@@ -5,7 +5,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
  * @ORM\Table(name="T_DENTAL_MODIFIER_DMO")
  */
 @Entity('T_DENTAL_MODIFIER_DMO')
-export class DentalModifier {
+export class DentalModifierEntity {
   /**
    * @ORM\Column(name="DMO_ID", type="integer")
    * @ORM\Id
