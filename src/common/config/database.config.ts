@@ -5,7 +5,6 @@ import { MysqlConnectionCredentialsOptions } from 'typeorm/driver/mysql/MysqlCon
 
 export default registerAs('database', (): TypeOrmModuleOptions => {
 
-
   const slaves: MysqlConnectionCredentialsOptions[] = [];
 
   const slaveHosts = `${process.env.DATABASE_SLAVES_HOST || ''}`.split(',');
@@ -16,24 +15,42 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
 
   let i = 0;
   for (const host of slaveHosts) {
-    slaves.push({
-      host,
-      port: parseInt(slavePorts[i]),
-      username: slaveUsernames[i],
-      password: slavePasswords[i],
-      database: slaveDbs[i],
-    });
+    console.log('host', host, host && host !== '');
+    if (host && host.trim() !== '') {
+      slaves.push({
+        host,
+        port: parseInt(slavePorts[i]),
+        username: slaveUsernames[i],
+        password: slavePasswords[i],
+        database: slaveDbs[i],
+      });
+    }
     i++;
+  }
+
+  if (slaves.length === 0) {
+    return {
+      type: 'mysql',
+      host: process.env.DATABASE_MASTER_HOST || '127.0.0.1',
+      port: parseInt(`${process.env.DATABASE_MASTER_PORT || 3306}`),
+      username: process.env.DATABASE_MASTER_USERNAME || 'root',
+      password: process.env.DATABASE_MASTER_PASSWROD || 'test',
+      database: process.env.DATABASE_MASTER_NAME || 'dental',
+      synchronize: false,
+      logging: process.env.DATABASE_LOGGING !== 'false' ? true : ['error'],
+      autoLoadEntities: true,
+      entities: [join(__dirname, '**/**.entity{.ts,.js}')],
+    };
   }
   return {
     type: 'mysql',
     replication: {
       master: {
-        host: process.env.DATABASE_HOST || '127.0.0.1',
-        port: parseInt(`${process.env.DATABASE_PORT || 33063}`),
-        username: process.env.DATABASE_USERNAME || 'root',
-        password: process.env.DATABASE_PASSWROD || 'test',
-        database: process.env.DATABASE_NAME || 'dental',
+        host: process.env.DATABASE_MASTER_HOST || '127.0.0.1',
+        port: parseInt(`${process.env.DATABASE_MASTER_PORT || 33063}`),
+        username: process.env.DATABASE_MASTER_USERNAME || 'root',
+        password: process.env.DATABASE_MASTER_PASSWROD || 'test',
+        database: process.env.DATABASE_MASTER_NAME || 'dental',
       },
       slaves,
     },
@@ -42,4 +59,5 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
     logging: process.env.DATABASE_LOGGING !== 'false' ? true : ['error'],
     autoLoadEntities: true,
     entities: [join(__dirname, '**/**.entity{.ts,.js}')],
-}});
+  };
+});
