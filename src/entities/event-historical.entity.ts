@@ -68,3 +68,5 @@ export class EventHistoricalEntity {
    *
    */
 }
+
+// application/Entities/Event/Historical.php

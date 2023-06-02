@@ -58,3 +58,5 @@ export class LibraryCityEntity {
    * Initialisation des propriétés du modèle.
    */
 }
+
+// application/Entities/Library/City.php
