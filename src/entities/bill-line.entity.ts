@@ -1,6 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-//'operation','ligneBlanche','ligneSeparation'
 export enum EnumBillLineType {
   OPERATION = 'operation',
   LIGNE_BLANCHE = 'ligneBlanche',
@@ -12,7 +11,7 @@ export enum EnumBillLineType {
  * @ORM\Table(name="T_BILL_LINE_BLN")
  */
 @Entity('T_BILL_LINE_BLN')
-export class BillLine {
+export class BillLineEntity {
   /**
    * @ORM\Column(name="BLN_ID", type="integer", nullable=false)
    * @ORM\Id
@@ -36,7 +35,6 @@ export class BillLine {
   /**
    * @ORM\Column(name="BLN_TYPE", type="string", nullable=false)
    */
-  //'operation','ligneBlanche','ligneSeparation'
   @Column({
     name: 'BLN_TYPE',
     type: 'enum',
@@ -93,6 +91,7 @@ export class BillLine {
    */
   @Column({
     name: 'BLN_COTATION',
+    type: 'varchar',
     length: 7,
     nullable: true,
   })
@@ -117,6 +116,7 @@ export class BillLine {
    */
   @Column({
     name: 'BLN_MATERIALS',
+    type: 'varchar',
     length: 15,
     nullable: true,
   })
