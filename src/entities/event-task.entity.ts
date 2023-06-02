@@ -244,6 +244,15 @@ export class EventTaskEntity {
   })
   ccamFamily?: string;
 
+  /**
+   * // @Check VariableMissing
+   * @ORM\Column(name="traceability_status", type="traceabilityStatusEnum", options={"default": 0})
+   * @Serializer\Expose
+   * @Serializer\Type("int")
+   * @Assert\Choice(callback={"App\Enum\TraceabilityStatusEnum", "getValues"})
+   * @Assert\NotNull
+   */
+
   @Column({
     name: 'traceability_status',
     type: 'tinyint',
@@ -272,14 +281,6 @@ export class EventTaskEntity {
    */
   // @TODO EntityMissing
   //   protected $parent = null;
-
-  /**
-   * @ORM\Column(name="traceability_status", type="traceabilityStatusEnum", options={"default": 0})
-   * @Serializer\Expose
-   * @Serializer\Type("int")
-   * @Assert\Choice(callback={"App\Enum\TraceabilityStatusEnum", "getValues"})
-   * @Assert\NotNull
-   */
 
   /**
    * @ORM\OneToOne(targetEntity="ActMedical", mappedBy="act", fetch="EAGER", cascade={"persist"})
