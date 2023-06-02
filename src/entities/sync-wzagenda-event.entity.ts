@@ -5,7 +5,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
  * @ORM\Table(name="T_SYNC_WZAGENDA_EVENT_SWE")
  */
 @Entity('T_SYNC_WZAGENDA_EVENT_SWE')
-export class SyncWzagendaEvent {
+export class SyncWzagendaEventEntity {
   /**
    * @ORM\Column(name="SWE_ID", type="integer")
    * @ORM\Id

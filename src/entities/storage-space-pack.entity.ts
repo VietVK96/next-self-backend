@@ -5,7 +5,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
  * @ORM\Table(name="T_STORAGE_SPACE_PACK_STK")
  */
 @Entity('T_STORAGE_SPACE_PACK_STK')
-export class StorageSpacePack {
+export class StorageSpacePackEntity {
   /**
    * Identifiant de l'enregistrement.
    *

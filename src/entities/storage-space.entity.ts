@@ -8,7 +8,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
  * @ExclusionPolicy("all")
  */
 @Entity('T_STORAGE_SPACE_STS')
-export class StorageSpace {
+export class StorageSpaceEntity {
   /**
    * @ORM\Column(name="STS_ID", type="integer")
    * @ORM\Id
