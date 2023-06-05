@@ -90,7 +90,7 @@ Thay `T_USER_USR` thành bảng tương ứng.
   @Column({
     name: 'USR_ADMIN',
     type: 'tinyint',
-    length: 1,
+    size: 1,
     default: 0,
   })
   admin?: number;
@@ -115,8 +115,8 @@ Thay `T_USER_USR` thành bảng tương ứng.
 ```
 + `default` là giá trị mặc định khi insert vào dữ liệu.
 + Dạng dữ liệu từ mysql sang nodejs là:
-`bit, int, integer, tinyint, smallint, mediumint, bigint, float, double, double precision, dec, decimal, numeric, fixed` => `number`.\
-`date, datetime, timestamp, time, year, char, nchar, national char, varchar, nvarchar, national varchar, text, tinytext, mediumtext, blob, longtext, tinyblob, mediumblob, longblob, json, binary, varbinary ` => `string`
+`bit, int, integer, tinyint, smallint, mediumint, bigint, float, double, double precision, dec, decimal, numeric, fixed` => `number`. Và quy định độ dài (rộng) của cột là `size`. Ví dụ INT(11) thì `type : 'int', size: 11`\
+`date, datetime, timestamp, time, year, char, nchar, national char, varchar, nvarchar, national varchar, text, tinytext, mediumtext, blob, longtext, tinyblob, mediumblob, longblob, json, binary, varbinary ` => `string`. Và quy định độ dài (rộng) của cột là `length`. Ví dụ VARCHAR(20) thì `type : 'varchar', length: 20`\
 Nếu gặp các dạng dữ liệu khác thì cần kiểm tra lại để map lại cho đúng.
 ## Relation:
 Ví dụ ở php là:
