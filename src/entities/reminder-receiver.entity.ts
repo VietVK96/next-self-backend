@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * @ORM\Entity
@@ -6,7 +6,6 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
  */
 @Entity('T_REMINDER_RECEIVER_RMR')
 export class ReminderReceiverEntity {
-
   /**
    * @ORM\Column(name="RMR_ID", type="integer", nullable=false)
    * @ORM\Id

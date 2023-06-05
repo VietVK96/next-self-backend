@@ -5,11 +5,7 @@ import { FindContactController } from './find.contact.controller';
 import { FindContactService } from './services/find.contact.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      ContactEntity,
-    ]),
-  ],
+  imports: [TypeOrmModule.forFeature([ContactEntity])],
   controllers: [FindContactController],
   providers: [FindContactService],
 })
