@@ -1,6 +1,13 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
-export enum EnumReminderVisitType {
+export enum EnumContactReminderVisitType {
   NONE = 'none',
   DURATION = 'duration',
   DATE = 'date',
@@ -13,7 +20,6 @@ export enum EnumReminderVisitType {
  */
 @Entity('T_CONTACT_CON')
 export class ContactEntity {
-
   /**
    * @ORM\Column(name="CON_ID", type="integer")
    * @ORM\Id
@@ -31,7 +37,6 @@ export class ContactEntity {
   @Column({
     name: 'CON_NBR',
     type: 'int',
-    length: 11, 
     nullable: true,
   })
   nbr?: number;
@@ -116,7 +121,6 @@ export class ContactEntity {
   @Column({
     name: 'CON_BIRTH_ORDER',
     type: 'int',
-    length: 11,
     default: 1,
   })
   birthOrder?: number;
@@ -127,7 +131,6 @@ export class ContactEntity {
   @Column({
     name: 'CON_QUALITY',
     type: 'int',
-    length: 11,
     nullable: true,
   })
   quality?: number;
@@ -139,7 +142,6 @@ export class ContactEntity {
   @Column({
     name: 'CON_BREASTFEEDING',
     type: 'int',
-    length: 11,
     default: 0,
   })
   breastfeeding?: number;
@@ -152,7 +154,6 @@ export class ContactEntity {
   @Column({
     name: 'CON_PREGNANCY',
     type: 'int',
-    length: 11,
     default: 0,
   })
   pregnancy?: number;
@@ -164,7 +165,6 @@ export class ContactEntity {
   @Column({
     name: 'CON_CLEARANCE_CREATININE',
     type: 'int',
-    length: 11,
     default: 0,
   })
   clearanceCreatinine?: number;
@@ -187,7 +187,6 @@ export class ContactEntity {
   @Column({
     name: 'CON_WEIGHT',
     type: 'int',
-    length: 11,
     default: 0,
   })
   weight?: number;
@@ -199,7 +198,6 @@ export class ContactEntity {
   @Column({
     name: 'CON_SIZE',
     type: 'int',
-    length: 11,
     default: 0,
   })
   size?: number;
@@ -237,7 +235,7 @@ export class ContactEntity {
   @Column({
     name: 'CON_NOTIFICATION_ENABLE',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     default: 1,
   })
   notificationEnable?: number;
@@ -249,7 +247,7 @@ export class ContactEntity {
   @Column({
     name: 'CON_NOTIFICATION_EVERY_TIME',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     default: 0,
   })
   notificationEveryTime?: number;
@@ -260,7 +258,7 @@ export class ContactEntity {
   @Column({
     name: 'CON_COLOR',
     type: 'int',
-    length: 11,
+    width: 11,
     default: -3840,
   })
   color?: number;
@@ -272,7 +270,7 @@ export class ContactEntity {
   @Column({
     name: 'CON_COLOR_MEDICAL',
     type: 'int',
-    length: 11,
+    width: 11,
     default: -3840,
   })
   colorMedical?: number;
@@ -320,7 +318,7 @@ export class ContactEntity {
   @Column({
     name: 'CON_MUTUAL_REPAYMENT_TYPE',
     type: 'int',
-    length: 11,
+    width: 11,
   })
   mutualRepaymentType?: number;
 
@@ -372,7 +370,7 @@ export class ContactEntity {
     name: 'CON_AGENESIE',
     type: 'tinyint',
     default: 0,
-    length: 1,
+    width: 1,
   })
   agenesie?: number;
 
@@ -383,7 +381,7 @@ export class ContactEntity {
   @Column({
     name: 'CON_MALADIE_RARE',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     default: 0,
   })
   maladieRare?: number;
@@ -395,7 +393,7 @@ export class ContactEntity {
   @Column({
     name: 'CON_MALADIE_RARE',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     default: 0,
   })
   rxSidexisLoaded?: number;
@@ -407,10 +405,10 @@ export class ContactEntity {
   @Column({
     name: 'CON_REMINDER_VISIT_TYPE',
     type: 'enum',
-    enum: EnumReminderVisitType,
-    default: EnumReminderVisitType.DURATION,
+    enum: EnumContactReminderVisitType,
+    default: EnumContactReminderVisitType.DURATION,
   })
-  reminderVisitType?: EnumReminderVisitType;
+  reminderVisitType?: EnumContactReminderVisitType;
 
   /**
    * @ORM\Column(name="CON_REMINDER_VISIT_DURATION", type="integer", nullable=true)
@@ -419,7 +417,7 @@ export class ContactEntity {
   @Column({
     name: 'CON_REMINDER_VISIT_DURATION',
     type: 'int',
-    length: 11,
+    width: 11,
     nullable: true,
   })
   reminderVisitDuration?: number;
@@ -452,11 +450,10 @@ export class ContactEntity {
   @Column({
     name: 'CON_DELETE',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     default: 0,
   })
   delete?: number;
-
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Group", inversedBy="contacts")
@@ -576,7 +573,7 @@ export class ContactEntity {
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 
-  @UpdateDateColumn({ name: 'updated_at'})
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt?: Date;
 
   @DeleteDateColumn({ name: 'deleted_at' })

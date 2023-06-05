@@ -55,7 +55,9 @@ export class OrganizationEntity {
   /**
    * @ORM\OneToMany(targetEntity="UserEntity", mappedBy="organization", cascade={"persist"})
    */
-  @OneToMany(() => UserEntity, (e) => e.group)
+  @OneToMany(() => UserEntity, (e) => e.group, {
+    createForeignKeyConstraints: false,
+  })
   users?: UserEntity[];
 
   @CreateDateColumn({ name: 'created_at' })

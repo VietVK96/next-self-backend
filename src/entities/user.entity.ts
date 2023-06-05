@@ -375,7 +375,9 @@ export class UserEntity {
   })
   organizationId?: number;
 
-  @ManyToOne(() => OrganizationEntity, (e) => e.users)
+  @ManyToOne(() => OrganizationEntity, (e) => e.users, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({
     name: 'organization_id',
     referencedColumnName: 'GRP_ID',
