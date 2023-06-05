@@ -30,10 +30,9 @@ export class CmcicPaymentEntity {
   mac?: string;
 
   /**
-     * @ORM\Column(name="cpy_date", type="string", length=21, nullable=true)
-     * @var string Date de la demande d’autorisation de la commande au format JJ/MM/AAAA_a_HH:MM:SS.
-
-     */
+   * @ORM\Column(name="cpy_date", type="string", length=21, nullable=true)
+   * @var string Date de la demande d’autorisation de la commande au format JJ/MM/AAAA_a_HH:MM:SS.
+   */
   @Column({
     name: 'cpy_date',
     type: 'varchar',
@@ -144,7 +143,7 @@ export class CmcicPaymentEntity {
   @Column({
     name: 'cpy_status3ds',
     type: 'tinyint',
-    length: 4,
+    width: 4,
     nullable: true,
   })
   status3ds?: number;
@@ -276,7 +275,7 @@ export class CmcicPaymentEntity {
   @Column({
     name: 'cpy_filtragecause',
     type: 'tinyint',
-    length: 4,
+    width: 4,
     nullable: true,
   })
   filtragecause?: number;
@@ -300,7 +299,7 @@ export class CmcicPaymentEntity {
   @Column({
     name: 'cpy_cbenregistree',
     type: 'tinyint',
-    length: 4,
+    width: 4,
     nullable: true,
   })
   cbenregistree?: number;
