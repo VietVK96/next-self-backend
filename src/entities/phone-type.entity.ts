@@ -29,6 +29,20 @@ export class PhoneTypeEntity {
   name?: string;
 
   /**
+   * Nom d'affichage du type de numéro de téléphone.
+   * 
+   * @ORM\Column(name="display_name", type="string", length=255)
+   * @Expose
+   * @var string
+   */
+  @Column({
+    name: 'display_name',
+    type: 'varchar',
+    length: 255
+  })
+  displayName?: string;
+
+  /**
    * @ORM\Column(name="PTY_POS", type="integer")
    * @var integer
    */
@@ -38,6 +52,26 @@ export class PhoneTypeEntity {
     default: 0
   })
   pos?: number;
+
+  /**
+   * Position du type de numéro de téléphone.
+   * 
+   * @ORM\Column(name="PTY_POS", type="integer", options={"default": 0})
+   * @Expose
+   * @var integer
+   */
+  @Column({
+    name: 'PTY_POS',
+    type: 'integer',
+    default: 0
+  })
+  position?: number;
+
+  /**
+   * @ORM\OneToMany(targetEntity="PhoneNumber", mappedBy="category")
+   */
+  // @TODO EntityMissing
+  // protected $phoneNumbers;
 
 }
 
