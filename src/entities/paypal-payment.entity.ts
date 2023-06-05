@@ -288,4 +288,4 @@ export class PaypalPaymentEntity {
   updatedAt?: Date;
 }
 
-// application/Paypal/Payment.php
+// application/Entities/Paypal/Payment.php

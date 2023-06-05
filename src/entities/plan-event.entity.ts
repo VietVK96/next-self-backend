@@ -60,4 +60,4 @@ export class PlanEventEnity {
 
 }
 
-// application/Plan/Event.php
+// application/Entities/Plan/Event.php

@@ -5,8 +5,7 @@ export enum EnumMedicalOrderFormatType {
   A4 = 'A4',
   A5 = 'A5',
   A5P = 'A5p',
-  // @TODO EntityMissing
-  // 180X210 = '180x210',
+  SCREEN_180x210 = '180x210'
 }
 
 /**
@@ -173,7 +172,7 @@ export class MedicalOrderEntity {
   @Column({
     name: 'MDO_HEADER_ENABLE',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false
   })
   headerEnable?: number;
@@ -211,4 +210,4 @@ export class MedicalOrderEntity {
   updatedAt?: Date;
 }
 
-// application/Medical/Order.php
+// application/Entities/Medical/Order.php

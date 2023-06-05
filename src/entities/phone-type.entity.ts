@@ -41,4 +41,4 @@ export class PhoneTypeEntity {
 
 }
 
-// application/Phone/Type.php
+// application/Entites/Phone/Type.php

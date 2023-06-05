@@ -1,12 +1,12 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { UserEntity } from "./user.entity";
 
 //enum('A4', 'A5', 'A5p', '180x210')
 export enum EnumMedicalHeaderFormatType {
   A4 = 'A4',
   A5 = 'A5',
   A5P = 'A5p',
-  // @TODO EntityMissing
-  // 180X210 = '180x210',
+  SCREEN_180x210 = '180x210'
 }
 
 /**
@@ -35,8 +35,19 @@ export class MedicalHeaderEntity {
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    * @var \App\Entities\User
    */
-  // @TODO EntityMissing
-  //protected $user;
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+  })
+  userId?: number;
+
+  @OneToOne(() => UserEntity)
+  @JoinColumn({
+    name: 'user_id',
+    referencedColumnName: 'USER_ID',
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\Column(name="bill_message", type="text", nullable=true)
@@ -160,7 +171,7 @@ export class MedicalHeaderEntity {
     name: 'MDH_ENABLE',
     type: 'tinyint',
     nullable: true,
-    length: 1
+    width: 1
   })
   enable?: number;
 
@@ -172,4 +183,4 @@ export class MedicalHeaderEntity {
 }
 
 
-// application/Medical/Header.php
+// application/Entities/Medical/Header.php
