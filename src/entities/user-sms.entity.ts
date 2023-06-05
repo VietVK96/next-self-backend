@@ -56,7 +56,7 @@ export class UserSmsEntity {
   @Column({
     name: 'USS_VALIDATED',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 0
   })

@@ -35,7 +35,7 @@ export class UserTypeEntity {
   @Column({
     name: 'UST_PRO',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false
   })
   professional?: number;

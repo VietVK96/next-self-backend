@@ -86,7 +86,7 @@ export class UserPreferenceQuotationEntity {
   @Column({
     name: 'UPQ_WITH_SUBCONTRACTING',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 1
   })
@@ -148,7 +148,7 @@ export class UserPreferenceQuotationEntity {
   @Column({
     name: 'UPQ_DISPLAY_NOTICE',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 1
   })
@@ -161,7 +161,7 @@ export class UserPreferenceQuotationEntity {
   @Column({
     name: 'UPQ_DISPLAY_TOOLTIP',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 1
   })
@@ -174,7 +174,7 @@ export class UserPreferenceQuotationEntity {
   @Column({
     name: 'UPQ_DISPLAY_DUPLICATA',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 1
   })
@@ -186,7 +186,7 @@ export class UserPreferenceQuotationEntity {
   @Column({
     name: 'treatment_timeline',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 0
   })

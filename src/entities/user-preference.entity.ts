@@ -114,7 +114,7 @@ export class UserPreferenceEntity {
     name: 'USP_DAYS',
     type: 'tinyint',
     nullable: false,
-    length: 4,
+    width: 4,
     default: 62
   })
   days?: number;
@@ -126,7 +126,7 @@ export class UserPreferenceEntity {
     name: 'USP_WEEK_START_DAY',
     type: 'tinyint',
     nullable: false,
-    length: 4,
+    width: 4,
     default: 1
   })
   weekStartDay?: number;
@@ -138,7 +138,7 @@ export class UserPreferenceEntity {
     name: 'USP_DISPLAY_HOLIDAY',
     type: 'tinyint',
     nullable: false,
-    length: 1,
+    width: 1,
     default: 0
   })
   displayHoliday?: number;
@@ -149,7 +149,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'USP_DISPLAY_EVENT_TIME',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 0
   })
@@ -161,7 +161,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'USP_DISPLAY_LAST_PATIENTS',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 1
   })
@@ -173,7 +173,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'USP_DISPLAY_PRACTITIONER_CALENDAR',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 0
   })
@@ -187,7 +187,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'USP_ENABLE_EVENT_PRACTITIONER_CHANGE',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 1
   })
@@ -296,7 +296,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'USP_QUOTATION_DISPLAY_TOOLTIP',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 1
   })
@@ -309,7 +309,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'USP_QUOTATION_DISPLAY_DUPLICATA',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 0
   })
@@ -345,7 +345,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'USP_BILL_TEMPLATE',
     type: 'tinyint',
-    length: 4,
+    width: 4,
     nullable: false,
     default: 1
   })
@@ -358,7 +358,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'USP_ORDER_DISPLAY_TOOLTIP',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 1
   })
@@ -371,7 +371,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'USP_ORDER_DUPLICATA',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 1
   })
@@ -384,7 +384,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'USP_ORDER_PREPRINTED_HEADER',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 0
   })
@@ -422,7 +422,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'USP_ORDER_BCB_CHECK',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 1
   })
@@ -435,7 +435,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'USP_THEME_CUSTOM',
     type: 'tinyint',
-    length: 4,
+    width: 4,
     nullable: false,
     default: 0
   })
@@ -504,6 +504,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'USP_CCAM_BRIDGE_QUICKENTRY',
     type: 'tinyint',
+    width: 1,
     nullable: false,
     default: 0
   })
@@ -516,6 +517,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'ccam_price_list',
     type: 'tinyint',
+    width: 4,
     nullable: false,
     default: 13
   })
@@ -533,6 +535,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'ccam_price_list',
     type: 'tinyint',
+    width: 4,
     nullable: false,
     default: 13
   })
@@ -563,7 +566,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'sesam_vitale_mode_desynchronise',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 0
   })
@@ -575,7 +578,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'calendar_border_colored',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 1
   })
@@ -587,7 +590,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'signature_automatic',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     nullable: false,
     default: 0
   })
