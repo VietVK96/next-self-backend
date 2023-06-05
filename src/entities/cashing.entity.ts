@@ -27,7 +27,7 @@ export enum EnumCashingType {
  * @ORM\HasLifecycleCallbacks
  */
 @Entity('T_CASHING_CSG')
-export class Cashing {
+export class CashingEntity {
   // use TimestampableTrait;
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
@@ -224,8 +224,6 @@ export class Cashing {
    */
   // @TODO EntityMissing
   //   protected $cashingContacts;
-
-  /**
-   * Class constructor
-   */
 }
+
+// application\Entities\Cashing.php
