@@ -49,7 +49,7 @@ export class EventTaskEntity {
    * @ORM\ManyToOne(targetEntity="Patient", inversedBy="acts")
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    */
-
+  // @TODO EntityMissing
   //   protected $patient;
 
   /**
@@ -87,7 +87,6 @@ export class EventTaskEntity {
     type: 'varchar',
   })
   label?: string;
-  //protected $label;
 
   /**
    * @ORM\Column(name="ETK_NAME", type="string", length=81, nullable=false)
@@ -111,7 +110,7 @@ export class EventTaskEntity {
   date?: string;
 
   /**
-   * // @Check VariableMissing
+   *
    * @ORM\Column(name="ETK_MSG", type="text", nullable=true)
    * @Serializer\Expose
    * @Assert\Type("string")
@@ -122,7 +121,6 @@ export class EventTaskEntity {
     nullable: true,
   })
   observation?: string;
-  //protected $observation = null;
 
   /**
    * @ORM\Column(name="ETK_MSG", type="text", nullable=true)
@@ -150,7 +148,6 @@ export class EventTaskEntity {
     default: 0,
   })
   position?: number;
-  //protected $position = 0;
 
   /**
    * @ORM\Column(name="ETK_POS", type="integer", nullable=false)
@@ -199,7 +196,6 @@ export class EventTaskEntity {
     nullable: true,
   })
   amountBackup?: number;
-  //protected $amountBackup = null;
 
   /**
    * @ORM\Column(name="ETK_AMOUNT_SAVED", type="float", nullable=true)
@@ -238,7 +234,7 @@ export class EventTaskEntity {
   qty?: number;
 
   /**
-   * // @Check VariableMissing
+   *
    * @ORM\Column(name="ETK_STATE", type="integer", options={"default": 0})
    * @Serializer\Expose
    * @Serializer\Type("int")
@@ -253,7 +249,6 @@ export class EventTaskEntity {
     default: 0,
   })
   status?: number;
-  //protected $status = 0;
 
   /**
    * @ORM\Column(name="ETK_STATE", type="integer")
@@ -270,6 +265,7 @@ export class EventTaskEntity {
    * @ORM\Column(name="ccam_family", type="string", length=3, nullable=true)
    * @var string Code de regroupement CCAM.
    */
+
   @Column({
     name: 'ccam_family',
     length: 3,
@@ -293,7 +289,6 @@ export class EventTaskEntity {
     default: 0,
   })
   traceabilityStatus?: number;
-  // protected $traceabilityStatus = TraceabilityStatusEnum:: NONE;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Event", inversedBy="tasks")

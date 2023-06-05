@@ -54,7 +54,6 @@ export class LibraryBankEntity {
     length: 10,
   })
   shortName?: string;
-  //   protected $shortName;
 
   /**
    * @ORM\Column(name="LBK_ABBR", type="string", length=10)
@@ -90,7 +89,6 @@ export class LibraryBankEntity {
     nullable: true,
   })
   code?: string;
-  //   protected $code = NULL;
 
   /**
    * @ORM\Column(name="LBK_BANK_CODE", type="string", length=5, nullable=true)
@@ -117,7 +115,6 @@ export class LibraryBankEntity {
     nullable: true,
   })
   agencyCode?: string;
-  //   protected $agencyCode = NULL;
 
   /**
    * @ORM\Column(name="LBK_BRANCH_CODE", type="string", length=5, nullable=true)
@@ -144,7 +141,6 @@ export class LibraryBankEntity {
     nullable: true,
   })
   accountNumber?: string;
-  //   protected $accountNumber = NULL;
 
   /**
    * @ORM\Column(name="LBK_ACCOUNT_NBR", type="string", length=11, nullable=true)
@@ -171,7 +167,6 @@ export class LibraryBankEntity {
     nullable: true,
   })
   key?: string;
-  //   protected $key = NULL;
 
   /**
    * @ORM\Column(name="LBK_BANK_DETAILS", type="string", length=2, nullable=true)
@@ -245,7 +240,6 @@ export class LibraryBankEntity {
     default: 1,
   })
   nextBordereauNumber?: number;
-  //   protected $nextBordereauNumber = 1;
 
   /**
    * @ORM\Column(name="LBK_SLIP_CHECK_NBR", type="integer")
@@ -273,7 +267,6 @@ export class LibraryBankEntity {
     default: 0,
   })
   isDefault?: number;
-  //   protected $isDefault = false;
 
   /**
    * @ORM\Column(name="LBK_TRANSFERT_DEFAULT", type="integer")
@@ -303,7 +296,6 @@ export class LibraryBankEntity {
     default: 0,
   })
   position?: number;
-  //   protected $position = 0;
 
   /**
    * @ORM\Column(name="LBK_POS", type="integer")
@@ -340,16 +332,6 @@ export class LibraryBankEntity {
    */
   // @TODO EntityMissing
   //   protected $address;
-
-  /**
-   *
-   *
-   *
-   *
-   *
-   *
-   * Initialisation des propriétés du modèle.
-   */
 }
 
 //application\Entities\BankEntity.php

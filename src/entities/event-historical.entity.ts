@@ -63,10 +63,6 @@ export class EventHistoricalEntity {
    */
   // @TODO EntityMissing
   //protected $user;
-
-  /**
-   *
-   */
 }
 
 // application/Entities/Event/Historical.php
