@@ -28,7 +28,7 @@ export class BillLineEntity {
   @Column({
     name: 'BLN_POS',
     type: 'int',
-    length: 11,
+    width: 11,
   })
   pos?: number;
 
