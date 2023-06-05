@@ -176,6 +176,15 @@ export class DentalQuotationActEntity {
   })
   cotation?: string;
 
+  @Column({
+    name: 'DQA_PURCHASE_PRICE',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 0,
+  })
+  purchasePrice?: number;
+
   /**
    * @ORM\Column(name="DQA_REFUNDABLE", type="string", nullable=false)
    */
