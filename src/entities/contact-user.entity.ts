@@ -35,7 +35,7 @@ export class ContactUserEntity {
   // protected $user;
 
   @Column({
-    name: '	cou_unpaid_level',
+    name: 'cou_unpaid_level',
     type: 'int',
     nullable: false,
     default: 0
@@ -43,7 +43,7 @@ export class ContactUserEntity {
   unpaidLevel?: number;
 
   @Column({
-    name: '	cou_unpaid_last_recovery',
+    name: 'cou_unpaid_last_recovery',
     type: 'date',
     nullable: true,
   })
