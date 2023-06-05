@@ -343,6 +343,46 @@ export class LibraryActQuantityEntity {
    */
   // @TODO EntityMissing
   //   protected $traceabilities;
+
+  /**
+   * @ORM\ManyToOne(targetEntity="LibraryAct", inversedBy="quantities")
+   * @ORM\JoinColumn(name="library_act_id", referencedColumnName="id")
+   */
+  //@TODO EntityMissing;
+  // protected $act;
+
+  /**
+   * @ORM\ManyToOne(targetEntity="Ccam")
+   * @ORM\JoinColumn(name="ccam_id", referencedColumnName="id", nullable=true)
+   * @Serializer\Expose
+   * @Serializer\Groups({"detail"})
+   */
+  //@TODO EntityMissing;
+  // protected $ccam = null;
+
+  /**
+   * @ORM\ManyToOne(targetEntity="NgapKey")
+   * @ORM\JoinColumn(name="ngap_key_id", referencedColumnName="id", nullable=true)
+   */
+  //@TODO EntityMissing;
+  // protected $ngapKey = null;
+
+  /**
+   * @ORM\OneToMany(targetEntity="LibraryActQuantityTariff", mappedBy="libraryActQuantity")
+   * @Serializer\Expose
+   * @Serializer\Groups({"libraryActQuantity:read"})
+   */
+  //@TODO EntityMissing;
+  // protected $tariffs;
+
+  /**
+   * @ORM\OneToMany(targetEntity="Traceability", mappedBy="libraryActQuantity", cascade={"persist"}, orphanRemoval=true)
+   * @Serializer\Expose
+   * @Serializer\Groups({"traceability:read"})
+   */
+  //@TODO EntityMissing;
+  // protected $traceabilities;
 }
 
 // application\Entities\LibraryActQuantity.php
+// application\Entity\LibraryActQuantity.php

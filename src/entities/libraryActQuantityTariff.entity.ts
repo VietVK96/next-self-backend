@@ -55,3 +55,4 @@ export class LibraryActQuantityTariffEntity {
 }
 
 // application\Entities\LibraryActQuantityTariff.php
+// application\Entity\LibraryActQuantityTariff.php
