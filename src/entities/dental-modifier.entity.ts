@@ -72,8 +72,10 @@ export class DentalModifierEntity {
   @Column({
     name: 'DMO_AGE_LOWER_LIMIT',
     type: 'tinyint',
-    length: 4,
+    width: 4,
     nullable: true,
   })
   ageLowerLimit?: number;
 }
+
+// application/Entities/Dental/Modifier.php
