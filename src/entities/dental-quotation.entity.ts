@@ -49,7 +49,7 @@ export class DentalQuotationEntity {
   // @TODO EntityMissing
   // protected $logo;
 
-  /**
+  /** File: application\Entity\Quote.php
    * @ORM\OneToOne(targetEntity="File", cascade={"persist", "remove"})
    * @ORM\JoinColumn(name="logo_id", referencedColumnName="UPL_ID", nullable=true)
    */
@@ -79,7 +79,7 @@ export class DentalQuotationEntity {
   })
   reference?: string;
 
-  /**
+  /** File: application\Entity\Quote.php
    * @ORM\Column(name="reference", type="string", length=13, nullable=true)
    * @Serializer\Expose
    * @Serializer\Groups({"detail"})
@@ -147,7 +147,7 @@ export class DentalQuotationEntity {
   })
   dateAccept?: string;
 
-  /**
+  /** File: application\Entity\Quote.php
    * @ORM\Column(name="DQO_DATE_ACCEPT", type="date", nullable=true)
    * @Serializer\Expose
    * @Serializer\Groups({"detail"})
@@ -201,7 +201,7 @@ export class DentalQuotationEntity {
   })
   msg?: string;
 
-  /**
+  /** File: application\Entity\Quote.php
    * @ORM\Column(name="DQO_MSG", type="text", nullable=true)
    * @Serializer\Expose
    * @Serializer\Groups({"detail"})
@@ -454,7 +454,7 @@ export class DentalQuotationEntity {
   })
   displayNotice?: number;
 
-  /**
+  /** File: application\Entity\Quote.php
    * @ORM\Column(name="DQO_DISPLAY_NOTICE", type="boolean", options={"default": true})
    * @Serializer\Expose
    * @Serializer\Groups({"detail"})
@@ -481,7 +481,7 @@ export class DentalQuotationEntity {
   })
   signaturePatient?: string;
 
-  /**
+  /** File: application\Entity\Quote.php
    * @ORM\Column(name="DQO_SIGNATURE_PATIENT", type="text", nullable=true)
    * @Serializer\Expose
    * @Serializer\Groups({"detail"})
@@ -505,7 +505,7 @@ export class DentalQuotationEntity {
   })
   signaturePraticien?: string;
 
-  /**
+  /** File: application\Entity\Quote.php
    * @ORM\Column(name="DQO_SIGNATURE_PRATICIEN", type="text", nullable=true)
    * @Serializer\Expose
    * @Serializer\Groups({"detail"})
@@ -532,7 +532,7 @@ export class DentalQuotationEntity {
   // @TODO EntityMissing
   // protected $contact;
 
-  /**
+  /** File: application\Entity\Quote.php
    * @ORM\ManyToOne(targetEntity="Patient")
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    * @Serializer\Expose
@@ -548,7 +548,7 @@ export class DentalQuotationEntity {
   // @TODO EntityMissing
   // protected $planification;
 
-  /**
+  /** File: application\Entity\Quote.php
    * @ORM\ManyToOne(targetEntity="TreatmentPlan")
    * @ORM\JoinColumn(name="PLF_ID", referencedColumnName="PLF_ID", nullable=true)
    */
@@ -557,6 +557,15 @@ export class DentalQuotationEntity {
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Dental\Quotation\Act", mappedBy="quotation")
+   */
+  // @TODO EntityMissing
+  // protected $acts;
+
+  /** File: application\Entity\Quote.php
+   * @ORM\OneToMany(targetEntity="QuoteAct", mappedBy="quote", cascade={"persist"})
+   * @ORM\OrderBy({"position": "ASC"})
+   * @Serializer\Expose
+   * @Serializer\Groups({"detail"})
    */
   // @TODO EntityMissing
   // protected $acts;
@@ -592,15 +601,6 @@ export class DentalQuotationEntity {
     default: 0,
   })
   treatmentTimeline?: number;
-
-  /**
-   * @ORM\OneToMany(targetEntity="QuoteAct", mappedBy="quote", cascade={"persist"})
-   * @ORM\OrderBy({"position": "ASC"})
-   * @Serializer\Expose
-   * @Serializer\Groups({"detail"})
-   */
-  // @TODO EntityMissing
-  // protected $acts;
 
   /**
    * @ORM\OneToMany(targetEntity="Mail", mappedBy="quote", cascade={"persist"})
