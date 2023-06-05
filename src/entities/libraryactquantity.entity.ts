@@ -29,7 +29,7 @@ export enum EnumLibraryActQuantityExceeding {
  * @Serializer\ExclusionPolicy("all")
  */
 Entity('library_act_quantity');
-export class LibraryActQuantity {
+export class LibraryActQuantityEntity {
   // use OrganizationTrait;
   /**
    * @ORM\ManyToOne(targetEntity="Organization")
