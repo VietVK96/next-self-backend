@@ -48,7 +48,7 @@ export class ContactNoteEntity {
   @Column({
     name: 'color',
     type: 'int',
-    length: 11,
+    width: 11,
     default: -15,
   })
   color?: number;
