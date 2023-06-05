@@ -45,7 +45,7 @@ export class SyncWzagendaUserEntity {
   @Column({
     name: 'SWU_LAST_MODIFIED_WZAGENDA',
     type: 'int',
-    length: 11,
+    width: 11,
     nullable: true,
   })
   lastModifiedWzAgenda?: number;

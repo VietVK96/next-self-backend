@@ -27,7 +27,7 @@ export class StorageSpacePackEntity {
   @Column({
     name: 'STK_SIZE',
     type: 'bigint',
-    length: 20,
+    width: 20,
   })
   size?: number;
 
