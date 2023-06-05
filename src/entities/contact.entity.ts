@@ -1,6 +1,13 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
-export enum EnumReminderVisitType {
+export enum EnumContactReminderVisitType {
   NONE = 'none',
   DURATION = 'duration',
   DATE = 'date',
@@ -13,7 +20,6 @@ export enum EnumReminderVisitType {
  */
 @Entity('T_CONTACT_CON')
 export class ContactEntity {
-
   /**
    * @ORM\Column(name="CON_ID", type="integer")
    * @ORM\Id
@@ -399,10 +405,10 @@ export class ContactEntity {
   @Column({
     name: 'CON_REMINDER_VISIT_TYPE',
     type: 'enum',
-    enum: EnumReminderVisitType,
-    default: EnumReminderVisitType.DURATION,
+    enum: EnumContactReminderVisitType,
+    default: EnumContactReminderVisitType.DURATION,
   })
-  reminderVisitType?: EnumReminderVisitType;
+  reminderVisitType?: EnumContactReminderVisitType;
 
   /**
    * @ORM\Column(name="CON_REMINDER_VISIT_DURATION", type="integer", nullable=true)
@@ -448,7 +454,6 @@ export class ContactEntity {
     default: 0,
   })
   delete?: number;
-
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Group", inversedBy="contacts")
@@ -568,7 +573,7 @@ export class ContactEntity {
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 
-  @UpdateDateColumn({ name: 'updated_at'})
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt?: Date;
 
   @DeleteDateColumn({ name: 'deleted_at' })
