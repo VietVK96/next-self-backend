@@ -1,11 +1,12 @@
-import { Column, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\UserConnection")
  * @ORM\Table(name="T_USER_CONNECTION_USC")
  * @ORM\HasLifecycleCallbacks
  */
-class UserConnection {
+@Entity('T_USER_CONNECTION_USC')
+export class UserConnectionEntity {
 
   /**
    * @ORM\Column(name="USC_ID", type="integer")
@@ -73,3 +74,5 @@ class UserConnection {
   updatedAt?: Date;
 
 }
+
+// application/Entities/UserConnection.php
