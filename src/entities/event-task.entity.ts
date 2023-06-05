@@ -45,7 +45,7 @@ export class EventTaskEntity {
   //   protected $user;
 
   /**
-   * // @Check VariableMissing
+   *
    * @ORM\ManyToOne(targetEntity="Patient", inversedBy="acts")
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    */
@@ -75,12 +75,18 @@ export class EventTaskEntity {
   //   protected $libraryActQuantity = null;
 
   /**
-   * // @Check VariableMissing
+   *
    * @ORM\Column(name="ETK_NAME", type="string", length=255)
    * @Serializer\Expose
    * @Assert\Type("string")
    * @Assert\NotBlank
    */
+  @Column({
+    name: 'ETK_NAME',
+    length: 255,
+    type: 'varchar',
+  })
+  label?: string;
   //protected $label;
 
   /**
@@ -110,6 +116,12 @@ export class EventTaskEntity {
    * @Serializer\Expose
    * @Assert\Type("string")
    */
+  @Column({
+    name: 'ETK_MSG',
+    type: 'text',
+    nullable: true,
+  })
+  observation?: string;
   //protected $observation = null;
 
   /**
@@ -123,7 +135,7 @@ export class EventTaskEntity {
   msg?: string;
 
   /**
-   * // @Check VariableMissing
+   *
    * @ORM\Column(name="ETK_POS", type="integer", options={"default": 0})
    * @Serializer\Expose
    * @Serializer\Type("int")
@@ -131,6 +143,13 @@ export class EventTaskEntity {
    * @Assert\NotNull
    * @Assert\GreaterThanOrEqual(0)
    */
+  @Column({
+    name: 'ETK_POS',
+    type: 'int',
+    width: 11,
+    default: 0,
+  })
+  position?: number;
   //protected $position = 0;
 
   /**
@@ -167,11 +186,19 @@ export class EventTaskEntity {
   amount?: number;
 
   /**
-   * // @Check VariableMissing
+   *
    * @ORM\Column(name="ETK_AMOUNT_SAVED", type="decimal", precision=10, scale=2, nullable=true)
    * @Serializer\Type("float")
    * @Assert\Type("float")
    */
+  @Column({
+    name: 'ETK_AMOUNT_SAVED',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
+  amountBackup?: number;
   //protected $amountBackup = null;
 
   /**
@@ -219,6 +246,13 @@ export class EventTaskEntity {
    * @Assert\NotNull
    * @Assert\GreaterThanOrEqual(0)
    */
+  @Column({
+    name: 'ETK_STATE',
+    type: 'int',
+    width: 11,
+    default: 0,
+  })
+  status?: number;
   //protected $status = 0;
 
   /**
@@ -245,14 +279,13 @@ export class EventTaskEntity {
   ccamFamily?: string;
 
   /**
-   * // @Check VariableMissing
+   *
    * @ORM\Column(name="traceability_status", type="traceabilityStatusEnum", options={"default": 0})
    * @Serializer\Expose
    * @Serializer\Type("int")
    * @Assert\Choice(callback={"App\Enum\TraceabilityStatusEnum", "getValues"})
    * @Assert\NotNull
    */
-
   @Column({
     name: 'traceability_status',
     type: 'tinyint',

@@ -41,13 +41,19 @@ export class LibraryBankEntity {
   id?: number;
 
   /**
-   * // @Check VariableMissing
+   *
    * @ORM\Column(name="LBK_ABBR", type="string", length=10)
    * @Serializer\Expose
    * @Assert\Type("string")
    * @Assert\NotBlank
    * @Assert\Length(max=10)
    */
+  @Column({
+    name: 'LBK_ABBR',
+    type: 'varchar',
+    length: 10,
+  })
+  shortName?: string;
   //   protected $shortName;
 
   /**
@@ -71,12 +77,19 @@ export class LibraryBankEntity {
   name?: string;
 
   /**
-   * // @Check VariableMissing
+   *
    * @ORM\Column(name="LBK_BANK_CODE", type="string", length=5, nullable=true, options={"fixed": true})
    * @Serializer\Expose
    * @Assert\Type(type={"digit"})
    * @Assert\Length(min=5, max=5)
    */
+  @Column({
+    name: 'LBK_BANK_CODE',
+    type: 'varchar',
+    length: 5,
+    nullable: true,
+  })
+  code?: string;
   //   protected $code = NULL;
 
   /**
@@ -91,12 +104,19 @@ export class LibraryBankEntity {
   bankCode?: string;
 
   /**
-   * // @Check VariableMissing
+   *
    * @ORM\Column(name="LBK_BRANCH_CODE", type="string", length=5, nullable=true, options={"fixed": true})
    * @Serializer\Expose
    * @Assert\Type(type={"digit"})
    * @Assert\Length(min=5, max=5)
    */
+  @Column({
+    name: 'LBK_BRANCH_CODE',
+    type: 'varchar',
+    length: 5,
+    nullable: true,
+  })
+  agencyCode?: string;
   //   protected $agencyCode = NULL;
 
   /**
@@ -111,12 +131,19 @@ export class LibraryBankEntity {
   branchCode?: string;
 
   /**
-   * // @Check VariableMissing
+   *
    * @ORM\Column(name="LBK_ACCOUNT_NBR", type="string", length=11, nullable=true, options={"fixed": true})
    * @Serializer\Expose
    * @Assert\Type(type={"alpha", "digit"})
    * @Assert\Length(min=11, max=11)
    */
+  @Column({
+    name: 'LBK_ACCOUNT_NBR',
+    type: 'varchar',
+    length: 11,
+    nullable: true,
+  })
+  accountNumber?: string;
   //   protected $accountNumber = NULL;
 
   /**
@@ -131,12 +158,19 @@ export class LibraryBankEntity {
   accountNbr?: string;
 
   /**
-   * // @Check VariableMissing
+   *
    * @ORM\Column(name="LBK_BANK_DETAILS", type="string", length=2, nullable=true, options={"fixed": true})
    * @Serializer\Expose
    * @Assert\Type(type={"digit"})
    * @Assert\Length(min=2, max=2)
    */
+  @Column({
+    name: 'LBK_BANK_DETAILS',
+    type: 'varchar',
+    length: 2,
+    nullable: true,
+  })
+  key?: string;
   //   protected $key = NULL;
 
   /**
@@ -198,12 +232,19 @@ export class LibraryBankEntity {
   currency?: string;
 
   /**
-   * // @Check VariableMissing
+   *
    * @ORM\Column(name="LBK_SLIP_CHECK_NBR", type="integer", options={"default": 1})
    * @Assert\Type("int")
    * @Assert\GreaterThanOrEqual(1)
    * @Assert\NotNull
    */
+  @Column({
+    name: 'LBK_SLIP_CHECK_NBR',
+    type: 'int',
+    width: 11,
+    default: 1,
+  })
+  nextBordereauNumber?: number;
   //   protected $nextBordereauNumber = 1;
 
   /**
@@ -218,13 +259,20 @@ export class LibraryBankEntity {
   slipCheckNbr?: number;
 
   /**
-   * // @Check VariableMissing
+   *
    * @ORM\Column(name="LBK_TRANSFERT_DEFAULT", type="boolean", options={"default": false})
    * @Serializer\Expose
    * @Serializer\Type("bool")
    * @Assert\Type("bool")
    * @Assert\NotNull
    */
+  @Column({
+    name: 'LBK_TRANSFERT_DEFAULT',
+    type: 'tinyint',
+    width: 1,
+    default: 0,
+  })
+  isDefault?: number;
   //   protected $isDefault = false;
 
   /**
@@ -240,7 +288,7 @@ export class LibraryBankEntity {
   transfertDefault?: number;
 
   /**
-   * // @Check VariableMissing
+   *
    * @ORM\Column(name="LBK_POS", type="integer", options={"default": 0})
    * @Serializer\Expose
    * @Serializer\Type("int")
@@ -248,6 +296,13 @@ export class LibraryBankEntity {
    * @Assert\NotNull
    * @Assert\GreaterThanOrEqual(0)
    */
+  @Column({
+    name: 'LBK_POS',
+    type: 'int',
+    width: 11,
+    default: 0,
+  })
+  position?: number;
   //   protected $position = 0;
 
   /**
