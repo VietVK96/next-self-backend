@@ -12,7 +12,7 @@ import {
  * @Serializer\ExclusionPolicy("all")
  */
 @Entity('traceability')
-export class Traceability {
+export class TraceabilityEntity {
   /**
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
