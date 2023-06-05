@@ -15,7 +15,7 @@ export class DentalMaterialEntity {
    * @Serializer\Groups({"list", "detail"})
    */
   @PrimaryGeneratedColumn('increment', {
-    name: 'GRP_ID',
+    name: 'id',
   })
   id?: number;
 

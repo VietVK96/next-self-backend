@@ -154,14 +154,8 @@ export class EventEntity {
   })
   lateness?: number;
 
-  @Column({
-    name: 'evt_rrule',
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-    default: null
-  })
-  evt_rrule?: string;
+  // Missing from entity php
+  // evt_rrule?: string;
 
   /**
    * @ORM\Column(name="EVT_SOLICITATION", type="integer", nullable=false)
@@ -237,14 +231,7 @@ export class EventEntity {
   // protected $planEvent;
 
   // Missing from entity php
-  @Column({
-    name: 'created_by',
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-    default: null,
-  })
-  created_by: string;
+  // created_by: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
