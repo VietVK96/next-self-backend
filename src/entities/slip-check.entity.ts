@@ -153,3 +153,5 @@ export class SlipCheckEntity {
   updatedAt?: Date;
 
 }
+
+// application/Entities/Slip/Check.php

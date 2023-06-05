@@ -33,5 +33,6 @@ export class ReminderUnitEntity {
     name: 'RMU_NBR'
   })
   nbr?: number;
-
 }
+
+// application/Entities/Reminder/Unit.php
