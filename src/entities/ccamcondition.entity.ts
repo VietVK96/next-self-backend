@@ -6,7 +6,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
  * @Serializer\ExclusionPolicy("all")
  */
 @Entity('ccam_condition')
-export class CcamCondition {
+export class CcamConditionEntity {
   /**
    * @ORM\Id
    * @ORM\GeneratedValue

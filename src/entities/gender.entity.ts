@@ -10,7 +10,7 @@ export enum EnumGenderType {
  * @ORM\Table(name="T_GENDER_GEN")
  */
 @Entity('T_GENDER_GEN')
-export class Gender {
+export class GenderEntity {
   /**
    * @ORM\Column(name="GEN_ID", type="integer", nullable=false)
    * @ORM\Id
