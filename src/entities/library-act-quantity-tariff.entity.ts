@@ -54,5 +54,5 @@ export class LibraryActQuantityTariffEntity {
   tariff?: number;
 }
 
-// application\Entities\LibraryActQuantityTariff.php
-// application\Entity\LibraryActQuantityTariff.php
+//application\Entities\LibraryActQuantityTariff.php
+//application\Entity\LibraryActQuantityTariff.php
