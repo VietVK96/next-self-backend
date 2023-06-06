@@ -66,3 +66,4 @@ export class StorageSpacePackEntity {
   //   protected $storageSpace;
 }
 // application/Entities/Storage/Space/Pack.php
+// application/Entities/StorageSpacePackEntity.php
