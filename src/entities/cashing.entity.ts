@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-export enum EnumCashingPaymentMethod {
+export enum EnumCashingPayment {
   CHEQUE = 'cheque',
   CARTE = 'carte',
   ESPECE = 'espece',
@@ -99,11 +99,11 @@ export class CashingEntity {
   @Column({
     name: 'CSG_PAYMENT',
     type: 'enum',
-    enum: EnumCashingPaymentMethod,
-    default: EnumCashingPaymentMethod.CHEQUE,
+    enum: EnumCashingPayment,
+    default: EnumCashingPayment.CHEQUE,
     nullable: true,
   })
-  payment?: EnumCashingPaymentMethod;
+  payment?: EnumCashingPayment;
 
   /**
    * @ORM\Column(name="CSG_PAYMENT_DATE", type="date")
@@ -145,7 +145,7 @@ export class CashingEntity {
     enum: EnumCashingType,
     default: EnumCashingType.SOLDE,
   })
-  type?: EnumCashingType.SOLDE;
+  type?: EnumCashingType;
 
   /**
    * @ORM\Column(name="CSG_AMOUNT", type="float", nullable=false)
@@ -305,11 +305,11 @@ export class CashingEntity {
   @Column({
     name: 'CSG_PAYMENT',
     type: 'enum',
-    enum: EnumCashingPaymentMethod,
-    default: EnumCashingPaymentMethod.CHEQUE,
+    enum: EnumCashingPayment,
+    default: EnumCashingPayment.CHEQUE,
     nullable: true,
   })
-  method?: EnumCashingPaymentMethod;
+  method?: EnumCashingPayment;
 
   /**
    * @ORM\Column(name="CSG_CHECK_NBR", type="string", length=255, nullable=true)
