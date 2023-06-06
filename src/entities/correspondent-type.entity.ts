@@ -40,3 +40,4 @@ export class CorrespondentTypeEntity {
 }
 
 // application/Entities/CorrespondentType.php
+// application/Entity/AddressBookCategory.php

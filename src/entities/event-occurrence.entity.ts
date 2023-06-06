@@ -64,3 +64,4 @@ export class EventOccurrenceEntity {
 }
 
 // application/Entities/EventOccurrence.php
+// application/Entity/EventOccurrence.php

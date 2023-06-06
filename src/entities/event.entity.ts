@@ -195,6 +195,17 @@ export class EventEntity {
   // protected $contact;
 
   /**
+     * @ORM\ManyToOne(targetEntity="Patient")
+     * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
+     * @Serializer\Expose
+     * @Serializer\Groups({
+     *  "event:read"
+     * })
+     */
+  // @TODO EntityMissing
+  // protected $patient = null;
+
+  /**
      * @ORM\ManyToOne(targetEntity="EventType")
      * @ORM\JoinColumn(name="event_type_id", referencedColumnName="id")
      * @Serializer\Expose
@@ -244,3 +255,4 @@ export class EventEntity {
 }
 
 // application/Entities/Event.php
+// application/Entity/Event.php

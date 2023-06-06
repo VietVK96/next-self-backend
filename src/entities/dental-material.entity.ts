@@ -61,3 +61,4 @@ export class DentalMaterialEntity {
 }
 
 // application/Entities/DentalMaterial.php
+// application/Entity/DentalMaterial.php
