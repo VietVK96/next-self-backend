@@ -24,7 +24,7 @@ export class SyncWzagendaEventEntity {
   @Column({
     name: 'SWE_EVENT_ID',
     type: 'int',
-    length: 11,
+    width: 11,
   })
   eventId?: number;
 
@@ -35,7 +35,7 @@ export class SyncWzagendaEventEntity {
   @Column({
     name: 'SWE_EVENT_UPDATE',
     type: 'int',
-    length: 11,
+    width: 11,
     nullable: true,
   })
   eventUpdate?: number;
@@ -43,7 +43,7 @@ export class SyncWzagendaEventEntity {
   @Column({
     name: 'event_occurrence_id',
     type: 'int',
-    length: 11,
+    width: 11,
     nullable: true,
   })
   eventoccurrenceid?: number;
