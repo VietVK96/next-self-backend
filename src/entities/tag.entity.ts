@@ -63,7 +63,6 @@ export class TagEntity {
   @Column({
     name: 'color',
     type: 'json',
-    default: '{""background"": ""#e0e0e0"", ""foreground"": ""#343a40""}',
   })
   color?: string;
 
