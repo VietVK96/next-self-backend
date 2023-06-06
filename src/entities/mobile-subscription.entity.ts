@@ -1,19 +1,20 @@
 import {
-  Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 /**
- * @ORM\Entity(repositoryClass="\App\Repositories\ConversationMessageRepository")
- * @ORM\Table(name="conversation_message")
+ * @ORM\Entity
+ * @ORM\Table(name="mobile_subscriptions")
  * @ORM\HasLifecycleCallbacks
+ * @Gedmo\SoftDeleteable(fieldName="deletedAt", timeAware=false)
  * @ExclusionPolicy("all")
  */
-@Entity('conversation_message')
-export class ConversationMessageEntityEntity {
+@Entity('mobile_subscriptions')
+export class MobileSubscriptionEntityEntity {
   /**
    * Identifiant de l'enregistrement.
    *
@@ -29,45 +30,33 @@ export class ConversationMessageEntityEntity {
   id?: number;
 
   /**
-   * Entité de la conversation.
+   * Entité du groupe.
    *
-   * @ORM\ManyToOne(targetEntity="ConversationEntity", inversedBy="messages")
-   * @ORM\JoinColumn(name="conversation_id", referencedColumnName="id")
-   * @var \App\Entities\ConversationEntity
+   * @ORM\ManyToOne(targetEntity="GroupEntity")
+   * @ORM\JoinColumn(name="group_id", referencedColumnName="GRP_ID")
+   * @var \App\Entities\GroupEntity
    */
   // @TODO EntityMissing
-  // protected $conversation;
+  // protected $group;
 
   /**
    * Entité de l'utilisateur.
    *
-   * @ORM\ManyToOne(targetEntity="UserEntity")
+   * @ORM\OneToOne(targetEntity="UserEntity", inversedBy="mobileSubscription")
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
-   * @Expose
    * @var \App\Entities\UserEntity
    */
   // @TODO EntityMissing
   // protected $user;
-
-  /**
-   * Corps du message.
-   *
-   * @ORM\Column(name="body", type="text")
-   * @Expose
-   * @var string
-   */
-  @Column({
-    name: 'body',
-    type: 'text',
-    nullable: false,
-  })
-  body?: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt?: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt?: Date;
 }
 
-//application/Entities/ConversationMessageEntity.php
+//application/Entities/MobileSubscriptionEntity.php
