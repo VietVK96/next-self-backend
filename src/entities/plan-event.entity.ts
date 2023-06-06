@@ -1,4 +1,10 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 /**
  * @ORM\Entity
@@ -6,7 +12,6 @@ import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "ty
  */
 @Entity('T_PLAN_EVENT_PLV')
 export class PlanEventEnity {
-
   /**
    * @ORM\Column(name="PLV_POS", type="integer", nullable=false)
    */
@@ -14,7 +19,7 @@ export class PlanEventEnity {
     name: 'PLV_POS',
     type: 'integer',
     nullable: false,
-    default: 1
+    default: 1,
   })
   pos?: number;
 
@@ -25,20 +30,20 @@ export class PlanEventEnity {
     name: 'PLV_DELAY',
     type: 'integer',
     nullable: false,
-    default: 7
+    default: 7,
   })
   delay?: number;
 
   /**
    * Durée de la séance.
-   * 
+   *
    * @ORM\Column(name="duration", type="time", nullable=true)
    * @var \DateTime|null
    */
   @Column({
     name: 'duration',
     type: 'time',
-    nullable: true
+    nullable: true,
   })
   duration?: string;
 
@@ -57,7 +62,6 @@ export class PlanEventEnity {
    */
   // @TODO EntityMissing
   // protected $event;
-
 }
 
 // application/Entities/Plan/Event.php

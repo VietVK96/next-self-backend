@@ -1,11 +1,17 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 //enum('A4', 'A5', 'A5p', '180x210')
 export enum EnumMedicalOrderFormatType {
   A4 = 'A4',
   A5 = 'A5',
   A5P = 'A5p',
-  SCREEN_180x210 = '180x210'
+  SCREEN_180x210 = '180x210',
 }
 
 /**
@@ -15,7 +21,6 @@ export enum EnumMedicalOrderFormatType {
  */
 @Entity('T_MEDICAL_ORDER_MDO')
 export class MedicalOrderEntity {
-
   /**
    * @ORM\Column(name="MDO_ID", type="integer", nullable=false)
    * @ORM\Id
@@ -34,7 +39,7 @@ export class MedicalOrderEntity {
     name: 'MDO_BCB_VERSION',
     type: 'varchar',
     length: 45,
-    nullable: true
+    nullable: true,
   })
   bcbVersion?: string;
 
@@ -44,7 +49,7 @@ export class MedicalOrderEntity {
   @Column({
     name: 'MDO_DATE',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   date?: string;
 
@@ -69,7 +74,7 @@ export class MedicalOrderEntity {
     name: 'title',
     type: 'varchar',
     length: 255,
-    nullable: false
+    nullable: false,
   })
   title?: string;
 
@@ -80,7 +85,7 @@ export class MedicalOrderEntity {
   @Column({
     name: 'MDO_END_DATE',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   endDate?: string;
 
@@ -93,7 +98,7 @@ export class MedicalOrderEntity {
     type: 'enum',
     enum: EnumMedicalOrderFormatType,
     default: EnumMedicalOrderFormatType.A4,
-    nullable: false
+    nullable: false,
   })
   format?: EnumMedicalOrderFormatType;
 
@@ -103,7 +108,7 @@ export class MedicalOrderEntity {
   @Column({
     name: 'MDO_IDENT_PRAT',
     type: 'text',
-    nullable: true
+    nullable: true,
   })
   identPrat?: string;
 
@@ -113,7 +118,7 @@ export class MedicalOrderEntity {
   @Column({
     name: 'MDO_IDENT_CONTACT',
     type: 'text',
-    nullable: false
+    nullable: false,
   })
   identContact?: string;
 
@@ -123,7 +128,7 @@ export class MedicalOrderEntity {
   @Column({
     name: 'MDO_ADDRESS',
     type: 'text',
-    nullable: true
+    nullable: true,
   })
   address?: string;
 
@@ -135,8 +140,8 @@ export class MedicalOrderEntity {
     name: 'MDO_NUMBER_OF_PRESCRIPTION',
     type: 'integer',
     default: 0,
-    nullable: false
-    })
+    nullable: false,
+  })
   numberOfPrescription?: number;
 
   /**
@@ -145,7 +150,7 @@ export class MedicalOrderEntity {
   @Column({
     name: 'MDO_PRESCRIPTION',
     type: 'text',
-    nullable: false
+    nullable: false,
   })
   prescription?: string;
 
@@ -156,7 +161,7 @@ export class MedicalOrderEntity {
   @Column({
     name: 'MDO_COMMENT',
     type: 'text',
-    nullable: true
+    nullable: true,
   })
   comment?: string;
 
@@ -166,7 +171,7 @@ export class MedicalOrderEntity {
   @Column({
     name: 'MDO_HEADER_MSG',
     type: 'text',
-    nullable: true
+    nullable: true,
   })
   headerMsg?: string;
 
@@ -176,7 +181,7 @@ export class MedicalOrderEntity {
   @Column({
     name: 'MDO_HEADER_HEIGHT',
     type: 'integer',
-    nullable: true
+    nullable: true,
   })
   headerHeight?: number;
 
@@ -187,7 +192,7 @@ export class MedicalOrderEntity {
     name: 'MDO_HEADER_ENABLE',
     type: 'tinyint',
     width: 1,
-    nullable: false
+    nullable: false,
   })
   headerEnable?: number;
 
@@ -198,7 +203,7 @@ export class MedicalOrderEntity {
   @Column({
     name: 'MDO_SIGNATURE_PRATICIEN',
     type: 'mediumtext',
-    nullable: true
+    nullable: true,
   })
   signaturePraticien?: string;
 

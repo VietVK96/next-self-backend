@@ -1,12 +1,20 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { UserEntity } from "./user.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { UserEntity } from './user.entity';
 
 //enum('A4', 'A5', 'A5p', '180x210')
 export enum EnumMedicalHeaderFormatType {
   A4 = 'A4',
   A5 = 'A5',
   A5P = 'A5p',
-  SCREEN_180x210 = '180x210'
+  SCREEN_180x210 = '180x210',
 }
 
 /**
@@ -20,7 +28,7 @@ export class MedicalHeaderEntity {
    * @ORM\Column(name="MDH_ID", type="integer", nullable=false)
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="IDENTITY")
-  */
+   */
   @PrimaryGeneratedColumn('increment', {
     name: 'MDH_ID',
   })
@@ -156,7 +164,7 @@ export class MedicalHeaderEntity {
     type: 'enum',
     nullable: true,
     enum: EnumMedicalHeaderFormatType,
-    default: EnumMedicalHeaderFormatType.A4
+    default: EnumMedicalHeaderFormatType.A4,
   })
   format?: EnumMedicalHeaderFormatType;
 
@@ -167,7 +175,7 @@ export class MedicalHeaderEntity {
     name: 'MDH_ENABLE',
     type: 'tinyint',
     nullable: true,
-    width: 1
+    width: 1,
   })
   enable?: number;
 
@@ -177,6 +185,5 @@ export class MedicalHeaderEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt?: Date;
 }
-
 
 // application/Entities/Medical/Header.php

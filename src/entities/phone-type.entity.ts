@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\Phone\Type")
@@ -6,7 +6,6 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
  */
 @Entity('T_PHONE_TYPE_PTY')
 export class PhoneTypeEntity {
-
   /**
    * @ORM\Column(name="PTY_ID", type="integer", nullable=false)
    * @ORM\Id
@@ -24,7 +23,7 @@ export class PhoneTypeEntity {
     name: 'PTY_NAME',
     type: 'string',
     length: 81,
-    nullable: false
+    nullable: false,
   })
   name?: string;
 
@@ -49,7 +48,7 @@ export class PhoneTypeEntity {
   @Column({
     name: 'PTY_POS',
     type: 'integer',
-    default: 0
+    default: 0,
   })
   pos?: number;
 
