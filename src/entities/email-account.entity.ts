@@ -90,7 +90,7 @@ export class EmailAccountEntity {
    * @Assert\Email(mode=Assert\Email::VALIDATION_MODE_STRICT)
    */
   @Column({
-    name: '	reply_to_address',
+    name: 'reply_to_address',
     type: 'varchar',
     length: 255,
     nullable: true,
@@ -104,7 +104,7 @@ export class EmailAccountEntity {
    * @Gedmo\SortablePosition
    */
   @Column({
-    name: '	position',
+    name: 'position',
     type: 'int',
     width: 11,
     default: 0,
