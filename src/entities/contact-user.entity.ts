@@ -33,6 +33,13 @@ export class ContactUserEntity {
   // @TODO EntityMissing
   // protected $user;
 
+  /**
+   * @ORM\ManyToOne(targetEntity="PatientEntity", inversedBy="patientUsers", cascade={"persist"})
+   * @ORM\JoinColumn(name="con_id", referencedColumnName="CON_ID")
+   */
+  // @TODO EntityMissing
+  // protected $patient;
+
   @Column({
     name: 'cou_unpaid_level',
     type: 'int',
