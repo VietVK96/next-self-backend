@@ -72,3 +72,5 @@ export class CcamMenu {
   })
   paragraphe?: string;
 }
+
+//application\Entity\CcamMenu.php
