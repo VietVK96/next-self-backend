@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
-export enum EnumThirdPartyAmcStatus {
+export enum EnumThirdPartyStatus {
   WAITING = 'WTN',
   INCOMPLETE = 'INK',
   PAID = 'PYD',
@@ -184,9 +184,9 @@ export class ThirdPartyAmcEntity {
     name: 'status',
     type: 'char',
     length: 3,
-    default: EnumThirdPartyAmcStatus.WAITING,
+    default: EnumThirdPartyStatus.WAITING,
   })
-  status?: string;
+  status?: EnumThirdPartyStatus;
 
   /**
    * @ORM\ManyToOne(targetEntity="Amc")
