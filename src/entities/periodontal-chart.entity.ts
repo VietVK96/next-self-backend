@@ -53,7 +53,6 @@ export class PeriodontalChartEntity {
   @Column({
     name: 'creation_date',
     type: 'date',
-    nullable: false
   })
   creationDate?: string;
 
@@ -67,7 +66,6 @@ export class PeriodontalChartEntity {
   @Column({
     name: 'status',
     type: 'int',
-    nullable: false,
     default: 1
   })
   status?: number;

@@ -6,7 +6,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
  * @Serializer\ExclusionPolicy("all")
  */
 @Entity('payment_schedule_line')
-export class PaymentPlanDeadline {
+export class PaymentPlanDeadlineEntity {
 
   /**
    * @ORM\Id
@@ -43,7 +43,6 @@ export class PaymentPlanDeadline {
   @Column({
     name: 'date',
     type: 'date',
-    nullable: false
   })
   dueDate?: string;
 
@@ -63,7 +62,6 @@ export class PaymentPlanDeadline {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    nullable: false
   })
   amount?: number;
 
