@@ -78,7 +78,7 @@ export class UserResourceEntity {
     type: 'json',
     default: '"default": "{""background"": ""#000000"", ""foreground"": ""#ffffff""}"'
   })
-  color?: string
+  color?: string;
 
   /**
    * @ORM\Column(name="use_default_color", type="boolean", options={"default": true})
