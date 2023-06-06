@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 // enum('none', 'both', 'three')
 export enum UserPreferenceQuotationDisplayOdontogramType {
@@ -20,7 +20,6 @@ export enum UserPreferenceQuotationDisplayAnnexeType {
  */
 @Entity('T_USER_PREFERENCE_QUOTATION_UPQ')
 export class UserPreferenceQuotationEntity {
-
   /**
    * @ORM\Column(name="UPQ_ID", type="integer")
    * @ORM\Id
@@ -28,7 +27,7 @@ export class UserPreferenceQuotationEntity {
    * @var integer Identifiant de l'enregistrement
    */
   @PrimaryGeneratedColumn('increment', {
-    name: "UPQ_ID",
+    name: 'UPQ_ID',
   })
   id?: number;
 
@@ -40,7 +39,7 @@ export class UserPreferenceQuotationEntity {
     name: 'UPQ_COLOR',
     type: 'varchar',
     length: 45,
-    nullable: true
+    nullable: true,
   })
   color?: string;
 
@@ -51,7 +50,7 @@ export class UserPreferenceQuotationEntity {
     name: 'period_of_validity',
     type: 'integer',
     nullable: false,
-    default: 6
+    default: 6,
   })
   periodOfValidity?: number;
 
@@ -63,7 +62,7 @@ export class UserPreferenceQuotationEntity {
     name: 'UPQ_PLACE_OF_MANUFACTURE',
     type: 'integer',
     nullable: false,
-    default: 1
+    default: 1,
   })
   placeOfManufacture?: number;
 
@@ -75,7 +74,7 @@ export class UserPreferenceQuotationEntity {
     name: 'UPQ_PLACE_OF_MANUFACTURE_LABEL',
     type: 'varchar',
     length: 16,
-    nullable: true
+    nullable: true,
   })
   placeOfManufactureLabel?: string;
 
@@ -88,7 +87,7 @@ export class UserPreferenceQuotationEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   withSubcontracting?: number;
 
@@ -99,7 +98,7 @@ export class UserPreferenceQuotationEntity {
   @Column({
     name: 'UPQ_PLACE_OF_SUBCONTRACTING',
     type: 'integer',
-    nullable: true
+    nullable: true,
   })
   placeOfSubcontracting?: number;
 
@@ -111,7 +110,7 @@ export class UserPreferenceQuotationEntity {
     name: 'UPQ_PLACE_OF_SUBCONTRACTING_LABEL',
     type: 'varchar',
     length: 16,
-    nullable: true
+    nullable: true,
   })
   placeOfSubcontractingLabel?: string;
 
@@ -124,7 +123,7 @@ export class UserPreferenceQuotationEntity {
     type: 'enum',
     enum: UserPreferenceQuotationDisplayOdontogramType,
     default: UserPreferenceQuotationDisplayOdontogramType.NONE,
-    nullable: false
+    nullable: false,
   })
   displayOdontogram?: UserPreferenceQuotationDisplayOdontogramType;
 
@@ -137,7 +136,7 @@ export class UserPreferenceQuotationEntity {
     type: 'enum',
     enum: UserPreferenceQuotationDisplayAnnexeType,
     default: UserPreferenceQuotationDisplayAnnexeType.BOTH,
-    nullable: false
+    nullable: false,
   })
   displayAnnexe?: UserPreferenceQuotationDisplayAnnexeType;
 
@@ -150,7 +149,7 @@ export class UserPreferenceQuotationEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   displayNotice?: number;
 
@@ -163,7 +162,7 @@ export class UserPreferenceQuotationEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   displayTooltip?: number;
 
@@ -176,7 +175,7 @@ export class UserPreferenceQuotationEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   displayDuplicata?: number;
 
@@ -188,7 +187,7 @@ export class UserPreferenceQuotationEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 0
+    default: 0,
   })
   treatmentTimeline?: number;
 
@@ -199,7 +198,6 @@ export class UserPreferenceQuotationEntity {
    */
   // @TODO EntityMissing
   // protected $user;
-
 }
 
 // application/Entities/User/Preference/Quotation.php

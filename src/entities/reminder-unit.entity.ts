@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * @ORM\Entity
@@ -6,7 +6,6 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
  */
 @Entity('T_REMINDER_UNIT_RMU')
 export class ReminderUnitEntity {
-
   /**
    * @ORM\Column(name="RMU_ID", type="integer", nullable=false)
    * @ORM\Id
@@ -30,7 +29,7 @@ export class ReminderUnitEntity {
    * @ORM\Column(name="RMU_NBR", type="integer", nullable=false)
    */
   @Column({
-    name: 'RMU_NBR'
+    name: 'RMU_NBR',
   })
   nbr?: number;
 }
