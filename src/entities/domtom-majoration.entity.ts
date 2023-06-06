@@ -11,6 +11,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
  * @Serializer\ExclusionPolicy("all")
  * @UniqueEntity(fields={"ccam", "domtom"})
  */
+// File: application\Entity\DomtomMajoration.php: DomtomMajoration extends AbstractEntity
 @Entity('domtom_majoration')
 export class DomtomMajorationEntity {
   /**
