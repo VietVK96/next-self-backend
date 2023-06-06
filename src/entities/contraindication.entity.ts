@@ -22,7 +22,7 @@ import {
  * @Serializer\ExclusionPolicy("all")
  */
 @Entity('T_MEDICAL_LIBRARY_CONTRAINDICATION_MLC')
-export class Contraindication {
+export class ContraindicationEntity {
   // use OrganizationTrait;
   /**
    * @ORM\ManyToOne(targetEntity="Organization")

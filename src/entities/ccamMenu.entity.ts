@@ -11,7 +11,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
  * @Serializer\ExclusionPolicy("all")
  */
 @Entity('ccam_menu')
-export class CcamMenu {
+export class CcamMenuEntity {
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -53,7 +53,7 @@ export class CcamMenu {
    */
   @Column({
     name: 'libelle',
-    type: 'string',
+    type: 'varchar',
     length: 254,
   })
   libelle?: string;
@@ -66,7 +66,7 @@ export class CcamMenu {
    */
   @Column({
     name: 'paragraphe',
-    type: 'string',
+    type: 'varchar',
     length: 11,
     nullable: true,
   })

@@ -11,7 +11,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
  * @Serializer\ExclusionPolicy("all")
  */
 @Entity('ccam_panier')
-export class CcamPanier {
+export class CcamPanierEntity {
   /**
    * @ORM\Id
    * @ORM\GeneratedValue

@@ -10,7 +10,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
  * )
  */
 @Entity('ccam_tooth')
-export class CcamTooth {
+export class CcamToothEntity {
   /**
    * @ORM\Id
    * @ORM\GeneratedValue

@@ -10,7 +10,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
  * @Serializer\ExclusionPolicy("all")
  */
 @Entity('ccam_family')
-export class CcamFamily {
+export class CcamFamilyEntity {
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -57,7 +57,7 @@ export class CcamFamily {
    * @Assert\Length(max=255)
    */
   @Column({
-    name: 'code',
+    name: 'label',
     type: 'varchar',
     length: 255,
   })

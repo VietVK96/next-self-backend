@@ -6,7 +6,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
  * @Serializer\ExclusionPolicy("all")
  */
 @Entity('domtom')
-export class Domtom {
+export class DomtomEntity {
   /**
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="NONE")
