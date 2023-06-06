@@ -1,4 +1,11 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\MobileAuthenticationCodeRepository")
@@ -11,10 +18,9 @@ import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedCol
  */
 @Entity('mobile_authentication_codes')
 export class MobileAuthenticationCodeEntityEntity {
-
   /**
    * Identifiant de l'enregistrement.
-   * 
+   *
    * @ORM\Column(name="id", type="integer")
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="IDENTITY")
@@ -28,7 +34,7 @@ export class MobileAuthenticationCodeEntityEntity {
 
   /**
    * Entité du groupe.
-   * 
+   *
    * @ORM\ManyToOne(targetEntity="GroupEntity")
    * @ORM\JoinColumn(name="group_id", referencedColumnName="GRP_ID")
    * @var \App\Entities\GroupEntity
@@ -38,7 +44,7 @@ export class MobileAuthenticationCodeEntityEntity {
 
   /**
    * Entité de l'utilisateur.
-   * 
+   *
    * @ORM\OneToOne(targetEntity="UserEntity")
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    * @var \App\Entities\UserEntity
@@ -48,7 +54,7 @@ export class MobileAuthenticationCodeEntityEntity {
 
   /**
    * Entité du patient.
-   * 
+   *
    * @ORM\ManyToOne(targetEntity="PatientEntity")
    * @ORM\JoinColumn(name="patient_id", referencedColumnName="CON_ID")
    * @Expose
@@ -59,7 +65,7 @@ export class MobileAuthenticationCodeEntityEntity {
 
   /**
    * Code d'authentification.
-   * 
+   *
    * @ORM\Column(name="code", type="string", length=6)
    * @Expose
    * @var string
@@ -68,10 +74,9 @@ export class MobileAuthenticationCodeEntityEntity {
     name: 'code',
     type: 'varchar',
     length: 6,
-    nullable: false
+    nullable: false,
   })
   code?: string;
-
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

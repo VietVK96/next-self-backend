@@ -1,4 +1,10 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\Memo")
@@ -7,7 +13,6 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
  */
 @Entity('T_MEMO_MEM')
 export class MemoEntity {
-
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -51,7 +56,7 @@ export class MemoEntity {
   @Column({
     name: 'MEM_DATE',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   date?: string;
 
@@ -65,7 +70,7 @@ export class MemoEntity {
   @Column({
     name: 'MEM_MSG',
     type: 'text',
-    nullable: true
+    nullable: true,
   })
   message?: string;
 
@@ -76,7 +81,7 @@ export class MemoEntity {
   @Column({
     name: 'MEM_MSG',
     type: 'text',
-    nullable: true
+    nullable: true,
   })
   msg?: string;
 
