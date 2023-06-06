@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-export enum EnumCashingPayment {
+export enum EnumCashingPaymentMethod {
   CHEQUE = 'cheque',
   CARTE = 'carte',
   ESPECE = 'espece',
@@ -99,10 +99,11 @@ export class CashingEntity {
   @Column({
     name: 'CSG_PAYMENT',
     type: 'enum',
-    enum: EnumCashingPayment,
-    default: EnumCashingPayment.CHEQUE,
+    enum: EnumCashingPaymentMethod,
+    default: EnumCashingPaymentMethod.CHEQUE,
+    nullable: true,
   })
-  payment?: EnumCashingPayment;
+  payment?: EnumCashingPaymentMethod;
 
   /**
    * @ORM\Column(name="CSG_PAYMENT_DATE", type="date")
@@ -224,6 +225,149 @@ export class CashingEntity {
    */
   // @TODO EntityMissing
   //   protected $cashingContacts;
+
+  /**
+   * @ORM\ManyToOne(targetEntity="User")
+   * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
+   * @Serializer\Expose
+   * @Serializer\MaxDepth(1)
+   */
+  // @TODO EntityMissing
+  // protected $user;
+
+  /**
+   * @ORM\ManyToOne(targetEntity="Patient")
+   * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID", nullable=true)
+   */
+  // @TODO EntityMissing
+  // protected $payer = NULL;
+
+  /**
+   * @ORM\ManyToOne(targetEntity="Bank")
+   * @ORM\JoinColumn(name="LBK_ID", referencedColumnName="LBK_ID", nullable=true)
+   * @Serializer\Expose
+   * @Serializer\MaxDepth(1)
+   */
+  // @TODO EntityMissing
+  // protected $bank = null;
+
+  /**
+   * @ORM\ManyToOne(targetEntity="Bordereau", inversedBy="payments")
+   * @ORM\JoinColumn(name="SLC_ID", referencedColumnName="SLC_ID", nullable=true)
+   */
+  // @TODO EntityMissing
+  // protected $bordereau = NULL;
+
+  /**
+   * @ORM\Column(name="CSG_DEBTOR", type="string", length=255)
+   * @Serializer\Expose
+   * @Assert\Type("string")
+   * @Assert\NotBlank
+   * @Assert\Length(max=255)
+   */
+  @Column({
+    name: 'CSG_DEBTOR',
+    type: 'text',
+    nullable: true,
+  })
+  label?: string;
+
+  /**
+   * @ORM\Column(name="CSG_MSG", type="text", nullable=true)
+   * @Serializer\Expose
+   * @Assert\Type("string")
+   */
+  @Column({
+    name: 'CSG_MSG',
+    type: 'text',
+    nullable: true,
+  })
+  observation?: string;
+
+  /**
+   * @ORM\Column(name="CSG_DATE", type="date", nullable=true)
+   * @Serializer\Expose
+   * @Serializer\Type("DateTime<'Y-m-d'>")
+   * @Assert\Date
+   */
+  @Column({
+    name: 'CSG_DATE',
+    type: 'date',
+    nullable: true,
+  })
+  entryDate?: string;
+
+  /**
+   * @ORM\Column(name="CSG_PAYMENT", type="enum_payment_method", nullable=true, options={"default": "cheque"})
+   * @Serializer\Expose
+   * @Assert\Choice(callback={"App\Enum\PaymentMethodEnum", "getValues"})
+   */
+  @Column({
+    name: 'CSG_PAYMENT',
+    type: 'enum',
+    enum: EnumCashingPaymentMethod,
+    default: EnumCashingPaymentMethod.CHEQUE,
+    nullable: true,
+  })
+  method?: EnumCashingPaymentMethod;
+
+  /**
+   * @ORM\Column(name="CSG_CHECK_NBR", type="string", length=255, nullable=true)
+   * @Assert\Type("string")
+   * @Assert\Length(max=255)
+   */
+  @Column({
+    name: 'CSG_CHECK_NBR',
+    type: 'varchar',
+    length: 45,
+    nullable: true,
+  })
+  checkNumber?: string;
+
+  /**
+   * @ORM\Column(name="is_tp", type="boolean", options={"default": false})
+   * @Serializer\Expose
+   * @Serializer\Type("boolean")
+   * @Assert\Type("boolean")
+   * @Assert\NotNull
+   */
+  @Column({
+    name: 'is_tp',
+    type: 'tinyint',
+    width: 1,
+    default: 0,
+  })
+  isTp?: number;
+
+  /**
+   * @ORM\OneToMany(targetEntity="PaymentPayee", mappedBy="payment", cascade={"persist", "remove"}, orphanRemoval=true)
+   * @Serializer\Expose
+   */
+  // @TODO EntityMissing
+  // protected $payees;
+
+  /**
+   * @ORM\ManyToMany(targetEntity="ThirdPartyAmo")
+   * @ORM\JoinTable(name="payment_third_party_amo", joinColumns={
+   *  @ORM\JoinColumn(name="payment_id", referencedColumnName="CSG_ID")
+   * }, inverseJoinColumns={
+   *  @ORM\JoinColumn(name="third_party_amo_id", referencedColumnName="id")
+   * })
+   */
+  // @TODO EntityMissing
+  // protected $thirdPartyAmos;
+
+  /**
+   * @ORM\ManyToMany(targetEntity="ThirdPartyAmc")
+   * @ORM\JoinTable(name="payment_third_party_amc", joinColumns={
+   *  @ORM\JoinColumn(name="payment_id", referencedColumnName="CSG_ID")
+   * }, inverseJoinColumns={
+   *  @ORM\JoinColumn(name="third_party_amc_id", referencedColumnName="id")
+   * })
+   */
+  // @TODO EntityMissing
+  // protected $thirdPartyAmcs;
 }
 
 // application\Entities\Cashing.php
+// application\Entity\Payment.php
