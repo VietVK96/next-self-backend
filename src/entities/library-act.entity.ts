@@ -117,7 +117,7 @@ export class LibraryActEntity {
     default: EnumLibraryActNomenclature.CCAM,
     nullable: true,
   })
-  nomenclature?: EnumLibraryActNomenclature.CCAM;
+  nomenclature?: EnumLibraryActNomenclature;
 
   /**
    * @ORM\Column(name="materials", type="simple_array", nullable=true)

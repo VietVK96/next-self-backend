@@ -52,7 +52,7 @@ export class PlanEntity {
     enum: EnumPlanType,
     default: EnumPlanType.PLAN,
   })
-  type?: EnumPlanType.PLAN;
+  type?: EnumPlanType;
 
   /**
    * @ORM\Column(name="PLF_AMOUNT", type="float")

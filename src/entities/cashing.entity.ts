@@ -144,7 +144,7 @@ export class CashingEntity {
     enum: EnumCashingType,
     default: EnumCashingType.SOLDE,
   })
-  type?: EnumCashingType.SOLDE;
+  type?: EnumCashingType;
 
   /**
    * @ORM\Column(name="CSG_AMOUNT", type="float", nullable=false)

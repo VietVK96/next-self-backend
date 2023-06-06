@@ -105,7 +105,7 @@ export class LettersEntity {
     nullable: true,
     default: EnumLettersType.CONTACT,
   })
-  category?: EnumLettersType.CONTACT;
+  category?: EnumLettersType;
 
   /** File: application\Entities\Letters.php and application\Entity\Mail.php
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
