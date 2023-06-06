@@ -1,4 +1,10 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 /**
  * @ORM\Entity
@@ -7,7 +13,6 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
  */
 @Entity('T_PAYPAL_PAYMENT_PPY')
 export class PaypalPaymentEntity {
-
   /**
    * @ORM\Column(name="PPY_ID", type="string", length=30)
    * @ORM\Id
@@ -25,7 +30,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_TXN_ID',
     type: 'varchar',
     length: 30,
-    nullable: false
+    nullable: false,
   })
   txnId?: string;
 
@@ -36,7 +41,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_TXN_TYPE',
     type: 'varchar',
     length: 100,
-    nullable: true
+    nullable: true,
   })
   txnType?: string;
 
@@ -47,7 +52,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_PAYER_ID',
     type: 'varchar',
     length: 30,
-    nullable: true
+    nullable: true,
   })
   payerId?: string;
 
@@ -58,7 +63,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_PAYER_STATUS',
     type: 'varchar',
     length: 100,
-    nullable: true
+    nullable: true,
   })
   payerStatus?: string;
 
@@ -69,7 +74,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_PAYER_LASTNAME',
     type: 'varchar',
     length: 100,
-    nullable: true
+    nullable: true,
   })
   payerLastname?: string;
 
@@ -80,7 +85,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_PAYER_FIRSTNAME',
     type: 'varchar',
     length: 100,
-    nullable: true
+    nullable: true,
   })
   payerFirstname?: string;
 
@@ -91,7 +96,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_PAYER_MAIL',
     type: 'varchar',
     length: 100,
-    nullable: true
+    nullable: true,
   })
   payerEmail?: string;
 
@@ -102,7 +107,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_PAYER_STREET',
     type: 'varchar',
     length: 100,
-    nullable: true
+    nullable: true,
   })
   payerStreet?: string;
 
@@ -113,7 +118,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_PAYER_CITY',
     type: 'varchar',
     length: 50,
-    nullable: true
+    nullable: true,
   })
   payerCity?: string;
 
@@ -124,7 +129,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_PAYER_STATE',
     type: 'char',
     length: 3,
-    nullable: true
+    nullable: true,
   })
   payerState?: string;
 
@@ -135,7 +140,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_PAYER_ZIP_CODE',
     type: 'varchar',
     length: 11,
-    nullable: true
+    nullable: true,
   })
   payerZipCode?: string;
 
@@ -146,7 +151,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_PAYER_COUNTRY',
     type: 'varchar',
     length: 20,
-    nullable: true
+    nullable: true,
   })
   payerCountry?: string;
 
@@ -157,7 +162,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_ITEM_NAME',
     type: 'varchar',
     length: 255,
-    nullable: true
+    nullable: true,
   })
   itemName?: string;
 
@@ -168,7 +173,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_ITEM_NBR',
     type: 'varchar',
     length: 50,
-    nullable: true
+    nullable: true,
   })
   itemNbr?: string;
 
@@ -179,7 +184,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_ITEM_QTY',
     type: 'char',
     length: 3,
-    nullable: true
+    nullable: true,
   })
   itemQty?: string;
 
@@ -190,7 +195,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_PAYMENT_DATE',
     type: 'varchar',
     length: 50,
-    nullable: true
+    nullable: true,
   })
   paymentDate?: string;
 
@@ -201,7 +206,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_PAYMENT_TYPE',
     type: 'varchar',
     length: 10,
-    nullable: true
+    nullable: true,
   })
   paymentType?: string;
 
@@ -212,7 +217,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_PAYMENT_STATUS',
     type: 'varchar',
     length: 15,
-    nullable: true
+    nullable: true,
   })
   paymentStatus?: string;
 
@@ -223,7 +228,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_PAYMENT_GROSS',
     type: 'varchar',
     length: 6,
-    nullable: true
+    nullable: true,
   })
   paymentGross?: string;
 
@@ -234,7 +239,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_PAYMENT_FEE',
     type: 'varchar',
     length: 5,
-    nullable: true
+    nullable: true,
   })
   paymentFee?: string;
 
@@ -245,7 +250,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_PAYMENT_TAX',
     type: 'varchar',
     length: 10,
-    nullable: true
+    nullable: true,
   })
   paymentTax?: string;
 
@@ -256,7 +261,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_PAYMENT_CURRENCY',
     type: 'varchar',
     length: 5,
-    nullable: true
+    nullable: true,
   })
   paymentCurrency?: string;
 
@@ -267,7 +272,7 @@ export class PaypalPaymentEntity {
     name: 'PPY_CUSTOM',
     type: 'varchar',
     length: 255,
-    nullable: true
+    nullable: true,
   })
   custom?: string;
 

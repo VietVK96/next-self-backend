@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * @ORM\Entity
@@ -6,7 +6,6 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
  */
 @Entity('T_REMINDER_TYPE_RMT')
 export class ReminderTypeEntity {
-
   /**
    * @ORM\Column(name="RMT_ID", type="integer", nullable=false)
    * @ORM\Id
@@ -25,7 +24,6 @@ export class ReminderTypeEntity {
     length: 45,
   })
   name?: string;
-
 }
 
 // application/Entities/Reminder/Type.php
