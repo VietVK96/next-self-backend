@@ -63,3 +63,5 @@ export class CcamFamily {
   })
   label?: string;
 }
+
+// application\Entity\CcamFamily.php
