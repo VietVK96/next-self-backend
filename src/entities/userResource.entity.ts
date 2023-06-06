@@ -56,6 +56,77 @@ export class UserResourceEntity {
   })
   accessLevel?: number;
 
+  /**
+     * @ORM\Column(name="color", type="json", options={"default": "{""background"": ""#000000"", ""foreground"": ""#ffffff""}"})
+     * @Serializer\Expose
+     * @Serializer\Groups({
+     *  "resource:index",
+     *  "resource:read",
+     *  "details"
+     * })
+     * @Serializer\Type("array")
+     * @Assert\Collection(
+     *  fields={
+     *      "background"=@Assert\Required({@Assert\NotBlank}),
+     *      "foreground"=@Assert\Required({@Assert\NotBlank})
+     *  }
+     * )
+     * @Assert\NotNull
+     */
+  @Column({
+    name: 'color',
+    type: 'json',
+    default: '"default": "{""background"": ""#000000"", ""foreground"": ""#ffffff""}"'
+  })
+  color?: string
+
+  /**
+   * @ORM\Column(name="use_default_color", type="boolean", options={"default": true})
+   * @Serializer\Expose
+   * @Serializer\Groups({
+   *  "resource:index",
+   *  "resource:read",
+   *  "details"
+   * })
+   * @Serializer\Type("bool")
+   * @Assert\Type("bool")
+   * @Assert\NotNull
+   */
+  @Column({
+    name: 'use_default_color',
+    type: 'boolean',
+    default: true,
+  })
+  useDefaultColor?: boolean;
+
+  /**
+   * @ORM\Column(name="free", type="boolean", options={"default": true})
+   * @Assert\Type("bool")
+   * @Assert\NotNull
+   */
+  @Column({
+    name: 'free',
+    type: 'boolean',
+    default: true,
+  })
+  free?: boolean;
+
+  /**
+     * @ORM\ManyToMany(targetEntity="User", inversedBy="resources", cascade={"persist", "remove"})
+     * @ORM\JoinTable(
+     *  name="user_resource",
+     *  joinColumns={
+     *      @ORM\JoinColumn(name="resource_id", referencedColumnName="id")
+     *  },
+     *  inverseJoinColumns={
+     *      @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
+     *  }
+     * )
+     */
+  // @TODO EntityMissing
+  // protected $subscribers;
+
 }
 
 // application/Entities/UserResource.php
+// application/Entity/Resource.php
