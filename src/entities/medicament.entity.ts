@@ -168,7 +168,8 @@ export class MedicamentEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"medicament:read"})
    */
-  protected $contraindications;
+  // @TODO EntityMissing
+  // protected $contraindications;
 
   // from file extends
   /**

@@ -97,7 +97,7 @@ export class LotEntity {
     name: 'mode',
     type: 'char',
     length: 1,
-    default: 3,
+    default: '3',
   })
   mode?: string;
 
