@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\NgapKeyRepository")
@@ -13,9 +13,9 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 @Entity('ngap_key')
 export class NgapKeyEntity {
   /**
-  * @ORM\ManyToOne(targetEntity="Organization")
-  * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
-  */
+   * @ORM\ManyToOne(targetEntity="Organization")
+   * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
+   */
   // @TODO EntityMissing
   // organization;
 
@@ -45,7 +45,7 @@ export class NgapKeyEntity {
     name: 'name',
     type: 'varchar',
     length: 10,
-    nullable: false
+    nullable: false,
   })
   name?: string;
 
@@ -64,7 +64,7 @@ export class NgapKeyEntity {
     precision: 10,
     scale: 2,
     nullable: false,
-    default: 0.00
+    default: 0.0,
   })
   unitPrice?: number;
 
@@ -83,7 +83,7 @@ export class NgapKeyEntity {
     precision: 10,
     scale: 2,
     nullable: false,
-    default: 25.15
+    default: 25.15,
   })
   complementNight?: number;
 
@@ -102,7 +102,7 @@ export class NgapKeyEntity {
     precision: 10,
     scale: 2,
     nullable: false,
-    default: 19.06
+    default: 19.06,
   })
   complementHoliday?: number;
 
@@ -119,8 +119,7 @@ export class NgapKeyEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
-
+    default: 1,
   })
   used?: number;
 

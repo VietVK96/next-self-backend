@@ -1,4 +1,10 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\ConversationMessageRepository")
@@ -8,10 +14,9 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
  */
 @Entity('conversation_message')
 export class ConversationMessageEntityEntity {
-
   /**
    * Identifiant de l'enregistrement.
-   * 
+   *
    * @ORM\Column(name="id", type="integer")
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="IDENTITY")
@@ -25,7 +30,7 @@ export class ConversationMessageEntityEntity {
 
   /**
    * Entité de la conversation.
-   * 
+   *
    * @ORM\ManyToOne(targetEntity="ConversationEntity", inversedBy="messages")
    * @ORM\JoinColumn(name="conversation_id", referencedColumnName="id")
    * @var \App\Entities\ConversationEntity
@@ -35,7 +40,7 @@ export class ConversationMessageEntityEntity {
 
   /**
    * Entité de l'utilisateur.
-   * 
+   *
    * @ORM\ManyToOne(targetEntity="UserEntity")
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    * @Expose
@@ -46,7 +51,7 @@ export class ConversationMessageEntityEntity {
 
   /**
    * Corps du message.
-   * 
+   *
    * @ORM\Column(name="body", type="text")
    * @Expose
    * @var string
@@ -54,7 +59,7 @@ export class ConversationMessageEntityEntity {
   @Column({
     name: 'body',
     type: 'text',
-    nullable: false
+    nullable: false,
   })
   body?: string;
 

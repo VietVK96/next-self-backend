@@ -14,4 +14,3 @@ export const makeRandomString = (len: number, chars: string): string => {
 export const getBetween = (str: string, start: string, end: string) => {
   return str.split(start).pop().split(end)[0];
 };
-
