@@ -65,7 +65,7 @@ export class TeletransmissionEntity {
   @Column({
     name: 'external_reference_id',
     type: 'int',
-    length: 11,
+    width: 11,
   })
   externalReferenceId?: number;
 
