@@ -82,4 +82,4 @@ export class AmcEntity {
 }
 
 
-//application/Entity/Amc/php
+//application/Entity/Amc.php
