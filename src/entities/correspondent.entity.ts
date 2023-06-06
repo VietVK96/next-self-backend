@@ -1,4 +1,11 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\Correspondent")
@@ -44,7 +51,7 @@ export class CorrespondentEntity {
     name: 'CPD_TYPE',
     type: 'varchar',
     length: 50,
-    nullable: true
+    nullable: true,
   })
   type?: string;
   /**
@@ -58,7 +65,7 @@ export class CorrespondentEntity {
     name: 'CPD_LASTNAME',
     type: 'varchar',
     length: 255,
-    nullable: false
+    nullable: false,
   })
   lastName?: string;
 
@@ -72,7 +79,7 @@ export class CorrespondentEntity {
     name: 'CPD_FIRSTNAME',
     type: 'varchar',
     length: 255,
-    nullable: true
+    nullable: true,
   })
   firstName?: string;
 
@@ -86,7 +93,7 @@ export class CorrespondentEntity {
     name: 'CPD_MAIL',
     type: 'varchar',
     length: 50,
-    nullable: true
+    nullable: true,
   })
   email?: string;
 
@@ -98,7 +105,7 @@ export class CorrespondentEntity {
   @Column({
     name: 'CPD_MSG',
     type: 'text',
-    nullable: true
+    nullable: true,
   })
   observation?: string;
 
@@ -108,7 +115,7 @@ export class CorrespondentEntity {
   @Column({
     name: 'CPD_MSG',
     type: 'text',
-    nullable: true
+    nullable: true,
   })
   msg?: string;
 
@@ -149,7 +156,7 @@ export class CorrespondentEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt?: Date;
-  
+
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt?: Date;
 }

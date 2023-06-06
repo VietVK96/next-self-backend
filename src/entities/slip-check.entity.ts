@@ -1,4 +1,10 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum EnumSlipCheckPaymentChoice {
   ESPECE = 'espece',
@@ -12,10 +18,9 @@ export enum EnumSlipCheckPaymentChoice {
  * @ORM\Entity
  * @ORM\Table(name="T_SLIP_CHECK_SLC")
  * @ORM\HasLifecycleCallbacks
-*/
+ */
 @Entity('T_SLIP_CHECK_SLC')
 export class SlipCheckEntity {
-
   /**
    * @ORM\Column(name="SLC_ID", type="integer")
    * @ORM\Id
@@ -48,12 +53,12 @@ export class SlipCheckEntity {
   date?: string;
 
   /**
-     * @ORM\Column(name="label", type="string", length=255)
-     * @Serializer\Expose
-     * @Assert\Type("string")
-     * @Assert\NotBlank
-     * @Assert\Length(max=255)
-     */
+   * @ORM\Column(name="label", type="string", length=255)
+   * @Serializer\Expose
+   * @Assert\Type("string")
+   * @Assert\NotBlank
+   * @Assert\Length(max=255)
+   */
   @Column({
     name: 'label',
     length: 255,
@@ -71,7 +76,7 @@ export class SlipCheckEntity {
     length: 255,
     default: EnumSlipCheckPaymentChoice.CHEQUE,
   })
-  paymentChoice?: EnumSlipCheckPaymentChoice
+  paymentChoice?: EnumSlipCheckPaymentChoice;
 
   /**
    * @ORM\Column(name="payment_count", type="integer", options={"default": 1})
@@ -99,7 +104,7 @@ export class SlipCheckEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    default: 0.00,
+    default: 0.0,
   })
   amount?: number;
 
@@ -118,10 +123,10 @@ export class SlipCheckEntity {
   // protected $cashings;
 
   /**
-     * @ORM\ManyToOne(targetEntity="User")
-     * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
-     * @Assert\NotBlank
-     */
+   * @ORM\ManyToOne(targetEntity="User")
+   * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
+   * @Assert\NotBlank
+   */
   // @TODO EntityMissing
   // protected $user;
 
@@ -151,7 +156,6 @@ export class SlipCheckEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt?: Date;
-
 }
 
 // application/Entities/Slip/Check.php

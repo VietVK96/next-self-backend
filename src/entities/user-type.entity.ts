@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * @ORM\Entity
@@ -7,7 +7,6 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('T_USER_TYPE_UST')
 export class UserTypeEntity {
-
   /**
    * @ORM\Column(name="UST_ID", type="integer", nullable=false)
    * @ORM\Id
@@ -25,7 +24,7 @@ export class UserTypeEntity {
     name: 'UST_NAME',
     type: 'varchar',
     length: 45,
-    nullable: false
+    nullable: false,
   })
   name?: string;
 
@@ -36,7 +35,7 @@ export class UserTypeEntity {
     name: 'UST_PRO',
     type: 'tinyint',
     width: 1,
-    nullable: false
+    nullable: false,
   })
   professional?: number;
 }
