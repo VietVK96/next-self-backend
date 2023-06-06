@@ -1,11 +1,11 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
-export enum EnumDentalEventTaskDETType {
+export enum EnumDentalEventTaskType {
   NGAP = 'NGAP',
   CCAM = 'CCAM',
 }
 
-export enum EnumDentalEventTaskExceedingType {
+export enum EnumDentalEventTaskExceeding {
   D = 'D',
   E = 'E',
   F = 'F',
@@ -18,7 +18,7 @@ export enum EnumDentalEventTaskExceedingType {
   L = 'L',
 }
 
-export enum EnumDentalEventTaskCompType {
+export enum EnumDentalEventTaskComp {
   N = 'N',
   F = 'F',
 }
@@ -33,6 +33,12 @@ export class DentalEventTaskEntity {
    * @var string $_separator Teeth separator
    */
   _separator?: string = ',';
+
+  @PrimaryColumn({
+    name: 'ETK_ID',
+    type: 'int',
+  })
+  id?: number;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Ccam")
@@ -76,9 +82,9 @@ export class DentalEventTaskEntity {
     name: 'DET_TYPE',
     type: 'enum',
     nullable: true,
-    default: EnumDentalEventTaskDETType.NGAP,
+    default: EnumDentalEventTaskType.NGAP,
   })
-  type?: EnumDentalEventTaskDETType;
+  type?: EnumDentalEventTaskType;
 
   /**
    * @ORM\Column(name="DET_COEF", type="decimal", precision=10, scale=2, nullable=true)
@@ -100,7 +106,7 @@ export class DentalEventTaskEntity {
     type: 'enum',
     nullable: true,
   })
-  exceeding?: EnumDentalEventTaskExceedingType;
+  exceeding?: EnumDentalEventTaskExceeding;
 
   /**
    * @ORM\Column(name="DET_CODE", type="string", length=7, nullable=true)
@@ -122,7 +128,7 @@ export class DentalEventTaskEntity {
     type: 'enum',
     nullable: true,
   })
-  comp?: EnumDentalEventTaskCompType;
+  comp?: EnumDentalEventTaskComp;
 
   /**
    * @ORM\Column(name="DET_PURCHASE_PRICE", type="float", nullable=false)
@@ -405,9 +411,9 @@ export class DentalEventTaskEntity {
     name: 'DET_TYPE',
     type: 'enum',
     nullable: true,
-    default: EnumDentalEventTaskDETType.NGAP,
+    default: EnumDentalEventTaskType.NGAP,
   })
-  nomenclature?: EnumDentalEventTaskDETType = EnumDentalEventTaskDETType.CCAM;
+  nomenclature?: EnumDentalEventTaskType;
 
   /** File: application\Entity\ActMedical.php
    * @ORM\Column(name="DET_CCAM_CODE", type="string", length=255, nullable=true)
@@ -449,7 +455,7 @@ export class DentalEventTaskEntity {
     type: 'enum',
     nullable: true,
   })
-  complement?: EnumDentalEventTaskCompType;
+  complement?: EnumDentalEventTaskComp;
 
   /** File: application\Entity\ActMedical.php
    * @ORM\Column(name="DET_CCAM_MODIFIER", type="simple_array", nullable=true)

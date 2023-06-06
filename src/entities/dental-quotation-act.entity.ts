@@ -1,12 +1,12 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-export enum EnumDentalQuotationActDQAType {
+export enum EnumDentalQuotationActType {
   OPERATION = 'operation',
   LIGNEBLANCHE = 'ligneBlanche',
   LIGNESEPARATION = 'ligneSeparation',
 }
 
-export enum EnumDentalQuotationActRefundableType {
+export enum EnumDentalQuotationActRefundable {
   NON = 'non',
   OUI = 'oui',
 }
@@ -75,10 +75,10 @@ export class DentalQuotationActEntity {
   @Column({
     name: 'DQA_TYPE',
     type: 'enum',
-    enum: EnumDentalQuotationActDQAType,
+    enum: EnumDentalQuotationActType,
     nullable: true,
   })
-  type?: EnumDentalQuotationActDQAType;
+  type?: EnumDentalQuotationActType;
 
   /**
    * @ORM\Column(name="DQA_LOCATION", type="text", nullable=true)
@@ -191,10 +191,10 @@ export class DentalQuotationActEntity {
   @Column({
     name: 'DQA_REFUNDABLE',
     type: 'enum',
-    enum: EnumDentalQuotationActRefundableType,
-    default: EnumDentalQuotationActRefundableType.NON,
+    enum: EnumDentalQuotationActRefundable,
+    default: EnumDentalQuotationActRefundable.NON,
   })
-  refundable?: EnumDentalQuotationActRefundableType;
+  refundable?: EnumDentalQuotationActRefundable;
 
   /**
    * @ORM\Column(name="DQA_AMOUNT", type="float", nullable=false)

@@ -6,13 +6,13 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-export enum EnumDentalQuotationSchemesType {
+export enum EnumDentalQuotationSchemes {
   NONE = 'none',
   BOTH = 'both',
   THREE = 'three',
 }
 
-export enum EnumDentalQuotationDetailsType {
+export enum EnumDentalQuotationDetails {
   NONE = 'none',
   BOTH = 'both',
   ONLY = 'only',
@@ -110,10 +110,10 @@ export class DentalQuotationEntity {
   @Column({
     name: 'DQO_SCHEMES',
     type: 'enum',
-    enum: EnumDentalQuotationSchemesType,
+    enum: EnumDentalQuotationSchemes,
     nullable: true,
   })
-  schemes?: EnumDentalQuotationSchemesType;
+  schemes?: EnumDentalQuotationSchemes;
 
   /**
    * @ORM\Column(name="DQO_DETAILS", type="string", nullable=true)
@@ -122,10 +122,10 @@ export class DentalQuotationEntity {
   @Column({
     name: 'DQO_DETAILS',
     type: 'enum',
-    enum: EnumDentalQuotationDetailsType,
+    enum: EnumDentalQuotationDetails,
     nullable: true,
   })
-  details?: EnumDentalQuotationDetailsType;
+  details?: EnumDentalQuotationDetails;
 
   /**
    * @ORM\Column(name="DQO_TITLE", type="text", nullable=true)
