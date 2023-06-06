@@ -281,6 +281,21 @@ export class LibraryBankEntity {
   transfertDefault?: number;
 
   /**
+   * Banque par défaut pour les virements.
+   *
+   * @ORM\Column(name="LBK_TRANSFERT_DEFAULT", type="boolean")
+   * @Expose
+   * @var boolean
+   */
+  @Column({
+    name: 'LBK_TRANSFERT_DEFAULT',
+    type: 'tinyint',
+    width: 1,
+    default: 0,
+  })
+  default?: number;
+
+  /**
    *
    * @ORM\Column(name="LBK_POS", type="integer", options={"default": 0})
    * @Serializer\Expose
