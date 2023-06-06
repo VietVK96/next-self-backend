@@ -1,4 +1,10 @@
-import { CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 /**
  * @ORM\Entity
@@ -9,10 +15,9 @@ import { CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, Upd
  */
 @Entity('mobile_subscriptions')
 export class MobileSubscriptionEntityEntity {
-
   /**
    * Identifiant de l'enregistrement.
-   * 
+   *
    * @ORM\Column(name="id", type="integer")
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="IDENTITY")
@@ -20,13 +25,13 @@ export class MobileSubscriptionEntityEntity {
    * @var integer
    */
   @PrimaryGeneratedColumn('increment', {
-    name: 'id'
+    name: 'id',
   })
   id?: number;
 
   /**
    * Entité du groupe.
-   * 
+   *
    * @ORM\ManyToOne(targetEntity="GroupEntity")
    * @ORM\JoinColumn(name="group_id", referencedColumnName="GRP_ID")
    * @var \App\Entities\GroupEntity
@@ -36,7 +41,7 @@ export class MobileSubscriptionEntityEntity {
 
   /**
    * Entité de l'utilisateur.
-   * 
+   *
    * @ORM\OneToOne(targetEntity="UserEntity", inversedBy="mobileSubscription")
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    * @var \App\Entities\UserEntity

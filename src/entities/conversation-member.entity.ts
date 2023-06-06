@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * @ORM\Entity
@@ -11,10 +11,9 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
  */
 @Entity('conversation_member')
 export class ConversationMemberEntityEntity {
-
   /**
    * Identifiant de l'enregistrement.
-   * 
+   *
    * @ORM\Column(name="id", type="integer")
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="IDENTITY")
@@ -22,13 +21,13 @@ export class ConversationMemberEntityEntity {
    * @var integer
    */
   @PrimaryGeneratedColumn('increment', {
-    name: "id",
+    name: 'id',
   })
   id?: number;
 
   /**
    * Entité de la conversation.
-   * 
+   *
    * @ORM\ManyToOne(targetEntity="ConversationEntity", inversedBy="members")
    * @ORM\JoinColumn(name="conversation_id", referencedColumnName="id")
    * @var \App\Entities\ConversationEntity
@@ -38,7 +37,7 @@ export class ConversationMemberEntityEntity {
 
   /**
    * Entité de l'utilisateur.
-   * 
+   *
    * @ORM\ManyToOne(targetEntity="UserEntity")
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    * @Expose
@@ -49,7 +48,7 @@ export class ConversationMemberEntityEntity {
 
   /**
    * Date et heure de lecture de la conversation.
-   * 
+   *
    * @ORM\Column(name="read_at", type="datetime", nullable=true)
    * @Expose
    * @var DateTime
@@ -57,7 +56,7 @@ export class ConversationMemberEntityEntity {
   @Column({
     name: 'read_at',
     type: 'datetime',
-    nullable: true
+    nullable: true,
   })
   readAt?: string;
 }

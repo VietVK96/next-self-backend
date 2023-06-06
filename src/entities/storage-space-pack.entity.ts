@@ -21,6 +21,7 @@ export class StorageSpacePackEntity {
   id?: number;
 
   /**
+   * Taille du pack en octet.
    * @ORM\Column(name="STK_SIZE", type="bigint")
    * @var integer Taille en octet du pack d'espace de stockage.
    */
@@ -32,6 +33,7 @@ export class StorageSpacePackEntity {
   size?: number;
 
   /**
+   * Taille du pack sous forme de chaîne de caractères.
    * @ORM\Column(name="STK_SIZE_READABLE", type="string", length=45)
    * @var string Taille du pack d'espace de stockage au format
    * chaîne de caractères.
@@ -45,7 +47,6 @@ export class StorageSpacePackEntity {
 
   /**
    * Prix du pack.
-   *
    * @ORM\Column(name="STK_PRICE", type="decimal", precision=10, scale=2)
    * @Expose
    * @var float
@@ -63,7 +64,7 @@ export class StorageSpacePackEntity {
    * @var \App\Entities\Storage\Space Espace de stockage par groupe.
    */
   // @TODO EntityMissing
-  //   protected $storageSpace;
+  // protected $storageSpace;
 }
 // application/Entities/Storage/Space/Pack.php
 // application/Entities/StorageSpacePackEntity.php

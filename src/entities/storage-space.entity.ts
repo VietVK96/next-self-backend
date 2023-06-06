@@ -10,10 +10,13 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 @Entity('T_STORAGE_SPACE_STS')
 export class StorageSpaceEntity {
   /**
+   * Identifiant de l'enregistrement.
+   *
    * @ORM\Column(name="STS_ID", type="integer")
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="IDENTITY")
-   * @var integer Identifiant de l'enregistrement.
+   * @Expose
+   * @var integer
    */
   @PrimaryGeneratedColumn('increment', {
     name: 'STS_ID',
@@ -44,7 +47,7 @@ export class StorageSpaceEntity {
    * @var \App\Entities\GroupEntity
    */
   // @TODO EntityMissing
-  //   protected $group;
+  // protected $group;
 
   /** File: application\Entities\Storage\Space.php
    * @ORM\ManyToOne(targetEntity="\App\Entities\Storage\Space\Pack", inversedBy="storageSpace")
@@ -54,7 +57,7 @@ export class StorageSpaceEntity {
    */
   // @TODO EntityMissing
   // @TODO VariableMissing
-  //   protected $storageSpacePack;
+  // protected $storageSpacePack;
 
   /** File: application\Entities\StorageSpaceEntity.php
    * Entité du pack.
@@ -66,7 +69,7 @@ export class StorageSpaceEntity {
    */
   // @TODO EntityMissing
   // @TODO VariableMissing
-  //   protected $pack;
+  // protected $pack;
 }
 // application/Entities/StorageSpaceEntity.php
 // application/Entities/Storage/Space.php
