@@ -86,6 +86,13 @@ export class BankCheckEntity {
   })
   internalReferenceId?: number
 
+  /**
+     * @ORM\ManyToOne(targetEntity="Organization")
+     * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
+     */
+  // @TODO EntityMissing
+  //protected $organization;
+
 }
 
 // application\Entity\BankCheck.php
