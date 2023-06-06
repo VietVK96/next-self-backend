@@ -267,4 +267,4 @@ export class ContactUserEntity {
 
 }
 
-//application/Entiteies/ContactUser.php
+//application/Entities/ContactUser.php
