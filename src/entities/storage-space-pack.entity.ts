@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="\App\Repositories\Storage\Space\Pack")
  * @ORM\Table(name="T_STORAGE_SPACE_PACK_STK")
  */
 @Entity('T_STORAGE_SPACE_PACK_STK')
@@ -22,10 +22,8 @@ export class StorageSpacePackEntity {
 
   /**
    * Taille du pack en octet.
-   *
    * @ORM\Column(name="STK_SIZE", type="bigint")
-   * @Expose
-   * @var string
+   * @var integer Taille en octet du pack d'espace de stockage.
    */
   @Column({
     name: 'STK_SIZE',
@@ -36,10 +34,9 @@ export class StorageSpacePackEntity {
 
   /**
    * Taille du pack sous forme de chaîne de caractères.
-   *
    * @ORM\Column(name="STK_SIZE_READABLE", type="string", length=45)
-   * @Expose
-   * @var string
+   * @var string Taille du pack d'espace de stockage au format
+   * chaîne de caractères.
    */
   @Column({
     name: 'STK_SIZE_READABLE',
@@ -50,7 +47,6 @@ export class StorageSpacePackEntity {
 
   /**
    * Prix du pack.
-   *
    * @ORM\Column(name="STK_PRICE", type="decimal", precision=10, scale=2)
    * @Expose
    * @var float

@@ -24,6 +24,22 @@ export class StorageSpaceEntity {
   id?: number;
 
   /**
+   * @ORM\Column(name="STS_QUANTITY", type="integer")
+   * @var integer Quantité d'espace de stockage.
+   */
+  @Column({
+    name: 'STS_QUANTITY',
+    type: 'int',
+    length: 11,
+  })
+  quantity?: number;
+
+  /** File: application\Entities\Storage\Space.php
+   * @ORM\ManyToOne(targetEntity="\App\Entities\Group")
+   * @ORM\JoinColumn(name="GRP_ID", referencedColumnName="GRP_ID")
+   * @var \App\Entities\Group Entité représentant le groupe.
+   */
+  /** File : application\Entities\StorageSpaceEntity.php
    * Entité du groupe.
    *
    * @ORM\ManyToOne(targetEntity="GroupEntity")
@@ -33,7 +49,17 @@ export class StorageSpaceEntity {
   // @TODO EntityMissing
   // protected $group;
 
-  /**
+  /** File: application\Entities\Storage\Space.php
+   * @ORM\ManyToOne(targetEntity="\App\Entities\Storage\Space\Pack", inversedBy="storageSpace")
+   * @ORM\JoinColumn(name="STK_ID", referencedColumnName="STK_ID")
+   * @var \App\Entities\Storage\Space\Pack Entité représentant le pack
+   * d'espace de stockage.
+   */
+  // @TODO EntityMissing
+  // @TODO VariableMissing
+  // protected $storageSpacePack;
+
+  /** File: application\Entities\StorageSpaceEntity.php
    * Entité du pack.
    *
    * @ORM\ManyToOne(targetEntity="StorageSpacePackEntity")
@@ -42,31 +68,8 @@ export class StorageSpaceEntity {
    * @var \App\Entities\StorageSpacePackEntity
    */
   // @TODO EntityMissing
+  // @TODO VariableMissing
   // protected $pack;
-
-  /**
-   * Quantité de pack acheté.
-   *
-   * @ORM\Column(name="STS_QUANTITY", type="integer")
-   * @Expose
-   * @var integer
-   */
-  @Column({
-    name: 'STS_QUANTITY',
-    type: 'int',
-    width: 11,
-  })
-  quantity?: number;
-
-  /** File: application\Entities\Storage\Space.php
-   * @ORM\ManyToOne(targetEntity="\App\Entities\Storage\Space\Pack", inversedBy="storageSpace")
-   * @ORM\JoinColumn(name="STK_ID", referencedColumnName="STK_ID")
-   * @var \App\Entities\Storage\Space\Pack Entité représentant le pack
-   * d'espace de stockage.
-   */
-  // @TODO EntityMissing
-  // protected $storageSpacePack;
 }
-
-// application\Entities\StorageSpaceEntity.php
-// application\Entities\Storage\Space.php
+// application/Entities/StorageSpaceEntity.php
+// application/Entities/Storage/Space.php
