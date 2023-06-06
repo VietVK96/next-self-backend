@@ -4,13 +4,16 @@ import { join } from 'path';
 import { MysqlConnectionCredentialsOptions } from 'typeorm/driver/mysql/MysqlConnectionCredentialsOptions';
 
 export default registerAs('database', (): TypeOrmModuleOptions => {
-
   const slaves: MysqlConnectionCredentialsOptions[] = [];
 
   const slaveHosts = `${process.env.DATABASE_SLAVES_HOST || ''}`.split(',');
   const slavePorts = `${process.env.DATABASE_SLAVES_PORT || ''}`.split(',');
-  const slaveUsernames = `${process.env.DATABASE_SLAVES_USERNAME || ''}`.split(',');
-  const slavePasswords = `${process.env.DATABASE_SLAVES_PASSWORD || ''}`.split(',');
+  const slaveUsernames = `${process.env.DATABASE_SLAVES_USERNAME || ''}`.split(
+    ',',
+  );
+  const slavePasswords = `${process.env.DATABASE_SLAVES_PASSWORD || ''}`.split(
+    ',',
+  );
   const slaveDbs = `${process.env.DATABASE_SLAVES_NAME || ''}`.split(',');
 
   let i = 0;

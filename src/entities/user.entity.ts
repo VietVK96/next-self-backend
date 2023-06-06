@@ -1,4 +1,13 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { OrganizationEntity } from './organization.entity';
 
 /**
@@ -269,7 +278,7 @@ export class UserEntity {
    * @ORM\Column(name="USR_RATE_CHARGES", type="float")
    * @var float Taux de charges du cabinet pour le praticien,
    * exprimé en pourcentage.
-   * decimal(10,2)	
+   * decimal(10,2)
    */
   @Column({
     name: 'USR_RATE_CHARGES',
@@ -464,7 +473,7 @@ export class UserEntity {
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 
-  @UpdateDateColumn({ name: 'updated_at'})
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt?: Date;
 
   @DeleteDateColumn({ name: 'deleted_at' })

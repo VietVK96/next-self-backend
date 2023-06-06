@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * @ORM\Entity
@@ -9,10 +9,9 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
  */
 @Entity('mobile_settings')
 export class MobileSettingEntityEntity {
-
   /**
    * Identifiant de l'enregistrement.
-   * 
+   *
    * @ORM\Column(name="id", type="integer")
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="IDENTITY")
@@ -26,7 +25,7 @@ export class MobileSettingEntityEntity {
 
   /**
    * Entité du groupe.
-   * 
+   *
    * @ORM\ManyToOne(targetEntity="GroupEntity")
    * @ORM\JoinColumn(name="group_id", referencedColumnName="GRP_ID")
    * @var \App\Entities\GroupEntity
@@ -36,7 +35,7 @@ export class MobileSettingEntityEntity {
 
   /**
    * Entité de l'utilisateur.
-   * 
+   *
    * @ORM\OneToOne(targetEntity="UserEntity", inversedBy="mobileSetting")
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    * @var \App\Entities\UserEntity
@@ -46,7 +45,7 @@ export class MobileSettingEntityEntity {
 
   /**
    * Durée de la session.
-   * 
+   *
    * @ORM\Column(name="session_duration", type="integer", options={"default": 60})
    * @Expose
    * @var integer
@@ -55,10 +54,9 @@ export class MobileSettingEntityEntity {
     name: 'session_duration',
     type: 'integer',
     nullable: false,
-    default: 60
+    default: 60,
   })
   sessionDuration?: number;
-
 }
 
 //application/Entities/MobileSettingEntity.php

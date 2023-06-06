@@ -1,4 +1,10 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\ConversationRepository")
@@ -8,10 +14,9 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
  */
 @Entity('conversation')
 export class ConversationEntityEntity {
-
   /**
    * Identifiant de l'enregistrement.
-   * 
+   *
    * @ORM\Column(name="id", type="integer")
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="IDENTITY")
@@ -19,13 +24,13 @@ export class ConversationEntityEntity {
    * @var integer
    */
   @PrimaryGeneratedColumn('increment', {
-    name: 'id'
+    name: 'id',
   })
   id?: number;
 
   /**
    * Entité de l'utilisateur.
-   * 
+   *
    * @ORM\ManyToOne(targetEntity="UserEntity")
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    * @Expose
@@ -43,7 +48,7 @@ export class ConversationEntityEntity {
 
   /**
    * Titre de la conversation.
-   * 
+   *
    * @ORM\Column(name="title", type="string", length=255)
    * @Expose
    * @var string
@@ -52,13 +57,13 @@ export class ConversationEntityEntity {
     name: 'title',
     type: 'string',
     length: 255,
-    nullable: false
+    nullable: false,
   })
   title?: string;
 
   /**
    * Nombre de messages dans la conversation.
-   * 
+   *
    * @ORM\Column(name="message_count", type="integer")
    * @Expose
    * @var integer
@@ -67,13 +72,13 @@ export class ConversationEntityEntity {
     name: 'message_count',
     type: 'int',
     nullable: false,
-    default: 0
+    default: 0,
   })
   messageCount?: number;
 
   /**
    * Membres de la conversation.
-   * 
+   *
    * @ORM\OneToMany(targetEntity="ConversationMemberEntity", mappedBy="conversation", cascade={"persist", "remove"})
    * @Expose
    * @var \Doctrine\Common\Collections\ArrayCollection
@@ -83,7 +88,7 @@ export class ConversationEntityEntity {
 
   /**
    * Messages de la conversation.
-   * 
+   *
    * @ORM\OneToMany(targetEntity="ConversationMessageEntity", mappedBy="conversation", cascade={"persist","remove"})
    * @Expose
    * @var \Doctrine\Common\Collections\ArrayCollection

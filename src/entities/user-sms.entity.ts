@@ -1,13 +1,11 @@
-import { Column, Entity } from "typeorm";
+import { Column, Entity } from 'typeorm';
 /**
  * @ORM\Entity
  * @ORM\Table(name="T_USER_SMS_USS")
  */
 
-
 @Entity('T_USER_SMS_USS')
 export class UserSmsEntity {
-
   /**
    * @ORM\OneToOne(targetEntity="\App\Entities\User", inversedBy="sms")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
@@ -24,7 +22,7 @@ export class UserSmsEntity {
     name: 'USS_PHONE',
     type: 'varchar',
     length: 45,
-    nullable: true
+    nullable: true,
   })
   phone?: string;
 
@@ -35,7 +33,7 @@ export class UserSmsEntity {
     name: 'USS_COUNTRY',
     type: 'varchar',
     length: 3,
-    nullable: true
+    nullable: true,
   })
   country?: string;
 
@@ -46,7 +44,7 @@ export class UserSmsEntity {
     name: 'USS_CODE',
     type: 'varchar',
     length: 45,
-    nullable: true
+    nullable: true,
   })
   code?: string;
 
@@ -58,7 +56,7 @@ export class UserSmsEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 0
+    default: 0,
   })
   validated?: number;
 
@@ -69,7 +67,7 @@ export class UserSmsEntity {
     name: 'USS_STOCK',
     type: 'int',
     nullable: false,
-    default: 0
+    default: 0,
   })
   stock?: number;
 
@@ -84,10 +82,9 @@ export class UserSmsEntity {
     name: 'USS_STOCK',
     type: 'int',
     nullable: false,
-    default: 0
+    default: 0,
   })
- quantity?: number;
-
+  quantity?: number;
 }
 
 //application/Entities/User/Sms.php

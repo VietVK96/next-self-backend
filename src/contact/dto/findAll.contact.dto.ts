@@ -12,6 +12,5 @@ export class FindAllStructDto {
 }
 
 export class FindAllContactDto {
-
   conditions?: FindAllStructDto[];
 }
