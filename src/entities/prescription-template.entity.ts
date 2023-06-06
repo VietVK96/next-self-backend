@@ -59,6 +59,7 @@ export class PrescriptionTemplateEntity {
   @Column({
     name: 'position',
     type: 'integer',
+    width: 11,
     nullable: false,
     default: 0
   })

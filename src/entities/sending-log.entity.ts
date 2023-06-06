@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\SendingLogRepository")
@@ -75,7 +75,8 @@ export class SendingLogEntity {
    */
   @Column({
     name: 'USH_MSG',
-    type: 'text'
+    type: 'text',
+    nullable: true
   })
   message?: string;
 
@@ -88,9 +89,16 @@ export class SendingLogEntity {
   @Column({
     name: 'USH_OVH_ID',
     type: 'integer',
+    width: 11,
     nullable: true
   })
   externalReferenceId?: number;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt?: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt?: Date;
 }
 
 //application/Entity/SendingLog.php

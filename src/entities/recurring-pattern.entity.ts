@@ -30,6 +30,7 @@ export class RecurringPatternEntity {
   @Column({
     name: 'week_frequency',
     type: 'tinyint',
+    width: 2,
     nullable: false,
     default: 1
   })
@@ -44,6 +45,7 @@ export class RecurringPatternEntity {
   @Column({
     name: 'week_days',
     type: 'varchar',
+    length: 255,
     nullable: true,
   })
   weekDays?: string;

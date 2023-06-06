@@ -33,6 +33,13 @@ export class StickyNoteEntity {
   //   nullable: true
   // })
 
+  // @TODO EntityMissing
+  // @Column({
+  //   name: 'USR_ID',
+  //   type: 'int',
+  //   nullable: true
+  // })
+
   /**
    * @ORM\Column(name="PTT_MSG", type="text")
    * @Serializer\Expose
@@ -50,6 +57,7 @@ export class StickyNoteEntity {
   @Column({
     name: 'PTT_COLOR',
     type: 'int',
+    width: 11,
     nullable: false,
     default: -41487
   })
@@ -66,6 +74,7 @@ export class StickyNoteEntity {
   @Column({
     name: 'PTT_EDITABLE',
     type: 'tinyint',
+    width: 1,
     nullable: false,
     default: 1
   })
@@ -74,6 +83,7 @@ export class StickyNoteEntity {
   @Column({
     name: 'PTT_SHARED',
     type: 'tinyint',
+    width: 1,
     nullable: false,
     default: 1
   })
