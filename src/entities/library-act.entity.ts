@@ -81,7 +81,7 @@ export class LibraryActEntity {
    * @Assert\Length(max=1000)
    */
   @Column({
-    name: 'descriptive-text',
+    name: 'descriptive_text',
     type: 'varchar',
     length: 1000,
     nullable: true,
@@ -285,7 +285,8 @@ export class LibraryActEntity {
    * )
    * @Serializer\Expose
    * @Serializer\Groups({"attachment:read"})
-   */ // @TODO EntityMissing
+   */
+  // @TODO EntityMissing
   // protected $attachments;
   /**
    * @ORM\ManyToOne(targetEntity="Organization")
@@ -303,3 +304,4 @@ export class LibraryActEntity {
   deletedAt?: Date;
 }
 // application/Entities/LibraryAct.php
+// application/Entity/LibraryAct.php

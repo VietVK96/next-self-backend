@@ -66,6 +66,5 @@ export class StorageSpacePackEntity {
   // @TODO EntityMissing
   // protected $storageSpace;
 }
-
-// application\Entities\StorageSpacePackEntity.php
-// application\Entities\Storage\Space\Pack.php
+// application/Entities/Storage/Space/Pack.php
+// application/Entities/StorageSpacePackEntity.php
