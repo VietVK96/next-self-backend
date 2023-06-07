@@ -105,6 +105,24 @@ export class ContactUserEntity {
   balance?: number;
 
   /**
+   * @ORM\Column(name="cou_amount_due", type="decimal", precision=10, scale=2, options={"default": 0})
+   * @Serializer\Expose
+   * @Serializer\Groups({"unpaid:index"})
+   * @Serializer\Type("float")
+   * @Assert\Type("float")
+   * @Assert\NotNull
+   */
+  @Column({
+    name: 'cou_amount_due',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: false,
+    default: 0.0,
+  })
+  amount?: number;
+
+  /**
    * @ORM\Column(name="amount_due_care", type="decimal", precision=10, scale=2)
    * @var float Montant dû des soins.
    */
@@ -267,3 +285,6 @@ export class ContactUserEntity {
 }
 
 //application/Entiteies/ContactUser.php
+// application\Entities\PatientUserEntity.php
+// application\Entity\PatientBalance.php
+// application\Entity\PatientUser.php
