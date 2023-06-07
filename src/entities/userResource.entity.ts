@@ -42,6 +42,7 @@ export class UserResourceEntity {
     name: 'selected',
     type: 'tinyint',
     width: 1,
+    default: 1,
   })
   selected?: number;
 
@@ -53,6 +54,7 @@ export class UserResourceEntity {
     name: 'access_level',
     type: 'tinyint',
     width: 4,
+    default: 15,
   })
   accessLevel?: number;
 
