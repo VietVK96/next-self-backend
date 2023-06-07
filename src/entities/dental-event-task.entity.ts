@@ -81,6 +81,7 @@ export class DentalEventTaskEntity {
   @Column({
     name: 'DET_TYPE',
     type: 'enum',
+    enum: EnumDentalEventTaskType,
     nullable: true,
     default: EnumDentalEventTaskType.NGAP,
   })
@@ -104,6 +105,7 @@ export class DentalEventTaskEntity {
   @Column({
     name: 'DET_EXCEEDING',
     type: 'enum',
+    enum: EnumDentalEventTaskExceeding,
     nullable: true,
   })
   exceeding?: EnumDentalEventTaskExceeding;
@@ -126,6 +128,7 @@ export class DentalEventTaskEntity {
   @Column({
     name: 'DET_COMP',
     type: 'enum',
+    enum: EnumDentalEventTaskComp,
     nullable: true,
   })
   comp?: EnumDentalEventTaskComp;
@@ -410,6 +413,7 @@ export class DentalEventTaskEntity {
   @Column({
     name: 'DET_TYPE',
     type: 'enum',
+    enum: EnumDentalEventTaskType,
     nullable: true,
     default: EnumDentalEventTaskType.NGAP,
   })
@@ -477,7 +481,7 @@ export class DentalEventTaskEntity {
   @Column({
     name: 'code_nature_assurance',
     type: 'char',
-    length: '2',
+    length: 2,
     default: '10',
   })
   codeNatureAssurance?: string;
@@ -489,7 +493,7 @@ export class DentalEventTaskEntity {
   @Column({
     name: 'exemption_code',
     type: 'char',
-    length: '1',
+    length: 1,
     default: '0',
   })
   exemptionCode?: string;
