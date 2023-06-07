@@ -1,21 +1,5 @@
 import { Collection, Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
-export enum EnumFseMode {
-  SESAM_VITALE = 'SV',
-  DEGRADE = 'DEG',
-  SESAM_SANS_VITALE = 'SSV',
-  DESYNCHRONISEE = 'DES',
-  PAPIER = 'PPR',
-}
-
-export enum EnumFseType {
-  DRE = 'DRE',
-  FSE = 'FSE',
-  ENR = 'ENR',
-  FDE = 'FDE',
-  FSU = 'FSU',
-}
-
 /**
  * @ORM\Entity
  * @ORM\Table(name="T_FSE_FSE")
@@ -92,7 +76,6 @@ export class FseEntity {
     type: 'char',
     length: 9,
     nullable: true,
-    default: null,
   })
   protected $numeroFacturation = null;
 
@@ -104,7 +87,6 @@ export class FseEntity {
     type: 'varchar',
     length: 45,
     nullable: true,
-    default: null,
   })
   nbr?: string;
 
@@ -128,9 +110,9 @@ export class FseEntity {
     name: 'mode',
     type: 'char',
     length: 3,
-    default: EnumFseMode.SESAM_VITALE
+    default: 'SV'
   })
-  mode?: EnumFseMode;
+  mode?: string;
 
   /**
    * @ORM\Column(name="type", type="enum_caresheet_type", length=3, options={"fixed": 3, "default": "FSE"})
@@ -143,9 +125,9 @@ export class FseEntity {
     name: 'type',
     type: 'char',
     length: 3,
-    default: EnumFseType.FSE
+    default: 'FSE'
   })
-  type?: EnumFseType;
+  type?: string;
 
   /**
      * @ORM\Column(name="electronic_caresheet", type="boolean", options={"default": true})
@@ -189,7 +171,6 @@ export class FseEntity {
     type: 'char',
     length: 3,
     nullable: true,
-    default: null,
   })
   tiersPayantStatus?: string;
 
@@ -314,7 +295,6 @@ export class FseEntity {
     type: 'int',
     width: 11,
     nullable: true,
-    default: null,
   })
   externalReferenceId?: number;
 

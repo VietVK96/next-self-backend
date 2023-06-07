@@ -36,6 +36,13 @@ export class DentalMaterialEntity {
   })
   label?: string;
 
+  /**
+* @ORM\Column(name="code", type="integer")
+* @Serializer\Expose
+* @Serializer\Type("int")
+* @Assert\Type("int")
+* @Assert\NotBlank
+*/
   @Column({
     name: 'code',
     type: 'int',

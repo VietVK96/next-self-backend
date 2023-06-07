@@ -105,7 +105,6 @@ export class EventEntity {
     name: 'EVT_MSG',
     type: 'text',
     nullable: true,
-    default: null,
   })
   msg?: string;
 
