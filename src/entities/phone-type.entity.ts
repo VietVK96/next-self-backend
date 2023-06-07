@@ -61,7 +61,8 @@ export class PhoneTypeEntity {
    */
   @Column({
     name: 'PTY_POS',
-    type: 'integer',
+    type: 'int',
+    width: 11,
     default: 0
   })
   position?: number;
