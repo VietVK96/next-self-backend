@@ -61,7 +61,6 @@ export class CaresheetStatusEntity {
     name: 'description',
     type: 'text',
     nullable: true,
-    default: null,
   })
   description?: string;
 }

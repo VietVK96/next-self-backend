@@ -71,6 +71,7 @@ export class BankCheckEntity {
     name: 'position',
     type: 'tinyint',
     width: 3,
+    unsigned: true,
   })
   position?: number;
 
@@ -82,7 +83,6 @@ export class BankCheckEntity {
     type: 'int',
     width: 11,
     nullable: true,
-    default: null,
   })
   internalReferenceId?: number
 

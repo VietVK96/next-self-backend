@@ -39,7 +39,6 @@ export class CcamCmuCodificationEntity {
     type: 'char',
     length: 3,
     nullable: true,
-    default: null,
   })
   codification?: string;
 
@@ -105,7 +104,6 @@ export class CcamCmuCodificationEntity {
     type: 'varchar',
     length: 255,
     nullable: true,
-    default: null,
   })
   forbiddenTeeth?: string;
 

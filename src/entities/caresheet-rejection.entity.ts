@@ -73,7 +73,6 @@ export class CaresheetRejection {
     name: 'extra',
     type: 'json',
     nullable: true,
-    default: null,
   })
   extra?: string;
 }
