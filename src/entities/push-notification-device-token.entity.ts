@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 // enum('ios', 'android', 'web')
-export enum EnumPushNotificationDeviceTokenType {
+export enum EnumPushNotificationDeviceToken {
   IOS = 'ios',
   ANDROID = 'android',
   WEB = 'web',
@@ -42,10 +42,10 @@ export class PushNotificationDeviceTokenEntity {
   @Column({
     name: 'platform',
     type: 'enum',
-    enum: EnumPushNotificationDeviceTokenType,
+    enum: EnumPushNotificationDeviceToken,
     nullable: false,
   })
-  platform?: EnumPushNotificationDeviceTokenType;
+  platform?: EnumPushNotificationDeviceToken;
 
   /**
    * @ORM\Column(name="token", type="string", length=255)

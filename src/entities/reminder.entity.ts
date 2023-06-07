@@ -24,6 +24,7 @@ export class ReminderEntity {
   @Column({
     name: 'appointment_reminder_library_id',
     type: 'int',
+    width: 11,
     nullable: true
   })
   appointmentReminderLibraryId?: number;
@@ -43,7 +44,8 @@ export class ReminderEntity {
    */
   @Column({
     name: 'RMD_NBR',
-    type: 'integer',
+    type: 'int',
+    width: 11,
     nullable: false,
     default: 1
   })

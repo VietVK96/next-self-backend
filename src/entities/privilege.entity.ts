@@ -38,6 +38,7 @@ export class PrivilegeEntity {
   @Column({
     name: 'PVG_COLOR',
     type: 'int',
+    width: 11,
     nullable: false,
     default: -12303
   })
@@ -61,6 +62,7 @@ export class PrivilegeEntity {
   @Column({
     name: 'PVG_POS',
     type: 'int',
+    width: 11,
     nullable: false,
     default: 0
   })

@@ -33,7 +33,8 @@ export class PushNotificationEntity {
    */
   @Column({
     name: 'item_id',
-    type: 'integer',
+    type: 'int',
+    width: 11,
     nullable: false
   })
   itemId?: number;
