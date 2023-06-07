@@ -41,7 +41,7 @@ export class LibraryCityEntity {
    */
   @Column({
     name: 'LCI_COUNTRY',
-    length: 250,
+    length: 3,
     type: 'varchar',
   })
   country?: string;
