@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 /**
  * @ORM\Entity
  * @ORM\Table(name="contact_user_cou")
@@ -6,7 +6,6 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('contact_user_cou')
 export class ContactUserEntity {
-
   /**
    * @ORM\Column(name="cou_id", type="integer")
    * @ORM\Id
@@ -14,7 +13,7 @@ export class ContactUserEntity {
    * @var integer $id Identifiant de l'enregistrement.
    */
   @PrimaryGeneratedColumn('increment', {
-    name: 'cou_id'
+    name: 'cou_id',
   })
   id?: number;
 
@@ -34,11 +33,18 @@ export class ContactUserEntity {
   // @TODO EntityMissing
   // protected $user;
 
+  /**
+   * @ORM\ManyToOne(targetEntity="PatientEntity", inversedBy="patientUsers", cascade={"persist"})
+   * @ORM\JoinColumn(name="con_id", referencedColumnName="CON_ID")
+   */
+  // @TODO EntityMissing
+  // protected $patient;
+
   @Column({
     name: 'cou_unpaid_level',
     type: 'int',
     nullable: false,
-    default: 0
+    default: 0,
   })
   unpaidLevel?: number;
 
@@ -59,7 +65,7 @@ export class ContactUserEntity {
     precision: 10,
     scale: 2,
     nullable: false,
-    default: 0.00
+    default: 0.0,
   })
   amountDue?: number;
 
@@ -75,7 +81,7 @@ export class ContactUserEntity {
     precision: 10,
     scale: 2,
     nullable: false,
-    default: 0.00
+    default: 0.0,
   })
   balance?: number;
 
@@ -89,7 +95,7 @@ export class ContactUserEntity {
     precision: 10,
     scale: 2,
     nullable: false,
-    default: 0.00
+    default: 0.0,
   })
   amountDueCare?: number;
 
@@ -105,7 +111,7 @@ export class ContactUserEntity {
     precision: 10,
     scale: 2,
     nullable: false,
-    default: 0.00
+    default: 0.0,
   })
   balanceCare?: number;
 
@@ -119,7 +125,7 @@ export class ContactUserEntity {
     precision: 10,
     scale: 2,
     nullable: false,
-    default: 0.00
+    default: 0.0,
   })
   amountDueProsthesis?: number;
 
@@ -135,7 +141,7 @@ export class ContactUserEntity {
     precision: 10,
     scale: 2,
     nullable: false,
-    default: 0.00
+    default: 0.0,
   })
   balanceProsthesis?: number;
 
@@ -146,7 +152,7 @@ export class ContactUserEntity {
   @Column({
     name: 'cou_last_payment',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   lastPayment?: string;
 
@@ -157,7 +163,7 @@ export class ContactUserEntity {
   @Column({
     name: 'cou_last_care',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   lastCare?: string;
 
@@ -170,10 +176,9 @@ export class ContactUserEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 0
+    default: 0,
   })
   forceUpdate?: number;
-
 }
 
 //application/Entiteies/ContactUser.php

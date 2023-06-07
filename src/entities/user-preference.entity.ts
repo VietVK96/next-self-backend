@@ -1,23 +1,23 @@
-import { Column, Entity } from "typeorm";
+import { Column, Entity } from 'typeorm';
 
 // enum('day', 'week')
 export enum UserPreferenceViewType {
   DAY = 'day',
-  WEEK = 'week'
+  WEEK = 'week',
 }
 
 // enum('none', 'both', 'three')
 export enum UserPreferenceQuotationDisplayOdontogramType {
   NONE = 'none',
   BOTH = 'both',
-  THREE = 'three'
+  THREE = 'three',
 }
 
 //enum('none', 'both', 'only')
 export enum UserPreferenceQuotationDisplayDetailsType {
   NONE = 'none',
   BOTH = 'both',
-  ONLY = 'only'
+  ONLY = 'only',
 }
 
 /**
@@ -26,7 +26,6 @@ export enum UserPreferenceQuotationDisplayDetailsType {
  */
 @Entity('T_USER_PREFERENCE_USP')
 export class UserPreferenceEntity {
-
   /**
    * @ORM\Column(name="USP_LANGUAGE", type="string", length=3, nullable=false)
    */
@@ -35,7 +34,7 @@ export class UserPreferenceEntity {
     type: 'varchar',
     length: 3,
     nullable: false,
-    default: 'fr'
+    default: 'fr',
   })
   language?: string;
 
@@ -47,13 +46,13 @@ export class UserPreferenceEntity {
     type: 'varchar',
     length: 3,
     nullable: false,
-    default: 'FR'
+    default: 'FR',
   })
   country?: string;
 
   /**
    * Code pays.
-   * 
+   *
    * @ORM\Column(name="USP_COUNTRY", type="string", length=3)
    * @Expose
    * @var string
@@ -63,7 +62,7 @@ export class UserPreferenceEntity {
     type: 'varchar',
     length: 3,
     nullable: false,
-    default: 'FR'
+    default: 'FR',
   })
   countryCode?: string;
 
@@ -75,7 +74,7 @@ export class UserPreferenceEntity {
     type: 'varchar',
     length: 45,
     nullable: false,
-    default: 'Europe/Paris'
+    default: 'Europe/Paris',
   })
   timezone?: string;
 
@@ -91,7 +90,7 @@ export class UserPreferenceEntity {
     type: 'char',
     length: 3,
     nullable: false,
-    default: 'EUR'
+    default: 'EUR',
   })
   currency?: string;
 
@@ -103,7 +102,7 @@ export class UserPreferenceEntity {
     type: 'enum',
     enum: UserPreferenceViewType,
     default: UserPreferenceViewType.WEEK,
-    nullable: false
+    nullable: false,
   })
   view?: UserPreferenceViewType;
 
@@ -115,7 +114,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     nullable: false,
     width: 4,
-    default: 62
+    default: 62,
   })
   days?: number;
 
@@ -127,7 +126,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     nullable: false,
     width: 4,
-    default: 1
+    default: 1,
   })
   weekStartDay?: number;
 
@@ -139,7 +138,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     nullable: false,
     width: 1,
-    default: 0
+    default: 0,
   })
   displayHoliday?: number;
 
@@ -151,7 +150,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 0
+    default: 0,
   })
   displayEventTime?: number;
 
@@ -163,7 +162,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   displayLastPatients?: number;
 
@@ -175,7 +174,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 0
+    default: 0,
   })
   displayPractitionerCalendar?: number;
 
@@ -189,7 +188,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   enableEventPractitionerChange?: number;
 
@@ -200,7 +199,7 @@ export class UserPreferenceEntity {
     name: 'USP_FREQUENCY',
     type: 'int',
     nullable: false,
-    default: 30
+    default: 30,
   })
   frequency?: number;
 
@@ -212,7 +211,7 @@ export class UserPreferenceEntity {
     type: 'varchar',
     length: 5,
     nullable: false,
-    default: '08:00'
+    default: '08:00',
   })
   hmd?: string;
 
@@ -224,7 +223,7 @@ export class UserPreferenceEntity {
     type: 'varchar',
     length: 5,
     nullable: false,
-    default: '12:00'
+    default: '12:00',
   })
   hmf?: string;
 
@@ -236,7 +235,7 @@ export class UserPreferenceEntity {
     type: 'varchar',
     length: 5,
     nullable: false,
-    default: '14:00'
+    default: '14:00',
   })
   had?: string;
 
@@ -248,7 +247,7 @@ export class UserPreferenceEntity {
     type: 'varchar',
     length: 5,
     nullable: false,
-    default: '20:00'
+    default: '20:00',
   })
   haf?: string;
 
@@ -259,65 +258,65 @@ export class UserPreferenceEntity {
     name: 'USP_HEIGHT_LINE',
     type: 'int',
     nullable: false,
-    default: 0
+    default: 0,
   })
   heightLine?: number;
 
   /**
    * @ORM\Column(name="USP_QUOTATION_DISPLAY_ODONTOGRAM", type="string")
-   * @var string 
+   * @var string
    */
   @Column({
-    name: "USP_QUOTATION_DISPLAY_ODONTOGRAM",
+    name: 'USP_QUOTATION_DISPLAY_ODONTOGRAM',
     type: 'enum',
     enum: UserPreferenceQuotationDisplayOdontogramType,
     nullable: false,
-    default: UserPreferenceQuotationDisplayOdontogramType.NONE
+    default: UserPreferenceQuotationDisplayOdontogramType.NONE,
   })
   quotationDisplayOdontogram?: UserPreferenceQuotationDisplayOdontogramType;
 
   /**
    * @ORM\Column(name="USP_QUOTATION_DISPLAY_DETAILS", type="string")
-   * @var string 
+   * @var string
    */
   @Column({
     name: 'USP_QUOTATION_DISPLAY_DETAILS',
     type: 'enum',
     enum: UserPreferenceQuotationDisplayDetailsType,
     nullable: false,
-    default: UserPreferenceQuotationDisplayDetailsType.BOTH
+    default: UserPreferenceQuotationDisplayDetailsType.BOTH,
   })
   quotationDisplayDetails?: UserPreferenceQuotationDisplayDetailsType;
 
   /**
    * @ORM\Column(name="USP_QUOTATION_DISPLAY_TOOLTIP", type="integer")
-   * @var boolean 
+   * @var boolean
    */
   @Column({
     name: 'USP_QUOTATION_DISPLAY_TOOLTIP',
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   quotationDisplayTooltip?: number;
 
   /**
    * @ORM\Column(name="USP_QUOTATION_DISPLAY_DUPLICATA", type="integer")
-   * @var boolean 
+   * @var boolean
    */
   @Column({
     name: 'USP_QUOTATION_DISPLAY_DUPLICATA',
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 0
+    default: 0,
   })
   quotationDisplayDuplicata?: number;
 
   /**
    * @ORM\Column(name="USP_QUOTATION_COLOR", type="string", nullable=true)
-   * @var string 
+   * @var string
    */
   @Column({
     name: 'USP_QUOTATION_COLOR',
@@ -334,7 +333,7 @@ export class UserPreferenceEntity {
     name: 'USP_BILL_DISPLAY_TOOLTIP',
     type: 'tinyint',
     nullable: false,
-    default: 1
+    default: 1,
   })
   billDisplayTooltip?: 1;
 
@@ -347,7 +346,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     width: 4,
     nullable: false,
-    default: 1
+    default: 1,
   })
   billTemplate?: number;
 
@@ -360,7 +359,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   orderDisplayTooltip?: number;
 
@@ -373,7 +372,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   orderDuplicata?: number;
 
@@ -386,7 +385,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 0
+    default: 0,
   })
   orderPreprintedHeader?: number;
 
@@ -398,7 +397,7 @@ export class UserPreferenceEntity {
     name: 'USP_ORDER_PREPRINTED_HEADER_SIZE',
     type: 'int',
     nullable: false,
-    default: 35
+    default: 35,
   })
   orderPreprintedHeaderSize?: number;
 
@@ -411,7 +410,7 @@ export class UserPreferenceEntity {
     type: 'varchar',
     length: 7,
     nullable: false,
-    default: 'A4'
+    default: 'A4',
   })
   orderFormat?: string;
 
@@ -424,7 +423,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   orderBcbCheck?: number;
 
@@ -437,7 +436,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     width: 4,
     nullable: false,
-    default: 0
+    default: 0,
   })
   themeCustom?: number;
 
@@ -470,7 +469,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'USP_THEME_BORDERCOLOR',
     type: 'int',
-    nullable: true
+    nullable: true,
   })
   themeBordercolor?: number;
 
@@ -481,7 +480,7 @@ export class UserPreferenceEntity {
   @Column({
     name: 'USP_THEME_ASIDE_BGCOLOR',
     type: 'int',
-    nullable: true
+    nullable: true,
   })
   themeAsideBgcolor?: number;
 
@@ -493,7 +492,7 @@ export class UserPreferenceEntity {
     name: 'USP_REMINDER_VISIT_DURATION',
     type: 'int',
     nullable: false,
-    default: 6
+    default: 6,
   })
   reminderVisitDuration?: number;
 
@@ -506,7 +505,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 0
+    default: 0,
   })
   ccamBridgeQuickentry?: number;
 
@@ -519,7 +518,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     width: 4,
     nullable: false,
-    default: 13
+    default: 13,
   })
   ccamPriceList?: number;
 
@@ -537,13 +536,13 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     width: 4,
     nullable: false,
-    default: 13
+    default: 13,
   })
   priceGrid?: number;
 
   /**
    * Temps de prise en charge du patient.
-   * 
+   *
    * @ORM\Column(name="patient_care_time", type="time")
    * @var \DateTime
    */
@@ -551,7 +550,7 @@ export class UserPreferenceEntity {
     name: 'patient_care_time',
     type: 'time',
     nullable: false,
-    default: '00:00:00'
+    default: '00:00:00',
   })
   patientCareTime?: string;
 
@@ -568,7 +567,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 0
+    default: 0,
   })
   sesamVitaleModeDesynchronise?: number;
 
@@ -580,7 +579,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   calendarBorderColored?: number;
 
@@ -592,7 +591,7 @@ export class UserPreferenceEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 0
+    default: 0,
   })
   signatureAutomatic?: number;
 
@@ -604,7 +603,7 @@ export class UserPreferenceEntity {
    */
   /**
    * Entité de l'utilisateur.
-   * 
+   *
    * @ORM\OneToOne(targetEntity="UserEntity", inversedBy="setting")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    * @ORM\Id
@@ -614,6 +613,5 @@ export class UserPreferenceEntity {
   // @TODO EntityMissing
   // protected $user;
 }
-
 
 //application/Entities/User/Preference.php

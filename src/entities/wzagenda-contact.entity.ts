@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\Wzagenda\Contact")
@@ -13,7 +13,7 @@ export class WzagendaContactEntity {
    * @var integer Identifiant de l'enregistrement.
    */
   @PrimaryGeneratedColumn('increment', {
-    name: 'wzc_id'
+    name: 'wzc_id',
   })
   id?: number;
 
@@ -40,7 +40,7 @@ export class WzagendaContactEntity {
   @Column({
     name: 'wzc_provider_id',
     type: 'int',
-    nullable: false
+    nullable: false,
   })
   providerId?: number;
 }
