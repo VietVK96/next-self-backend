@@ -78,7 +78,7 @@ export class UserResourceEntity {
   @Column({
     name: 'color',
     type: 'json',
-    default: '"default": "{""background"": ""#000000"", ""foreground"": ""#ffffff""}"'
+    default: '"{""background"": ""#000000"", ""foreground"": ""#ffffff""}"',
   })
   color?: string;
 
