@@ -29,10 +29,9 @@ export class LotEntity {
    * @Serializer\Type("int")
    */
   @PrimaryGeneratedColumn('increment', {
-    name: 'BIL_ID',
+    name: 'id',
   })
   id?: number;
-  protected $id;
 
   /**
    * @ORM\ManyToOne(targetEntity="LotStatus")
