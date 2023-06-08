@@ -39,7 +39,6 @@ export class PaymentPlanEntity {
     name: 'label',
     type: 'varchar',
     length: 255,
-    nullable: false
   })
   title?: string;
 

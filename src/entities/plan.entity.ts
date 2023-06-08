@@ -32,8 +32,7 @@ export class PlanEntity {
   @Column({
     name: 'name',
     type: 'varchar',
-    length: 255,
-    nullable: false
+    length: 255
   })
   name?: string;
 

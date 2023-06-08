@@ -66,6 +66,7 @@ export class PeriodontalChartEntity {
   @Column({
     name: 'status',
     type: 'int',
+    width: 11,
     default: 1
   })
   status?: number;
@@ -83,7 +84,6 @@ export class PeriodontalChartEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    nullable: false,
     default: 0.00
   })
   probingDepth?: number;
@@ -101,7 +101,6 @@ export class PeriodontalChartEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    nullable: false,
     default: 0.00
   })
   gingivalMargin?: number;
@@ -119,7 +118,6 @@ export class PeriodontalChartEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    nullable: false,
     default: 0.00
   })
   plaque?: number;
@@ -137,7 +135,6 @@ export class PeriodontalChartEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    nullable: false,
     default: 0.00
   })
   bleedingOnProbing?: number;
@@ -152,7 +149,6 @@ export class PeriodontalChartEntity {
   @Column({
     name: 'matrix',
     type: 'json',
-    nullable: false
   })
   matrix?: string;
 
