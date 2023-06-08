@@ -36,7 +36,7 @@ export class AddressEntity {
   })
   street?: string;
 
-  /**
+  /** File: application\Entities\Address.php and application\Entities\AddressEntity.php
    * @ORM\Column(name="ADR_STREET_COMP", type="string", length=255, nullable=true)
    */
   @Column({
@@ -46,6 +46,20 @@ export class AddressEntity {
     nullable: true,
   })
   streetComp?: string;
+
+  /** File: application\Entity\Address.php
+   * @ORM\Column(name="ADR_STREET_COMP", type="string", length=255, nullable=true)
+   * @Serializer\Expose
+   * @Assert\Type("string")
+   * @Assert\Length(max=255)
+   */
+  @Column({
+    name: 'ADR_STREET_COMP',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  street2?: string;
 
   /**
    * @ORM\Column(name="ADR_ZIP_CODE", type="string", length=6, nullable=true)
@@ -82,7 +96,7 @@ export class AddressEntity {
   })
   country?: string;
 
-  /**
+  /** File: application\Entities\Address.php
    * @ORM\Column(name="ADR_COUNTRY_ABBR", type="string", length=3, nullable=true)
    */
   @Column({
@@ -93,7 +107,7 @@ export class AddressEntity {
   })
   countryAbbr?: string;
 
-  /**
+  /** File: application\Entities\AddressEntity.php and application\Entity\Address.php
    * Code pays.
    *
    * @ORM\Column(name="ADR_COUNTRY_ABBR", type="string", length=3, nullable=true)
