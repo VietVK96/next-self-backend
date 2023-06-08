@@ -6,17 +6,17 @@ import { FindAllContactRes } from '../response/findall.contact.res';
 
 @Injectable()
 export class FindContactService {
-
-  constructor(
-    private dataSource: DataSource,
-  ) {}
+  constructor(private dataSource: DataSource) {}
 
   /**
    * File: php\contact\findAll.php 21-91
    * @function main function
-   * 
+   *
    */
-  async findAll(request: FindAllContactDto, organizationId: number): Promise<FindAllContactRes[]> {
+  async findAll(
+    request: FindAllContactDto,
+    organizationId: number,
+  ): Promise<FindAllContactRes[]> {
     const queryBuiler = this.dataSource.createQueryBuilder();
     const select = `
             CON.CON_ID as id,
@@ -31,12 +31,14 @@ export class FindContactService {
             CON.CON_INSEE_KEY as insee_number_key,
             CON.CON_COLOR as color`;
     const qr = queryBuiler.select(select).from(ContactEntity, 'CON');
-      console.log(request);
     if (request.conditions && request.conditions[0].field) {
       qr.where('CON.CON_LASTNAME like :name', {
         name: request.conditions[0].value,
-      }) 
+      });
     }
+    qr.where('CON.CONT_ID <> :id', {
+      id: organizationId,
+    });
     const ab: FindAllContactRes[] = await qr.getRawMany();
     for (const a of ab) {
       if (a.phones) {
@@ -48,9 +50,7 @@ export class FindContactService {
       $reliabilityStm->closeCursor();
       */
       a.reliability = 1;
-      
     }
     return ab;
-
   }
 }

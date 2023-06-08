@@ -8,7 +8,7 @@ import {
 import { Cache } from 'cache-manager';
 import { createParamDecorator } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { JWT_LOG_OUT } from '../constatns/jwt';
+import { JWT_LOG_OUT } from 'src/constatns/jwt';
 
 export interface UserIdentity {
   sub: string;
