@@ -158,7 +158,7 @@ export class LibraryActQuantityEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    default: 0.0,
+    default: 0,
   })
   amount?: number;
 
@@ -176,7 +176,7 @@ export class LibraryActQuantityEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    default: 1.0,
+    default: 1,
   })
   coefficient?: number;
 
@@ -192,7 +192,7 @@ export class LibraryActQuantityEntity {
     enum: EnumLibraryActQuantityExceeding,
     nullable: true,
   })
-  protected $exceeding = null;
+  exceeding?: EnumLibraryActQuantityExceeding;
 
   /**
    * @ORM\Column(name="duration", type="time", options={"default": "00:00:00"})
@@ -222,7 +222,7 @@ export class LibraryActQuantityEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    default: 0.0,
+    default: 0,
   })
   buyingPrice?: number;
 

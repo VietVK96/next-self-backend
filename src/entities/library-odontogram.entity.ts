@@ -87,7 +87,7 @@ export class LibraryOdontogramEntity {
     name: 'visible_implant',
     type: 'tinyint',
     width: 1,
-    default: 1,
+    default: 0,
   })
   visibleImplant?: number;
 

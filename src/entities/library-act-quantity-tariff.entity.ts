@@ -49,7 +49,7 @@ export class LibraryActQuantityTariffEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    default: 0.0,
+    default: 0,
   })
   tariff?: number;
 }
