@@ -31,12 +31,14 @@ export class FindContactService {
             CON.CON_INSEE_KEY as insee_number_key,
             CON.CON_COLOR as color`;
     const qr = queryBuiler.select(select).from(ContactEntity, 'CON');
-    console.log(request);
     if (request.conditions && request.conditions[0].field) {
       qr.where('CON.CON_LASTNAME like :name', {
         name: request.conditions[0].value,
       });
     }
+    qr.where('CON.CONT_ID <> :id', {
+      id: organizationId,
+    });
     const ab: FindAllContactRes[] = await qr.getRawMany();
     for (const a of ab) {
       if (a.phones) {

@@ -3,7 +3,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
-import type { NestExpressApplication } from '@nestjs/platform-express';
 import {
   UnprocessableEntityException,
   ValidationError,

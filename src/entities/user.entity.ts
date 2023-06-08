@@ -44,7 +44,7 @@ export class UserEntity {
   @Column({
     name: 'USR_ADMIN',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     default: 0,
   })
   admin?: number;
@@ -165,7 +165,7 @@ export class UserEntity {
   @Column({
     name: 'USR_PERMISSION_LIBRARY',
     type: 'tinyint',
-    length: 4,
+    width: 4,
   })
   permissionLibrary?: number;
 
@@ -176,7 +176,7 @@ export class UserEntity {
   @Column({
     name: 'USR_PERMISSION_LIBRARY',
     type: 'tinyint',
-    length: 4,
+    width: 4,
   })
   permissionPatient?: number;
 
@@ -187,7 +187,7 @@ export class UserEntity {
   @Column({
     name: 'permission_patient_view',
     type: 'tinyint',
-    length: 1,
+    width: 1,
   })
   permissionPatientView?: number;
 
@@ -198,7 +198,7 @@ export class UserEntity {
   @Column({
     name: 'USR_PERMISSION_PASSWORD',
     type: 'tinyint',
-    length: 4,
+    width: 4,
   })
   permissionPassword?: number;
 
@@ -209,7 +209,7 @@ export class UserEntity {
   @Column({
     name: 'USR_PERMISSION_DELETE',
     type: 'tinyint',
-    length: 4,
+    width: 4,
   })
   permissionDelete?: number;
 
@@ -220,7 +220,7 @@ export class UserEntity {
   @Column({
     name: 'USR_AGA_MEMBER',
     type: 'tinyint',
-    length: 4,
+    width: 4,
   })
   agaMember?: number;
 
@@ -341,7 +341,7 @@ export class UserEntity {
   @Column({
     name: 'USR_PENDING_DELETION',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     default: 0,
   })
   pendingDeletion?: string;
@@ -353,7 +353,7 @@ export class UserEntity {
   @Column({
     name: 'USR_CLIENT',
     type: 'tinyint',
-    length: 1,
+    width: 1,
     default: 0,
   })
   client?: number;
@@ -389,7 +389,6 @@ export class UserEntity {
   })
   @JoinColumn({
     name: 'organization_id',
-    referencedColumnName: 'GRP_ID',
   })
   group?: OrganizationEntity;
 

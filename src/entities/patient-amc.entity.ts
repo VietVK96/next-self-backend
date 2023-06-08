@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PatientAmcRepository")
@@ -9,7 +9,6 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
  */
 @Entity('patient_amc')
 export class PatientAmc {
-
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -46,7 +45,7 @@ export class PatientAmc {
   @Column({
     name: 'start_date',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   startDate?: string;
 
@@ -60,7 +59,7 @@ export class PatientAmc {
   @Column({
     name: 'end_date',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   endDate?: string;
 
@@ -76,7 +75,7 @@ export class PatientAmc {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 0
+    default: 0,
   })
   isTp?: number;
 
@@ -92,7 +91,7 @@ export class PatientAmc {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 0
+    default: 0,
   })
   isCmu?: number;
 
@@ -108,7 +107,7 @@ export class PatientAmc {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 0
+    default: 0,
   })
   isDrePossible?: number;
 
@@ -122,7 +121,7 @@ export class PatientAmc {
     name: 'type_ame',
     type: 'char',
     length: 1,
-    nullable: true
+    nullable: true,
   })
   typeAme?: string;
 
@@ -134,10 +133,9 @@ export class PatientAmc {
   @Column({
     name: 'lecture_adr',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   lectureAdr?: string;
-
 }
 
 //application/Entity/PatientAmc.php
