@@ -3,4 +3,3 @@
 
 # Add the following
 yarn lint-staged
-npx lint-staged
