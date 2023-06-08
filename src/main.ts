@@ -55,3 +55,5 @@ async function bootstrap() {
   });
 }
 bootstrap();
+
+// Test something
