@@ -105,8 +105,11 @@ export class UserEntity {
    */
   @Column({
     name: 'password_hash',
+    type: 'int',
+    width: 1,
+    default: 0,
   })
-  passwordHash?: boolean;
+  passwordHash?: number;
 
   /**
    * @ORM\Column(name="USR_MAIL", type="string", nullable=false)
@@ -334,8 +337,11 @@ export class UserEntity {
    */
   @Column({
     name: 'freelance',
+    type: 'tinyint',
+    width: 1,
+    default: 0,
   })
-  freelance?: boolean;
+  freelance?: number;
 
   /**
    * @ORM\Column(name="USR_DEPASSEMENT_PERMANENT", type="integer")
@@ -343,8 +349,11 @@ export class UserEntity {
    */
   @Column({
     name: 'USR_DEPASSEMENT_PERMANENT',
+    type: 'tinyint',
+    width: 1,
+    default: 0,
   })
-  droitPermanentDepassement?: boolean;
+  droitPermanentDepassement?: number;
 
   /**
    * @ORM\Column(name="USR_NUMERO_FACTURANT", type="string", length=13, nullable=true)

@@ -3,7 +3,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -15,6 +15,12 @@ import {
  */
 @Entity('T_SYNC_WZAGENDA_USER_SWU')
 export class SyncWzagendaUserEntity {
+  @PrimaryColumn({
+    name: 'USR_ID',
+    type: 'int',
+  })
+  id?: number;
+
   /**
    * @ORM\Column(name="SWU_CALENDAR_ID", type="string", length=32)
    * @var string Identifiant souscripteur permettant l'authentification

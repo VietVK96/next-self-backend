@@ -3,7 +3,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
-import type { NestExpressApplication } from '@nestjs/platform-express';
 import {
   UnprocessableEntityException,
   ValidationError,
@@ -12,6 +11,13 @@ import {
 import { useContainer } from 'class-validator';
 import { errFormat, filterError } from './common/util/filter-error';
 import { HttpExceptionFilter } from './common/exceptions/http-exception.filter';
+
+/**
+ * Project convert PHP to nodejs
+ * It is best for learn.
+ * Some function is CRUD but 10% function working verry hard
+ * Try up!!!!
+ */
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
