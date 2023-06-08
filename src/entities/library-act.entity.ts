@@ -102,7 +102,7 @@ export class LibraryActEntity {
     width: 11,
     default: 0,
   })
-  position?: number = 0;
+  position?: number;
 
   /**
    * @ORM\Column(name="nomenclature", type="enum_nomenclature", nullable=true, options={"default": "CCAM"})
@@ -147,7 +147,7 @@ export class LibraryActEntity {
     width: 1,
     default: 0,
   })
-  traceabilityActivated?: number = 0;
+  traceabilityActivated?: number;
 
   /**
    * @ORM\Column(name="transmitted", type="boolean", options={"default": true})
@@ -163,7 +163,7 @@ export class LibraryActEntity {
     width: 1,
     default: 1,
   })
-  transmitted?: number = 1;
+  transmitted?: number;
 
   /**
    * @ORM\Column(name="used", type="boolean", options={"default": true})
@@ -179,7 +179,7 @@ export class LibraryActEntity {
     width: 1,
     default: 1,
   })
-  used?: number = 1;
+  used?: number;
 
   /**
    * @ORM\Column(name="internal_reference_id", type="integer", nullable=true)
@@ -270,7 +270,7 @@ export class LibraryActEntity {
     width: 11,
     default: 0,
   })
-  attachmentCount?: number = 0;
+  attachmentCount?: number;
 
   /**
    * @ORM\ManyToMany(targetEntity="App\Entity\Mail", cascade={"persist", "remove"})

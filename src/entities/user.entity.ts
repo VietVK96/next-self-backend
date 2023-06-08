@@ -254,7 +254,7 @@ export class UserEntity {
     width: 4,
     default: 15,
   })
-  permissionLibrary?: number = 15;
+  permissionLibrary?: number;
 
   /**
    * @ORM\Column(name="USR_PERMISSION_PATIENT", type="integer")
@@ -266,7 +266,7 @@ export class UserEntity {
     width: 4,
     default: 15,
   })
-  permissionPatient?: number = 15;
+  permissionPatient?: number;
 
   /**
    * @ORM\Column(name="permission_patient_view", type="integer")
@@ -278,7 +278,7 @@ export class UserEntity {
     width: 1,
     default: 1,
   })
-  permissionPatientView?: number = 1;
+  permissionPatientView?: number;
 
   /**
    * @ORM\Column(name="USR_PERMISSION_PASSWORD", type="integer")
@@ -290,7 +290,7 @@ export class UserEntity {
     width: 4,
     default: 15,
   })
-  permissionPassword?: number = 15;
+  permissionPassword?: number;
 
   /**
    * @ORM\Column(name="USR_PERMISSION_DELETE", type="integer")
@@ -302,7 +302,7 @@ export class UserEntity {
     width: 4,
     default: 15,
   })
-  permissionDelete?: number = 15;
+  permissionDelete?: number;
 
   /**
    * @ORM\Column(name="USR_AGA_MEMBER", type="integer")
@@ -314,7 +314,7 @@ export class UserEntity {
     width: 1,
     default: 0,
   })
-  agaMember?: number = 0;
+  agaMember?: number;
 
   /**
    * @ORM\Column(name="USR_AGA_MEMBER", type="boolean", options={"default": false})
@@ -327,7 +327,7 @@ export class UserEntity {
     width: 1,
     default: 0,
   })
-  memberOfApprovedAssociation?: number = 0;
+  memberOfApprovedAssociation?: number;
 
   /**
    * @ORM\Column(name="freelance", type="boolean", options={"default": false})
@@ -422,7 +422,7 @@ export class UserEntity {
     scale: 2,
     default: 0,
   })
-  rateCharges?: number = 0;
+  rateCharges?: number;
 
   /**
    * @ORM\Column(name="social_security_reimbursement_base_rate", type="decimal", precision=10, scale=2, options={"default": 100})
@@ -556,6 +556,8 @@ export class UserEntity {
    */
   @Column({
     name: 'organization_id',
+    type: 'int',
+    width: 11,
   })
   organizationId?: number;
 
@@ -564,7 +566,6 @@ export class UserEntity {
   })
   @JoinColumn({
     name: 'organization_id',
-    referencedColumnName: 'GRP_ID',
   })
   group?: OrganizationEntity;
 
@@ -644,6 +645,94 @@ export class UserEntity {
    */
   // @TODO EntityMissing
   // protected $userPreferenceQuotation;
+
+  /**
+   * Entité des réglages.
+   *
+   * @ORM\OneToOne(targetEntity="UserSettingEntity", mappedBy="user")
+   * @var \App\Entities\UserSettingEntity
+   */
+  // @TODO EntityMissing
+  // protected $setting;
+
+  /**
+   * Entité de l'abonnement mobile.
+   *
+   * @ORM\OneToOne(targetEntity="MobileSubscriptionEntity", mappedBy="user")
+   * @var \App\Entities\MobileSubscriptionEntity|null
+   */
+  // @TODO EntityMissing
+  // protected $mobileSubscription = null;
+
+  /**
+   * Entité des réglages mobile.
+   *
+   * @ORM\OneToOne(targetEntity="MobileSettingEntity", mappedBy="user")
+   * @var \App\Entities\MobileSettingEntity|null
+   */
+  // @TODO EntityMissing
+  // protected $mobileSetting = null;
+
+  /**
+   * @ORM\OneToOne(targetEntity="UserMedical", mappedBy="user", fetch="EAGER", cascade={"persist"})
+   * @Serializer\Expose
+   * @Assert\Valid
+   */
+  // @TODO EntityMissing
+  // protected $medical = null;
+
+  /**
+   * @ORM\OneToOne(targetEntity="UserAmo", mappedBy="user", fetch="EAGER", cascade={"persist"})
+   * @Serializer\Expose
+   * @Assert\Valid
+   */
+  // @TODO EntityMissing
+  // protected $amo = null;
+
+  /**
+   * @ORM\OneToMany(targetEntity="Caresheet", mappedBy="user")
+   */
+  // @TODO EntityMissing
+  // protected $caresheets;
+
+  /**
+   * @ORM\OneToMany(targetEntity="EmailAccount", mappedBy="user")
+   * @ORM\OrderBy({"position": "ASC"})
+   */
+  // @TODO EntityMissing
+  // protected $emailAccounts;
+  /**
+   * @ORM\OneToMany(targetEntity="EventType", mappedBy="user")
+   * @ORM\OrderBy({"position": "asc"})
+   */
+  // @TODO EntityMissing
+  // protected $eventTypes;
+
+  /**
+   * @ORM\ManyToMany(targetEntity="Resource", mappedBy="subscribers")
+   * @ORM\OrderBy({"name": "ASC"})
+   */
+  // @TODO EntityMissing
+  // protected $resources;
+
+  /**
+   * @ORM\OneToMany(targetEntity="SendingLog", mappedBy="user", cascade={"persist"})
+   * @ORM\OrderBy({"sendingDate": "desc"})
+   */
+  // @TODO EntityMissing
+  // protected $sendingLogs;
+
+  /**
+   * @ORM\ManyToMany(targetEntity="EmailAccount", mappedBy="subscribers")
+   */
+  // @TODO EntityMissing
+  // protected $subscribedEmailAccounts;
+
+  /**
+   * @ORM\OneToMany(targetEntity="AppointmentReminderLibrary", mappedBy="user", cascade={"persist"})
+   */
+  // @TODO EntityMissing
+  // protected $appointmentReminderLibraries;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

@@ -3,6 +3,8 @@ import configuration from './common/config';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ContactModule } from './contact/contact.module';
+import { AuthModule } from './auth/auth.module';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
@@ -18,7 +20,17 @@ import { ContactModule } from './contact/contact.module';
         return configDatabase;
       },
     }),
+    CacheModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (c: ConfigService) => {
+        const cacheConfig = c.get('redis');
+        return cacheConfig;
+      },
+      isGlobal: true,
+    }),
     ContactModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

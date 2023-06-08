@@ -1,4 +1,10 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\OrganizationSubscriptionRepository")
@@ -15,11 +21,10 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
  */
 @Entity('organization_subscription')
 export class OrganizationSubscriptionEntity {
-
   /**
- * @ORM\ManyToOne(targetEntity="Organization")
- * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
- */
+   * @ORM\ManyToOne(targetEntity="Organization")
+   * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
+   */
   // @TODO EntityMissing
   // organization;
 
@@ -55,7 +60,7 @@ export class OrganizationSubscriptionEntity {
   @Column({
     name: 'start_of_period',
     type: 'datetime',
-    nullable: false
+    nullable: false,
   })
   startOfPeriod?: string;
 
@@ -71,7 +76,7 @@ export class OrganizationSubscriptionEntity {
   @Column({
     name: 'end_of_period',
     type: 'datetime',
-    nullable: false
+    nullable: false,
   })
   endOfPeriod?: string;
 
