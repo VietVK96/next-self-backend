@@ -14,7 +14,7 @@ import { HttpExceptionFilter } from './common/exceptions/http-exception.filter';
 
 /**
  * Project convert PHP to nodejs
- * It is best for learn. 
+ * It is best for learn.
  * Some function is CRUD but 10% function working verry hard
  * Try up!!!!
  */
@@ -62,4 +62,3 @@ async function bootstrap() {
   });
 }
 bootstrap();
-
