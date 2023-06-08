@@ -58,7 +58,7 @@ export class WorkstationEntity {
     width: 4,
     default: 0,
   })
-  platform?: number = 0;
+  platform?: number;
 
   /**
    * @ORM\OneToMany(targetEntity="ImagingSoftware", mappedBy="workstation", cascade={"persist"})

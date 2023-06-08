@@ -41,7 +41,7 @@ export class UserAmoEntity {
     width: 1,
     default: 0,
   })
-  isTp?: number = 0;
+  isTp?: number;
 
   /**
    * @ORM\Column(name="code_convention", type="integer", options={"default": 1})
@@ -56,6 +56,6 @@ export class UserAmoEntity {
     width: 4,
     default: 1,
   })
-  codeConvention?: number = 1;
+  codeConvention?: number;
 }
 // application/Entity/UserAmo.php
