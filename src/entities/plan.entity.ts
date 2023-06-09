@@ -52,7 +52,7 @@ export class PlanEntity {
     enum: EnumPlanType,
     default: EnumPlanType.PLAN,
   })
-  type?: EnumPlanType.PLAN;
+  type?: EnumPlanType;
 
   /**
    * @ORM\Column(name="PLF_AMOUNT", type="float")
@@ -65,7 +65,7 @@ export class PlanEntity {
     scale: 2,
     default: 0,
   })
-  amount?: number = 0;
+  amount?: number;
 
   /**
    * @ORM\Column(name="PLF_MUTUAL_CEILING", type="float")
@@ -78,7 +78,7 @@ export class PlanEntity {
     scale: 2,
     default: 0,
   })
-  mutualCeiling?: number = 0;
+  mutualCeiling?: number;
 
   /**
    * @ORM\Column(name="PLF_PERSON_REPAYMENT", type="float")
@@ -91,7 +91,7 @@ export class PlanEntity {
     scale: 2,
     default: 0,
   })
-  personRepayment?: number = 0;
+  personRepayment?: number;
 
   /**
    * @ORM\Column(name="PLF_PERSON_AMOUNT", type="float")
@@ -104,7 +104,7 @@ export class PlanEntity {
     scale: 2,
     default: 0,
   })
-  personAmount?: number = 0;
+  personAmount?: number;
 
   /**
    * @ORM\Column(name="PLF_ACCEPTED_ON", type="datetime", nullable=true)
@@ -159,7 +159,7 @@ export class PlanEntity {
     width: 4,
     default: 0,
   })
-  sentToPatient?: number = 0;
+  sentToPatient?: number;
 
   /**
    * @ORM\Column(name="sending_date_to_patient", type="date", nullable=true)
