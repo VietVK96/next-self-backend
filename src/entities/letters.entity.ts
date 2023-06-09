@@ -233,6 +233,14 @@ export class LettersEntity {
   })
   footerHeight?: number;
 
+  // @TODO EntityMissing
+  // @Column({
+  //   name:'int',
+  //   width:11,
+  //   nullable:true
+  // })
+  // quote_id?:number
+
   // @Check TimeStamp
   // use TimestampableEntity;
   @CreateDateColumn({ name: 'created_at' })
