@@ -63,7 +63,7 @@ export class PlanPlfEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    default: 0,
+    default: 0.00,
   })
   amount?: number;
 
@@ -76,7 +76,7 @@ export class PlanPlfEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    default: 0,
+    default: 0.00,
   })
   mutualCeiling?: number;
 
@@ -89,7 +89,7 @@ export class PlanPlfEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    default: 0,
+    default: 0.00,
   })
   personRepayment?: number;
 
@@ -102,7 +102,7 @@ export class PlanPlfEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    default: 0,
+    default: 0.00,
   })
   personAmount?: number;
 
