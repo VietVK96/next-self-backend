@@ -105,7 +105,7 @@ export class LettersEntity {
     nullable: true,
     default: EnumLettersType.CONTACT,
   })
-  category?: EnumLettersType.CONTACT;
+  category?: EnumLettersType;
 
   /** File: application\Entities\Letters.php and application\Entity\Mail.php
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
@@ -197,8 +197,9 @@ export class LettersEntity {
     name: 'favorite',
     type: 'tinyint',
     width: 1,
+    default: 0,
   })
-  favorite?: number = 0;
+  favorite?: number;
 
   /**
    * @ORM\ManyToOne(targetEntity="Quote", inversedBy="attachments")
@@ -213,7 +214,7 @@ export class LettersEntity {
    * @Serializer\Groups({"mail:read"})
    */
   @Column({
-    name: 'footerContent',
+    name: 'footer_content',
     type: 'text',
     nullable: true,
   })
@@ -225,12 +226,20 @@ export class LettersEntity {
    * @Serializer\Groups({"mail:read"})
    */
   @Column({
-    name: 'footerHeight',
+    name: 'footer_height',
     type: 'int',
     width: 11,
     default: 0,
   })
-  footerHeight?: number = 0;
+  footerHeight?: number;
+
+  // @TODO EntityMissing
+  // @Column({
+  //   name:'int',
+  //   width:11,
+  //   nullable:true
+  // })
+  // quote_id?:number
 
   // @Check TimeStamp
   // use TimestampableEntity;

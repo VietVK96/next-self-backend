@@ -1,9 +1,6 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { getBetween, makeRandomString } from './string';
 
 describe('StringUtil', () => {
-  beforeEach(async () => {});
-
   it('should be make random string', () => {
     // expect(service).toBeDefined();
     const a = makeRandomString(10, 'a');

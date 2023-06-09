@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PatientAmoRepository")
@@ -9,7 +9,6 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
  */
 @Entity('patient_amo')
 export class PatientAmo {
-
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -46,7 +45,7 @@ export class PatientAmo {
   @Column({
     name: 'start_date',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   startDate?: string;
 
@@ -60,7 +59,7 @@ export class PatientAmo {
   @Column({
     name: 'end_date',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   endDate?: string;
 
@@ -76,7 +75,7 @@ export class PatientAmo {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 0
+    default: 0,
   })
   isTp?: number;
 
@@ -92,7 +91,7 @@ export class PatientAmo {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 0
+    default: 0,
   })
   isAld?: number;
 
@@ -105,7 +104,7 @@ export class PatientAmo {
   @Column({
     name: 'maternity_date',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   maternityDate?: string;
 
@@ -119,7 +118,7 @@ export class PatientAmo {
   @Column({
     name: 'childbirth_date',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   childbirthDate?: string;
 
@@ -133,7 +132,7 @@ export class PatientAmo {
     type: 'char',
     length: 2,
     nullable: false,
-    default: 10
+    default: 10,
   })
   codeNatureAssurance?: string;
 
@@ -147,7 +146,7 @@ export class PatientAmo {
     type: 'char',
     length: 1,
     nullable: false,
-    default: 0
+    default: 0,
   })
   codeExoneration?: string;
 
@@ -159,10 +158,9 @@ export class PatientAmo {
   @Column({
     name: 'lecture_adr',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   lectureAdr?: string;
-
 }
 
 //application/Entity/PatientAmo.php

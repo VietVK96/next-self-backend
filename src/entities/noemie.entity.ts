@@ -1,4 +1,10 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\NoemieRepository")
@@ -14,7 +20,6 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
  */
 @Entity('noemie')
 export class NoemieEntity {
-
   /**
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
@@ -43,7 +48,7 @@ export class NoemieEntity {
     name: 'finess_number',
     type: 'varchar',
     length: 255,
-    nullable: false
+    nullable: false,
   })
   finessNumber?: string;
 
@@ -56,7 +61,7 @@ export class NoemieEntity {
   @Column({
     name: 'creation_date',
     type: 'date',
-    nullable: false
+    nullable: false,
   })
   creationDate?: string;
 
@@ -70,7 +75,7 @@ export class NoemieEntity {
     name: 'reference',
     type: 'varchar',
     length: 3,
-    nullable: false
+    nullable: false,
   })
   reference?: string;
 
@@ -82,7 +87,7 @@ export class NoemieEntity {
   @Column({
     name: 'file_content',
     type: 'blob',
-    nullable: false
+    nullable: false,
   })
   fileContent?: string;
 
@@ -96,7 +101,7 @@ export class NoemieEntity {
     name: 'file_content_hash',
     type: 'char',
     length: 40,
-    nullable: false
+    nullable: false,
   })
   fileContentHash?: string;
 
@@ -109,7 +114,7 @@ export class NoemieEntity {
   @Column({
     name: 'external_reference_id',
     type: 'int',
-    nullable: false
+    nullable: false,
   })
   externalReferenceId?: number;
 
@@ -130,7 +135,6 @@ export class NoemieEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt?: Date;
-
 }
 
 //application/Entity/Noemie.php
