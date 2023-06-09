@@ -26,6 +26,16 @@ export class ContactUserEntity {
   // protected $contact;
 
   /**
+   * @ORM\ManyToOne(targetEntity="Patient")
+   * @ORM\JoinColumn(name="con_id", referencedColumnName="CON_ID")
+   * @Serializer\Expose
+   * @Serializer\Groups({"unpaid:index"})
+   * @Assert\NotNull
+   */
+  // @TODO EntityMissing
+  // protected $patient;
+
+  /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
    * @ORM\JoinColumn(name="usr_id", referencedColumnName="USR_ID")
    * @var \App\Entities\User $user Entité représentant le praticien.
@@ -34,26 +44,35 @@ export class ContactUserEntity {
   // protected $user;
 
   /**
-   * @ORM\ManyToOne(targetEntity="PatientEntity", inversedBy="patientUsers", cascade={"persist"})
-   * @ORM\JoinColumn(name="con_id", referencedColumnName="CON_ID")
+   * @ORM\Column(name="cou_unpaid_level", type="integer", options={"default": 0})
+   * @Serializer\Expose
+   * @Serializer\Groups({"unpaid:index"})
+   * @Serializer\Type("int")
+   * @Assert\Type("int")
+   * @Assert\NotNull
+   * @Assert\GreaterThanOrEqual(0)
    */
-  // @TODO EntityMissing
-  // protected $patient;
-
   @Column({
     name: 'cou_unpaid_level',
     type: 'int',
     nullable: false,
     default: 0,
   })
-  unpaidLevel?: number;
+  relaunchLevel?: number;
 
+  /**
+   * @ORM\Column(name="cou_unpaid_last_recovery", type="date", nullable=true)
+   * @Serializer\Expose
+   * @Serializer\Groups({"unpaid:index"})
+   * @Serializer\Type("DateTime<'Y-m-d'>")
+   * @Assert\Date
+   */
   @Column({
     name: 'cou_unpaid_last_recovery',
     type: 'date',
     nullable: true,
   })
-  unpaidLastRecovery?: string;
+  relaunchDate?: string;
 
   /**
    * @ORM\Column(name="cou_amount_due", type="decimal", precision=10, scale=2)
@@ -86,6 +105,24 @@ export class ContactUserEntity {
   balance?: number;
 
   /**
+   * @ORM\Column(name="cou_amount_due", type="decimal", precision=10, scale=2, options={"default": 0})
+   * @Serializer\Expose
+   * @Serializer\Groups({"unpaid:index"})
+   * @Serializer\Type("float")
+   * @Assert\Type("float")
+   * @Assert\NotNull
+   */
+  @Column({
+    name: 'cou_amount_due',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: false,
+    default: 0.0,
+  })
+  amount?: number;
+
+  /**
    * @ORM\Column(name="amount_due_care", type="decimal", precision=10, scale=2)
    * @var float Montant dû des soins.
    */
@@ -114,6 +151,24 @@ export class ContactUserEntity {
     default: 0.0,
   })
   balanceCare?: number;
+
+  /**
+   * @ORM\Column(name="amount_due_care", type="decimal", precision=10, scale=2, options={"default": 0})
+   * @Serializer\Expose
+   * @Serializer\Groups({"unpaid:index"})
+   * @Serializer\Type("float")
+   * @Assert\Type("float")
+   * @Assert\NotNull
+   */
+  @Column({
+    name: 'amount_due_care',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: false,
+    default: 0.00
+  })
+  amountCare?: number;
 
   /**
    * @ORM\Column(name="amount_due_prosthesis", type="decimal", precision=10, scale=2)
@@ -146,6 +201,24 @@ export class ContactUserEntity {
   balanceProsthesis?: number;
 
   /**
+   * @ORM\Column(name="amount_due_prosthesis", type="decimal", precision=10, scale=2, options={"default": 0})
+   * @Serializer\Expose
+   * @Serializer\Groups({"unpaid:index"})
+   * @Serializer\Type("float")
+   * @Assert\Type("float")
+   * @Assert\NotNull
+   */
+  @Column({
+    name: 'amount_due_prosthesis',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: false,
+    default: 0.00
+  })
+  amountProsthesis?: number;
+
+  /**
    * @ORM\Column(name="cou_last_payment", type="date", nullable=true)
    * @var \DateTime|NULL $lastPayment Date de dernier paiement.
    */
@@ -168,6 +241,20 @@ export class ContactUserEntity {
   lastCare?: string;
 
   /**
+   * @ORM\Column(name="cou_last_care", type="date", nullable=true)
+   * @Serializer\Expose
+   * @Serializer\Groups({"unpaid:index"})
+   * @Serializer\Type("DateTime<'Y-m-d'>")
+   * @Assert\Date
+   */
+  @Column({
+    name: 'cou_last_care',
+    type: 'date',
+    nullable: true
+  })
+  visitDate?: string;
+
+  /**
    * @ORM\Column(name="cou_force_update", type="integer")
    * @var boolean $forceUpdate Force la mise à jour des informations.
    */
@@ -179,6 +266,25 @@ export class ContactUserEntity {
     default: 0,
   })
   forceUpdate?: number;
+
+  /**
+   * @ORM\Column(name="third_party_balance", type="decimal", precision=0, scale=2, options={"default": 0})
+   * @Serializer\Type("float")
+   * @Assert\Type("float")
+   * @Assert\NotNull
+   */
+  @Column({
+    name: 'third_party_balance',
+    type: 'decimal',
+    precision: 0,
+    scale: 2,
+    default: 0.00
+  })
+  thirdPartyBalance?: number;
+
 }
 
 //application/Entiteies/ContactUser.php
+// application\Entities\PatientUserEntity.php
+// application\Entity\PatientBalance.php
+// application\Entity\PatientUser.php
