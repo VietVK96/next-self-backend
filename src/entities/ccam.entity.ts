@@ -288,6 +288,100 @@ export class CcamEntity {
    */
   // @TODO EntityMissing
   //   protected $dependences;
+
+  /**
+   * @ORM\ManyToOne(targetEntity="DentalMaterial")
+   * @ORM\JoinColumn(name="dental_material_id", referencedColumnName="id", nullable=true)
+   * @Serializer\Expose
+   * @Serializer\Groups({"detail"})
+   */
+  // @TODO EntityMissing
+  // protected $material = NULL;
+
+  /**
+   * @ORM\Column(name="forbidden_teeth", type="simple_array", nullable=true)
+   * @Serializer\Expose
+   * @Serializer\Groups({"detail"})
+   * @Assert\Type("array")
+   */
+  @Column({
+    name: 'forbidden_teeth',
+    type: 'varchar',
+    nullable: true,
+    length: 255,
+  })
+  forbiddenTeeth?: string;
+
+  /**
+   * @ORM\ManyToMany(targetEntity="Ccam")
+   * @ORM\JoinTable(
+   *  name="ccam_association",
+   *  joinColumns={
+   *      @ORM\JoinColumn(name="ccam_parent_id", referencedColumnName="id")
+   *  },
+   *  inverseJoinColumns={
+   *      @ORM\JoinColumn(name="ccam_child_id", referencedColumnName="id")
+   *  }
+   * )
+   */
+  // @TODO EntityMissing
+  // protected $associations;
+
+  /**
+   * @ORM\ManyToMany(targetEntity="Ccam")
+   * @ORM\JoinTable(
+   *  name="ccam_association",
+   *  joinColumns={
+   *      @ORM\JoinColumn(name="ccam_parent_id", referencedColumnName="id")
+   *  },
+   *  inverseJoinColumns={
+   *      @ORM\JoinColumn(name="ccam_child_id", referencedColumnName="id")
+   *  }
+   * )
+   */
+  // @TODO EntityMissing
+  // protected $associations;
+
+  /**
+   * @ORM\ManyToMany(targetEntity="Ccam", inversedBy="dependentWithMe")
+   * @ORM\JoinTable(
+   *  name="ccam_dependence",
+   *  joinColumns={
+   *      @ORM\JoinColumn(name="ccam_parent_id", referencedColumnName="id")
+   *  },
+   *  inverseJoinColumns={
+   *      @ORM\JoinColumn(name="ccam_child_id", referencedColumnName="id")
+   *  }
+   * )
+   */
+  // @TODO EntityMissing
+  // protected $dependencies;
+
+  /**
+   * @ORM\ManyToMany(targetEntity="Ccam", mappedBy="dependencies")
+   */
+  // @TODO EntityMissing
+  // protected $dependentWithMe;
+
+  /**
+   * @ORM\OneToMany(targetEntity="CcamCmuCodification", mappedBy="ccam")
+   */
+  // @TODO EntityMissing
+  // protected $cmuCodifications;
+
+  /**
+   * @ORM\OneToMany(targetEntity="CcamTooth", mappedBy="ccam")
+   * @ORM\OrderBy({"rank": "ASC"})
+   */
+  // @TODO EntityMissing
+  // protected $teeth;
+
+  /**
+   * @ORM\OneToMany(targetEntity="DomtomMajoration", mappedBy="ccam")
+   */
+  // @TODO EntityMissing
+  // protected $domtomMajorations;
 }
 
 // application\Entities\Ccam.php
+// application\Entity\Ccam.php

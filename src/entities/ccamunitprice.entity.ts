@@ -5,7 +5,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
  * @ORM\Table(name="ccam_unit_price")
  * @Serializer\ExclusionPolicy("all")
  */
-Entity('ccam_unit_price');
+@Entity('ccam_unit_price')
 export class CcamUnitPriceEntity {
   /**
    * @ORM\Id
@@ -95,3 +95,4 @@ export class CcamUnitPriceEntity {
 }
 
 // application\Entities\CcamUnitPrice.php
+// application\Entity\CcamUnitPrice.php
