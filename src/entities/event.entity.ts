@@ -50,7 +50,6 @@ export class EventEntity {
     type: 'varchar',
     length: 81,
     nullable: true,
-    default: null
   })
   name?: string;
 
@@ -61,7 +60,6 @@ export class EventEntity {
     name: 'EVT_START',
     type: 'datetime',
     nullable: true,
-    default: null
   })
   start?: string;
 
@@ -83,7 +81,6 @@ export class EventEntity {
     name: 'EVT_END',
     type: 'datetime',
     nullable: true,
-    default: null
   })
   end?: string;
 
