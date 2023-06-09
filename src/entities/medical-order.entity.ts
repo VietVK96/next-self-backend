@@ -54,6 +54,20 @@ export class MedicalOrderEntity {
   date?: string;
 
   /**
+   * @ORM\Column(name="MDO_DATE", type="date")
+   * @Serializer\Expose
+   * @Serializer\Type("DateTime<'Y-m-d'>")
+   * @Assert\Type("DateTimeInterface")
+   * @Assert\NotNull
+   */
+  @Column({
+    name: 'MDO_DATE',
+    type: 'date',
+    nullable: true
+  })
+  creationDate?: string;
+
+  /**
    * @ORM\Column(name="title", type="string", length=255)
    */
   @Column({
@@ -206,6 +220,15 @@ export class MedicalOrderEntity {
    */
   // @TODO EntityMissing
   // protected $contact;
+
+  /**
+   * @ORM\ManyToOne(targetEntity="Patient")
+   * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
+   * @Serializer\Expose
+   */
+  // @TODO EntityMissing
+  // protected $patient;
+
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
