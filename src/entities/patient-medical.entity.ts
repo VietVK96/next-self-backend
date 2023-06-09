@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * @ORM\Entity
@@ -7,7 +7,6 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
  */
 @Entity('patient_medical')
 export class PatientMedicalEntity {
-
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -66,7 +65,7 @@ export class PatientMedicalEntity {
   @Column({
     name: 'service_amo_start_date',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   serviceAmoStartDate?: string;
 
@@ -80,10 +79,9 @@ export class PatientMedicalEntity {
   @Column({
     name: 'service_amo_end_date',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   serviceAmoEndDate?: string;
-
 }
 
 //application/Entity/PatientMedical.php
