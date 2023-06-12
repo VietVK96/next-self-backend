@@ -7,6 +7,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { UserEntity } from './user.entity';
+import { CorrespondentTypeEntity } from './correspondent-type.entity';
 
 @Entity('T_GROUP_GRP')
 export class OrganizationEntity {
@@ -65,6 +66,11 @@ export class OrganizationEntity {
     createForeignKeyConstraints: false,
   })
   users?: UserEntity[];
+
+  @OneToMany(() => CorrespondentTypeEntity, e => e.group, {
+    createForeignKeyConstraints: false,
+  })
+  CorrespondentTypes: CorrespondentTypeEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
