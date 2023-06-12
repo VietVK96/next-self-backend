@@ -1,4 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { CashingEntity } from './cashing.entity';
+import { ContactEntity } from './contact.entity';
 
 /**
  * @ORM\Entity
@@ -60,6 +68,19 @@ export class CashingContactEntity {
    */
   // @TODO EntityMissing
   //   protected $cashing;
+  @Column({
+    name: 'CSG_ID',
+    type: 'int',
+    width: 11,
+  })
+  csgId?: number;
+
+  @ManyToOne(() => CashingEntity, (e) => e.cashingContacts)
+  @JoinColumn({
+    name: 'CSG_ID',
+    referencedColumnName: 'CSG_ID',
+  })
+  cashing?: CashingEntity;
 
   /** File: application\Entity\PaymentPayee.php
    * @ORM\ManyToOne(targetEntity="Payment", inversedBy="payees")
@@ -67,6 +88,12 @@ export class CashingContactEntity {
    */
   // @TODO EntityMissing
   // protected $payment;
+  @ManyToOne(() => CashingEntity, (e) => e.payees)
+  @JoinColumn({
+    name: 'CSG_ID',
+    referencedColumnName: 'CSG_ID',
+  })
+  payment?: CashingEntity;
 
   /** File: application\Entities\Cashing\Contact.php
    * @ORM\ManyToOne(targetEntity="\App\Entities\Contact", inversedBy="cashingContacts")
@@ -74,6 +101,19 @@ export class CashingContactEntity {
    */
   // @TODO EntityMissing
   //   protected $contact;
+  @Column({
+    name: 'CON_ID',
+    type: 'int',
+    width: 11,
+  })
+  conId?: number;
+
+  @ManyToOne(() => ContactEntity, (e) => e.cashingContacts)
+  @JoinColumn({
+    name: 'CON_ID',
+    referencedColumnName: 'CON_ID',
+  })
+  contact?: ContactEntity;
 
   /** File: application\Entity\PaymentPayee.php
    * @ORM\ManyToOne(targetEntity="Patient")
@@ -83,6 +123,12 @@ export class CashingContactEntity {
    */
   // @TODO EntityMissing
   // protected $patient;
+  @ManyToOne(() => ContactEntity, (e) => e.id)
+  @JoinColumn({
+    name: 'CON_ID',
+    referencedColumnName: 'CON_ID',
+  })
+  patient?: ContactEntity;
 }
 // application/Entities/Cashing/Contact.php
 // application/Entity/PaymentPayee.php
