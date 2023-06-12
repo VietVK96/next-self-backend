@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { CorrespondentTypeEntity } from './correspondent-type.entity';
+import { CorrespondentEntity } from './correspondent.entity';
 
 @Entity('T_GROUP_GRP')
 export class OrganizationEntity {
@@ -70,7 +71,12 @@ export class OrganizationEntity {
   @OneToMany(() => CorrespondentTypeEntity, e => e.group, {
     createForeignKeyConstraints: false,
   })
-  CorrespondentTypes: CorrespondentTypeEntity[];
+  CorrespondentTypes?: CorrespondentTypeEntity[];
+
+  @OneToMany(() => CorrespondentEntity, e => e.group, {
+    createForeignKeyConstraints: false,
+  })
+  Correspondents?: CorrespondentEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

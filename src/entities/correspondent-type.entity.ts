@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { OrganizationEntity } from "./organization.entity";
 import { CorrespondentEntity } from "./correspondent.entity";
 
@@ -39,6 +39,11 @@ export class CorrespondentTypeEntity {
     referencedColumnName: 'GRP_ID'
   })
   group?: OrganizationEntity;
+
+  @OneToMany(() => CorrespondentEntity, e => e.category, {
+    createForeignKeyConstraints: false
+  })
+  Correspondents?: CorrespondentEntity[];
 
   /**
    * @ORM\Column(name="name", type="string", length=255)

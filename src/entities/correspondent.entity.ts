@@ -3,9 +3,14 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { CorrespondentTypeEntity } from './correspondent-type.entity';
+import { AddressEntity } from './address.entity';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\Correspondent")
@@ -18,8 +23,20 @@ export class CorrespondentEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // group;
+  @Column({
+    name: 'organization_id'
+  })
+  organizationId?: string;
+
+  @ManyToOne(() => OrganizationEntity, e => e.Correspondents, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'organization_id',
+    referencedColumnName: 'GRP_ID'
+  })
+  group?: OrganizationEntity;
 
   /**
    * @ORM\Id
@@ -37,15 +54,41 @@ export class CorrespondentEntity {
    * @ORM\ManyToOne(targetEntity="AddressBookCategory")
    * @ORM\JoinColumn(name="correspondent_type_id", referencedColumnName="id", nullable=true)
    */
-  // @TODO EntityMissing
   // protected $category = NULL;
+  @Column({
+    name: 'correspondent_type_id',
+    nullable: true,
+  })
+  correspondentTypeId?: string;
+
+  @ManyToOne(() => CorrespondentTypeEntity, e => e.Correspondents, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'correspondent_type_id',
+    referencedColumnName: "id"
+  })
+  category?: CorrespondentTypeEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Address")
    * @ORM\JoinColumn(name="ADR_ID", referencedColumnName="ADR_ID", nullable=true)
    */
-  // @TODO EntityMissing
   // protected $address = NULL;
+  @Column({
+    name: 'ADR_ID',
+    nullable: true,
+  })
+  ADR_ID?: string;
+
+  @ManyToOne(() => AddressEntity, e => e.Correspondents, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'ADR_ID',
+    referencedColumnName: 'ADR_ID'
+  })
+  address?: AddressEntity;
 
   @Column({
     name: 'CPD_TYPE',

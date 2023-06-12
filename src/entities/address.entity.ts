@@ -2,9 +2,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { CorrespondentEntity } from './correspondent.entity';
 
 /**
  * @ORM\Entity
@@ -121,6 +123,11 @@ export class AddressEntity {
     nullable: true,
   })
   countryCode?: string;
+
+  @OneToMany(() => CorrespondentEntity, e => e.address, {
+    createForeignKeyConstraints: false
+  })
+  Correspondents?: CorrespondentEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
