@@ -151,6 +151,15 @@ export class SlipCheckEntity {
   // @TODO EntityMissing
   // protected $number = 1;
 
+  /** File: application\Entity\Bordereau.php
+   * @ORM\OneToMany(targetEntity="Payment", mappedBy="bordereau")
+   * @Serializer\Expose
+   * @Serializer\Groups({"payments_group"})
+   * @Serializer\MaxDepth(1)
+   */
+  // @TODO EntityMissing
+  // protected $payments;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 

@@ -3,9 +3,11 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { CashingEntity } from './cashing.entity';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\Correspondent")
@@ -150,6 +152,11 @@ export class CorrespondentEntity {
    */
   // @TODO EntityMissing
   // protected $phones;
+
+  @OneToMany(() => CashingEntity, (e) => e.correspondent, {
+    createForeignKeyConstraints: false,
+  })
+  cashings?: CashingEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

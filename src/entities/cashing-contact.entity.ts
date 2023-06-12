@@ -66,8 +66,7 @@ export class CashingContactEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\Cashing", inversedBy="cashingContacts")
    * @ORM\JoinColumn(name="CSG_ID", referencedColumnName="CSG_ID")
    */
-  // @TODO EntityMissing
-  //   protected $cashing;
+  // protected $cashing;
   @Column({
     name: 'CSG_ID',
     type: 'int',
@@ -75,10 +74,11 @@ export class CashingContactEntity {
   })
   csgId?: number;
 
-  @ManyToOne(() => CashingEntity, (e) => e.cashingContacts)
+  @ManyToOne(() => CashingEntity, (e) => e.cashingContacts, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({
     name: 'CSG_ID',
-    referencedColumnName: 'CSG_ID',
   })
   cashing?: CashingEntity;
 
@@ -86,12 +86,12 @@ export class CashingContactEntity {
    * @ORM\ManyToOne(targetEntity="Payment", inversedBy="payees")
    * @ORM\JoinColumn(name="CSG_ID", referencedColumnName="CSG_ID")
    */
-  // @TODO EntityMissing
   // protected $payment;
-  @ManyToOne(() => CashingEntity, (e) => e.payees)
+  @ManyToOne(() => CashingEntity, (e) => e.payees, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({
     name: 'CSG_ID',
-    referencedColumnName: 'CSG_ID',
   })
   payment?: CashingEntity;
 
@@ -108,10 +108,11 @@ export class CashingContactEntity {
   })
   conId?: number;
 
-  @ManyToOne(() => ContactEntity, (e) => e.cashingContacts)
+  @ManyToOne(() => ContactEntity, (e) => e.cashingContacts, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({
     name: 'CON_ID',
-    referencedColumnName: 'CON_ID',
   })
   contact?: ContactEntity;
 
@@ -123,10 +124,11 @@ export class CashingContactEntity {
    */
   // @TODO EntityMissing
   // protected $patient;
-  @ManyToOne(() => ContactEntity, (e) => e.id)
+  @ManyToOne(() => ContactEntity, (e) => e.cashingContacts, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({
     name: 'CON_ID',
-    referencedColumnName: 'CON_ID',
   })
   patient?: ContactEntity;
 }

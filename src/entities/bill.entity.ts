@@ -3,9 +3,11 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { CashingEntity } from './cashing.entity';
 // 'cheque','carte','espece','virement','prelevement','autre','non payee'
 export enum EnumBillPayment {
   CHEQUE = 'cheque',
@@ -239,6 +241,11 @@ export class BillEntity {
 
   // @Check TimeStamp
   //use TimestampableEntity;
+
+  @OneToMany(() => CashingEntity, (e) => e.bill, {
+    createForeignKeyConstraints: false,
+  })
+  cashings?: CashingEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
