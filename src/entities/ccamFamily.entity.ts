@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { CcamEntity } from './ccam.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\CcamFamilyRepository")
@@ -62,6 +63,11 @@ export class CcamFamilyEntity {
     length: 255,
   })
   label?: string;
+
+  @OneToMany(() => CcamEntity, (e) => e.family, {
+    createForeignKeyConstraints: false,
+  })
+  ccams?: CcamEntity[];
 }
 
 // application\Entity\CcamFamily.php
