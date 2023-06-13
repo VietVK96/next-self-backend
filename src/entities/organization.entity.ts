@@ -71,12 +71,12 @@ export class OrganizationEntity {
   @OneToMany(() => CorrespondentTypeEntity, e => e.group, {
     createForeignKeyConstraints: false,
   })
-  CorrespondentTypes?: CorrespondentTypeEntity[];
+  correspondentTypes?: CorrespondentTypeEntity[];
 
   @OneToMany(() => CorrespondentEntity, e => e.group, {
     createForeignKeyConstraints: false,
   })
-  Correspondents?: CorrespondentEntity[];
+  correspondents?: CorrespondentEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

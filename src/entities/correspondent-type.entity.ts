@@ -29,9 +29,9 @@ export class CorrespondentTypeEntity {
   @Column({
     name: 'group_id'
   })
-  groupId?: string;
+  groupId?: number;
 
-  @ManyToOne(() => OrganizationEntity, e => e.CorrespondentTypes, {
+  @ManyToOne(() => OrganizationEntity, e => e.correspondentTypes, {
     createForeignKeyConstraints: false
   })
   @JoinColumn({

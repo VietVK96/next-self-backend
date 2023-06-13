@@ -33,7 +33,7 @@ export class CorrespondentEntity {
   })
   organizationId?: number;
 
-  @ManyToOne(() => OrganizationEntity, e => e.Correspondents, {
+  @ManyToOne(() => OrganizationEntity, e => e.correspondents, {
     createForeignKeyConstraints: false
   })
   @JoinColumn({
