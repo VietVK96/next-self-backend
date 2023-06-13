@@ -2,9 +2,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { UserEntity } from './user.entity';
 
 /**
  * @ORM\Entity
@@ -280,11 +283,31 @@ export class PaypalPaymentEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   // protected $user;
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+  })
+  usrId?: number;
+
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'USR_ID',
+  })
+  user?: UserEntity;
 
   // @TODO EntityMissing
   // protected $profil;
+  @Column({
+    name: 'PPL_ID',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  profil?: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
