@@ -3,9 +3,17 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { UploadEntity } from './upload.entity';
+import { UserEntity } from './user.entity';
+import { DentalQuotationEntity } from './dental-quotation.entity';
+import { BillLineEntity, EnumBillLineType } from './bill-line.entity';
+import { ContactEntity } from './contact.entity';
 // 'cheque','carte','espece','virement','prelevement','autre','non payee'
 export enum EnumBillPayment {
   CHEQUE = 'cheque',
@@ -38,8 +46,19 @@ export class BillEntity {
    * @ORM\JoinColumn(name="logo_id", referencedColumnName="UPL_ID")
    * @var \App\Entities\Upload Entité représentant le logo du devis.
    */
-  // @TODO EntityMissing
   //   protected $logo;
+  @Column({
+    name: 'logo_id',
+  })
+  logoId?: number;
+
+  @ManyToOne(() => UploadEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'logo_id',
+  })
+  logo?: UploadEntity;
 
   /**
    * @ORM\Column(name="BIL_NBR", type="string", length=30, nullable=false)
@@ -205,29 +224,64 @@ export class BillEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   //   protected $user;
+  @Column({
+    name: 'USR_ID',
+  })
+  USRID?: number;
+
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'USR_ID',
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Dental\Quotation")
    * @ORM\JoinColumn(name="DQO_ID", referencedColumnName="DQO_ID")
    * @var \App\Entities\Dental\Quotation Entité représentant un devis.
    */
-  // @TODO EntityMissing
   //   protected $dentalQuotation;
+  @Column({
+    name: 'DQO_ID',
+  })
+  DQOID?: number;
+
+  @ManyToOne(() => DentalQuotationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'DQO_ID',
+  })
+  dentalQuotation?: DentalQuotationEntity;
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Bill\Line", mappedBy="bill")
    */
-  // @TODO EntityMissing
   //   protected $lines;
+  @OneToMany(() => BillLineEntity, (e) => e.bill)
+  lines?: BillLineEntity[];
 
   /** File: application\Entities\Bill.php
    * @ORM\ManyToOne(targetEntity="\App\Entities\Contact", inversedBy="bills")
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    */
-  // @TODO EntityMissing
   //   protected $contact;
+  @Column({
+    name: 'CON_ID',
+  })
+  CONID?: number;
+
+  @ManyToOne(() => ContactEntity, (e) => e.bills, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'CON_ID',
+    referencedColumnName: 'CON_ID',
+  })
+  contact?: ContactEntity;
 
   /** File: application\Entity\Invoice.php
    * @ORM\ManyToOne(targetEntity="Patient")
@@ -236,6 +290,15 @@ export class BillEntity {
    */
   // @TODO EntityMissing
   //   protected $patient;
+
+  @ManyToOne(() => ContactEntity, (e) => e.bills, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'CON_ID',
+    referencedColumnName: 'CON_ID',
+  })
+  patient?: ContactEntity;
 
   // @Check TimeStamp
   //use TimestampableEntity;

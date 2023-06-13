@@ -1,4 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\BankCheckRepository")
@@ -15,7 +22,6 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
  */
 @Entity('bank_check')
 export class BankCheckEntity {
-
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -84,15 +90,25 @@ export class BankCheckEntity {
     width: 11,
     nullable: true,
   })
-  internalReferenceId?: number
+  internalReferenceId?: number;
 
   /**
-     * @ORM\ManyToOne(targetEntity="Organization")
-     * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
-     */
-  // @TODO EntityMissing
+   * @ORM\ManyToOne(targetEntity="Organization")
+   * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
+   */
   //protected $organization;
+  @Column({
+    name: 'organization_id',
+  })
+  organizationId?: number;
 
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'organization_id',
+  })
+  organization?: OrganizationEntity;
 }
 
 // application\Entity\BankCheck.php
