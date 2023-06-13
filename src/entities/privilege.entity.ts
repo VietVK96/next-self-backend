@@ -1,11 +1,18 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { UserEntity } from './user.entity';
 
-// enum('none', 'outline', 'readonly', 'all')	
+// enum('none', 'outline', 'readonly', 'all')
 enum EnumPrivilegeTypeType {
-    NONE = 'none',
-    OUTLINE = 'outline',
-    READONLY = 'readonly',
-    ALL = 'all'
+  NONE = 'none',
+  OUTLINE = 'outline',
+  READONLY = 'readonly',
+  ALL = 'all',
 }
 
 /**
@@ -14,7 +21,6 @@ enum EnumPrivilegeTypeType {
  */
 @Entity('T_PRIVILEGE_PVG')
 export class PrivilegeEntity {
-
   /**
    * @ORM\Column(name="PVG_ID", type="integer")
    * @ORM\Id
@@ -31,7 +37,7 @@ export class PrivilegeEntity {
   @Column({
     name: 'PVG_NAME',
     type: 'text',
-    nullable: true
+    nullable: true,
   })
   name?: string;
 
@@ -40,7 +46,7 @@ export class PrivilegeEntity {
     type: 'int',
     width: 11,
     nullable: false,
-    default: -12303
+    default: -12303,
   })
   color?: number;
 
@@ -52,7 +58,7 @@ export class PrivilegeEntity {
     type: 'enum',
     enum: EnumPrivilegeTypeType,
     nullable: false,
-    default: EnumPrivilegeTypeType.ALL
+    default: EnumPrivilegeTypeType.ALL,
   })
   type?: EnumPrivilegeTypeType;
 
@@ -64,7 +70,7 @@ export class PrivilegeEntity {
     type: 'int',
     width: 11,
     nullable: false,
-    default: 0
+    default: 0,
   })
   pos?: number;
 
@@ -76,7 +82,7 @@ export class PrivilegeEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   enable?: number;
 
@@ -89,7 +95,7 @@ export class PrivilegeEntity {
     type: 'tinyint',
     width: 4,
     nullable: false,
-    default: 15
+    default: 15,
   })
   permissionCalendar?: number;
 
@@ -102,7 +108,7 @@ export class PrivilegeEntity {
     type: 'tinyint',
     width: 4,
     nullable: false,
-    default: 15
+    default: 15,
   })
   permissionBilling?: number;
 
@@ -115,7 +121,7 @@ export class PrivilegeEntity {
     type: 'tinyint',
     width: 4,
     nullable: false,
-    default: 15
+    default: 15,
   })
   permissionPaiement?: number;
 
@@ -128,7 +134,7 @@ export class PrivilegeEntity {
     type: 'tinyint',
     width: 4,
     nullable: false,
-    default: 15
+    default: 15,
   })
   permissionAccounting?: number;
 
@@ -139,13 +145,40 @@ export class PrivilegeEntity {
   // @TODO EntityMissing
   // protected $user;
 
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+  })
+  usrId?: number;
+
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'USR_ID',
+    referencedColumnName: 'USR_ID',
+  })
+  user?: UserEntity;
+
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\User", inversedBy="privileged")
    * @ORM\JoinColumn(name="USR_WITH_ID", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   // protected $userWith;
-
+  @Column({
+    name: 'USR_WITH_ID',
+    type: 'int',
+    width: 11,
+  })
+  usrWithId?: number;
+  @ManyToOne(() => UserEntity, (e) => e.privileged, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'USR_WITH_ID',
+    referencedColumnName: 'USR_ID',
+  })
+  userWith?: UserEntity;
 }
-
 //application/Entities/Privilege.php

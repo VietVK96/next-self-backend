@@ -2,9 +2,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
 
 /**
  * @ORM\Entity
@@ -12,7 +17,6 @@ import {
  */
 @Entity('resource')
 export class UserEntity {
-
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -37,18 +41,33 @@ export class UserEntity {
    * @var \DateTimeInterface|null
    */
   @Column({
-    'name': 'archived_at',
+    name: 'archived_at',
     type: 'datetime',
     nullable: true,
   })
   archivedAt?: string;
 
   /**
-  * @ORM\ManyToOne(targetEntity="Organization")
-  * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
-  */
-  // @TODO EntityMissing
+   * @ORM\ManyToOne(targetEntity="Organization")
+   * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
+   */
   // protected $organization;
+
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
+  })
+  organizationId?: number;
+
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'organization_id',
+    referencedColumnName: 'GRP_ID',
+  })
+  organization?: OrganizationEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="User")
@@ -58,16 +77,48 @@ export class UserEntity {
    *  "resource:read"
    * })
    */
-  // @TODO EntityMissing
   // protected $addressee = null;
+
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  addresseeId: number;
+
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'user_id',
+    referencedColumnName: 'USR_ID',
+  })
+  addressee?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    * @var \App\Entities\User Entité représentant le praticien.
    */
-  // @TODO EntityMissing
   // protected $user;
+
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  userId?: number;
+
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'user_id',
+    referencedColumnName: 'USR_ID',
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\Column(name="name", type="string", length=255)
@@ -86,7 +137,7 @@ export class UserEntity {
     name: 'name',
     type: 'varchar',
     length: 255,
-    nullable: false
+    nullable: false,
   })
   name?: string;
 
@@ -110,7 +161,7 @@ export class UserEntity {
   @Column({
     name: 'color',
     type: 'json',
-    nullable: true
+    nullable: true,
   })
   color?: string;
 
@@ -131,7 +182,7 @@ export class UserEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   useDefaultColor?: number;
 
@@ -145,7 +196,7 @@ export class UserEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   free?: number;
 
@@ -161,9 +212,21 @@ export class UserEntity {
    *  }
    * )
    */
-  // @TODO EntityMissing
   // protected $subscribers;
 
+  @ManyToMany(() => UserEntity, (e) => e.resources, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinTable({
+    name: 'user_resource',
+    joinColumn: {
+      name: 'user_id',
+    },
+    inverseJoinColumn: {
+      name: 'user_id',
+    },
+  })
+  subscribers: UserEntity[];
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 

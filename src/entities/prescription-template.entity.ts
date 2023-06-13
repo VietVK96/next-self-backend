@@ -130,4 +130,4 @@ export class PrescriptionTemplateEntity {
   medicaments: MedicamentEntity[];
 }
 
-//application/Entity/PrescriptionTemplate.php
+// application/Entity/PrescriptionTemplate.php
