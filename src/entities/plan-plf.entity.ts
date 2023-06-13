@@ -2,9 +2,19 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { BillEntity } from './bill.entity';
+import { PlanEventEnity } from './plan-event.entity';
+import { UserEntity } from './user.entity';
+import { ContactEntity } from './contact.entity';
+import { OrganizationEntity } from './organization.entity';
+import { PaymentPlanEntity } from './payment-plan.entity';
 
 export enum EnumPlanPlfType {
   PLAN = 'plan',
@@ -124,28 +134,69 @@ export class PlanPlfEntity {
    * @ORM\OneToOne(targetEntity="\App\Entities\Bill")
    * @ORM\JoinColumn(name="BIL_ID", referencedColumnName="BIL_ID")
    */
-  // @TODO EntityMissing
   //   protected $bill;
+  @Column({
+    name: 'BIL_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  bilId?: number;
+
+  @OneToOne(() => BillEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'BIL_ID',
+  })
+  bill?: BillEntity;
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Plan\Event", mappedBy="plan")
    */
-  // @TODO EntityMissing
   //   protected $events;
+  @OneToMany(() => PlanEventEnity, (e) => e.plan)
+  events?: PlanEventEnity[];
 
   /**
    * @ORM\ManyToOne(targetEntity="User")
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   //   protected $user;
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+  })
+  userId?: number;
+
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'user_id',
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Patient")
    * @ORM\JoinColumn(name="patient_id", referencedColumnName="CON_ID")
    */
-  // @TODO EntityMissing
   //   protected $patient;
+  @Column({
+    name: 'patient_id',
+    type: 'int',
+    width: 11,
+  })
+  patientId?: number;
+
+  @ManyToOne(() => ContactEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'patient_id',
+  })
+  patient?: ContactEntity;
 
   /**
    * @ORM\Column(name="sent_to_patient", type="boolean", options={"default": false})
@@ -178,14 +229,41 @@ export class PlanPlfEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
+  })
+  organizationId?: number;
 
-  // @TODO EntityMissing
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'organization_id',
+  })
+  organization?: OrganizationEntity;
+
   //   @Column({
   //     name: 'payment_schedule_id',
   //   })
   //   paymentScheduleId?: number;
+  @Column({
+    name: 'payment_schedule_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  paymentScheduleId?: number;
+
+  @ManyToOne(() => PaymentPlanEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'payment_schedule_id',
+  })
+  paymentSchedule?: PaymentPlanEntity;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

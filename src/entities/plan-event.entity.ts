@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { PlanPlfEntity } from './plan-plf.entity';
 import { EventEntity } from './event.entity';
 
@@ -77,7 +77,7 @@ export class PlanEventEnity {
   })
   evtId?: number;
 
-  @ManyToOne(() => EventEntity, (e) => e.planEvent, {
+  @OneToOne(() => EventEntity, (e) => e.planEvent, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
