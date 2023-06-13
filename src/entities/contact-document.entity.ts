@@ -1,4 +1,6 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { ContactEntity } from './contact.entity';
+import { UploadEntity } from './upload.entity';
 
 export enum EnumContactDocumentType {
   FILE = 'file',
@@ -26,16 +28,39 @@ export class ContactDocumentEntity {
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="NONE")
    */
-  // @TODO EntityMissing
   //   protected $contact;
+  @Column({
+    name: 'CON_ID',
+    type: 'int',
+    width: 11,
+  })
+  conId?: number;
 
+  @ManyToOne(() => ContactEntity, {
+    createForeignKeyConstraints: false,
+  })
+  contact?: ContactEntity;
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Upload")
    * @ORM\JoinColumn(name="UPL_ID", referencedColumnName="UPL_ID")
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="NONE")
    */
-  // @TODO EntityMissing
   //   protected $upload;
+  @Column({
+    name: 'UPL_ID',
+    type: 'int',
+    width: 11,
+  })
+  uplId?: number;
+
+  @ManyToOne(() => UploadEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'UPL_ID',
+    referencedColumnName: 'UPL_ID',
+  })
+  upload?: UploadEntity;
 }
 // application/Entities/Contact/Document.php
