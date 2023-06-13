@@ -17,9 +17,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { GlossaryEntryEntity } from './glossary-entry.entity';
 
 // File: application\Entity\EventType.php: class GlossaryEntity extends AbstractEntity implements OrganizationInterface, ProtectedInterface
 @Entity('glossary')
@@ -29,8 +34,20 @@ export class GlossaryEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+  @Column({
+    name: '	organization_id',
+    type: 'int',
+    width: 11,
+  })
+  organizationId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'organization_id',
+  })
+  organization?: OrganizationEntity;
 
   // @Check TimeStamp
   // use TimestampableEntity;
@@ -112,7 +129,10 @@ export class GlossaryEntity {
    * @ORM\OneToMany(targetEntity="GlossaryEntry", mappedBy="glossary")
    * @ORM\OrderBy({"position": "ASC"})
    */
-  // @TODO EntityMissing
   // protected $entries;
+  @OneToMany(() => GlossaryEntryEntity, (e) => e.glossary, {
+    createForeignKeyConstraints: false
+  })
+  entries?: GlossaryEntryEntity[];
 }
 // application\Entity\Glossary.php

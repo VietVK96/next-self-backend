@@ -5,7 +5,7 @@ import { Column, Entity } from 'typeorm';
  * @ORM\Table(name="T_PLAN_EVENT_PLV")
  */
 @Entity('T_PLAN_EVENT_PLV')
-export class PlanEventEnity {
+export class PlanEventEntity {
   /**
    * @ORM\Column(name="PLV_POS", type="integer", nullable=false)
    */
