@@ -232,6 +232,28 @@ export class UserEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt?: Date;
+
+  /**
+   * @ORM\ManyToOne(targetEntity="\App\Entities\Group")
+   * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
+   * @var \App\Entities\Group Entité représentant le group.
+   */
+  // protected $group;
+
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
+  })
+  groupId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'organization_id',
+    referencedColumnName: 'GRP_ID',
+  })
+  group?: OrganizationEntity;
 }
 
 // Transfrom application\Entities\Resource.php
