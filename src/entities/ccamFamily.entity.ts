@@ -1,5 +1,6 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { CcamEntity } from './ccam.entity';
+import { CcamPanierEntity } from './ccamPanier.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\CcamFamilyRepository")
@@ -31,8 +32,22 @@ export class CcamFamilyEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"list", "detail"})
    */
-  // @TODO EntityMissing
   //   protected $panier = null;
+  @Column({
+    name: 'ccam_panier_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  ccamPanierId?: number;
+
+  @ManyToOne(() => CcamPanierEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'ccam_panier_id',
+  })
+  panier?: CcamPanierEntity;
 
   /**
    * @ORM\Column(name="code", type="string", length=3, options={"fixed": true})
