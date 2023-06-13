@@ -124,11 +124,6 @@ export class AddressEntity {
   })
   countryCode?: string;
 
-  @OneToMany(() => CorrespondentEntity, e => e.address, {
-    createForeignKeyConstraints: false
-  })
-  Correspondents?: CorrespondentEntity[];
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 

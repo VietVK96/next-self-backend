@@ -4,6 +4,8 @@ import {
   DeleteDateColumn,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -11,6 +13,8 @@ import {
 import { OrganizationEntity } from './organization.entity';
 import { CorrespondentTypeEntity } from './correspondent-type.entity';
 import { AddressEntity } from './address.entity';
+import { GenderEntity } from './gender.entity';
+import { PhoneEntity } from './phone.entity';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\Correspondent")
@@ -27,7 +31,7 @@ export class CorrespondentEntity {
   @Column({
     name: 'organization_id'
   })
-  organizationId?: string;
+  organizationId?: number;
 
   @ManyToOne(() => OrganizationEntity, e => e.Correspondents, {
     createForeignKeyConstraints: false
@@ -59,9 +63,9 @@ export class CorrespondentEntity {
     name: 'correspondent_type_id',
     nullable: true,
   })
-  correspondentTypeId?: string;
+  correspondentTypeId?: number;
 
-  @ManyToOne(() => CorrespondentTypeEntity, e => e.Correspondents, {
+  @ManyToOne(() => CorrespondentTypeEntity, {
     createForeignKeyConstraints: false
   })
   @JoinColumn({
@@ -79,9 +83,9 @@ export class CorrespondentEntity {
     name: 'ADR_ID',
     nullable: true,
   })
-  ADR_ID?: string;
+  ADRId?: string;
 
-  @ManyToOne(() => AddressEntity, e => e.Correspondents, {
+  @ManyToOne(() => AddressEntity, {
     createForeignKeyConstraints: false
   })
   @JoinColumn({
@@ -166,8 +170,20 @@ export class CorrespondentEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\Gender")
    * @ORM\JoinColumn(name="GEN_ID", referencedColumnName="GEN_ID")
    */
-  // @TODO EntityMissing
   // protected $gender;
+  @Column({
+    name: 'GEN_ID',
+  })
+  genId?: number;
+
+  @ManyToOne(() => GenderEntity, e => e.correspondents, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'GEN_ID',
+    referencedColumnName: "GEN_ID"
+  })
+  gender?: GenderEntity;
 
   /**
    * @ORM\ManyToMany(targetEntity="PhoneNumber")
@@ -181,7 +197,6 @@ export class CorrespondentEntity {
    *  }
    * )
    */
-  // @TODO EntityMissing
   // protected $phoneNumbers;
 
   /**
@@ -191,8 +206,16 @@ export class CorrespondentEntity {
    *  inverseJoinColumns={@ORM\JoinColumn(name="PHO_ID", referencedColumnName="PHO_ID")}
    * )
    */
-  // @TODO EntityMissing
   // protected $phones;
+  @ManyToMany(() => PhoneEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinTable({
+    name: 'T_CORRESPONDENT_PHONE_CPP',
+    joinColumn: { name: "CPD_ID", referencedColumnName: "CPD_ID" },
+    inverseJoinColumn: { name: "PHO_ID", referencedColumnName: "PHO_ID" }
+  })
+  phones?: PhoneEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

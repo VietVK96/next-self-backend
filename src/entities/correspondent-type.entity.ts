@@ -40,11 +40,6 @@ export class CorrespondentTypeEntity {
   })
   group?: OrganizationEntity;
 
-  @OneToMany(() => CorrespondentEntity, e => e.category, {
-    createForeignKeyConstraints: false
-  })
-  Correspondents?: CorrespondentEntity[];
-
   /**
    * @ORM\Column(name="name", type="string", length=255)
    * @var string Nom du type de correspondant.
