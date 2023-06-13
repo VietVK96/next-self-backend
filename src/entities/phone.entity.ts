@@ -2,9 +2,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { PhoneTypeEntity } from './phone-type.entity';
+import { ContactEntity } from './contact.entity';
 
 /**
  * @ORM\Entity
@@ -59,8 +65,22 @@ export class PhoneEntity {
    * @Expose
    * @var \App\Entities\PhoneTypeEntity
    */
-  // @TODO EntityMissing
   //   protected $type;
+  @Column({
+    name: 'PTY_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  ptyId?: number;
+
+  @ManyToOne(() => PhoneTypeEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'PTY_ID',
+  })
+  type?: PhoneTypeEntity;
 
   /** File: application\Entity\PhoneNumber.php
    * @ORM\ManyToOne(targetEntity="PhoneNumberCategory", inversedBy="phoneNumbers", fetch="EAGER")
@@ -68,14 +88,32 @@ export class PhoneEntity {
    * @Serializer\Expose
    * @Assert\NotNull
    */
-  // @TODO EntityMissing
   //   protected $category;
+  @ManyToOne(() => PhoneTypeEntity, (e) => e.phoneNumbers, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'PTY_ID',
+  })
+  category?: PhoneTypeEntity;
 
   /**
    * @ORM\ManyToMany(targetEntity="Patient", mappedBy="phoneNumbers")
    */
-  // @TODO EntityMissing
   //   protected $patients;
+  @ManyToMany(() => ContactEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinTable({
+    name: 'T_CONTACT_PHONE_COP',
+    joinColumn: {
+      name: 'PHO_ID',
+    },
+    inverseJoinColumn: {
+      name: 'CON_ID',
+    }
+  })
+  patients?: ContactEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
