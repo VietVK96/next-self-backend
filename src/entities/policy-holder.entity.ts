@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { OrganizationEntity } from "./organization.entity";
+import { ContactEntity } from "./contact.entity";
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PolicyHolderRepository")
@@ -12,8 +14,21 @@ export class PolicyHolderEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
+  })
+  organizationId?: number;
+
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'organization_id',
+  })
+  organization?: OrganizationEntity;
 
   /**
    * @ORM\Id
@@ -34,8 +49,22 @@ export class PolicyHolderEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"policyHolder:read"})
    */
-  // @TODO EntityMissing
   // protected $patient = NULL;
+  @Column({
+    name: 'patient_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  patientId?: number;
+
+  @ManyToOne(() => ContactEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'patient_id',
+  })
+  patient?: ContactEntity;
 
   /**
    * @ORM\Column(name="name", type="string", length=255)
