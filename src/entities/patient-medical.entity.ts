@@ -1,4 +1,13 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { ContactEntity } from './contact.entity';
+import { PolicyHolderEntity } from './policy-holder.entity';
+import { TariffTypeEntity } from './tariff-type.entity';
 
 /**
  * @ORM\Entity
@@ -25,6 +34,11 @@ export class PatientMedicalEntity {
    */
   // @TODO EntityMissing
   // protected $patient;
+  @OneToOne(() => ContactEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({ name: 'patient_id' })
+  patient?: ContactEntity;
 
   /**
    * @ORM\OneToOne(targetEntity="PolicyHolder", cascade={"persist", "remove"})
@@ -34,6 +48,12 @@ export class PatientMedicalEntity {
   // @TODO EntityMissing
   // policyHolder = null;
 
+  @OneToOne(() => PolicyHolderEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({ name: 'policy_holder_id' })
+  policyHolder?: PolicyHolderEntity;
+
   /**
    * @ORM\OneToOne(targetEntity="TariffType")
    * @ORM\JoinColumn(name="tariff_type_id", referencedColumnName="id", nullable=true)
@@ -41,6 +61,12 @@ export class PatientMedicalEntity {
    */
   // @TODO EntityMissing
   // tariffType = null;
+
+  @OneToOne(() => TariffTypeEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({ name: 'tariff_type_id' })
+  tariffType?: TariffTypeEntity;
 
   /**
    * @ORM\Column(name="service_amo_code", type="string", length=2, nullable=true, options={"fixed": true})

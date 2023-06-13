@@ -3,9 +3,15 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { UserEntity } from './user.entity';
+import { ContactEntity } from './contact.entity';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\MobileAuthenticationCodeRepository")
@@ -39,8 +45,18 @@ export class MobileAuthenticationCodeEntityEntity {
    * @ORM\JoinColumn(name="group_id", referencedColumnName="GRP_ID")
    * @var \App\Entities\GroupEntity
    */
-  // @TODO EntityMissing
   // protected $group;
+  @Column({
+    name: 'group_id',
+  })
+  groupId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'group_id',
+  })
+  group?: OrganizationEntity;
 
   /**
    * Entité de l'utilisateur.
@@ -49,8 +65,13 @@ export class MobileAuthenticationCodeEntityEntity {
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    * @var \App\Entities\UserEntity
    */
-  // @TODO EntityMissing
   // protected $user;
+
+  @OneToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({ name: 'user_id' })
+  user?: UserEntity;
 
   /**
    * Entité du patient.
@@ -62,6 +83,18 @@ export class MobileAuthenticationCodeEntityEntity {
    */
   // @TODO EntityMissing
   // protected $patient;
+
+  @Column({
+    name: 'patient_id',
+  })
+  patientId?: number;
+  @ManyToOne(() => ContactEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'patient_id',
+  })
+  patient?: ContactEntity;
 
   /**
    * Code d'authentification.

@@ -2,9 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { PlanPlfEntity } from './plan-plf.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\OrganizationSubscriptionRepository")
@@ -28,6 +32,18 @@ export class OrganizationSubscriptionEntity {
   // @TODO EntityMissing
   // organization;
 
+  @Column({
+    name: 'organization_id',
+  })
+  organizationId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'organization_id',
+  })
+  organization?: OrganizationEntity;
+
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -46,8 +62,19 @@ export class OrganizationSubscriptionEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"subscription:index", "subscription:read"})
    */
-  // @TODO EntityMissing
   // protected $plan;
+
+  @Column({
+    name: 'plan_id',
+  })
+  planId?: number;
+  @ManyToOne(() => PlanPlfEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'plan_id',
+  })
+  plan?: PlanPlfEntity;
 
   /**
    * @ORM\Column(name="start_of_period", type="datetime")

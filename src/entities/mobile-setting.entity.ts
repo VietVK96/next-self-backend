@@ -1,4 +1,13 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { UserEntity } from './user.entity';
 
 /**
  * @ORM\Entity
@@ -30,8 +39,19 @@ export class MobileSettingEntityEntity {
    * @ORM\JoinColumn(name="group_id", referencedColumnName="GRP_ID")
    * @var \App\Entities\GroupEntity
    */
-  // @TODO EntityMissing
   // protected $group;
+
+  @Column({
+    name: 'group_id',
+  })
+  groupId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'group_id',
+  })
+  group?: OrganizationEntity;
 
   /**
    * Entité de l'utilisateur.
@@ -42,6 +62,12 @@ export class MobileSettingEntityEntity {
    */
   // @TODO EntityMissing
   // protected $user;
+
+  @OneToOne(() => UserEntity, (e) => e.mobileSetting {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({ name: 'user_id' })
+  user?: UserEntity;
 
   /**
    * Durée de la session.

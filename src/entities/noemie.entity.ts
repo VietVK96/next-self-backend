@@ -2,9 +2,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { FseEntity } from './fse.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\NoemieRepository")
@@ -24,8 +30,19 @@ export class NoemieEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // organization;
+
+  @Column({
+    name: 'organization_id',
+  })
+  organizationId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'organization_id',
+  })
+  organization?: OrganizationEntity;
 
   /**
    * @ORM\Id
@@ -127,8 +144,19 @@ export class NoemieEntity {
    * })
    * @Serializer\Groups({"caresheets_group"})
    */
-  // @TODO EntityMissing
   // protected $caresheets;
+
+  @ManyToMany(() => FseEntity)
+  @JoinTable({
+    name: 'noemie_caresheet',
+    joinColumn: {
+      name: 'noemie_id',
+    },
+    inverseJoinColumn: {
+      name: 'caresheet_id',
+    },
+  })
+  caresheets?: FseEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
