@@ -1,4 +1,14 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { MedicamentEntity } from './medicament.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PrescriptionTemplateRepository")
@@ -10,14 +20,26 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
  */
 @Entity('prescription_template')
 export class PrescriptionTemplateEntity {
-
   /**
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
+  })
+  organizationId?: number;
 
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'organization_id',
+    referencedColumnName: 'GRP_ID',
+  })
+  organization: OrganizationEntity;
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -43,7 +65,7 @@ export class PrescriptionTemplateEntity {
     name: 'name',
     type: 'varchar',
     length: 255,
-    nullable: false
+    nullable: false,
   })
   name?: string;
 
@@ -61,7 +83,7 @@ export class PrescriptionTemplateEntity {
     type: 'integer',
     width: 11,
     nullable: false,
-    default: 0
+    default: 0,
   })
   position?: number;
 
@@ -74,7 +96,7 @@ export class PrescriptionTemplateEntity {
   @Column({
     name: 'observation',
     type: 'text',
-    nullable: true
+    nullable: true,
   })
   observation?: string;
 
@@ -92,9 +114,20 @@ export class PrescriptionTemplateEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"medicament:read"})
    */
-  // @TODO EntityMissing
   // protected $medicaments;
-
+  @ManyToMany(() => MedicamentEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinTable({
+    name: 'prescription_template_medicament',
+    joinColumn: {
+      name: 'prescription_template_id',
+    },
+    inverseJoinColumn: {
+      name: 'medicament_id',
+    },
+  })
+  medicaments: MedicamentEntity[];
 }
 
 //application/Entity/PrescriptionTemplate.php
