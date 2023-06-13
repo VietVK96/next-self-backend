@@ -1,4 +1,9 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryColumn } from 'typeorm';
+import { CcamEntity } from './ccam.entity';
+import { NgapKeyEntity } from './ngapKey.entity';
+import { EventTaskEntity } from './event-task.entity';
+import { FseEntity } from './fse.entity';
+import { DentalMaterialEntity } from './dental-material.entity';
 
 export enum EnumDentalEventTaskType {
   NGAP = 'NGAP',
@@ -44,15 +49,31 @@ export class DentalEventTaskEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\Ccam")
    * @ORM\JoinColumn(name="ccam_id", referencedColumnName="id", nullable=true)
    */
-  // @TODO EntityMissing
   // protected $ccam = null;
+  @Column({
+    name: "ccam_id",
+    nullable: true,
+  })
+  ccamId?: number;
+
+  @ManyToOne(() => CcamEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: "ccam_id", referencedColumnName: 'id' })
+  ccam?: CcamEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\NgapKey")
    * @ORM\JoinColumn(name="ngap_key_id", referencedColumnName="id", nullable=true)
    */
-  // @TODO EntityMissing
   // protected $ngapKey = null;
+  @Column({
+    name: "ngap_key_id",
+    nullable: true,
+  })
+  ngapKeyId?: number;
+
+  @ManyToOne(() => NgapKeyEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: "ngap_key_id", referencedColumnName: 'id' })
+  ngapKey?: NgapKeyEntity;
 
   /**
    * @ORM\Column(name="DET_ALD", type="integer")
@@ -344,13 +365,10 @@ export class DentalEventTaskEntity {
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="NONE")
    */
-  // @TODO EntityMissing
-  // @PrimaryColumn({
-  //   name: 'ETK_ID',
-  //   type: 'int',
-  //   width: 11,
-  // })
-  // task?: number;
+  // protected $task;
+  @OneToOne(() => EventTaskEntity, { createForeignKeyConstraints: false })
+  @JoinColumn()
+  task?: EventTaskEntity;
 
   /** File: application\Entity\ActMedical.php
    * @ORM\Id
@@ -358,52 +376,35 @@ export class DentalEventTaskEntity {
    * @ORM\OneToOne(targetEntity="Act", inversedBy="medical", fetch="EAGER")
    * @ORM\JoinColumn(name="ETK_ID", referencedColumnName="ETK_ID")
    */
-  // @TODO EntityMissing
-  // @PrimaryColumn({
-  //   name: 'ETK_ID',
-  //   type: 'int',
-  //   width: 11,
-  // })
   // act?: number;
+  @OneToOne(() => EventTaskEntity, { createForeignKeyConstraints: false })
+  @JoinColumn()
+  act?: EventTaskEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Fse", inversedBy="tasks")
    * @ORM\JoinColumn(name="FSE_ID", referencedColumnName="FSE_ID")
    */
-  // @TODO EntityMissing
   // protected $fse;
+  @Column({ name: "FSE_ID" })
+  FSEId?: number;
 
-  /**
-   * @ORM\ManyToOne(targetEntity="Ccam")
-   * @ORM\JoinColumn(name="ccam_id", referencedColumnName="id", nullable=true)
-   * @Serializer\Expose
-   */
-  // @TODO EntityMissing
-  // protected $ccam = null;
-
-  /**
-   * @ORM\ManyToOne(targetEntity="NgapKey")
-   * @ORM\JoinColumn(name="ngap_key_id", referencedColumnName="id", nullable=true)
-   * @Serializer\Expose
-   */
-  // @TODO EntityMissing
-  // protected $ngapKey = null;
-
-  /**
-   * @ORM\ManyToOne(targetEntity="Caresheet", inversedBy="actMedicals")
-   * @ORM\JoinColumn(name="FSE_ID", referencedColumnName="FSE_ID", nullable=true)
-   * @Serializer\Expose
-   */
-  // @TODO EntityMissing
-  // protected $caresheet = null;
+  @ManyToOne(() => FseEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: "FSE_ID", referencedColumnName: "FSE_ID" })
+  fse?: FseEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="DentalMaterial", fetch="EAGER")
    * @ORM\JoinColumn(name="dental_material_id", referencedColumnName="id", nullable=true)
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   // protected $material = null;
+  @Column({ name: "dental_material_id", nullable: true })
+  dentalMaterialId?: number;
+
+  @ManyToOne(() => DentalMaterialEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'dental_material_id', referencedColumnName: "id" })
+  material?: DentalMaterialEntity;
 
   /** File: application\Entity\ActMedical.php
    * @ORM\Column(name="DET_TYPE", type="enum_nomenclature", nullable=true, options={"default": "CCAM"})
