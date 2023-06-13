@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { StorageSpacePackEntity } from './storage-space-pack.entity';
 
 /**
  * @ORM\Entity
@@ -46,8 +48,20 @@ export class StorageSpaceEntity {
    * @ORM\JoinColumn(name="GRP_ID", referencedColumnName="GRP_ID")
    * @var \App\Entities\GroupEntity
    */
-  // @TODO EntityMissing
   // protected $group;
+  @Column({
+    name: 'GRP_ID',
+    type: 'int',
+    width: 11,
+  })
+  grpId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'GRP_ID'
+  })
+  group?: OrganizationEntity;
 
   /** File: application\Entities\Storage\Space.php
    * @ORM\ManyToOne(targetEntity="\App\Entities\Storage\Space\Pack", inversedBy="storageSpace")
@@ -55,9 +69,20 @@ export class StorageSpaceEntity {
    * @var \App\Entities\Storage\Space\Pack Entité représentant le pack
    * d'espace de stockage.
    */
-  // @TODO EntityMissing
-  // @TODO VariableMissing
   // protected $storageSpacePack;
+  @Column({
+    name: 'STK_ID',
+    type: 'int',
+    width: 11,
+  })
+  stkId?: number;
+  @ManyToOne(() => StorageSpacePackEntity, (e) => e.storageSpace, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'STK_ID'
+  })
+  storageSpacePack?: StorageSpacePackEntity;
 
   /** File: application\Entities\StorageSpaceEntity.php
    * Entité du pack.
@@ -67,9 +92,15 @@ export class StorageSpaceEntity {
    * @Expose
    * @var \App\Entities\StorageSpacePackEntity
    */
-  // @TODO EntityMissing
-  // @TODO VariableMissing
   // protected $pack;
+  @ManyToOne(() => StorageSpacePackEntity, (e) => e.storageSpace, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'STK_ID'
+  })
+  pack?: StorageSpacePackEntity;
+
 }
 // application/Entities/StorageSpaceEntity.php
 // application/Entities/Storage/Space.php

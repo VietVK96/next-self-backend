@@ -1,4 +1,6 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { UserEntity } from "./user.entity";
+import { ContactEntity } from "./contact.entity";
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\StickyNoteRepository")
@@ -26,19 +28,35 @@ export class StickyNoteEntity {
   })
   id?: number;
 
-  // @TODO EntityMissing
-  // @Column({
-  //   name: 'CON_ID',
-  //   type: 'int',
-  //   nullable: true
-  // })
-
-  // @TODO EntityMissing
-  // @Column({
-  //   name: 'USR_ID',
-  //   type: 'int',
-  //   nullable: true
-  // })
+  @Column({
+    name: 'CON_ID',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  conId?: number;
+  @OneToOne(() => ContactEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'CON_ID',
+  })
+  contact?: ContactEntity;
+  
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  usrId?: number;
+  @OneToOne(() => UserEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'USR_ID',
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\Column(name="PTT_MSG", type="text")
