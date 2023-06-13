@@ -1,4 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { LibraryActEntity } from './library-act.entity';
+import { LibraryActQuantityEntity } from './library-act-quantity.entity';
+import { DentalQuotationEntity } from './dental-quotation.entity';
 
 export enum EnumDentalQuotationActType {
   OPERATION = 'operation',
@@ -31,15 +34,25 @@ export class DentalQuotationActEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\LibraryAct")
    * @ORM\JoinColumn(name="library_act_id", referencedColumnName="id", nullable=true)
    */
-  // @TODO EntityMissing
   // protected $libraryAct = null;
+  @Column({ name: "library_act_id", nullable: true })
+  libraryActId?: number;
+
+  @ManyToOne(() => LibraryActEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: "library_act_id", referencedColumnName: 'id' })
+  libraryAct?: LibraryActEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\LibraryActQuantity")
    * @ORM\JoinColumn(name="library_act_quantity_id", referencedColumnName="id", nullable=true)
    */
-  // @TODO EntityMissing
   // protected $libraryActQuantity = null;
+  @Column({ name: "library_act_quantity_id", nullable: true })
+  libraryActQuantityId?: number;
+
+  @ManyToOne(() => LibraryActQuantityEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: "library_act_quantity_id", referencedColumnName: 'id' })
+  libraryActQuantity?: LibraryActQuantityEntity;
 
   /**
    * @ORM\Column(name="DQA_POS", type="integer", nullable=true)
@@ -436,15 +449,22 @@ export class DentalQuotationActEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\Dental\Quotation", inversedBy="acts")
    * @ORM\JoinColumn(name="DQO_ID", referencedColumnName="DQO_ID")
    */
-  // @TODO EntityMissing
   // protected $quotation;
+  @Column({ name: "DQO_ID", nullable: true })
+  DQOId?: number;
+
+  @ManyToOne(() => DentalQuotationEntity, e => e.acts, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: "DQO_ID", referencedColumnName: 'DQO_ID' })
+  quotation?: DentalQuotationEntity;
 
   /** File: application\Entity\QuoteAct.php
    * @ORM\ManyToOne(targetEntity="Quote", inversedBy="acts")
    * @ORM\JoinColumn(name="DQO_ID", referencedColumnName="DQO_ID")
    */
-  // @TODO EntityMissing
   // protected $quote;
+  @ManyToOne(() => DentalQuotationEntity, e => e.acts, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: "DQO_ID", referencedColumnName: 'DQO_ID' })
+  quote?: DentalQuotationEntity;
 
   /** File: application\Entity\QuoteAct.php
    * @ORM\Column(name="treatment_number", type="integer", nullable=true)
