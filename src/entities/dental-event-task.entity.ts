@@ -367,7 +367,7 @@ export class DentalEventTaskEntity {
    */
   // protected $task;
   @OneToOne(() => EventTaskEntity, { createForeignKeyConstraints: false })
-  @JoinColumn()
+  @JoinColumn({ name: "ETK_ID" })
   task?: EventTaskEntity;
 
   /** File: application\Entity\ActMedical.php
@@ -378,7 +378,7 @@ export class DentalEventTaskEntity {
    */
   // act?: number;
   @OneToOne(() => EventTaskEntity, { createForeignKeyConstraints: false })
-  @JoinColumn()
+  @JoinColumn({ name: "ETK_ID" })
   act?: EventTaskEntity;
 
   /**

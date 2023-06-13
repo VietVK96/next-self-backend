@@ -2,9 +2,20 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { UploadEntity } from './upload.entity';
+import { UserEntity } from './user.entity';
+import { ContactEntity } from './contact.entity';
+import { PlanEntity } from './plan.entity';
+import { DentalQuotationActEntity } from './dental-quotation-act.entity';
+import { PaymentPlanEntity } from './payment-plan.entity';
+import { LettersEntity } from './letters.entity';
 
 export enum EnumDentalQuotationSchemes {
   NONE = 'none',
@@ -46,8 +57,13 @@ export class DentalQuotationEntity {
    * @ORM\JoinColumn(name="logo_id", referencedColumnName="UPL_ID")
    * @var \App\Entities\Upload Entité représentant le logo du devis.
    */
-  // @TODO EntityMissing
   // protected $logo;
+  @Column({ name: 'logo_id' })
+  logoId?: number;
+
+  @ManyToOne(() => UploadEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'logo_id', referencedColumnName: 'UPL_ID' })
+  logo?: UploadEntity;
 
   /** File: application\Entity\Quote.php
    * @ORM\OneToOne(targetEntity="File", cascade={"persist", "remove"})
@@ -522,15 +538,25 @@ export class DentalQuotationEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   // protected $user;
+  @Column({ name: "USR_ID" })
+  USRId?: number;
+
+  @ManyToOne(() => UserEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'USR_ID', referencedColumnName: 'USR_ID' })
+  user?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Contact", inversedBy="quotations")
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    */
-  // @TODO EntityMissing
   // protected $contact;
+  @Column({ name: "CON_ID" })
+  CONId?: number;
+
+  @ManyToOne(() => ContactEntity, e => e.quotations, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'CON_ID', referencedColumnName: 'CON_ID' })
+  contact?: ContactEntity;
 
   /** File: application\Entity\Quote.php
    * @ORM\ManyToOne(targetEntity="Patient")
@@ -545,21 +571,31 @@ export class DentalQuotationEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\Plan")
    * @ORM\JoinColumn(name="PLF_ID", referencedColumnName="PLF_ID")
    */
-  // @TODO EntityMissing
   // protected $planification;
+  @Column({ name: "PLF_ID" })
+  PLFId?: number;
+
+  @ManyToOne(() => PlanEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'PLF_ID', referencedColumnName: 'PLF_ID' })
+  planification?: PlanEntity;
 
   /** File: application\Entity\Quote.php
    * @ORM\ManyToOne(targetEntity="TreatmentPlan")
    * @ORM\JoinColumn(name="PLF_ID", referencedColumnName="PLF_ID", nullable=true)
    */
-  // @TODO EntityMissing
   // protected $treatmentPlan = null;
+  @ManyToOne(() => PlanEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'PLF_ID', referencedColumnName: 'PLF_ID' })
+  treatmentPlan?: PlanEntity;
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Dental\Quotation\Act", mappedBy="quotation")
    */
-  // @TODO EntityMissing
   // protected $acts;
+  @OneToMany(() => DentalQuotationActEntity, e => e.quotation, {
+    createForeignKeyConstraints: false,
+  })
+  acts?: DentalQuotationActEntity[];
 
   /** File: application\Entity\Quote.php
    * @ORM\OneToMany(targetEntity="QuoteAct", mappedBy="quote", cascade={"persist"})
@@ -574,8 +610,10 @@ export class DentalQuotationEntity {
    * @ORM\OneToOne(targetEntity="PaymentPlan")
    * @ORM\JoinColumn(name="payment_schedule_id", referencedColumnName="id", nullable=true)
    */
-  // @TODO EntityMissing
   // protected $paymentPlan = null;
+  @OneToOne(() => PaymentPlanEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: "payment_schedule_id" })
+  paymentPlan?: PaymentPlanEntity;
 
   /**
    * @ORM\Column(name="valid_until", type="date", nullable=true)
@@ -605,8 +643,9 @@ export class DentalQuotationEntity {
   /**
    * @ORM\OneToMany(targetEntity="Mail", mappedBy="quote", cascade={"persist"})
    */
-  // @TODO EntityMissing
   // protected $attachments;
+  @OneToMany(() => LettersEntity, e => e.quote, { createForeignKeyConstraints: false })
+  attachments?: LettersEntity
 }
 
 // application/Entities/Dental/Quotation.php
