@@ -74,7 +74,6 @@ export class TeletransmissionEntity {
  * @ORM\ManyToOne(targetEntity="Organization")
  * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
  */
-  // @TODO EntityMissing
   //protected $organization;
   @Column({ name: 'organization_id' })
   organizationId?: number;

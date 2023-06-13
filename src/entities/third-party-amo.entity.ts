@@ -1,5 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { EnumThirdPartyStatus } from "./third-party-amc.entity";
+import { UserEntity } from "./user.entity";
+import { ContactEntity } from "./contact.entity";
+import { FseEntity } from "./fse.entity";
+import { AmoEntity } from "./amo.entity";
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\ThirdPartyAmoRepository")
@@ -29,24 +33,39 @@ export class ThirdPartyAmoEntity {
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    * @Serializer\Exclude
    */
-  // @TODO EntityMissing
   // protected $user;
+  @Column({ name: "user_id" })
+  userId?: number;
+
+  @OneToOne(() => UserEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'user_id' })
+  user?: UserEntity;
 
   /**
    * @ORM\OneToOne(targetEntity="Patient")
    * @ORM\JoinColumn(name="patient_id", referencedColumnName="CON_ID")
    * @Serializer\Exclude
    */
-  // @TODO EntityMissing
   // protected $patient;
+  @Column({ name: "patient_id" })
+  patientId?: number;
+
+  @OneToOne(() => ContactEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'patient_id' })
+  patient?: ContactEntity;
 
   /**
    * @ORM\OneToOne(targetEntity="Caresheet")
    * @ORM\JoinColumn(name="caresheet_id", referencedColumnName="FSE_ID")
    * @Serializer\Exclude
    */
-  // @TODO EntityMissing
   // protected $caresheet;
+  @Column({ name: "caresheet_id" })
+  caresheetId?: number;
+
+  @OneToOne(() => FseEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'caresheet_id' })
+  caresheet?: FseEntity;
 
   /**
    * @ORM\Column(name="amount", type="decimal", precision=10, scale=2, options={"default": 0})
@@ -188,8 +207,13 @@ export class ThirdPartyAmoEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"amo:index"})
    */
-  // @TODO EntityMissing
   // protected $amo;
+  @Column({ name: 'amo_id' })
+  amoId?: number;
+
+  @ManyToOne(() => AmoEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: "amo_id", referencedColumnName: "id" })
+  amo?: AmoEntity;
 }
 
 //application/Entity/ThirdPartyAmo.php
