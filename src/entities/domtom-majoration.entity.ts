@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { CcamEntity } from './ccam.entity';
+import { DomtomEntity } from './domtom.entities';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\DomtomMajorationRepository")
@@ -31,15 +33,25 @@ export class DomtomMajorationEntity {
    * @ORM\ManyToOne(targetEntity="Ccam", inversedBy="domtomMajorations")
    * @ORM\JoinColumn(name="ccam_id", referencedColumnName="id")
    */
-  // @TODO EntityMissing
   // protected $ccam;
+  @Column({ name: "ccam_id" })
+  ccamId?: number;
+
+  @ManyToOne(() => CcamEntity, e => e.domtomMajorations, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: "ccam_id", referencedColumnName: "id" })
+  ccam?: CcamEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Domtom")
    * @ORM\JoinColumn(name="domtom_id", referencedColumnName="id")
    */
-  // @TODO EntityMissing
   // protected $domtom;
+  @Column({ name: "domtom_id" })
+  domtomId?: number;
+
+  @ManyToOne(() => DomtomEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: "domtom_id", referencedColumnName: "id" })
+  domtom?: DomtomEntity;
 
   /**
    * @ORM\Column(name="modification_date", type="date")

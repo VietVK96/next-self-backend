@@ -645,7 +645,7 @@ export class DentalQuotationEntity {
    */
   // protected $attachments;
   @OneToMany(() => LettersEntity, e => e.quote, { createForeignKeyConstraints: false })
-  attachments?: LettersEntity
+  attachments?: LettersEntity;
 }
 
 // application/Entities/Dental/Quotation.php
