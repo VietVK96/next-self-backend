@@ -1,4 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { LibraryActEntity } from './library-act.entity';
+import { LibraryActQuantityEntity } from './library-act-quantity.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\LibraryOdontogramRepository")
@@ -14,8 +17,20 @@ export class LibraryOdontogramEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
+  })
+  organizationId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'organization_id'
+  })
+  organization?: OrganizationEntity;
 
   /**
    * @ORM\Id
@@ -147,15 +162,20 @@ export class LibraryOdontogramEntity {
   /**
    * @ORM\ManyToMany(targetEntity="LibraryAct", mappedBy="odontograms")
    */
-  // @TODO EntityMissing
-
   //   protected $libraryActs;
+  @ManyToMany(() => LibraryActEntity, (e) => e.odontograms, {
+    createForeignKeyConstraints: false
+  })
+  libraryActs?: LibraryActEntity[];
 
   /**
    * @ORM\ManyToMany(targetEntity="LibraryActQuantity", mappedBy="odontograms")
    */
-  // @TODO EntityMissing
   //   protected $libraryActQuantities;
+  @ManyToMany(() => LibraryActQuantityEntity, (e) => e.odontograms, {
+    createForeignKeyConstraints: false
+  })
+  libraryActQuantities?: LibraryActQuantityEntity[];
 }
 
 // application\Entities\LibraryOdontogram.php

@@ -2,9 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { ResourceEntity } from './resource.entity';
+import { UserEntity } from './user.entity';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\Memo")
@@ -34,16 +38,42 @@ export class MemoEntity {
    * @Serializer\MaxDepth(1)
    * @Assert\NotNull
    */
-  // @TODO EntityMissing
   // protected $resource;
+  @Column({
+    name: 'resource_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  resourceId?: number;
+  @ManyToOne(() => ResourceEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'resource_id'
+  })
+  resource?: ResourceEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\User", inversedBy="memos")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    * @var \App\Entities\User Modèle représentant l'utilisateur.
    */
-  // @TODO EntityMissing
   // protected $user;
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  usrId?: number;
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'USR_ID'
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\Column(name="MEM_DATE", type="date")
