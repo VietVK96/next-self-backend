@@ -87,7 +87,9 @@ export class PaymentPlanEntity {
    * })
    */
   // protected $deadlines;
-  @OneToMany(() => PaymentPlanDeadlineEntity, (e) => e.paymentPlan)
+  @OneToMany(() => PaymentPlanDeadlineEntity, (e) => e.paymentPlan, {
+    createForeignKeyConstraints: false,
+  })
   deadlines?: PaymentPlanDeadlineEntity[];
 
   @CreateDateColumn({ name: 'created_at' })

@@ -72,7 +72,9 @@ export class PhoneTypeEntity {
    * @ORM\OneToMany(targetEntity="PhoneNumber", mappedBy="category")
    */
   // protected $phoneNumbers;
-  @OneToMany(() => PhoneEntity, (e) => e.category)
+  @OneToMany(() => PhoneEntity, (e) => e.category, {
+    createForeignKeyConstraints: false,
+  })
   phoneNumbers?: PhoneEntity[];
 
 }
