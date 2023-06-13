@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { OrganizationEntity } from "./organization.entity";
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\TeletransmissionRepository")
@@ -75,6 +76,12 @@ export class TeletransmissionEntity {
  */
   // @TODO EntityMissing
   //protected $organization;
+  @Column({ name: 'organization_id' })
+  organizationId?: number;
+
+  @ManyToOne(() => OrganizationEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'organization_id', referencedColumnName: 'GRP_ID' })
+  organization?: OrganizationEntity;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
