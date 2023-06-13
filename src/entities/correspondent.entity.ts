@@ -198,6 +198,15 @@ export class CorrespondentEntity {
    * )
    */
   // protected $phoneNumbers;
+  @ManyToMany(() => PhoneEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinTable({
+    name: 'T_CORRESPONDENT_PHONE_CPP',
+    joinColumn: { name: "CPD_ID", referencedColumnName: "CPD_ID" },
+    inverseJoinColumn: { name: "PHO_ID", referencedColumnName: "PHO_ID" }
+  })
+  phoneNumbers?: PhoneEntity[];
 
   /**
    * @ORM\ManyToMany(targetEntity="\App\Entities\Phone")

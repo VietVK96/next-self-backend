@@ -2,9 +2,18 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { JoinAttribute } from 'typeorm/query-builder/JoinAttribute';
+import { UserEntity } from './user.entity';
+import { EmailOutgoingServerEntity } from './email-outgoing-server.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\EmailAccountRepository")
@@ -20,8 +29,14 @@ export class EmailAccountEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+  @Column({ name: "organization_id" })
+  organizationId?: number;
+
+  @ManyToOne(() => OrganizationEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: "organization_id", referencedColumnName: "GRP_ID" }
+  )
+  organization?: OrganizationEntity;
 
   // @Check TimeStamp
   // use TimestampableEntity;
@@ -55,8 +70,14 @@ export class EmailAccountEntity {
    * @ORM\JoinColumn(referencedColumnName="USR_ID")
    * @Gedmo\SortableGroup
    */
-  // @TODO EntityMissing
   // protected $user;
+  @Column({ name: "USR_ID" })
+  USRId?: number;
+
+  @ManyToOne(() => UserEntity, e => e.emailAccounts, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: "USR_ID", referencedColumnName: "USR_ID" }
+  )
+  user?: UserEntity;
 
   /**
    * @ORM\Column(type="string")
@@ -117,8 +138,9 @@ export class EmailAccountEntity {
    * @Assert\Type("App\Entity\EmailOutgoingServer")
    * @Assert\NotNull
    */
-  // @TODO EntityMissing
   // protected $outgoingServer;
+  @OneToOne(() => EmailOutgoingServerEntity, { createForeignKeyConstraints: false })
+  outgoingServer?: EmailOutgoingServerEntity;
 
   /**
    * @ORM\ManyToMany(targetEntity="User", inversedBy="subscribedEmailAccounts")
@@ -132,8 +154,16 @@ export class EmailAccountEntity {
    *  }
    * )
    */
-  // @TODO EntityMissing
   // protected $subscribers;
+  @ManyToMany(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinTable({
+    name: 'email_account_subscriber',
+    joinColumn: { name: "email_account_id", referencedColumnName: "id" },
+    inverseJoinColumn: { name: "user_id", referencedColumnName: "USR_ID" }
+  })
+  subscribers?: UserEntity[];
 }
 
 // application\Entity\EmailAccount.php
