@@ -1,4 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { UserEntity } from './user.entity';
 
 /**
  * @ORM\Entity
@@ -345,7 +352,20 @@ export class CmcicPaymentEntity {
    * @ORM\JoinColumn(name="usr_id", referencedColumnName="USR_ID")
    * @var \App\Entities\User Entité représentant l'utilisateur.
    */
-  // @TODO EntityMissing
-  //   protected $user;
+  @Column({
+    name: 'usr_id',
+    type: 'int',
+    width: 11,
+  })
+  usrId?: number;
+
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'usr_id',
+    referencedColumnName: 'USR_ID',
+  })
+  user?: UserEntity;
 }
 // application/Entities/Cmcic/Payment.php
