@@ -1,4 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { ConversationEntity } from './conversation.entity';
+import { UserEntity } from './user.entity';
 
 /**
  * @ORM\Entity
@@ -10,7 +18,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
  * @ExclusionPolicy("all")
  */
 @Entity('conversation_member')
-export class ConversationMemberEntityEntity {
+export class ConversationMemberEntity {
   /**
    * Identifiant de l'enregistrement.
    *
@@ -32,8 +40,22 @@ export class ConversationMemberEntityEntity {
    * @ORM\JoinColumn(name="conversation_id", referencedColumnName="id")
    * @var \App\Entities\ConversationEntity
    */
-  // @TODO EntityMissing
   // protected $conversation;
+  @Column({
+    name: 'conversation_id',
+    type: 'int',
+    width: 11,
+  })
+  conversationId: number;
+
+  @ManyToOne(() => ConversationEntity, (e) => e.members, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'conversation_id',
+    referencedColumnName: 'id',
+  })
+  conversation: ConversationEntity;
 
   /**
    * Entité de l'utilisateur.
@@ -43,8 +65,23 @@ export class ConversationMemberEntityEntity {
    * @Expose
    * @var \App\Entities\UserEntity
    */
-  // @TODO EntityMissing
   // protected $user;
+
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+  })
+  userId: number;
+
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'user_id',
+    referencedColumnName: 'USR_ID',
+  })
+  user: UserEntity;
 
   /**
    * Date et heure de lecture de la conversation.

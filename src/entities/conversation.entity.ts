@@ -2,9 +2,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { UserEntity } from './user.entity';
+import { ConversationMemberEntity } from './conversation-member.entity';
+import { ConversationMessageEntity } from './conversation-message.entity';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\ConversationRepository")
@@ -13,7 +19,7 @@ import {
  * @ExclusionPolicy("all")
  */
 @Entity('conversation')
-export class ConversationEntityEntity {
+export class ConversationEntity {
   /**
    * Identifiant de l'enregistrement.
    *
@@ -36,16 +42,46 @@ export class ConversationEntityEntity {
    * @Expose
    * @var \App\Entities\UserEntity
    */
-  // @TODO EntityMissing
+  //
   // protected $user;
+
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+  })
+  userId: number;
+
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'user_id',
+    referencedColumnName: 'USR_ID',
+  })
+  user: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="User")
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
+  //
   // protected $owner;
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+  })
+  ownerId: number;
 
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'user_id',
+    referencedColumnName: 'USR_ID',
+  })
+  owner: UserEntity;
   /**
    * Titre de la conversation.
    *
@@ -83,8 +119,12 @@ export class ConversationEntityEntity {
    * @Expose
    * @var \Doctrine\Common\Collections\ArrayCollection
    */
-  // @TODO EntityMissing
   // protected $members;
+
+  @OneToMany(() => ConversationMemberEntity, (e) => e.conversation, {
+    createForeignKeyConstraints: false,
+  })
+  members: ConversationMemberEntity[];
 
   /**
    * Messages de la conversation.
@@ -93,8 +133,11 @@ export class ConversationEntityEntity {
    * @Expose
    * @var \Doctrine\Common\Collections\ArrayCollection
    */
-  // @TODO EntityMissing
   // protected $messages;
+  @OneToMany(() => ConversationMessageEntity, (e) => e.conversation, {
+    createForeignKeyConstraints: false,
+  })
+  messages: ConversationMessageEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
