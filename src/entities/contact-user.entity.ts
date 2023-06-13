@@ -1,4 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { ContactEntity } from './contact.entity';
+import { UserEntity } from './user.entity';
 /**
  * @ORM\Entity
  * @ORM\Table(name="contact_user_cou")
@@ -22,8 +30,22 @@ export class ContactUserEntity {
    * @ORM\JoinColumn(name="con_id", referencedColumnName="CON_ID")
    * @var \App\Entities\Contact $contact Entité représentant le patient.
    */
-  // @TODO EntityMissing
   // protected $contact;
+  @Column({
+    name: 'con_id',
+    type: 'int',
+    width: 11,
+  })
+  conId?: number;
+
+  @ManyToOne(() => ContactEntity, (e) => e.contactUsers, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'con_id',
+    referencedColumnName: 'CON_ID',
+  })
+  contact: ContactEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Patient")
@@ -32,16 +54,46 @@ export class ContactUserEntity {
    * @Serializer\Groups({"unpaid:index"})
    * @Assert\NotNull
    */
-  // @TODO EntityMissing
   // protected $patient;
+
+  @Column({
+    name: 'con_id',
+    type: 'int',
+    width: 11,
+  })
+  patientId?: number;
+
+  @ManyToOne(() => ContactEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'con_id',
+    referencedColumnName: 'CON_ID',
+  })
+  patient: ContactEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
    * @ORM\JoinColumn(name="usr_id", referencedColumnName="USR_ID")
    * @var \App\Entities\User $user Entité représentant le praticien.
    */
-  // @TODO EntityMissing
   // protected $user;
+
+  @Column({
+    name: 'usr_id',
+    type: 'int',
+    width: 11,
+  })
+  usrId?: number;
+
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'usr_id',
+    referencedColumnName: 'USR_ID',
+  })
+  user: UserEntity;
 
   /**
    * @ORM\Column(name="cou_unpaid_level", type="integer", options={"default": 0})
@@ -166,7 +218,7 @@ export class ContactUserEntity {
     precision: 10,
     scale: 2,
     nullable: false,
-    default: 0.00
+    default: 0.0,
   })
   amountCare?: number;
 
@@ -214,7 +266,7 @@ export class ContactUserEntity {
     precision: 10,
     scale: 2,
     nullable: false,
-    default: 0.00
+    default: 0.0,
   })
   amountProsthesis?: number;
 
@@ -250,7 +302,7 @@ export class ContactUserEntity {
   @Column({
     name: 'cou_last_care',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   visitDate?: string;
 
@@ -278,10 +330,9 @@ export class ContactUserEntity {
     type: 'decimal',
     precision: 0,
     scale: 2,
-    default: 0.00
+    default: 0.0,
   })
   thirdPartyBalance?: number;
-
 }
 
 //application/Entiteies/ContactUser.php

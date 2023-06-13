@@ -2,9 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { UserEntity } from './user.entity';
+import { ContactEntity } from './contact.entity';
 
 /**
  * @ORM\Entity
@@ -69,8 +73,22 @@ export class ContactNoteEntity {
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    * @var \App\Entities\UserEntity
    */
-  // @TODO EntityMissing
   //   protected $user;
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+  })
+  userId?: number;
+
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'user_id',
+    referencedColumnName: 'USR_ID',
+  })
+  user?: UserEntity;
 
   /**
    * @File: Entities/Contact/Note.php
@@ -78,6 +96,22 @@ export class ContactNoteEntity {
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    * protected $contact;
    */
+  @Column({
+    name: 'CON_ID',
+    type: 'int',
+    width: 11,
+  })
+  conId?: number;
+
+  @ManyToOne(() => ContactEntity, (e) => e.notes, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'CON_ID',
+    referencedColumnName: 'CON_ID',
+  })
+  contact?: ContactEntity;
+
   /**
    * @File: Entity/PatientNode.php
    * @ORM\ManyToOne(targetEntity="Patient")
@@ -92,13 +126,26 @@ export class ContactNoteEntity {
      * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
      * @var \App\Entities\PatientEntity
    */
-  // @TODO EntityMissing
-  // @Check VariableMissing
   //   protected $patient;
+
+  @Column({
+    name: 'CON_ID',
+    type: 'int',
+    width: 11,
+  })
+  patientId?: number;
+
+  @ManyToOne(() => ContactEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'CON_ID',
+    referencedColumnName: 'CON_ID',
+  })
+  patient?: ContactEntity;
 
   // @Check TimeStamp
   // use TimestampableEntity;
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 
