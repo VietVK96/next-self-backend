@@ -69,6 +69,7 @@ export class CashingEntity {
     name: 'correspondent_id',
     type: 'int',
     width: 11,
+    nullable: true,
   })
   correspondentId?: number;
 
@@ -241,6 +242,7 @@ export class CashingEntity {
     name: 'CON_ID',
     type: 'int',
     width: 11,
+    nullable: true,
   })
   conId?: number;
 
@@ -261,6 +263,7 @@ export class CashingEntity {
     name: 'BIL_ID',
     type: 'int',
     width: 11,
+    nullable: true,
   })
   bilId?: number;
 
@@ -281,6 +284,7 @@ export class CashingEntity {
     name: 'LBK_ID',
     type: 'int',
     width: 11,
+    nullable: true,
   })
   lbkId?: number;
 
@@ -301,6 +305,7 @@ export class CashingEntity {
     name: 'SLC_ID',
     type: 'int',
     width: 11,
+    nullable: true,
   })
   slcId?: number;
 

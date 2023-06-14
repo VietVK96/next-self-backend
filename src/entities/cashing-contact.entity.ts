@@ -99,7 +99,6 @@ export class CashingContactEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\Contact", inversedBy="cashingContacts")
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    */
-  // @TODO EntityMissing
   //   protected $contact;
   @Column({
     name: 'CON_ID',
@@ -122,7 +121,6 @@ export class CashingContactEntity {
    * @Serializer\Expose
    * @Serializer\MaxDepth(1)
    */
-  // @TODO EntityMissing
   // protected $patient;
   @ManyToOne(() => ContactEntity, (e) => e.cashingContacts, {
     createForeignKeyConstraints: false,
