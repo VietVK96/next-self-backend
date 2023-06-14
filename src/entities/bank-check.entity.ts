@@ -99,6 +99,8 @@ export class BankCheckEntity {
   //protected $organization;
   @Column({
     name: 'organization_id',
+    type: 'int',
+    width: 11,
   })
   organizationId?: number;
 

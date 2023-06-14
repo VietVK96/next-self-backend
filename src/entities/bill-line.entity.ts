@@ -136,8 +136,11 @@ export class BillLineEntity {
   //protected $bill;
   @Column({
     name: 'BIL_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
   })
-  BILID?: number;
+  bilId?: number;
 
   @ManyToOne(() => BillEntity, (e) => e.lines, {
     createForeignKeyConstraints: false,

@@ -45,6 +45,8 @@ export class AppointmentReminderLibraryEntity {
   // protected $user;
   @Column({
     name: 'USR_ID',
+    type: 'int',
+    width: 11,
   })
   usrId?: number;
 
@@ -68,6 +70,8 @@ export class AppointmentReminderLibraryEntity {
   // protected $addressee;
   @Column({
     name: 'RMR_ID',
+    type: 'int',
+    width: 11,
   })
   rmrId?: number;
 
@@ -91,6 +95,8 @@ export class AppointmentReminderLibraryEntity {
   // protected $category;
   @Column({
     name: 'RMT_ID',
+    type: 'int',
+    width: 11,
   })
   RMTID?: number;
 
@@ -114,6 +120,8 @@ export class AppointmentReminderLibraryEntity {
   // protected $timelimitUnit;
   @Column({
     name: 'RMU_ID',
+    type: 'int',
+    width: 11,
   })
   rmuId?: number;
 

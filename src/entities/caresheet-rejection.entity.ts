@@ -32,6 +32,8 @@ export class CaresheetRejection {
   // protected $caresheet;
   @Column({
     name: 'caresheet_id',
+    type: 'int',
+    width: 11,
   })
   caresheetId?: number;
 

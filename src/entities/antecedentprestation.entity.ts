@@ -35,6 +35,9 @@ export class AntecedentPrestationEntity {
   //   protected $contact;
   @Column({
     name: 'CON_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
   })
   conId?: number;
   @ManyToOne(() => ContactEntity, {
@@ -52,6 +55,9 @@ export class AntecedentPrestationEntity {
   //   protected $libraryAct = null;
   @Column({
     name: 'library_act_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
   })
   libraryActId?: number;
 
@@ -70,6 +76,9 @@ export class AntecedentPrestationEntity {
   //   protected $libraryActQuantity = null;
   @Column({
     name: 'library_act_quantity_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
   })
   libraryActQuantityId?: number;
 

@@ -49,6 +49,9 @@ export class BillEntity {
   //   protected $logo;
   @Column({
     name: 'logo_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
   })
   logoId?: number;
 
@@ -227,8 +230,11 @@ export class BillEntity {
   //   protected $user;
   @Column({
     name: 'USR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
   })
-  USRID?: number;
+  usrId?: number;
 
   @ManyToOne(() => UserEntity, {
     createForeignKeyConstraints: false,
@@ -246,8 +252,11 @@ export class BillEntity {
   //   protected $dentalQuotation;
   @Column({
     name: 'DQO_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
   })
-  DQOID?: number;
+  dqoId?: number;
 
   @ManyToOne(() => DentalQuotationEntity, {
     createForeignKeyConstraints: false,
@@ -271,15 +280,17 @@ export class BillEntity {
   //   protected $contact;
   @Column({
     name: 'CON_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
   })
-  CONID?: number;
+  conId?: number;
 
   @ManyToOne(() => ContactEntity, (e) => e.bills, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'CON_ID',
-    referencedColumnName: 'CON_ID',
   })
   contact?: ContactEntity;
 
@@ -288,7 +299,6 @@ export class BillEntity {
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   //   protected $patient;
 
   @ManyToOne(() => ContactEntity, (e) => e.bills, {
