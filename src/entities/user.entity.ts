@@ -664,7 +664,9 @@ export class UserEntity {
    */
   // protected $privileges;
 
-  @OneToMany(() => PrivilegeEntity, (e) => e.user)
+  @OneToMany(() => PrivilegeEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
   privileges?: PrivilegeEntity[];
 
   /**
@@ -675,7 +677,9 @@ export class UserEntity {
    */
   // protected $privileged;
 
-  @OneToMany(() => PrivilegeEntity, (e) => e.userWith)
+  @OneToMany(() => PrivilegeEntity, (e) => e.userWith, {
+    createForeignKeyConstraints: false,
+  })
   privileged?: PrivilegeEntity[];
 
   /**
@@ -684,7 +688,9 @@ export class UserEntity {
    */
   // protected $events;
 
-  @OneToMany(() => EventEntity, (e) => e.user)
+  @OneToMany(() => EventEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
   events?: EventEntity[];
 
   /**
@@ -693,7 +699,9 @@ export class UserEntity {
    */
   // protected $memos;
 
-  @OneToMany(() => MemoEntity, (e) => e.user)
+  @OneToMany(() => MemoEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
   memos?: MemoEntity[];
 
   /**
@@ -712,7 +720,9 @@ export class UserEntity {
    */
   // protected $connections;
 
-  @OneToMany(() => UserConnectionEntity, (e) => e.user)
+  @OneToMany(() => UserConnectionEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
   connections?: UserConnectionEntity[];
 
   /**
@@ -740,7 +750,9 @@ export class UserEntity {
    */
   // protected $cashings;
 
-  @OneToMany(() => CashingEntity, (e) => e.user)
+  @OneToMany(() => CashingEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
   cashings?: CashingEntity[];
 
   /**
@@ -822,7 +834,9 @@ export class UserEntity {
    */
   // protected $caresheets;
 
-  @OneToMany(() => FseEntity, (e) => e.user)
+  @OneToMany(() => FseEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
   caresheets?: FseEntity[];
 
   /**
@@ -831,7 +845,9 @@ export class UserEntity {
    */
   // protected $emailAccounts;
 
-  @OneToMany(() => EmailAccountEntity, (e) => e.user)
+  @OneToMany(() => EmailAccountEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
   emailAccounts?: EmailAccountEntity[];
 
   /**
@@ -840,7 +856,9 @@ export class UserEntity {
    */
   // protected $eventTypes;
 
-  @OneToMany(() => EventTypeEntity, (e) => e.user)
+  @OneToMany(() => EventTypeEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
   eventTypes?: EventTypeEntity[];
 
   /**
@@ -869,7 +887,9 @@ export class UserEntity {
    */
   // protected $sendingLogs;
 
-  @OneToMany(() => SendingLogEntity, (e) => e.user)
+  @OneToMany(() => SendingLogEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
   sendingLogs?: SendingLogEntity[];
 
   /**
@@ -880,15 +900,6 @@ export class UserEntity {
   @ManyToMany(() => EmailAccountEntity, (e)=>e.subscribers {
     createForeignKeyConstraints:false
   })
-  @JoinTable({
-    name: 'email_account_subscriber',
-    joinColumn: {
-      name: 'user_id',
-    },
-    inverseJoinColumn: {
-      name: 'email_account_id',
-    },
-  })
   subscribedEmailAccounts?: EmailAccountEntity[];
 
   /**
@@ -896,7 +907,9 @@ export class UserEntity {
    */
   // protected $appointmentReminderLibraries;
 
-  @OneToMany(() => AppointmentReminderLibraryEntity, (e) => e.user)
+  @OneToMany(() => AppointmentReminderLibraryEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
   appointmentReminderLibraries?: AppointmentReminderLibraryEntity[];
 
   @CreateDateColumn({ name: 'created_at' })

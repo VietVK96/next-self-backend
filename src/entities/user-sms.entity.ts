@@ -24,7 +24,7 @@ export class UserSmsEntity {
   @OneToOne(() => UserEntity, (e) => e.sms, {
     createForeignKeyConstraints: false,
   })
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'USR_ID' })
   user?: UserEntity;
 
   /**

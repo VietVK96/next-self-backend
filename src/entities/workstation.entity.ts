@@ -88,6 +88,8 @@ export class WorkstationEntity {
 
   @Column({
     name: 'organization_id',
+    type: 'int',
+    width: 11,
   })
   organizationId?: number;
   @ManyToOne(() => OrganizationEntity, {
