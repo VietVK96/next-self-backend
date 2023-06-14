@@ -46,7 +46,7 @@ export class TimeslotEntity {
   @Column({ name: 'recurring_pattern_id', type: 'int', width: 11, nullable: true })
   recurringPatternId?: number;
 
-  @ManyToOne(() => RecurringPatternEntity, { createForeignKeyConstraints: false })
+  @ManyToOne(() => RecurringPatternEntity, e => e.timeslots, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'recurring_pattern_id' })
   recurringPattern?: ResourceEntity;
 
