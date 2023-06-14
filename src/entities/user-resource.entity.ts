@@ -51,7 +51,6 @@ export class UserResourceEntity {
    * @ORM\JoinColumn(name="resource_id", referencedColumnName="id")
    * @var \App\Entities\Resource Entité représentant la ressource.
    */
-  // @TODO EntityMissing
   // protected $resource;
 
   @Column({

@@ -61,7 +61,6 @@ export class UserEntity {
    * @ORM\JoinColumn(name="resource_id", referencedColumnName="id")
    * @var \App\Entities\Resource Entité représentant la resource principale.
    */
-  // @TODO EntityMissing
   // protected $resource;
 
   @Column({
@@ -601,9 +600,15 @@ export class UserEntity {
    * @ORM\OneToOne(targetEntity="\App\Entities\Address")
    * @ORM\JoinColumn(name="ADR_ID", referencedColumnName="ADR_ID")
    */
-  // @TODO EntityMissing
   // protected $address;
 
+  @Column({
+    name: 'ADR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  adrId?: number;
   @OneToOne(() => AddressEntity, {
     createForeignKeyConstraints: false,
   })
@@ -870,7 +875,6 @@ export class UserEntity {
   /**
    * @ORM\ManyToMany(targetEntity="EmailAccount", mappedBy="subscribers")
    */
-  // @TODO EntityMissing
   // protected $subscribedEmailAccounts;
 
   @ManyToMany(() => EmailAccountEntity, (e)=>e.subscribers {

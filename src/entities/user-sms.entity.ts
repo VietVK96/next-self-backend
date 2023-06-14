@@ -13,9 +13,14 @@ export class UserSmsEntity {
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="NONE")
    */
-  // @TODO EntityMissing
   // protected $user;
 
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+  })
+  usrId?: number;
   @OneToOne(() => UserEntity, (e) => e.sms, {
     createForeignKeyConstraints: false,
   })

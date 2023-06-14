@@ -35,6 +35,12 @@ export class UserMedicalEntity {
    */
   //   protected $user;
 
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+  })
+  userId?: number;
   @OneToOne(() => UserEntity, (e) => e.medical, {
     createForeignKeyConstraints: false,
   })

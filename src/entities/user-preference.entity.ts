@@ -604,6 +604,12 @@ export class UserPreferenceEntity {
    */
   // protected $user;
 
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+  })
+  usrId?: number;
   @OneToOne(() => UserEntity, (e) => e.preference, {
     createForeignKeyConstraints: false,
   })

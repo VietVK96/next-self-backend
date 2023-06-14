@@ -73,7 +73,6 @@ export class WorkstationEntity {
    * @ORM\OneToMany(targetEntity="ImagingSoftware", mappedBy="workstation", cascade={"persist"})
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   //   protected $imagingSoftwares;
 
   @OneToMany(() => ImagingSoftwareEntity, (e) => e.workstation, {
