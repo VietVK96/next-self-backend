@@ -67,7 +67,7 @@ export class UserEntity {
     name: 'resource_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   resourceId?: number;
   @ManyToOne(() => ResourceEntity, {
@@ -82,9 +82,12 @@ export class UserEntity {
     name: 'avatar_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
-  @OneToMany(() => UploadEntity, (e) => e.user)
+  avatarId?: number;
+  @OneToMany(() => UploadEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
   uploads?: UploadEntity[];
 
   /**
@@ -644,7 +647,7 @@ export class UserEntity {
     name: 'UST_ID',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   ustId?: number;
 
@@ -867,8 +870,8 @@ export class UserEntity {
    */
   // protected $resources;
 
-  @ManyToMany(() => ResourceEntity, (e)=>e.subscribers {
-    createForeignKeyConstraints:false
+  @ManyToMany(() => ResourceEntity, (e) => e.subscribers, {
+    createForeignKeyConstraints: false,
   })
   @JoinTable({
     name: 'user_resource',
@@ -897,8 +900,8 @@ export class UserEntity {
    */
   // protected $subscribedEmailAccounts;
 
-  @ManyToMany(() => EmailAccountEntity, (e)=>e.subscribers {
-    createForeignKeyConstraints:false
+  @ManyToMany(() => EmailAccountEntity, (e) => e.subscribers, {
+    createForeignKeyConstraints: false,
   })
   subscribedEmailAccounts?: EmailAccountEntity[];
 
