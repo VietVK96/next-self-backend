@@ -40,7 +40,6 @@ export class CorrespondentEntity {
   })
   @JoinColumn({
     name: 'organization_id',
-    referencedColumnName: 'GRP_ID'
   })
   group?: OrganizationEntity;
 
@@ -74,7 +73,6 @@ export class CorrespondentEntity {
   })
   @JoinColumn({
     name: 'correspondent_type_id',
-    referencedColumnName: "id"
   })
   category?: CorrespondentTypeEntity;
 
@@ -96,7 +94,6 @@ export class CorrespondentEntity {
   })
   @JoinColumn({
     name: 'ADR_ID',
-    referencedColumnName: 'ADR_ID'
   })
   address?: AddressEntity;
 
@@ -181,6 +178,7 @@ export class CorrespondentEntity {
     name: 'GEN_ID',
     type: 'int',
     width: 11,
+    nullable: true,
   })
   genId?: number;
 
@@ -189,7 +187,6 @@ export class CorrespondentEntity {
   })
   @JoinColumn({
     name: 'GEN_ID',
-    referencedColumnName: "GEN_ID"
   })
   gender?: GenderEntity;
 
@@ -211,8 +208,8 @@ export class CorrespondentEntity {
   })
   @JoinTable({
     name: 'T_CORRESPONDENT_PHONE_CPP',
-    joinColumn: { name: "CPD_ID", referencedColumnName: "CPD_ID" },
-    inverseJoinColumn: { name: "PHO_ID", referencedColumnName: "PHO_ID" }
+    joinColumn: { name: "CPD_ID" },
+    inverseJoinColumn: { name: "PHO_ID" }
   })
   phoneNumbers?: PhoneEntity[];
 
@@ -229,8 +226,8 @@ export class CorrespondentEntity {
   })
   @JoinTable({
     name: 'T_CORRESPONDENT_PHONE_CPP',
-    joinColumn: { name: "CPD_ID", referencedColumnName: "CPD_ID" },
-    inverseJoinColumn: { name: "PHO_ID", referencedColumnName: "PHO_ID" }
+    joinColumn: { name: "CPD_ID" },
+    inverseJoinColumn: { name: "PHO_ID" }
   })
   phones?: PhoneEntity[];
 

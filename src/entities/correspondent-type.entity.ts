@@ -29,7 +29,8 @@ export class CorrespondentTypeEntity {
   @Column({
     name: 'group_id',
     type: 'int',
-    width: 11
+    width: 11,
+    nullable: true,
   })
   groupId?: number;
 
@@ -38,7 +39,6 @@ export class CorrespondentTypeEntity {
   })
   @JoinColumn({
     name: 'group_id',
-    referencedColumnName: 'GRP_ID'
   })
   group?: OrganizationEntity;
 

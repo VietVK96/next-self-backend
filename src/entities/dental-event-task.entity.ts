@@ -59,7 +59,7 @@ export class DentalEventTaskEntity {
   ccamId?: number;
 
   @ManyToOne(() => CcamEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "ccam_id", referencedColumnName: 'id' })
+  @JoinColumn({ name: "ccam_id" })
   ccam?: CcamEntity;
 
   /**
@@ -76,7 +76,7 @@ export class DentalEventTaskEntity {
   ngapKeyId?: number;
 
   @ManyToOne(() => NgapKeyEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "ngap_key_id", referencedColumnName: 'id' })
+  @JoinColumn({ name: "ngap_key_id" })
   ngapKey?: NgapKeyEntity;
 
   /**
@@ -390,11 +390,11 @@ export class DentalEventTaskEntity {
    * @ORM\JoinColumn(name="FSE_ID", referencedColumnName="FSE_ID")
    */
   // protected $fse;
-  @Column({ name: "FSE_ID", type: 'int', width: 11 })
+  @Column({ name: "FSE_ID", type: 'int', width: 11, nullable: true })
   FSEId?: number;
 
   @ManyToOne(() => FseEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "FSE_ID", referencedColumnName: "FSE_ID" })
+  @JoinColumn({ name: "FSE_ID" })
   fse?: FseEntity;
 
   /**
@@ -407,7 +407,7 @@ export class DentalEventTaskEntity {
   dentalMaterialId?: number;
 
   @ManyToOne(() => DentalMaterialEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: 'dental_material_id', referencedColumnName: "id" })
+  @JoinColumn({ name: 'dental_material_id' })
   material?: DentalMaterialEntity;
 
   /** File: application\Entity\ActMedical.php

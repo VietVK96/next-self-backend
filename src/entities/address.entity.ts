@@ -6,7 +6,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { CorrespondentEntity } from './correspondent.entity';
 
 /**
  * @ORM\Entity

@@ -38,7 +38,7 @@ export class DomtomMajorationEntity {
   ccamId?: number;
 
   @ManyToOne(() => CcamEntity, e => e.domtomMajorations, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "ccam_id", referencedColumnName: "id" })
+  @JoinColumn({ name: "ccam_id" })
   ccam?: CcamEntity;
 
   /**
@@ -50,7 +50,7 @@ export class DomtomMajorationEntity {
   domtomId?: number;
 
   @ManyToOne(() => DomtomEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "domtom_id", referencedColumnName: "id" })
+  @JoinColumn({ name: "domtom_id" })
   domtom?: DomtomEntity;
 
   /**
