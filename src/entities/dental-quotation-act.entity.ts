@@ -35,7 +35,7 @@ export class DentalQuotationActEntity {
    * @ORM\JoinColumn(name="library_act_id", referencedColumnName="id", nullable=true)
    */
   // protected $libraryAct = null;
-  @Column({ name: "library_act_id", type: 'int', width: 11, nullable: true })
+  @Column({ name: 'library_act_id', type: 'int', width: 11, nullable: true })
   libraryActId?: number;
 
   @ManyToOne(() => LibraryActEntity, { createForeignKeyConstraints: false })
@@ -47,11 +47,11 @@ export class DentalQuotationActEntity {
    * @ORM\JoinColumn(name="library_act_quantity_id", referencedColumnName="id", nullable=true)
    */
   // protected $libraryActQuantity = null;
-  @Column({ name: "library_act_quantity_id", type: 'int', width: 11, nullable: true })
+  @Column({ name: 'library_act_quantity_id', type: 'int', width: 11, nullable: true })
   libraryActQuantityId?: number;
 
   @ManyToOne(() => LibraryActQuantityEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "library_act_quantity_id" })
+  @JoinColumn({ name: 'library_act_quantity_id' })
   libraryActQuantity?: LibraryActQuantityEntity;
 
   /**
@@ -450,11 +450,11 @@ export class DentalQuotationActEntity {
    * @ORM\JoinColumn(name="DQO_ID", referencedColumnName="DQO_ID")
    */
   // protected $quotation;
-  @Column({ name: "DQO_ID", type: 'int', width: 11 })
+  @Column({ name: 'DQO_ID', type: 'int', width: 11 })
   DQOId?: number;
 
   @ManyToOne(() => DentalQuotationEntity, e => e.acts, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "DQO_ID" })
+  @JoinColumn({ name: 'DQO_ID' })
   quotation?: DentalQuotationEntity;
 
   /** File: application\Entity\QuoteAct.php
@@ -463,7 +463,7 @@ export class DentalQuotationActEntity {
    */
   // protected $quote;
   @ManyToOne(() => DentalQuotationEntity, e => e.acts, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "DQO_ID" })
+  @JoinColumn({ name: 'DQO_ID' })
   quote?: DentalQuotationEntity;
 
   /** File: application\Entity\QuoteAct.php

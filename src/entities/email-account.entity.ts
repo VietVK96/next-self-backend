@@ -30,11 +30,11 @@ export class EmailAccountEntity {
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
   // protected $organization;
-  @Column({ name: "organization_id", type: 'int', width: 11 })
+  @Column({ name: 'organization_id', type: 'int', width: 11 })
   organizationId?: number;
 
   @ManyToOne(() => OrganizationEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "organization_id" }
+  @JoinColumn({ name: 'organization_id' }
   )
   organization?: OrganizationEntity;
 
@@ -71,11 +71,11 @@ export class EmailAccountEntity {
    * @Gedmo\SortableGroup
    */
   // protected $user;
-  @Column({ name: "user_id", type: 'int', width: 11 })
+  @Column({ name: 'user_id', type: 'int', width: 11 })
   USRId?: number;
 
   @ManyToOne(() => UserEntity, e => e.emailAccounts, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "user_id" }
+  @JoinColumn({ name: 'user_id' }
   )
   user?: UserEntity;
 
@@ -160,8 +160,8 @@ export class EmailAccountEntity {
   })
   @JoinTable({
     name: 'email_account_subscriber',
-    joinColumn: { name: "email_account_id" },
-    inverseJoinColumn: { name: "user_id" }
+    joinColumn: { name: 'email_account_id' },
+    inverseJoinColumn: { name: 'user_id' }
   })
   subscribers?: UserEntity[];
 }

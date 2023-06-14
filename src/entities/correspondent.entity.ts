@@ -87,7 +87,7 @@ export class CorrespondentEntity {
     width: 11,
     nullable: true,
   })
-  ADRId?: string;
+  addressId?: string;
 
   @ManyToOne(() => AddressEntity, {
     createForeignKeyConstraints: false

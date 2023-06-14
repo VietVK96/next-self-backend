@@ -539,8 +539,8 @@ export class DentalQuotationEntity {
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
   // protected $user;
-  @Column({ name: "USR_ID", type: 'int', width: 11 })
-  USRId?: number;
+  @Column({ name: 'USR_ID', type: 'int', width: 11 })
+  userId?: number;
 
   @ManyToOne(() => UserEntity, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'USR_ID' })
@@ -551,8 +551,8 @@ export class DentalQuotationEntity {
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    */
   // protected $contact;
-  @Column({ name: "CON_ID", type: 'int', width: 11 })
-  CONId?: number;
+  @Column({ name: 'CON_ID', type: 'int', width: 11 })
+  contactId?: number;
 
   @ManyToOne(() => ContactEntity, e => e.quotations, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'CON_ID' })
@@ -572,8 +572,8 @@ export class DentalQuotationEntity {
    * @ORM\JoinColumn(name="PLF_ID", referencedColumnName="PLF_ID")
    */
   // protected $planification;
-  @Column({ name: "PLF_ID", type: 'int', width: 11, nullable: true })
-  PLFId?: number;
+  @Column({ name: 'PLF_ID', type: 'int', width: 11, nullable: true })
+  planificationId?: number;
 
   @ManyToOne(() => PlanEntity, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'PLF_ID' })
@@ -611,11 +611,11 @@ export class DentalQuotationEntity {
    * @ORM\JoinColumn(name="payment_schedule_id", referencedColumnName="id", nullable=true)
    */
   // protected $paymentPlan = null;
-  @Column({ name: "payment_schedule_id", type: 'int', width: 11, nullable: true })
+  @Column({ name: 'payment_schedule_id', type: 'int', width: 11, nullable: true })
   paymentScheduleId?: number;
 
   @OneToOne(() => PaymentPlanEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "payment_schedule_id" })
+  @JoinColumn({ name: 'payment_schedule_id' })
   paymentPlan?: PaymentPlanEntity;
 
   /**
