@@ -52,6 +52,8 @@ export class DentalEventTaskEntity {
   // protected $ccam = null;
   @Column({
     name: "ccam_id",
+    type: 'int',
+    width: 11,
     nullable: true,
   })
   ccamId?: number;
@@ -67,6 +69,8 @@ export class DentalEventTaskEntity {
   // protected $ngapKey = null;
   @Column({
     name: "ngap_key_id",
+    type: 'int',
+    width: 11,
     nullable: true,
   })
   ngapKeyId?: number;
@@ -386,7 +390,7 @@ export class DentalEventTaskEntity {
    * @ORM\JoinColumn(name="FSE_ID", referencedColumnName="FSE_ID")
    */
   // protected $fse;
-  @Column({ name: "FSE_ID" })
+  @Column({ name: "FSE_ID", type: 'int', width: 11 })
   FSEId?: number;
 
   @ManyToOne(() => FseEntity, { createForeignKeyConstraints: false })
@@ -399,7 +403,7 @@ export class DentalEventTaskEntity {
    * @Serializer\Expose
    */
   // protected $material = null;
-  @Column({ name: "dental_material_id", nullable: true })
+  @Column({ name: "dental_material_id", type: 'int', width: 11, nullable: true })
   dentalMaterialId?: number;
 
   @ManyToOne(() => DentalMaterialEntity, { createForeignKeyConstraints: false })

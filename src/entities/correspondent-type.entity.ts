@@ -27,7 +27,9 @@ export class CorrespondentTypeEntity {
    */
   // protected $group;
   @Column({
-    name: 'group_id'
+    name: 'group_id',
+    type: 'int',
+    width: 11
   })
   groupId?: number;
 

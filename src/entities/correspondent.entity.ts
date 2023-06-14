@@ -29,7 +29,9 @@ export class CorrespondentEntity {
    */
   // group;
   @Column({
-    name: 'organization_id'
+    name: 'organization_id',
+    type: 'int',
+    width: 11
   })
   organizationId?: number;
 
@@ -61,6 +63,8 @@ export class CorrespondentEntity {
   // protected $category = NULL;
   @Column({
     name: 'correspondent_type_id',
+    type: 'int',
+    width: 11,
     nullable: true,
   })
   correspondentTypeId?: number;
@@ -81,6 +85,8 @@ export class CorrespondentEntity {
   // protected $address = NULL;
   @Column({
     name: 'ADR_ID',
+    type: 'int',
+    width: 11,
     nullable: true,
   })
   ADRId?: string;
@@ -173,6 +179,8 @@ export class CorrespondentEntity {
   // protected $gender;
   @Column({
     name: 'GEN_ID',
+    type: 'int',
+    width: 11,
   })
   genId?: number;
 
