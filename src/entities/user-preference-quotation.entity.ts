@@ -1,4 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { UserEntity } from './user.entity';
 
 // enum('none', 'both', 'three')
 export enum UserPreferenceQuotationDisplayOdontogramType {
@@ -196,8 +203,13 @@ export class UserPreferenceQuotationEntity {
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    * @var \App\Entities\User Entité représentant l'utilisateur
    */
-  // @TODO EntityMissing
   // protected $user;
+
+  @OneToOne(() => UserEntity, (e) => e.userPreferenceQuotation, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({ name: 'USR_ID' })
+  user?: UserEntity;
 }
 
 // application/Entities/User/Preference/Quotation.php

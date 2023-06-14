@@ -1,4 +1,14 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { UserEntity } from './user.entity';
+import { SpecialtyCodeEntity } from './specialty-code.entity';
+import { DomtomEntity } from './domtom.entities';
 
 /**
  * @ORM\Entity
@@ -23,24 +33,57 @@ export class UserMedicalEntity {
    * @ORM\OneToOne(targetEntity="User", inversedBy="medical")
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   //   protected $user;
+
+  @OneToOne(() => UserEntity, (e) => e.medical, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({ name: 'user_id' })
+  user?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="SpecialtyCode", fetch="EAGER")
    * @ORM\JoinColumn(name="specialty_code_id", referencedColumnName="id")
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   //   protected $specialtyCode;
+
+  @Column({
+    name: 'specialty_code_id',
+    type: 'int',
+    width: 11,
+    default: 19,
+  })
+  specialtyCodeId?: number;
+  @ManyToOne(() => SpecialtyCodeEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'specialty_code_id',
+  })
+  specialtyCode?: SpecialtyCodeEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Domtom")
    * @ORM\JoinColumn(name="domtom_id", referencedColumnName="id", nullable=true)
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   //   protected $domtom = null;
+
+  @Column({
+    name: 'domtom_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  domtomId?: number;
+  @ManyToOne(() => DomtomEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'domtom_id',
+  })
+  domtom?: DomtomEntity;
 
   /**
    * @ORM\Column(name="last_name", type="string", length=255)

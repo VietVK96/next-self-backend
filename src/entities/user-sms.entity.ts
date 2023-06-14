@@ -1,4 +1,5 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { UserEntity } from './user.entity';
 /**
  * @ORM\Entity
  * @ORM\Table(name="T_USER_SMS_USS")
@@ -14,6 +15,12 @@ export class UserSmsEntity {
    */
   // @TODO EntityMissing
   // protected $user;
+
+  @OneToOne(() => UserEntity, (e) => e.sms, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({ name: 'user_id' })
+  user?: UserEntity;
 
   /**
    * @ORM\Column(name="USS_PHONE", type="string", length=45, nullable=true)

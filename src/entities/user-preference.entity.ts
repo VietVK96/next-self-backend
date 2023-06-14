@@ -1,4 +1,5 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { UserEntity } from './user.entity';
 
 // enum('day', 'week')
 export enum UserPreferenceViewType {
@@ -601,6 +602,13 @@ export class UserPreferenceEntity {
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="NONE")
    */
+  // protected $user;
+
+  @OneToOne(() => UserEntity, (e) => e.preference, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({ name: 'USR_ID' })
+  user?: UserEntity;
   /**
    * Entité de l'utilisateur.
    *

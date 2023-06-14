@@ -1,4 +1,13 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { ImagingSoftwareEntity } from './imaging-software.entity';
+import { OrganizationEntity } from './organization.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\WorkstationRepository")
@@ -67,11 +76,27 @@ export class WorkstationEntity {
   // @TODO EntityMissing
   //   protected $imagingSoftwares;
 
+  @OneToMany(() => ImagingSoftwareEntity, (e) => e.workstation, {
+    createForeignKeyConstraints: false,
+  })
+  imagingSoftwares?: ImagingSoftwareEntity[];
+
   /**
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+
+  @Column({
+    name: 'organization_id',
+  })
+  organizationId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'organization_id',
+  })
+  organizations?: OrganizationEntity;
 }
 // application/Entity/Workstation.php
