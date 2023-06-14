@@ -11,7 +11,7 @@ import {
  * @ORM\Table(name="resource")
  */
 @Entity('resource')
-export class UserEntity {
+export class ResourceEntity {
 
   /**
    * @ORM\Id
