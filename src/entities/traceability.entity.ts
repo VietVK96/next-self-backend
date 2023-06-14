@@ -29,7 +29,7 @@ export class TraceabilityEntity {
   organizationId?: number;
 
   @ManyToOne(() => OrganizationEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: 'organization_id', referencedColumnName: 'GRP_ID' })
+  @JoinColumn({ name: 'organization_id' })
   organization?: OrganizationEntity;
 
   // @check Timestamp
@@ -62,7 +62,7 @@ export class TraceabilityEntity {
   @Column({ name: 'library_act_id', type: 'int', width: 11, nullable: true })
   libraryActId?: number;
 
-  @ManyToOne(() => LibraryActEntity, { createForeignKeyConstraints: false })
+  @ManyToOne(() => LibraryActEntity, e => e.traceabilities, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'library_act_id' })
   libraryAct?: LibraryActEntity;
 

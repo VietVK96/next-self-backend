@@ -212,7 +212,7 @@ export class ThirdPartyAmoEntity {
   amoId?: number;
 
   @ManyToOne(() => AmoEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "amo_id", referencedColumnName: "id" })
+  @JoinColumn({ name: 'amo_id' })
   amo?: AmoEntity;
 }
 

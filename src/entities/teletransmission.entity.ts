@@ -79,7 +79,7 @@ export class TeletransmissionEntity {
   organizationId?: number;
 
   @ManyToOne(() => OrganizationEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: 'organization_id', referencedColumnName: 'GRP_ID' })
+  @JoinColumn({ name: 'organization_id' })
   organization?: OrganizationEntity;
 
   @CreateDateColumn({ name: 'created_at' })

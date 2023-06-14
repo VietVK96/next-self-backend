@@ -110,11 +110,11 @@ export class UploadEntity {
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
   // protected $user;
-  @Column({ name: "USR_ID", type: 'int', width: 11 })
+  @Column({ name: 'USR_ID', type: 'int', width: 11 })
   USRId?: number;
 
   @ManyToOne(() => UserEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "USR_ID", referencedColumnName: "USR_ID" })
+  @JoinColumn({ name: 'USR_ID' })
   user?: UserEntity;
 
   /////
@@ -125,7 +125,7 @@ export class UploadEntity {
    */
   // protected $transmitter;
   @ManyToOne(() => UserEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "USR_ID", referencedColumnName: "USR_ID" })
+  @JoinColumn({ name: 'USR_ID' })
   transmitter?: UserEntity;
 
   /** File: application\Entity\File.php
@@ -218,8 +218,8 @@ export class UploadEntity {
   })
   @JoinTable({
     name: 'file_tag',
-    joinColumn: { name: "file_id", referencedColumnName: "UPL_ID" },
-    inverseJoinColumn: { name: "tag_id", referencedColumnName: "id" }
+    joinColumn: { name: 'file_id' },
+    inverseJoinColumn: { name: 'tag_id' }
   })
   tags?: TagEntity[];
 }

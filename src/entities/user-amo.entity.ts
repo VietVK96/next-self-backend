@@ -27,7 +27,10 @@ export class UserAmoEntity {
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    */
   //   protected $user;
-  @OneToOne(() => UserEntity, { createForeignKeyConstraints: false })
+  @Column({ name: 'user_id' })
+  userId?: number;
+
+  @OneToOne(() => UserEntity, e => e.amo, { createForeignKeyConstraints: false })
   @JoinColumn({ name: "user_id" })
   user?: UserEntity;
 

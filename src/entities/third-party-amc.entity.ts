@@ -218,7 +218,7 @@ export class ThirdPartyAmcEntity {
   amcId?: number;
 
   @ManyToOne(() => AmcEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "amc_id", referencedColumnName: "id" })
+  @JoinColumn({ name: 'amc_id' })
   amc?: AmcEntity;
 
   /**

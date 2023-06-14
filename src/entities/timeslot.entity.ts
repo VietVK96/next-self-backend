@@ -33,7 +33,7 @@ export class TimeslotEntity {
   resourceId?: number;
 
   @ManyToOne(() => ResourceEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: 'resource_id', referencedColumnName: 'id' })
+  @JoinColumn({ name: 'resource_id' })
   resource?: ResourceEntity;
 
   /**
@@ -47,7 +47,7 @@ export class TimeslotEntity {
   recurringPatternId?: number;
 
   @ManyToOne(() => RecurringPatternEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: 'recurring_pattern_id', referencedColumnName: 'id' })
+  @JoinColumn({ name: 'recurring_pattern_id' })
   recurringPattern?: ResourceEntity;
 
   /**
