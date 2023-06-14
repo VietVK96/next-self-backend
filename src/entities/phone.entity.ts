@@ -104,15 +104,6 @@ export class PhoneEntity {
   @ManyToMany(() => ContactEntity, {
     createForeignKeyConstraints: false,
   })
-  @JoinTable({
-    name: 'T_CONTACT_PHONE_COP',
-    joinColumn: {
-      name: 'PHO_ID',
-    },
-    inverseJoinColumn: {
-      name: 'CON_ID',
-    }
-  })
   patients?: ContactEntity[];
 
   @CreateDateColumn({ name: 'created_at' })

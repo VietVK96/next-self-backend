@@ -299,7 +299,6 @@ export class PaypalPaymentEntity {
   })
   user?: UserEntity;
 
-  // @TODO EntityMissing
   // protected $profil;
   @Column({
     name: 'PPL_ID',
