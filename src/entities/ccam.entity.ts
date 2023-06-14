@@ -40,7 +40,7 @@ export class CcamEntity {
   })
   ccamFamilyId?: number;
 
-  @ManyToOne(() => CcamFamilyEntity, (e) => e.ccams, {
+  @ManyToOne(() => CcamFamilyEntity, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
@@ -296,15 +296,6 @@ export class CcamEntity {
   @ManyToMany(() => CcamEntity, (e) => e.associations, {
     createForeignKeyConstraints: false,
   })
-  @JoinTable({
-    name: 'ccam_association',
-    joinColumn: {
-      name: 'ccam_parent_id',
-    },
-    inverseJoinColumn: {
-      name: 'ccam_child_id',
-    },
-  })
   associatedWithMe?: CcamEntity[];
 
   /**
@@ -421,15 +412,6 @@ export class CcamEntity {
   // protected $dependentWithMe;
   @ManyToMany(() => CcamEntity, (e) => e.dependencies, {
     createForeignKeyConstraints: false,
-  })
-  @JoinTable({
-    name: 'ccam_dependence',
-    joinColumn: {
-      name: 'ccam_parent_id',
-    },
-    inverseJoinColumn: {
-      name: 'ccam_child_id',
-    },
   })
   dependentWithMe?: CcamEntity[];
 
