@@ -38,7 +38,6 @@ export class EventTypeEntity {
   })
   @JoinColumn({
     name: 'organization_id',
-    referencedColumnName: 'GRP_ID'
   })
   organization?: OrganizationEntity;
   
