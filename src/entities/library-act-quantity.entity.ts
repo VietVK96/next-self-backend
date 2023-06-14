@@ -3,9 +3,21 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { LibraryActEntity } from './library-act.entity';
+import { CcamEntity } from './ccam.entity';
+import { NgapKeyEntity } from './ngapKey.entity';
+import { LibraryOdontogramEntity } from './library-odontogram.entity';
+import { LibraryActQuantityTariffEntity } from './library-act-quantity-tariff.entity';
+import { TraceabilityEntity } from './traceability.entity';
 
 export enum EnumLibraryActQuantityExceeding {
   D = 'D',
@@ -35,8 +47,21 @@ export class LibraryActQuantityEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11
+  })
+  organizationId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'organization_id'
+  })
+  organization?: OrganizationEntity;
 
   // use TimestampableTrait;
   // use SoftDeleteableEntity;
@@ -65,8 +90,21 @@ export class LibraryActQuantityEntity {
    * @ORM\ManyToOne(targetEntity="LibraryAct", inversedBy="quantities")
    * @ORM\JoinColumn(name="library_act_id", referencedColumnName="id")
    */
-  // @TODO EntityMissing
   //   protected $act;
+
+  @Column({
+    name: 'library_act_id',
+    type: 'int',
+    width: 11
+  })
+  libraryActId?: number;
+  @ManyToOne(() => LibraryActEntity, e => e.quantities, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'library_act_id'
+  })
+  act?: LibraryActEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Ccam")
@@ -74,8 +112,22 @@ export class LibraryActQuantityEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"detail"})
    */
-  // @TODO EntityMissing
   //   protected $ccam = null;
+
+  @Column({
+    name: 'ccam_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  ccamId?: number;
+  @ManyToOne(() => CcamEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'ccam_id'
+  })
+  ccam?: CcamEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="NgapKey")
@@ -83,8 +135,22 @@ export class LibraryActQuantityEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"detail"})
    */
-  // @TODO EntityMissing
   //   protected $ngapKey = null;
+
+  @Column({
+    name: 'ngap_key_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  ngapKeyId?: number;
+  @ManyToOne(() => NgapKeyEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'ngap_key_id'
+  })
+  ngapKey?: NgapKeyEntity;
 
   /**
    * @ORM\Column(name="label", type="string", length=4000)
@@ -325,63 +391,43 @@ export class LibraryActQuantityEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"odontograms_group"})
    */
-  // @TODO EntityMissing
   //   protected $odontograms;
+
+  @ManyToMany(() => LibraryOdontogramEntity)
+  @JoinTable({
+    name: 'library_act_quantity_odontogram',
+    joinColumn: {
+      name: 'library_act_quantity_id',
+    },
+    inverseJoinColumn: {
+      name: 'library_odontogram_id',
+    },
+  })
+  odontograms?: LibraryOdontogramEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="LibraryActQuantityTariff", mappedBy="libraryActQuantity", cascade={"persist"}, orphanRemoval=true)
    * @Serializer\Expose
    * @Serializer\Groups({"libraryActQuantity:read"})
    */
-  // @TODO EntityMissing
   //   protected $tariffs;
 
+  @OneToMany(() => LibraryActQuantityTariffEntity, (e) => e.libraryActQuantity, {
+    createForeignKeyConstraints: false,
+  })
+  tariffs?: LibraryActQuantityTariffEntity[];
+
   /**
    * @ORM\OneToMany(targetEntity="Traceability", mappedBy="libraryActQuantity", cascade={"persist"}, orphanRemoval=true)
    * @Serializer\Expose
    * @Serializer\Groups({"traceability:read"})
    */
-  // @TODO EntityMissing
   //   protected $traceabilities;
 
-  /**
-   * @ORM\ManyToOne(targetEntity="LibraryAct", inversedBy="quantities")
-   * @ORM\JoinColumn(name="library_act_id", referencedColumnName="id")
-   */
-  //@TODO EntityMissing;
-  // protected $act;
-
-  /**
-   * @ORM\ManyToOne(targetEntity="Ccam")
-   * @ORM\JoinColumn(name="ccam_id", referencedColumnName="id", nullable=true)
-   * @Serializer\Expose
-   * @Serializer\Groups({"detail"})
-   */
-  //@TODO EntityMissing;
-  // protected $ccam = null;
-
-  /**
-   * @ORM\ManyToOne(targetEntity="NgapKey")
-   * @ORM\JoinColumn(name="ngap_key_id", referencedColumnName="id", nullable=true)
-   */
-  //@TODO EntityMissing;
-  // protected $ngapKey = null;
-
-  /**
-   * @ORM\OneToMany(targetEntity="LibraryActQuantityTariff", mappedBy="libraryActQuantity")
-   * @Serializer\Expose
-   * @Serializer\Groups({"libraryActQuantity:read"})
-   */
-  //@TODO EntityMissing;
-  // protected $tariffs;
-
-  /**
-   * @ORM\OneToMany(targetEntity="Traceability", mappedBy="libraryActQuantity", cascade={"persist"}, orphanRemoval=true)
-   * @Serializer\Expose
-   * @Serializer\Groups({"traceability:read"})
-   */
-  //@TODO EntityMissing;
-  // protected $traceabilities;
+  @OneToMany(() => TraceabilityEntity, (e) => e.libraryActQuantity, {
+    createForeignKeyConstraints: false,
+  })
+  traceabilities?: TraceabilityEntity[];
 }
 
 // application\Entities\LibraryActQuantity.php

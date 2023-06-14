@@ -3,9 +3,14 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { LibraryActEntity } from './library-act.entity';
+import { OrganizationEntity } from './organization.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\LibraryActFamilyRepository")
@@ -113,14 +118,32 @@ export class LibraryActFamilyEntity {
    * @ORM\OneToMany(targetEntity="LibraryAct", mappedBy="family", cascade={"persist"}, orphanRemoval=true)
    * @ORM\OrderBy({"position" = "ASC", "id" = "ASC"})
    */
-  // @TODO EntityMissing
   //   protected $acts;
+
+  @OneToMany(() => LibraryActEntity, e => e.family, {
+    createForeignKeyConstraints: false
+  })
+  acts?: LibraryActEntity[];
+
   /**
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
   // @TODO EntityMissing
   // protected $organization;
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11
+  })
+  organizationId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'organization_id'
+  })
+  organization?: OrganizationEntity;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

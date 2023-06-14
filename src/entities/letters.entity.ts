@@ -2,9 +2,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { UserEntity } from './user.entity';
+import { CorrespondentEntity } from './correspondent.entity';
+import { DentalQuotationEntity } from './dental-quotation.entity';
 
 export enum EnumLettersType {
   CONTACT = 'contact',
@@ -111,31 +116,73 @@ export class LettersEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   //   protected $user;
+
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  usrId?: number;
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'USR_ID'
+  })
+  user?: UserEntity;
 
   /** File: application\Entities\Mail.php
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    * @var \App\Entities\User Docteur propriétaire du courrier.
    */
-  // @TODO EntityMissing
   //   protected $doctor;
+
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'USR_ID'
+  })
+  doctor?: UserEntity;
 
   /** File: application\Entities\Letters.php
    * @ORM\ManyToOne(targetEntity="\App\Entities\Contact")
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    */
-  // @TODO EntityMissing
   //   protected $contact;
+
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  conId?: number;
+  @ManyToOne(() => LettersEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'USR_ID'
+  })
+  contact?: LettersEntity;
 
   /** File: application\Entities\Mail.php and application\Entity\Mail.php
    * @ORM\ManyToOne(targetEntity="\App\Entities\Contact")
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    * @var \App\Entities\Contact Patient destinataire du courrier.
    */
-  // @TODO EntityMissing
   //   protected $patient;
+
+  @ManyToOne(() => LettersEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'USR_ID'
+  })
+  patient?: LettersEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Correspondent")
@@ -145,34 +192,63 @@ export class LettersEntity {
   // @TODO EntityMissing
   //   protected $correspondent;
 
+  @Column({
+    name: 'CPD_ID',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  cpdId?: number;
+  @ManyToOne(() => CorrespondentEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'CPD_ID'
+  })
+  correspondent?: CorrespondentEntity;
+
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Mail")
    * @ORM\JoinColumn(name="header_id", referencedColumnName="LET_ID")
    * @var \App\Entities\Mail En-tête du courrier.
    */
-  // @TODO EntityMissing
   //   protected $header;
 
-  /**
-   * @ORM\ManyToOne(targetEntity="Mail")
-   * @ORM\JoinColumn(referencedColumnName="LET_ID", nullable=true)
-   */
-  // @TODO EntityMissing
-  //   protected $header = null;
+  @Column({
+    name: 'header_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  headerId?: number;
+  @ManyToOne(() => LettersEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'header_id'
+  })
+  header?: LettersEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Mail")
    * @ORM\JoinColumn(name="footer_id", referencedColumnName="LET_ID", nullable=true)
    */
-  // @TODO EntityMissing
   //   protected $footer = null;
 
-  /**
-   * @ORM\ManyToOne(targetEntity="Mail")
-   * @ORM\JoinColumn(referencedColumnName="LET_ID", nullable=true)
-   */
-  // @TODO EntityMissing
-  //   protected $footer = null;
+  @Column({
+    name: 'footer_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  footerId?: number;
+  @ManyToOne(() => LettersEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'footer_id'
+  })
+  footer?: LettersEntity;
 
   /**
    * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true)
@@ -205,8 +281,22 @@ export class LettersEntity {
    * @ORM\ManyToOne(targetEntity="Quote", inversedBy="attachments")
    * @ORM\JoinColumn(referencedColumnName="DQO_ID", nullable=true, onDelete="SET NULL")
    */
-  // @TODO EntityMissing
   //   protected $quote = null;
+
+  @Column({
+    name: 'quote_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  quoteId?: number;
+  @ManyToOne(() => DentalQuotationEntity, e => e.attachments, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'quote_id'
+  })
+  quote?: DentalQuotationEntity;
 
   /**
    * @ORM\Column(type="text", nullable=true)
@@ -232,14 +322,6 @@ export class LettersEntity {
     default: 0,
   })
   footerHeight?: number;
-
-  // @TODO EntityMissing
-  // @Column({
-  //   name:'int',
-  //   width:11,
-  //   nullable:true
-  // })
-  // quote_id?:number
 
   // @Check TimeStamp
   // use TimestampableEntity;

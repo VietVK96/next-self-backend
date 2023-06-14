@@ -4,7 +4,9 @@
  * @Serializer\ExclusionPolicy("all")
  */
 
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { WorkstationEntity } from './workstation.entity';
 
 // File: application\Entity\ImagingSoftware.php: class ImagingSoftware extends AbstractEntity implements OrganizationInterface
 @Entity('imaging_software')
@@ -14,8 +16,21 @@ export class ImagingSoftwareEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11
+  })
+  organizationId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'organization_id'
+  })
+  organization?: OrganizationEntity;
+
 
   /**
    * @ORM\Id
@@ -34,6 +49,19 @@ export class ImagingSoftwareEntity {
    */
   // @TODO EntityMissing
   // protected $workstation;
+  @Column({
+    name: 'workstation_id',
+    type: 'int',
+    width: 11
+  })
+  workstationId?: number;
+  @ManyToOne(() => WorkstationEntity, e => e.imagingSoftwares, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'workstation_id'
+  })
+  workstation?: WorkstationEntity;
 
   /**
    * @ORM\Column(name="original_name", type="string", length=255)
