@@ -56,7 +56,7 @@ export class GlossaryEntryEntity {
    */
   // protected $glossary;
   @Column({
-    name: '	glossary_id',
+    name: 'glossary_id',
     type: 'int',
     width: 11,
   })
@@ -65,7 +65,7 @@ export class GlossaryEntryEntity {
     createForeignKeyConstraints: false
   })
   @JoinColumn({
-    name: '	glossary_id'
+    name: 'glossary_id'
   })
   glossary?: GlossaryEntity;
 

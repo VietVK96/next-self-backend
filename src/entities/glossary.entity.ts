@@ -36,7 +36,7 @@ export class GlossaryEntity {
    */
   // protected $organization;
   @Column({
-    name: '	organization_id',
+    name: 'organization_id',
     type: 'int',
     width: 11,
   })
