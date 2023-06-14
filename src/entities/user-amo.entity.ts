@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { UserEntity } from './user.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\UserAmoRepository")
@@ -25,8 +26,10 @@ export class UserAmoEntity {
    * @ORM\OneToOne(targetEntity="User", inversedBy="amo")
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   //   protected $user;
+  @OneToOne(() => UserEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: "user_id" })
+  user?: UserEntity;
 
   /**
    * @ORM\Column(name="is_tp", type="boolean", options={"default": false})
