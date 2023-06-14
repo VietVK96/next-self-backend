@@ -566,6 +566,9 @@ export class DentalQuotationEntity {
    */
   // @TODO EntityMissing
   // protected $patient;
+  @ManyToOne(() => ContactEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'CON_ID' })
+  patient?: ContactEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Plan")
