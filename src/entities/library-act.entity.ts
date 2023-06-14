@@ -62,7 +62,7 @@ export class LibraryActEntity {
     width: 11
   })
   libraryActFamilyId?: number;
-  @ManyToOne(() => LibraryActFamilyEntity, {
+  @ManyToOne(() => LibraryActFamilyEntity, e => e.acts, {
     createForeignKeyConstraints: false
   })
   @JoinColumn({
@@ -246,7 +246,9 @@ export class LibraryActEntity {
    */
   //   protected $odontograms;
 
-  @ManyToMany(() => LibraryOdontogramEntity)
+  @ManyToMany(() => LibraryOdontogramEntity, e => e.libraryActs, {
+    createForeignKeyConstraints: false
+  })
   @JoinTable({
     name: 'library_act_odontogram',
     joinColumn: {

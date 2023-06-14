@@ -337,7 +337,9 @@ export class LibraryBankEntity {
   // protected $group;
 
   @Column({
-    name: 'organization_id'
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
   })
   organizationId?: number;
   @ManyToOne(() => OrganizationEntity, e => e.libraryBanks, {

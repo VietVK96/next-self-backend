@@ -10,6 +10,7 @@ import {
 import { UserEntity } from './user.entity';
 import { CorrespondentEntity } from './correspondent.entity';
 import { DentalQuotationEntity } from './dental-quotation.entity';
+import { ContactEntity } from './contact.entity';
 
 export enum EnumLettersType {
   CONTACT = 'contact',
@@ -155,19 +156,19 @@ export class LettersEntity {
   //   protected $contact;
 
   @Column({
-    name: 'USR_ID',
+    name: 'CON_ID',
     type: 'int',
     width: 11,
     nullable: true
   })
   conId?: number;
-  @ManyToOne(() => LettersEntity, {
+  @ManyToOne(() => ContactEntity, {
     createForeignKeyConstraints: false
   })
   @JoinColumn({
-    name: 'USR_ID'
+    name: 'CON_ID'
   })
-  contact?: LettersEntity;
+  contact?: ContactEntity;
 
   /** File: application\Entities\Mail.php and application\Entity\Mail.php
    * @ORM\ManyToOne(targetEntity="\App\Entities\Contact")
@@ -176,20 +177,19 @@ export class LettersEntity {
    */
   //   protected $patient;
 
-  @ManyToOne(() => LettersEntity, {
+  @ManyToOne(() => ContactEntity, {
     createForeignKeyConstraints: false
   })
   @JoinColumn({
-    name: 'USR_ID'
+    name: 'CON_ID'
   })
-  patient?: LettersEntity;
+  patient?: ContactEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Correspondent")
    * @ORM\JoinColumn(name="CPD_ID", referencedColumnName="CPD_ID")
    * @var \App\Entities\Correspondent Correspondent destinataire du courrier.
    */
-  // @TODO EntityMissing
   //   protected $correspondent;
 
   @Column({
