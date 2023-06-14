@@ -2,9 +2,16 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { LibraryActEntity } from './library-act.entity';
+import { LibraryActQuantityEntity } from './library-act-quantity.entity';
+import { MedicalDeviceEntity } from './medical-device.entity';
+import { EventTaskEntity } from './event-task.entity';
 
 /**
  * @ORM\Entity
@@ -17,8 +24,13 @@ export class TraceabilityEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+  @Column({ name: 'organization_id' })
+  organizationId?: number;
+
+  @ManyToOne(() => OrganizationEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'organization_id', referencedColumnName: 'GRP_ID' })
+  organization?: OrganizationEntity;
 
   // @check Timestamp
   // use TimestampableEntity;
@@ -46,15 +58,31 @@ export class TraceabilityEntity {
    * @ORM\ManyToOne(targetEntity="LibraryAct", inversedBy="traceabilities")
    * @ORM\JoinColumn(nullable=true)
    */
-  // @TODO EntityMissing
   // protected $libraryAct = null;
+  @Column({ name: 'library_act_id', nullable: true })
+  libraryActId?: number;
+
+  @ManyToOne(() => LibraryActEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'library_act_id' })
+  libraryAct?: LibraryActEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="LibraryActQuantity", inversedBy="traceabilities")
    * @ORM\JoinColumn(nullable=true)
    */
-  // @TODO EntityMissing
   // protected $libraryActQuantity = null;
+  @Column({ name: 'library_act_quantity_id', nullable: true })
+  libraryActQuantityId?: number;
+
+  @ManyToOne(() => LibraryActQuantityEntity, e => e.traceabilities, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'library_act_quantity_id' })
+  libraryActQuantity?: LibraryActQuantityEntity;
+
+  /**
+  * @ORM\ManyToOne(targetEntity="MedicalDevice", inversedBy="traceabilities")
+  * @ORM\JoinColumn(name="medical_device_id", referencedColumnName="id", nullable=true)
+  */
+  // protected $medicalDevice = null;
 
   /**
    * @ORM\ManyToOne(targetEntity="App\Entity\MedicalDevice")
@@ -62,8 +90,13 @@ export class TraceabilityEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"traceability:read"})
    */
-  // @TODO EntityMissing
   // protected $medicalDevice = null;
+  @Column({ name: 'medical_device_id', nullable: true })
+  medicalDeviceId?: number;
+
+  @ManyToOne(() => MedicalDeviceEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'medical_device_id' })
+  medicalDevice?: MedicalDeviceEntity;
 
   /**
    * @ORM\Column(name="reference", type="string", length=255, nullable=true)
@@ -97,15 +130,13 @@ export class TraceabilityEntity {
    * @ORM\ManyToOne(targetEntity="Act", inversedBy="traceabilities")
    * @ORM\JoinColumn(name="act_id", referencedColumnName="ETK_ID", nullable=true)
    */
-  // @TODO EntityMissing
   // protected $act = null;
+  @Column({ name: 'act_id', nullable: true })
+  actId?: number;
 
-  /**
-   * @ORM\ManyToOne(targetEntity="MedicalDevice", inversedBy="traceabilities")
-   * @ORM\JoinColumn(name="medical_device_id", referencedColumnName="id", nullable=true)
-   */
-  // @TODO EntityMissing
-  // protected $medicalDevice = null;
+  @ManyToOne(() => EventTaskEntity, e => e.traceabilities, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'act_id' })
+  act?: EventTaskEntity;
 }
 
 // application\Entities\Traceability.php
