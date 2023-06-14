@@ -29,11 +29,12 @@ export class OrganizationSubscriptionEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // organization;
 
   @Column({
     name: 'organization_id',
+    type: 'int',
+    width: 11,
   })
   organizationId?: number;
   @ManyToOne(() => OrganizationEntity, {
@@ -66,6 +67,8 @@ export class OrganizationSubscriptionEntity {
 
   @Column({
     name: 'plan_id',
+    type: 'int',
+    width: 11,
   })
   planId?: number;
   @ManyToOne(() => PlanPlfEntity, {

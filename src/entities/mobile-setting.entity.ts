@@ -43,6 +43,8 @@ export class MobileSettingEntityEntity {
 
   @Column({
     name: 'group_id',
+    type: 'int',
+    width: 11,
   })
   groupId?: number;
   @ManyToOne(() => OrganizationEntity, {
@@ -60,9 +62,14 @@ export class MobileSettingEntityEntity {
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    * @var \App\Entities\UserEntity
    */
-  // @TODO EntityMissing
   // protected $user;
 
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+  })
+  userId?: number
   @OneToOne(() => UserEntity, (e) => e.mobileSetting {
     createForeignKeyConstraints: false,
   })

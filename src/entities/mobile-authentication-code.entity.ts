@@ -48,6 +48,8 @@ export class MobileAuthenticationCodeEntityEntity {
   // protected $group;
   @Column({
     name: 'group_id',
+    type: 'int',
+    width: 11,
   })
   groupId?: number;
   @ManyToOne(() => OrganizationEntity, {
@@ -67,6 +69,12 @@ export class MobileAuthenticationCodeEntityEntity {
    */
   // protected $user;
 
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+  })
+  userId?: number;
   @OneToOne(() => UserEntity, {
     createForeignKeyConstraints: false,
   })
@@ -81,11 +89,12 @@ export class MobileAuthenticationCodeEntityEntity {
    * @Expose
    * @var \App\Entities\PatientEntity
    */
-  // @TODO EntityMissing
   // protected $patient;
 
   @Column({
     name: 'patient_id',
+    type: 'int',
+    width: 11,
   })
   patientId?: number;
   @ManyToOne(() => ContactEntity, {

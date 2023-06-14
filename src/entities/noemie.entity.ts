@@ -34,6 +34,8 @@ export class NoemieEntity {
 
   @Column({
     name: 'organization_id',
+    type: 'int',
+    width: 11,
   })
   organizationId?: number;
   @ManyToOne(() => OrganizationEntity, {
@@ -146,7 +148,9 @@ export class NoemieEntity {
    */
   // protected $caresheets;
 
-  @ManyToMany(() => FseEntity)
+  @ManyToMany(() => FseEntity, (e) => e.noemies, {
+    createForeignKeyConstraints: false,
+  })
   @JoinTable({
     name: 'noemie_caresheet',
     joinColumn: {

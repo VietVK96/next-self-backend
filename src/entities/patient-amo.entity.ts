@@ -27,11 +27,12 @@ export class PatientAmo {
    * @ORM\ManyToOne(targetEntity="Patient", inversedBy="amos")
    * @ORM\JoinColumn(name="patient_id", referencedColumnName="CON_ID")
    */
-  // @TODO EntityMissing
   // protected $patient;
 
   @Column({
     name: 'patient_id',
+    type: 'int',
+    width: 11,
   })
   patientId?: number;
   @ManyToOne(() => ContactEntity, (e)=>e.amos {
@@ -47,11 +48,13 @@ export class PatientAmo {
    * @ORM\JoinColumn(name="amo_id", referencedColumnName="id", nullable=true)
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   // protected $amo = null;
 
   @Column({
     name: 'amo_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
   })
   amoId?: number;
   @ManyToOne(() => AmoEntity, (e)=>e.amos {

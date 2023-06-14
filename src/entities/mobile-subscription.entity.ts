@@ -46,6 +46,8 @@ export class MobileSubscriptionEntityEntity {
 
   @Column({
     name: 'group_id',
+    type: 'int',
+    width: 11,
   })
   groupId?: number;
   @ManyToOne(() => OrganizationEntity, {
@@ -65,7 +67,13 @@ export class MobileSubscriptionEntityEntity {
    */
   // protected $user;
 
-  @OneToOne(() => UserEntity, (e) => e.mobileSubscription {
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+  })
+  userId?: number;
+  @OneToOne(() => UserEntity, (e) => e.mobileSubscription, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({ name: 'user_id' })

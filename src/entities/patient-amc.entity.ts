@@ -36,16 +36,18 @@ export class PatientAmc {
   // protected $patient;
 
   @Column({
-    name: 'plan_id',
+    name: 'patient_id',
+    type: 'int',
+    width: 11,
   })
-  planId?: number;
+  patientId?: number;
   @ManyToOne(() => ContactEntity, (e) => e.amcs, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'plan_id',
+    name: 'patient_id',
   })
-  plan?: ContactEntity;
+  patient?: ContactEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Amc", cascade={"persist"})
@@ -56,6 +58,9 @@ export class PatientAmc {
 
   @Column({
     name: 'amc_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
   })
   amcId?: number;
   @ManyToOne(() => AmcEntity, {

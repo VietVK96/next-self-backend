@@ -55,6 +55,13 @@ export class OrganizationEntity {
    */
   // protected $address = null;
 
+  @Column({
+    name: 'ADR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  adrId?: number;
   @OneToOne(() => AddressEntity, {
     createForeignKeyConstraints: false,
   })
@@ -67,6 +74,13 @@ export class OrganizationEntity {
    */
   // protected $logo = null;
 
+  @Column({
+    name: 'UPL_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  uplId?: number;
   @OneToOne(() => UploadEntity, {
     createForeignKeyConstraints: false,
   })
@@ -273,8 +287,8 @@ export class OrganizationEntity {
   @Column({
     name: 'GRP_TOTAL_STORAGE_SPACE',
     type: 'bigint',
-    width: 2147483648,
-    default: 0,
+    width: 20,
+    default: 2147483648,
   })
   totalStorageSpace?: number;
 
@@ -285,8 +299,8 @@ export class OrganizationEntity {
   @Column({
     name: 'GRP_TOTAL_STORAGE_SPACE',
     type: 'bigint',
-    width: 2147483648,
-    default: 0,
+    width: 20,
+    default: 2147483648,
   })
   quotaBytesTotal?: number;
 

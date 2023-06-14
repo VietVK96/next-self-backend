@@ -32,8 +32,14 @@ export class PatientMedicalEntity {
    * @ORM\OneToOne(targetEntity="Patient", inversedBy="medical")
    * @ORM\JoinColumn(name="patient_id", referencedColumnName="CON_ID")
    */
-  // @TODO EntityMissing
   // protected $patient;
+
+  @Column({
+    name: 'patient_id',
+    type: 'int',
+    width: 11,
+  })
+  patientId?: number;
   @OneToOne(() => ContactEntity, {
     createForeignKeyConstraints: false,
   })
@@ -45,9 +51,15 @@ export class PatientMedicalEntity {
    * @ORM\JoinColumn(name="policy_holder_id", referencedColumnName="id", nullable=true)
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   // policyHolder = null;
 
+  @Column({
+    name: 'policy_holder_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  policyHolderId?: number;
   @OneToOne(() => PolicyHolderEntity, {
     createForeignKeyConstraints: false,
   })
@@ -59,9 +71,15 @@ export class PatientMedicalEntity {
    * @ORM\JoinColumn(name="tariff_type_id", referencedColumnName="id", nullable=true)
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   // tariffType = null;
 
+  @Column({
+    name: 'tariff_type_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  tariffTypeId?: number;
   @OneToOne(() => TariffTypeEntity, {
     createForeignKeyConstraints: false,
   })
