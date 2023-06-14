@@ -75,7 +75,7 @@ export class TeletransmissionEntity {
  * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
  */
   //protected $organization;
-  @Column({ name: 'organization_id' })
+  @Column({ name: 'organization_id', type: 'int', width: 11 })
   organizationId?: number;
 
   @ManyToOne(() => OrganizationEntity, { createForeignKeyConstraints: false })

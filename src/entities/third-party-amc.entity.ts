@@ -40,7 +40,7 @@ export class ThirdPartyAmcEntity {
    * @Serializer\Exclude
    */
   // protected $user;
-  @Column({ name: "user_id" })
+  @Column({ name: "user_id", type: 'int', width: 11 })
   userId?: number;
 
   @OneToOne(() => UserEntity, { createForeignKeyConstraints: false })
@@ -53,7 +53,7 @@ export class ThirdPartyAmcEntity {
    * @Serializer\Exclude
    */
   // protected $patient;
-  @Column({ name: "patient_id" })
+  @Column({ name: "patient_id", type: 'int', width: 11 })
   patientId?: number;
 
   @OneToOne(() => ContactEntity, { createForeignKeyConstraints: false })
@@ -66,7 +66,7 @@ export class ThirdPartyAmcEntity {
    * @Serializer\Exclude
    */
   // protected $caresheet;
-  @Column({ name: "caresheet_id" })
+  @Column({ name: "caresheet_id", type: 'int', width: 11 })
   caresheetId?: number;
 
   @OneToOne(() => FseEntity, { createForeignKeyConstraints: false })
@@ -214,7 +214,7 @@ export class ThirdPartyAmcEntity {
    * @Serializer\Groups({"amc:index"})
    */
   // protected $amc;
-  @Column({ name: 'amc_id' })
+  @Column({ name: 'amc_id', type: 'int', width: 11 })
   amcId?: number;
 
   @ManyToOne(() => AmcEntity, { createForeignKeyConstraints: false })

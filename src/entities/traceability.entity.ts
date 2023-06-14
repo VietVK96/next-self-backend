@@ -25,7 +25,7 @@ export class TraceabilityEntity {
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
   // protected $organization;
-  @Column({ name: 'organization_id' })
+  @Column({ name: 'organization_id', type: 'int', width: 11 })
   organizationId?: number;
 
   @ManyToOne(() => OrganizationEntity, { createForeignKeyConstraints: false })
@@ -59,7 +59,7 @@ export class TraceabilityEntity {
    * @ORM\JoinColumn(nullable=true)
    */
   // protected $libraryAct = null;
-  @Column({ name: 'library_act_id', nullable: true })
+  @Column({ name: 'library_act_id', type: 'int', width: 11, nullable: true })
   libraryActId?: number;
 
   @ManyToOne(() => LibraryActEntity, { createForeignKeyConstraints: false })
@@ -71,7 +71,7 @@ export class TraceabilityEntity {
    * @ORM\JoinColumn(nullable=true)
    */
   // protected $libraryActQuantity = null;
-  @Column({ name: 'library_act_quantity_id', nullable: true })
+  @Column({ name: 'library_act_quantity_id', type: 'int', width: 11, nullable: true })
   libraryActQuantityId?: number;
 
   @ManyToOne(() => LibraryActQuantityEntity, e => e.traceabilities, { createForeignKeyConstraints: false })
@@ -91,7 +91,7 @@ export class TraceabilityEntity {
    * @Serializer\Groups({"traceability:read"})
    */
   // protected $medicalDevice = null;
-  @Column({ name: 'medical_device_id', nullable: true })
+  @Column({ name: 'medical_device_id', type: 'int', width: 11, nullable: true })
   medicalDeviceId?: number;
 
   @ManyToOne(() => MedicalDeviceEntity, { createForeignKeyConstraints: false })
@@ -131,7 +131,7 @@ export class TraceabilityEntity {
    * @ORM\JoinColumn(name="act_id", referencedColumnName="ETK_ID", nullable=true)
    */
   // protected $act = null;
-  @Column({ name: 'act_id', nullable: true })
+  @Column({ name: 'act_id', nullable: true, type: 'int', width: 11 })
   actId?: number;
 
   @ManyToOne(() => EventTaskEntity, e => e.traceabilities, { createForeignKeyConstraints: false })

@@ -29,7 +29,7 @@ export class TimeslotEntity {
    * @Serializer\MaxDepth(1)
    */
   // protected $resource;
-  @Column({ name: 'resource_id' })
+  @Column({ name: 'resource_id', type: 'int', width: 11 })
   resourceId?: number;
 
   @ManyToOne(() => ResourceEntity, { createForeignKeyConstraints: false })
@@ -43,7 +43,7 @@ export class TimeslotEntity {
    * @Serializer\MaxDepth(1)
    */
   // protected $recurringPattern = null;
-  @Column({ name: 'recurring_pattern_id', nullable: true })
+  @Column({ name: 'recurring_pattern_id', type: 'int', width: 11, nullable: true })
   recurringPatternId?: number;
 
   @ManyToOne(() => RecurringPatternEntity, { createForeignKeyConstraints: false })

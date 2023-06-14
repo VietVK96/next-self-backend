@@ -110,7 +110,7 @@ export class UploadEntity {
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
   // protected $user;
-  @Column({ name: "USR_ID" })
+  @Column({ name: "USR_ID", type: 'int', width: 11 })
   USRId?: number;
 
   @ManyToOne(() => UserEntity, { createForeignKeyConstraints: false })
