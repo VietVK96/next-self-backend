@@ -2,9 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { EventEntity } from './event.entity';
+import { UserEntity } from './user.entity';
 
 /**
  * @ORM\Entity
@@ -54,15 +58,41 @@ export class EventHistoricalEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\Event", inversedBy="historical")
    * @ORM\JoinColumn(name="EVT_ID", referencedColumnName="EVT_ID")
    */
-  // @TODO EntityMissing
   //protected $event;
+  @Column({
+    name: 'EVT_ID',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  evtId?: number;
+  @ManyToOne(() => EventEntity, (e) => e.historical,{
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'EVT_ID',
+  })
+  event?: EventEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   //protected $user;
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  usrId?: number;
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'USR_ID',
+  })
+  user?: UserEntity;
 }
 
 // application/Entities/Event/Historical.php

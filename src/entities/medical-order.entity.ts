@@ -2,9 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { UserEntity } from './user.entity';
+import { ContactEntity } from './contact.entity';
 
 //enum('A4', 'A5', 'A5p', '180x210')
 export enum EnumMedicalOrderFormatType {
@@ -211,23 +215,55 @@ export class MedicalOrderEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   // protected $user;
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  usrId?: number;
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'USR_ID',
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Contact", inversedBy="orders")
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    */
-  // @TODO EntityMissing
   // protected $contact;
+  @Column({
+    name: 'CON_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  conId?: number;
+  @ManyToOne(() => ContactEntity, (e) => e.orders, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'CON_ID',
+  })
+  contact?: ContactEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Patient")
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   // protected $patient;
+  @ManyToOne(() => ContactEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'CON_ID',
+  })
+  patient?: ContactEntity;
 
 
   @CreateDateColumn({ name: 'created_at' })

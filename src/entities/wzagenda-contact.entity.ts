@@ -1,4 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { ContactEntity } from './contact.entity';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\Wzagenda\Contact")
@@ -22,16 +30,42 @@ export class WzagendaContactEntity {
    * @ORM\JoinColumn(name="grp_id", referencedColumnName="GRP_ID")
    * @var \App\Entities\Group Entité représentant le groupe.
    */
-  // @TODO EntityMissing
   // protected $group;
+
+  @Column({
+    name: 'grp_id',
+    type: 'int',
+    width: 11,
+  })
+  grpId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'grp_id',
+  })
+  group?: OrganizationEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Contact")
    * @ORM\JoinColumn(name="wzc_subscriber_id", referencedColumnName="CON_ID")
    * @var \App\Entities\Contact Entité représentant un contact.
    */
-  // @TODO EntityMissing
   // protected $subscriber;
+
+  @Column({
+    name: 'wzc_subscriber_id',
+    type: 'int',
+    width: 11,
+  })
+  wzcSubscriberId?: number;
+  @ManyToOne(() => ContactEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'wzc_subscriber_id',
+  })
+  subscriber?: ContactEntity;
 
   /**
    * @ORM\Column(name="wzc_provider_id", type="integer")

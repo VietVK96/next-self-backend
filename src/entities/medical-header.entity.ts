@@ -46,10 +46,11 @@ export class MedicalHeaderEntity {
   })
   userId?: number;
 
-  @OneToOne(() => UserEntity)
+  @OneToOne(() => UserEntity, {
+    createForeignKeyConstraints: false
+  })
   @JoinColumn({
     name: 'user_id',
-    referencedColumnName: 'USER_ID',
   })
   user?: UserEntity;
 
