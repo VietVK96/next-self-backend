@@ -47,6 +47,7 @@ export class ValidationService {
       }
       user.password = phpPassword.hash(payload.password);
       // user.passwordHash = true;
+      user.passwordHash = Number(true);
       await this.userRepo.save(user);
     } else {
       if (!phpPassword.verify(payload.password, user.password)) {
