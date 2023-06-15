@@ -85,14 +85,13 @@ export class UserEntity {
     width: 11,
     nullable: true,
   })
-  addresseeId: number;
+  addresseeId?: number;
 
   @ManyToOne(() => UserEntity, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'user_id',
-    referencedColumnName: 'USR_ID',
   })
   addressee?: UserEntity;
 
@@ -116,7 +115,6 @@ export class UserEntity {
   })
   @JoinColumn({
     name: 'user_id',
-    referencedColumnName: 'USR_ID',
   })
   user?: UserEntity;
 
@@ -226,7 +224,7 @@ export class UserEntity {
       name: 'user_id',
     },
   })
-  subscribers: UserEntity[];
+  subscribers?: UserEntity[];
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 
@@ -251,7 +249,6 @@ export class UserEntity {
   })
   @JoinColumn({
     name: 'organization_id',
-    referencedColumnName: 'GRP_ID',
   })
   group?: OrganizationEntity;
 }

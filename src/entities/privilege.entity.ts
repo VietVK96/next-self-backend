@@ -142,7 +142,6 @@ export class PrivilegeEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\User", inversedBy="privileges")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   // protected $user;
 
   @Column({
@@ -157,7 +156,6 @@ export class PrivilegeEntity {
   })
   @JoinColumn({
     name: 'USR_ID',
-    referencedColumnName: 'USR_ID',
   })
   user?: UserEntity;
 
@@ -177,7 +175,6 @@ export class PrivilegeEntity {
   })
   @JoinColumn({
     name: 'USR_WITH_ID',
-    referencedColumnName: 'USR_ID',
   })
   userWith?: UserEntity;
 }

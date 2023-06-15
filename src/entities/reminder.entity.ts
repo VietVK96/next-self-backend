@@ -100,9 +100,8 @@ export class ReminderEntity {
   })
   @JoinColumn({
     name: 'USR_ID',
-    referencedColumnName: 'USR_ID',
   })
-  user: UserEntity;
+  user?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Event", inversedBy="reminders")
@@ -122,9 +121,8 @@ export class ReminderEntity {
   })
   @JoinColumn({
     name: 'EVT_ID',
-    referencedColumnName: 'EVT_ID',
   })
-  event: EventEntity;
+  event?: EventEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Reminder\Type")
@@ -143,9 +141,8 @@ export class ReminderEntity {
   })
   @JoinColumn({
     name: 'RMT_ID',
-    referencedColumnName: 'RMT_ID',
   })
-  type: ReminderTypeEntity;
+  type?: ReminderTypeEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Reminder\Receiver")
@@ -165,9 +162,8 @@ export class ReminderEntity {
   })
   @JoinColumn({
     name: 'RMR_ID',
-    referencedColumnName: 'RMR_ID',
   })
-  receiver: ReminderReceiverEntity;
+  receiver?: ReminderReceiverEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Reminder\Unit")
@@ -187,9 +183,8 @@ export class ReminderEntity {
   })
   @JoinColumn({
     name: 'RMU_ID',
-    referencedColumnName: 'RMU_ID',
   })
-  unit: ReminderUnitEntity;
+  unit?: ReminderUnitEntity;
   
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

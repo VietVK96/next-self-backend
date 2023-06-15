@@ -38,14 +38,13 @@ export class PushNotificationEntity {
     type: 'int',
     width: 11,
   })
-  groupId: number;
+  groupId?: number;
 
   @ManyToOne(() => OrganizationEntity, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'group_id',
-    referencedColumnName: 'ORG_ID',
   })
   group: OrganizationEntity;
 

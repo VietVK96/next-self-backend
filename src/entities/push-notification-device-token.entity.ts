@@ -53,7 +53,6 @@ export class PushNotificationDeviceTokenEntity {
   })
   @JoinColumn({
     name: 'group_id',
-    referencedColumnName: 'GRP_ID',
   })
   group?: OrganizationEntity;
   /**

@@ -39,7 +39,7 @@ export class PrescriptionTemplateEntity {
     name: 'organization_id',
     referencedColumnName: 'GRP_ID',
   })
-  organization: OrganizationEntity;
+  organization?: OrganizationEntity;
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -127,7 +127,7 @@ export class PrescriptionTemplateEntity {
       name: 'medicament_id',
     },
   })
-  medicaments: MedicamentEntity[];
+  medicaments?: MedicamentEntity[];
 }
 
 // application/Entity/PrescriptionTemplate.php
