@@ -122,7 +122,7 @@ import { TraceabilityEntity } from './traceability.entity';
 import { UserAmoEntity } from './user-amo.entity';
 import { UserConnectionEntity } from './user-connection.entity';
 import { UserMedicalEntity } from './user-medical.entity';
-import { UserPreferenceEntity, UserPreferenceViewType } from './user-preference.entity';
+import { UserPreferenceEntity } from './user-preference.entity';
 import { UserPreferenceQuotationEntity } from './user-preference-quotation.entity';
 import { UserResourceEntity } from './user-resource.entity';
 import { UserSmsEntity } from './user-sms.entity';
