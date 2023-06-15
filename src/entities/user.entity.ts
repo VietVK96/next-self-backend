@@ -4,11 +4,37 @@ import {
   DeleteDateColumn,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
+  OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { OrganizationEntity } from './organization.entity';
+import { ResourceEntity } from './resource.entity';
+import { UploadEntity } from './upload.entity';
+import { AddressEntity } from './address.entity';
+import { UserTypeEntity } from './user-type.entity';
+import { PrivilegeEntity } from './privilege.entity';
+import { EventEntity } from './event.entity';
+import { MemoEntity } from './memo.entity';
+import { LicenseEntity } from './license.entity';
+import { UserConnectionEntity } from './user-connection.entity';
+import { UserSmsEntity } from './user-sms.entity';
+import { UserPreferenceEntity } from './user-preference.entity';
+import { CashingEntity } from './cashing.entity';
+import { UserPreferenceQuotationEntity } from './user-preference-quotation.entity';
+import { MobileSubscriptionEntityEntity } from './mobile-subscription.entity';
+import { MobileSettingEntityEntity } from './mobile-setting.entity';
+import { UserMedicalEntity } from './user-medical.entity';
+import { UserAmoEntity } from './user-amo.entity';
+import { FseEntity } from './fse.entity';
+import { EmailAccountEntity } from './email-account.entity';
+import { EventTypeEntity } from './event-type.entity';
+import { SendingLogEntity } from './sending-log.entity';
+import { AppointmentReminderLibraryEntity } from './appointment-reminder-library.entity';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\User")
@@ -35,13 +61,34 @@ export class UserEntity {
    * @ORM\JoinColumn(name="resource_id", referencedColumnName="id")
    * @var \App\Entities\Resource Entité représentant la resource principale.
    */
-  // @TODO EntityMissing
   // protected $resource;
 
-  // @TODO EntityMissing
-  // @Column({
-  //   name:'avatar_id',
-  // })
+  @Column({
+    name: 'resource_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  resourceId?: number;
+  @ManyToOne(() => ResourceEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'resource_id',
+  })
+  resource?: ResourceEntity;
+
+  @Column({
+    name: 'avatar_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  avatarId?: number;
+  @OneToMany(() => UploadEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  uploads?: UploadEntity[];
 
   /**
    * @ORM\Column(name="USR_ADMIN", type="integer", nullable=false)
@@ -556,8 +603,20 @@ export class UserEntity {
    * @ORM\OneToOne(targetEntity="\App\Entities\Address")
    * @ORM\JoinColumn(name="ADR_ID", referencedColumnName="ADR_ID")
    */
-  // @TODO EntityMissing
   // protected $address;
+
+  @Column({
+    name: 'ADR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  adrId?: number;
+  @OneToOne(() => AddressEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({ name: 'ADR_ID' })
+  address?: AddressEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Group", inversedBy="users")
@@ -582,8 +641,23 @@ export class UserEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\User\Type")
    * @ORM\JoinColumn(name="UST_ID", referencedColumnName="UST_ID")
    */
-  // @TODO EntityMissing
   // protected $type;
+
+  @Column({
+    name: 'UST_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  ustId?: number;
+
+  @ManyToOne(() => UserTypeEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'UST_ID',
+  })
+  type?: UserTypeEntity;
 
   /**
    * privilèges de l'utilisateur
@@ -591,8 +665,12 @@ export class UserEntity {
    * @ORM\OneToMany(targetEntity="\App\Entities\Privilege", mappedBy="user")
    * @ORM\OrderBy({"pos" = "ASC"})
    */
-  // @TODO EntityMissing
   // protected $privileges;
+
+  @OneToMany(() => PrivilegeEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  privileges?: PrivilegeEntity[];
 
   /**
    * privilèges dont l'utilisateur est le destinataire
@@ -600,60 +678,96 @@ export class UserEntity {
    * @ORM\OneToMany(targetEntity="\App\Entities\Privilege", mappedBy="userWith")
    * @ORM\OrderBy({"id" = "ASC", "pos" = "ASC"})
    */
-  // @TODO EntityMissing
   // protected $privileged;
+
+  @OneToMany(() => PrivilegeEntity, (e) => e.userWith, {
+    createForeignKeyConstraints: false,
+  })
+  privileged?: PrivilegeEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Event", mappedBy="user")
    * @ORM\OrderBy({"start" = "ASC", "end" = "ASC"})
    */
-  // @TODO EntityMissing
   // protected $events;
+
+  @OneToMany(() => EventEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  events?: EventEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Memo", mappedBy="user")
    * @ORM\OrderBy({"date" = "ASC"})
    */
-  // @TODO EntityMissing
   // protected $memos;
+
+  @OneToMany(() => MemoEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  memos?: MemoEntity[];
 
   /**
    * @ORM\OneToOne(targetEntity="\App\Entities\License", mappedBy="user")
    */
-  // @TODO EntityMissing
   // protected $license;
+
+  @OneToOne(() => LicenseEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  license?: LicenseEntity;
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\UserConnection", mappedBy="user")
    * @ORM\OrderBy({"id" = "DESC"})
    */
-  // @TODO EntityMissing
   // protected $connections;
+
+  @OneToMany(() => UserConnectionEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  connections?: UserConnectionEntity[];
 
   /**
    * @ORM\OneToOne(targetEntity="\App\Entities\User\Sms", mappedBy="user")
    */
-  // @TODO EntityMissing
   // protected $sms;
+
+  @OneToOne(() => UserSmsEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  sms?: UserSmsEntity;
 
   /**
    * @ORM\OneToOne(targetEntity="\App\Entities\User\Preference", mappedBy="user")
    */
-  // @TODO EntityMissing
   // protected $preference;
+
+  @OneToOne(() => UserPreferenceEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  preference?: UserPreferenceEntity;
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Cashing", mappedBy="user")
    */
-  // @TODO EntityMissing
   // protected $cashings;
+
+  @OneToMany(() => CashingEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  cashings?: CashingEntity[];
 
   /**
    * @ORM\OneToOne(targetEntity="\App\Entities\User\Preference\Quotation", mappedBy="user")
    * @var \App\Entities\User\Preference\Quotation Preference de l'utilisateur concernant les devis
    */
-  // @TODO EntityMissing
   // protected $userPreferenceQuotation;
+
+  @OneToOne(() => UserPreferenceQuotationEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  userPreferenceQuotation?: UserPreferenceQuotationEntity;
 
   /**
    * Entité des réglages.
@@ -661,8 +775,12 @@ export class UserEntity {
    * @ORM\OneToOne(targetEntity="UserSettingEntity", mappedBy="user")
    * @var \App\Entities\UserSettingEntity
    */
-  // @TODO EntityMissing
   // protected $setting;
+
+  @OneToOne(() => UserPreferenceEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  setting?: UserPreferenceEntity;
 
   /**
    * Entité de l'abonnement mobile.
@@ -670,8 +788,12 @@ export class UserEntity {
    * @ORM\OneToOne(targetEntity="MobileSubscriptionEntity", mappedBy="user")
    * @var \App\Entities\MobileSubscriptionEntity|null
    */
-  // @TODO EntityMissing
   // protected $mobileSubscription = null;
+
+  @OneToOne(() => MobileSubscriptionEntityEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  mobileSubscription?: MobileSubscriptionEntityEntity;
 
   /**
    * Entité des réglages mobile.
@@ -679,69 +801,119 @@ export class UserEntity {
    * @ORM\OneToOne(targetEntity="MobileSettingEntity", mappedBy="user")
    * @var \App\Entities\MobileSettingEntity|null
    */
-  // @TODO EntityMissing
   // protected $mobileSetting = null;
+
+  @OneToOne(() => MobileSettingEntityEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  mobileSetting?: MobileSettingEntityEntity;
 
   /**
    * @ORM\OneToOne(targetEntity="UserMedical", mappedBy="user", fetch="EAGER", cascade={"persist"})
    * @Serializer\Expose
    * @Assert\Valid
    */
-  // @TODO EntityMissing
   // protected $medical = null;
+
+  @OneToOne(() => UserMedicalEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  medical?: UserMedicalEntity;
 
   /**
    * @ORM\OneToOne(targetEntity="UserAmo", mappedBy="user", fetch="EAGER", cascade={"persist"})
    * @Serializer\Expose
    * @Assert\Valid
    */
-  // @TODO EntityMissing
   // protected $amo = null;
+
+  @OneToOne(() => UserAmoEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  amo?: UserAmoEntity;
 
   /**
    * @ORM\OneToMany(targetEntity="Caresheet", mappedBy="user")
    */
-  // @TODO EntityMissing
   // protected $caresheets;
+
+  @OneToMany(() => FseEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  caresheets?: FseEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="EmailAccount", mappedBy="user")
    * @ORM\OrderBy({"position": "ASC"})
    */
-  // @TODO EntityMissing
   // protected $emailAccounts;
+
+  @OneToMany(() => EmailAccountEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  emailAccounts?: EmailAccountEntity[];
+
   /**
    * @ORM\OneToMany(targetEntity="EventType", mappedBy="user")
    * @ORM\OrderBy({"position": "asc"})
    */
-  // @TODO EntityMissing
   // protected $eventTypes;
+
+  @OneToMany(() => EventTypeEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  eventTypes?: EventTypeEntity[];
 
   /**
    * @ORM\ManyToMany(targetEntity="Resource", mappedBy="subscribers")
    * @ORM\OrderBy({"name": "ASC"})
    */
-  // @TODO EntityMissing
   // protected $resources;
+
+  @ManyToMany(() => ResourceEntity, (e) => e.subscribers, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinTable({
+    name: 'user_resource',
+    joinColumn: {
+      name: 'user_id',
+    },
+    inverseJoinColumn: {
+      name: 'resource_id',
+    },
+  })
+  resources?: ResourceEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="SendingLog", mappedBy="user", cascade={"persist"})
    * @ORM\OrderBy({"sendingDate": "desc"})
    */
-  // @TODO EntityMissing
   // protected $sendingLogs;
+
+  @OneToMany(() => SendingLogEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  sendingLogs?: SendingLogEntity[];
 
   /**
    * @ORM\ManyToMany(targetEntity="EmailAccount", mappedBy="subscribers")
    */
-  // @TODO EntityMissing
   // protected $subscribedEmailAccounts;
+
+  @ManyToMany(() => EmailAccountEntity, (e) => e.subscribers, {
+    createForeignKeyConstraints: false,
+  })
+  subscribedEmailAccounts?: EmailAccountEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="AppointmentReminderLibrary", mappedBy="user", cascade={"persist"})
    */
-  // @TODO EntityMissing
   // protected $appointmentReminderLibraries;
+
+  @OneToMany(() => AppointmentReminderLibraryEntity, (e) => e.user, {
+    createForeignKeyConstraints: false,
+  })
+  appointmentReminderLibraries?: AppointmentReminderLibraryEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

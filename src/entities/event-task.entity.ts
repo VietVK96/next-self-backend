@@ -3,9 +3,20 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { UserEntity } from './user.entity';
+import { ContactEntity } from './contact.entity';
+import { LibraryActEntity } from './library-act.entity';
+import { LibraryActQuantityEntity } from './library-act-quantity.entity';
+import { EventEntity } from './event.entity';
+import { DentalEventTaskEntity } from './dental-event-task.entity';
+import { TraceabilityEntity } from './traceability.entity';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\Prestation")
@@ -41,38 +52,96 @@ export class EventTaskEntity {
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    * @var \App\Entities\User Entité représentant le praticien.
    */
-  // @TODO EntityMissing
   //   protected $user;
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  usrId?: number;
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'USR_ID'
+  })
+  user?: UserEntity;
 
   /**
    *
    * @ORM\ManyToOne(targetEntity="Patient", inversedBy="acts")
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    */
-  // @TODO EntityMissing
   //   protected $patient;
+  @Column({
+    name: 'CON_ID',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  conId?: number;
+  @ManyToOne(() => ContactEntity, (e) => e.acts, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'CON_ID'
+  })
+  patient?: ContactEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Contact")
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    * @var \App\Entities\Contact Entité représentant le patient.
    */
-  // @TODO EntityMissing
   //   protected $contact;
+  @ManyToOne(() => ContactEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'CON_ID'
+  })
+  contact?: ContactEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\LibraryAct")
    * @ORM\JoinColumn(name="library_act_id", referencedColumnName="id", nullable=true)
    */
-  // @TODO EntityMissing
   //   protected $libraryAct = null;
+  @Column({
+    name: 'library_act_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  libraryActId?: number;
+  @ManyToOne(() => LibraryActEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'library_act_id'
+  })
+  libraryAct?: LibraryActEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\LibraryActQuantity")
    * @ORM\JoinColumn(name="library_act_quantity_id", referencedColumnName="id", nullable=true)
    */
-  // @TODO EntityMissing
   //   protected $libraryActQuantity = null;
+  @Column({
+    name: 'library_act_quantity_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  libraryActQuantityId?: number;
+  @ManyToOne(() => LibraryActQuantityEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'library_act_quantity_id'
+  })
+  libraryActQuantity?: LibraryActQuantityEntity;
 
   /**
    *
@@ -294,34 +363,69 @@ export class EventTaskEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\Event", inversedBy="tasks")
    * @ORM\JoinColumn(name="EVT_ID", referencedColumnName="EVT_ID")
    */
-  // @TODO EntityMissing
   //   protected $event;
+  @Column({
+    name: 'EVT_ID',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  evtId?: number;
+  @ManyToOne(() => EventEntity, (e) => e.tasks, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'EVT_ID'
+  })
+  event?: EventEntity;
 
   /**
    * @ORM\OneToOne(targetEntity="\App\Entities\Dental\Event\Task", mappedBy="task")
    */
-  // @TODO EntityMissing
   //   protected $dental;
+  @OneToOne(() => DentalEventTaskEntity, (e) => e.task, {
+    createForeignKeyConstraints: false
+  })
+  dental?: DentalEventTaskEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Act")
    * @ORM\JoinColumn(name="parent_id", referencedColumnName="ETK_ID", nullable=true)
    */
-  // @TODO EntityMissing
   //   protected $parent = null;
+  @Column({
+    name: 'parent_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  parentId?: number;
+  @ManyToOne(() => EventTaskEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'parent_id'
+  })
+  parent?: EventTaskEntity;
 
   /**
    * @ORM\OneToOne(targetEntity="ActMedical", mappedBy="act", fetch="EAGER", cascade={"persist"})
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   //   protected $medical = null;
+  @OneToOne(() => DentalEventTaskEntity, (e) => e.act, {
+    createForeignKeyConstraints: false
+  })
+  medical?: DentalEventTaskEntity;
 
   /**
    * @ORM\OneToMany(targetEntity="Traceability", mappedBy="act", cascade={"persist"}, orphanRemoval=true)
    */
-  // @TODO EntityMissing
   //   protected $traceabilities;
+  @OneToMany(() => TraceabilityEntity, (e) => e.act, {
+    createForeignKeyConstraints: false
+  })
+  traceabilities?: TraceabilityEntity[];
 }
 
 //application\Entities\Event\Task.php

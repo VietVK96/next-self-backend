@@ -1,4 +1,7 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { OrganizationEntity } from "./organization.entity";
+import { UserEntity } from "./user.entity";
+import { ContactEntity } from "./contact.entity";
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PeriodontalChartRepository")
@@ -12,8 +15,21 @@ export class PeriodontalChartEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
+  })
+  organizationId?: number;
+
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'organization_id',
+  })
+  organization?: OrganizationEntity;
 
   /**
    * @ORM\Id
@@ -32,15 +48,41 @@ export class PeriodontalChartEntity {
    * @ORM\ManyToOne(targetEntity="User")
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   // protected $user;
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+  })
+  userId?: number;
+
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'user_id',
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Patient", inversedBy="periodontalCharts")
    * @ORM\JoinColumn(name="patient_id", referencedColumnName="CON_ID")
    */
-  // @TODO EntityMissing
   // protected $patient;
+  @Column({
+    name: 'patient_id',
+    type: 'int',
+    width: 11,
+  })
+  patientId?: number;
+
+  @ManyToOne(() => ContactEntity, (e) => e.periodontalCharts, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'patient_id',
+  })
+  patient?: ContactEntity;
 
   /**
    * @ORM\Column(name="creation_date", type="date")

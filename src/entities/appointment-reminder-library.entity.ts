@@ -1,4 +1,17 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { UserEntity } from './user.entity';
+import { ReminderReceiverEntity } from './reminder-receiver.entity';
+import { ReminderTypeEntity } from './reminder-type.entity';
+import { ReminderUnitEntity } from './reminder-unit.entity';
+import { UploadEntity } from './upload.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\AppointmentReminderLibraryRepository")
@@ -29,8 +42,21 @@ export class AppointmentReminderLibraryEntity {
    * @ORM\ManyToOne(targetEntity="User", inversedBy="appointmentReminderLibraries")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   // protected $user;
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+  })
+  usrId?: number;
+
+  @ManyToOne(() => UserEntity, (e) => e.appointmentReminderLibraries, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'USR_ID',
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="AppointmentReminderAddressee")
@@ -41,8 +67,21 @@ export class AppointmentReminderLibraryEntity {
    *  "appointmentReminderLibrary:read"
    * })
    */
-  // @TODO EntityMissing
   // protected $addressee;
+  @Column({
+    name: 'RMR_ID',
+    type: 'int',
+    width: 11,
+  })
+  rmrId?: number;
+
+  @ManyToOne(() => ReminderReceiverEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'RMR_ID',
+  })
+  addressee?: ReminderReceiverEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="AppointmentReminderCategory")
@@ -53,8 +92,21 @@ export class AppointmentReminderLibraryEntity {
    *  "appointmentReminderLibrary:read"
    * })
    */
-  // @TODO EntityMissing
   // protected $category;
+  @Column({
+    name: 'RMT_ID',
+    type: 'int',
+    width: 11,
+  })
+  RMTID?: number;
+
+  @ManyToOne(() => ReminderTypeEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'RMT_ID',
+  })
+  category?: ReminderTypeEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="AppointmentReminderUnit")
@@ -65,8 +117,21 @@ export class AppointmentReminderLibraryEntity {
    *  "appointmentReminderLibrary:read"
    * })
    */
-  // @TODO EntityMissing
   // protected $timelimitUnit;
+  @Column({
+    name: 'RMU_ID',
+    type: 'int',
+    width: 11,
+  })
+  rmuId?: number;
+
+  @ManyToOne(() => ReminderUnitEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'RMU_ID',
+  })
+  timelimitUnit?: ReminderUnitEntity;
 
   /**
    * @ORM\Column(name="RML_NBR", type="integer", options={"default": 1440})
@@ -86,7 +151,7 @@ export class AppointmentReminderLibraryEntity {
     width: 11,
     default: 1440,
   })
-  timelimit?: number
+  timelimit?: number;
 
   /**
    * @ORM\Column(name="attachment_count", type="integer", options={"default": 0})
@@ -125,8 +190,18 @@ export class AppointmentReminderLibraryEntity {
    *  }
    * )
    */
-  // @TODO EntityMissing
   // protected $attachments;
+  @ManyToMany(() => UploadEntity)
+  @JoinTable({
+    name: 'appointment_reminder_library_attachment',
+    joinColumn: {
+      name: 'appointment_reminder_library_id',
+    },
+    inverseJoinColumn: {
+      name: 'file_id',
+    },
+  })
+  attachments?: UploadEntity[];
 }
 
 // application\Entity\AppointmentReminderLibrary.php

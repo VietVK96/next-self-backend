@@ -3,9 +3,12 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  OneToOne,
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { UserEntity } from './user.entity';
 
 /**
  * @ORM\Entity
@@ -96,8 +99,10 @@ export class SyncWzagendaUserEntity {
    * @var \App\Entities\User Entité représentant l'utilisateur
    * ayant activé la synchronisation avec WzAgenda.
    */
-  // @TODO EntityMissing
   // protected $user;
+  @OneToOne(() => UserEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'USR_ID' })
+  user?: UserEntity;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

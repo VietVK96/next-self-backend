@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   JoinColumn,
   JoinTable,
   ManyToMany,
@@ -10,6 +11,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { CashingEntity } from './cashing.entity';
 import { OrganizationEntity } from './organization.entity';
 import { CorrespondentTypeEntity } from './correspondent-type.entity';
 import { AddressEntity } from './address.entity';
@@ -230,6 +232,16 @@ export class CorrespondentEntity {
     inverseJoinColumn: { name: "PHO_ID" }
   })
   phones?: PhoneEntity[];
+
+  @OneToMany(() => CashingEntity, (e) => e.correspondent, {
+    createForeignKeyConstraints: false,
+  })
+  cashings?: CashingEntity[];
+
+  @OneToMany(() => CashingEntity, (e) => e.correspondent, {
+    createForeignKeyConstraints: false,
+  })
+  cashings?: CashingEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

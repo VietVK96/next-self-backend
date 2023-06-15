@@ -11,8 +11,7 @@ import {
  * @ORM\Table(name="resource")
  */
 @Entity('resource')
-export class UserEntity {
-
+export class ResourceEntity {
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -37,16 +36,16 @@ export class UserEntity {
    * @var \DateTimeInterface|null
    */
   @Column({
-    'name': 'archived_at',
+    name: 'archived_at',
     type: 'datetime',
     nullable: true,
   })
   archivedAt?: string;
 
   /**
-  * @ORM\ManyToOne(targetEntity="Organization")
-  * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
-  */
+   * @ORM\ManyToOne(targetEntity="Organization")
+   * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
+   */
   // @TODO EntityMissing
   // protected $organization;
 
@@ -86,7 +85,7 @@ export class UserEntity {
     name: 'name',
     type: 'varchar',
     length: 255,
-    nullable: false
+    nullable: false,
   })
   name?: string;
 
@@ -110,7 +109,7 @@ export class UserEntity {
   @Column({
     name: 'color',
     type: 'json',
-    nullable: true
+    nullable: true,
   })
   color?: string;
 
@@ -131,7 +130,7 @@ export class UserEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   useDefaultColor?: number;
 
@@ -145,7 +144,7 @@ export class UserEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   free?: number;
 

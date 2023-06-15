@@ -1,4 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { UserEntity } from './user.entity';
+import { ResourceEntity } from './resource.entity';
 
 /**
  * @ORM\Entity
@@ -6,7 +14,6 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
  */
 @Entity('user_resource')
 export class UserResourceEntity {
-
   /**
    * @ORM\Column(name="id", type="integer")
    * @ORM\Id
@@ -23,16 +30,42 @@ export class UserResourceEntity {
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    * @var \App\Entities\User Entité représentant l'utilisateur.
    */
-  // @TODO EntityMissing
   // protected $user;
+
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+  })
+  usrId?: number;
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'user_id',
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Resource")
    * @ORM\JoinColumn(name="resource_id", referencedColumnName="id")
    * @var \App\Entities\Resource Entité représentant la ressource.
    */
-  // @TODO EntityMissing
   // protected $resource;
+
+  @Column({
+    name: 'resource_id',
+    type: 'int',
+    width: 11,
+  })
+  resourceId?: number;
+  @ManyToOne(() => ResourceEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'resource_id',
+  })
+  resource?: ResourceEntity;
 
   /**
    * @ORM\Column(name="selected", type="integer")
@@ -57,7 +90,6 @@ export class UserResourceEntity {
     default: 15,
   })
   accessLevel?: number;
-
 }
 
 // application/Entities/UserResource.php

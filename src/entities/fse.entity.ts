@@ -1,4 +1,10 @@
-import { Collection, Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Collection, Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { UserEntity } from "./user.entity";
+import { ContactEntity } from "./contact.entity";
+import { CaresheetStatusEntity } from "./caresheet-status.entity";
+import { AmoEntity } from "./amo.entity";
+import { AmcEntity } from "./amc.entity";
+import { DentalEventTaskEntity } from "./dental-event-task.entity";
 
 /**
  * @ORM\Entity
@@ -20,11 +26,24 @@ export class FseEntity {
   id?: number;
 
   /**
-     * @ORM\ManyToOne(targetEntity="User", inversedBy="caresheets")
-     * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
-     */
-  // @TODO EntityMissing
+   * @ORM\ManyToOne(targetEntity="User", inversedBy="caresheets")
+   * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
+   */
   // protected $user;
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  usrId?: number;
+  @ManyToOne(() => UserEntity, (e) => e.caresheets, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'USR_ID',
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Patient")
@@ -33,8 +52,21 @@ export class FseEntity {
    * @Serializer\Groups({"caresheet:index", "caresheet:read", "tiersPayant:index"})
    * @Serializer\MaxDepth(1)
    */
-  // @TODO EntityMissing
   // protected $patient;
+  @Column({
+    name: 'CON_ID',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  conId?: number;
+  @ManyToOne(() => ContactEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'CON_ID',
+  })
+  patient?: ContactEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="CaresheetStatus")
@@ -42,8 +74,21 @@ export class FseEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"caresheet:index", "caresheet:read"})
    */
-  // @TODO EntityMissing
   // protected $fseStatus = null;
+  @Column({
+    name: 'fse_status_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  fseStatusId?: number;
+  @ManyToOne(() => CaresheetStatusEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'fse_status_id',
+  })
+  fseStatus?: CaresheetStatusEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="CaresheetStatus")
@@ -51,22 +96,61 @@ export class FseEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"caresheet:index", "caresheet:read"})
    */
-  // @TODO EntityMissing
   // protected $dreStatus = null;
+  @Column({
+    name: 'dre_status_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  dreStatusId?: number;
+  @ManyToOne(() => CaresheetStatusEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'dre_status_id',
+  })
+  dreStatus?: CaresheetStatusEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Amo")
    * @ORM\JoinColumn(name="amo_id", referencedColumnName="id", nullable=true)
    */
-  // @TODO EntityMissing
   // protected $amo = null;
+  @Column({
+    name: 'amo_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  amoId?: number;
+  @ManyToOne(() => AmoEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'amo_id',
+  })
+  amo?: AmoEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Amc")
    * @ORM\JoinColumn(name="amc_id", referencedColumnName="id", nullable=true)
    */
-  // @TODO EntityMissing
   // protected $amc = null;
+  @Column({
+    name: 'amc_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  amcId?: number;
+  @ManyToOne(() => AmcEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'amc_id',
+  })
+  amc?: AmcEntity;
 
   /**
    * @ORM\Column(name="numero_facturation", type="string", length=9, nullable=true, options={"fixed": true})
@@ -264,24 +348,25 @@ export class FseEntity {
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Dental\Event\Task", mappedBy="fse")
    */
-  // @TODO EntityMissing
   // protected $tasks;
-
-  /**
-   * @ORM\ManyToOne(targetEntity="\App\Entities\User")
-   * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
-   * @var \App\Entities\User|NULL Référence l'utilisateur ayant crée la FSE
-   */
-  // @TODO EntityMissing
-  // protected $user;
+  @OneToMany(() => DentalEventTaskEntity, (e) => e.fse, {
+    createForeignKeyConstraints: false
+  })
+  tasks?: DentalEventTaskEntity[];
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Contact")
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    * @var \App\Entities\Contact|NULL Référence le patient à qui appartient la FSE
    */
-  // @TODO EntityMissing
   // protected $contact;
+  @ManyToOne(() => ContactEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'CON_ID',
+  })
+  contact?: ContactEntity;
 
   /**
      * @ORM\Column(name="external_reference_id", type="integer", nullable=true)

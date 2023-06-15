@@ -9,7 +9,8 @@
  * @UniqueEntity("emailAccount")
  */
 
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { EmailAccountEntity } from './email-account.entity';
 
 // File: application\Entity\EmailOutgoingServer.php: class EmailOutgoingServer extends AbstractEntity
 @Entity('email_outgoing_server')
@@ -27,8 +28,11 @@ export class EmailOutgoingServerEntity {
   /**
    * @ORM\OneToOne(targetEntity="EmailAccount", inversedBy="outgoingServer")
    */
-  // @TODO EntityMissing
-  // protected $emailAccount;
+  // protected $emailAccount
+  @OneToOne(() => EmailAccountEntity, (e) => e.outgoingServer,{
+    createForeignKeyConstraints: false
+  })
+  emailAccount?: EmailAccountEntity;
 
   /**
    * @ORM\Column(type="string", length=4, options={"fixed": true, "default": "smtp"})

@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { CcamEntity } from './ccam.entity';
+import { DentalMaterialEntity } from './dental-material.entity';
 
 /**
  * @ORM\Entity
@@ -25,15 +27,41 @@ export class CcamToothEntity {
    * @ORM\ManyToOne(targetEntity="Ccam", inversedBy="teeth")
    * @ORM\JoinColumn(name="ccam_id", referencedColumnName="id")
    */
-  // @TODO EntityMissing
   //   protected $ccam;
+  @Column({
+    name: 'ccam_id',
+    type: 'int',
+    width: 11,
+  })
+  ccamId?: number;
+
+  @ManyToOne(() => CcamEntity, (e) => e.teeth, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'ccam_id',
+  })
+  ccam?: CcamEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="DentalMaterial")
    * @ORM\JoinColumn(name="dental_material_id", referencedColumnName="id")
    */
-  // @TODO EntityMissing
   //   protected $material;
+  @Column({
+    name: 'dental_material_id',
+    type: 'int',
+    width: 11,
+  })
+  dentalMaterialId?: number;
+
+  @ManyToOne(() => DentalMaterialEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'dental_material_id',
+  })
+  material?: DentalMaterialEntity;
 
   /**
    * @ORM\Column(name="rank", type="integer")

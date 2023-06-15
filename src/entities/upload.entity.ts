@@ -2,9 +2,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { UserEntity } from './user.entity';
+import { TagEntity } from './tag.entity';
 
 /**
  * @ORM\Entity
@@ -103,8 +109,13 @@ export class UploadEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   // protected $user;
+  @Column({ name: 'USR_ID', type: 'int', width: 11 })
+  userId?: number;
+
+  @ManyToOne(() => UserEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'USR_ID' })
+  user?: UserEntity;
 
   /////
 
@@ -112,8 +123,10 @@ export class UploadEntity {
    * @ORM\ManyToOne(targetEntity="User")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   // protected $transmitter;
+  @ManyToOne(() => UserEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'USR_ID' })
+  transmitter?: UserEntity;
 
   /** File: application\Entity\File.php
    * @ORM\Column(name="UPL_NAME", type="string", length=255)
@@ -199,8 +212,16 @@ export class UploadEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"file:read"})
    */
-  // @TODO EntityMissing
   // protected $tags;
+  @ManyToMany(() => TagEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinTable({
+    name: 'file_tag',
+    joinColumn: { name: 'file_id' },
+    inverseJoinColumn: { name: 'tag_id' }
+  })
+  tags?: TagEntity[];
 }
 
 // application\Entities\Upload.php
