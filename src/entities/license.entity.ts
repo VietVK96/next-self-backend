@@ -1,4 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { UserEntity } from './user.entity';
 
 /**
@@ -49,10 +55,10 @@ export class LicenseEntity {
   })
   usrId?: number;
   @OneToOne(() => UserEntity, (e) => e.license, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'USR_ID'
+    name: 'USR_ID',
   })
   user?: UserEntity;
 }

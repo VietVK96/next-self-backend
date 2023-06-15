@@ -1,6 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { OrganizationEntity } from "./organization.entity";
-import { CorrespondentEntity } from "./correspondent.entity";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
 
 /**
  * @ORM\Entity
@@ -8,7 +13,6 @@ import { CorrespondentEntity } from "./correspondent.entity";
  */
 @Entity('correspondent_type')
 export class CorrespondentTypeEntity {
-
   /**
    * @ORM\Column(name="id", type="integer")
    * @ORM\Id
@@ -34,8 +38,8 @@ export class CorrespondentTypeEntity {
   })
   groupId?: number;
 
-  @ManyToOne(() => OrganizationEntity, e => e.correspondentTypes, {
-    createForeignKeyConstraints: false
+  @ManyToOne(() => OrganizationEntity, (e) => e.correspondentTypes, {
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'group_id',
@@ -52,7 +56,6 @@ export class CorrespondentTypeEntity {
     length: 255,
   })
   name?: string;
-
 }
 
 // application/Entities/CorrespondentType.php
