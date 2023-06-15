@@ -238,11 +238,6 @@ export class CorrespondentEntity {
   })
   cashings?: CashingEntity[];
 
-  @OneToMany(() => CashingEntity, (e) => e.correspondent, {
-    createForeignKeyConstraints: false,
-  })
-  cashings?: CashingEntity[];
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 
