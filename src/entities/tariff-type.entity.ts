@@ -21,7 +21,7 @@ export class TariffTypeEntity {
   /**
    * @var int Nombre maximal de types de tarif.
    */
-  const MAX_ENTRIES = 5;
+  MAX_ENTRIES = 5;
 
   /**
    * @ORM\Id

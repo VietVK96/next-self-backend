@@ -1,4 +1,5 @@
-import { Column, DeleteDateColumn, Entity } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { LibraryActEntity } from './library-act.entity';
 
 /**
  * @ORM\Entity
@@ -14,9 +15,20 @@ export class LibraryActComplementaryEntity {
    * @ORM\ManyToOne(targetEntity="LibraryAct", inversedBy="complementaries")
    * @ORM\JoinColumn(name="library_act_parent_id", referencedColumnName="id")
    */
-  // @TODO EntityMissing
   //   protected $parent;
-
+  @Column({
+    name: 'library_act_parent_id',
+    type: 'int',
+    width: 11
+  })
+  libraryActParentId?: number;
+  @ManyToOne(() => LibraryActEntity, e => e.complementaries, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'library_act_parent_id'
+  })
+  parent?: LibraryActEntity;
   /**
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="NONE")
@@ -26,8 +38,20 @@ export class LibraryActComplementaryEntity {
    * @Serializer\Groups({"detail"})
    * @Serializer\MaxDepth(1)
    */
-  // @TODO EntityMissing
   //   protected $child;
+  @Column({
+    name: 'library_act_child_id',
+    type: 'int',
+    width: 11
+  })
+  libraryActChildId?: number;
+  @ManyToOne(() => LibraryActEntity, e => e.complementariesWithMe, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'library_act_child_id'
+  })
+  child?: LibraryActEntity;
 
   /**
    * @ORM\Column(name="position", type="integer", options={"default": 0})

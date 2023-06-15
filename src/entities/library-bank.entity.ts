@@ -3,10 +3,15 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { UserEntity } from './user.entity';
+import { AddressEntity } from './address.entity';
 import { CashingEntity } from './cashing.entity';
 
 /**
@@ -331,24 +336,65 @@ export class LibraryBankEntity {
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    * @var \App\Entities\Group Référence l'entité Group.
    */
-  // @TODO EntityMissing
-  //   protected $group;
+  // protected $group;
+
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
+  })
+  organizationId?: number;
+  @ManyToOne(() => OrganizationEntity, e => e.libraryBanks, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'organization_id'
+  })
+  group?: OrganizationEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    * @var \App\Entities\User Référence l'entité User.
    */
-  // @TODO EntityMissing
-  //   protected $user;
+  // protected $user;
+
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  usrId?: number;
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'USR_ID'
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Address")
    * @ORM\JoinColumn(name="ADR_ID", referencedColumnName="ADR_ID")
    * @var \App\Entities\Address Référence l'entité Address.
    */
-  // @TODO EntityMissing
-  //   protected $address;
+  // protected $address;
+
+  @Column({
+    name: 'ADR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  adrId?: number;
+  @ManyToOne(() => AddressEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'ADR_ID'
+  })
+  address?: AddressEntity;
 
   @OneToMany(() => CashingEntity, (e) => e.bill, {
     createForeignKeyConstraints: false,

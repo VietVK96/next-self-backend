@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
 
 /**
  * @ORM\Entity
@@ -51,8 +52,21 @@ export class LibraryCityEntity {
    * @ORM\JoinColumn(name="GRP_ID", referencedColumnName="GRP_ID")
    * @var \App\Entities\Group|NULL
    */
-  // @TODO EntityMissing
   //protected $group;
+  @Column({
+    name: 'GRP_ID',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  grpId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'GRP_ID'
+  })
+  group?: OrganizationEntity;
 
   /**
    * Initialisation des propriétés du modèle.
