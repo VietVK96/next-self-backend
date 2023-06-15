@@ -69,8 +69,8 @@ export class MobileSettingEntityEntity {
     type: 'int',
     width: 11,
   })
-  userId?: number
-  @OneToOne(() => UserEntity, (e) => e.mobileSetting {
+  userId?: number;
+  @OneToOne(() => UserEntity, (e) => e.mobileSetting, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({ name: 'user_id' })

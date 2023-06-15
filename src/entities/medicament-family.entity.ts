@@ -3,9 +3,14 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { MedicamentEntity } from './medicament.entity';
+import { OrganizationEntity } from './organization.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\MedicamentFamilyRepository")
@@ -87,16 +92,31 @@ export class MedicamentFamilyEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"medicament:index", "medicament:read"})
    */
-  // @TODO EntityMissing
   //   protected $medicaments;
+  @OneToMany(() => MedicamentEntity, (e) => e.family, {
+    createForeignKeyConstraints: false
+  })
+  medicaments?: MedicamentEntity[];
 
   // from file extends
   /**
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
+  })
+  organizationId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'organization_id'
+  })
+  organization?: OrganizationEntity;
 
   // @Check TimeStamp
   //use TimestampableEntity;

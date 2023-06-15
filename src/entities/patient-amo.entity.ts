@@ -1,4 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { ContactEntity } from './contact.entity';
 import { AmoEntity } from './amo.entity';
 
@@ -35,7 +41,7 @@ export class PatientAmo {
     width: 11,
   })
   patientId?: number;
-  @ManyToOne(() => ContactEntity, (e)=>e.amos {
+  @ManyToOne(() => ContactEntity, (e) => e.amos, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
@@ -57,7 +63,7 @@ export class PatientAmo {
     nullable: true,
   })
   amoId?: number;
-  @ManyToOne(() => AmoEntity, (e)=>e.amos {
+  @ManyToOne(() => AmoEntity, (e) => e.amos, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({

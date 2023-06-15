@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { OrganizationEntity } from "./organization.entity";
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\TariffTypeRepository")
@@ -54,8 +55,13 @@ export class TariffTypeEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   //protected $organization;
+  @Column({ name: 'organization_id', type: 'int', width: 11 })
+  organizationId?: number;
+
+  @ManyToOne(() => OrganizationEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'organization_id' })
+  organization?: OrganizationEntity;
 }
 
 //application/Entity/TariffType.php

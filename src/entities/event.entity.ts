@@ -1,4 +1,12 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { ResourceEntity } from "./resource.entity";
+import { UserEntity } from "./user.entity";
+import { ContactEntity } from "./contact.entity";
+import { EventTypeEntity } from "./event-type.entity";
+import { EventTaskEntity } from "./event-task.entity";
+import { EventHistoricalEntity } from "./event-historical.entity";
+import { ReminderEntity } from "./reminder.entity";
+import { PlanEventEntity } from "./plan-event.entity";
 
 export enum EnumEventType {
   EVENT = 'event',
@@ -28,8 +36,21 @@ export class EventEntity {
    * @ORM\JoinColumn(name="resource_id", referencedColumnName="id")
    * @var \App\Entities\Resource Entité représentant une ressource.
    */
-  // @TODO EntityMissing
   // protected $resource;
+  @Column({
+    name: 'resource_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  resourceId?: number;
+  @ManyToOne(() => ResourceEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'resource_id',
+  })
+  resource?: ResourceEntity;
 
   /**
    * @ORM\Column(name="EVT_TYPE", type="string", nullable=false)
@@ -180,65 +201,129 @@ export class EventEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\User", inversedBy="events")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   // protected $user;
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  usrId?: number;
+  @ManyToOne(() => UserEntity, (e) => e.events, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'USR_ID',
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Contact", inversedBy="events")
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    */
-  // @TODO EntityMissing
   // protected $contact;
+  @Column({
+    name: 'CON_ID',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  conId?: number;
+  @ManyToOne(() => ContactEntity, (e) => e.events, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'CON_ID',
+  })
+  contact?: ContactEntity;
 
   /**
-     * @ORM\ManyToOne(targetEntity="Patient")
-     * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
-     * @Serializer\Expose
-     * @Serializer\Groups({
-     *  "event:read"
-     * })
-     */
-  // @TODO EntityMissing
+   * @ORM\ManyToOne(targetEntity="Patient")
+   * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
+   * @Serializer\Expose
+   * @Serializer\Groups({
+   *  "event:read"
+   * })
+   */
   // protected $patient = null;
+  @ManyToOne(() => ContactEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'CON_ID',
+  })
+  patient?: ContactEntity;
 
   /**
-     * @ORM\ManyToOne(targetEntity="EventType")
-     * @ORM\JoinColumn(name="event_type_id", referencedColumnName="id")
-     * @Serializer\Expose
-     * @Serializer\Groups({
-     *  "event:read"
-     * })
-     */
-  // @TODO EntityMissing
+   * @ORM\ManyToOne(targetEntity="EventType")
+   * @ORM\JoinColumn(name="event_type_id", referencedColumnName="id")
+   * @Serializer\Expose
+   * @Serializer\Groups({
+   *  "event:read"
+   * })
+   */
   // protected $reason = null;
+  @Column({
+    name: 'event_type_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  eventTypeId?: number;
+  @ManyToOne(() => EventTypeEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'event_type_id',
+  })
+  reason?: EventTypeEntity;
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Event\Task", mappedBy="event")
    */
-  // @TODO EntityMissing
   // protected $tasks;
+  @OneToMany(() => EventTaskEntity, (e) => e.event, {
+    createForeignKeyConstraints: false
+  })
+  tasks?: EventTaskEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Event\Historical", mappedBy="event")
    * @ORM\OrderBy({"id" = "DESC"})
    */
-  // @TODO EntityMissing
   // protected $historical;
+  @OneToMany(() => EventHistoricalEntity, (e) => e.event, {
+    createForeignKeyConstraints: false
+  })
+  historical?: EventHistoricalEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Reminder", mappedBy="event")
    */
-  // @TODO EntityMissing
   // protected $reminders;
+  @OneToMany(() => ReminderEntity, (e) => e.event, {
+    createForeignKeyConstraints: false
+  })
+  reminders?: ReminderEntity[];
 
   /**
    * @ORM\OneToOne(targetEntity="\App\Entities\Plan\Event", mappedBy="event")
    */
-  // @TODO EntityMissing
   // protected $planEvent;
+  @OneToOne(() => PlanEventEntity, (e) => e.event, {
+    createForeignKeyConstraints: false
+  })
+  planEvent?: PlanEventEntity;
 
   // Missing from entity php
   // created_by: string;
+  @Column({
+    name: 'created_by',
+    type: 'varchar',
+    length: 255,
+    nullable: true
+  })
+  createdBy?: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
