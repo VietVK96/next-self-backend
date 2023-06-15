@@ -155,7 +155,7 @@ export class EmailAccountEntity {
    * )
    */
   // protected $subscribers;
-  @ManyToMany(() => UserEntity, {
+  @ManyToMany(() => UserEntity, e => e.subscribedEmailAccounts, {
     createForeignKeyConstraints: false,
   })
   @JoinTable({
