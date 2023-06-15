@@ -46,16 +46,15 @@ export class ConversationMemberEntity {
     type: 'int',
     width: 11,
   })
-  conversationId: number;
+  conversationId?: number;
 
   @ManyToOne(() => ConversationEntity, (e) => e.members, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'conversation_id',
-    referencedColumnName: 'id',
   })
-  conversation: ConversationEntity;
+  conversation?: ConversationEntity;
 
   /**
    * Entité de l'utilisateur.
@@ -72,16 +71,15 @@ export class ConversationMemberEntity {
     type: 'int',
     width: 11,
   })
-  userId: number;
+  userId?: number;
 
   @ManyToOne(() => UserEntity, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'user_id',
-    referencedColumnName: 'USR_ID',
   })
-  user: UserEntity;
+  user?: UserEntity;
 
   /**
    * Date et heure de lecture de la conversation.

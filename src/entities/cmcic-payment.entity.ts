@@ -364,7 +364,6 @@ export class CmcicPaymentEntity {
   })
   @JoinColumn({
     name: 'usr_id',
-    referencedColumnName: 'USR_ID',
   })
   user?: UserEntity;
 }

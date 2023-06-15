@@ -236,14 +236,13 @@ export class ContactEntity {
     width: 11,
     nullable: true,
   })
-  medecinTraitantId?: number;
+  conMedecinTraitantId?: number;
 
   @ManyToOne(() => CorrespondentEntity, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'CON_MEDECIN_TRAITANT',
-    referencedColumnName: 'CPD_ID',
   })
   medecinTraitant?: CorrespondentEntity;
 
@@ -510,7 +509,6 @@ export class ContactEntity {
   })
   @JoinColumn({
     name: 'organization_id',
-    referencedColumnName: 'GRP_ID',
   })
   group?: OrganizationEntity;
 
@@ -523,6 +521,7 @@ export class ContactEntity {
     name: 'GEN_ID',
     type: 'int',
     width: 11,
+    nullable: true,
   })
   genId?: number;
 
@@ -531,7 +530,6 @@ export class ContactEntity {
   })
   @JoinColumn({
     name: 'GEN_ID',
-    referencedColumnName: 'GEN_ID',
   })
   gender?: GenderEntity;
 
@@ -545,6 +543,7 @@ export class ContactEntity {
     name: 'ADR_ID',
     type: 'int',
     width: 11,
+    nullable: true,
   })
   adrId?: number;
 
@@ -553,7 +552,6 @@ export class ContactEntity {
   })
   @JoinColumn({
     name: 'ADR_ID',
-    referencedColumnName: 'ADR_ID',
   })
   address?: AddressEntity;
 
@@ -566,6 +564,7 @@ export class ContactEntity {
     name: 'UPL_ID',
     type: 'int',
     width: 11,
+    nullable: true,
   })
   uplId?: number;
 
@@ -574,7 +573,6 @@ export class ContactEntity {
   })
   @JoinColumn({
     name: 'UPL_ID',
-    referencedColumnName: 'UPL_ID',
   })
   upload?: UploadEntity;
 
@@ -587,6 +585,7 @@ export class ContactEntity {
     name: 'CPD_ID',
     type: 'int',
     width: 11,
+    nullable: true,
   })
   cpdId?: number;
 
@@ -595,7 +594,6 @@ export class ContactEntity {
   })
   @JoinColumn({
     name: 'CPD_ID',
-    referencedColumnName: 'CPD_ID',
   })
   correspondent?: CorrespondentEntity;
 
@@ -608,6 +606,7 @@ export class ContactEntity {
     name: 'COF_ID',
     type: 'int',
     width: 11,
+    nullable: true,
   })
   cofId?: number;
 
@@ -616,7 +615,6 @@ export class ContactEntity {
   })
   @JoinColumn({
     name: 'COF_ID',
-    referencedColumnName: 'COF_ID',
   })
   family?: ContactFamilyEntity;
 
@@ -721,6 +719,7 @@ export class ContactEntity {
     name: 'USR_ID',
     type: 'int',
     width: 11,
+    nullable: true,
   })
   ursId?: number;
 
@@ -729,7 +728,6 @@ export class ContactEntity {
   })
   @JoinColumn({
     name: 'USR_ID',
-    referencedColumnName: 'USR_ID',
   })
   user?: UserEntity;
 

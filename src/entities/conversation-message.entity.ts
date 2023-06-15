@@ -47,16 +47,15 @@ export class ConversationMessageEntity {
     type: 'int',
     width: 11,
   })
-  conversationId: number;
+  conversationId?: number;
 
   @ManyToOne(() => ConversationEntity, (e) => e.messages, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'conversation_id',
-    referencedColumnName: 'id',
   })
-  conversation: ConversationEntity;
+  conversation?: ConversationEntity;
 
   /**
    * Entité de l'utilisateur.
@@ -73,16 +72,15 @@ export class ConversationMessageEntity {
     type: 'int',
     width: 11,
   })
-  userId: number;
+  userId?: number;
 
   @ManyToOne(() => UserEntity, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'user_id',
-    referencedColumnName: 'USR_ID',
   })
-  user: UserEntity;
+  user?: UserEntity;
 
   /**
    * Corps du message.

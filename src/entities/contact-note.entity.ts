@@ -78,6 +78,7 @@ export class ContactNoteEntity {
     name: 'user_id',
     type: 'int',
     width: 11,
+    nullable: true,
   })
   userId?: number;
 
@@ -86,7 +87,6 @@ export class ContactNoteEntity {
   })
   @JoinColumn({
     name: 'user_id',
-    referencedColumnName: 'USR_ID',
   })
   user?: UserEntity;
 
@@ -108,7 +108,6 @@ export class ContactNoteEntity {
   })
   @JoinColumn({
     name: 'CON_ID',
-    referencedColumnName: 'CON_ID',
   })
   contact?: ContactEntity;
 
@@ -128,19 +127,11 @@ export class ContactNoteEntity {
    */
   //   protected $patient;
 
-  @Column({
-    name: 'CON_ID',
-    type: 'int',
-    width: 11,
-  })
-  patientId?: number;
-
   @ManyToOne(() => ContactEntity, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'CON_ID',
-    referencedColumnName: 'CON_ID',
   })
   patient?: ContactEntity;
 

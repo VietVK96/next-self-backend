@@ -34,7 +34,7 @@ export class ContraindicationEntity {
   // protected $organization;
 
   @Column({
-    name: 'organizatio_id',
+    name: 'organization_id',
     type: 'int',
     width: 11,
   })
@@ -43,9 +43,8 @@ export class ContraindicationEntity {
   @ManyToOne(() => OrganizationEntity)
   @JoinColumn({
     name: 'organization_id',
-    referencedColumnName: 'GRP_ID',
   })
-  organization: OrganizationEntity;
+  organization?: OrganizationEntity;
 
   // use TimestampableEntity;
   // use SoftDeleteableEntity;

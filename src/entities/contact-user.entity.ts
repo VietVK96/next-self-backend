@@ -43,9 +43,8 @@ export class ContactUserEntity {
   })
   @JoinColumn({
     name: 'con_id',
-    referencedColumnName: 'CON_ID',
   })
-  contact: ContactEntity;
+  contact?: ContactEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Patient")
@@ -56,21 +55,13 @@ export class ContactUserEntity {
    */
   // protected $patient;
 
-  @Column({
-    name: 'con_id',
-    type: 'int',
-    width: 11,
-  })
-  patientId?: number;
-
   @ManyToOne(() => ContactEntity, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'con_id',
-    referencedColumnName: 'CON_ID',
   })
-  patient: ContactEntity;
+  patient?: ContactEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
@@ -91,9 +82,8 @@ export class ContactUserEntity {
   })
   @JoinColumn({
     name: 'usr_id',
-    referencedColumnName: 'USR_ID',
   })
-  user: UserEntity;
+  user?: UserEntity;
 
   /**
    * @ORM\Column(name="cou_unpaid_level", type="integer", options={"default": 0})

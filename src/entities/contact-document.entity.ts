@@ -59,7 +59,6 @@ export class ContactDocumentEntity {
   })
   @JoinColumn({
     name: 'UPL_ID',
-    referencedColumnName: 'UPL_ID',
   })
   upload?: UploadEntity;
 }

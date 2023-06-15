@@ -50,16 +50,15 @@ export class ConversationEntity {
     type: 'int',
     width: 11,
   })
-  userId: number;
+  userId?: number;
 
   @ManyToOne(() => UserEntity, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'user_id',
-    referencedColumnName: 'USR_ID',
   })
-  user: UserEntity;
+  user?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="User")
@@ -71,17 +70,17 @@ export class ConversationEntity {
     name: 'user_id',
     type: 'int',
     width: 11,
+    nullable: true,
   })
-  ownerId: number;
+  ownerId?: number;
 
   @ManyToOne(() => UserEntity, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'user_id',
-    referencedColumnName: 'USR_ID',
   })
-  owner: UserEntity;
+  owner?: UserEntity;
   /**
    * Titre de la conversation.
    *
@@ -124,7 +123,7 @@ export class ConversationEntity {
   @OneToMany(() => ConversationMemberEntity, (e) => e.conversation, {
     createForeignKeyConstraints: false,
   })
-  members: ConversationMemberEntity[];
+  members?: ConversationMemberEntity[];
 
   /**
    * Messages de la conversation.
@@ -137,7 +136,7 @@ export class ConversationEntity {
   @OneToMany(() => ConversationMessageEntity, (e) => e.conversation, {
     createForeignKeyConstraints: false,
   })
-  messages: ConversationMessageEntity[];
+  messages?: ConversationMessageEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
