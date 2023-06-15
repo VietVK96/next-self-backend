@@ -2,16 +2,21 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
 
 /**
  * @ORM\Entity
  * @ORM\Table(name="resource")
  */
 @Entity('resource')
-export class ResourceEntity {
+export class UserEntity {
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -46,8 +51,23 @@ export class ResourceEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
+  })
+  organizationId?: number;
+
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'organization_id',
+    referencedColumnName: 'GRP_ID',
+  })
+  organization?: OrganizationEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="User")
@@ -57,16 +77,46 @@ export class ResourceEntity {
    *  "resource:read"
    * })
    */
-  // @TODO EntityMissing
   // protected $addressee = null;
+
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  addresseeId?: number;
+
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'user_id',
+  })
+  addressee?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    * @var \App\Entities\User Entité représentant le praticien.
    */
-  // @TODO EntityMissing
   // protected $user;
+
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  userId?: number;
+
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'user_id',
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\Column(name="name", type="string", length=255)
@@ -160,14 +210,41 @@ export class ResourceEntity {
    *  }
    * )
    */
-  // @TODO EntityMissing
   // protected $subscribers;
 
+  @ManyToMany(() => UserEntity, (e) => e.resources, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinTable({
+    name: 'user_resource',
+    joinColumn: {
+      name: 'user_id',
+    },
+    inverseJoinColumn: {
+      name: 'user_id',
+    },
+  })
+  subscribers?: UserEntity[];
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt?: Date;
+
+  /**
+   * @ORM\ManyToOne(targetEntity="\App\Entities\Group")
+   * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
+   * @var \App\Entities\Group Entité représentant le group.
+   */
+  // protected $group;
+
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'organization_id',
+  })
+  group?: OrganizationEntity;
 }
 
 // Transfrom application\Entities\Resource.php

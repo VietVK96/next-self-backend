@@ -1,4 +1,13 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
 
 /**
  * @ORM\Entity
@@ -7,7 +16,6 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
  */
 @Entity('push_notification')
 export class PushNotificationEntity {
-
   /**
    * @ORM\Id()
    * @ORM\GeneratedValue()
@@ -24,8 +32,21 @@ export class PushNotificationEntity {
    * @ORM\JoinColumn(name="group_id", referencedColumnName="GRP_ID")
    * @var \App\Entities\GroupEntity
    */
-  // @TODO EntityMissing
   // protected $group;
+  @Column({
+    name: 'group_id',
+    type: 'int',
+    width: 11,
+  })
+  groupId?: number;
+
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'group_id',
+  })
+  group?: OrganizationEntity;
 
   /**
    * @ORM\Column(name="item_id", type="integer")
@@ -35,7 +56,7 @@ export class PushNotificationEntity {
     name: 'item_id',
     type: 'int',
     width: 11,
-    nullable: false
+    nullable: false,
   })
   itemId?: number;
 
@@ -47,7 +68,7 @@ export class PushNotificationEntity {
     name: 'title',
     type: 'varchar',
     length: 255,
-    nullable: false
+    nullable: false,
   })
   title?: string;
 
@@ -59,7 +80,7 @@ export class PushNotificationEntity {
     name: 'body',
     type: 'varchar',
     length: 255,
-    nullable: false
+    nullable: false,
   })
   body?: string;
 

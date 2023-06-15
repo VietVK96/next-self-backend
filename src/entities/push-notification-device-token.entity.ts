@@ -1,4 +1,13 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { OrganizationEntity } from './organization.entity';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 // enum('ios', 'android', 'web')
 export enum EnumPushNotificationDeviceToken {
@@ -15,7 +24,6 @@ export enum EnumPushNotificationDeviceToken {
  */
 @Entity('push_notification_device_token')
 export class PushNotificationDeviceTokenEntity {
-
   /**
    * @ORM\Id()
    * @ORM\GeneratedValue()
@@ -32,9 +40,21 @@ export class PushNotificationDeviceTokenEntity {
    * @ORM\JoinColumn(name="group_id", referencedColumnName="GRP_ID")
    * @var \App\Entities\GroupEntity
    */
-  // @TODO EntityMissing
   // protected $group;
+  @Column({
+    name: 'group_id',
+    type: 'int',
+    width: 11,
+  })
+  groupId?: number;
 
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'group_id',
+  })
+  group?: OrganizationEntity;
   /**
    * @ORM\Column(name="platform", type="enum_push_notification_platform")
    * @var string
@@ -55,7 +75,7 @@ export class PushNotificationDeviceTokenEntity {
     name: 'token',
     type: 'varchar',
     length: 255,
-    nullable: false
+    nullable: false,
   })
   token?: string;
 

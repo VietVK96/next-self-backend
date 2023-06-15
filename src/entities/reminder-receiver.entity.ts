@@ -26,4 +26,4 @@ export class ReminderReceiverEntity {
   name?: string;
 }
 
-// application/Entities/Reminder/Receiver.php
+//application/Entities/Reminder/Receiver.php

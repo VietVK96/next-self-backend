@@ -1,4 +1,17 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { UserEntity } from './user.entity';
+import { EventEntity } from './event.entity';
+import { ReminderTypeEntity } from './reminder-type.entity';
+import { ReminderReceiverEntity } from './reminder-receiver.entity';
+import { ReminderUnitEntity } from './reminder-unit.entity';
 
 /**
  * @ORM\Entity
@@ -7,7 +20,6 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
  */
 @Entity('T_REMINDER_RMD')
 export class ReminderEntity {
-
   /**
    * @ORM\Column(name="RMD_ID", type="integer", nullable=false)
    * @ORM\Id
@@ -17,7 +29,7 @@ export class ReminderEntity {
     name: 'RMD_ID',
   })
   id?: number;
-  
+
   /**
    * @ORM\Column(name="RMD_MSG", type="text", nullable=true)
    */
@@ -25,7 +37,7 @@ export class ReminderEntity {
     name: 'appointment_reminder_library_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   appointmentReminderLibraryId?: number;
 
@@ -35,7 +47,7 @@ export class ReminderEntity {
   @Column({
     name: 'RMD_MSG',
     type: 'text',
-    nullable: true
+    nullable: true,
   })
   msg?: string;
 
@@ -47,7 +59,7 @@ export class ReminderEntity {
     type: 'int',
     width: 11,
     nullable: false,
-    default: 1
+    default: 1,
   })
   nbr?: number;
 
@@ -66,7 +78,7 @@ export class ReminderEntity {
     type: 'tinyint',
     width: 4,
     nullable: false,
-    default: 0
+    default: 0,
   })
   flag?: number;
 
@@ -74,37 +86,106 @@ export class ReminderEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   // protected $user;
+
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+  })
+  usrId?: number;
+
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'USR_ID',
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Event", inversedBy="reminders")
    * @ORM\JoinColumn(name="EVT_ID", referencedColumnName="EVT_ID")
    */
-  // @TODO EntityMissing
   // protected $event;
+
+  @Column({
+    name: 'EVT_ID',
+    type: 'int',
+    width: 11,
+  })
+  eventId?: number;
+
+  @ManyToOne(() => EventEntity,(e)=>e.reminders {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'EVT_ID',
+  })
+  event?: EventEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Reminder\Type")
    * @ORM\JoinColumn(name="RMT_ID", referencedColumnName="RMT_ID")
    */
-  // @TODO EntityMissing
   // protected $type;
+  @Column({
+    name: 'RMT_ID',
+    type: 'int',
+    width: 11,
+  })
+  rmtId?: number;
+
+  @ManyToOne(() => ReminderTypeEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'RMT_ID',
+  })
+  type?: ReminderTypeEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Reminder\Receiver")
    * @ORM\JoinColumn(name="RMR_ID", referencedColumnName="RMR_ID")
    */
-  // @TODO EntityMissing
   // protected $receiver;
+
+  @Column({
+    name: 'RMR_ID',
+    type: 'int',
+    width: 11,
+  })
+  rmrId?: number;
+
+  @ManyToOne(() => ReminderReceiverEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'RMR_ID',
+  })
+  receiver?: ReminderReceiverEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Reminder\Unit")
    * @ORM\JoinColumn(name="RMU_ID", referencedColumnName="RMU_ID")
    */
-  // @TODO EntityMissing
   // protected $unit;
 
+  @Column({
+    name: 'RMU_ID',
+    type: 'int',
+    width: 11,
+  })
+  rmuId?: number;
+
+  @ManyToOne(() => ReminderUnitEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'RMU_ID',
+  })
+  unit?: ReminderUnitEntity;
+  
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 

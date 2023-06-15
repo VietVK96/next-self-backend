@@ -26,4 +26,4 @@ export class ReminderTypeEntity {
   name?: string;
 }
 
-// application/Entities/Reminder/Type.php
+//application/Entities/Reminder/Type.php

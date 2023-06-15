@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\RecurringPatternRepository")
@@ -6,7 +6,6 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
  */
 @Entity('recurring_pattern')
 export class RecurringPatternEntity {
-
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -32,7 +31,7 @@ export class RecurringPatternEntity {
     type: 'tinyint',
     width: 2,
     nullable: false,
-    default: 1
+    default: 1,
   })
   weekFrequency?: number;
 
@@ -59,9 +58,9 @@ export class RecurringPatternEntity {
   @Column({
     name: 'until',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   until?: string;
 }
 
-//application/Entity/RecurringPattern.php
+// application/Entity/RecurringPattern.php
