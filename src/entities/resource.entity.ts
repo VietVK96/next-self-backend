@@ -16,11 +16,7 @@ import { OrganizationEntity } from './organization.entity';
  * @ORM\Table(name="resource")
  */
 @Entity('resource')
-<<<<<<< HEAD
 export class UserEntity {
-=======
-export class ResourceEntity {
->>>>>>> f75876d460fd54dcebe48734e4999293939d7d20
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -55,10 +51,6 @@ export class ResourceEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-<<<<<<< HEAD
-=======
-  // @TODO EntityMissing
->>>>>>> f75876d460fd54dcebe48734e4999293939d7d20
   // protected $organization;
 
   @Column({
