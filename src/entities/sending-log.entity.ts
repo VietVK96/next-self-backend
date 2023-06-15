@@ -1,6 +1,5 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { UserEntity } from "./user.entity";
-import { ReminderTypeEntity } from "./reminder-type.entity";
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\SendingLogRepository")
@@ -44,7 +43,7 @@ export class SendingLogEntity {
   @JoinColumn({
     name: 'USR_ID',
   })
-  usr?: UserEntity;
+  user?: UserEntity;
 
   // @TODO EntityMissing
   // @Column({

@@ -1,10 +1,13 @@
-import { Collection, Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Collection, Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { UserEntity } from "./user.entity";
 import { ContactEntity } from "./contact.entity";
 import { CaresheetStatusEntity } from "./caresheet-status.entity";
 import { AmoEntity } from "./amo.entity";
 import { AmcEntity } from "./amc.entity";
 import { DentalEventTaskEntity } from "./dental-event-task.entity";
+import { CaresheetRejectionEntity } from "./caresheet-rejection.entity";
+import { LotEntity } from "./lot.entity";
+import { NoemieEntity } from "./noemie.entity";
 
 /**
  * @ORM\Entity
@@ -382,6 +385,38 @@ export class FseEntity {
     nullable: true,
   })
   externalReferenceId?: number;
+
+  /**
+     * @ORM\OneToMany(targetEntity="CaresheetRejection", mappedBy="caresheet", cascade={"persist", "remove"})
+     * @Serializer\Expose
+     */
+  // protected $rejections;
+  @OneToMany(() => CaresheetRejectionEntity, (e) => e.caresheet, {
+    createForeignKeyConstraints: false,
+  })
+  rejections?: CaresheetRejectionEntity[];
+
+  /**
+     * @ORM\ManyToMany(targetEntity="Lot", mappedBy="caresheets")
+     * @ORM\OrderBy({"creationDate": "DESC"})
+     * @Serializer\Expose
+     * @Serializer\Groups({"caresheet:index", "caresheet:read"})
+     * @Serializer\MaxDepth(1)
+     */
+  // protected $lots;
+  @ManyToMany(() => LotEntity, (e)=>e.caresheets, {
+    createForeignKeyConstraints: false,
+  })
+  lots?: LotEntity[];
+
+  /**
+     * @ORM\ManyToMany(targetEntity="Noemie", mappedBy="caresheets")
+     */
+  // protected $noemies;
+  @ManyToMany(() => NoemieEntity, (e)=>e.caresheets, {
+    createForeignKeyConstraints: false,
+  })
+  noemies?: NoemieEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

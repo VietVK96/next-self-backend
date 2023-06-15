@@ -12,7 +12,7 @@ import { FseEntity } from './fse.entity';
  * @ORM\Table(name="caresheet_rejection")
  */
 @Entity('caresheet_rejection')
-export class CaresheetRejection {
+export class CaresheetRejectionEntity {
   /**
    * @ORM\Id
    * @ORM\GeneratedValue

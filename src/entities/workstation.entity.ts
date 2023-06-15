@@ -98,6 +98,6 @@ export class WorkstationEntity {
   @JoinColumn({
     name: 'organization_id',
   })
-  organizations?: OrganizationEntity;
+  organization?: OrganizationEntity;
 }
 // application/Entity/Workstation.php

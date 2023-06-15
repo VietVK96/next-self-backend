@@ -26,8 +26,6 @@ import { UserSmsEntity } from './user-sms.entity';
 import { UserPreferenceEntity } from './user-preference.entity';
 import { CashingEntity } from './cashing.entity';
 import { UserPreferenceQuotationEntity } from './user-preference-quotation.entity';
-import { MobileSubscriptionEntityEntity } from './mobile-subscription.entity';
-import { MobileSettingEntityEntity } from './mobile-setting.entity';
 import { UserMedicalEntity } from './user-medical.entity';
 import { UserAmoEntity } from './user-amo.entity';
 import { FseEntity } from './fse.entity';
@@ -35,6 +33,8 @@ import { EmailAccountEntity } from './email-account.entity';
 import { EventTypeEntity } from './event-type.entity';
 import { SendingLogEntity } from './sending-log.entity';
 import { AppointmentReminderLibraryEntity } from './appointment-reminder-library.entity';
+import { MobileSettingEntity } from './mobile-setting.entity';
+import { MobileSubscriptionEntity } from './mobile-subscription.entity';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\User")
@@ -790,10 +790,10 @@ export class UserEntity {
    */
   // protected $mobileSubscription = null;
 
-  @OneToOne(() => MobileSubscriptionEntityEntity, (e) => e.user, {
+  @OneToOne(() => MobileSubscriptionEntity, (e) => e.user, {
     createForeignKeyConstraints: false,
   })
-  mobileSubscription?: MobileSubscriptionEntityEntity;
+  mobileSubscription?: MobileSubscriptionEntity;
 
   /**
    * Entité des réglages mobile.
@@ -803,10 +803,10 @@ export class UserEntity {
    */
   // protected $mobileSetting = null;
 
-  @OneToOne(() => MobileSettingEntityEntity, (e) => e.user, {
+  @OneToOne(() => MobileSettingEntity, (e) => e.user, {
     createForeignKeyConstraints: false,
   })
-  mobileSetting?: MobileSettingEntityEntity;
+  mobileSetting?: MobileSettingEntity;
 
   /**
    * @ORM\OneToOne(targetEntity="UserMedical", mappedBy="user", fetch="EAGER", cascade={"persist"})

@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { TimeslotEntity } from './timeslot.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\RecurringPatternRepository")
@@ -61,6 +62,15 @@ export class RecurringPatternEntity {
     nullable: true,
   })
   until?: string;
+
+  /**
+     * @ORM\OneToMany(targetEntity="Timeslot", mappedBy="recurringPattern")
+     */
+  // protected $timeslots;
+  @OneToMany(() => TimeslotEntity, (e) => e.recurringPattern, {
+    createForeignKeyConstraints: false,
+  })
+  timeslots?: TimeslotEntity[];
 }
 
 // application/Entity/RecurringPattern.php

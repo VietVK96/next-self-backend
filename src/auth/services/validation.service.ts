@@ -46,7 +46,7 @@ export class ValidationService {
         throw new CBadRequestException(ErrorCode.CAN_NOT_LOGIN);
       }
       user.password = phpPassword.hash(payload.password);
-      user.passwordHash = true;
+      // user.passwordHash = true;
       await this.userRepo.save(user);
     } else {
       if (!phpPassword.verify(payload.password, user.password)) {

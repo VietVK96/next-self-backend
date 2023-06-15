@@ -204,6 +204,10 @@ export class SlipCheckEntity {
    */
   // @TODO EntityMissing
   // protected $payments;
+  @OneToMany(() => CashingEntity, (e) => e.bordereau, {
+    createForeignKeyConstraints: false,
+  })
+  payments?: CashingEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

@@ -10,13 +10,14 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { OrganizationEntity } from './organization.entity';
+import { UserEntity } from './user.entity';
 
 /**
  * @ORM\Entity
  * @ORM\Table(name="resource")
  */
 @Entity('resource')
-export class UserEntity {
+export class ResourceEntity {
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
