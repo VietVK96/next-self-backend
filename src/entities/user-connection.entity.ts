@@ -1,4 +1,13 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { UserEntity } from './user.entity';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\UserConnection")
@@ -7,7 +16,6 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
  */
 @Entity('T_USER_CONNECTION_USC')
 export class UserConnectionEntity {
-
   /**
    * @ORM\Column(name="USC_ID", type="integer")
    * @ORM\Id
@@ -24,8 +32,22 @@ export class UserConnectionEntity {
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    * @var \App\Entities\User Entité représentant l'utilisateur
    */
-  // @TODO EntityMissing
   // protected $user;
+
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  usrId?: number;
+  @ManyToOne(() => UserEntity, (e) => e.connections, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'USR_ID',
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\Column(name="USC_SESSION_ID", type="string", length=50)
@@ -72,7 +94,6 @@ export class UserConnectionEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt?: Date;
-
 }
 
 // application/Entities/UserConnection.php
