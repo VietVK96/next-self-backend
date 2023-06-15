@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { CorrespondentEntity } from './correspondent.entity';
 
 export enum EnumGenderType {
   M = 'M',
@@ -52,6 +53,27 @@ export class GenderEntity {
     default: EnumGenderType.M,
   })
   type?: EnumGenderType;
+
+  /**
+     * @ORM\Column(name="code", type="integer", nullable=true)
+     * @Serializer\Expose
+     * @Serializer\Type("int")
+     * @Assert\Type("int")
+     */
+  @Column({
+    name: 'code',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  code?: number;
+
+  @OneToMany(() => CorrespondentEntity, e => e.gender, {
+    createForeignKeyConstraints: false
+  })
+  correspondents?: CorrespondentEntity[];
 }
 
+// application\Entities\CivilityTitle.php
 // application\Entities\Gender.php
+// application\Entity\CivilityTitle.php

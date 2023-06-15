@@ -1,4 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { CcamFamilyEntity } from './ccamFamily.entity';
+import { DentalMaterialEntity } from './dental-material.entity';
+import { CcamConditionEntity } from './ccamcondition.entity';
+import { CcamUnitPriceEntity } from './ccamunitprice.entity';
+import { CcamCmuCodificationEntity } from './ccam-cmu-codification.entity';
+import { CcamToothEntity } from './ccamTooth.entity';
+import { DomtomMajorationEntity } from './domtom-majoration.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\CcamRepository")
@@ -25,8 +32,21 @@ export class CcamEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"list", "detail"})
    */
-  // @TODO EntityMissing
   //   protected $family;
+  @Column({
+    name: 'ccam_family_id',
+    type: 'int',
+    width: 11,
+  })
+  ccamFamilyId?: number;
+
+  @ManyToOne(() => CcamFamilyEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'ccam_family_id',
+  })
+  family?: CcamFamilyEntity;
 
   /**
    * @ORM\Column(name="code", type="string", length=7, unique=true)
@@ -250,8 +270,11 @@ export class CcamEntity {
    * @Serializer\Groups({"detail"})
    * @Assert\Valid
    */
-  // @TODO EntityMissing
   //   protected $conditions;
+  @OneToMany(() => CcamConditionEntity, (e) => e.ccam, {
+    createForeignKeyConstraints: false,
+  })
+  conditions?: CcamConditionEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="CcamUnitPrice", mappedBy="ccam", cascade={"persist"})
@@ -260,14 +283,20 @@ export class CcamEntity {
    * @Serializer\Groups({"detail"})
    * @Assert\Valid
    */
-  // @TODO EntityMissing
   //   protected $unitPrices;
+  @OneToMany(() => CcamUnitPriceEntity, (e) => e.ccam, {
+    createForeignKeyConstraints: false,
+  })
+  unitPrices?: CcamUnitPriceEntity[];
 
   /**
    * @ORM\ManyToMany(targetEntity="Ccam", mappedBy="associations")
    */
-  // @TODO EntityMissing
   //   protected $associatedWithMe;
+  @ManyToMany(() => CcamEntity, (e) => e.associations, {
+    createForeignKeyConstraints: false,
+  })
+  associatedWithMe?: CcamEntity[];
 
   /**
    * @ORM\ManyToMany(targetEntity="Ccam", inversedBy="associatedWithMe")
@@ -276,8 +305,20 @@ export class CcamEntity {
    *  inverseJoinColumns={@ORM\JoinColumn(name="ccam_child_id", referencedColumnName="id")}
    * )
    */
-  // @TODO EntityMissing
   //   protected $associations;
+  @ManyToMany(() => CcamEntity, (e) => e.associatedWithMe, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinTable({
+    name: 'ccam_association',
+    joinColumn: {
+      name: 'ccam_parent_id',
+    },
+    inverseJoinColumn: {
+      name: 'ccam_child_id',
+    },
+  })
+  associations?: CcamEntity[];
 
   /**
    * @ORM\ManyToMany(targetEntity="Ccam")
@@ -286,8 +327,122 @@ export class CcamEntity {
    *  inverseJoinColumns={@ORM\JoinColumn(name="ccam_child_id", referencedColumnName="id")}
    * )
    */
-  // @TODO EntityMissing
   //   protected $dependences;
+  @ManyToMany(() => CcamEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinTable({
+    name: 'ccam_dependence',
+    joinColumn: {
+      name: 'ccam_parent_id',
+    },
+    inverseJoinColumn: {
+      name: 'ccam_child_id',
+    },
+  })
+  dependences?: CcamEntity[];
+
+  /**
+   * @ORM\ManyToOne(targetEntity="DentalMaterial")
+   * @ORM\JoinColumn(name="dental_material_id", referencedColumnName="id", nullable=true)
+   * @Serializer\Expose
+   * @Serializer\Groups({"detail"})
+   */
+  // protected $material = NULL;
+  @Column({
+    name: 'dental_material_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  dentalMaterialId?: number;
+
+  @ManyToOne(() => DentalMaterialEntity, (e) => e.ccams, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'dental_material_id',
+  })
+  material?: DentalMaterialEntity;
+
+  /**
+   * @ORM\Column(name="forbidden_teeth", type="simple_array", nullable=true)
+   * @Serializer\Expose
+   * @Serializer\Groups({"detail"})
+   * @Assert\Type("array")
+   */
+  @Column({
+    name: 'forbidden_teeth',
+    type: 'varchar',
+    nullable: true,
+    length: 255,
+  })
+  forbiddenTeeth?: string;
+
+  /**
+   * @ORM\ManyToMany(targetEntity="Ccam", inversedBy="dependentWithMe")
+   * @ORM\JoinTable(
+   *  name="ccam_dependence",
+   *  joinColumns={
+   *      @ORM\JoinColumn(name="ccam_parent_id", referencedColumnName="id")
+   *  },
+   *  inverseJoinColumns={
+   *      @ORM\JoinColumn(name="ccam_child_id", referencedColumnName="id")
+   *  }
+   * )
+   */
+  // protected $dependencies;
+  @ManyToMany(() => CcamEntity, (e) => e.dependentWithMe, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinTable({
+    name: 'ccam_dependence',
+    joinColumn: {
+      name: 'ccam_parent_id',
+    },
+    inverseJoinColumn: {
+      name: 'ccam_child_id',
+    },
+  })
+  dependencies?: CcamEntity[];
+
+  /**
+   * @ORM\ManyToMany(targetEntity="Ccam", mappedBy="dependencies")
+   */
+  // protected $dependentWithMe;
+  @ManyToMany(() => CcamEntity, (e) => e.dependencies, {
+    createForeignKeyConstraints: false,
+  })
+  dependentWithMe?: CcamEntity[];
+
+  /**
+   * @ORM\OneToMany(targetEntity="CcamCmuCodification", mappedBy="ccam")
+   */
+  // protected $cmuCodifications;
+  @OneToMany(() => CcamCmuCodificationEntity, (e) => e.ccam, {
+    createForeignKeyConstraints: false,
+  })
+  cmuCodifications?: CcamCmuCodificationEntity[];
+
+  /**
+   * @ORM\OneToMany(targetEntity="CcamTooth", mappedBy="ccam")
+   * @ORM\OrderBy({"rank": "ASC"})
+   */
+  // protected $teeth;
+  @OneToMany(() => CcamToothEntity, (e) => e.ccam, {
+    createForeignKeyConstraints: false,
+  })
+  teeth?: CcamToothEntity[];
+
+  /**
+   * @ORM\OneToMany(targetEntity="DomtomMajoration", mappedBy="ccam")
+   */
+  // protected $domtomMajorations;
+  @OneToMany(() => DomtomMajorationEntity, (e) => e.ccam, {
+    createForeignKeyConstraints: false,
+  })
+  domtomMajorations?: DomtomMajorationEntity[];
 }
 
 // application\Entities\Ccam.php
+// application\Entity\Ccam.php

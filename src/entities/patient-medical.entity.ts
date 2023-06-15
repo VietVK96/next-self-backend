@@ -1,4 +1,13 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { ContactEntity } from './contact.entity';
+import { PolicyHolderEntity } from './policy-holder.entity';
+import { TariffTypeEntity } from './tariff-type.entity';
 
 /**
  * @ORM\Entity
@@ -23,24 +32,59 @@ export class PatientMedicalEntity {
    * @ORM\OneToOne(targetEntity="Patient", inversedBy="medical")
    * @ORM\JoinColumn(name="patient_id", referencedColumnName="CON_ID")
    */
-  // @TODO EntityMissing
   // protected $patient;
+
+  @Column({
+    name: 'patient_id',
+    type: 'int',
+    width: 11,
+  })
+  patientId?: number;
+  @OneToOne(() => ContactEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({ name: 'patient_id' })
+  patient?: ContactEntity;
 
   /**
    * @ORM\OneToOne(targetEntity="PolicyHolder", cascade={"persist", "remove"})
    * @ORM\JoinColumn(name="policy_holder_id", referencedColumnName="id", nullable=true)
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   // policyHolder = null;
+
+  @Column({
+    name: 'policy_holder_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  policyHolderId?: number;
+  @OneToOne(() => PolicyHolderEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({ name: 'policy_holder_id' })
+  policyHolder?: PolicyHolderEntity;
 
   /**
    * @ORM\OneToOne(targetEntity="TariffType")
    * @ORM\JoinColumn(name="tariff_type_id", referencedColumnName="id", nullable=true)
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   // tariffType = null;
+
+  @Column({
+    name: 'tariff_type_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  tariffTypeId?: number;
+  @OneToOne(() => TariffTypeEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({ name: 'tariff_type_id' })
+  tariffType?: TariffTypeEntity;
 
   /**
    * @ORM\Column(name="service_amo_code", type="string", length=2, nullable=true, options={"fixed": true})

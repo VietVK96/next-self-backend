@@ -2,9 +2,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { LibraryBankEntity } from './library-bank.entity';
+import { CashingEntity } from './cashing.entity';
+import { UserEntity } from './user.entity';
 
 export enum EnumSlipCheckPaymentChoice {
   ESPECE = 'espece',
@@ -113,22 +119,49 @@ export class SlipCheckEntity {
    * @ORM\JoinColumn(name="LBK_ID", referencedColumnName="LBK_ID")
    * @var \App\Entities\Library\Bank Entité représentant la banque.
    */
-  // @TODO EntityMissing
   // protected $libraryBank;
+  @Column({
+    name: 'LBK_ID',
+    type: 'int',
+    width: 11,
+  })
+  lbkId?: number;
+  @ManyToOne(() => LibraryBankEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'LBK_ID',
+  })
+  libraryBank?: LibraryBankEntity;
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Cashing", mappedBy="slipCheck")
    */
-  // @TODO EntityMissing
   // protected $cashings;
+  @OneToMany(() => CashingEntity, (e) => e.slipCheck, {
+    createForeignKeyConstraints: false
+  })
+  cashings?: CashingEntity[];
 
   /**
    * @ORM\ManyToOne(targetEntity="User")
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    * @Assert\NotBlank
    */
-  // @TODO EntityMissing
   // protected $user;
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+  })
+  userId?: number;
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'user_id',
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Bank")
@@ -137,8 +170,14 @@ export class SlipCheckEntity {
    * @Serializer\MaxDepth(1)
    * @Assert\NotBlank
    */
-  // @TODO EntityMissing
   // protected $bank;
+  @ManyToOne(() => LibraryBankEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'LBK_ID',
+  })
+  bank?: LibraryBankEntity;
 
   /**
    * @ORM\Column(name="SLC_NBR", type="integer", options={"default": 1})
@@ -148,8 +187,23 @@ export class SlipCheckEntity {
    * @Assert\NotNull
    * @Assert\GreaterThanOrEqual(1)
    */
-  // @TODO EntityMissing
   // protected $number = 1;
+  @Column({
+    name: 'SLC_NBR',
+    type: 'int',
+    width: 11,
+    default: 1,
+  })
+  number?: number;
+
+  /** File: application\Entity\Bordereau.php
+   * @ORM\OneToMany(targetEntity="Payment", mappedBy="bordereau")
+   * @Serializer\Expose
+   * @Serializer\Groups({"payments_group"})
+   * @Serializer\MaxDepth(1)
+   */
+  // @TODO EntityMissing
+  // protected $payments;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

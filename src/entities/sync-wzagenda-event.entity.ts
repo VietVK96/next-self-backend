@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { EventEntity } from './event.entity';
 
 /**
  * @ORM\Entity
@@ -60,7 +61,21 @@ export class SyncWzagendaEventEntity {
    * @ORM\JoinColumn(name="EVT_ID", referencedColumnName="EVT_ID")
    * @var \App\Entities\Event Entité représentant le rendez-vous.
    */
-  // @TODO EntityMissing
   //   protected $event;
+  @Column({
+    name: 'EVT_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  evtId?: number;
+  @OneToOne(() => EventEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'EVT_ID'
+  })
+  event?: EventEntity;
+
 }
 // application/Entities/Sync/WzAgenda/Event.php

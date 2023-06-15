@@ -18,13 +18,9 @@ export enum EnumMedicalHeaderFormatType {
 }
 
 /**
- * @ORM\Entity(repositoryClass="App\Repository\UserRepository")
- * @ORM\Table(name="T_USER_USR")
- * @ORM\AssociationOverrides({
- *  @ORM\AssociationOverride(name="organization", inversedBy="users")
- * })
- * @Gedmo\SoftDeleteable(fieldName="deletedAt", timeAware=false)
- * @Serializer\ExclusionPolicy("all")
+ * @ORM\Entity
+ * @ORM\Table(name="T_MEDICAL_HEADER_MDH")
+ * @ORM\HasLifecycleCallbacks
  */
 @Entity('T_MEDICAL_HEADER_MDH')
 export class MedicalHeaderEntity {
@@ -50,10 +46,11 @@ export class MedicalHeaderEntity {
   })
   userId?: number;
 
-  @OneToOne(() => UserEntity)
+  @OneToOne(() => UserEntity, {
+    createForeignKeyConstraints: false
+  })
   @JoinColumn({
     name: 'user_id',
-    referencedColumnName: 'USER_ID',
   })
   user?: UserEntity;
 

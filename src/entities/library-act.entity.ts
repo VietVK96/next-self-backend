@@ -3,9 +3,22 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { LibraryActFamilyEntity } from './library-act-family.entity';
+import { LibraryActQuantityEntity } from './library-act-quantity.entity';
+import { LibraryOdontogramEntity } from './library-odontogram.entity';
+import { LibraryActAssociationEntity } from './library-act-association.entity';
+import { LibraryActComplementaryEntity } from './library-act-complementary.entity';
+import { TraceabilityEntity } from './traceability.entity';
+import { LettersEntity } from './letters.entity';
+import { OrganizationEntity } from './organization.entity';
 
 export enum EnumLibraryActNomenclature {
   NGAP = 'NGAP',
@@ -41,8 +54,21 @@ export class LibraryActEntity {
    * @Serializer\Groups({"family_group", "detail"})
    * @Serializer\MaxDepth(1)
    */
-  // @TODO EntityMissing
   //   protected $family;
+
+  @Column({
+    name: 'library_act_family_id',
+    type: 'int',
+    width: 11
+  })
+  libraryActFamilyId?: number;
+  @ManyToOne(() => LibraryActFamilyEntity, e => e.acts, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'library_act_family_id'
+  })
+  family?: LibraryActFamilyEntity;
 
   /**
    * @ORM\Column(name="label", type="string", length=255)
@@ -102,7 +128,7 @@ export class LibraryActEntity {
     width: 11,
     default: 0,
   })
-  position?: number = 0;
+  position?: number;
 
   /**
    * @ORM\Column(name="nomenclature", type="enum_nomenclature", nullable=true, options={"default": "CCAM"})
@@ -117,7 +143,7 @@ export class LibraryActEntity {
     default: EnumLibraryActNomenclature.CCAM,
     nullable: true,
   })
-  nomenclature?: EnumLibraryActNomenclature.CCAM;
+  nomenclature?: EnumLibraryActNomenclature;
 
   /**
    * @ORM\Column(name="materials", type="simple_array", nullable=true)
@@ -147,7 +173,7 @@ export class LibraryActEntity {
     width: 1,
     default: 0,
   })
-  traceabilityActivated?: number = 0;
+  traceabilityActivated?: number;
 
   /**
    * @ORM\Column(name="transmitted", type="boolean", options={"default": true})
@@ -163,7 +189,7 @@ export class LibraryActEntity {
     width: 1,
     default: 1,
   })
-  transmitted?: number = 1;
+  transmitted?: number;
 
   /**
    * @ORM\Column(name="used", type="boolean", options={"default": true})
@@ -179,7 +205,7 @@ export class LibraryActEntity {
     width: 1,
     default: 1,
   })
-  used?: number = 1;
+  used?: number;
 
   /**
    * @ORM\Column(name="internal_reference_id", type="integer", nullable=true)
@@ -201,8 +227,12 @@ export class LibraryActEntity {
    * @Serializer\Groups({"detail"})
    * @Assert\Valid
    */
-  // @TODO EntityMissing
   //   protected $quantities;
+
+  @OneToMany(() => LibraryActQuantityEntity, e => e.act, {
+    createForeignKeyConstraints: false
+  })
+  quantities?: LibraryActQuantityEntity[];
 
   /**
    * @ORM\ManyToMany(targetEntity="LibraryOdontogram", inversedBy="libraryActs", cascade={"persist"})
@@ -214,8 +244,21 @@ export class LibraryActEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"odontograms_group"})
    */
-  // @TODO EntityMissing
   //   protected $odontograms;
+
+  @ManyToMany(() => LibraryOdontogramEntity, e => e.libraryActs, {
+    createForeignKeyConstraints: false
+  })
+  @JoinTable({
+    name: 'library_act_odontogram',
+    joinColumn: {
+      name: 'library_act_id',
+    },
+    inverseJoinColumn: {
+      name: 'library_odontogram_id',
+    },
+  })
+  odontograms?: LibraryOdontogramEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="LibraryActAssociation", mappedBy="parent", cascade={"persist"}, orphanRemoval=true)
@@ -223,14 +266,22 @@ export class LibraryActEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"associations_group"})
    */
-  // @TODO EntityMissing
   //   protected $associations;
+
+  @OneToMany(() => LibraryActAssociationEntity, e => e.parent, {
+    createForeignKeyConstraints: false
+  })
+  associations?: LibraryActAssociationEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="LibraryActAssociation", mappedBy="child", cascade={"persist"}, orphanRemoval=true)
    */
-  // @TODO EntityMissing
-  //   protected $associatedWithMe;
+  // protected $associatedWithMe;
+
+  @OneToMany(() => LibraryActAssociationEntity, e => e.child, {
+    createForeignKeyConstraints: false
+  })
+  associatedWithMe?: LibraryActAssociationEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="LibraryActComplementary", mappedBy="parent", cascade={"persist"}, orphanRemoval=true)
@@ -238,22 +289,34 @@ export class LibraryActEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"associations_group"})
    */
-  // @TODO EntityMissing
   //   protected $complementaries;
+
+  @OneToMany(() => LibraryActComplementaryEntity, e => e.parent, {
+    createForeignKeyConstraints: false
+  })
+  complementaries?: LibraryActComplementaryEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="LibraryActComplementary", mappedBy="child", cascade={"persist"}, orphanRemoval=true)
    */
-  // @TODO EntityMissing
-  //   protected $complementariesWithMe;
+  // protected $complementariesWithMe;
+
+  @OneToMany(() => LibraryActComplementaryEntity, e => e.child, {
+    createForeignKeyConstraints: false
+  })
+  complementariesWithMe?: LibraryActComplementaryEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="Traceability", mappedBy="libraryAct", cascade={"persist"}, orphanRemoval=true)
    * @Serializer\Expose
    * @Serializer\Groups({"traceability:read"})
    */
-  // @TODO EntityMissing
-  //   protected $traceabilities;
+  // protected $traceabilities;
+
+  @OneToMany(() => TraceabilityEntity, e => e.libraryAct, {
+    createForeignKeyConstraints: false
+  })
+  traceabilities?: TraceabilityEntity[];
 
   /**
    * @ORM\Column(name="attachment_count", type="integer", options={"default": 0})
@@ -270,7 +333,7 @@ export class LibraryActEntity {
     width: 11,
     default: 0,
   })
-  attachmentCount?: number = 0;
+  attachmentCount?: number;
 
   /**
    * @ORM\ManyToMany(targetEntity="App\Entity\Mail", cascade={"persist", "remove"})
@@ -286,14 +349,40 @@ export class LibraryActEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"attachment:read"})
    */
-  // @TODO EntityMissing
   // protected $attachments;
+
+  @ManyToMany(() => LettersEntity)
+  @JoinTable({
+    name: 'library_act_attachment',
+    joinColumn: {
+      name: 'library_act_id',
+    },
+    inverseJoinColumn: {
+      name: 'mail_id',
+    },
+  })
+  attachments?: LettersEntity[];
+
   /**
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11
+  })
+  organizationId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'organization_id'
+  })
+  organization?: OrganizationEntity;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 

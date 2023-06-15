@@ -3,9 +3,20 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { CashingEntity } from './cashing.entity';
+import { OrganizationEntity } from './organization.entity';
+import { CorrespondentTypeEntity } from './correspondent-type.entity';
+import { AddressEntity } from './address.entity';
+import { GenderEntity } from './gender.entity';
+import { PhoneEntity } from './phone.entity';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\Correspondent")
@@ -18,8 +29,21 @@ export class CorrespondentEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // group;
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11
+  })
+  organizationId?: number;
+
+  @ManyToOne(() => OrganizationEntity, e => e.correspondents, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'organization_id',
+  })
+  group?: OrganizationEntity;
 
   /**
    * @ORM\Id
@@ -37,15 +61,43 @@ export class CorrespondentEntity {
    * @ORM\ManyToOne(targetEntity="AddressBookCategory")
    * @ORM\JoinColumn(name="correspondent_type_id", referencedColumnName="id", nullable=true)
    */
-  // @TODO EntityMissing
   // protected $category = NULL;
+  @Column({
+    name: 'correspondent_type_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  correspondentTypeId?: number;
+
+  @ManyToOne(() => CorrespondentTypeEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'correspondent_type_id',
+  })
+  category?: CorrespondentTypeEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Address")
    * @ORM\JoinColumn(name="ADR_ID", referencedColumnName="ADR_ID", nullable=true)
    */
-  // @TODO EntityMissing
   // protected $address = NULL;
+  @Column({
+    name: 'ADR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  addressId?: string;
+
+  @ManyToOne(() => AddressEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'ADR_ID',
+  })
+  address?: AddressEntity;
 
   @Column({
     name: 'CPD_TYPE',
@@ -123,8 +175,22 @@ export class CorrespondentEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\Gender")
    * @ORM\JoinColumn(name="GEN_ID", referencedColumnName="GEN_ID")
    */
-  // @TODO EntityMissing
   // protected $gender;
+  @Column({
+    name: 'GEN_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  genId?: number;
+
+  @ManyToOne(() => GenderEntity, e => e.correspondents, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'GEN_ID',
+  })
+  gender?: GenderEntity;
 
   /**
    * @ORM\ManyToMany(targetEntity="PhoneNumber")
@@ -138,8 +204,16 @@ export class CorrespondentEntity {
    *  }
    * )
    */
-  // @TODO EntityMissing
   // protected $phoneNumbers;
+  @ManyToMany(() => PhoneEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinTable({
+    name: 'T_CORRESPONDENT_PHONE_CPP',
+    joinColumn: { name: "CPD_ID" },
+    inverseJoinColumn: { name: "PHO_ID" }
+  })
+  phoneNumbers?: PhoneEntity[];
 
   /**
    * @ORM\ManyToMany(targetEntity="\App\Entities\Phone")
@@ -148,8 +222,21 @@ export class CorrespondentEntity {
    *  inverseJoinColumns={@ORM\JoinColumn(name="PHO_ID", referencedColumnName="PHO_ID")}
    * )
    */
-  // @TODO EntityMissing
   // protected $phones;
+  @ManyToMany(() => PhoneEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinTable({
+    name: 'T_CORRESPONDENT_PHONE_CPP',
+    joinColumn: { name: "CPD_ID" },
+    inverseJoinColumn: { name: "PHO_ID" }
+  })
+  phones?: PhoneEntity[];
+
+  @OneToMany(() => CashingEntity, (e) => e.correspondent, {
+    createForeignKeyConstraints: false,
+  })
+  cashings?: CashingEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
