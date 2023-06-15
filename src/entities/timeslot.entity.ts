@@ -1,6 +1,14 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { ResourceEntity } from "./resource.entity";
-import { RecurringPatternEntity } from "./recurring-pattern.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { ResourceEntity } from './resource.entity';
+import { RecurringPatternEntity } from './recurring-pattern.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\TimeslotRepository")
@@ -43,10 +51,17 @@ export class TimeslotEntity {
    * @Serializer\MaxDepth(1)
    */
   // protected $recurringPattern = null;
-  @Column({ name: 'recurring_pattern_id', type: 'int', width: 11, nullable: true })
+  @Column({
+    name: 'recurring_pattern_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
   recurringPatternId?: number;
 
-  @ManyToOne(() => RecurringPatternEntity, e => e.timeslots, { createForeignKeyConstraints: false })
+  @ManyToOne(() => RecurringPatternEntity, (e) => e.timeslots, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'recurring_pattern_id' })
   recurringPattern?: ResourceEntity;
 
@@ -59,7 +74,7 @@ export class TimeslotEntity {
    */
   @Column({
     name: 'start_date',
-    type: 'datetime'
+    type: 'datetime',
   })
   startDate?: string;
 
@@ -73,7 +88,7 @@ export class TimeslotEntity {
    */
   @Column({
     name: 'end_date',
-    type: 'datetime'
+    type: 'datetime',
   })
   endDate?: string;
 

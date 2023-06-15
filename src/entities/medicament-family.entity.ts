@@ -94,7 +94,7 @@ export class MedicamentFamilyEntity {
    */
   //   protected $medicaments;
   @OneToMany(() => MedicamentEntity, (e) => e.family, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   medicaments?: MedicamentEntity[];
 
@@ -111,10 +111,10 @@ export class MedicamentFamilyEntity {
   })
   organizationId?: number;
   @ManyToOne(() => OrganizationEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'organization_id'
+    name: 'organization_id',
   })
   organization?: OrganizationEntity;
 

@@ -34,13 +34,13 @@ export class EventTypeEntity {
   })
   organizationId?: number;
   @ManyToOne(() => OrganizationEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'organization_id',
   })
   organization?: OrganizationEntity;
-  
+
   // use SoftDeleteableEntity;
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt?: Date;
@@ -75,11 +75,11 @@ export class EventTypeEntity {
     name: 'user_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   userId?: number;
   @ManyToOne(() => UserEntity, (e) => e.eventTypes, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'user_id',

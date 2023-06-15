@@ -4,7 +4,13 @@
  * @Serializer\ExclusionPolicy("all")
  */
 
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { OrganizationEntity } from './organization.entity';
 import { WorkstationEntity } from './workstation.entity';
 
@@ -20,17 +26,16 @@ export class ImagingSoftwareEntity {
   @Column({
     name: 'organization_id',
     type: 'int',
-    width: 11
+    width: 11,
   })
   organizationId?: number;
   @ManyToOne(() => OrganizationEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'organization_id'
+    name: 'organization_id',
   })
   organization?: OrganizationEntity;
-
 
   /**
    * @ORM\Id
@@ -52,14 +57,14 @@ export class ImagingSoftwareEntity {
   @Column({
     name: 'workstation_id',
     type: 'int',
-    width: 11
+    width: 11,
   })
   workstationId?: number;
-  @ManyToOne(() => WorkstationEntity, e => e.imagingSoftwares, {
-    createForeignKeyConstraints: false
+  @ManyToOne(() => WorkstationEntity, (e) => e.imagingSoftwares, {
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'workstation_id'
+    name: 'workstation_id',
   })
   workstation?: WorkstationEntity;
 

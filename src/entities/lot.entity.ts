@@ -55,10 +55,10 @@ export class LotEntity {
   })
   lotStatusId?: number;
   @ManyToOne(() => LotStatusEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'lot_status_id'
+    name: 'lot_status_id',
   })
   status?: LotStatusEntity;
 
@@ -72,14 +72,14 @@ export class LotEntity {
     name: 'amo_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   amoId?: number;
   @ManyToOne(() => AmoEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'amo_id'
+    name: 'amo_id',
   })
   amo?: AmoEntity;
 
@@ -93,14 +93,14 @@ export class LotEntity {
     name: 'amc_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   amcId?: number;
   @ManyToOne(() => AmcEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'amc_id'
+    name: 'amc_id',
   })
   amc?: AmcEntity;
 
@@ -267,16 +267,16 @@ export class LotEntity {
    */
   //   protected $caresheets;
   @ManyToMany(() => FseEntity, (e) => e.lots, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinTable({
     name: 'lot_caresheet',
     joinColumn: {
-      name: 'lot_id'
+      name: 'lot_id',
     },
     inverseJoinColumn: {
-      name: 'caresheet_id'
-    }
+      name: 'caresheet_id',
+    },
   })
   caresheets?: FseEntity[];
 
@@ -293,10 +293,10 @@ export class LotEntity {
   })
   organizationId?: number;
   @ManyToOne(() => OrganizationEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'organization_id'
+    name: 'organization_id',
   })
   organization?: OrganizationEntity;
 

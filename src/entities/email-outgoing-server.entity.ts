@@ -9,12 +9,7 @@
  * @UniqueEntity("emailAccount")
  */
 
-import {
-  Column,
-  Entity,
-  OneToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { EmailAccountEntity } from './email-account.entity';
 
 // File: application\Entity\EmailOutgoingServer.php: class EmailOutgoingServer extends AbstractEntity

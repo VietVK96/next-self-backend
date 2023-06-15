@@ -52,14 +52,14 @@ export class LibraryActQuantityEntity {
   @Column({
     name: 'organization_id',
     type: 'int',
-    width: 11
+    width: 11,
   })
   organizationId?: number;
   @ManyToOne(() => OrganizationEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'organization_id'
+    name: 'organization_id',
   })
   organization?: OrganizationEntity;
 
@@ -95,14 +95,14 @@ export class LibraryActQuantityEntity {
   @Column({
     name: 'library_act_id',
     type: 'int',
-    width: 11
+    width: 11,
   })
   libraryActId?: number;
-  @ManyToOne(() => LibraryActEntity, e => e.quantities, {
-    createForeignKeyConstraints: false
+  @ManyToOne(() => LibraryActEntity, (e) => e.quantities, {
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'library_act_id'
+    name: 'library_act_id',
   })
   act?: LibraryActEntity;
 
@@ -118,14 +118,14 @@ export class LibraryActQuantityEntity {
     name: 'ccam_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   ccamId?: number;
   @ManyToOne(() => CcamEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'ccam_id'
+    name: 'ccam_id',
   })
   ccam?: CcamEntity;
 
@@ -141,14 +141,14 @@ export class LibraryActQuantityEntity {
     name: 'ngap_key_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   ngapKeyId?: number;
   @ManyToOne(() => NgapKeyEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'ngap_key_id'
+    name: 'ngap_key_id',
   })
   ngapKey?: NgapKeyEntity;
 
@@ -412,9 +412,13 @@ export class LibraryActQuantityEntity {
    */
   //   protected $tariffs;
 
-  @OneToMany(() => LibraryActQuantityTariffEntity, (e) => e.libraryActQuantity, {
-    createForeignKeyConstraints: false,
-  })
+  @OneToMany(
+    () => LibraryActQuantityTariffEntity,
+    (e) => e.libraryActQuantity,
+    {
+      createForeignKeyConstraints: false,
+    },
+  )
   tariffs?: LibraryActQuantityTariffEntity[];
 
   /**

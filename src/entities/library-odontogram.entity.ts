@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToMany,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { OrganizationEntity } from './organization.entity';
 import { LibraryActEntity } from './library-act.entity';
 import { LibraryActQuantityEntity } from './library-act-quantity.entity';
@@ -25,10 +32,10 @@ export class LibraryOdontogramEntity {
   })
   organizationId?: number;
   @ManyToOne(() => OrganizationEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'organization_id'
+    name: 'organization_id',
   })
   organization?: OrganizationEntity;
 
@@ -164,7 +171,7 @@ export class LibraryOdontogramEntity {
    */
   //   protected $libraryActs;
   @ManyToMany(() => LibraryActEntity, (e) => e.odontograms, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   libraryActs?: LibraryActEntity[];
 
@@ -173,7 +180,7 @@ export class LibraryOdontogramEntity {
    */
   //   protected $libraryActQuantities;
   @ManyToMany(() => LibraryActQuantityEntity, (e) => e.odontograms, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   libraryActQuantities?: LibraryActQuantityEntity[];
 }

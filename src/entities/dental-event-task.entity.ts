@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
+  PrimaryColumn,
+} from 'typeorm';
 import { CcamEntity } from './ccam.entity';
 import { NgapKeyEntity } from './ngapKey.entity';
 import { EventTaskEntity } from './event-task.entity';
@@ -59,7 +66,7 @@ export class DentalEventTaskEntity {
   ccamId?: number;
 
   @ManyToOne(() => CcamEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "ccam_id" })
+  @JoinColumn({ name: 'ccam_id' })
   ccam?: CcamEntity;
 
   /**
@@ -76,7 +83,7 @@ export class DentalEventTaskEntity {
   ngapKeyId?: number;
 
   @ManyToOne(() => NgapKeyEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "ngap_key_id" })
+  @JoinColumn({ name: 'ngap_key_id' })
   ngapKey?: NgapKeyEntity;
 
   /**
@@ -404,7 +411,10 @@ export class DentalEventTaskEntity {
    */
   // protected $material = null;
   @Column({
-    name: 'dental_material_id', type: 'int', width: 11, nullable: true
+    name: 'dental_material_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
   })
   dentalMaterialId?: number;
 

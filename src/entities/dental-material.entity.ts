@@ -1,5 +1,5 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { CcamEntity } from "./ccam.entity";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { CcamEntity } from './ccam.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\DentalMaterialRepository")
@@ -38,12 +38,12 @@ export class DentalMaterialEntity {
   label?: string;
 
   /**
-* @ORM\Column(name="code", type="integer")
-* @Serializer\Expose
-* @Serializer\Type("int")
-* @Assert\Type("int")
-* @Assert\NotBlank
-*/
+   * @ORM\Column(name="code", type="integer")
+   * @Serializer\Expose
+   * @Serializer\Type("int")
+   * @Assert\Type("int")
+   * @Assert\NotBlank
+   */
   @Column({
     name: 'code',
     type: 'int',
@@ -65,7 +65,7 @@ export class DentalMaterialEntity {
     width: 11,
     default: 0,
   })
-  position?: number
+  position?: number;
 
   @OneToMany(() => CcamEntity, (e) => e.material, {
     createForeignKeyConstraints: false,

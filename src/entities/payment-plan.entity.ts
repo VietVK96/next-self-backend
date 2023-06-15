@@ -1,5 +1,12 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { PaymentPlanDeadlineEntity } from "./payment-plan-deadline.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { PaymentPlanDeadlineEntity } from './payment-plan-deadline.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PaymentPlanRepository")
@@ -8,7 +15,6 @@ import { PaymentPlanDeadlineEntity } from "./payment-plan-deadline.entity";
  */
 @Entity('payment_schedule')
 export class PaymentPlanEntity {
-
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -59,7 +65,7 @@ export class PaymentPlanEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    nullable: false
+    nullable: false,
   })
   amount?: number;
 
@@ -74,7 +80,7 @@ export class PaymentPlanEntity {
   @Column({
     name: 'observation',
     type: 'text',
-    nullable: true
+    nullable: true,
   })
   observation?: string;
 

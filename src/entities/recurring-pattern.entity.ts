@@ -64,8 +64,8 @@ export class RecurringPatternEntity {
   until?: string;
 
   /**
-     * @ORM\OneToMany(targetEntity="Timeslot", mappedBy="recurringPattern")
-     */
+   * @ORM\OneToMany(targetEntity="Timeslot", mappedBy="recurringPattern")
+   */
   // protected $timeslots;
   @OneToMany(() => TimeslotEntity, (e) => e.recurringPattern, {
     createForeignKeyConstraints: false,

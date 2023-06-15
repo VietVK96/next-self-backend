@@ -1,4 +1,10 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\AmoRepository")
@@ -13,7 +19,6 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
  */
 @Entity('amo')
 export class AmoEntity {
-
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -38,7 +43,7 @@ export class AmoEntity {
     name: 'libelle',
     type: 'varchar',
     length: 255,
-    nullable: false
+    nullable: false,
   })
   libelle?: string;
 
@@ -51,7 +56,7 @@ export class AmoEntity {
     name: 'code_national',
     type: 'char',
     length: 9,
-    nullable: false
+    nullable: false,
   })
   codeNational?: string;
 
@@ -67,7 +72,7 @@ export class AmoEntity {
     name: 'grand_regime',
     type: 'char',
     length: 2,
-    nullable: false
+    nullable: false,
   })
   grandRegime?: string;
 
@@ -83,7 +88,7 @@ export class AmoEntity {
     name: 'caisse_gestionnaire',
     type: 'char',
     length: 3,
-    nullable: false
+    nullable: false,
   })
   caisseGestionnaire?: string;
 
@@ -99,7 +104,7 @@ export class AmoEntity {
     name: 'centre_gestionnaire',
     type: 'char',
     length: 4,
-    nullable: false
+    nullable: false,
   })
   centreGestionnaire?: string;
 
@@ -115,7 +120,7 @@ export class AmoEntity {
     name: 'organisme_destinataire',
     type: 'char',
     length: 3,
-    nullable: false
+    nullable: false,
   })
   organismeDestinataire?: string;
 
@@ -131,7 +136,7 @@ export class AmoEntity {
     name: 'centre_informatique',
     type: 'char',
     length: 3,
-    nullable: false
+    nullable: false,
   })
   centreInformatique?: string;
 

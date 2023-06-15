@@ -47,7 +47,7 @@ export class MedicalHeaderEntity {
   userId?: number;
 
   @OneToOne(() => UserEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'user_id',

@@ -57,14 +57,14 @@ export class EventTaskEntity {
     name: 'USR_ID',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   usrId?: number;
   @ManyToOne(() => UserEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'USR_ID'
+    name: 'USR_ID',
   })
   user?: UserEntity;
 
@@ -78,14 +78,14 @@ export class EventTaskEntity {
     name: 'CON_ID',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   conId?: number;
   @ManyToOne(() => ContactEntity, (e) => e.acts, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'CON_ID'
+    name: 'CON_ID',
   })
   patient?: ContactEntity;
 
@@ -96,10 +96,10 @@ export class EventTaskEntity {
    */
   //   protected $contact;
   @ManyToOne(() => ContactEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'CON_ID'
+    name: 'CON_ID',
   })
   contact?: ContactEntity;
 
@@ -112,14 +112,14 @@ export class EventTaskEntity {
     name: 'library_act_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   libraryActId?: number;
   @ManyToOne(() => LibraryActEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'library_act_id'
+    name: 'library_act_id',
   })
   libraryAct?: LibraryActEntity;
 
@@ -132,14 +132,14 @@ export class EventTaskEntity {
     name: 'library_act_quantity_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   libraryActQuantityId?: number;
   @ManyToOne(() => LibraryActQuantityEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'library_act_quantity_id'
+    name: 'library_act_quantity_id',
   })
   libraryActQuantity?: LibraryActQuantityEntity;
 
@@ -368,14 +368,14 @@ export class EventTaskEntity {
     name: 'EVT_ID',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   evtId?: number;
   @ManyToOne(() => EventEntity, (e) => e.tasks, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'EVT_ID'
+    name: 'EVT_ID',
   })
   event?: EventEntity;
 
@@ -384,7 +384,7 @@ export class EventTaskEntity {
    */
   //   protected $dental;
   @OneToOne(() => DentalEventTaskEntity, (e) => e.task, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   dental?: DentalEventTaskEntity;
 
@@ -397,14 +397,14 @@ export class EventTaskEntity {
     name: 'parent_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   parentId?: number;
   @ManyToOne(() => EventTaskEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'parent_id'
+    name: 'parent_id',
   })
   parent?: EventTaskEntity;
 
@@ -414,7 +414,7 @@ export class EventTaskEntity {
    */
   //   protected $medical = null;
   @OneToOne(() => DentalEventTaskEntity, (e) => e.act, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   medical?: DentalEventTaskEntity;
 
@@ -423,7 +423,7 @@ export class EventTaskEntity {
    */
   //   protected $traceabilities;
   @OneToMany(() => TraceabilityEntity, (e) => e.act, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   traceabilities?: TraceabilityEntity[];
 }

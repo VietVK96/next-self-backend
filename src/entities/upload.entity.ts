@@ -219,7 +219,7 @@ export class UploadEntity {
   @JoinTable({
     name: 'file_tag',
     joinColumn: { name: 'file_id' },
-    inverseJoinColumn: { name: 'tag_id' }
+    inverseJoinColumn: { name: 'tag_id' },
   })
   tags?: TagEntity[];
 }

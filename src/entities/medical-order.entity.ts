@@ -67,7 +67,7 @@ export class MedicalOrderEntity {
   @Column({
     name: 'MDO_DATE',
     type: 'date',
-    nullable: true
+    nullable: true,
   })
   creationDate?: string;
 
@@ -224,7 +224,7 @@ export class MedicalOrderEntity {
   })
   usrId?: number;
   @ManyToOne(() => UserEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'USR_ID',
@@ -244,7 +244,7 @@ export class MedicalOrderEntity {
   })
   conId?: number;
   @ManyToOne(() => ContactEntity, (e) => e.orders, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'CON_ID',
@@ -258,13 +258,12 @@ export class MedicalOrderEntity {
    */
   // protected $patient;
   @ManyToOne(() => ContactEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'CON_ID',
   })
   patient?: ContactEntity;
-
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

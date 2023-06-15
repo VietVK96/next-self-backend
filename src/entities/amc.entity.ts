@@ -1,4 +1,10 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\AmcRepository")
@@ -12,7 +18,6 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
  */
 @Entity('amc')
 export class AmcEntity {
-
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -37,7 +42,7 @@ export class AmcEntity {
     name: 'libelle',
     type: 'varchar',
     length: 255,
-    nullable: false
+    nullable: false,
   })
   libelle?: string;
 
@@ -53,7 +58,7 @@ export class AmcEntity {
     name: 'numero',
     type: 'varchar',
     length: 40,
-    nullable: false
+    nullable: false,
   })
   numero?: string;
 
@@ -69,7 +74,7 @@ export class AmcEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   isGu?: number;
 
@@ -78,8 +83,6 @@ export class AmcEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt?: Date;
-
 }
-
 
 //application/Entity/Amc.php

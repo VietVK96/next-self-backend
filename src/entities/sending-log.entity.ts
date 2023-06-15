@@ -1,5 +1,13 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { UserEntity } from "./user.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { UserEntity } from './user.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\SendingLogRepository")
@@ -13,7 +21,6 @@ import { UserEntity } from "./user.entity";
  */
 @Entity('T_USER_SMS_HISTORY_USH')
 export class SendingLogEntity {
-
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -34,11 +41,11 @@ export class SendingLogEntity {
   @Column({
     name: 'USR_ID',
     type: 'int',
-    width: 11
+    width: 11,
   })
   usrId?: number;
   @ManyToOne(() => UserEntity, (e) => e.sendingLogs, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'USR_ID',
@@ -60,7 +67,7 @@ export class SendingLogEntity {
   //   name: 'RMT_ID',
   // })
   // reminderType?: ReminderTypeEntity;
-  
+
   /**
    * @ORM\Column(name="USH_USED", type="datetime")
    * @Serializer\Expose
@@ -71,7 +78,7 @@ export class SendingLogEntity {
   @Column({
     name: 'USH_USED',
     type: 'datetime',
-    nullable: true
+    nullable: true,
   })
   sendingDate?: string;
 
@@ -85,7 +92,7 @@ export class SendingLogEntity {
   @Column({
     name: 'USH_RECEIVER',
     type: 'text',
-    nullable: false
+    nullable: false,
   })
   receiver?: string;
 
@@ -98,7 +105,7 @@ export class SendingLogEntity {
   @Column({
     name: 'USH_MSG',
     type: 'text',
-    nullable: true
+    nullable: true,
   })
   message?: string;
 
@@ -112,7 +119,7 @@ export class SendingLogEntity {
     name: 'USH_OVH_ID',
     type: 'integer',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   externalReferenceId?: number;
 

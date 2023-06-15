@@ -59,14 +59,14 @@ export class LibraryActEntity {
   @Column({
     name: 'library_act_family_id',
     type: 'int',
-    width: 11
+    width: 11,
   })
   libraryActFamilyId?: number;
-  @ManyToOne(() => LibraryActFamilyEntity, e => e.acts, {
-    createForeignKeyConstraints: false
+  @ManyToOne(() => LibraryActFamilyEntity, (e) => e.acts, {
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'library_act_family_id'
+    name: 'library_act_family_id',
   })
   family?: LibraryActFamilyEntity;
 
@@ -229,8 +229,8 @@ export class LibraryActEntity {
    */
   //   protected $quantities;
 
-  @OneToMany(() => LibraryActQuantityEntity, e => e.act, {
-    createForeignKeyConstraints: false
+  @OneToMany(() => LibraryActQuantityEntity, (e) => e.act, {
+    createForeignKeyConstraints: false,
   })
   quantities?: LibraryActQuantityEntity[];
 
@@ -246,8 +246,8 @@ export class LibraryActEntity {
    */
   //   protected $odontograms;
 
-  @ManyToMany(() => LibraryOdontogramEntity, e => e.libraryActs, {
-    createForeignKeyConstraints: false
+  @ManyToMany(() => LibraryOdontogramEntity, (e) => e.libraryActs, {
+    createForeignKeyConstraints: false,
   })
   @JoinTable({
     name: 'library_act_odontogram',
@@ -268,8 +268,8 @@ export class LibraryActEntity {
    */
   //   protected $associations;
 
-  @OneToMany(() => LibraryActAssociationEntity, e => e.parent, {
-    createForeignKeyConstraints: false
+  @OneToMany(() => LibraryActAssociationEntity, (e) => e.parent, {
+    createForeignKeyConstraints: false,
   })
   associations?: LibraryActAssociationEntity[];
 
@@ -278,8 +278,8 @@ export class LibraryActEntity {
    */
   // protected $associatedWithMe;
 
-  @OneToMany(() => LibraryActAssociationEntity, e => e.child, {
-    createForeignKeyConstraints: false
+  @OneToMany(() => LibraryActAssociationEntity, (e) => e.child, {
+    createForeignKeyConstraints: false,
   })
   associatedWithMe?: LibraryActAssociationEntity[];
 
@@ -291,8 +291,8 @@ export class LibraryActEntity {
    */
   //   protected $complementaries;
 
-  @OneToMany(() => LibraryActComplementaryEntity, e => e.parent, {
-    createForeignKeyConstraints: false
+  @OneToMany(() => LibraryActComplementaryEntity, (e) => e.parent, {
+    createForeignKeyConstraints: false,
   })
   complementaries?: LibraryActComplementaryEntity[];
 
@@ -301,8 +301,8 @@ export class LibraryActEntity {
    */
   // protected $complementariesWithMe;
 
-  @OneToMany(() => LibraryActComplementaryEntity, e => e.child, {
-    createForeignKeyConstraints: false
+  @OneToMany(() => LibraryActComplementaryEntity, (e) => e.child, {
+    createForeignKeyConstraints: false,
   })
   complementariesWithMe?: LibraryActComplementaryEntity[];
 
@@ -313,8 +313,8 @@ export class LibraryActEntity {
    */
   // protected $traceabilities;
 
-  @OneToMany(() => TraceabilityEntity, e => e.libraryAct, {
-    createForeignKeyConstraints: false
+  @OneToMany(() => TraceabilityEntity, (e) => e.libraryAct, {
+    createForeignKeyConstraints: false,
   })
   traceabilities?: TraceabilityEntity[];
 
@@ -372,14 +372,14 @@ export class LibraryActEntity {
   @Column({
     name: 'organization_id',
     type: 'int',
-    width: 11
+    width: 11,
   })
   organizationId?: number;
   @ManyToOne(() => OrganizationEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'organization_id'
+    name: 'organization_id',
   })
   organization?: OrganizationEntity;
 

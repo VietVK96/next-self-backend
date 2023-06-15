@@ -120,8 +120,8 @@ export class LibraryActFamilyEntity {
    */
   //   protected $acts;
 
-  @OneToMany(() => LibraryActEntity, e => e.family, {
-    createForeignKeyConstraints: false
+  @OneToMany(() => LibraryActEntity, (e) => e.family, {
+    createForeignKeyConstraints: false,
   })
   acts?: LibraryActEntity[];
 
@@ -134,14 +134,14 @@ export class LibraryActFamilyEntity {
   @Column({
     name: 'organization_id',
     type: 'int',
-    width: 11
+    width: 11,
   })
   organizationId?: number;
   @ManyToOne(() => OrganizationEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'organization_id'
+    name: 'organization_id',
   })
   organization?: OrganizationEntity;
 

@@ -1,8 +1,15 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
-import { UserEntity } from "./user.entity";
-import { ContactEntity } from "./contact.entity";
-import { FseEntity } from "./fse.entity";
-import { AmcEntity } from "./amc.entity";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { UserEntity } from './user.entity';
+import { ContactEntity } from './contact.entity';
+import { FseEntity } from './fse.entity';
+import { AmcEntity } from './amc.entity';
 
 export enum EnumThirdPartyStatus {
   WAITING = 'WTN',
@@ -23,12 +30,12 @@ export enum EnumThirdPartyStatus {
 @Entity('third_party_amc')
 export class ThirdPartyAmcEntity {
   /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(name="id", type="integer")
-     * @Serializer\Groups({"Default", "third_party_summary", "caresheet:index", "caresheet:read", "tiersPayant:index"})
-     * @Serializer\Type("int")
-     */
+   * @ORM\Id
+   * @ORM\GeneratedValue
+   * @ORM\Column(name="id", type="integer")
+   * @Serializer\Groups({"Default", "third_party_summary", "caresheet:index", "caresheet:read", "tiersPayant:index"})
+   * @Serializer\Type("int")
+   */
   @PrimaryGeneratedColumn('increment', {
     name: 'id',
   })
@@ -40,7 +47,7 @@ export class ThirdPartyAmcEntity {
    * @Serializer\Exclude
    */
   // protected $user;
-  @Column({ name: "user_id", type: 'int', width: 11 })
+  @Column({ name: 'user_id', type: 'int', width: 11 })
   userId?: number;
 
   @OneToOne(() => UserEntity, { createForeignKeyConstraints: false })
@@ -53,7 +60,7 @@ export class ThirdPartyAmcEntity {
    * @Serializer\Exclude
    */
   // protected $patient;
-  @Column({ name: "patient_id", type: 'int', width: 11 })
+  @Column({ name: 'patient_id', type: 'int', width: 11 })
   patientId?: number;
 
   @OneToOne(() => ContactEntity, { createForeignKeyConstraints: false })
@@ -66,7 +73,7 @@ export class ThirdPartyAmcEntity {
    * @Serializer\Exclude
    */
   // protected $caresheet;
-  @Column({ name: "caresheet_id", type: 'int', width: 11 })
+  @Column({ name: 'caresheet_id', type: 'int', width: 11 })
   caresheetId?: number;
 
   @OneToOne(() => FseEntity, { createForeignKeyConstraints: false })

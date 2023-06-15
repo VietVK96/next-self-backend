@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\SpecialtyCodeRepository")
@@ -7,7 +7,6 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
  */
 @Entity('specialty_code')
 export class SpecialtyCodeEntity {
-
   /**
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="NONE")
@@ -18,7 +17,7 @@ export class SpecialtyCodeEntity {
    * @Assert\NotBlank
    */
   @PrimaryGeneratedColumn({
-    name: 'id'
+    name: 'id',
   })
   id?: number;
 
@@ -33,10 +32,9 @@ export class SpecialtyCodeEntity {
     name: 'label',
     type: 'varchar',
     length: 255,
-    nullable: false
+    nullable: false,
   })
   label?: string;
-
 }
 
 //application/Entity/SpecialtyCode.php

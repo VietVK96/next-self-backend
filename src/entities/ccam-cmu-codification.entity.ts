@@ -1,5 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { CcamEntity } from "./ccam.entity";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { CcamEntity } from './ccam.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\CcamCmuCodificationRepository")
@@ -120,7 +126,6 @@ export class CcamCmuCodificationEntity {
     nullable: true,
   })
   forbiddenTeeth?: string;
-
 }
 
 // application\Entity\CcamCmuCodification.php

@@ -50,4 +50,4 @@ import { IRedisConfig } from './common/config/redis.config';
     AuthModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}

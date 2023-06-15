@@ -127,7 +127,7 @@ export class SlipCheckEntity {
   })
   lbkId?: number;
   @ManyToOne(() => LibraryBankEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'LBK_ID',
@@ -139,7 +139,7 @@ export class SlipCheckEntity {
    */
   // protected $cashings;
   @OneToMany(() => CashingEntity, (e) => e.slipCheck, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   cashings?: CashingEntity[];
 
@@ -156,7 +156,7 @@ export class SlipCheckEntity {
   })
   userId?: number;
   @ManyToOne(() => UserEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'user_id',
@@ -172,7 +172,7 @@ export class SlipCheckEntity {
    */
   // protected $bank;
   @ManyToOne(() => LibraryBankEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'LBK_ID',

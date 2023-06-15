@@ -267,4 +267,4 @@ import { WzagendaContactEntity } from './wzagenda-contact.entity';
   controllers: [],
   providers: [],
 })
-export class EntityModule { }
+export class EntityModule {}

@@ -62,7 +62,9 @@ export class TraceabilityEntity {
   @Column({ name: 'library_act_id', type: 'int', width: 11, nullable: true })
   libraryActId?: number;
 
-  @ManyToOne(() => LibraryActEntity, e => e.traceabilities, { createForeignKeyConstraints: false })
+  @ManyToOne(() => LibraryActEntity, (e) => e.traceabilities, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'library_act_id' })
   libraryAct?: LibraryActEntity;
 
@@ -71,17 +73,24 @@ export class TraceabilityEntity {
    * @ORM\JoinColumn(nullable=true)
    */
   // protected $libraryActQuantity = null;
-  @Column({ name: 'library_act_quantity_id', type: 'int', width: 11, nullable: true })
+  @Column({
+    name: 'library_act_quantity_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
   libraryActQuantityId?: number;
 
-  @ManyToOne(() => LibraryActQuantityEntity, e => e.traceabilities, { createForeignKeyConstraints: false })
+  @ManyToOne(() => LibraryActQuantityEntity, (e) => e.traceabilities, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'library_act_quantity_id' })
   libraryActQuantity?: LibraryActQuantityEntity;
 
   /**
-  * @ORM\ManyToOne(targetEntity="MedicalDevice", inversedBy="traceabilities")
-  * @ORM\JoinColumn(name="medical_device_id", referencedColumnName="id", nullable=true)
-  */
+   * @ORM\ManyToOne(targetEntity="MedicalDevice", inversedBy="traceabilities")
+   * @ORM\JoinColumn(name="medical_device_id", referencedColumnName="id", nullable=true)
+   */
   // protected $medicalDevice = null;
 
   /**
@@ -94,7 +103,9 @@ export class TraceabilityEntity {
   @Column({ name: 'medical_device_id', type: 'int', width: 11, nullable: true })
   medicalDeviceId?: number;
 
-  @ManyToOne(() => MedicalDeviceEntity, e => e.traceabilities, { createForeignKeyConstraints: false })
+  @ManyToOne(() => MedicalDeviceEntity, (e) => e.traceabilities, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'medical_device_id' })
   medicalDevice?: MedicalDeviceEntity;
 
@@ -134,7 +145,9 @@ export class TraceabilityEntity {
   @Column({ name: 'act_id', nullable: true, type: 'int', width: 11 })
   actId?: number;
 
-  @ManyToOne(() => EventTaskEntity, e => e.traceabilities, { createForeignKeyConstraints: false })
+  @ManyToOne(() => EventTaskEntity, (e) => e.traceabilities, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'act_id' })
   act?: EventTaskEntity;
 }

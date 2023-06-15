@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\CaresheetStatusRepository")
@@ -49,7 +49,7 @@ export class CaresheetStatusEntity {
     type: 'varchar',
     length: 255,
   })
-  label?: string
+  label?: string;
 
   /**
    * @ORM\Column(name="description", type="text", nullable=true)

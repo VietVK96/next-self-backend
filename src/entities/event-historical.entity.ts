@@ -63,11 +63,11 @@ export class EventHistoricalEntity {
     name: 'EVT_ID',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   evtId?: number;
-  @ManyToOne(() => EventEntity, (e) => e.historical,{
-    createForeignKeyConstraints: false
+  @ManyToOne(() => EventEntity, (e) => e.historical, {
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'EVT_ID',
@@ -83,11 +83,11 @@ export class EventHistoricalEntity {
     name: 'USR_ID',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   usrId?: number;
   @ManyToOne(() => UserEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'USR_ID',

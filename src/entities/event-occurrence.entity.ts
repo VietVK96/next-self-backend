@@ -1,6 +1,14 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { EventEntity } from "./event.entity";
-import { ResourceEntity } from "./resource.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { EventEntity } from './event.entity';
+import { ResourceEntity } from './resource.entity';
 
 /**
  * @ORM\Entity
@@ -8,7 +16,6 @@ import { ResourceEntity } from "./resource.entity";
  */
 @Entity('event_occurrence_evo')
 export class EventOccurrenceEntity {
-
   /**
    * @ORM\Column(name="evo_id", type="integer")
    * @ORM\Id
@@ -33,10 +40,10 @@ export class EventOccurrenceEntity {
   })
   evtId?: number;
   @ManyToOne(() => EventEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'evt_id'
+    name: 'evt_id',
   })
   event?: EventEntity;
 
@@ -49,14 +56,14 @@ export class EventOccurrenceEntity {
     name: 'resource_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   resourceId?: number;
   @ManyToOne(() => ResourceEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'resource_id'
+    name: 'resource_id',
   })
   resource?: ResourceEntity;
 
@@ -87,7 +94,6 @@ export class EventOccurrenceEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt?: Date;
-
 }
 
 // application/Entities/EventOccurrence.php

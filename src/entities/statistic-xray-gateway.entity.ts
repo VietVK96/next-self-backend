@@ -1,4 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { OrganizationEntity } from './organization.entity';
 import { UserEntity } from './user.entity';
 
@@ -38,7 +44,7 @@ export class StatisticXrayGatewayEntity {
   })
   groupId?: number;
   @ManyToOne(() => OrganizationEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'group_id',
@@ -61,7 +67,7 @@ export class StatisticXrayGatewayEntity {
   })
   userId?: number;
   @ManyToOne(() => UserEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'user_id',

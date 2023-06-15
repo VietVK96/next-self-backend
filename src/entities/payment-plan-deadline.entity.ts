@@ -1,5 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { PaymentPlanEntity } from "./payment-plan.entity";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { PaymentPlanEntity } from './payment-plan.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PaymentPlanDeadlineRepository")
@@ -8,7 +14,6 @@ import { PaymentPlanEntity } from "./payment-plan.entity";
  */
 @Entity('payment_schedule_line')
 export class PaymentPlanDeadlineEntity {
-
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -78,7 +83,6 @@ export class PaymentPlanDeadlineEntity {
     scale: 2,
   })
   amount?: number;
-
 }
 
 //application/Entity/PaymentPlanDeadline.php

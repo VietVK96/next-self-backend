@@ -1,4 +1,10 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { UserEntity } from './user.entity';
 
 /**
@@ -30,8 +36,10 @@ export class UserAmoEntity {
   @Column({ name: 'user_id' })
   userId?: number;
 
-  @OneToOne(() => UserEntity, e => e.amo, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "user_id" })
+  @OneToOne(() => UserEntity, (e) => e.amo, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({ name: 'user_id' })
   user?: UserEntity;
 
   /**

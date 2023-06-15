@@ -54,13 +54,12 @@ export class MedicamentEntity {
   })
   mdtId?: number;
   @ManyToOne(() => MedicamentFamilyEntity, (e) => e.medicaments, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'MDT_ID'
+    name: 'MDT_ID',
   })
   family?: MedicamentFamilyEntity;
-  
 
   /**
    * @ORM\Column(name="MDP_NAME", type="string", length=255)
@@ -191,16 +190,16 @@ export class MedicamentEntity {
    */
   // protected $contraindications;
   @ManyToMany(() => ContraindicationEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinTable({
     name: 'T_MEDICAL_PRESCRIPTION_CONTRAINDICATION_MPC',
     joinColumn: {
-      name: 'MDP_ID'
+      name: 'MDP_ID',
     },
     inverseJoinColumn: {
-      name: 'MLC_ID'
-    }
+      name: 'MLC_ID',
+    },
   })
   contraindications?: ContraindicationEntity[];
 
@@ -217,10 +216,10 @@ export class MedicamentEntity {
   })
   organizationId?: number;
   @ManyToOne(() => OrganizationEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'organization_id'
+    name: 'organization_id',
   })
   organization?: OrganizationEntity;
 

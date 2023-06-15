@@ -484,12 +484,12 @@ export class OrganizationEntity {
   })
   workstations?: WorkstationEntity[];
 
-  @OneToMany(() => CorrespondentTypeEntity, e => e.group, {
+  @OneToMany(() => CorrespondentTypeEntity, (e) => e.group, {
     createForeignKeyConstraints: false,
   })
   correspondentTypes?: CorrespondentTypeEntity[];
 
-  @OneToMany(() => CorrespondentEntity, e => e.group, {
+  @OneToMany(() => CorrespondentEntity, (e) => e.group, {
     createForeignKeyConstraints: false,
   })
   correspondents?: CorrespondentEntity[];

@@ -1,4 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { OrganizationEntity } from './organization.entity';
 
 /**
@@ -57,14 +63,14 @@ export class LibraryCityEntity {
     name: 'GRP_ID',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   grpId?: number;
   @ManyToOne(() => OrganizationEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'GRP_ID'
+    name: 'GRP_ID',
   })
   group?: OrganizationEntity;
 
