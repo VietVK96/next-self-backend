@@ -22,7 +22,7 @@ export class PhoneTypeEntity {
    */
   @Column({
     name: 'PTY_NAME',
-    type: 'string',
+    type: 'varchar',
     length: 81,
     nullable: false,
   })
@@ -30,7 +30,7 @@ export class PhoneTypeEntity {
 
   /**
    * Nom d'affichage du type de numéro de téléphone.
-   * 
+   *
    * @ORM\Column(name="display_name", type="string", length=255)
    * @Expose
    * @var string
@@ -38,7 +38,7 @@ export class PhoneTypeEntity {
   @Column({
     name: 'display_name',
     type: 'varchar',
-    length: 255
+    length: 255,
   })
   displayName?: string;
 
@@ -55,7 +55,7 @@ export class PhoneTypeEntity {
 
   /**
    * Position du type de numéro de téléphone.
-   * 
+   *
    * @ORM\Column(name="PTY_POS", type="integer", options={"default": 0})
    * @Expose
    * @var integer
@@ -64,7 +64,7 @@ export class PhoneTypeEntity {
     name: 'PTY_POS',
     type: 'int',
     width: 11,
-    default: 0
+    default: 0,
   })
   position?: number;
 
@@ -76,7 +76,6 @@ export class PhoneTypeEntity {
     createForeignKeyConstraints: false,
   })
   phoneNumbers?: PhoneEntity[];
-
 }
 
 // application/Entites/Phone/Type.php

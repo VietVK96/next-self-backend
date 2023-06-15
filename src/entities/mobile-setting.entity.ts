@@ -17,7 +17,7 @@ import { UserEntity } from './user.entity';
  * @ExclusionPolicy("all")
  */
 @Entity('mobile_settings')
-export class MobileSettingEntityEntity {
+export class MobileSettingEntity {
   /**
    * Identifiant de l'enregistrement.
    *

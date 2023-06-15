@@ -344,11 +344,11 @@ export class LibraryBankEntity {
     width: 11,
   })
   organizationId?: number;
-  @ManyToOne(() => OrganizationEntity, e => e.libraryBanks, {
-    createForeignKeyConstraints: false
+  @ManyToOne(() => OrganizationEntity, (e) => e.libraryBanks, {
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'organization_id'
+    name: 'organization_id',
   })
   group?: OrganizationEntity;
 
@@ -363,14 +363,14 @@ export class LibraryBankEntity {
     name: 'USR_ID',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   usrId?: number;
   @ManyToOne(() => UserEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'USR_ID'
+    name: 'USR_ID',
   })
   user?: UserEntity;
 
@@ -385,14 +385,14 @@ export class LibraryBankEntity {
     name: 'ADR_ID',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   adrId?: number;
   @ManyToOne(() => AddressEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'ADR_ID'
+    name: 'ADR_ID',
   })
   address?: AddressEntity;
 

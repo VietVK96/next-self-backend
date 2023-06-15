@@ -7,6 +7,7 @@ import { redisStore } from 'cache-manager-redis-store';
 import { ContactModule } from './contact/contact.module';
 import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { EntityModule } from './entities';
 import { IRedisConfig } from './common/config/redis.config';
 
 @Module({
@@ -44,6 +45,7 @@ import { IRedisConfig } from './common/config/redis.config';
       },
       isGlobal: true,
     }),
+    EntityModule,
     ContactModule,
     AuthModule,
   ],

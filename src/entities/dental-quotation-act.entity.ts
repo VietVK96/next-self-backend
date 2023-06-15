@@ -1,4 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { LibraryActEntity } from './library-act.entity';
 import { LibraryActQuantityEntity } from './library-act-quantity.entity';
 import { DentalQuotationEntity } from './dental-quotation.entity';
@@ -39,7 +45,7 @@ export class DentalQuotationActEntity {
   libraryActId?: number;
 
   @ManyToOne(() => LibraryActEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "library_act_id" })
+  @JoinColumn({ name: 'library_act_id' })
   libraryAct?: LibraryActEntity;
 
   /**
@@ -47,10 +53,17 @@ export class DentalQuotationActEntity {
    * @ORM\JoinColumn(name="library_act_quantity_id", referencedColumnName="id", nullable=true)
    */
   // protected $libraryActQuantity = null;
-  @Column({ name: 'library_act_quantity_id', type: 'int', width: 11, nullable: true })
+  @Column({
+    name: 'library_act_quantity_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
   libraryActQuantityId?: number;
 
-  @ManyToOne(() => LibraryActQuantityEntity, { createForeignKeyConstraints: false })
+  @ManyToOne(() => LibraryActQuantityEntity, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'library_act_quantity_id' })
   libraryActQuantity?: LibraryActQuantityEntity;
 
@@ -453,7 +466,9 @@ export class DentalQuotationActEntity {
   @Column({ name: 'DQO_ID', type: 'int', width: 11 })
   DQOId?: number;
 
-  @ManyToOne(() => DentalQuotationEntity, e => e.acts, { createForeignKeyConstraints: false })
+  @ManyToOne(() => DentalQuotationEntity, (e) => e.acts, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'DQO_ID' })
   quotation?: DentalQuotationEntity;
 
@@ -462,7 +477,9 @@ export class DentalQuotationActEntity {
    * @ORM\JoinColumn(name="DQO_ID", referencedColumnName="DQO_ID")
    */
   // protected $quote;
-  @ManyToOne(() => DentalQuotationEntity, e => e.acts, { createForeignKeyConstraints: false })
+  @ManyToOne(() => DentalQuotationEntity, (e) => e.acts, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'DQO_ID' })
   quote?: DentalQuotationEntity;
 

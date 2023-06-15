@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
 import { UserEntity } from './user.entity';
 /**
  * @ORM\Entity
@@ -15,7 +15,7 @@ export class UserSmsEntity {
    */
   // protected $user;
 
-  @Column({
+  @PrimaryColumn({
     name: 'USR_ID',
     type: 'int',
     width: 11,

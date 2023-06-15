@@ -1,4 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { OrganizationEntity } from './organization.entity';
 import { StorageSpacePackEntity } from './storage-space-pack.entity';
 
@@ -32,7 +38,7 @@ export class StorageSpaceEntity {
   @Column({
     name: 'STS_QUANTITY',
     type: 'int',
-    length: 11,
+    width: 11,
   })
   quantity?: number;
 
@@ -56,10 +62,10 @@ export class StorageSpaceEntity {
   })
   grpId?: number;
   @ManyToOne(() => OrganizationEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'GRP_ID'
+    name: 'GRP_ID',
   })
   group?: OrganizationEntity;
 
@@ -77,10 +83,10 @@ export class StorageSpaceEntity {
   })
   stkId?: number;
   @ManyToOne(() => StorageSpacePackEntity, (e) => e.storageSpace, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'STK_ID'
+    name: 'STK_ID',
   })
   storageSpacePack?: StorageSpacePackEntity;
 
@@ -94,13 +100,12 @@ export class StorageSpaceEntity {
    */
   // protected $pack;
   @ManyToOne(() => StorageSpacePackEntity, (e) => e.storageSpace, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'STK_ID'
+    name: 'STK_ID',
   })
   pack?: StorageSpacePackEntity;
-
 }
 // application/Entities/StorageSpaceEntity.php
 // application/Entities/Storage/Space.php

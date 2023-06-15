@@ -23,7 +23,7 @@ import { ContactEntity } from './contact.entity';
  * @ExclusionPolicy("all")
  */
 @Entity('mobile_authentication_codes')
-export class MobileAuthenticationCodeEntityEntity {
+export class MobileAuthenticationCodeEntity {
   /**
    * Identifiant de l'enregistrement.
    *

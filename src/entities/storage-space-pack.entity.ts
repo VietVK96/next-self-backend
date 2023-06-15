@@ -66,10 +66,9 @@ export class StorageSpacePackEntity {
    */
   // protected $storageSpace;
   @OneToMany(() => StorageSpaceEntity, (e) => e.storageSpacePack, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   storageSpace?: StorageSpaceEntity[];
-  
 }
 // application/Entities/Storage/Space/Pack.php
 // application/Entities/StorageSpacePackEntity.php

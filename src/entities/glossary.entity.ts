@@ -42,7 +42,7 @@ export class GlossaryEntity {
   })
   organizationId?: number;
   @ManyToOne(() => OrganizationEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'organization_id',
@@ -131,7 +131,7 @@ export class GlossaryEntity {
    */
   // protected $entries;
   @OneToMany(() => GlossaryEntryEntity, (e) => e.glossary, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   entries?: GlossaryEntryEntity[];
 }

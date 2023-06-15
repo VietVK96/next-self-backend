@@ -1,4 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { CcamEntity } from './ccam.entity';
 import { DomtomEntity } from './domtom.entities';
 
@@ -37,8 +43,10 @@ export class DomtomMajorationEntity {
   @Column({ name: 'ccam_id', type: 'int', width: 11 })
   ccamId?: number;
 
-  @ManyToOne(() => CcamEntity, e => e.domtomMajorations, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: "ccam_id" })
+  @ManyToOne(() => CcamEntity, (e) => e.domtomMajorations, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({ name: 'ccam_id' })
   ccam?: CcamEntity;
 
   /**

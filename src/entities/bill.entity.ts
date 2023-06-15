@@ -13,7 +13,7 @@ import { CashingEntity } from './cashing.entity';
 import { UploadEntity } from './upload.entity';
 import { UserEntity } from './user.entity';
 import { DentalQuotationEntity } from './dental-quotation.entity';
-import { BillLineEntity, EnumBillLineType } from './bill-line.entity';
+import { BillLineEntity } from './bill-line.entity';
 import { ContactEntity } from './contact.entity';
 // 'cheque','carte','espece','virement','prelevement','autre','non payee'
 export enum EnumBillPayment {
@@ -307,7 +307,6 @@ export class BillEntity {
   })
   @JoinColumn({
     name: 'CON_ID',
-    referencedColumnName: 'CON_ID',
   })
   patient?: ContactEntity;
 

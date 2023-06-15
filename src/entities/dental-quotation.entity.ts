@@ -554,7 +554,9 @@ export class DentalQuotationEntity {
   @Column({ name: 'CON_ID', type: 'int', width: 11 })
   contactId?: number;
 
-  @ManyToOne(() => ContactEntity, e => e.quotations, { createForeignKeyConstraints: false })
+  @ManyToOne(() => ContactEntity, (e) => e.quotations, {
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'CON_ID' })
   contact?: ContactEntity;
 
@@ -588,14 +590,14 @@ export class DentalQuotationEntity {
    */
   // protected $treatmentPlan = null;
   @ManyToOne(() => PlanEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: 'PLF_ID', referencedColumnName: 'PLF_ID' })
+  @JoinColumn({ name: 'PLF_ID' })
   treatmentPlan?: PlanEntity;
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Dental\Quotation\Act", mappedBy="quotation")
    */
   // protected $acts;
-  @OneToMany(() => DentalQuotationActEntity, e => e.quotation, {
+  @OneToMany(() => DentalQuotationActEntity, (e) => e.quotation, {
     createForeignKeyConstraints: false,
   })
   acts?: DentalQuotationActEntity[];
@@ -614,7 +616,12 @@ export class DentalQuotationEntity {
    * @ORM\JoinColumn(name="payment_schedule_id", referencedColumnName="id", nullable=true)
    */
   // protected $paymentPlan = null;
-  @Column({ name: 'payment_schedule_id', type: 'int', width: 11, nullable: true })
+  @Column({
+    name: 'payment_schedule_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
   paymentScheduleId?: number;
 
   @OneToOne(() => PaymentPlanEntity, { createForeignKeyConstraints: false })
@@ -650,7 +657,9 @@ export class DentalQuotationEntity {
    * @ORM\OneToMany(targetEntity="Mail", mappedBy="quote", cascade={"persist"})
    */
   // protected $attachments;
-  @OneToMany(() => LettersEntity, e => e.quote, { createForeignKeyConstraints: false })
+  @OneToMany(() => LettersEntity, (e) => e.quote, {
+    createForeignKeyConstraints: false,
+  })
   attachments?: LettersEntity[];
 }
 

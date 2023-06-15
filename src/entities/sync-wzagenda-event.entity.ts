@@ -1,4 +1,10 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { EventEntity } from './event.entity';
 
 /**
@@ -70,12 +76,11 @@ export class SyncWzagendaEventEntity {
   })
   evtId?: number;
   @OneToOne(() => EventEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'EVT_ID'
+    name: 'EVT_ID',
   })
   event?: EventEntity;
-
 }
 // application/Entities/Sync/WzAgenda/Event.php

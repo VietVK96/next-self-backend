@@ -47,10 +47,10 @@ export class MemoEntity {
   })
   resourceId?: number;
   @ManyToOne(() => ResourceEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'resource_id'
+    name: 'resource_id',
   })
   resource?: ResourceEntity;
 
@@ -68,10 +68,10 @@ export class MemoEntity {
   })
   usrId?: number;
   @ManyToOne(() => UserEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'USR_ID'
+    name: 'USR_ID',
   })
   user?: UserEntity;
 

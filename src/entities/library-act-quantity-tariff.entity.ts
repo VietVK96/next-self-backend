@@ -1,4 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { LibraryActQuantityEntity } from './library-act-quantity.entity';
 import { TariffTypeEntity } from './tariff-type.entity';
 
@@ -33,14 +39,14 @@ export class LibraryActQuantityTariffEntity {
   @Column({
     name: 'library_act_quantity_id',
     type: 'int',
-    width: 11
+    width: 11,
   })
   libraryActChildId?: number;
-  @ManyToOne(() => LibraryActQuantityEntity, e => e.tariffs, {
-    createForeignKeyConstraints: false
+  @ManyToOne(() => LibraryActQuantityEntity, (e) => e.tariffs, {
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'library_act_quantity_id'
+    name: 'library_act_quantity_id',
   })
   libraryActQuantity?: LibraryActQuantityEntity;
 
@@ -55,14 +61,14 @@ export class LibraryActQuantityTariffEntity {
   @Column({
     name: 'tariff_type_id',
     type: 'int',
-    width: 11
+    width: 11,
   })
   tariffTypeId?: number;
   @ManyToOne(() => TariffTypeEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'tariff_type_id'
+    name: 'tariff_type_id',
   })
   tariffType?: TariffTypeEntity;
 

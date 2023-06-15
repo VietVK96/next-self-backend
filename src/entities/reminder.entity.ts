@@ -116,7 +116,7 @@ export class ReminderEntity {
   })
   eventId?: number;
 
-  @ManyToOne(() => EventEntity,(e)=>e.reminders {
+  @ManyToOne(() => EventEntity, (e) => e.reminders, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
@@ -185,7 +185,7 @@ export class ReminderEntity {
     name: 'RMU_ID',
   })
   unit?: ReminderUnitEntity;
-  
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 

@@ -1,7 +1,15 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { OrganizationEntity } from "./organization.entity";
-import { UserEntity } from "./user.entity";
-import { ContactEntity } from "./contact.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { UserEntity } from './user.entity';
+import { ContactEntity } from './contact.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PeriodontalChartRepository")
@@ -10,7 +18,6 @@ import { ContactEntity } from "./contact.entity";
  */
 @Entity('periodontal_chart')
 export class PeriodontalChartEntity {
-
   /**
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
@@ -109,7 +116,7 @@ export class PeriodontalChartEntity {
     name: 'status',
     type: 'int',
     width: 11,
-    default: 1
+    default: 1,
   })
   status?: number;
 
@@ -126,7 +133,7 @@ export class PeriodontalChartEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    default: 0.00
+    default: 0.0,
   })
   probingDepth?: number;
 
@@ -143,7 +150,7 @@ export class PeriodontalChartEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    default: 0.00
+    default: 0.0,
   })
   gingivalMargin?: number;
 
@@ -160,7 +167,7 @@ export class PeriodontalChartEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    default: 0.00
+    default: 0.0,
   })
   plaque?: number;
 
@@ -177,7 +184,7 @@ export class PeriodontalChartEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    default: 0.00
+    default: 0.0,
   })
   bleedingOnProbing?: number;
 
@@ -199,7 +206,6 @@ export class PeriodontalChartEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt?: Date;
-  
 }
 
 //application/Entity/PeriodontalChart.php

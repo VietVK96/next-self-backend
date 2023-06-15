@@ -90,7 +90,7 @@ export class ConversationEntity {
    */
   @Column({
     name: 'title',
-    type: 'string',
+    type: 'varchar',
     length: 255,
     nullable: false,
   })

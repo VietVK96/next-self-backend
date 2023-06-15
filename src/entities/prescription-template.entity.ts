@@ -37,7 +37,6 @@ export class PrescriptionTemplateEntity {
   })
   @JoinColumn({
     name: 'organization_id',
-    referencedColumnName: 'GRP_ID',
   })
   organization?: OrganizationEntity;
   /**

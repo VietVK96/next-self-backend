@@ -20,7 +20,7 @@ import { UserEntity } from './user.entity';
  * @ExclusionPolicy("all")
  */
 @Entity('mobile_subscriptions')
-export class MobileSubscriptionEntityEntity {
+export class MobileSubscriptionEntity {
   /**
    * Identifiant de l'enregistrement.
    *

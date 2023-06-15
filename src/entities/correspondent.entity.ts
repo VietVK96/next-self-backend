@@ -33,12 +33,12 @@ export class CorrespondentEntity {
   @Column({
     name: 'organization_id',
     type: 'int',
-    width: 11
+    width: 11,
   })
   organizationId?: number;
 
-  @ManyToOne(() => OrganizationEntity, e => e.correspondents, {
-    createForeignKeyConstraints: false
+  @ManyToOne(() => OrganizationEntity, (e) => e.correspondents, {
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'organization_id',
@@ -71,7 +71,7 @@ export class CorrespondentEntity {
   correspondentTypeId?: number;
 
   @ManyToOne(() => CorrespondentTypeEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'correspondent_type_id',
@@ -92,7 +92,7 @@ export class CorrespondentEntity {
   addressId?: string;
 
   @ManyToOne(() => AddressEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'ADR_ID',
@@ -184,8 +184,8 @@ export class CorrespondentEntity {
   })
   genId?: number;
 
-  @ManyToOne(() => GenderEntity, e => e.correspondents, {
-    createForeignKeyConstraints: false
+  @ManyToOne(() => GenderEntity, (e) => e.correspondents, {
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'GEN_ID',
@@ -210,8 +210,8 @@ export class CorrespondentEntity {
   })
   @JoinTable({
     name: 'T_CORRESPONDENT_PHONE_CPP',
-    joinColumn: { name: "CPD_ID" },
-    inverseJoinColumn: { name: "PHO_ID" }
+    joinColumn: { name: 'CPD_ID' },
+    inverseJoinColumn: { name: 'PHO_ID' },
   })
   phoneNumbers?: PhoneEntity[];
 
@@ -228,8 +228,8 @@ export class CorrespondentEntity {
   })
   @JoinTable({
     name: 'T_CORRESPONDENT_PHONE_CPP',
-    joinColumn: { name: "CPD_ID" },
-    inverseJoinColumn: { name: "PHO_ID" }
+    joinColumn: { name: 'CPD_ID' },
+    inverseJoinColumn: { name: 'PHO_ID' },
   })
   phones?: PhoneEntity[];
 

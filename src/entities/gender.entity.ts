@@ -55,11 +55,11 @@ export class GenderEntity {
   type?: EnumGenderType;
 
   /**
-     * @ORM\Column(name="code", type="integer", nullable=true)
-     * @Serializer\Expose
-     * @Serializer\Type("int")
-     * @Assert\Type("int")
-     */
+   * @ORM\Column(name="code", type="integer", nullable=true)
+   * @Serializer\Expose
+   * @Serializer\Type("int")
+   * @Assert\Type("int")
+   */
   @Column({
     name: 'code',
     type: 'int',
@@ -68,8 +68,8 @@ export class GenderEntity {
   })
   code?: number;
 
-  @OneToMany(() => CorrespondentEntity, e => e.gender, {
-    createForeignKeyConstraints: false
+  @OneToMany(() => CorrespondentEntity, (e) => e.gender, {
+    createForeignKeyConstraints: false,
   })
   correspondents?: CorrespondentEntity[];
 }

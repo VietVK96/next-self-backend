@@ -10,7 +10,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { BillEntity } from './bill.entity';
-import { PlanEventEnity } from './plan-event.entity';
+import { PlanEventEntity } from './plan-event.entity';
 import { UserEntity } from './user.entity';
 import { ContactEntity } from './contact.entity';
 import { OrganizationEntity } from './organization.entity';
@@ -73,7 +73,7 @@ export class PlanPlfEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    default: 0.00,
+    default: 0.0,
   })
   amount?: number;
 
@@ -86,7 +86,7 @@ export class PlanPlfEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    default: 0.00,
+    default: 0.0,
   })
   mutualCeiling?: number;
 
@@ -99,7 +99,7 @@ export class PlanPlfEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    default: 0.00,
+    default: 0.0,
   })
   personRepayment?: number;
 
@@ -112,7 +112,7 @@ export class PlanPlfEntity {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    default: 0.00,
+    default: 0.0,
   })
   personAmount?: number;
 
@@ -155,8 +155,8 @@ export class PlanPlfEntity {
    * @ORM\OneToMany(targetEntity="\App\Entities\Plan\Event", mappedBy="plan")
    */
   //   protected $events;
-  @OneToMany(() => PlanEventEnity, (e) => e.plan)
-  events?: PlanEventEnity[];
+  @OneToMany(() => PlanEventEntity, (e) => e.plan)
+  events?: PlanEventEntity[];
 
   /**
    * @ORM\ManyToOne(targetEntity="User")

@@ -123,14 +123,14 @@ export class LettersEntity {
     name: 'USR_ID',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   usrId?: number;
   @ManyToOne(() => UserEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'USR_ID'
+    name: 'USR_ID',
   })
   user?: UserEntity;
 
@@ -142,10 +142,10 @@ export class LettersEntity {
   //   protected $doctor;
 
   @ManyToOne(() => UserEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'USR_ID'
+    name: 'USR_ID',
   })
   doctor?: UserEntity;
 
@@ -159,14 +159,14 @@ export class LettersEntity {
     name: 'CON_ID',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   conId?: number;
   @ManyToOne(() => ContactEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'CON_ID'
+    name: 'CON_ID',
   })
   contact?: ContactEntity;
 
@@ -178,10 +178,10 @@ export class LettersEntity {
   //   protected $patient;
 
   @ManyToOne(() => ContactEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'CON_ID'
+    name: 'CON_ID',
   })
   patient?: ContactEntity;
 
@@ -196,14 +196,14 @@ export class LettersEntity {
     name: 'CPD_ID',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   cpdId?: number;
   @ManyToOne(() => CorrespondentEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'CPD_ID'
+    name: 'CPD_ID',
   })
   correspondent?: CorrespondentEntity;
 
@@ -218,14 +218,14 @@ export class LettersEntity {
     name: 'header_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   headerId?: number;
   @ManyToOne(() => LettersEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'header_id'
+    name: 'header_id',
   })
   header?: LettersEntity;
 
@@ -239,14 +239,14 @@ export class LettersEntity {
     name: 'footer_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   footerId?: number;
   @ManyToOne(() => LettersEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'footer_id'
+    name: 'footer_id',
   })
   footer?: LettersEntity;
 
@@ -287,14 +287,14 @@ export class LettersEntity {
     name: 'quote_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   quoteId?: number;
-  @ManyToOne(() => DentalQuotationEntity, e => e.attachments, {
-    createForeignKeyConstraints: false
+  @ManyToOne(() => DentalQuotationEntity, (e) => e.attachments, {
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'quote_id'
+    name: 'quote_id',
   })
   quote?: DentalQuotationEntity;
 

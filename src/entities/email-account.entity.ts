@@ -11,7 +11,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { OrganizationEntity } from './organization.entity';
-import { JoinAttribute } from 'typeorm/query-builder/JoinAttribute';
 import { UserEntity } from './user.entity';
 import { EmailOutgoingServerEntity } from './email-outgoing-server.entity';
 
@@ -34,8 +33,7 @@ export class EmailAccountEntity {
   organizationId?: number;
 
   @ManyToOne(() => OrganizationEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: 'organization_id' }
-  )
+  @JoinColumn({ name: 'organization_id' })
   organization?: OrganizationEntity;
 
   // @Check TimeStamp
@@ -74,9 +72,10 @@ export class EmailAccountEntity {
   @Column({ name: 'user_id', type: 'int', width: 11 })
   USRId?: number;
 
-  @ManyToOne(() => UserEntity, e => e.emailAccounts, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: 'user_id' }
-  )
+  @ManyToOne(() => UserEntity, (e) => e.emailAccounts, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({ name: 'user_id' })
   user?: UserEntity;
 
   /**
@@ -139,7 +138,9 @@ export class EmailAccountEntity {
    * @Assert\NotNull
    */
   // protected $outgoingServer;
-  @OneToOne(() => EmailOutgoingServerEntity, { createForeignKeyConstraints: false })
+  @OneToOne(() => EmailOutgoingServerEntity, {
+    createForeignKeyConstraints: false,
+  })
   outgoingServer?: EmailOutgoingServerEntity;
 
   /**
@@ -155,13 +156,13 @@ export class EmailAccountEntity {
    * )
    */
   // protected $subscribers;
-  @ManyToMany(() => UserEntity, e => e.subscribedEmailAccounts, {
+  @ManyToMany(() => UserEntity, (e) => e.subscribedEmailAccounts, {
     createForeignKeyConstraints: false,
   })
   @JoinTable({
     name: 'email_account_subscriber',
     joinColumn: { name: 'email_account_id' },
-    inverseJoinColumn: { name: 'user_id' }
+    inverseJoinColumn: { name: 'user_id' },
   })
   subscribers?: UserEntity[];
 }

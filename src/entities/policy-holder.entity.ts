@@ -1,6 +1,12 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { OrganizationEntity } from "./organization.entity";
-import { ContactEntity } from "./contact.entity";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { ContactEntity } from './contact.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PolicyHolderRepository")
@@ -9,7 +15,6 @@ import { ContactEntity } from "./contact.entity";
  */
 @Entity('policy_holder')
 export class PolicyHolderEntity {
-
   /**
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
@@ -78,7 +83,7 @@ export class PolicyHolderEntity {
     name: 'name',
     type: 'varchar',
     length: 255,
-    nullable: false
+    nullable: false,
   })
   name?: string;
 
@@ -96,7 +101,6 @@ export class PolicyHolderEntity {
     nullable: true,
   })
   inseeNumber?: string;
-
 }
 
 //application/Entity/PolicyHolder.php

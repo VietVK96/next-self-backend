@@ -1,12 +1,23 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { ResourceEntity } from "./resource.entity";
-import { UserEntity } from "./user.entity";
-import { ContactEntity } from "./contact.entity";
-import { EventTypeEntity } from "./event-type.entity";
-import { EventTaskEntity } from "./event-task.entity";
-import { EventHistoricalEntity } from "./event-historical.entity";
-import { ReminderEntity } from "./reminder.entity";
-import { PlanEventEntity } from "./plan-event.entity";
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { ResourceEntity } from './resource.entity';
+import { UserEntity } from './user.entity';
+import { ContactEntity } from './contact.entity';
+import { EventTypeEntity } from './event-type.entity';
+import { EventTaskEntity } from './event-task.entity';
+import { EventHistoricalEntity } from './event-historical.entity';
+import { ReminderEntity } from './reminder.entity';
+import { PlanEventEntity } from './plan-event.entity';
 
 export enum EnumEventType {
   EVENT = 'event',
@@ -20,7 +31,6 @@ export enum EnumEventType {
  */
 @Entity('T_EVENT_EVT')
 export class EventEntity {
-
   /**
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="IDENTITY")
@@ -41,11 +51,11 @@ export class EventEntity {
     name: 'resource_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   resourceId?: number;
   @ManyToOne(() => ResourceEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'resource_id',
@@ -91,7 +101,7 @@ export class EventEntity {
     name: 'EVT_START_TZ',
     type: 'varchar',
     length: 45,
-    default: 'UTC'
+    default: 'UTC',
   })
   startTimezone?: string;
 
@@ -112,7 +122,7 @@ export class EventEntity {
     name: 'EVT_END_TZ',
     type: 'varchar',
     length: 45,
-    default: 'UTC'
+    default: 'UTC',
   })
   endTimezone?: string;
 
@@ -206,11 +216,11 @@ export class EventEntity {
     name: 'USR_ID',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   usrId?: number;
   @ManyToOne(() => UserEntity, (e) => e.events, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'USR_ID',
@@ -226,11 +236,11 @@ export class EventEntity {
     name: 'CON_ID',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   conId?: number;
   @ManyToOne(() => ContactEntity, (e) => e.events, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'CON_ID',
@@ -247,7 +257,7 @@ export class EventEntity {
    */
   // protected $patient = null;
   @ManyToOne(() => ContactEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'CON_ID',
@@ -267,11 +277,11 @@ export class EventEntity {
     name: 'event_type_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   eventTypeId?: number;
   @ManyToOne(() => EventTypeEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'event_type_id',
@@ -283,7 +293,7 @@ export class EventEntity {
    */
   // protected $tasks;
   @OneToMany(() => EventTaskEntity, (e) => e.event, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   tasks?: EventTaskEntity[];
 
@@ -293,7 +303,7 @@ export class EventEntity {
    */
   // protected $historical;
   @OneToMany(() => EventHistoricalEntity, (e) => e.event, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   historical?: EventHistoricalEntity[];
 
@@ -302,7 +312,7 @@ export class EventEntity {
    */
   // protected $reminders;
   @OneToMany(() => ReminderEntity, (e) => e.event, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   reminders?: ReminderEntity[];
 
@@ -311,7 +321,7 @@ export class EventEntity {
    */
   // protected $planEvent;
   @OneToOne(() => PlanEventEntity, (e) => e.event, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   planEvent?: PlanEventEntity;
 
@@ -321,7 +331,7 @@ export class EventEntity {
     name: 'created_by',
     type: 'varchar',
     length: 255,
-    nullable: true
+    nullable: true,
   })
   createdBy?: string;
 

@@ -1,10 +1,24 @@
-import { Collection, Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { UserEntity } from "./user.entity";
-import { ContactEntity } from "./contact.entity";
-import { CaresheetStatusEntity } from "./caresheet-status.entity";
-import { AmoEntity } from "./amo.entity";
-import { AmcEntity } from "./amc.entity";
-import { DentalEventTaskEntity } from "./dental-event-task.entity";
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { UserEntity } from './user.entity';
+import { ContactEntity } from './contact.entity';
+import { CaresheetStatusEntity } from './caresheet-status.entity';
+import { AmoEntity } from './amo.entity';
+import { AmcEntity } from './amc.entity';
+import { DentalEventTaskEntity } from './dental-event-task.entity';
+import { CaresheetRejectionEntity } from './caresheet-rejection.entity';
+import { LotEntity } from './lot.entity';
+import { NoemieEntity } from './noemie.entity';
 
 /**
  * @ORM\Entity
@@ -14,7 +28,6 @@ import { DentalEventTaskEntity } from "./dental-event-task.entity";
  */
 @Entity('T_FSE_FSE')
 export class FseEntity {
-
   /**
    * @ORM\Column(name="FSE_ID", type="integer")
    * @ORM\Id
@@ -34,11 +47,11 @@ export class FseEntity {
     name: 'USR_ID',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   usrId?: number;
   @ManyToOne(() => UserEntity, (e) => e.caresheets, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'USR_ID',
@@ -57,11 +70,11 @@ export class FseEntity {
     name: 'CON_ID',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   conId?: number;
   @ManyToOne(() => ContactEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'CON_ID',
@@ -79,11 +92,11 @@ export class FseEntity {
     name: 'fse_status_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   fseStatusId?: number;
   @ManyToOne(() => CaresheetStatusEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'fse_status_id',
@@ -101,11 +114,11 @@ export class FseEntity {
     name: 'dre_status_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   dreStatusId?: number;
   @ManyToOne(() => CaresheetStatusEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'dre_status_id',
@@ -121,11 +134,11 @@ export class FseEntity {
     name: 'amo_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   amoId?: number;
   @ManyToOne(() => AmoEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'amo_id',
@@ -141,11 +154,11 @@ export class FseEntity {
     name: 'amc_id',
     type: 'int',
     width: 11,
-    nullable: true
+    nullable: true,
   })
   amcId?: number;
   @ManyToOne(() => AmcEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'amc_id',
@@ -184,17 +197,17 @@ export class FseEntity {
   date?: string;
 
   /**
-     * @ORM\Column(name="mode", type="enum_caresheet_mode", length=3, options={"fixed": 3, "default": "SV"})
-     * @Serializer\Expose
-     * @Serializer\Groups({"caresheet:index", "caresheet:read"})
-     * @Assert\Choice(callback={"App\Enum\CaresheetModeEnum", "getValues"})
-     * @Assert\NotNull
-     */
+   * @ORM\Column(name="mode", type="enum_caresheet_mode", length=3, options={"fixed": 3, "default": "SV"})
+   * @Serializer\Expose
+   * @Serializer\Groups({"caresheet:index", "caresheet:read"})
+   * @Assert\Choice(callback={"App\Enum\CaresheetModeEnum", "getValues"})
+   * @Assert\NotNull
+   */
   @Column({
     name: 'mode',
     type: 'char',
     length: 3,
-    default: 'SV'
+    default: 'SV',
   })
   mode?: string;
 
@@ -209,18 +222,18 @@ export class FseEntity {
     name: 'type',
     type: 'char',
     length: 3,
-    default: 'FSE'
+    default: 'FSE',
   })
   type?: string;
 
   /**
-     * @ORM\Column(name="electronic_caresheet", type="boolean", options={"default": true})
-     * @Serializer\Expose
-     * @Serializer\Groups({"caresheet:read"})
-     * @Serializer\Type("bool")
-     * @Assert\Type("bool")
-     * @Assert\NotNull
-     */
+   * @ORM\Column(name="electronic_caresheet", type="boolean", options={"default": true})
+   * @Serializer\Expose
+   * @Serializer\Groups({"caresheet:read"})
+   * @Serializer\Type("bool")
+   * @Assert\Type("bool")
+   * @Assert\NotNull
+   */
   @Column({
     name: 'electronic_caresheet',
     type: 'tinyint',
@@ -230,12 +243,12 @@ export class FseEntity {
   electronicCaresheet?: number;
 
   /**
-     * @ORM\Column(name="tiers_payant", type="boolean", options={"default": false})
-     * @Serializer\Expose
-     * @Serializer\Type("boolean")
-     * @Assert\Type("boolean")
-     * @Assert\NotNull
-     */
+   * @ORM\Column(name="tiers_payant", type="boolean", options={"default": false})
+   * @Serializer\Expose
+   * @Serializer\Type("boolean")
+   * @Assert\Type("boolean")
+   * @Assert\NotNull
+   */
   @Column({
     name: 'tiers_payant',
     type: 'tinyint',
@@ -259,13 +272,13 @@ export class FseEntity {
   tiersPayantStatus?: string;
 
   /**
-    * @ORM\Column(name="FSE_AMOUNT", type="decimal", precision=10, scale=2, options={"default": 0})
-    * @Serializer\Expose
-    * @Serializer\Groups({"caresheet:index", "caresheet:read", "tiersPayant:index"})
-    * @Serializer\Type("float")
-    * @Assert\Type("float")
-    * @Assert\NotNull
-    */
+   * @ORM\Column(name="FSE_AMOUNT", type="decimal", precision=10, scale=2, options={"default": 0})
+   * @Serializer\Expose
+   * @Serializer\Groups({"caresheet:index", "caresheet:read", "tiersPayant:index"})
+   * @Serializer\Type("float")
+   * @Assert\Type("float")
+   * @Assert\NotNull
+   */
   @Column({
     name: 'FSE_AMOUNT',
     type: 'decimal',
@@ -350,7 +363,7 @@ export class FseEntity {
    */
   // protected $tasks;
   @OneToMany(() => DentalEventTaskEntity, (e) => e.fse, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   tasks?: DentalEventTaskEntity[];
 
@@ -361,7 +374,7 @@ export class FseEntity {
    */
   // protected $contact;
   @ManyToOne(() => ContactEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'CON_ID',
@@ -369,12 +382,12 @@ export class FseEntity {
   contact?: ContactEntity;
 
   /**
-     * @ORM\Column(name="external_reference_id", type="integer", nullable=true)
-     * @Serializer\Expose
-     * @Serializer\Type("int")
-     * @Assert\Type("int")
-     * @Assert\GreaterThan(0)
-     */
+   * @ORM\Column(name="external_reference_id", type="integer", nullable=true)
+   * @Serializer\Expose
+   * @Serializer\Type("int")
+   * @Assert\Type("int")
+   * @Assert\GreaterThan(0)
+   */
   @Column({
     name: 'external_reference_id',
     type: 'int',
@@ -382,6 +395,38 @@ export class FseEntity {
     nullable: true,
   })
   externalReferenceId?: number;
+
+  /**
+   * @ORM\OneToMany(targetEntity="CaresheetRejection", mappedBy="caresheet", cascade={"persist", "remove"})
+   * @Serializer\Expose
+   */
+  // protected $rejections;
+  @OneToMany(() => CaresheetRejectionEntity, (e) => e.caresheet, {
+    createForeignKeyConstraints: false,
+  })
+  rejections?: CaresheetRejectionEntity[];
+
+  /**
+   * @ORM\ManyToMany(targetEntity="Lot", mappedBy="caresheets")
+   * @ORM\OrderBy({"creationDate": "DESC"})
+   * @Serializer\Expose
+   * @Serializer\Groups({"caresheet:index", "caresheet:read"})
+   * @Serializer\MaxDepth(1)
+   */
+  // protected $lots;
+  @ManyToMany(() => LotEntity, (e) => e.caresheets, {
+    createForeignKeyConstraints: false,
+  })
+  lots?: LotEntity[];
+
+  /**
+   * @ORM\ManyToMany(targetEntity="Noemie", mappedBy="caresheets")
+   */
+  // protected $noemies;
+  @ManyToMany(() => NoemieEntity, (e) => e.caresheets, {
+    createForeignKeyConstraints: false,
+  })
+  noemies?: NoemieEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

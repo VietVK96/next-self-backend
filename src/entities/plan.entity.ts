@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PlanRepository")
@@ -7,7 +7,6 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
  */
 @Entity('plan')
 export class PlanEntity {
-
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -17,7 +16,7 @@ export class PlanEntity {
    * @Serializer\Type("int")
    */
   @PrimaryGeneratedColumn('increment', {
-    name: 'id'
+    name: 'id',
   })
   id?: number;
 
@@ -32,10 +31,9 @@ export class PlanEntity {
   @Column({
     name: 'name',
     type: 'varchar',
-    length: 255
+    length: 255,
   })
   name?: string;
-
 }
 
 //application/Entity/Plan.php

@@ -5,7 +5,13 @@
  * @AcmeAssert\MaxEntries(max=GlossaryEntry::MAX_ENTRIES, repositoryMethod="getCountByGlossary", message="glossaryEntry.validation.maxEntries", groups={"glossaryEntry:create"})
  */
 
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { OrganizationEntity } from './organization.entity';
 import { GlossaryEntity } from './glossary.entity';
 
@@ -25,7 +31,7 @@ export class GlossaryEntryEntity {
   })
   organizationId?: number;
   @ManyToOne(() => OrganizationEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'organization_id',
@@ -62,10 +68,10 @@ export class GlossaryEntryEntity {
   })
   glossaryId?: number;
   @ManyToOne(() => GlossaryEntity, (e) => e.entries, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'glossary_id'
+    name: 'glossary_id',
   })
   glossary?: GlossaryEntity;
 

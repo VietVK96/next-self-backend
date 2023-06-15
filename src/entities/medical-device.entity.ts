@@ -59,7 +59,7 @@ export class MedicalDeviceEntity {
    */
   //   protected $traceabilities;
   @OneToMany(() => TraceabilityEntity, (e) => e.medicalDevice, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   traceabilities?: TraceabilityEntity[];
 
@@ -76,10 +76,10 @@ export class MedicalDeviceEntity {
   })
   organizationId?: number;
   @ManyToOne(() => OrganizationEntity, {
-    createForeignKeyConstraints: false
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'organization_id'
+    name: 'organization_id',
   })
   organization?: OrganizationEntity;
 

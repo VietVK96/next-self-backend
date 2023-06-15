@@ -1,4 +1,11 @@
-import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import {
+  Column,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryColumn,
+} from 'typeorm';
 import { LibraryActEntity } from './library-act.entity';
 
 /**
@@ -16,17 +23,17 @@ export class LibraryActComplementaryEntity {
    * @ORM\JoinColumn(name="library_act_parent_id", referencedColumnName="id")
    */
   //   protected $parent;
-  @Column({
+  @PrimaryColumn({
     name: 'library_act_parent_id',
     type: 'int',
-    width: 11
+    width: 11,
   })
   libraryActParentId?: number;
-  @ManyToOne(() => LibraryActEntity, e => e.complementaries, {
-    createForeignKeyConstraints: false
+  @ManyToOne(() => LibraryActEntity, (e) => e.complementaries, {
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'library_act_parent_id'
+    name: 'library_act_parent_id',
   })
   parent?: LibraryActEntity;
   /**
@@ -42,14 +49,14 @@ export class LibraryActComplementaryEntity {
   @Column({
     name: 'library_act_child_id',
     type: 'int',
-    width: 11
+    width: 11,
   })
   libraryActChildId?: number;
-  @ManyToOne(() => LibraryActEntity, e => e.complementariesWithMe, {
-    createForeignKeyConstraints: false
+  @ManyToOne(() => LibraryActEntity, (e) => e.complementariesWithMe, {
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'library_act_child_id'
+    name: 'library_act_child_id',
   })
   child?: LibraryActEntity;
 

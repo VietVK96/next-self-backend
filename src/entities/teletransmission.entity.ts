@@ -1,5 +1,13 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { OrganizationEntity } from "./organization.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\TeletransmissionRepository")
@@ -16,7 +24,6 @@ import { OrganizationEntity } from "./organization.entity";
  */
 @Entity('teletransmission')
 export class TeletransmissionEntity {
-
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -71,9 +78,9 @@ export class TeletransmissionEntity {
   externalReferenceId?: number;
 
   /**
- * @ORM\ManyToOne(targetEntity="Organization")
- * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
- */
+   * @ORM\ManyToOne(targetEntity="Organization")
+   * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
+   */
   //protected $organization;
   @Column({ name: 'organization_id', type: 'int', width: 11 })
   organizationId?: number;

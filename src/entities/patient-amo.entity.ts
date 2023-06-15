@@ -63,7 +63,7 @@ export class PatientAmoEntity {
     nullable: true,
   })
   amoId?: number;
-  @ManyToOne(() => AmoEntity, (e) => e.amos, {
+  @ManyToOne(() => AmoEntity, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({

@@ -1,6 +1,14 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { UserEntity } from "./user.entity";
-import { ContactEntity } from "./contact.entity";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { UserEntity } from './user.entity';
+import { ContactEntity } from './contact.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\StickyNoteRepository")
@@ -14,7 +22,6 @@ import { ContactEntity } from "./contact.entity";
  */
 @Entity('T_POSTIT_PTT')
 export class StickyNoteEntity {
-
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -43,7 +50,7 @@ export class StickyNoteEntity {
   //   name: 'CON_ID',
   // })
   // contact?: ContactEntity;
-  
+
   // @TODO EntityMissing
   // @Column({
   //   name: 'USR_ID',
@@ -70,7 +77,7 @@ export class StickyNoteEntity {
   @Column({
     name: 'PTT_MSG',
     type: 'text',
-    nullable: true
+    nullable: true,
   })
   content?: string;
 
@@ -79,7 +86,7 @@ export class StickyNoteEntity {
     type: 'int',
     width: 11,
     nullable: false,
-    default: -41487
+    default: -41487,
   })
   color?: number;
 
@@ -96,7 +103,7 @@ export class StickyNoteEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   editable?: number;
 
@@ -105,7 +112,7 @@ export class StickyNoteEntity {
     type: 'tinyint',
     width: 1,
     nullable: false,
-    default: 1
+    default: 1,
   })
   shared?: number;
 
