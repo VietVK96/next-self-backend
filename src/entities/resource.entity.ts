@@ -238,12 +238,6 @@ export class UserEntity {
    */
   // protected $group;
 
-  @Column({
-    name: 'organization_id',
-    type: 'int',
-    width: 11,
-  })
-  groupId?: number;
   @ManyToOne(() => OrganizationEntity, {
     createForeignKeyConstraints: false,
   })
