@@ -190,6 +190,8 @@ export class SlipCheckEntity {
   // protected $number = 1;
   @Column({
     name: 'SLC_NBR',
+    type: 'int',
+    width: 11,
     default: 1,
   })
   number?: number;

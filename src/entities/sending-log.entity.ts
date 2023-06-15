@@ -46,20 +46,21 @@ export class SendingLogEntity {
   })
   usr?: UserEntity;
 
-  @Column({
-    name: 'RMT_ID',
-    type: 'int',
-    width: 11,
-    nullable: true
-  })
-  rmtId?: number;
-  @OneToOne(() => ReminderTypeEntity, {
-    createForeignKeyConstraints: false
-  })
-  @JoinColumn({
-    name: 'RMT_ID',
-  })
-  reminderType?: ReminderTypeEntity;
+  // @TODO EntityMissing
+  // @Column({
+  //   name: 'RMT_ID',
+  //   type: 'int',
+  //   width: 11,
+  //   nullable: true
+  // })
+  // rmtId?: number;
+  // @OneToOne(() => ReminderTypeEntity, {
+  //   createForeignKeyConstraints: false
+  // })
+  // @JoinColumn({
+  //   name: 'RMT_ID',
+  // })
+  // reminderType?: ReminderTypeEntity;
   
   /**
    * @ORM\Column(name="USH_USED", type="datetime")
