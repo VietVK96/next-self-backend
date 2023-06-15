@@ -1,4 +1,6 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+import { PlanPlfEntity } from './plan-plf.entity';
+import { EventEntity } from './event.entity';
 
 /**
  * @ORM\Entity
@@ -45,8 +47,21 @@ export class PlanEventEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\Plan", inversedBy="events")
    * @ORM\JoinColumn(name="PLF_ID", referencedColumnName="PLF_ID")
    */
-  // @TODO EntityMissing
   // protected $plan;
+  @Column({
+    name: 'PLF_ID',
+    type: 'int',
+    width: 11,
+  })
+  plfId?: number;
+
+  @ManyToOne(() => PlanPlfEntity, (e) => e.events, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'PLF_ID',
+  })
+  plan?: PlanPlfEntity;
 
   /**
    * @ORM\OneToOne(targetEntity="\App\Entities\Event", inversedBy="planEvent")
@@ -54,8 +69,21 @@ export class PlanEventEntity {
    * @ORM\Id
    * @ORM\GeneratedValue(strategy="NONE")
    */
-  // @TODO EntityMissing
   // protected $event;
+  @Column({
+    name: 'EVT_ID',
+    type: 'int',
+    width: 11,
+  })
+  evtId?: number;
+
+  @OneToOne(() => EventEntity, (e) => e.planEvent, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'EVT_ID',
+  })
+  event?: EventEntity;
 }
 
 // application/Entities/Plan/Event.php

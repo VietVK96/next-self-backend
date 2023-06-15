@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { PhoneEntity } from './phone.entity';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\Phone\Type")
@@ -70,8 +71,11 @@ export class PhoneTypeEntity {
   /**
    * @ORM\OneToMany(targetEntity="PhoneNumber", mappedBy="category")
    */
-  // @TODO EntityMissing
   // protected $phoneNumbers;
+  @OneToMany(() => PhoneEntity, (e) => e.category, {
+    createForeignKeyConstraints: false,
+  })
+  phoneNumbers?: PhoneEntity[];
 
 }
 

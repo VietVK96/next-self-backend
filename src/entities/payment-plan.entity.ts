@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { PaymentPlanDeadlineEntity } from "./payment-plan-deadline.entity";
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PaymentPlanRepository")
@@ -85,8 +86,11 @@ export class PaymentPlanEntity {
    *  "paymentPlan:read"
    * })
    */
-  // @TODO EntityMissing
   // protected $deadlines;
+  @OneToMany(() => PaymentPlanDeadlineEntity, (e) => e.paymentPlan, {
+    createForeignKeyConstraints: false,
+  })
+  deadlines?: PaymentPlanDeadlineEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

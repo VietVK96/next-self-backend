@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { PaymentPlanEntity } from "./payment-plan.entity";
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PaymentPlanDeadlineRepository")
@@ -27,8 +28,21 @@ export class PaymentPlanDeadlineEntity {
    * @ORM\ManyToOne(targetEntity="PaymentPlan", inversedBy="deadlines")
    * @ORM\JoinColumn(name="payment_schedule_id", referencedColumnName="id")
    */
-  // @TODO EntityMissing
   // protected $paymentPlan;
+  @Column({
+    name: 'payment_schedule_id',
+    type: 'int',
+    width: 11,
+  })
+  paymentScheduleId?: number;
+
+  @ManyToOne(() => PaymentPlanEntity, (e) => e.deadlines, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'payment_schedule_id',
+  })
+  paymentPlan?: PaymentPlanEntity;
 
   /**
    * @ORM\Column(name="date", type="date")
