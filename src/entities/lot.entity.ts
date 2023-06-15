@@ -3,9 +3,18 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { LotStatusEntity } from './lot-status.entity';
+import { AmoEntity } from './amo.entity';
+import { AmcEntity } from './amc.entity';
+import { FseEntity } from './fse.entity';
+import { OrganizationEntity } from './organization.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\LotRepository")
@@ -38,24 +47,62 @@ export class LotEntity {
    * @ORM\JoinColumn(name="lot_status_id", referencedColumnName="id")
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   // protected $status;
+  @Column({
+    name: 'lot_status_id',
+    type: 'int',
+    width: 11,
+  })
+  lotStatusId?: number;
+  @ManyToOne(() => LotStatusEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'lot_status_id'
+  })
+  status?: LotStatusEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Amo")
    * @ORM\JoinColumn(name="amo_id", referencedColumnName="id", nullable=true)
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   // protected $amo = null;
+  @Column({
+    name: 'amo_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  amoId?: number;
+  @ManyToOne(() => AmoEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'amo_id'
+  })
+  amo?: AmoEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Amc")
    * @ORM\JoinColumn(name="amc_id", referencedColumnName="id", nullable=true)
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   // protected $amc = null;
+  @Column({
+    name: 'amc_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  amcId?: number;
+  @ManyToOne(() => AmcEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'amc_id'
+  })
+  amc?: AmcEntity;
 
   /**
    * @ORM\Column(name="finess_number", type="string", length=255)
@@ -218,16 +265,40 @@ export class LotEntity {
    * @Serializer\Expose
    * @Serializer\MaxDepth(1)
    */
-  // @TODO EntityMissing
   //   protected $caresheets;
+  @ManyToMany(() => FseEntity, (e) => e.lots, {
+    createForeignKeyConstraints: false
+  })
+  @JoinTable({
+    name: 'lot_caresheet',
+    joinColumn: {
+      name: 'lot_id'
+    },
+    inverseJoinColumn: {
+      name: 'caresheet_id'
+    }
+  })
+  caresheets?: FseEntity[];
 
   // from file extends
   /**
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
+  })
+  organizationId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'organization_id'
+  })
+  organization?: OrganizationEntity;
 
   // @Check TimeStamp
   //use TimestampableEntity;
