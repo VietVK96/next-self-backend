@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { OrganizationEntity } from "./organization.entity";
+import { CorrespondentEntity } from "./correspondent.entity";
 
 /**
  * @ORM\Entity
@@ -23,8 +25,22 @@ export class CorrespondentTypeEntity {
    * @ORM\JoinColumn(name="group_id", referencedColumnName="GRP_ID")
    * @var \App\Entities\Group Entité représentant le groupe.
    */
-  // @TODO EntityMissing
   // protected $group;
+  @Column({
+    name: 'group_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  groupId?: number;
+
+  @ManyToOne(() => OrganizationEntity, e => e.correspondentTypes, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'group_id',
+  })
+  group?: OrganizationEntity;
 
   /**
    * @ORM\Column(name="name", type="string", length=255)

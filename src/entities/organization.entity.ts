@@ -9,6 +9,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { UserEntity } from './user.entity';
+import { CorrespondentTypeEntity } from './correspondent-type.entity';
+import { CorrespondentEntity } from './correspondent.entity';
 import { AddressEntity } from './address.entity';
 import { UploadEntity } from './upload.entity';
 import { LibraryBankEntity } from './library-bank.entity';
@@ -481,6 +483,16 @@ export class OrganizationEntity {
     createForeignKeyConstraints: false,
   })
   workstations?: WorkstationEntity[];
+
+  @OneToMany(() => CorrespondentTypeEntity, e => e.group, {
+    createForeignKeyConstraints: false,
+  })
+  correspondentTypes?: CorrespondentTypeEntity[];
+
+  @OneToMany(() => CorrespondentEntity, e => e.group, {
+    createForeignKeyConstraints: false,
+  })
+  correspondents?: CorrespondentEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
