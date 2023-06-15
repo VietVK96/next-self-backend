@@ -391,7 +391,7 @@ export class DentalEventTaskEntity {
    */
   // protected $fse;
   @Column({ name: 'FSE_ID', type: 'int', width: 11, nullable: true })
-  FSEId?: number;
+  fseId?: number;
 
   @ManyToOne(() => FseEntity, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'FSE_ID' })
