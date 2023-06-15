@@ -3,9 +3,37 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { CorrespondentEntity } from './correspondent.entity';
+import { OrganizationEntity } from './organization.entity';
+import { GenderEntity } from './gender.entity';
+import { AddressEntity } from './address.entity';
+import { UploadEntity } from './upload.entity';
+import { ContactFamilyEntity } from './contact-family.entity';
+import { ContactNoteEntity } from './contact-note.entity';
+import { EventEntity } from './event.entity';
+import { DentalQuotationEntity } from './dental-quotation.entity';
+import { BillEntity } from './bill.entity';
+import { CashingEntity } from './cashing.entity';
+import { MedicalOrderEntity } from './medical-order.entity';
+import { CashingContactEntity } from './cashing-contact.entity';
+import { UserEntity } from './user.entity';
+import { ContactUserEntity } from './contact-user.entity';
+import { PhoneEntity } from './phone.entity';
+import { PatientAmo, PatientAmoEntity } from './patient-amo.entity';
+import { PatientAmc, PatientAmcEntity } from './patient-amc.entity';
+import { EventTaskEntity } from './event-task.entity';
+import { ContraindicationEntity } from './contraindication.entity';
+import { PeriodontalChartEntity } from './periodontal-chart.entity';
+import { PatientMedicalEntity } from './patient-medical.entity';
 
 export enum EnumContactReminderVisitType {
   NONE = 'none',
@@ -273,8 +301,23 @@ export class ContactEntity {
    * @ORM\JoinColumn(name="CON_MEDECIN_TRAITANT", referencedColumnName="CPD_ID")
    * @var integer Entité représentant le médecin traitant.
    */
-  // @TODO EntityMissing
   // protected $medecinTraitant;
+
+  @Column({
+    name: 'CON_MEDECIN_TRAITANT',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  conMedecinTraitantId?: number;
+
+  @ManyToOne(() => CorrespondentEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'CON_MEDECIN_TRAITANT',
+  })
+  medecinTraitant?: CorrespondentEntity;
 
   /**
    * @ORM\Column(name="CON_MSG", type="text", nullable=false)
@@ -606,58 +649,157 @@ export class ContactEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\Group", inversedBy="contacts")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $group;
+
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
+  })
+  organizationId?: number;
+
+  @ManyToOne(() => OrganizationEntity, (e) => e.contacts, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'organization_id',
+  })
+  group?: OrganizationEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Gender")
    * @ORM\JoinColumn(name="GEN_ID", referencedColumnName="GEN_ID")
    */
-  // @TODO EntityMissing
   // protected $gender;
+  @Column({
+    name: 'GEN_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  genId?: number;
+
+  @ManyToOne(() => GenderEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'GEN_ID',
+  })
+  gender?: GenderEntity;
 
   /**
    * @ORM\OneToOne(targetEntity="CivilityTitle")
    * @ORM\JoinColumn(name="GEN_ID", referencedColumnName="GEN_ID", nullable=true)
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   // protected $civilityTitle = null;
+
+  @OneToOne(() => GenderEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'GEN_ID',
+  })
+  civilityTitle?: GenderEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Address")
    * @ORM\JoinColumn(name="ADR_ID", referencedColumnName="ADR_ID")
    */
-  // @TODO EntityMissing
   // protected $address;
+
+  @Column({
+    name: 'ADR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  adrId?: number;
+
+  @ManyToOne(() => AddressEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'ADR_ID',
+  })
+  address?: AddressEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Upload")
    * @ORM\JoinColumn(name="UPL_ID", referencedColumnName="UPL_ID")
    */
-  // @TODO EntityMissing
   // protected $upload;
+  @Column({
+    name: 'UPL_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  uplId?: number;
+
+  @ManyToOne(() => UploadEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'UPL_ID',
+  })
+  upload?: UploadEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Correspondent")
    * @ORM\JoinColumn(name="CPD_ID", referencedColumnName="CPD_ID")
    */
-  // @TODO EntityMissing
   // protected $correspondent;
+  @Column({
+    name: 'CPD_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  cpdId?: number;
+
+  @ManyToOne(() => CorrespondentEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'CPD_ID',
+  })
+  correspondent?: CorrespondentEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="AddressBook")
    * @ORM\JoinColumn(name="CPD_ID", referencedColumnName="CPD_ID", nullable=true)
    */
-  // @TODO EntityMissing
   // protected $addressedBy = NULL;
+
+  @ManyToOne(() => CorrespondentEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'CPD_ID',
+  })
+  addressedBy?: CorrespondentEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Contact\Family", inversedBy="contacts")
    * @ORM\JoinColumn(name="COF_ID", referencedColumnName="COF_ID")
    */
-  // @TODO EntityMissing
   // protected $family;
+  @Column({
+    name: 'COF_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  cofId?: number;
+
+  @ManyToOne(() => ContactFamilyEntity, (e) => e.contacts, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'COF_ID',
+  })
+  family?: ContactFamilyEntity;
 
   /**
    * @ORM\ManyToMany(targetEntity="\App\Entities\Phone")
@@ -667,85 +809,144 @@ export class ContactEntity {
    * 		inverseJoinColumns={@ORM\JoinColumn(name="PHO_ID", referencedColumnName="PHO_ID")}
    * )
    */
-  // @TODO EntityMissing
   // protected $phones;
+  @ManyToMany(() => PhoneEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinTable({
+    name: 'T_CONTACT_PHONE_COP',
+    joinColumn: {
+      name: 'CON_ID',
+    },
+    inverseJoinColumn: {
+      name: 'PHO_ID',
+    },
+  })
+  phones?: PhoneEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Contact\Note", mappedBy="contact")
    * @ORM\OrderBy({"date" = "ASC"})
    */
-  // @TODO EntityMissing
   // protected $notes;
+  @OneToMany(() => ContactNoteEntity, (e) => e.contact, {
+    createForeignKeyConstraints: false,
+  })
+  notes?: ContactNoteEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Event", mappedBy="contact")
    * @ORM\OrderBy({"start" = "ASC", "end" = "DESC"})
    */
-  // @TODO EntityMissing
   // protected $events;
+  @OneToMany(() => EventEntity, (e) => e.contact, {
+    createForeignKeyConstraints: false,
+  })
+  events?: EventEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Dental\Quotation", mappedBy="contact")
    * @ORM\OrderBy({"date" = "ASC"})
    */
-  // @TODO EntityMissing
   // protected $quotations;
+  @OneToMany(() => DentalQuotationEntity, (e) => e.contact, {
+    createForeignKeyConstraints: false,
+  })
+  quotations?: DentalQuotationEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Bill", mappedBy="contact")
    * @ORM\OrderBy({"date" = "ASC"})
    */
-  // @TODO EntityMissing
   // protected $bills;
-
+  @OneToMany(() => BillEntity, (e) => e.contact, {
+    createForeignKeyConstraints: false,
+  })
+  bills?: BillEntity[];
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Cashing", mappedBy="contact")
    * @ORM\OrderBy({"date" = "ASC"})
    */
-  // @TODO EntityMissing
+
   // protected $cashings;
+  @OneToMany(() => CashingEntity, (e) => e.contact, {
+    createForeignKeyConstraints: false,
+  })
+  cashings?: CashingEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Medical\Order", mappedBy="contact")
    * @ORM\OrderBy({"date" = "ASC"})
    */
-  // @TODO EntityMissing
   // protected $orders;
+  @OneToMany(() => MedicalOrderEntity, (e) => e.contact, {
+    createForeignKeyConstraints: false,
+  })
+  orders?: MedicalOrderEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Cashing\Contact", mappedBy="contact")
    */
-  // @TODO EntityMissing
   // protected $cashingContacts;
+  @OneToMany(() => CashingContactEntity, (e) => e.contact, {
+    createForeignKeyConstraints: false,
+  })
+  cashingContacts?: CashingContactEntity[];
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   // protected $user;
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  ursId?: number;
+
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'USR_ID',
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\ContactUser", mappedBy="contact")
    * @var \Doctrine\Common\Collections\ArrayCollection
    */
-  // @TODO EntityMissing
   // protected $contactUsers;
+  @OneToMany(() => ContactUserEntity, (e) => e.contact, {
+    createForeignKeyConstraints: false,
+  })
+  contactUsers?: ContactUserEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="PatientUserEntity", mappedBy="patient", cascade={"persist", "remove"})
    * @Expose
    * @var \Doctrine\Common\Collections\ArrayCollection
    */
-  // @TODO EntityMissing
+  //
   // protected $patientUsers;
+
+  @OneToMany(() => ContactUserEntity, (e) => e.patient, {
+    createForeignKeyConstraints: false,
+  })
+  patientUsers?: ContactUserEntity[];
 
   /**
    * @ORM\OneToOne(targetEntity="PatientMedical", mappedBy="patient", fetch="EAGER", cascade={"persist", "remove"}, orphanRemoval=true)
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   // protected $medical = null;
+
+  @OneToOne(() => PatientMedicalEntity, {
+    createForeignKeyConstraints: false,
+  })
+  medical?: PatientMedicalEntity;
 
   /**
    * @ORM\OneToMany(targetEntity="PatientAmo", mappedBy="patient", cascade={"persist", "remove"}, orphanRemoval=true)
@@ -753,8 +954,12 @@ export class ContactEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"amos_group"})
    */
-  // @TODO EntityMissing
   // protected $amos;
+
+  @OneToMany(() => PatientAmoEntity, (e) => e.patient, {
+    createForeignKeyConstraints: false,
+  })
+  amos?: PatientAmoEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="PatientAmc", mappedBy="patient", cascade={"persist", "remove"}, orphanRemoval=true)
@@ -762,14 +967,22 @@ export class ContactEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"amcs_group"})
    */
-  // @TODO EntityMissing
   // protected $amcs;
+
+  @OneToMany(() => PatientAmcEntity, (e) => e.patient, {
+    createForeignKeyConstraints: false,
+  })
+  amcs?: PatientAmcEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="Act", mappedBy="patient")
    */
-  // @TODO EntityMissing
   // protected $acts;
+
+  @OneToMany(() => EventTaskEntity, (e) => e.patient, {
+    createForeignKeyConstraints: false,
+  })
+  acts?: EventTaskEntity[];
 
   /**
    * @ORM\ManyToMany(targetEntity="Contraindication")
@@ -784,8 +997,21 @@ export class ContactEntity {
    * )
    * @ORM\OrderBy({"position": "ASC", "name": "ASC"})
    */
-  // @TODO EntityMissing
   // protected $contraindications;
+
+  @ManyToMany(() => ContraindicationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinTable({
+    name: 'T_CONTACT_CONTRAINDICATION_COC',
+    joinColumn: {
+      name: 'CON_ID',
+    },
+    inverseJoinColumn: {
+      name: 'MLC_ID',
+    },
+  })
+  contraindications?: ContraindicationEntity[];
 
   /**
    * @ORM\ManyToMany(targetEntity="PhoneNumber", inversedBy="patients")
@@ -801,15 +1027,31 @@ export class ContactEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"unpaid:index"})
    */
-  // @TODO EntityMissing
   // protected $phoneNumbers;
+  @ManyToMany(() => PhoneEntity, (e) => e.patients, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinTable({
+    name: 'T_CONTACT_PHONE_COP',
+    joinColumn: {
+      name: 'CON_ID',
+    },
+    inverseJoinColumn: {
+      name: 'PHO_ID',
+    },
+  })
+  phoneNumbers?: PhoneEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="PeriodontalChart", mappedBy="patient")
    * @ORM\OrderBy({"creationDate": "ASC"})
    */
-  // @TODO EntityMissing
   // protected $periodontalCharts;
+
+  @OneToMany(() => PeriodontalChartEntity, (e) => e.patient, {
+    createForeignKeyConstraints: false,
+  })
+  periodontalCharts?: PeriodontalChartEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

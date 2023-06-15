@@ -16,7 +16,7 @@ import { AmoEntity } from './amo.entity';
  * @Serializer\ExclusionPolicy("all")
  */
 @Entity('patient_amo')
-export class PatientAmo {
+export class PatientAmoEntity {
   /**
    * @ORM\Id
    * @ORM\GeneratedValue

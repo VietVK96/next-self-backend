@@ -3,9 +3,12 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\ContraindicationRepository")
@@ -28,12 +31,23 @@ export class ContraindicationEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
+  })
+  organizationId?: number;
+
+  @ManyToOne(() => OrganizationEntity)
+  @JoinColumn({
+    name: 'organization_id',
+  })
+  organization?: OrganizationEntity;
 
   // use TimestampableEntity;
   // use SoftDeleteableEntity;
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 

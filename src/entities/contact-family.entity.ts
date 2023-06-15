@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { ContactEntity } from './contact.entity';
 
 /**
  * @ORM\Entity
@@ -19,17 +20,20 @@ export class ContactFamilyEntity {
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Contact", mappedBy="family")
    */
-  // @TODO EntityMissing
-  // @TODO VariableMissing
   //   protected $contacts;
-
+  @OneToMany(() => ContactEntity, (e) => e.family, {
+    createForeignKeyConstraints: false,
+  })
+  contacts?: ContactEntity[];
   /**
    * @ORM\OneToMany(targetEntity="PatientEntity", mappedBy="family")
    * @Expose
    */
-  // @TODO EntityMissing
-  // @TODO VariableMissing
   //   protected $patients;
+  @OneToMany(() => ContactEntity, (e) => e.family, {
+    createForeignKeyConstraints: false,
+  })
+  patients?: ContactEntity[];
 }
 // application/Entities/Contact/Family.php
 // application/Entities/PatientFamilyEntity.php
