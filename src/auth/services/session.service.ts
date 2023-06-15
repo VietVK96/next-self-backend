@@ -1,12 +1,24 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as jwt from 'jsonwebtoken';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cache } from 'cache-manager';
 import { DEFAULT_LANGUAGE } from 'src/constatns/default';
+import { JWT_LOG_OUT, JWT_RF_LOG_OUT, JWT_SECRET } from 'src/constatns/jwt';
 import { UserEntity } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
+import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { LoginRes } from '../reponse/token.res';
+import { RefreshJwt, UserIdentity } from 'src/common/decorator/auth.decorator';
+import { ErrorCode } from 'src/constatns/error';
+import * as dayjs from 'dayjs';
+import { LogoutDto } from '../dto/logout.dto';
 
 @Injectable()
 export class SessionService {
@@ -23,25 +35,46 @@ export class SessionService {
   async createTokenLogin({
     user,
     lang,
+    oldRefreshToken,
   }: {
     user: UserEntity;
     lang?: string;
+    oldRefreshToken?: string;
   }): Promise<LoginRes> {
-    const payloadRefreshToken = {
-      sub: user.id,
-    };
-    const payloadSign = {
-      sub: user.id,
-      un: user.log,
+    const payloadSign: UserIdentity = {
+      id: user.id,
+      type: 'auth',
+      sub: user.log,
       org: user.organizationId,
       lang: lang ?? DEFAULT_LANGUAGE,
     };
 
     const token = this.jwtService.sign(payloadSign);
     const decode = this.jwtService.decode(token);
-    const refreshToken = this.jwtService.sign(payloadRefreshToken, {
-      expiresIn: '7d',
-    });
+
+    let refreshToken: string = oldRefreshToken;
+    let needRefresh = true;
+    if (oldRefreshToken && oldRefreshToken !== '') {
+      const u = jwt.verify(oldRefreshToken, JWT_SECRET) as RefreshJwt;
+      if (u.type !== 'refresh') {
+        throw new UnauthorizedException(ErrorCode.FRESH_TOKEN_WRONG);
+      }
+      const now = dayjs().subtract(1, 'day');
+      if (now.unix() < u.exp) {
+        needRefresh = false;
+      }
+    }
+
+    if (needRefresh) {
+      const payloadRefreshToken: RefreshJwt = {
+        id: user.id,
+        sub: user.log,
+        type: 'refresh',
+      };
+      refreshToken = this.jwtService.sign(payloadRefreshToken, {
+        expiresIn: '7d',
+      });
+    }
     return {
       accessToken: token,
       refreshToken: refreshToken,
@@ -50,86 +83,71 @@ export class SessionService {
     };
   }
 
-  // async refreshToken(payload: RefreshDto): Promise<LoginRes> {
-  //   const tokens = payload.refreshToken.split('.');
-  //   if (!tokens || tokens.length !== 2) {
-  //     throw new CBadRequestException(ErrorCode.REFRESH_TOKEN_WRONG);
-  //   }
-  //   const session = await this.sessionRepo.findOne({
-  //     where: {
-  //       userId: tokens[1],
-  //       refreshToken: payload.refreshToken,
-  //       deletedAt: IsNull(),
-  //     },
-  //   });
-  //   if (!session) {
-  //     throw new CBadRequestException(ErrorCode.REFRESH_TOKEN_WRONG);
-  //   }
-  //   const user = await this.userRepo.findOne({
-  //     where: {
-  //       id: session.userId,
-  //     },
-  //     relations: ['role'],
-  //   });
-  //   const refreshToken = `${makeRandomString(60, 'Aa#')}.${user.id}`;
-  //   const payloadSign = {
-  //     sub: user.id,
-  //     un: user.username,
-  //     role: user?.role?.id || '',
-  //   };
-  //   const token = this.jwtService.sign(payloadSign);
-  //   await this.sessionRepo.update(session.id, {
-  //     refreshToken,
-  //     token,
-  //     updatedAt: new Date(),
-  //   });
-  //   const decode = this.jwtService.decode(token);
-  //   return {
-  //     accessToken: token,
-  //     refreshToken: refreshToken,
-  //     expiresIn: 3600,
-  //     expiresAt: decode['exp'],
-  //   };
-  // }
+  async refreshToken(payload: RefreshTokenDto): Promise<LoginRes> {
+    let u: RefreshJwt = null;
+    try {
+      u = jwt.verify(payload.refreshToken, JWT_SECRET) as RefreshJwt;
+    } catch (e) {
+      throw new UnauthorizedException(ErrorCode.FRESH_TOKEN_WRONG);
+    }
 
-  // async deleteToken(payload: LogoutDto): Promise<void> {
-  //   const decode = this.jwtService.decode(payload.token);
-  //   const session = await this.sessionRepo.findOne({
-  //     where: {
-  //       userId: decode['sub'],
-  //       token: payload.token,
-  //       deletedAt: IsNull(),
-  //     },
-  //   });
+    const logout = await this.cacheManager.get(
+      `${JWT_RF_LOG_OUT}.${payload.refreshToken}`,
+    );
+    if (logout === JWT_RF_LOG_OUT) {
+      throw new UnauthorizedException(ErrorCode.FRESH_TOKEN_WRONG);
+    }
+    if (u.type !== 'refresh') {
+      throw new UnauthorizedException(ErrorCode.FRESH_TOKEN_WRONG);
+    }
 
-  //   if (session) {
-  //     await this.sessionRepo.update(session.id, { deletedAt: new Date() });
-  //     await this.cacheManager.set(
-  //       `${JWT_LOG_OUT}.${payload.token}`,
-  //       JWT_LOG_OUT,
-  //     );
-  //   }
-  // }
+    const user = await this.userRepo.findOne({
+      where: {
+        id: u.id,
+      },
+    });
+    if (!user) {
+      throw new UnauthorizedException(ErrorCode.CAN_NOT_LOGIN);
+    }
 
-  // async deleteAllToken(userId: string): Promise<void> {
-  //   const sessions = await this.sessionRepo.find({
-  //     where: {
-  //       userId,
-  //       deletedAt: IsNull(),
-  //     },
-  //   });
-  //   if (sessions && sessions.length > 0) {
-  //     for (const s of sessions) {
-  //       await this.cacheManager.set(`${JWT_LOG_OUT}.${s.token}`, JWT_LOG_OUT);
-  //     }
-  //   }
-  //   await this.sessionRepo.update(
-  //     {
-  //       userId,
-  //     },
-  //     {
-  //       deletedAt: new Date(),
-  //     },
-  //   );
-  // }
+    if (!user.validated || user.validated === null) {
+      throw new UnauthorizedException(ErrorCode.USER_NOT_ACTIVE);
+    }
+    return await this.createTokenLogin({
+      user,
+      lang: DEFAULT_LANGUAGE,
+      oldRefreshToken: payload.refreshToken,
+    });
+  }
+
+  async deleteToken(payload: LogoutDto): Promise<void> {
+    // Logout jwt token
+    try {
+      const decode = this.jwtService.decode(payload.token) as UserIdentity;
+      // 60 is 1 minute for time clear after lifeTime jwt
+      const lifeTime = dayjs().unix() - decode.exp + 60;
+
+      await this.cacheManager.set(
+        `${JWT_LOG_OUT}.${payload.token}`,
+        JWT_LOG_OUT,
+        lifeTime * 1000,
+      );
+    } catch (e) {
+      this.logger.log(e);
+    }
+    //Logout refresh token
+    try {
+      const decode = this.jwtService.decode(payload.rfToken) as RefreshJwt;
+      // 60 is 1 minute for time clear after lifeTime jwt
+      const lifeTime = dayjs().unix() - decode.exp + 60;
+
+      await this.cacheManager.set(
+        `${JWT_RF_LOG_OUT}.${payload.rfToken}`,
+        JWT_RF_LOG_OUT,
+        lifeTime * 1000,
+      );
+    } catch (e) {
+      this.logger.log(e);
+    }
+  }
 }
