@@ -9,13 +9,18 @@ import { Cache } from 'cache-manager';
 import { createParamDecorator } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { JWT_LOG_OUT } from 'src/constatns/jwt';
+import { JwtPayload } from 'jsonwebtoken';
 
-export interface UserIdentity {
-  sub: string;
+export interface UserIdentity extends JwtPayload {
+  id: number;
   un?: string;
-  role?: number;
   type?: string;
-  pers?: string[];
+}
+
+export interface RefreshJwt extends JwtPayload {
+  id: number;
+  sub: string;
+  type?: string;
 }
 
 export const CurrentUser = createParamDecorator(
