@@ -9,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { CashingEntity } from './cashing.entity';
 import { UploadEntity } from './upload.entity';
 import { UserEntity } from './user.entity';
 import { DentalQuotationEntity } from './dental-quotation.entity';
@@ -312,6 +313,11 @@ export class BillEntity {
 
   // @Check TimeStamp
   //use TimestampableEntity;
+
+  @OneToMany(() => CashingEntity, (e) => e.bill, {
+    createForeignKeyConstraints: false,
+  })
+  cashings?: CashingEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

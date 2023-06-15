@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\CcamMenuRepository")
@@ -29,8 +29,22 @@ export class CcamMenuEntity {
    * @ORM\ManyToOne(targetEntity="CcamMenu")
    * @ORM\JoinColumn(name="parent_id", referencedColumnName="id", nullable=true)
    */
-  // @TODO EntityMissing
   //   protected $parent = null;
+  @Column({
+    name: 'parent_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  parentId?: number;
+
+  @ManyToOne(() => CcamMenuEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'parent_id',
+  })
+  parent?: CcamMenuEntity;
 
   /**
    * @ORM\Column(name="rang", type="integer")

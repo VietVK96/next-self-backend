@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { CcamEntity } from './ccam.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\CcamUnitPriceRepository")
@@ -23,8 +24,21 @@ export class CcamUnitPriceEntity {
    * @ORM\ManyToOne(targetEntity="Ccam", inversedBy="unitPrices")
    * @ORM\JoinColumn(name="ccam_id", referencedColumnName="id")
    */
-  // @TODO EntityMissing
   //   protected $ccam;
+  @Column({
+    name: 'ccam_id',
+    type: 'int',
+    width: 11,
+  })
+  ccamId?: number;
+
+  @ManyToOne(() => CcamEntity, (e) => e.unitPrices, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'ccam_id',
+  })
+  ccam?: CcamEntity;
 
   /**
    * @ORM\Column(name="grid", type="integer", options={"default": 0})
