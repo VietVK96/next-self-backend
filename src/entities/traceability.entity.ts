@@ -94,7 +94,7 @@ export class TraceabilityEntity {
   @Column({ name: 'medical_device_id', type: 'int', width: 11, nullable: true })
   medicalDeviceId?: number;
 
-  @ManyToOne(() => MedicalDeviceEntity, { createForeignKeyConstraints: false })
+  @ManyToOne(() => MedicalDeviceEntity, e => e.traceabilities, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'medical_device_id' })
   medicalDevice?: MedicalDeviceEntity;
 
