@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { StorageSpaceEntity } from './storage-space.entity';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\Storage\Space\Pack")
@@ -63,8 +64,12 @@ export class StorageSpacePackEntity {
    * @ORM\OneToMany(targetEntity="\App\Entities\Storage\Space", mappedBy="storageSpacePack")
    * @var \App\Entities\Storage\Space Espace de stockage par groupe.
    */
-  // @TODO EntityMissing
   // protected $storageSpace;
+  @OneToMany(() => StorageSpaceEntity, (e) => e.storageSpacePack, {
+    createForeignKeyConstraints: false
+  })
+  storageSpace?: StorageSpaceEntity[];
+  
 }
 // application/Entities/Storage/Space/Pack.php
 // application/Entities/StorageSpacePackEntity.php

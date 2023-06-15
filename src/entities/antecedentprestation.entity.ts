@@ -2,9 +2,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { ContactEntity } from './contact.entity';
+import { LibraryActEntity } from './library-act.entity';
+import { LibraryActQuantityEntity } from './library-act-quantity.entity';
 
 /**
  * @ORM\Entity
@@ -27,22 +32,63 @@ export class AntecedentPrestationEntity {
    * @ORM\ManyToOne(targetEntity="Contact")
    * @ORM\JoinColumn(name="CON_ID", referencedColumnName="CON_ID")
    */
-  // @TODO EntityMissing
   //   protected $contact;
+  @Column({
+    name: 'CON_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  conId?: number;
+  @ManyToOne(() => ContactEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'CON_ID',
+  })
+  contact?: ContactEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="LibraryAct")
    * @ORM\JoinColumn(name="library_act_id", referencedColumnName="id", nullable=true)
    */
-  // @TODO EntityMissing
   //   protected $libraryAct = null;
+  @Column({
+    name: 'library_act_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  libraryActId?: number;
+
+  @ManyToOne(() => LibraryActEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'library_act_id',
+  })
+  libraryAct?: LibraryActEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="LibraryActQuantity")
    * @ORM\JoinColumn(name="library_act_quantity_id", referencedColumnName="id", nullable=true)
    */
-  // @TODO EntityMissing
   //   protected $libraryActQuantity = null;
+  @Column({
+    name: 'library_act_quantity_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  libraryActQuantityId?: number;
+
+  @ManyToOne(() => LibraryActQuantityEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'library_act_quantity_id',
+  })
+  libraryActQuantity?: LibraryActQuantityEntity;
 
   /**
    * @ORM\Column(name="DIN_NAME", type="text")

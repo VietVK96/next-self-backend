@@ -1,4 +1,6 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { EventEntity } from "./event.entity";
+import { ResourceEntity } from "./resource.entity";
 
 /**
  * @ORM\Entity
@@ -23,15 +25,40 @@ export class EventOccurrenceEntity {
    * @ORM\JoinColumn(name="evt_id", referencedColumnName="EVT_ID")
    * @var \App\Entities\Event Entité représentant un rendez-vous.
    */
-  // @TODO EntityMissing
   // protected $event;
+  @Column({
+    name: 'evt_id',
+    type: 'int',
+    width: 11,
+  })
+  evtId?: number;
+  @ManyToOne(() => EventEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'evt_id'
+  })
+  event?: EventEntity;
 
   /**
-     * @ORM\ManyToOne(targetEntity="Resource")
-     * @ORM\JoinColumn(name="resource_id", referencedColumnName="id")
-     */
-  // @TODO EntityMissing
+   * @ORM\ManyToOne(targetEntity="Resource")
+   * @ORM\JoinColumn(name="resource_id", referencedColumnName="id")
+   */
   // protected $resource = null;
+  @Column({
+    name: 'resource_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  resourceId?: number;
+  @ManyToOne(() => ResourceEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'resource_id'
+  })
+  resource?: ResourceEntity;
 
   /**
    * @ORM\Column(name="evo_date", type="date")

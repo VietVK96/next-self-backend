@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { CcamEntity } from './ccam.entity';
+import { DentalMaterialEntity } from './dental-material.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\CcamConditionRepository")
@@ -23,8 +25,21 @@ export class CcamConditionEntity {
    * @ORM\ManyToOne(targetEntity="Ccam", inversedBy="conditions")
    * @ORM\JoinColumn(name="ccam_id", referencedColumnName="id")
    */
-  // @TODO EntityMissing
   // protected $ccam;
+  @Column({
+    name: 'ccam_id',
+    type: 'int',
+    width: 11,
+  })
+  ccamId?: number;
+
+  @ManyToOne(() => CcamEntity, (e) => e.conditions, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'ccam_id',
+  })
+  ccam?: CcamEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="DentalMaterial")
@@ -32,8 +47,22 @@ export class CcamConditionEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"detail"})
    */
-  // @TODO EntityMissing
   // protected $material = null;
+  @Column({
+    name: 'dental_material_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  dentalMaterialId?: number;
+
+  @ManyToOne(() => DentalMaterialEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'dental_material_id',
+  })
+  material?: DentalMaterialEntity;
 
   /**
    * @ORM\Column(name="forbidden_teeth", type="simple_array", nullable=true)

@@ -2,9 +2,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { TraceabilityEntity } from './traceability.entity';
+import { OrganizationEntity } from './organization.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\MedicalDeviceRepository")
@@ -52,16 +57,31 @@ export class MedicalDeviceEntity {
   /**
    * @ORM\OneToMany(targetEntity="Traceability", mappedBy="medicalDevice")
    */
-  // @TODO EntityMissing
   //   protected $traceabilities;
+  @OneToMany(() => TraceabilityEntity, (e) => e.medicalDevice, {
+    createForeignKeyConstraints: false
+  })
+  traceabilities?: TraceabilityEntity[];
 
   // from file extends
   /**
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
+  })
+  organizationId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'organization_id'
+  })
+  organization?: OrganizationEntity;
 
   // @Check TimeStamp
   //use TimestampableEntity;

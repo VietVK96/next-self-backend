@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { CcamEntity } from "./ccam.entity";
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\CcamCmuCodificationRepository")
@@ -24,8 +25,21 @@ export class CcamCmuCodificationEntity {
    * @ORM\ManyToOne(targetEntity="Ccam", inversedBy="cmuCodifications")
    * @ORM\JoinColumn(name="ccam_id", referencedColumnName="id")
    */
-  // @TODO EntityMissing
   // protected $ccam;
+  @Column({
+    name: 'ccam_id',
+    type: 'int',
+    width: 11,
+  })
+  ccamId?: number;
+
+  @ManyToOne(() => CcamEntity, (e) => e.cmuCodifications, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'ccam_id',
+  })
+  ccam?: CcamEntity;
 
   /**
    * @ORM\Column(name="codification", type="string", length=3, nullable=true, options={"fixed": true})

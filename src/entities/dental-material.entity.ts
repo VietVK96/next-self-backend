@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { CcamEntity } from "./ccam.entity";
 
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\DentalMaterialRepository")
@@ -65,6 +66,11 @@ export class DentalMaterialEntity {
     default: 0,
   })
   position?: number
+
+  @OneToMany(() => CcamEntity, (e) => e.material, {
+    createForeignKeyConstraints: false,
+  })
+  ccams?: CcamEntity[];
 }
 
 // application/Entities/DentalMaterial.php

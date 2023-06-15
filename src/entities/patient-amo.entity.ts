@@ -1,4 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { ContactEntity } from './contact.entity';
+import { AmoEntity } from './amo.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PatientAmoRepository")
@@ -8,7 +16,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
  * @Serializer\ExclusionPolicy("all")
  */
 @Entity('patient_amo')
-export class PatientAmo {
+export class PatientAmoEntity {
   /**
    * @ORM\Id
    * @ORM\GeneratedValue
@@ -25,16 +33,43 @@ export class PatientAmo {
    * @ORM\ManyToOne(targetEntity="Patient", inversedBy="amos")
    * @ORM\JoinColumn(name="patient_id", referencedColumnName="CON_ID")
    */
-  // @TODO EntityMissing
   // protected $patient;
+
+  @Column({
+    name: 'patient_id',
+    type: 'int',
+    width: 11,
+  })
+  patientId?: number;
+  @ManyToOne(() => ContactEntity, (e) => e.amos, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'patient_id',
+  })
+  patient?: ContactEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Amo", cascade={"persist"})
    * @ORM\JoinColumn(name="amo_id", referencedColumnName="id", nullable=true)
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   // protected $amo = null;
+
+  @Column({
+    name: 'amo_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  amoId?: number;
+  @ManyToOne(() => AmoEntity, (e) => e.amos, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'amo_id',
+  })
+  amo?: AmoEntity;
 
   /**
    * @ORM\Column(name="start_date", type="date", nullable=true)

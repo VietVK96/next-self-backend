@@ -1,4 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { UserEntity } from "./user.entity";
+import { ContactEntity } from "./contact.entity";
+import { FseEntity } from "./fse.entity";
+import { AmcEntity } from "./amc.entity";
 
 export enum EnumThirdPartyStatus {
   WAITING = 'WTN',
@@ -35,24 +39,39 @@ export class ThirdPartyAmcEntity {
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    * @Serializer\Exclude
    */
-  // @TODO EntityMissing
   // protected $user;
+  @Column({ name: "user_id", type: 'int', width: 11 })
+  userId?: number;
+
+  @OneToOne(() => UserEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'user_id' })
+  user?: UserEntity;
 
   /**
    * @ORM\OneToOne(targetEntity="Patient")
    * @ORM\JoinColumn(name="patient_id", referencedColumnName="CON_ID")
    * @Serializer\Exclude
    */
-  // @TODO EntityMissing
   // protected $patient;
+  @Column({ name: "patient_id", type: 'int', width: 11 })
+  patientId?: number;
+
+  @OneToOne(() => ContactEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'patient_id' })
+  patient?: ContactEntity;
 
   /**
    * @ORM\OneToOne(targetEntity="Caresheet")
    * @ORM\JoinColumn(name="caresheet_id", referencedColumnName="FSE_ID")
    * @Serializer\Exclude
    */
-  // @TODO EntityMissing
   // protected $caresheet;
+  @Column({ name: "caresheet_id", type: 'int', width: 11 })
+  caresheetId?: number;
+
+  @OneToOne(() => FseEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'caresheet_id' })
+  caresheet?: FseEntity;
 
   /**
    * @ORM\Column(name="amount", type="decimal", precision=10, scale=2, options={"default": 0})
@@ -194,8 +213,13 @@ export class ThirdPartyAmcEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"amc:index"})
    */
-  // @TODO EntityMissing
   // protected $amc;
+  @Column({ name: 'amc_id', type: 'int', width: 11 })
+  amcId?: number;
+
+  @ManyToOne(() => AmcEntity, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'amc_id' })
+  amc?: AmcEntity;
 
   /**
    * @ORM\Column(name="is_dre", type="boolean", options={"default": false})

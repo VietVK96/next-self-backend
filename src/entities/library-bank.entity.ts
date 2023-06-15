@@ -3,9 +3,11 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { CashingEntity } from './cashing.entity';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\Library\Bank")
@@ -347,6 +349,11 @@ export class LibraryBankEntity {
    */
   // @TODO EntityMissing
   //   protected $address;
+
+  @OneToMany(() => CashingEntity, (e) => e.bill, {
+    createForeignKeyConstraints: false,
+  })
+  cashings?: CashingEntity[];
 }
 
 //application\Entities\BankEntity.php

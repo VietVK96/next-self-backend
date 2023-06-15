@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { UserEntity } from './user.entity';
 
 /**
  * @ORM\Entity
@@ -40,8 +41,20 @@ export class LicenseEntity {
    * @ORM\OneToOne(targetEntity="\App\Entities\User", inversedBy="license")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   //   protected $user;
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11,
+  })
+  usrId?: number;
+  @OneToOne(() => UserEntity, (e) => e.license, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'USR_ID'
+  })
+  user?: UserEntity;
 }
 
 // application\Entities\License.php
