@@ -46,7 +46,7 @@ export class PushNotificationEntity {
   @JoinColumn({
     name: 'group_id',
   })
-  group: OrganizationEntity;
+  group?: OrganizationEntity;
 
   /**
    * @ORM\Column(name="item_id", type="integer")
