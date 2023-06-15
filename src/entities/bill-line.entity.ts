@@ -1,4 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { BillEntity } from './bill.entity';
 
 export enum EnumBillLineType {
   OPERATION = 'operation',
@@ -126,7 +133,21 @@ export class BillLineEntity {
    * @ORM\ManyToOne(targetEntity="\App\Entities\Bill", inversedBy="lines")
    * @ORM\JoinColumn(name="BIL_ID", referencedColumnName="BIL_ID")
    */
-  // @TODO EntityMissing
   //protected $bill;
+  @Column({
+    name: 'BIL_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  bilId?: number;
+
+  @ManyToOne(() => BillEntity, (e) => e.lines, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'BIL_ID',
+  })
+  bill?: BillEntity;
 }
 // application/Entities/Bill/Line.php
