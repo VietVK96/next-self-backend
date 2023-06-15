@@ -100,6 +100,7 @@ export class ContactNoteEntity {
     name: 'CON_ID',
     type: 'int',
     width: 11,
+    nullable: true,
   })
   conId?: number;
 
