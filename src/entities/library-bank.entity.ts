@@ -5,12 +5,14 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { OrganizationEntity } from './organization.entity';
 import { UserEntity } from './user.entity';
 import { AddressEntity } from './address.entity';
+import { CashingEntity } from './cashing.entity';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\Library\Bank")
@@ -393,6 +395,11 @@ export class LibraryBankEntity {
     name: 'ADR_ID'
   })
   address?: AddressEntity;
+
+  @OneToMany(() => CashingEntity, (e) => e.bill, {
+    createForeignKeyConstraints: false,
+  })
+  cashings?: CashingEntity[];
 }
 
 //application\Entities\BankEntity.php

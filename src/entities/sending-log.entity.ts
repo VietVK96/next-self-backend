@@ -1,4 +1,6 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { UserEntity } from "./user.entity";
+import { ReminderTypeEntity } from "./reminder-type.entity";
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\SendingLogRepository")
@@ -29,15 +31,36 @@ export class SendingLogEntity {
    * @ORM\ManyToOne(targetEntity="User", inversedBy="sendingLogs")
    * @ORM\JoinColumn(name="USR_ID", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   // protected $user;
+  @Column({
+    name: 'USR_ID',
+    type: 'int',
+    width: 11
+  })
+  usrId?: number;
+  @ManyToOne(() => UserEntity, (e) => e.sendingLogs, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'USR_ID',
+  })
+  usr?: UserEntity;
 
   // @TODO EntityMissing
   // @Column({
   //   name: 'RMT_ID',
   //   type: 'int',
+  //   width: 11,
   //   nullable: true
   // })
+  // rmtId?: number;
+  // @OneToOne(() => ReminderTypeEntity, {
+  //   createForeignKeyConstraints: false
+  // })
+  // @JoinColumn({
+  //   name: 'RMT_ID',
+  // })
+  // reminderType?: ReminderTypeEntity;
   
   /**
    * @ORM\Column(name="USH_USED", type="datetime")

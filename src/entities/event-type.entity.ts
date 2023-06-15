@@ -10,9 +10,13 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { UserEntity } from './user.entity';
 
 // File: application\Entity\EventType.php: class EventType extends AbstractEntity implements OrganizationInterface
 @Entity('event_type')
@@ -22,9 +26,21 @@ export class EventTypeEntity {
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
-
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
+  })
+  organizationId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'organization_id',
+  })
+  organization?: OrganizationEntity;
+  
   // use SoftDeleteableEntity;
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt?: Date;
@@ -54,8 +70,21 @@ export class EventTypeEntity {
    * @ORM\ManyToOne(targetEntity="User", inversedBy="eventTypes")
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    */
-  // @TODO EntityMissing
   // protected $user;
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+    nullable: true
+  })
+  userId?: number;
+  @ManyToOne(() => UserEntity, (e) => e.eventTypes, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'user_id',
+  })
+  user?: UserEntity;
 
   /**
    * @ORM\Column(name="label", type="string", length=255)

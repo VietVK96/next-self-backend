@@ -1,4 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { ContactEntity } from './contact.entity';
+import { AmcEntity } from './amc.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\PatientAmcRepository")
@@ -25,16 +33,43 @@ export class PatientAmc {
    * @ORM\ManyToOne(targetEntity="Patient", inversedBy="amcs")
    * @ORM\JoinColumn(name="patient_id", referencedColumnName="CON_ID")
    */
-  // @TODO EntityMissing
   // protected $patient;
+
+  @Column({
+    name: 'patient_id',
+    type: 'int',
+    width: 11,
+  })
+  patientId?: number;
+  @ManyToOne(() => ContactEntity, (e) => e.amcs, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'patient_id',
+  })
+  patient?: ContactEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="Amc", cascade={"persist"})
    * @ORM\JoinColumn(name="amc_id", referencedColumnName="id", nullable=true)
    * @Serializer\Expose
    */
-  // @TODO EntityMissing
   // protected $amc = null;
+
+  @Column({
+    name: 'amc_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  amcId?: number;
+  @ManyToOne(() => AmcEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'amc_id',
+  })
+  amc?: AmcEntity;
 
   /**
    * @ORM\Column(name="start_date", type="date", nullable=true)

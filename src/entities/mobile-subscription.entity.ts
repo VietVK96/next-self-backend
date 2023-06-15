@@ -1,10 +1,16 @@
 import {
+  Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrganizationEntity } from './organization.entity';
+import { UserEntity } from './user.entity';
 
 /**
  * @ORM\Entity
@@ -36,8 +42,21 @@ export class MobileSubscriptionEntityEntity {
    * @ORM\JoinColumn(name="group_id", referencedColumnName="GRP_ID")
    * @var \App\Entities\GroupEntity
    */
-  // @TODO EntityMissing
   // protected $group;
+
+  @Column({
+    name: 'group_id',
+    type: 'int',
+    width: 11,
+  })
+  groupId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'group_id',
+  })
+  group?: OrganizationEntity;
 
   /**
    * Entité de l'utilisateur.
@@ -46,8 +65,19 @@ export class MobileSubscriptionEntityEntity {
    * @ORM\JoinColumn(name="user_id", referencedColumnName="USR_ID")
    * @var \App\Entities\UserEntity
    */
-  // @TODO EntityMissing
   // protected $user;
+
+  @Column({
+    name: 'user_id',
+    type: 'int',
+    width: 11,
+  })
+  userId?: number;
+  @OneToOne(() => UserEntity, (e) => e.mobileSubscription, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({ name: 'user_id' })
+  user?: UserEntity;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

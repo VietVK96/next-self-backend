@@ -3,9 +3,16 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { MedicamentFamilyEntity } from './medicament-family.entity';
+import { ContraindicationEntity } from './contraindication.entity';
+import { OrganizationEntity } from './organization.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\MedicamentRepository")
@@ -38,8 +45,22 @@ export class MedicamentEntity {
    * @ORM\JoinColumn(name="MDT_ID", referencedColumnName="MDT_ID")
    * @Gedmo\SortableGroup
    */
-  // @TODO EntityMissing
   //   protected $family;
+  @Column({
+    name: 'MDT_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  mdtId?: number;
+  @ManyToOne(() => MedicamentFamilyEntity, (e) => e.medicaments, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'MDT_ID'
+  })
+  family?: MedicamentFamilyEntity;
+  
 
   /**
    * @ORM\Column(name="MDP_NAME", type="string", length=255)
@@ -168,16 +189,40 @@ export class MedicamentEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"medicament:read"})
    */
-  // @TODO EntityMissing
   // protected $contraindications;
+  @ManyToMany(() => ContraindicationEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinTable({
+    name: 'T_MEDICAL_PRESCRIPTION_CONTRAINDICATION_MPC',
+    joinColumn: {
+      name: 'MDP_ID'
+    },
+    inverseJoinColumn: {
+      name: 'MLC_ID'
+    }
+  })
+  contraindications?: ContraindicationEntity[];
 
   // from file extends
   /**
    * @ORM\ManyToOne(targetEntity="Organization")
    * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
    */
-  // @TODO EntityMissing
   // protected $organization;
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
+  })
+  organizationId?: number;
+  @ManyToOne(() => OrganizationEntity, {
+    createForeignKeyConstraints: false
+  })
+  @JoinColumn({
+    name: 'organization_id'
+  })
+  organization?: OrganizationEntity;
 
   // @Check TimeStamp
   //use TimestampableEntity;

@@ -1,4 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { FseEntity } from './fse.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\CaresheetRejectionRepository")
@@ -22,8 +29,21 @@ export class CaresheetRejection {
    * @ORM\JoinColumn(name="caresheet_id", referencedColumnName="FSE_ID")
    * @Serializer\Exclude
    */
-  // @TODO EntityMissing
   // protected $caresheet;
+  @Column({
+    name: 'caresheet_id',
+    type: 'int',
+    width: 11,
+  })
+  caresheetId?: number;
+
+  @ManyToOne(() => FseEntity, (e) => e.rejections, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'caresheet_id',
+  })
+  caresheet?: FseEntity;
 
   /**
    * @ORM\Column(name="rejected_on", type="date")
