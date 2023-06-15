@@ -32,7 +32,7 @@ export class StorageSpaceEntity {
   @Column({
     name: 'STS_QUANTITY',
     type: 'int',
-    length: 11,
+    width: 11,
   })
   quantity?: number;
 

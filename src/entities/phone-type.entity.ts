@@ -22,7 +22,7 @@ export class PhoneTypeEntity {
    */
   @Column({
     name: 'PTY_NAME',
-    type: 'string',
+    type: 'varchar',
     length: 81,
     nullable: false,
   })

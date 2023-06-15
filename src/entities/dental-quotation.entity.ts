@@ -588,7 +588,7 @@ export class DentalQuotationEntity {
    */
   // protected $treatmentPlan = null;
   @ManyToOne(() => PlanEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: 'PLF_ID', referencedColumnName: 'PLF_ID' })
+  @JoinColumn({ name: 'PLF_ID' })
   treatmentPlan?: PlanEntity;
 
   /**

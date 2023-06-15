@@ -464,6 +464,7 @@ export class DentalEventTaskEntity {
   @Column({
     name: 'DET_COMP',
     type: 'enum',
+    enum: EnumDentalEventTaskComp,
     nullable: true,
   })
   complement?: EnumDentalEventTaskComp;

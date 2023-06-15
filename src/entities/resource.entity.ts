@@ -66,7 +66,6 @@ export class ResourceEntity {
   })
   @JoinColumn({
     name: 'organization_id',
-    referencedColumnName: 'GRP_ID',
   })
   organization?: OrganizationEntity;
 

@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
 import { UserEntity } from './user.entity';
 
 // enum('day', 'week')
@@ -604,7 +604,7 @@ export class UserPreferenceEntity {
    */
   // protected $user;
 
-  @Column({
+  @PrimaryColumn({
     name: 'USR_ID',
     type: 'int',
     width: 11,

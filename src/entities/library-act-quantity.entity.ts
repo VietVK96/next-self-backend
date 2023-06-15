@@ -40,7 +40,7 @@ export enum EnumLibraryActQuantityExceeding {
  * @Gedmo\SoftDeleteable(fieldName="deletedAt", timeAware=false)
  * @Serializer\ExclusionPolicy("all")
  */
-Entity('library_act_quantity');
+@Entity('library_act_quantity')
 export class LibraryActQuantityEntity {
   // use OrganizationTrait;
   /**

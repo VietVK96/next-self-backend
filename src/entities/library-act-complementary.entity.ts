@@ -1,4 +1,4 @@
-import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { LibraryActEntity } from './library-act.entity';
 
 /**
@@ -16,7 +16,7 @@ export class LibraryActComplementaryEntity {
    * @ORM\JoinColumn(name="library_act_parent_id", referencedColumnName="id")
    */
   //   protected $parent;
-  @Column({
+  @PrimaryColumn({
     name: 'library_act_parent_id',
     type: 'int',
     width: 11

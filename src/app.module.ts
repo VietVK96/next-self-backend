@@ -35,4 +35,4 @@ import { EntityModule } from './entities';
     AuthModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

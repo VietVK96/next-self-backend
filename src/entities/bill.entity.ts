@@ -307,7 +307,6 @@ export class BillEntity {
   })
   @JoinColumn({
     name: 'CON_ID',
-    referencedColumnName: 'CON_ID',
   })
   patient?: ContactEntity;
 

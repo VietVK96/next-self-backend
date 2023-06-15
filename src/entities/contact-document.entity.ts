@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { ContactEntity } from './contact.entity';
 import { UploadEntity } from './upload.entity';
 
@@ -29,7 +29,7 @@ export class ContactDocumentEntity {
    * @ORM\GeneratedValue(strategy="NONE")
    */
   //   protected $contact;
-  @Column({
+  @PrimaryColumn({
     name: 'CON_ID',
     type: 'int',
     width: 11,
