@@ -18,6 +18,7 @@ import { HttpExceptionFilter } from './common/exceptions/http-exception.filter';
  * Some function is CRUD but 10% function working verry hard
  * Try up!!!!
  */
+//Some thing
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
