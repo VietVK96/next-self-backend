@@ -36,7 +36,7 @@ export class FindContactService {
         name: request.conditions[0].value,
       });
     }
-    qr.where('CON.CONT_ID <> :id', {
+    qr.where('CON.CON_ID <> :id', {
       id: organizationId,
     });
     const ab: FindAllContactRes[] = await qr.getRawMany();

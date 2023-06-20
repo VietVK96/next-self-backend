@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { EntityModule } from './entities';
 import { IRedisConfig } from './common/config/redis.config';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { IRedisConfig } from './common/config/redis.config';
     EntityModule,
     ContactModule,
     AuthModule,
+    MailModule,
   ],
 })
 export class AppModule {}
