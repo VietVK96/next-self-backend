@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AddressEntity } from 'src/entities/address.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { ContactEntity } from 'src/entities/contact.entity';
+import { EventEntity } from 'src/entities/event.entity';
 import { GenderEntity } from 'src/entities/gender.entity';
 import { PhoneEntity } from 'src/entities/phone.entity';
 import { UserEntity } from 'src/entities/user.entity';
@@ -122,7 +123,45 @@ export class FindContactService {
     });
     qr.addGroupBy('CON.CON_ID');
     qr.addOrderBy('CON.CON_LASTNAME , CON.CON_FIRSTNAME', 'ASC');
-    const ab: FindAllContactRes[] = await qr.getRawMany();
-    return ab;
+    const contacts: FindAllContactRes[] = await qr.getRawMany();
+
+    const conIds = contacts.map((a) => a.id);
+
+    /**
+     * Logic in php\contact\findAll.php line 34 and line 79->82
+     */
+    if (conIds && conIds.length > 0) {
+      const reliabilityQr = this.dataSource
+        .createQueryBuilder()
+        .from(EventEntity, 'EVT');
+
+      reliabilityQr.select(
+        `COALESCE(100 * SUM(IF(lateness = 0 AND EVT.EVT_STATE NOT IN (2, 3), 1, 0)) / COUNT(EVT_ID), 0) as reliability, EVT.CON_ID as conId`,
+      );
+      reliabilityQr.andWhere(
+        'EVT.CON_ID IN (:conIds) AND EVT.USR_ID = :docterId AND EVT.EVT_DELETE = 0',
+        {
+          conIds: conIds.join(','),
+          docterId,
+        },
+      );
+      reliabilityQr.addGroupBy('EVT.CON_ID');
+
+      const reliabilities: {
+        reliability: number;
+        conId: number;
+      }[] = await reliabilityQr.getRawMany();
+
+      const allContacts = contacts.map((contact) => {
+        const reliability = reliabilities.find((r) => r.conId === contact.id);
+        contact.reliability = 0;
+        if (reliability) {
+          contact.reliability = reliability.reliability;
+        }
+        return contact;
+      });
+      return allContacts;
+    }
+    return contacts;
   }
 }
