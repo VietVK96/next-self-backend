@@ -9,14 +9,14 @@ import { JwtService } from '@nestjs/jwt';
 import * as jwt from 'jsonwebtoken';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cache } from 'cache-manager';
-import { DEFAULT_LANGUAGE } from 'src/constatns/default';
-import { JWT_LOG_OUT, JWT_RF_LOG_OUT, JWT_SECRET } from 'src/constatns/jwt';
+import { DEFAULT_LANGUAGE } from 'src/constants/default';
+import { JWT_LOG_OUT, JWT_RF_LOG_OUT, JWT_SECRET } from 'src/constants/jwt';
 import { UserEntity } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { LoginRes } from '../reponse/token.res';
 import { RefreshJwt, UserIdentity } from 'src/common/decorator/auth.decorator';
-import { ErrorCode } from 'src/constatns/error';
+import { ErrorCode } from 'src/constants/error';
 import * as dayjs from 'dayjs';
 import { LogoutDto } from '../dto/logout.dto';
 

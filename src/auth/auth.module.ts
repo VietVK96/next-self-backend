@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { JWT_LIFETIME, JWT_SECRET } from 'src/constatns/jwt';
+import { JWT_LIFETIME, JWT_SECRET } from 'src/constants/jwt';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { AuthController } from './auth.controller';
