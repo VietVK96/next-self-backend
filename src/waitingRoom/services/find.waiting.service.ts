@@ -5,16 +5,17 @@ import { EventOccurrenceEntity } from 'src/entities/event-occurrence.entity';
 import { EventEntity } from 'src/entities/event.entity';
 import { GenderEntity } from 'src/entities/gender.entity';
 import { UserEntity } from 'src/entities/user.entity';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { findAllWaitingQueryRes } from '../reponse/findAllWaiting.query.res';
 import { findAllWaitingRes } from '../reponse/findAllWaiting.res';
-import { UserService } from 'src/users/services/user.service';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class FindWaitingService {
   constructor(
+    @InjectRepository(UserEntity)
+    private userRepo: Repository<UserEntity>,
     private dataSource: DataSource,
-    private readonly userService: UserService,
   ) {}
 
   /**
@@ -28,7 +29,7 @@ export class FindWaitingService {
     practitionerID: number,
   ) {
     const queryBuilder = this.dataSource.createQueryBuilder();
-    const user = await this.userService.findOne(organizationID);
+    const user = await this.userRepo.findOneBy({ id: organizationID });
     let query = '';
     if (
       user &&

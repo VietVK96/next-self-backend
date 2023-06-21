@@ -9,7 +9,6 @@ import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { EntityModule } from './entities';
 import { IRedisConfig } from './common/config/redis.config';
-import { UserModule } from './users/user.module';
 import { WaitingRoomModule } from './waitingRoom/waitingRoom.module';
 
 @Module({
@@ -50,7 +49,6 @@ import { WaitingRoomModule } from './waitingRoom/waitingRoom.module';
     EntityModule,
     ContactModule,
     AuthModule,
-    UserModule,
     WaitingRoomModule,
   ],
 })
