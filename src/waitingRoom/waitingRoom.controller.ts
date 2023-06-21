@@ -1,5 +1,5 @@
-import { Controller, Get, Headers, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiHeader, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { FindWaitingService } from './services/find.waiting.service';
 import {
   CurrentUser,
