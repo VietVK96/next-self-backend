@@ -1,5 +1,5 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
+import { Body, Controller, Get, Put, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   CurrentUser,
   TokenGuard,
@@ -7,29 +7,29 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { AntecedentPrestationService } from './services/antecedent-prestation.service';
 import { FindAllStructDto } from './dto/findAll.antecedent-prestation.dto';
+import { SaveStructDto } from './dto/save.antecedent-prestation.dto';
 
 @ApiBearerAuth()
 @Controller('/antecedent-prestation')
 @ApiTags('AntecedentPrestation')
 export class AntecedentPrestationController {
   constructor(
-    private antecedentPrestationServiceService: AntecedentPrestationService,
+    private antecedentPrestationService: AntecedentPrestationService,
   ) {}
 
   //File php/contact/antecedentPrestation/findAll.php
-  @Get('')
-  @ApiHeader({
-    name: 'X-DocterId',
-    description: 'DocterId',
-  })
+  @Get()
   @UseGuards(TokenGuard)
   async findAllAntecedentPrestation(
     @Query() payload: FindAllStructDto,
     @CurrentUser() identity: UserIdentity,
   ) {
-    return this.antecedentPrestationServiceService.findAll(
-      payload,
-      identity.org,
-    );
+    return this.antecedentPrestationService.findAll(payload, identity.org);
+  }
+
+  @Put()
+  @UseGuards(TokenGuard)
+  async saveAntecedentPrestation(@Body() payload: SaveStructDto) {
+    return this.antecedentPrestationService.save(payload);
   }
 }
