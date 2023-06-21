@@ -8,6 +8,7 @@ import { AuthController } from './auth.controller';
 import { SessionService } from './services/session.service';
 import { ValidationService } from './services/validation.service';
 import { AddressEntity } from 'src/entities/address.entity';
+import { JwtStrategy } from './jwt.strategy';
 
 @Module({
   imports: [
@@ -18,6 +19,6 @@ import { AddressEntity } from 'src/entities/address.entity';
     }),
   ],
   controllers: [AuthController],
-  providers: [ValidationService, SessionService],
+  providers: [ValidationService, SessionService, JwtStrategy],
 })
 export class AuthModule {}

@@ -13,6 +13,7 @@ import { JwtPayload } from 'jsonwebtoken';
 
 export interface UserIdentity extends JwtPayload {
   id: number;
+  org: number;
   un?: string;
   type?: string;
 }

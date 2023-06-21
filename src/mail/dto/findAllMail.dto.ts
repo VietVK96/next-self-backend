@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { PersonInfoDto } from './relationClass.dto';
 
 export class FindAllMailDto {
   @ApiProperty()
@@ -17,8 +18,11 @@ export class FindAllMailDto {
   favorite?: number;
 
   @ApiProperty()
-  created_at?: string;
+  created_at?: Date;
 
   @ApiProperty()
-  updated_at?: string;
+  updated_at?: Date;
+
+  @ApiProperty()
+  doctor?: PersonInfoDto;
 }
