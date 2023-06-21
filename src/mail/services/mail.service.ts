@@ -34,7 +34,9 @@ export class MailService {
         T_USER_USR.USR_MAIL AS email
     FROM T_USER_USR
     WHERE T_USER_USR.USR_ID = ?`;
-    const doctor: PersonInfoDto = await this.dataSource.query(sql, [docId | 0]);
+    const doctor: PersonInfoDto = (
+      await this.dataSource.query(sql, [docId | 0])
+    )[0];
 
     let data: FindAllMailDto[];
     if (docId) {
