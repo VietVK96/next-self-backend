@@ -13,4 +13,10 @@ export class FindContactController {
   async findAll(@Query() request: FindAllContactDto) {
     return this.findContactService.findAll(request, 1);
   }
+
+  // File php\contact\recentlyTreated\findAll.php 1->8
+  @Get('/recentlyTreated')
+  async findAllRecentlyTreated(@Query('practitioner') practitioner?: number) {
+    return this.findContactService.recentlyTreated(practitioner);
+  }
 }
