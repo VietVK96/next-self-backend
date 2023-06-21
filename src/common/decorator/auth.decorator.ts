@@ -8,7 +8,7 @@ import {
 import { Cache } from 'cache-manager';
 import { createParamDecorator } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { JWT_LOG_OUT } from 'src/constatns/jwt';
+import { JWT_LOG_OUT } from 'src/constants/jwt';
 import { JwtPayload } from 'jsonwebtoken';
 
 export interface UserIdentity extends JwtPayload {
