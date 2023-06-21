@@ -401,3 +401,6 @@ Temporary Items
 dist
 .webpack
 .serverless/**/*.zip
+
+.idea
+.vscode
