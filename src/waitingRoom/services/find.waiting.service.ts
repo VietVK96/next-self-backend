@@ -76,7 +76,7 @@ export class FindWaitingService {
       .andWhere('event_occurrence_evo.evo_date = CURDATE()')
       .andWhere('event_occurrence_evo.evo_exception = 0')
       .andWhere('T_EVENT_EVT.CON_ID = T_CONTACT_CON.CON_ID')
-      .addOrderBy('start, end');
+      .addOrderBy('start, end', 'ASC');
 
     const events: findAllWaitingQueryRes[] = await qr.getRawMany();
     const result: findAllWaitingRes[] = events.map((event) => {

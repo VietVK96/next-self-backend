@@ -18,20 +18,15 @@ export class WaitingRoomController {
     name: 'practitioner_id',
     type: 'string',
   })
-  @ApiHeader({
-    name: 'X-OrganizationId',
-    description: 'OrganizationId',
-  })
   @UseGuards(TokenGuard)
   async findAll(
     @Query() request: { practitioner_id: string },
-    @Headers('X-OrganizationId') organizationId: number,
     @CurrentUser() identity: UserIdentity,
   ) {
     const practitionerId = Number(request.practitioner_id);
     return this.findWaitingService.findAll(
-      organizationId,
-      identity.id | 2,
+      identity.org,
+      identity.id,
       practitionerId,
     );
   }
