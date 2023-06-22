@@ -32,7 +32,6 @@ export class FindAllContactDto {
     required: false,
   })
   @Transform(({ value }) => {
-    console.log(value);
     let re: FindAllStructDto[] | undefined = undefined;
     if (value) {
       re = [];
