@@ -15,6 +15,7 @@ import {
   dateFormatter,
 } from '../../common/formatter/index';
 import { Parser } from 'json2csv';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 
 const TypeFile = {
   EXCEL: 'xlsx',
@@ -113,6 +114,26 @@ export class PatientService {
       });
       await book.xlsx.write(res);
       res.end();
+    }
+  }
+
+  async deletePatient(id: number): Promise<any> {
+    try {
+      const patient = await this.dataSource
+        .createQueryBuilder()
+        .select('CON')
+        .from(ContactEntity, 'CON')
+        .where('CON.id = :id', { id })
+        .getOne();
+
+      return await this.dataSource
+        .getRepository(ContactEntity)
+        .createQueryBuilder()
+        .delete()
+        .where('id = :id', { id: patient?.id })
+        .execute();
+    } catch (error) {
+      throw new CBadRequestException(error?.sqlMessage);
     }
   }
 }
