@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { ErrorCode } from 'src/constatns/error';
+import { ErrorCode } from 'src/constants/error';
 import { UserEntity } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 import { ValidationDto } from '../dto/validation.dto';
