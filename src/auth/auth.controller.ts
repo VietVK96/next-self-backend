@@ -1,10 +1,16 @@
-import { Body, Controller, Delete, Post } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
 import { SuccessResponse } from 'src/common/response/success.res';
 import { LogoutDto } from './dto/logout.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ValidationDto } from './dto/validation.dto';
 import { LoginRes } from './reponse/token.res';
+import { GetSessionService } from './services/get-session.service';
 import { SessionService } from './services/session.service';
 import { ValidationService } from './services/validation.service';
 
@@ -14,6 +20,7 @@ export class AuthController {
   constructor(
     private validationService: ValidationService,
     private sessionService: SessionService,
+    private getSessionService: GetSessionService,
   ) {}
 
   /**
@@ -41,5 +48,13 @@ export class AuthController {
     return {
       success: true,
     };
+  }
+
+  @ApiBearerAuth()
+  @Get('session')
+  @UseGuards(TokenGuard)
+  async session(@CurrentUser() userIdentity: UserIdentity) {
+    const data = await this.getSessionService.getSession(userIdentity);
+    return data;
   }
 }
