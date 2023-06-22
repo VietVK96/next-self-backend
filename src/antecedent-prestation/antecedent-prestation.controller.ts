@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Put, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -8,6 +17,7 @@ import {
 import { AntecedentPrestationService } from './services/antecedent-prestation.service';
 import { FindAllStructDto } from './dto/findAll.antecedent-prestation.dto';
 import { SaveStructDto } from './dto/save.antecedent-prestation.dto';
+import { DeleteStructDto } from './dto/delete.antecedent-prestation.dto';
 
 @ApiBearerAuth()
 @Controller('/antecedent-prestation')
@@ -27,9 +37,24 @@ export class AntecedentPrestationController {
     return this.antecedentPrestationService.findAll(payload, identity.org);
   }
 
+  @Post()
+  @UseGuards(TokenGuard)
+  async createAntecedentPrestation(@Body() payload: SaveStructDto) {
+    return this.antecedentPrestationService.save(payload);
+  }
+
   @Put()
   @UseGuards(TokenGuard)
-  async saveAntecedentPrestation(@Body() payload: SaveStructDto) {
+  async updateAntecedentPrestation(@Body() payload: SaveStructDto) {
     return this.antecedentPrestationService.save(payload);
+  }
+
+  @Delete()
+  @UseGuards(TokenGuard)
+  async deleteAntecedentPrestation(
+    @Query() payload: DeleteStructDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.antecedentPrestationService.delete(payload, identity.org);
   }
 }

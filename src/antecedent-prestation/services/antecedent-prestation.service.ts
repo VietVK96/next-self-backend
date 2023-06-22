@@ -4,6 +4,7 @@ import { AntecedentPrestationEntity } from 'src/entities/antecedentprestation.en
 import { FindAllAntecedentPrestationRes } from '../response/findall.antecedent-prestation.res';
 import { FindAllStructDto } from '../dto/findAll.antecedent-prestation.dto';
 import { SaveStructDto } from '../dto/save.antecedent-prestation.dto';
+import { DeleteStructDto } from '../dto/delete.antecedent-prestation.dto';
 
 @Injectable()
 export class AntecedentPrestationService {
@@ -42,7 +43,7 @@ export class AntecedentPrestationService {
         ON DUPLICATE KEY UPDATE
         DIN_NAME = VALUES(DIN_NAME),
         DIN_TOOTH = VALUES(DIN_TOOTH)`;
-    const result = this.dataSource.manager.query(query, [
+    this.dataSource.manager.query(query, [
       id,
       patientId,
       libraryActId,
@@ -50,6 +51,23 @@ export class AntecedentPrestationService {
       name,
       teeth,
     ]);
-    return result;
+  }
+
+  async delete(payload: DeleteStructDto, organizationId: number) {
+    const queryBuilder = this.dataSource
+      .getRepository(AntecedentPrestationEntity)
+      .createQueryBuilder('ap');
+    queryBuilder
+      .addSelect('p')
+      .leftJoin('ap.contact', 'p')
+      .where('ap.id = :id', { id: payload.id })
+      .andWhere('p.group.id = :groupId', { groupId: organizationId });
+
+    const antecedentPrestation = await queryBuilder.getOne();
+    // const patient = antecedentPrestation.contact
+
+    this.dataSource.manager.remove(antecedentPrestation);
+
+    // @TODO Ids\Log:: write('Acte initial', $patient -> getId(), 3);
   }
 }
