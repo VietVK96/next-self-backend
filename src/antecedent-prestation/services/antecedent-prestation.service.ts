@@ -14,19 +14,23 @@ export class AntecedentPrestationService {
     payload: FindAllStructDto,
     organizationId: number,
   ): Promise<FindAllAntecedentPrestationRes[]> {
-    const queryBuilder = this.dataSource
-      .getRepository(AntecedentPrestationEntity)
-      .createQueryBuilder('ap');
-    queryBuilder
-      .select('ap.id')
-      .addSelect('ap.name')
-      .addSelect('ap.teeth')
-      .leftJoin('ap.contact', 'p')
-      .where('p.id = :id', { id: payload.id })
-      .andWhere('p.group.id = :groupId', { groupId: organizationId })
-      .orderBy('ap.createdAt', 'DESC');
-    const result: FindAllStructDto[] = await queryBuilder.getMany();
-    return result;
+    try {
+      const queryBuilder = this.dataSource
+        .getRepository(AntecedentPrestationEntity)
+        .createQueryBuilder('ap');
+      queryBuilder
+        .select('ap.id')
+        .addSelect('ap.name')
+        .addSelect('ap.teeth')
+        .leftJoin('ap.contact', 'p')
+        .where('p.id = :id', { id: payload.id })
+        .andWhere('p.group.id = :groupId', { groupId: organizationId })
+        .orderBy('ap.createdAt', 'DESC');
+      const result: FindAllStructDto[] = await queryBuilder.getMany();
+      return result;
+    } catch (error) {
+      return error;
+    }
   }
 
   async save(payload: SaveStructDto) {
@@ -43,31 +47,39 @@ export class AntecedentPrestationService {
         ON DUPLICATE KEY UPDATE
         DIN_NAME = VALUES(DIN_NAME),
         DIN_TOOTH = VALUES(DIN_TOOTH)`;
-    this.dataSource.manager.query(query, [
-      id,
-      patientId,
-      libraryActId,
-      libraryActQuantityId,
-      name,
-      teeth,
-    ]);
+    try {
+      this.dataSource.manager.query(query, [
+        id,
+        patientId,
+        libraryActId,
+        libraryActQuantityId,
+        name,
+        teeth,
+      ]);
+    } catch (error) {
+      return error;
+    }
   }
 
   async delete(payload: DeleteStructDto, organizationId: number) {
-    const queryBuilder = this.dataSource
-      .getRepository(AntecedentPrestationEntity)
-      .createQueryBuilder('ap');
-    queryBuilder
-      .addSelect('p')
-      .leftJoin('ap.contact', 'p')
-      .where('ap.id = :id', { id: payload.id })
-      .andWhere('p.group.id = :groupId', { groupId: organizationId });
+    try {
+      const queryBuilder = this.dataSource
+        .getRepository(AntecedentPrestationEntity)
+        .createQueryBuilder('ap');
+      queryBuilder
+        .addSelect('p')
+        .leftJoin('ap.contact', 'p')
+        .where('ap.id = :id', { id: payload.id })
+        .andWhere('p.group.id = :groupId', { groupId: organizationId });
 
-    const antecedentPrestation = await queryBuilder.getOne();
-    // const patient = antecedentPrestation.contact
+      const antecedentPrestation = await queryBuilder.getOne();
+      // const patient = antecedentPrestation.contact
 
-    this.dataSource.manager.remove(antecedentPrestation);
+      this.dataSource.manager.remove(antecedentPrestation);
 
-    // @TODO Ids\Log:: write('Acte initial', $patient -> getId(), 3);
+      // @TODO Ids\Log:: write('Acte initial', $patient -> getId(), 3);
+    } catch (error) {
+      return error;
+    }
   }
 }
