@@ -279,8 +279,7 @@ export class FindContactService {
     );
 
     const recentlyTreatedArr = await Promise.all(resPromise);
-    const response = recentlyTreatedArr.map((result) => result);
 
-    return response;
+    return recentlyTreatedArr;
   }
 }
