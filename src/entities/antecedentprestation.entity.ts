@@ -39,7 +39,7 @@ export class AntecedentPrestationEntity {
     width: 11,
     nullable: true,
   })
-  contactId?: number;
+  conId?: number;
   @ManyToOne(() => ContactEntity, {
     createForeignKeyConstraints: false,
   })
