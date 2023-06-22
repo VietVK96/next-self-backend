@@ -1,10 +1,11 @@
-import { Controller, Get, Headers, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiQuery, ApiHeader } from '@nestjs/swagger';
 import {
   CurrentUser,
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
+import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
 import { FindAllContactDto } from './dto/findAll.contact.dto';
 import { FindContactService } from './services/find.contact.service';
 
@@ -21,15 +22,15 @@ export class FindContactController {
     type: FindAllContactDto,
   })
   @ApiHeader({
-    name: 'X-DocterId',
-    description: 'DocterId',
+    name: 'X-DoctorId',
+    description: 'DoctorId',
   })
   @UseGuards(TokenGuard)
   async findAll(
     @Query() request: FindAllContactDto,
-    @Headers('X-DocterId') docterId: number,
+    @CurrentDoctor() doctorId: number,
     @CurrentUser() identity: UserIdentity,
   ) {
-    return this.findContactService.findAll(request, docterId, identity.org);
+    return this.findContactService.findAll(request, doctorId, identity.org);
   }
 }
