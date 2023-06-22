@@ -1,9 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class FindAllContactPhoneRes {
-  nbr?: string;
-}
-
 export class FindAllContactRes {
   @ApiProperty()
   id?: number;
@@ -42,7 +38,7 @@ export class FindAllContactRes {
   nbr?: number;
 
   @ApiProperty()
-  phones?: FindAllContactPhoneRes[];
+  phones?: string;
 
   @ApiProperty()
   practitionerAbbr?: string;
