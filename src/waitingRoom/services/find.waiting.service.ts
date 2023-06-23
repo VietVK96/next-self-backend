@@ -87,6 +87,7 @@ export class FindWaitingService {
         : { short_name: event.civilityTitleShortName };
 
       return {
+        ...event,
         color: {
           background: color[0],
           foreground: color[1],
