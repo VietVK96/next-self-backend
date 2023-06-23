@@ -1,21 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserEntity } from 'src/entities/user.entity';
-import { Repository } from 'typeorm';
-import { PatientExportDto } from '../dto/index.dto';
-import { DataSource } from 'typeorm';
-import { ContactEntity } from '../../entities/contact.entity';
 import { Workbook } from 'exceljs';
 import { Response } from 'express';
-import { AddressEntity } from '../../entities/address.entity';
-import { PhoneEntity } from '../../entities/phone.entity';
-import {
-  addressFormatter,
-  inseeFormatter,
-  dateFormatter,
-} from '../../common/formatter/index';
 import { Parser } from 'json2csv';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
+import { UserEntity } from 'src/entities/user.entity';
+import { DataSource, Repository } from 'typeorm';
+import {
+  addressFormatter,
+  dateFormatter,
+  inseeFormatter,
+} from '../../common/formatter/index';
+import { AddressEntity } from '../../entities/address.entity';
+import { ContactEntity } from '../../entities/contact.entity';
+import { PhoneEntity } from '../../entities/phone.entity';
+import { PatientExportDto } from '../dto/index.dto';
 
 const TypeFile = {
   EXCEL: 'xlsx',
@@ -118,6 +118,10 @@ export class PatientService {
   }
 
   async deletePatient(id: number): Promise<any> {
+    // Vérification de la permission de suppression d'une fiche patient.
+    // if (!$em -> getRepository(User:: class) -> hasPermission('PERMISSION_DELETE', 8, $session -> get('id'))) {
+    //   throw new AccessDeniedHttpException();
+    // }
     try {
       const patient = await this.dataSource
         .createQueryBuilder()
@@ -126,6 +130,7 @@ export class PatientService {
         .where('CON.id = :id', { id })
         .getOne();
 
+      if (!patient) throw new CBadRequestException(ErrorCode.PATIENT_NOT_FOUND);
       return await this.dataSource
         .getRepository(ContactEntity)
         .createQueryBuilder()
@@ -133,7 +138,7 @@ export class PatientService {
         .where('id = :id', { id: patient?.id })
         .execute();
     } catch (error) {
-      throw new CBadRequestException(error?.sqlMessage);
+      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
   }
 }
