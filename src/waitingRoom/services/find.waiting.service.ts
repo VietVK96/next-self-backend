@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { colorHelper } from 'src/common/helper/ColorHelper';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { EventOccurrenceEntity } from 'src/entities/event-occurrence.entity';
 import { EventEntity } from 'src/entities/event.entity';
@@ -81,17 +80,12 @@ export class FindWaitingService {
 
     const events: findAllWaitingQueryRes[] = await qr.getRawMany();
     const result: findAllWaitingRes[] = events.map((event) => {
-      const color = colorHelper.inthex(event.color);
       const civility_title = !event.civilityTitleShortName.length
         ? null
         : { short_name: event.civilityTitleShortName };
 
       return {
         ...event,
-        color: {
-          background: color[0],
-          foreground: color[1],
-        },
         patient: {
           id: event.contactId,
           last_name: event.contactLastname,

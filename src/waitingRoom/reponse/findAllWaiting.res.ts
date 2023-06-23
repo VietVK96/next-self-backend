@@ -1,10 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-interface Color {
-  background?: string;
-  foreground?: string;
-}
-
 interface Patient {
   id: number;
   last_name: string;
@@ -30,7 +25,7 @@ export class findAllWaitingRes {
   end?: string;
 
   @ApiProperty()
-  color?: Color;
+  color?: number;
 
   @ApiProperty()
   patient?: Patient;
