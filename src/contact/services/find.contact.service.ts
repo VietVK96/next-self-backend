@@ -63,6 +63,7 @@ export class FindContactService {
     }
     return qr;
   }
+
   /**
    * File: php\contact\findAll.php 21-91
    * @function main function
@@ -70,7 +71,7 @@ export class FindContactService {
    */
   async findAll(
     request: FindAllContactDto,
-    docterId: number,
+    doctorId: number,
     organizationId: number,
   ): Promise<FindAllContactRes[]> {
     const queryBuiler = this.dataSource.createQueryBuilder();
@@ -103,9 +104,9 @@ export class FindContactService {
       .leftJoin(
         ContactUserEntity,
         'cou',
-        `cou.con_id = CON.CON_ID AND cou.usr_id = :docterId`,
+        `cou.con_id = CON.CON_ID AND cou.usr_id = :doctorId`,
         {
-          docterId,
+          doctorId,
         },
       )
       .leftJoin(
@@ -139,10 +140,10 @@ export class FindContactService {
         `COALESCE(100 * SUM(IF(lateness = 0 AND EVT.EVT_STATE NOT IN (2, 3), 1, 0)) / COUNT(EVT_ID), 0) as reliability, EVT.CON_ID as conId`,
       );
       reliabilityQr.andWhere(
-        'EVT.CON_ID IN (:conIds) AND EVT.USR_ID = :docterId AND EVT.EVT_DELETE = 0',
+        'EVT.CON_ID IN (:conIds) AND EVT.USR_ID = :doctorId AND EVT.EVT_DELETE = 0',
         {
           conIds: conIds.join(','),
-          docterId,
+          doctorId,
         },
       );
       reliabilityQr.addGroupBy('EVT.CON_ID');
