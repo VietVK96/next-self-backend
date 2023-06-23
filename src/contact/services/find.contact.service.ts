@@ -177,16 +177,6 @@ export class FindContactService {
   async findAllRecentlyTreated(
     practitioner?: number,
   ): Promise<FindAllRecentlyTreatedRes[]> {
-    const reliabilityQueryBuilder = this.dataSource.createQueryBuilder();
-    reliabilityQueryBuilder
-      .select(
-        'COALESCE(100 * SUM(IF(lateness = 0 AND EVT.EVT_STATE NOT IN (2, 3), 1, 0)) / COUNT(*), 0) as reliability',
-      )
-      .from(EventEntity, 'EVT')
-      .where('EVT.CON_ID = :conId')
-      .andWhere('EVT.USR_ID = :usrId')
-      .andWhere('EVT.EVT_DELETE = 0');
-
     const queryBuiler = this.dataSource.createQueryBuilder();
     const select = `
       CON.CON_ID as id,
@@ -240,46 +230,69 @@ export class FindContactService {
 
     const results = await qr.getRawMany();
 
-    const resPromise: Promise<FindAllRecentlyTreatedRes>[] = results.map(
-      async (item) => {
-        // convert phones
-        const pArr: contactPhoneRes[] = String(item.phones)
+    /**
+     * Logic in php\contact\recentlyTreated\findAll.php line 18->23, line 65->75
+     */
+    const conIds = results.map((a) => a.id);
+    if (conIds && conIds.length > 0) {
+      const reliabilityQueryBuilder = this.dataSource.createQueryBuilder();
+      reliabilityQueryBuilder
+        .select(
+          `COALESCE(100 * SUM(IF(lateness = 0 AND EVT.EVT_STATE NOT IN (2, 3), 1, 0)) / COUNT(*), 0) as reliability,
+          EVT.CON_ID as conId`,
+        )
+        .from(EventEntity, 'EVT')
+        .where('EVT.CON_ID IN (:...conIds)')
+        .andWhere('EVT.USR_ID = :usrId')
+        .andWhere('EVT.EVT_DELETE = 0')
+        .addGroupBy('EVT.CON_ID');
+
+      // get reliabilities
+      reliabilityQueryBuilder.setParameters({
+        conIds: conIds,
+        usrId: practitioner,
+      });
+      const reliabilities: {
+        reliability: number;
+        conId: number;
+      }[] = await reliabilityQueryBuilder.getRawMany();
+
+      // convert phones
+      const pArr: Array<contactPhoneRes[]> = results.map((contact) => {
+        return String(contact.phones)
           .split(',')
           .map((item) => {
             return {
-              nbr: item,
+              nbr: item.trim(),
             };
           });
+      });
+
+      const recentlyTreatedArr = results.map((contact, index) => {
+        // get reliability
+        const reliability = reliabilities.find((r) => r.conId === contact.id);
+        contact.reliability = 0;
+        if (reliability) {
+          contact.reliability = reliability.reliability;
+        }
 
         // convert color
-        const colorArr = ColorHelper.inthex(Number(item.color));
-
-        // get reliability
-        reliabilityQueryBuilder.setParameters({
-          conId: item.id,
-          usrId: practitioner,
-        });
-        const reliability = await reliabilityQueryBuilder
-          .getRawOne()
-          .then((result) => {
-            return result.reliability;
-          });
+        const colorArr = ColorHelper.inthex(Number(contact.color));
 
         const tmp: FindAllRecentlyTreatedRes = {
-          ...item,
+          ...contact,
           color: {
             background: colorArr[0],
             foreground: colorArr[1],
           },
-          phones: pArr,
-          reliability: reliability,
+          phones: pArr[index],
         };
         return tmp;
-      },
-    );
+      });
 
-    const recentlyTreatedArr = await Promise.all(resPromise);
+      return recentlyTreatedArr;
+    }
 
-    return recentlyTreatedArr;
+    return results;
   }
 }
