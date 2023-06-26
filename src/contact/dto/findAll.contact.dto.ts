@@ -5,16 +5,19 @@ import { parseJson } from 'src/common/util/json';
 @ApiExtraModels()
 export class FindAllStructDto {
   @ApiProperty({
+    name: '[field]',
     required: false,
   })
   field?: string;
 
   @ApiProperty({
+    name: '[op]',
     required: false,
   })
   op?: string;
 
   @ApiProperty({
+    name: '[value]',
     required: false,
   })
   value?: string;
@@ -34,7 +37,10 @@ export class FindAllContactDto {
       re = [];
       if (Array.isArray(value) && value.length > 0) {
         for (const v of value) {
-          const d = parseJson<FindAllStructDto>(v);
+          let d = v;
+          if (typeof v === 'string') {
+            d = parseJson<FindAllStructDto>(v);
+          }
           re.push(d);
         }
       } else {
