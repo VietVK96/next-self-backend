@@ -6,10 +6,18 @@ import { HistoricalController } from './historical.controller';
 import { ContactService } from './services/contact.service';
 import { FindContactService } from './services/find.contact.service';
 import { HistoricalService } from './services/historical.service';
+import { NoteService } from './services/note.service';
+import { NoteController } from './ note.controller';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ContactEntity])],
-  controllers: [FindContactController, HistoricalController],
-  providers: [FindContactService, HistoricalService, ContactService],
+  imports: [TypeOrmModule.forFeature([ContactEntity, ContactNoteEntity])],
+  controllers: [FindContactController, HistoricalController, NoteController],
+  providers: [
+    FindContactService,
+    HistoricalService,
+    ContactService,
+    NoteService,
+  ],
 })
 export class ContactModule {}
