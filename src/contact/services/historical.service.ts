@@ -271,7 +271,7 @@ export class HistoricalService {
         d.cotation = d.ccamCode;
       }
       if (d.nomenclature === 'NGAP') {
-        d.cotation = `${d.code} ${d.coef}`;
+        if (d.code) d.cotation = `${d.code} ${d.coef}`;
       }
       return d;
     });

@@ -55,4 +55,10 @@ export class FindContactController {
   ) {
     return this.contactService.findOne(id, doctorId, identity);
   }
+  // File php\contact\recentlyTreated\findAll.php 1->8
+  @Get('/recentlyTreated')
+  @UseGuards(TokenGuard)
+  async findAllRecentlyTreated(@Query('practitioner') practitioner?: number) {
+    return this.findContactService.findAllRecentlyTreated(practitioner);
+  }
 }
