@@ -12,5 +12,8 @@ export class FindAllMailRes {
   recordsFiltered?: number;
 
   @ApiProperty()
+  totalData?: number;
+
+  @ApiProperty()
   data?: FindAllMailDto[];
 }

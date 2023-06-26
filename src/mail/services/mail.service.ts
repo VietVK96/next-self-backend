@@ -6,6 +6,7 @@ import { FindAllMailDto } from '../dto/findAllMail.dto';
 import { HeaderFooterInfo, PersonInfoDto } from '../dto/relationClass.dto';
 import { FindMailRes } from '../response/findMail.res';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CreateUpdateMailDto } from '../dto/createUpdateMail.dto';
 import { CreateUpdateMailRes } from '../response/createUpdateMail.res';
 
 @Injectable()
@@ -16,8 +17,10 @@ export class MailService {
     private dataSource: DataSource,
   ) {}
 
-  //find all
+  //php\mail\findAll.php
   async findAll(
+    draw: string,
+    pageIndex: number,
     docId: number,
     groupId: number,
     search: string,
@@ -25,7 +28,6 @@ export class MailService {
   ): Promise<FindAllMailRes> {
     if (!search) search = '';
     const pageSize = 100;
-    const offSet = 0;
 
     const sql = `SELECT
         T_USER_USR.USR_ID AS id,
@@ -59,9 +61,8 @@ export class MailService {
                 T_LETTERS_LET.USR_ID = ?
             )
         ORDER BY favorite DESC
-        LIMIT ?
-        OFFSET ?`,
-        [search, docId, pageSize, offSet],
+        LIMIT ?`,
+        [search, docId, pageSize],
       );
     } else {
       data = await this.dataSource.query(
@@ -111,18 +112,20 @@ export class MailService {
       }
     }
 
-    const draw = '1';
+    const offSet = (pageIndex - 1) * pageSize;
+    const dataPaging = data.slice(offSet, offSet + pageSize);
 
     const result: FindAllMailRes = {
       draw,
-      recordsTotal: data.length,
-      recordsFiltered: data.length,
-      data,
+      recordsTotal: dataPaging.length,
+      recordsFiltered: dataPaging.length,
+      totalData: data.length,
+      data: dataPaging,
     };
     return result;
   }
 
-  //find by id
+  //php\mail\find.php
   async findById(id: number): Promise<FindMailRes> {
     const qr = await this.lettersRepo.findOne({
       where: { id: id },
@@ -215,17 +218,17 @@ export class MailService {
     return result;
   }
 
-  //duplicate
-  async duplicate(payload): Promise<FindMailRes> {
+  //php\mail\store.php
+  async duplicate(payload: CreateUpdateMailDto): Promise<CreateUpdateMailRes> {
     const qr = await this.lettersRepo.query(
       `INSERT INTO T_LETTERS_LET
       ( USR_ID, header_id, footer_id, LET_TITLE, LET_MSG, footer_content, 
         footer_height, LET_TYPE, height, favorite, created_at, updated_at) 
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
-        payload?.doctor === null ? null : payload?.doctor?.id,
-        payload?.header === null ? null : payload?.header?.id,
-        payload?.footer === null ? null : payload?.footer?.id,
+        payload?.doctor === null ? null : payload?.doctor,
+        payload?.header === null ? null : payload?.header,
+        payload?.footer === null ? null : payload?.footer,
         payload?.title,
         payload?.body,
         payload?.footer_content,

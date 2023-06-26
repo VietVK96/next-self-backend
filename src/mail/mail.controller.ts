@@ -1,7 +1,7 @@
 import { MailService } from './services/mail.service';
 import { Controller, Get, Query, Headers, Post, Body } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
-import { CreateUpdateMailRes } from './response/createUpdateMail.res';
+import { CreateUpdateMailDto } from './dto/createUpdateMail.dto';
 
 @ApiBearerAuth()
 @Controller('/mails')
@@ -15,12 +15,21 @@ export class MailController {
     description: 'DocterId',
   })
   async findAll(
+    @Query('draw') draw?: string,
+    @Query('pageIndex') pageIndex?: number,
     @Query('docId') docId?: number,
     @Query('groupId') groupId?: number,
     @Query('search') search?: string,
     @Headers('X-DocterId') doctorId?: number,
   ) {
-    return await this.mailService.findAll(docId, groupId, search, doctorId);
+    return await this.mailService.findAll(
+      draw,
+      pageIndex,
+      docId,
+      groupId,
+      search,
+      doctorId,
+    );
   }
 
   @Get('/find')
@@ -29,9 +38,7 @@ export class MailController {
   }
 
   @Post('/create')
-  async duplicate(@Body() payload: CreateUpdateMailRes) {
-    console.log('Hail!', payload);
-
+  async duplicate(@Body() payload: CreateUpdateMailDto) {
     return await this.mailService.duplicate(payload);
   }
 }

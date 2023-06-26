@@ -1,6 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class FindAllContactRes {
+export class contactPhoneRes {
+  nbr?: string;
+}
+
+export class FindAllRecentlyTreatedRes {
   @ApiProperty()
   id?: number;
 
@@ -14,7 +18,10 @@ export class FindAllContactRes {
   birthday?: string;
 
   @ApiProperty()
-  color?: number;
+  color?: {
+    background?: string;
+    foreground?: string;
+  };
 
   @ApiProperty()
   firstname?: string;
@@ -38,7 +45,7 @@ export class FindAllContactRes {
   nbr?: number;
 
   @ApiProperty()
-  phones?: string;
+  phones?: contactPhoneRes[];
 
   @ApiProperty()
   practitionerAbbr?: string;
@@ -53,7 +60,7 @@ export class FindAllContactRes {
   practitionerLastname?: string;
 
   @ApiProperty()
-  reliability?: number;
+  reliability?: string;
 
   @ApiProperty()
   value?: number;

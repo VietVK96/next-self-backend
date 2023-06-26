@@ -1,9 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateUpdateMailRes {
-  @ApiProperty()
-  id?: number;
-
+export class CreateUpdateMailDto {
   @ApiProperty()
   type?: string;
 
