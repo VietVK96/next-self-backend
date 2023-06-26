@@ -1,13 +1,5 @@
 import { MailService } from './services/mail.service';
-import {
-  Controller,
-  Get,
-  Query,
-  Headers,
-  Post,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Query, Post, Body, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { CreateUpdateMailDto } from './dto/createUpdateMail.dto';
 import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';

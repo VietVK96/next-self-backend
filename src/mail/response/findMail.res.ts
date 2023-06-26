@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { FindAllMailDto } from '../dto/findAllMail.dto';
 import { HeaderFooterInfo, PersonInfoDto } from '../dto/relationClass.dto';
 
 export class FindMailRes {
