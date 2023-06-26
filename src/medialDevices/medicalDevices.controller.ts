@@ -13,7 +13,7 @@ import {
 export class FindMedicalDevicesController {
   constructor(private service: FindMedicalDevicesService) {}
 
-  // File php\contact\findAll.php 1->8
+  // php/medical-devices/index.php
   @Get()
   @UseGuards(TokenGuard)
   async findAll(@CurrentUser() identity: UserIdentity) {
