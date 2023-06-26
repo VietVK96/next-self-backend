@@ -15,14 +15,8 @@ export class FindMedicalDevicesController {
 
   // File php\contact\findAll.php 1->8
   @Get()
-  @ApiQuery({
-    name: 'organization_id',
-  })
   @UseGuards(TokenGuard)
-  async findAll(
-    @Query() { organization_id },
-    @CurrentUser() identity: UserIdentity,
-  ) {
-    return this.service.getMedicalDevices(organization_id);
+  async findAll(@CurrentUser() identity: UserIdentity) {
+    return this.service.getMedicalDevices(identity.org);
   }
 }
