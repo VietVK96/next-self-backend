@@ -24,7 +24,6 @@ export class MailService {
     docId: number,
     groupId: number,
     search: string,
-    doctorId: number,
   ): Promise<FindAllMailRes> {
     if (!search) search = '';
     const pageSize = 100;

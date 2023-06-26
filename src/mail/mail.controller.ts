@@ -1,7 +1,21 @@
 import { MailService } from './services/mail.service';
-import { Controller, Get, Query, Headers, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Headers,
+  Post,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { CreateUpdateMailDto } from './dto/createUpdateMail.dto';
+import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
 
 @ApiBearerAuth()
 @Controller('/mails')
@@ -11,24 +25,23 @@ export class MailController {
 
   @Get('/')
   @ApiHeader({
-    name: 'X-DocterId',
-    description: 'DocterId',
+    name: 'X-DoctorId',
+    description: 'DoctorId',
   })
+  @UseGuards(TokenGuard)
   async findAll(
     @Query('draw') draw?: string,
     @Query('pageIndex') pageIndex?: number,
-    @Query('docId') docId?: number,
-    @Query('groupId') groupId?: number,
+    @CurrentDoctor() docId?: number,
+    @CurrentUser() identity?: UserIdentity,
     @Query('search') search?: string,
-    @Headers('X-DocterId') doctorId?: number,
   ) {
     return await this.mailService.findAll(
       draw,
       pageIndex,
       docId,
-      groupId,
+      identity.org,
       search,
-      doctorId,
     );
   }
 
