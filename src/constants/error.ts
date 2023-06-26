@@ -3,4 +3,5 @@ export enum ErrorCode {
   USER_NOT_ACTIVE = 'USER_NOT_ACTIVE', //Une erreur est survenue : votre compte n'a pas été activé. Veuillez contacter le service commercial.
   FRESH_TOKEN_WRONG = 'FRESH_TOKEN_WRONG',
   YOU_NOT_HAVE_DOCTOR = 'YOU_NOT_HAVE_DOCTOR', // Custome
+  NOT_FOUND_PATIENT = 'NOT_FOUND_PATIENT',
 }
