@@ -1,10 +1,6 @@
-import { Body, Controller, Post, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
-import {
-  CurrentUser,
-  TokenGuard,
-  UserIdentity,
-} from 'src/common/decorator/auth.decorator';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { TokenGuard } from 'src/common/decorator/auth.decorator';
 import { NoteService } from './services/note.service';
 import { StoreNoteDto } from './dto/noteStore.dto';
 @ApiBearerAuth()
