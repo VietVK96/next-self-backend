@@ -14,6 +14,12 @@ export class ActServices {
     const data = await this.traceabilityRepository.find({
       where: { actId: id },
     });
-    return data;
+    return data.map((data) => {
+      return {
+        id: data.id,
+        observation: data.observation,
+        reference: data.reference,
+      };
+    });
   }
 }
