@@ -4,6 +4,7 @@ import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { Repository } from 'typeorm';
 import { StoreNoteDto } from '../dto/noteStore.dto';
 import { UserService } from 'src/user/services/user.service';
+import { PatientService } from 'src/patients/service/patient.service';
 
 @Injectable()
 export class NoteService {
@@ -11,16 +12,16 @@ export class NoteService {
     @InjectRepository(ContactNoteEntity)
     private readonly repo: Repository<ContactNoteEntity>,
     private userService: UserService,
+    private patientService: PatientService,
   ) {}
   async store(payload: StoreNoteDto) {
-    try {
-      const note = await this.repo.save(payload);
-      return await this.find(note.id);
-    } catch (error) {}
+    const note = await this.repo.save(payload);
+    const res = await this.find(note.id);
+    return res;
   }
 
   async find(id: number) {
-    const note = await this.repo.find({
+    const notes = await this.repo.find({
       where: {
         id,
       },
@@ -28,19 +29,21 @@ export class NoteService {
         patient: true,
       },
     });
-    console.log('doctor thanh', note[0].userId);
+    const note = notes[0];
 
-    if (note[0].userId) {
-      const doctor = await this.userService.find(note[0].userId);
-      console.log('doctor thanh', doctor);
-
-      delete note[0].userId;
-      delete note[0].conId;
+    if (note.userId) {
+      const doctorPR = this.userService.find(note.userId);
+      const patientPR = this.patientService.find(note.conId);
+      const [doctor, patient] = await Promise.all([doctorPR, patientPR]);
       return {
-        ...note[0],
+        id: note.id,
+        date: note.date,
+        color: note.color,
+        message: note.message,
         doctor: {
           ...doctor,
         },
+        patient,
       };
     }
   }

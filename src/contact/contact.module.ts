@@ -14,6 +14,7 @@ import { ActController } from './act.controller';
 import { ActServices } from './services/act.service';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { UserModule } from 'src/user/userModule';
+import { PatientModule } from 'src/patients/patient.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -23,6 +24,7 @@ import { UserModule } from 'src/user/userModule';
       UserEntity,
     ]),
     UserModule,
+    PatientModule,
   ],
   controllers: [
     FindContactController,
@@ -37,5 +39,6 @@ import { UserModule } from 'src/user/userModule';
     NoteService,
     ActServices,
   ],
+  exports: [ContactService],
 })
 export class ContactModule {}

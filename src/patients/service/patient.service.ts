@@ -17,6 +17,9 @@ import {
 import { Parser } from 'json2csv';
 import { GenderEntity } from 'src/entities/gender.entity';
 import { AddressService } from 'src/address/service/address.service';
+import { ContactService } from 'src/contact/services/contact.service';
+import { UploadEntity } from 'src/entities/upload.entity';
+import { ContactUserEntity } from 'src/entities/contact-user.entity';
 
 const TypeFile = {
   EXCEL: 'xlsx',
@@ -29,6 +32,7 @@ export class PatientService {
 
   constructor(
     private addressService: AddressService,
+    private contactService: ContactService,
     private dataSource: DataSource,
     @InjectRepository(ContactEntity)
     private patientRepository: Repository<ContactEntity>,
@@ -120,7 +124,6 @@ export class PatientService {
   }
 
   async find(id: number) {
-    const queryBuilder = this.dataSource.createQueryBuilder();
     const selectPatient = `
     CON.CON_ID AS id,
     CON.ADR_ID AS address_id,
@@ -133,10 +136,11 @@ export class PatientService {
     CON.CON_INSEE AS insee,
     CON.CON_INSEE_KEY AS insee_key
     `;
-    const patient = await queryBuilder
+    const patientPR = this.dataSource
+      .createQueryBuilder()
       .select(selectPatient)
       .from(ContactEntity, 'CON')
-      .where('T_CONTACT_CON.CON_ID = :id', { id })
+      .where('CON.CON_ID = :id', { id })
       .getRawOne();
 
     const selectCivility = `
@@ -145,16 +149,97 @@ export class PatientService {
       GEN.long_name AS long_name,
       GEN.GEN_TYPE AS sex
     `;
-    const civility = await queryBuilder
+    const civilityPR = this.dataSource
+      .createQueryBuilder()
       .select(selectCivility)
       .from(ContactEntity, 'CON')
       .innerJoin(GenderEntity, 'GEN')
       .where('CON.CON_ID = :id', { id })
-      .andWhere('CON.GEN_ID = GEN.GEN_ID')
+      .andWhere('GEN.GEN_ID = CON.GEN_ID')
       .getRawOne();
 
-    const address = await this.addressService.find(patient.id);
+    const addressPR = this.addressService.find(id);
+    const phonesPR = this.contactService.findPhone(id);
 
-    // TODO find phone;
+    const selectAvatar = `
+      UPL.UPL_ID AS id,
+      UPL.UPL_NAME AS original_filename,
+      UPL.UPL_FILENAME AS filename,
+      UPL.UPL_TYPE AS mimetype,
+      UPL.UPL_SIZE AS size,
+      UPL.UPL_TOKEN AS token,
+      UPL.created_at
+    `;
+    const avatarPR = this.dataSource
+      .createQueryBuilder()
+      .select(selectAvatar)
+      .from(UploadEntity, 'UPL')
+      .innerJoin(ContactEntity, 'CON')
+      .where('UPL.UPL_ID = CON.UPL_ID')
+      .andWhere('CON.CON_ID = :id', { id })
+      .getRawOne();
+
+    const selectDoctorStm = `
+      USR.USR_ID AS id,
+      USR.USR_LASTNAME AS lastname,
+      USR.USR_FIRSTNAME AS firstname,
+      USR.USR_ABBR AS short_name
+    `;
+    const doctorStmPR = this.dataSource
+      .createQueryBuilder()
+      .select(selectDoctorStm)
+      .from(UserEntity, 'USR')
+      .innerJoin(ContactEntity, 'CON')
+      .where('CON.CON_ID = :id', { id })
+      .andWhere('CON.USR_ID = USR.USR_ID')
+      .getRawOne();
+    const selectDoctors = `
+      cou.usr_id AS id,
+      cou.cou_amount_due AS amount_due,
+      cou.amount_due_care AS amount_due_care,
+      cou.amount_due_prosthesis AS amount_due_prosthesis,
+      cou.cou_last_payment AS last_payment,
+      cou.cou_last_care AS last_care
+    `;
+    const doctorsPR = this.dataSource
+      .createQueryBuilder()
+      .select(selectDoctors)
+      .from(ContactUserEntity, 'cou')
+      .where('cou.con_id = :id', { id })
+      .getRawMany();
+
+    const [patient, civility, address, phones, avatar, doctorStm, doctors] =
+      await Promise.all([
+        patientPR,
+        civilityPR,
+        addressPR,
+        phonesPR,
+        avatarPR,
+        doctorStmPR,
+        doctorsPR,
+      ]);
+
+    const doctorsRes = doctors.map((doctor) => {
+      return {
+        id: doctor.id,
+        pivot: {
+          amount_due: doctor.amount_due,
+          amount_due_care: doctor.amount_due_care,
+          amount_due_prosthesis: doctor.amount_due_prosthesis,
+          last_payment: doctor.last_payment,
+          last_care: doctor.last_care,
+        },
+      };
+    });
+
+    return {
+      ...patient,
+      civility,
+      address,
+      phones,
+      avatar,
+      doctor: doctorStm,
+      doctors: doctorsRes,
+    };
   }
 }
