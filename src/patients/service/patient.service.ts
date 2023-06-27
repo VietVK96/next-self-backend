@@ -130,7 +130,7 @@ export class PatientService {
         .where('CON.id = :id', { id })
         .getOne();
 
-      if (!patient) throw new CBadRequestException(ErrorCode.PATIENT_NOT_FOUND);
+      if (!patient) throw new CBadRequestException(ErrorCode.NOT_FOUND_PATIENT);
       return await this.dataSource
         .getRepository(ContactEntity)
         .createQueryBuilder()

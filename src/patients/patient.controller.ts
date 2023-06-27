@@ -26,6 +26,9 @@ export class PatientController {
     return await this.patientService.getExportQuery(res, request);
   }
 
+  /**
+   * File: application/php/patient/delete.php
+   */
   @Delete('delete/:id')
   @ApiBearerAuth()
   @UseGuards(TokenGuard)
