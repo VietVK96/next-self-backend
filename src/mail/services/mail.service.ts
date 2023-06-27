@@ -29,16 +29,16 @@ export class MailService {
     if (!search) search = '';
     const pageSize = 100;
 
-    const doctor: PersonInfoDto[] = await this.dataSource.query(`SELECT
+    const doctors: PersonInfoDto[] = await this.dataSource.query(`SELECT
         T_USER_USR.USR_ID AS id,
         T_USER_USR.USR_LASTNAME AS lastname,
         T_USER_USR.USR_FIRSTNAME AS firstname,
         T_USER_USR.USR_MAIL AS email
     FROM T_USER_USR`);
 
-    let data: FindAllMailDto[];
+    let mails: FindAllMailDto[];
     if (docId) {
-      data = await this.dataSource.query(
+      mails = await this.dataSource.query(
         ` SELECT SQL_CALC_FOUND_ROWS
             T_LETTERS_LET.LET_ID AS id,
             T_LETTERS_LET.USR_ID AS doctor_id,
@@ -60,14 +60,14 @@ export class MailService {
         LIMIT ?`,
         [search, docId, pageSize],
       );
-      for (const iterator of data) {
+      for (const iterator of mails) {
         if (iterator.doctor_id !== null && docId)
-          iterator.doctor = doctor.find(
+          iterator.doctor = doctors.find(
             (item) => item.id === iterator.doctor_id,
           );
       }
     } else {
-      data = await this.dataSource.query(
+      mails = await this.dataSource.query(
         `SELECT SQL_CALC_FOUND_ROWS t1.*
         FROM (
             SELECT
@@ -101,9 +101,9 @@ export class MailService {
         ORDER BY favorite DESC, title`,
         [groupId],
       );
-      for (const iterator of data) {
+      for (const iterator of mails) {
         if (iterator.doctor_id !== null) {
-          const doctorGroup: PersonInfoDto = doctor.find(
+          const doctorGroup: PersonInfoDto = doctors.find(
             (item) => item.id === iterator.doctor_id,
           );
           iterator.doctor = doctorGroup;
@@ -112,13 +112,13 @@ export class MailService {
     }
 
     const offSet = (pageIndex - 1) * pageSize;
-    const dataPaging = data.slice(offSet, offSet + pageSize);
+    const dataPaging = mails.slice(offSet, offSet + pageSize);
 
     const result: FindAllMailRes = {
       draw,
       recordsTotal: dataPaging.length,
       recordsFiltered: dataPaging.length,
-      totalData: data.length,
+      totalData: mails.length,
       data: dataPaging,
     };
     return result;
@@ -132,7 +132,7 @@ export class MailService {
 
     if (!qr) throw new CNotFoundRequestException(`Mail Not found`);
 
-    const doctor: PersonInfoDto[] = await this.dataSource.query(
+    const doctors: PersonInfoDto[] = await this.dataSource.query(
       `SELECT
         T_USER_USR.USR_ID AS id,
         T_USER_USR.USR_LASTNAME AS lastname,
@@ -143,7 +143,7 @@ export class MailService {
       [qr.usrId],
     );
 
-    const patient: PersonInfoDto[] = await this.dataSource.query(
+    const patients: PersonInfoDto[] = await this.dataSource.query(
       `SELECT
         T_CONTACT_CON.CON_ID AS id,
         T_CONTACT_CON.CON_LASTNAME AS lastname,
@@ -154,7 +154,7 @@ export class MailService {
       [qr.conId],
     );
 
-    const conrrespondent: PersonInfoDto[] = await this.dataSource.query(
+    const conrrespondents: PersonInfoDto[] = await this.dataSource.query(
       `SELECT
         T_CORRESPONDENT_CPD.CPD_ID AS id,
         T_CORRESPONDENT_CPD.CPD_LASTNAME AS lastname,
@@ -165,7 +165,7 @@ export class MailService {
       [qr.cpdId],
     );
 
-    const header: HeaderFooterInfo[] = await this.dataSource.query(
+    const headers: HeaderFooterInfo[] = await this.dataSource.query(
       `SELECT 
         T_LETTERS_LET.LET_ID AS id,
         T_LETTERS_LET.LET_TITLE AS title,
@@ -177,7 +177,7 @@ export class MailService {
       [qr.headerId],
     );
 
-    const footer: HeaderFooterInfo[] = await this.dataSource.query(
+    const footers: HeaderFooterInfo[] = await this.dataSource.query(
       `SELECT 
         T_LETTERS_LET.LET_ID AS id,
         T_LETTERS_LET.LET_TITLE AS title,
@@ -189,7 +189,7 @@ export class MailService {
       [qr.footerId],
     );
 
-    const result: FindMailRes = {
+    const mail: FindMailRes = {
       id: qr.id,
       type: qr.type,
       title: qr.title,
@@ -200,14 +200,14 @@ export class MailService {
       favorite: qr.favorite,
       created_at: qr.createdAt,
       updated_at: qr.updatedAt,
-      doctor: doctor.length === 0 ? null : doctor[0],
-      patient: patient.length === 0 ? null : patient[0],
-      conrrespondent: conrrespondent.length <= 0 ? null : conrrespondent[0],
-      header: header.length === 0 ? null : header[0],
-      footer: footer.length === 0 ? null : footer[0],
+      doctor: doctors.length === 0 ? null : doctors[0],
+      patient: patients.length === 0 ? null : patients[0],
+      conrrespondent: conrrespondents.length <= 0 ? null : conrrespondents[0],
+      header: headers.length === 0 ? null : headers[0],
+      footer: footers.length === 0 ? null : footers[0],
     };
 
-    return result;
+    return mail;
   }
 
   //php\mail\store.php
@@ -232,10 +232,10 @@ export class MailService {
         payload?.updated_at,
       ],
     );
-    const dataRes = {
+    const mail = {
       id: qr.insertId,
       ...payload,
     };
-    return dataRes;
+    return mail;
   }
 }
