@@ -8,6 +8,7 @@ import { FindMailRes } from '../response/findMail.res';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUpdateMailDto } from '../dto/createUpdateMail.dto';
 import { CreateUpdateMailRes } from '../response/createUpdateMail.res';
+import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 
 @Injectable()
 export class MailService {
@@ -28,16 +29,16 @@ export class MailService {
     if (!search) search = '';
     const pageSize = 100;
 
-    const doctor: PersonInfoDto[] = await this.dataSource.query(`SELECT
+    const doctors: PersonInfoDto[] = await this.dataSource.query(`SELECT
         T_USER_USR.USR_ID AS id,
         T_USER_USR.USR_LASTNAME AS lastname,
         T_USER_USR.USR_FIRSTNAME AS firstname,
         T_USER_USR.USR_MAIL AS email
     FROM T_USER_USR`);
 
-    let data: FindAllMailDto[];
+    let mails: FindAllMailDto[];
     if (docId) {
-      data = await this.dataSource.query(
+      mails = await this.dataSource.query(
         ` SELECT SQL_CALC_FOUND_ROWS
             T_LETTERS_LET.LET_ID AS id,
             T_LETTERS_LET.USR_ID AS doctor_id,
@@ -59,14 +60,14 @@ export class MailService {
         LIMIT ?`,
         [search, docId, pageSize],
       );
-      for (const iterator of data) {
+      for (const iterator of mails) {
         if (iterator.doctor_id !== null && docId)
-          iterator.doctor = doctor.find(
+          iterator.doctor = doctors.find(
             (item) => item.id === iterator.doctor_id,
           );
       }
     } else {
-      data = await this.dataSource.query(
+      mails = await this.dataSource.query(
         `SELECT SQL_CALC_FOUND_ROWS t1.*
         FROM (
             SELECT
@@ -100,9 +101,9 @@ export class MailService {
         ORDER BY favorite DESC, title`,
         [groupId],
       );
-      for (const iterator of data) {
+      for (const iterator of mails) {
         if (iterator.doctor_id !== null) {
-          const doctorGroup: PersonInfoDto = doctor.find(
+          const doctorGroup: PersonInfoDto = doctors.find(
             (item) => item.id === iterator.doctor_id,
           );
           iterator.doctor = doctorGroup;
@@ -111,65 +112,61 @@ export class MailService {
     }
 
     const offSet = (pageIndex - 1) * pageSize;
-    const dataPaging = data.slice(offSet, offSet + pageSize);
+    const dataPaging = mails.slice(offSet, offSet + pageSize);
 
     const result: FindAllMailRes = {
       draw,
       recordsTotal: dataPaging.length,
       recordsFiltered: dataPaging.length,
-      totalData: data.length,
+      totalData: mails.length,
       data: dataPaging,
     };
     return result;
   }
 
   //php\mail\find.php
-  async findById(id: number): Promise<FindMailRes> {
+  async findById(id: number) {
     const qr = await this.lettersRepo.findOne({
       where: { id: id },
     });
-    const doctor: PersonInfoDto | null = (
-      await this.dataSource.query(
-        `SELECT
+
+    if (!qr) throw new CNotFoundRequestException(`Mail Not found`);
+
+    const doctors: PersonInfoDto[] = await this.dataSource.query(
+      `SELECT
         T_USER_USR.USR_ID AS id,
         T_USER_USR.USR_LASTNAME AS lastname,
         T_USER_USR.USR_FIRSTNAME AS firstname,
         T_USER_USR.USR_MAIL AS email
     FROM T_USER_USR
     WHERE T_USER_USR.USR_ID = ?`,
-        [qr.usrId | 0],
-      )
-    )[0];
+      [qr.usrId],
+    );
 
-    const patient: PersonInfoDto | null = (
-      await this.dataSource.query(
-        `SELECT
+    const patients: PersonInfoDto[] = await this.dataSource.query(
+      `SELECT
         T_CONTACT_CON.CON_ID AS id,
         T_CONTACT_CON.CON_LASTNAME AS lastname,
         T_CONTACT_CON.CON_FIRSTNAME AS firstname,
         T_CONTACT_CON.CON_MAIL AS email
     FROM T_CONTACT_CON
     WHERE T_CONTACT_CON.CON_ID = ?`,
-        [qr.conId | 0],
-      )
-    )[0];
+      [qr.conId],
+    );
 
-    const conrrespondent: PersonInfoDto | null = (
-      await this.dataSource.query(
-        `SELECT
+    const conrrespondents: PersonInfoDto[] = await this.dataSource.query(
+      `SELECT
         T_CORRESPONDENT_CPD.CPD_ID AS id,
         T_CORRESPONDENT_CPD.CPD_LASTNAME AS lastname,
         T_CORRESPONDENT_CPD.CPD_FIRSTNAME AS firstname,
         T_CORRESPONDENT_CPD.CPD_MAIL AS email
     FROM T_CORRESPONDENT_CPD
     WHERE T_CORRESPONDENT_CPD.CPD_ID = ?`,
-        [qr.cpdId | 0],
-      )
-    )[0];
+      [qr.cpdId],
+    );
 
-    const header: HeaderFooterInfo | null = (
-      await this.dataSource.query(
-        `SELECT 
+    const headers: HeaderFooterInfo[] = await this.dataSource.query(
+      `SELECT 
         T_LETTERS_LET.LET_ID AS id,
         T_LETTERS_LET.LET_TITLE AS title,
         T_LETTERS_LET.LET_MSG AS body,
@@ -177,13 +174,11 @@ export class MailService {
       FROM T_LETTERS_LET
       WHERE T_LETTERS_LET.LET_ID = ?
       `,
-        [qr.headerId | 0],
-      )
-    )[0];
+      [qr.headerId],
+    );
 
-    const footer: HeaderFooterInfo | null = (
-      await this.dataSource.query(
-        `SELECT 
+    const footers: HeaderFooterInfo[] = await this.dataSource.query(
+      `SELECT 
         T_LETTERS_LET.LET_ID AS id,
         T_LETTERS_LET.LET_TITLE AS title,
         T_LETTERS_LET.LET_MSG AS body,
@@ -191,11 +186,10 @@ export class MailService {
       FROM T_LETTERS_LET
       WHERE T_LETTERS_LET.LET_ID = ?
       `,
-        [qr.footerId | 0],
-      )
-    )[0];
+      [qr.footerId],
+    );
 
-    const result: FindMailRes = {
+    const mail: FindMailRes = {
       id: qr.id,
       type: qr.type,
       title: qr.title,
@@ -206,14 +200,14 @@ export class MailService {
       favorite: qr.favorite,
       created_at: qr.createdAt,
       updated_at: qr.updatedAt,
-      doctor: doctor === undefined ? null : doctor,
-      patient: patient === undefined ? null : patient,
-      conrrespondent: conrrespondent === undefined ? null : conrrespondent,
-      header: header === undefined ? null : header,
-      footer: footer === undefined ? null : footer,
+      doctor: doctors.length === 0 ? null : doctors[0],
+      patient: patients.length === 0 ? null : patients[0],
+      conrrespondent: conrrespondents.length <= 0 ? null : conrrespondents[0],
+      header: headers.length === 0 ? null : headers[0],
+      footer: footers.length === 0 ? null : footers[0],
     };
 
-    return result;
+    return mail;
   }
 
   //php\mail\store.php
@@ -238,11 +232,11 @@ export class MailService {
         payload?.updated_at,
       ],
     );
-    const dataRes = {
+    const mail = {
       id: qr.insertId,
       ...payload,
     };
-    return dataRes;
+    return mail;
   }
 
   async delete(id: number) {
