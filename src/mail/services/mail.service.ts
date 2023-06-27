@@ -35,8 +35,6 @@ export class MailService {
         T_USER_USR.USR_MAIL AS email
     FROM T_USER_USR`);
 
-    console.log(doctor);
-
     let data: FindAllMailDto[];
     if (docId) {
       data = await this.dataSource.query(
