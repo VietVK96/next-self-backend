@@ -54,7 +54,7 @@ export class StickyNoteService {
     reqBody: SaveStickNoteDto,
     userId: number,
     groupId: number,
-  ): Promise<StickyNoteRes | { msg: string }> {
+  ): Promise<StickyNoteRes | any> {
     let insertedId: number = null;
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -149,7 +149,7 @@ export class StickyNoteService {
       return { ...result[0], shareable: Number(result[0].shareable) };
     } catch (err) {
       await queryRunner.rollbackTransaction();
-      return { msg: err.message };
+      return { message: err.message, code: 0 };
     } finally {
       await queryRunner.release();
     }
