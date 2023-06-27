@@ -2,7 +2,6 @@ import { DataSource } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { ColorHelper } from 'src/utils/ColorHelper';
 import { FindAllEventDto } from '../dto/findAll.event.dto';
-import { start } from 'repl';
 
 const classNameFromStatuses: Map<number, string> = new Map<number, string>();
 classNameFromStatuses.set(1, 'present');
@@ -159,7 +158,7 @@ export class FindEventService {
       [startDate, endDate, viewCancelledEvents],
     );
     const events: FindAllEventDto[] = [];
-    if (confidentiality === 1) {
+    if (confidentiality === 0) {
       for (const item of result) {
         const colorArr = ColorHelper.inthex(Number(item.color));
         const newItem = {
