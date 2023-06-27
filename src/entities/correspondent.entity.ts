@@ -1,7 +1,6 @@
 import {
   Column,
   CreateDateColumn,
-  DeleteDateColumn,
   Entity,
   OneToMany,
   JoinColumn,
@@ -243,9 +242,6 @@ export class CorrespondentEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt?: Date;
-
-  @DeleteDateColumn({ name: 'deleted_at' })
-  deletedAt?: Date;
 }
 
 //application/Entities/Correspondent.php
