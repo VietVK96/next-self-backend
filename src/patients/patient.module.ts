@@ -7,6 +7,7 @@ import { PatientService } from './service/patient.service';
 import { ContactEntity } from '../entities/contact.entity';
 import { AddressEntity } from '../entities/address.entity';
 import { PhoneEntity } from '../entities/phone.entity';
+import { AddressService } from 'src/address/service/address.service';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { PhoneEntity } from '../entities/phone.entity';
     ]),
   ],
   controllers: [PatientController],
-  providers: [PatientService],
+  providers: [PatientService, AddressService],
   exports: [PatientService],
 })
 export class PatientModule {}

@@ -28,8 +28,8 @@ export class PatientService {
   private readonly logger: Logger = new Logger(PatientService.name);
 
   constructor(
-    private dataSource: DataSource,
     private addressService: AddressService,
+    private dataSource: DataSource,
     @InjectRepository(ContactEntity)
     private patientRepository: Repository<ContactEntity>,
     @InjectRepository(UserEntity)
@@ -154,5 +154,7 @@ export class PatientService {
       .getRawOne();
 
     const address = await this.addressService.find(patient.id);
+
+    // TODO find phone;
   }
 }
