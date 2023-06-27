@@ -42,7 +42,7 @@ export class MailController {
     return await this.mailService.findById(id);
   }
 
-  @Post('/create')
+  @Post('/duplicate')
   async duplicate(@Body() payload: CreateUpdateMailDto) {
     return await this.mailService.duplicate(payload);
   }
