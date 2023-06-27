@@ -124,8 +124,7 @@ export class FindContactService {
     if (request.conditions && request.conditions.length > 0) {
       this.addWhere(qr, request.conditions);
     }
-    // end $searchCriteria = new \App\Services\SearchCriteria($connection, $fields, $conditions);
-    qr.andWhere('CON.organization_id = :id', {
+    qr.where('CON.CON_ID <> :id', {
       id: organizationId,
     });
     qr.addGroupBy('CON.CON_ID');
