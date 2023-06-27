@@ -9,7 +9,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUpdateMailDto } from '../dto/createUpdateMail.dto';
 import { CreateUpdateMailRes } from '../response/createUpdateMail.res';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
-import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 
 @Injectable()
 export class MailService {
