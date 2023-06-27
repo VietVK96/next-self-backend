@@ -20,18 +20,27 @@ export class ActServices {
     });
     return data.map((data) => {
       return {
-        id: data.id,
+        id: data?.id,
         medicalDevice: {
-          id: data.medicalDevice.id,
-          name: data.medicalDevice.name,
+          id: data?.medicalDevice?.id,
+          name: data?.medicalDevice?.name,
         },
-        observation: data.observation,
-        reference: data.reference,
+        observation: data?.observation,
+        reference: data?.reference,
       };
     });
   }
 
   async updateTraceabilities(id: number, payload: UpdateTraceabilitiesDto) {
+    const data = await this.traceabilityRepository.find({
+      where: { actId: id },
+      select: ['id'],
+    });
+    const idUpdateDate = payload.traceabilities.filter((e) => e.id);
+    const idDelete = data.filter(
+      (e) => !idUpdateDate.find((v) => v.id == e.id),
+    );
+    await this.traceabilityRepository.delete(idDelete.map((id) => id.id));
     const req = payload.traceabilities.map((up) => {
       return up?.id
         ? {

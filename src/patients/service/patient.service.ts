@@ -1,20 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserEntity } from 'src/entities/user.entity';
-import { Repository } from 'typeorm';
-import { PatientExportDto } from '../dto/index.dto';
-import { DataSource } from 'typeorm';
-import { ContactEntity } from '../../entities/contact.entity';
 import { Workbook } from 'exceljs';
 import { Response } from 'express';
-import { AddressEntity } from '../../entities/address.entity';
-import { PhoneEntity } from '../../entities/phone.entity';
+import { Parser } from 'json2csv';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
+import { UserEntity } from 'src/entities/user.entity';
+import { DataSource, Repository } from 'typeorm';
 import {
   addressFormatter,
-  inseeFormatter,
   dateFormatter,
+  inseeFormatter,
 } from '../../common/formatter/index';
-import { Parser } from 'json2csv';
+import { AddressEntity } from '../../entities/address.entity';
+import { ContactEntity } from '../../entities/contact.entity';
+import { PhoneEntity } from '../../entities/phone.entity';
+import { PatientExportDto } from '../dto/index.dto';
 import { GenderEntity } from 'src/entities/gender.entity';
 import { AddressService } from 'src/address/service/address.service';
 import { ContactService } from 'src/contact/services/contact.service';
@@ -120,6 +121,31 @@ export class PatientService {
       });
       await book.xlsx.write(res);
       res.end();
+    }
+  }
+
+  async deletePatient(id: number): Promise<any> {
+    // Vérification de la permission de suppression d'une fiche patient.
+    // if (!$em -> getRepository(User:: class) -> hasPermission('PERMISSION_DELETE', 8, $session -> get('id'))) {
+    //   throw new AccessDeniedHttpException();
+    // }
+    try {
+      const patient = await this.dataSource
+        .createQueryBuilder()
+        .select('CON')
+        .from(ContactEntity, 'CON')
+        .where('CON.id = :id', { id })
+        .getOne();
+
+      if (!patient) throw new CBadRequestException(ErrorCode.NOT_FOUND_PATIENT);
+      return await this.dataSource
+        .getRepository(ContactEntity)
+        .createQueryBuilder()
+        .delete()
+        .where('id = :id', { id: patient?.id })
+        .execute();
+    } catch (error) {
+      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
   }
 
