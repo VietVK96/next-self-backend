@@ -12,6 +12,7 @@ import { IRedisConfig } from './common/config/redis.config';
 import { AntecedentPrestationModule } from './antecedent-prestation/antecedent-prestation.module';
 import { PatientModule } from './patients/patient.module';
 import { MedicalDevicesModule } from './medialDevices/medicalDevices.module';
+import { EventModule } from './event/event.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { MedicalDevicesModule } from './medialDevices/medicalDevices.module';
     AntecedentPrestationModule,
     PatientModule,
     MedicalDevicesModule,
+    EventModule,
   ],
 })
 export class AppModule {}
