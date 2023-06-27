@@ -123,6 +123,10 @@ export class PatientService {
     }
   }
 
+  /**
+   *  application/Services/Patient.php
+   *  find()
+   */
   async find(id: number) {
     const selectPatient = `
     CON.CON_ID AS id,

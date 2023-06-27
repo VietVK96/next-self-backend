@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { StoreNoteDto } from '../dto/noteStore.dto';
 import { UserService } from 'src/user/services/user.service';
 import { PatientService } from 'src/patients/service/patient.service';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 
 @Injectable()
 export class NoteService {
@@ -15,11 +16,19 @@ export class NoteService {
     private patientService: PatientService,
   ) {}
   async store(payload: StoreNoteDto) {
-    const note = await this.repo.save(payload);
-    const res = await this.find(note.id);
-    return res;
+    try {
+      const note = await this.repo.save(payload);
+
+      // TODO add LOG
+      //Ids\Log::write('Commentaire', $patientId, 1);
+      return await this.find(note.id);
+    } catch (error) {
+      return new CBadRequestException('Insert Comment Failure');
+    }
   }
 
+  //application/Services/PatientNote.php
+  // find()
   async find(id: number) {
     const notes = await this.repo.find({
       where: {
