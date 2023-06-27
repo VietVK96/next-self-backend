@@ -1,4 +1,4 @@
-import { LettersEntity } from './../../entities/letters.entity';
+import { LettersEntity } from '../../entities/letters.entity';
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { FindAllMailRes } from '../response/findAllMail.res';
@@ -243,5 +243,10 @@ export class MailService {
       ...payload,
     };
     return dataRes;
+  }
+
+  async delete(id: number) {
+    const abc = await this.lettersRepo.delete(id);
+    return abc;
   }
 }
