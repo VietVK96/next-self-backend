@@ -10,6 +10,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { EntityModule } from './entities';
 import { IRedisConfig } from './common/config/redis.config';
 import { PatientModule } from './patients/patient.module';
+import { PlanModule } from './plans/contact.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { PatientModule } from './patients/patient.module';
     ContactModule,
     AuthModule,
     PatientModule,
+    PlanModule,
   ],
 })
 export class AppModule {}
