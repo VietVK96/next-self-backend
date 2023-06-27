@@ -15,18 +15,18 @@ import {
 export class MailController {
   constructor(private readonly mailService: MailService) {}
 
-  @Get('/')
+  @Get()
   @ApiHeader({
     name: 'X-DoctorId',
     description: 'DoctorId',
   })
   @UseGuards(TokenGuard)
   async findAll(
+    @CurrentDoctor() docId: number,
+    @CurrentUser() identity: UserIdentity,
     @Query('draw') draw?: string,
-    @Query('pageIndex') pageIndex?: number,
-    @CurrentDoctor() docId?: number,
-    @CurrentUser() identity?: UserIdentity,
     @Query('search') search?: string,
+    @Query('pageIndex') pageIndex?: number,
   ) {
     return await this.mailService.findAll(
       draw,

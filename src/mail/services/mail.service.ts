@@ -28,16 +28,14 @@ export class MailService {
     if (!search) search = '';
     const pageSize = 100;
 
-    const sql = `SELECT
+    const doctor: PersonInfoDto[] = await this.dataSource.query(`SELECT
         T_USER_USR.USR_ID AS id,
         T_USER_USR.USR_LASTNAME AS lastname,
         T_USER_USR.USR_FIRSTNAME AS firstname,
         T_USER_USR.USR_MAIL AS email
-    FROM T_USER_USR
-    WHERE T_USER_USR.USR_ID = ?`;
-    const doctor: PersonInfoDto = (
-      await this.dataSource.query(sql, [docId | 0])
-    )[0];
+    FROM T_USER_USR`);
+
+    console.log(doctor);
 
     let data: FindAllMailDto[];
     if (docId) {
@@ -63,6 +61,12 @@ export class MailService {
         LIMIT ?`,
         [search, docId, pageSize],
       );
+      for (const iterator of data) {
+        if (iterator.doctor_id !== null && docId)
+          iterator.doctor = doctor.find(
+            (item) => item.id === iterator.doctor_id,
+          );
+      }
     } else {
       data = await this.dataSource.query(
         `SELECT SQL_CALC_FOUND_ROWS t1.*
@@ -98,14 +102,11 @@ export class MailService {
         ORDER BY favorite DESC, title`,
         [groupId],
       );
-    }
-    for (const iterator of data) {
-      if (iterator.doctor_id !== null && docId) iterator.doctor = doctor;
-      else if (docId !== null) {
+      for (const iterator of data) {
         if (iterator.doctor_id !== null) {
-          const doctorGroup: PersonInfoDto = await this.dataSource.query(sql, [
-            iterator.doctor_id,
-          ]);
+          const doctorGroup: PersonInfoDto = doctor.find(
+            (item) => item.id === iterator.doctor_id,
+          );
           iterator.doctor = doctorGroup;
         }
       }
