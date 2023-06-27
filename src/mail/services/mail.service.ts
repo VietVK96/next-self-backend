@@ -8,6 +8,8 @@ import { FindMailRes } from '../response/findMail.res';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUpdateMailDto } from '../dto/createUpdateMail.dto';
 import { CreateUpdateMailRes } from '../response/createUpdateMail.res';
+import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 
 @Injectable()
 export class MailService {
@@ -124,52 +126,48 @@ export class MailService {
   }
 
   //php\mail\find.php
-  async findById(id: number): Promise<FindMailRes> {
+  async findById(id: number) {
     const qr = await this.lettersRepo.findOne({
       where: { id: id },
     });
-    const doctor: PersonInfoDto | null = (
-      await this.dataSource.query(
-        `SELECT
+
+    if (!qr) throw new CNotFoundRequestException(`Mail Not found`);
+
+    const doctor: PersonInfoDto[] = await this.dataSource.query(
+      `SELECT
         T_USER_USR.USR_ID AS id,
         T_USER_USR.USR_LASTNAME AS lastname,
         T_USER_USR.USR_FIRSTNAME AS firstname,
         T_USER_USR.USR_MAIL AS email
     FROM T_USER_USR
     WHERE T_USER_USR.USR_ID = ?`,
-        [qr.usrId | 0],
-      )
-    )[0];
+      [qr.usrId],
+    );
 
-    const patient: PersonInfoDto | null = (
-      await this.dataSource.query(
-        `SELECT
+    const patient: PersonInfoDto[] = await this.dataSource.query(
+      `SELECT
         T_CONTACT_CON.CON_ID AS id,
         T_CONTACT_CON.CON_LASTNAME AS lastname,
         T_CONTACT_CON.CON_FIRSTNAME AS firstname,
         T_CONTACT_CON.CON_MAIL AS email
     FROM T_CONTACT_CON
     WHERE T_CONTACT_CON.CON_ID = ?`,
-        [qr.conId | 0],
-      )
-    )[0];
+      [qr.conId],
+    );
 
-    const conrrespondent: PersonInfoDto | null = (
-      await this.dataSource.query(
-        `SELECT
+    const conrrespondent: PersonInfoDto[] = await this.dataSource.query(
+      `SELECT
         T_CORRESPONDENT_CPD.CPD_ID AS id,
         T_CORRESPONDENT_CPD.CPD_LASTNAME AS lastname,
         T_CORRESPONDENT_CPD.CPD_FIRSTNAME AS firstname,
         T_CORRESPONDENT_CPD.CPD_MAIL AS email
     FROM T_CORRESPONDENT_CPD
     WHERE T_CORRESPONDENT_CPD.CPD_ID = ?`,
-        [qr.cpdId | 0],
-      )
-    )[0];
+      [qr.cpdId],
+    );
 
-    const header: HeaderFooterInfo | null = (
-      await this.dataSource.query(
-        `SELECT 
+    const header: HeaderFooterInfo[] = await this.dataSource.query(
+      `SELECT 
         T_LETTERS_LET.LET_ID AS id,
         T_LETTERS_LET.LET_TITLE AS title,
         T_LETTERS_LET.LET_MSG AS body,
@@ -177,13 +175,11 @@ export class MailService {
       FROM T_LETTERS_LET
       WHERE T_LETTERS_LET.LET_ID = ?
       `,
-        [qr.headerId | 0],
-      )
-    )[0];
+      [qr.headerId],
+    );
 
-    const footer: HeaderFooterInfo | null = (
-      await this.dataSource.query(
-        `SELECT 
+    const footer: HeaderFooterInfo[] = await this.dataSource.query(
+      `SELECT 
         T_LETTERS_LET.LET_ID AS id,
         T_LETTERS_LET.LET_TITLE AS title,
         T_LETTERS_LET.LET_MSG AS body,
@@ -191,9 +187,8 @@ export class MailService {
       FROM T_LETTERS_LET
       WHERE T_LETTERS_LET.LET_ID = ?
       `,
-        [qr.footerId | 0],
-      )
-    )[0];
+      [qr.footerId],
+    );
 
     const result: FindMailRes = {
       id: qr.id,
@@ -206,11 +201,11 @@ export class MailService {
       favorite: qr.favorite,
       created_at: qr.createdAt,
       updated_at: qr.updatedAt,
-      doctor: doctor === undefined ? null : doctor,
-      patient: patient === undefined ? null : patient,
-      conrrespondent: conrrespondent === undefined ? null : conrrespondent,
-      header: header === undefined ? null : header,
-      footer: footer === undefined ? null : footer,
+      doctor: doctor.length === 0 ? null : doctor[0],
+      patient: patient.length === 0 ? null : patient[0],
+      conrrespondent: conrrespondent.length <= 0 ? null : conrrespondent[0],
+      header: header.length === 0 ? null : header[0],
+      footer: footer.length === 0 ? null : footer[0],
     };
 
     return result;
