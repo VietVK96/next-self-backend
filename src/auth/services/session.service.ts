@@ -9,16 +9,19 @@ import { JwtService } from '@nestjs/jwt';
 import * as jwt from 'jsonwebtoken';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cache } from 'cache-manager';
-import { DEFAULT_LANGUAGE } from 'src/constatns/default';
-import { JWT_LOG_OUT, JWT_RF_LOG_OUT, JWT_SECRET } from 'src/constatns/jwt';
+import { DEFAULT_LANGUAGE } from 'src/constants/default';
+import { JWT_LOG_OUT, JWT_RF_LOG_OUT, JWT_SECRET } from 'src/constants/jwt';
 import { UserEntity } from 'src/entities/user.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { LoginRes } from '../reponse/token.res';
 import { RefreshJwt, UserIdentity } from 'src/common/decorator/auth.decorator';
-import { ErrorCode } from 'src/constatns/error';
+import { ErrorCode } from 'src/constants/error';
 import * as dayjs from 'dayjs';
 import { LogoutDto } from '../dto/logout.dto';
+import { ResourceEntity } from 'src/entities/resource.entity';
+import { UserResourceEntity } from 'src/entities/user-resource.entity';
+import { LicenseEntity } from 'src/entities/license.entity';
 
 @Injectable()
 export class SessionService {
@@ -30,6 +33,7 @@ export class SessionService {
     private jwtService: JwtService,
     @Inject(CACHE_MANAGER)
     protected cacheManager: Cache,
+    private dataSource: DataSource,
   ) {}
 
   async createTokenLogin({
@@ -41,10 +45,42 @@ export class SessionService {
     lang?: string;
     oldRefreshToken?: string;
   }): Promise<LoginRes> {
+    const queryBuiler = this.dataSource.createQueryBuilder();
+
+    const selectResource = `resource.id, resource.user_id as doctorId`;
+    const getResourceQr = queryBuiler
+      .select(selectResource)
+      .from(ResourceEntity, 'resource')
+      .innerJoin(
+        UserResourceEntity,
+        'user_resource',
+        'user_resource.resource_id = resource.id',
+      )
+      .innerJoin(
+        UserEntity,
+        'T_USER_USR',
+        'user_resource.user_id = T_USER_USR.USR_ID',
+      )
+      .innerJoin(
+        LicenseEntity,
+        'T_LICENSE_LIC',
+        'T_USER_USR.USR_ID = T_LICENSE_LIC.USR_ID',
+      )
+      .leftJoin(UserEntity, 'USR1', 'USR1.USR_ID = resource.user_id')
+      .andWhere('user_resource.user_id = :userId', {
+        userId: user.id,
+      })
+      .orderBy('resource.name');
+
+    const dataResources: { doctorId: number }[] =
+      await getResourceQr.getRawMany();
+    const doctorIds = dataResources.map((r) => r.doctorId);
+
     const payloadSign: UserIdentity = {
       id: user.id,
       type: 'auth',
       sub: user.log,
+      dis: doctorIds,
       org: user.organizationId,
       lang: lang ?? DEFAULT_LANGUAGE,
     };

@@ -129,6 +129,7 @@ import { UserSmsEntity } from './user-sms.entity';
 import { UserTypeEntity } from './user-type.entity';
 import { WorkstationEntity } from './workstation.entity';
 import { WzagendaContactEntity } from './wzagenda-contact.entity';
+import { ContactPhoneCopEntity } from './contact-phone-cop.entity';
 
 @Module({
   imports: [
@@ -262,6 +263,7 @@ import { WzagendaContactEntity } from './wzagenda-contact.entity';
       UserTypeEntity,
       WorkstationEntity,
       WzagendaContactEntity,
+      ContactPhoneCopEntity,
     ]),
   ],
   controllers: [],
