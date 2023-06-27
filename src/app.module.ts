@@ -13,6 +13,8 @@ import { WaitingRoomModule } from './waitingRoom/waitingRoom.module';
 import { AntecedentPrestationModule } from './antecedent-prestation/antecedent-prestation.module';
 import { PatientModule } from './patients/patient.module';
 import { MedicalDevicesModule } from './medialDevices/medicalDevices.module';
+import { UserModule } from './user/userModule';
+import { AddressModule } from './address/address.module';
 
 @Module({
   imports: [
@@ -56,6 +58,8 @@ import { MedicalDevicesModule } from './medialDevices/medicalDevices.module';
     AntecedentPrestationModule,
     PatientModule,
     MedicalDevicesModule,
+    UserModule,
+    AddressModule,
   ],
 })
 export class AppModule {}

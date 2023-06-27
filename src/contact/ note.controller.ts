@@ -8,6 +8,7 @@ import { StoreNoteDto } from './dto/noteStore.dto';
 @ApiTags('')
 export class NoteController {
   constructor(private service: NoteService) {}
+  // php/contact/note/store.php
   @Post('/add')
   @UseGuards(TokenGuard)
   async store(@Body() body: StoreNoteDto) {

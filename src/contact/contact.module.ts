@@ -9,9 +9,14 @@ import { HistoricalService } from './services/historical.service';
 import { NoteService } from './services/note.service';
 import { NoteController } from './ note.controller';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { UserEntity } from 'src/entities/user.entity';
+import { UserModule } from 'src/user/userModule';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ContactEntity, ContactNoteEntity])],
+  imports: [
+    TypeOrmModule.forFeature([ContactEntity, ContactNoteEntity, UserEntity]),
+    UserModule,
+  ],
   controllers: [FindContactController, HistoricalController, NoteController],
   providers: [
     FindContactService,

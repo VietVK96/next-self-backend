@@ -15,6 +15,8 @@ import {
   dateFormatter,
 } from '../../common/formatter/index';
 import { Parser } from 'json2csv';
+import { GenderEntity } from 'src/entities/gender.entity';
+import { AddressService } from 'src/address/service/address.service';
 
 const TypeFile = {
   EXCEL: 'xlsx',
@@ -27,6 +29,7 @@ export class PatientService {
 
   constructor(
     private dataSource: DataSource,
+    private addressService: AddressService,
     @InjectRepository(ContactEntity)
     private patientRepository: Repository<ContactEntity>,
     @InjectRepository(UserEntity)
@@ -114,5 +117,42 @@ export class PatientService {
       await book.xlsx.write(res);
       res.end();
     }
+  }
+
+  async find(id: number) {
+    const queryBuilder = this.dataSource.createQueryBuilder();
+    const selectPatient = `
+    CON.CON_ID AS id,
+    CON.ADR_ID AS address_id,
+    CON.CON_NBR AS number,
+    CON.CON_LASTNAME AS lastname,
+    CON.CON_FIRSTNAME AS firstname,
+    CON.CON_BIRTHDAY AS birthday,
+    CON.CON_MAIL AS email,
+    CON.CON_MSG AS description,
+    CON.CON_INSEE AS insee,
+    CON.CON_INSEE_KEY AS insee_key
+    `;
+    const patient = await queryBuilder
+      .select(selectPatient)
+      .from(ContactEntity, 'CON')
+      .where('T_CONTACT_CON.CON_ID = :id', { id })
+      .getRawOne();
+
+    const selectCivility = `
+      GEN.GEN_ID AS id,
+      GEN.GEN_NAME AS name,
+      GEN.long_name AS long_name,
+      GEN.GEN_TYPE AS sex
+    `;
+    const civility = await queryBuilder
+      .select(selectCivility)
+      .from(ContactEntity, 'CON')
+      .innerJoin(GenderEntity, 'GEN')
+      .where('CON.CON_ID = :id', { id })
+      .andWhere('CON.GEN_ID = GEN.GEN_ID')
+      .getRawOne();
+
+    const address = await this.addressService.find(patient.id);
   }
 }

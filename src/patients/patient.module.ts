@@ -20,5 +20,6 @@ import { PhoneEntity } from '../entities/phone.entity';
   ],
   controllers: [PatientController],
   providers: [PatientService],
+  exports: [PatientService],
 })
 export class PatientModule {}
