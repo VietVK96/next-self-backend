@@ -1,11 +1,6 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiQuery, ApiHeader } from '@nestjs/swagger';
-import {
-  CurrentUser,
-  TokenGuard,
-  UserIdentity,
-} from 'src/common/decorator/auth.decorator';
-import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
+import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { TokenGuard } from 'src/common/decorator/auth.decorator';
 import { ContactPaymentFindAllDto } from './dto/contact.payment.dto';
 import { ContactPaymentService } from './services/contact.payment.service';
 
@@ -21,11 +16,8 @@ export class ContactPaymentController {
     name: 'id',
     type: ContactPaymentFindAllDto,
   })
-  // @UseGuards(TokenGuard)
-  async findAll(
-    @Query() request: ContactPaymentFindAllDto,
-    @CurrentUser() identity: UserIdentity,
-  ) {
+  @UseGuards(TokenGuard)
+  async findAll(@Query() request: ContactPaymentFindAllDto) {
     return this.contactPaymentService.findAll(request);
   }
 }

@@ -1,9 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, SelectQueryBuilder } from 'typeorm';
-import {
-  contactPhoneRes,
-  FindAllRecentlyTreatedRes,
-} from '../response/findall.recentlyTreated.res';
+import { DataSource } from 'typeorm';
 import { ContactPaymentFindAllDto } from '../dto/contact.payment.dto';
 import { CashingEntity } from 'src/entities/cashing.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
