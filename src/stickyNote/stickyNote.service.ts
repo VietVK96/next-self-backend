@@ -1,18 +1,22 @@
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { SaveStickNoteDto } from './dto/save.stickyNote.dto';
 import { StickyNoteRes } from './response/stickyNote.res';
+import { InjectRepository } from '@nestjs/typeorm';
+import { StickyNoteEntity } from 'src/entities/sticky-note.entity';
 
 @Injectable()
 export class StickyNoteService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    @InjectRepository(StickyNoteEntity)
+    private stickyNoteRepo: Repository<StickyNoteEntity>,
+    private dataSource: DataSource,
+  ) {}
 
   // File: php\stickyNote\delete.php 23-38
   async delete(stickyNoteId: number, userId: number) {
-    const patient = await this.dataSource.query(
-      `SELECT CON_ID FROM T_POSTIT_PTT WHERE PTT_ID = ${stickyNoteId}`,
-    );
-    if (patient[0]['CON_ID']) {
+    const patient = await this.stickyNoteRepo.findOneBy({ id: stickyNoteId });
+    if (patient['CON_ID']) {
       await this.dataSource.query(
         `DELETE FROM T_POSTIT_PTT WHERE PTT_ID = ${stickyNoteId}`,
       );
