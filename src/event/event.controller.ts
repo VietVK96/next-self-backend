@@ -10,6 +10,7 @@ export class EventController {
   constructor(private readonly findEventService: FindEventService) {}
 
   @Get()
+  @UseGuards(TokenGuard)
   async findAll(
     @Query('resources') resources: number[],
     @Query('startDate') startDate: string,
