@@ -1,10 +1,25 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotAcceptableException,
+  NotFoundException,
+} from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { FindAllStructDto } from '../dto/plan.dto';
+import { DeleteOneStructDto, FindAllStructDto } from '../dto/plan.dto';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserEntity } from 'src/entities/user.entity';
+import { PermissionService } from 'src/users/services/permission.service';
+import { PaymentPlanService } from 'src/payment-plan/services/payment-plan.service';
+import { EventTaskEntity } from 'src/entities/event-task.entity';
 
 @Injectable()
 export class PlanService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private permissionService: PermissionService,
+    private paymentPlanService: PaymentPlanService,
+    private dataSource: DataSource,
+  ) {}
 
   /**
    * File: php\contact\plans\findAll.php
@@ -62,5 +77,169 @@ export class PlanService {
     });
 
     return plans;
+  }
+
+  async deleteOne(request: DeleteOneStructDto, identity: UserIdentity) {
+    const { id } = request;
+    const queryRunner = this.dataSource.createQueryRunner();
+    const queryBuiler = this.dataSource.createQueryBuilder();
+    try {
+      const selectPlan = `
+        T_PLAN_PLF.PLF_TYPE AS type,
+        T_PLAN_PLF.payment_schedule_id,
+        T_EVENT_EVT.CON_ID AS patient_id`;
+
+      const statement = queryBuiler
+        .select(selectPlan)
+        .from('T_PLAN_PLF', 'T_PLAN_PLF')
+        .innerJoin('T_PLAN_EVENT_PLV', 'T_PLAN_EVENT_PLV')
+        .innerJoin('T_EVENT_EVT', 'T_EVENT_EVT')
+        .where('T_PLAN_PLF.PLF_ID = :planId', { planId: id })
+        .andWhere('T_PLAN_PLF.PLF_ID = T_PLAN_EVENT_PLV.PLF_ID')
+        .andWhere('T_PLAN_EVENT_PLV.EVT_ID = T_EVENT_EVT.EVT_ID')
+        .groupBy('T_PLAN_PLF.PLF_ID');
+      const plan = await statement.getRawOne();
+
+      if (!plan) {
+        throw new NotFoundException();
+      }
+
+      if (
+        !this.permissionService.hasPermission(
+          'PERMISSION_DELETE',
+          8,
+          identity.id,
+        )
+      ) {
+        throw new NotAcceptableException();
+      }
+
+      await queryRunner.startTransaction();
+
+      if (plan.payment_schedule_id !== null) {
+        await this.paymentPlanService.delete(
+          plan.payment_schedule_id,
+          identity.org,
+        );
+      }
+
+      const dentalQuery = this.dataSource
+        .createQueryBuilder()
+        .delete()
+        .from('T_DENTAL_QUOTATION_DQO')
+        .where(`PLF_ID = ${id}`);
+      await queryRunner.query(dentalQuery.getSql());
+
+      const invoiceQuery = this.dataSource
+        .createQueryBuilder()
+        .select()
+        .from('T_PLAN_PLF', 'T_PLAN_PLF')
+        .where(`T_PLAN_PLF.PLF_ID = ${id}`);
+      const invoice = await queryRunner.query(invoiceQuery.getSql());
+
+      if (invoice.BIL_ID) {
+        const updatePlanQuery = this.dataSource
+          .createQueryBuilder()
+          .update('T_PLAN_PLF')
+          .set({ BIL_ID: null })
+          .where(`PLF_ID = ${id}`);
+        await queryRunner.query(updatePlanQuery.getSql());
+
+        const deleteBillQuery = this.dataSource
+          .createQueryBuilder()
+          .delete()
+          .from('T_BILL_BIL')
+          .where(`BIL_ID = ${invoice.id}`)
+          .andWhere('BIL_LOCK = 0');
+        await queryRunner.query(deleteBillQuery.getSql());
+      }
+
+      const queryEvent = `
+      DELETE T_EVENT_TASK_ETK
+      FROM T_EVENT_TASK_ETK
+      JOIN T_EVENT_EVT
+      JOIN T_PLAN_EVENT_PLV
+      JOIN T_PLAN_PLF
+      WHERE T_EVENT_TASK_ETK.ETK_STATE = 0
+        AND T_EVENT_TASK_ETK.EVT_ID = T_EVENT_EVT.EVT_ID
+        AND T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID
+        AND T_PLAN_EVENT_PLV.PLF_ID = T_PLAN_PLF.PLF_ID
+        AND T_PLAN_PLF.PLF_ID = ?`;
+      await queryRunner.query(queryEvent, [id]);
+
+      const queryReminder = `
+        DELETE T_REMINDER_RMD
+        FROM T_EVENT_EVT
+        JOIN T_REMINDER_RMD
+        JOIN T_PLAN_EVENT_PLV
+        JOIN T_PLAN_PLF
+        WHERE T_EVENT_EVT.EVT_ID = T_REMINDER_RMD.EVT_ID
+          AND T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID
+          AND T_PLAN_EVENT_PLV.PLF_ID = T_PLAN_PLF.PLF_ID
+          AND T_PLAN_PLF.PLF_ID = ?
+          AND NOT EXISTS (
+            SELECT *
+            FROM T_EVENT_TASK_ETK
+            WHERE T_EVENT_TASK_ETK.EVT_ID = T_EVENT_EVT.EVT_ID
+        )`;
+      await queryRunner.query(queryReminder, [id]);
+
+      const queryEventOccurrenceEvo = `
+      DELETE event_occurrence_evo
+      FROM T_EVENT_EVT
+      JOIN event_occurrence_evo
+      JOIN T_PLAN_EVENT_PLV
+      JOIN T_PLAN_PLF
+      WHERE T_EVENT_EVT.EVT_ID = event_occurrence_evo.evt_id
+        AND T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID
+        AND T_PLAN_EVENT_PLV.PLF_ID = T_PLAN_PLF.PLF_ID
+        AND T_PLAN_PLF.PLF_ID = ?
+        AND NOT EXISTS (
+            SELECT *
+              FROM T_EVENT_TASK_ETK
+            WHERE T_EVENT_TASK_ETK.EVT_ID = T_EVENT_EVT.EVT_ID
+        )`;
+      await queryRunner.query(queryEventOccurrenceEvo, [id]);
+
+      const queryEventEvt = `
+      DELETE T_EVENT_EVT
+      FROM T_EVENT_EVT
+      JOIN T_PLAN_EVENT_PLV
+      JOIN T_PLAN_PLF
+      WHERE T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID
+        AND T_PLAN_EVENT_PLV.PLF_ID = T_PLAN_PLF.PLF_ID
+        AND T_PLAN_PLF.PLF_ID = ?
+        AND NOT EXISTS (
+            SELECT *
+              FROM T_EVENT_TASK_ETK
+            WHERE T_EVENT_TASK_ETK.EVT_ID = T_EVENT_EVT.EVT_ID
+        )`;
+      await queryRunner.query(queryEventEvt, [id]);
+
+      const deletePlanQuery = `
+        DELETE FROM T_PLAN_PLF
+        WHERE PLF_ID = ?`;
+      await queryRunner.query(deletePlanQuery, [id]);
+
+      await queryRunner.commitTransaction();
+
+      //@TODO
+      // switch ($plan['type']) {
+      //   case 'plan':
+      //     Ids\Log:: write('Plan de traitement', $plan['patient_id'], 3);
+      //     break;
+      //   case 'quotation':
+      //     Ids\Log:: write('Devis', $plan['patient_id'], 3);
+      //     break;
+      // }
+
+      return id;
+    } catch (error) {
+      if (queryRunner.isTransactionActive) {
+        await queryRunner.rollbackTransaction();
+      }
+
+      return error;
+    }
   }
 }
