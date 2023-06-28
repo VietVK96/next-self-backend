@@ -9,7 +9,11 @@ import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { EntityModule } from './entities';
 import { IRedisConfig } from './common/config/redis.config';
+import { StickyNoteModule } from './stickyNote/stickyNote.module';
+import { WaitingRoomModule } from './waitingRoom/waitingRoom.module';
+import { AntecedentPrestationModule } from './antecedent-prestation/antecedent-prestation.module';
 import { PatientModule } from './patients/patient.module';
+import { PlanModule } from './plans/plan.module';
 import { MailModule } from './mail/mail.module';
 
 @Module({
@@ -50,7 +54,11 @@ import { MailModule } from './mail/mail.module';
     EntityModule,
     ContactModule,
     AuthModule,
+    StickyNoteModule,
+    WaitingRoomModule,
+    AntecedentPrestationModule,
     PatientModule,
+    PlanModule,
     MailModule,
   ],
 })
