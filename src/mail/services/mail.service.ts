@@ -1,9 +1,5 @@
 import { LettersEntity } from '../../entities/letters.entity';
-import {
-  HttpCode,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { FindAllMailRes } from '../response/findAllMail.res';
 import { FindAllMailDto } from '../dto/findAllMail.dto';
