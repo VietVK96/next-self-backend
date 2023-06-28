@@ -6,12 +6,14 @@ import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ContactFamilyEntity } from 'src/entities/contact-family.entity';
 import { ContactService } from './contact.service';
+import { PermissionService } from 'src/user/services/permission.service';
 
 @Injectable()
 export class FamilyService {
   constructor(
     private dataSource: DataSource,
     private contactService: ContactService,
+    private permissService: PermissionService,
   ) {}
 
   /**
@@ -129,6 +131,15 @@ export class FamilyService {
           status: 'success',
         };
       } else if (action === 'remove') {
+        if (
+          !this.permissService.hasPermission(
+            'PERMISSION_DELETE',
+            8,
+            identity.id,
+          )
+        ) {
+          throw new CBadRequestException('Permission denied');
+        }
         const contactId = contact;
         const row = await queryBuiler
           .select('CON.`COF_ID` as `family_id`')

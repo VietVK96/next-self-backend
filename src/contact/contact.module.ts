@@ -11,6 +11,7 @@ import { ActServices } from './services/act.service';
 import { TraceabilityEntity } from 'src/entities/traceability.entity';
 import { FamilyController } from './family.controller';
 import { FamilyService } from './services/family.service';
+import { PermissionService } from 'src/user/services/permission.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ContactEntity, TraceabilityEntity])],
@@ -26,6 +27,7 @@ import { FamilyService } from './services/family.service';
     ContactService,
     ActServices,
     FamilyService,
+    PermissionService,
   ],
 })
 export class ContactModule {}
