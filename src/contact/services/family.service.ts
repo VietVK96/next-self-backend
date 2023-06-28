@@ -50,7 +50,6 @@ export class FamilyService {
 
   async contactFamily(payload: FamilyContactDto, identity: UserIdentity) {
     const { id, action, target, contact } = payload;
-    const userId = identity.id;
     const groupId = identity.org;
     const queryBuiler = this.dataSource.createQueryBuilder();
     try {

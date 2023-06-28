@@ -21,10 +21,6 @@ import { UserEntity } from 'src/entities/user.entity';
 import { PatientAmcEntity } from 'src/entities/patient-amc.entity';
 import { DataSource } from 'typeorm';
 import { OrganizationEntity } from 'src/entities/organization.entity';
-import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { FamilyContactDto } from '../dto/family.contact.dto';
-import { ContactFamilyEntity } from 'src/entities/contact-family.entity';
-
 @Injectable()
 export class ContactService {
   constructor(private dataSource: DataSource) {}
