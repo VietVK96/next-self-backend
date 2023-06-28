@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 
 export class FindAllPlanItemRes {
   @ApiProperty()

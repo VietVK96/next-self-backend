@@ -155,7 +155,6 @@ export class PlanPlfEntity {
    * @ORM\OneToMany(targetEntity="\App\Entities\Plan\Event", mappedBy="plan")
    */
   //   protected $events;
-
   @OneToMany(() => PlanEventEntity, (e) => e.plan)
   events?: PlanEventEntity[];
 
