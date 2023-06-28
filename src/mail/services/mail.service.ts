@@ -1,5 +1,9 @@
 import { LettersEntity } from '../../entities/letters.entity';
-import { Injectable } from '@nestjs/common';
+import {
+  HttpCode,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { FindAllMailRes } from '../response/findAllMail.res';
 import { FindAllMailDto } from '../dto/findAllMail.dto';
@@ -240,7 +244,9 @@ export class MailService {
   }
 
   async delete(id: number) {
-    const abc = await this.lettersRepo.delete(id);
-    return abc;
+    const qr = await this.lettersRepo.find({ where: { id } });
+
+    if (qr.length === 0) throw new InternalServerErrorException();
+    return await this.lettersRepo.delete(id);
   }
 }

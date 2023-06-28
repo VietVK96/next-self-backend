@@ -1,4 +1,4 @@
-import { MailService } from './services/find.mail.service';
+import { MailService } from './services/mail.service';
 import {
   Controller,
   Get,
@@ -59,7 +59,7 @@ export class MailController {
 
   @UseGuards(TokenGuard)
   @Delete('/delete/:id')
-  async delete(@Param() id: number) {
+  async delete(@Param('id') id: number) {
     return await this.mailService.delete(id);
   }
 }
