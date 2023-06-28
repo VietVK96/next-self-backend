@@ -16,6 +16,7 @@ export interface UserIdentity extends JwtPayload {
   org: number;
   un?: string;
   type?: string;
+  dis?: number[]; // list doctor id
 }
 
 export interface RefreshJwt extends JwtPayload {

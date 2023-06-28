@@ -14,7 +14,7 @@ import { PlanService } from './services/plan.service';
 export class PlanController {
   constructor(private PlanService: PlanService) {}
 
-  // File php\contact\findAll.php 1->8
+  // File /php/contact/plans/findAll.php
   @Get()
   @UseGuards(TokenGuard)
   async findAll(@Query() request: FindAllStructDto) {

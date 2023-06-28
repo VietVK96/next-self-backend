@@ -9,6 +9,7 @@ import { SessionService } from './services/session.service';
 import { ValidationService } from './services/validation.service';
 import { AddressEntity } from 'src/entities/address.entity';
 import { JwtStrategy } from './jwt.strategy';
+import { GetSessionService } from './services/get-session.service';
 
 @Module({
   imports: [
@@ -19,6 +20,11 @@ import { JwtStrategy } from './jwt.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [ValidationService, SessionService, JwtStrategy],
+  providers: [
+    ValidationService,
+    SessionService,
+    JwtStrategy,
+    GetSessionService,
+  ],
 })
 export class AuthModule {}

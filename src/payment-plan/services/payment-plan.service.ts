@@ -1,12 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
+import { PaymentItemRes } from '../response/payment.res';
 
 @Injectable()
 export class PaymentPlanService {
   constructor(private dataSource: DataSource) {}
 
   /**
-   * File: php\contact\plans\findAll.php
+   * File: application/Services/PaymentSchedule.php, Line 82-124
    * @function main function
    *
    */
@@ -29,12 +30,12 @@ export class PaymentPlanService {
       })
       .andWhere('group_id = :groupId', { groupId: groupId });
 
-    const paymentSchedule = await qr.getRawOne();
+    const paymentSchedule: PaymentItemRes = await qr.getRawOne();
 
     // resources/lang/messages.fr.xlf (Line: 1445->1448)
     // @TODO Translate message err
     if (!paymentSchedule) {
-      throw new Error(`InvalidArgumentException: Le champ id est invalide.)}`);
+      throw new NotFoundException(`Le champ id est invalide.)}`);
     }
 
     const queryLine = this.dataSource.createQueryBuilder();
@@ -49,9 +50,9 @@ export class PaymentPlanService {
       .where('payment_schedule_id = :paymentScheduleId', {
         paymentScheduleId: paymentScheduleId,
       });
-
-    paymentSchedule.lines = await qrLine.getRawOne();
-    return paymentSchedule;
+    if (paymentSchedule.lines) {
+      paymentSchedule.lines = await qrLine.getRawOne();
+    }
   }
 
   async delete(id, groupId) {
