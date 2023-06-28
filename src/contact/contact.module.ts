@@ -9,15 +9,23 @@ import { HistoricalService } from './services/historical.service';
 import { ActController } from './act.controller';
 import { ActServices } from './services/act.service';
 import { TraceabilityEntity } from 'src/entities/traceability.entity';
+import { FamilyController } from './family.controller';
+import { FamilyService } from './services/family.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ContactEntity, TraceabilityEntity])],
-  controllers: [FindContactController, HistoricalController, ActController],
+  controllers: [
+    FindContactController,
+    HistoricalController,
+    ActController,
+    FamilyController,
+  ],
   providers: [
     FindContactService,
     HistoricalService,
     ContactService,
     ActServices,
+    FamilyService,
   ],
 })
 export class ContactModule {}
