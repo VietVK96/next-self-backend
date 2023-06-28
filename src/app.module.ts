@@ -11,6 +11,7 @@ import { EntityModule } from './entities';
 import { IRedisConfig } from './common/config/redis.config';
 import { PatientModule } from './patients/patient.module';
 import { PlanModule } from './plans/plan.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { PlanModule } from './plans/plan.module';
     AuthModule,
     PatientModule,
     PlanModule,
+    MailModule,
   ],
 })
 export class AppModule {}
