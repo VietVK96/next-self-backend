@@ -1,12 +1,5 @@
-import {
-  Controller,
-  Delete,
-  Get,
-  Headers,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiQuery, ApiHeader } from '@nestjs/swagger';
+import { Controller, Delete, Get, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   CurrentUser,
   TokenGuard,
@@ -24,11 +17,8 @@ export class PlanController {
   // File php\contact\findAll.php 1->8
   @Get()
   @UseGuards(TokenGuard)
-  async findAll(
-    @Query() request: FindAllStructDto,
-    @CurrentUser() identity: UserIdentity,
-  ) {
-    return this.PlanService.findAll(request, identity.org);
+  async findAll(@Query() request: FindAllStructDto) {
+    return this.PlanService.findAll(request);
   }
 
   @Delete()

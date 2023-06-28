@@ -6,12 +6,8 @@ import {
 import { DataSource } from 'typeorm';
 import { DeleteOneStructDto, FindAllStructDto } from '../dto/plan.dto';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
-import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { UserEntity } from 'src/entities/user.entity';
 import { PermissionService } from 'src/users/services/permission.service';
 import { PaymentPlanService } from 'src/payment-plan/services/payment-plan.service';
-import { EventTaskEntity } from 'src/entities/event-task.entity';
 
 @Injectable()
 export class PlanService {
@@ -27,7 +23,7 @@ export class PlanService {
    *
    */
 
-  async findAll(request: FindAllStructDto, organizationId: number) {
+  async findAll(request: FindAllStructDto) {
     const { type, patientId } = request;
     console.log(request);
 

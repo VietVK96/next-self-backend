@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { from } from 'rxjs';
 import { DataSource } from 'typeorm';
 
 @Injectable()
