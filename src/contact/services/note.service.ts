@@ -25,7 +25,7 @@ export class ContactNoteServices {
   }
 
   async deleteByID(id: number): Promise<SuccessResponse> {
-    // Vérification de la permission de suppression des modèles de courriers.
+    // @TODO: Vérification de la permission de suppression des modèles de courriers.
     // if (!$em->getRepository('App\Entities\User')->hasPermission('PERMISSION_DELETE', 8, $userId)) {
     // Response::abort(Response::STATUS_FORBIDDEN);
     // }
