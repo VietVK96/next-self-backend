@@ -12,6 +12,9 @@ import { UserEntity } from 'src/entities/user.entity';
 import { TraceabilityEntity } from 'src/entities/traceability.entity';
 import { ActController } from './act.controller';
 import { ActServices } from './services/act.service';
+import { TaskService } from './services/task.service';
+import { TaskController } from './task.controller';
+import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { UserModule } from 'src/user/userModule';
 import { PatientModule } from 'src/patients/patient.module';
@@ -19,8 +22,9 @@ import { PatientModule } from 'src/patients/patient.module';
   imports: [
     TypeOrmModule.forFeature([
       ContactEntity,
-      ContactNoteEntity,
       TraceabilityEntity,
+      EventTaskEntity,
+      ContactNoteEntity,
       UserEntity,
     ]),
     UserModule,
@@ -30,6 +34,7 @@ import { PatientModule } from 'src/patients/patient.module';
     FindContactController,
     HistoricalController,
     ActController,
+    TaskController,
     NoteController,
   ],
   providers: [
@@ -38,6 +43,7 @@ import { PatientModule } from 'src/patients/patient.module';
     ContactService,
     NoteService,
     ActServices,
+    TaskService,
   ],
   exports: [ContactService],
 })
