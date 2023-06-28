@@ -16,7 +16,7 @@ export class PlanService {
    *
    */
 
-  async findAll(request: FindAllStructDto, _organizationId: number) {
+  async findAll(request: FindAllStructDto) {
     const { type, patientId } = request;
 
     const queryBuiler = this.dataSource.createQueryBuilder();
