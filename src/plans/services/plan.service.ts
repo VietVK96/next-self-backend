@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { FindAllStructDto } from '../dto/plan.dto';
 import { PaymentPlanService } from 'src/payment-plan/services/payment-plan.service';
