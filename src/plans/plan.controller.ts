@@ -21,6 +21,6 @@ export class PlanController {
     @Query() request: FindAllStructDto,
     @CurrentUser() identity: UserIdentity,
   ) {
-    return this.PlanService.findAll(request);
+    return this.PlanService.findAll(request, identity.org);
   }
 }
