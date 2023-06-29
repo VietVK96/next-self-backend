@@ -943,7 +943,7 @@ export class ContactEntity {
    */
   // protected $medical = null;
 
-  @OneToOne(() => PatientMedicalEntity, {
+  @OneToOne(() => PatientMedicalEntity, (e) => e.patient, {
     createForeignKeyConstraints: false,
   })
   medical?: PatientMedicalEntity;
