@@ -17,10 +17,7 @@ export class PlanController {
   // File /php/contact/plans/findAll.php
   @Get()
   @UseGuards(TokenGuard)
-  async findAll(
-    @Query() request: FindAllStructDto,
-    @CurrentUser() identity: UserIdentity,
-  ) {
-    return this.PlanService.findAll(request, identity.org);
+  async findAll(@Query() request: FindAllStructDto) {
+    return this.PlanService.findAll(request);
   }
 }
