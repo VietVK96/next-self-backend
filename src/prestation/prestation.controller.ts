@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PrestationService } from './services/prestation.service';
 import {
@@ -39,5 +39,20 @@ export class PrestationController {
   @UseGuards(TokenGuard)
   async findPrestation(@Query() payload: FindPrestationStructDto) {
     return this.prestationService.find(payload);
+  }
+
+  /**
+   * php\prestation\delete.php line 1->13
+   * @param id
+   * @param identity
+   * @returns
+   */
+  @Delete('/delete')
+  @UseGuards(TokenGuard)
+  async deletePrestation(
+    @Query('id') id: number,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.prestationService.delete(id, identity);
   }
 }
