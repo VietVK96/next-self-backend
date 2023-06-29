@@ -1,5 +1,14 @@
 import { MailService } from './services/mail.service';
-import { Controller, Get, Query, Post, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Post,
+  Body,
+  UseGuards,
+  Delete,
+  Param,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { CreateUpdateMailDto } from './dto/createUpdateMail.dto';
 import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
@@ -36,14 +45,21 @@ export class MailController {
       search,
     );
   }
-
+  @UseGuards(TokenGuard)
   @Get('/find')
   async findById(@Query('id') id?: number) {
     return await this.mailService.findById(id);
   }
 
+  @UseGuards(TokenGuard)
   @Post('/duplicate')
   async duplicate(@Body() payload: CreateUpdateMailDto) {
     return await this.mailService.duplicate(payload);
+  }
+
+  @UseGuards(TokenGuard)
+  @Delete('/delete/:id')
+  async delete(@Param('id') id: number) {
+    return await this.mailService.delete(id);
   }
 }
