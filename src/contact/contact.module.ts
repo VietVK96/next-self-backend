@@ -23,6 +23,9 @@ import { PatientModule } from 'src/patient/patient.module';
 import { PermissionService } from 'src/user/services/permission.service';
 import { FamilyController } from './family.controller';
 import { FamilyService } from './services/family.service';
+import { QuotationController } from './quotation.controller';
+import { QuotationService } from './services/quotation.service';
+import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 
 @Module({
   controllers: [
@@ -33,6 +36,7 @@ import { FamilyService } from './services/family.service';
     TaskController,
     NoteController,
     FamilyController,
+    QuotationController,
   ],
   providers: [
     FindContactService,
@@ -48,6 +52,7 @@ import { FamilyService } from './services/family.service';
     TaskService,
     PermissionService,
     FamilyService,
+    QuotationService,
   ],
   imports: [
     TypeOrmModule.forFeature([
@@ -55,8 +60,8 @@ import { FamilyService } from './services/family.service';
       TraceabilityEntity,
       ContactNoteEntity,
       EventTaskEntity,
-      ContactNoteEntity,
       UserEntity,
+      DentalQuotationEntity,
     ]),
     UserModule,
     PatientModule,
