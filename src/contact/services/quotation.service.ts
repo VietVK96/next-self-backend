@@ -40,7 +40,10 @@ export class QuotationService {
     });
   }
 
-  async deleteQuotation(identity: UserIdentity, id: number): Promise<any> {
+  async deleteQuotation(
+    identity: UserIdentity,
+    id: number,
+  ): Promise<SuccessResponse> {
     // @TODO: Vérification de la permission de suppression.
     // if (!$entityManager->getRepository("\App\Entities\User")->hasPermission("PERMISSION_DELETE", 8, $userId)) :
     //     Response::sendJSONResponse(array("message" => trans("http_error_forbidden")), Response::STATUS_FORBIDDEN);
@@ -61,6 +64,9 @@ export class QuotationService {
     if (deleteQuotation.affected === 0) {
       throw new CBadRequestException(ErrorCode.DELETE_UNSUCCESSFUL);
     }
-    return quotation;
+
+    return {
+      success: true,
+    };
   }
 }
