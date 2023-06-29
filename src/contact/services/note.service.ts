@@ -8,7 +8,7 @@ import { ErrorCode } from 'src/constants/error';
 import { SuccessResponse } from 'src/common/response/success.res';
 import { StoreNoteDto } from '../dto/noteStore.dto';
 import { UserService } from 'src/user/services/user.service';
-import { PatientService } from 'src/patients/service/patient.service';
+import { PatientService } from 'src/patient/service/patient.service';
 
 @Injectable()
 export class NoteService {
