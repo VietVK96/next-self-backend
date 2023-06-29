@@ -6,33 +6,46 @@ import { HistoricalController } from './historical.controller';
 import { ContactService } from './services/contact.service';
 import { FindContactService } from './services/find.contact.service';
 import { HistoricalService } from './services/historical.service';
+import { NoteService } from './services/note.service';
+import { NoteController } from './note.controller';
+import { UserEntity } from 'src/entities/user.entity';
+import { TraceabilityEntity } from 'src/entities/traceability.entity';
 import { ActController } from './act.controller';
 import { ActServices } from './services/act.service';
-import { ContactNoteServices } from './services/note.service';
-import { TraceabilityEntity } from 'src/entities/traceability.entity';
-import { ContactNoteController } from './note.controller';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
-
+import { TaskService } from './services/task.service';
+import { TaskController } from './task.controller';
+import { EventTaskEntity } from 'src/entities/event-task.entity';
+import { UserModule } from 'src/user/userModule';
+import { PatientModule } from 'src/patients/patient.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       ContactEntity,
       TraceabilityEntity,
       ContactNoteEntity,
+      EventTaskEntity,
+      ContactNoteEntity,
+      UserEntity,
     ]),
+    UserModule,
+    PatientModule,
   ],
   controllers: [
     FindContactController,
     HistoricalController,
     ActController,
-    ContactNoteController,
+    TaskController,
+    NoteController,
   ],
   providers: [
     FindContactService,
     HistoricalService,
     ContactService,
+    NoteService,
     ActServices,
-    ContactNoteServices,
+    TaskService,
   ],
+  exports: [ContactService],
 })
 export class ContactModule {}

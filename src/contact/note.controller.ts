@@ -1,18 +1,33 @@
-import { Controller, Delete, Get, Param, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Post,
+  Delete,
+  Param,
+  UseGuards,
+  Get,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { NoteService } from './services/note.service';
+import { StoreNoteDto } from './dto/noteStore.dto';
 import {
   CurrentUser,
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
-import { ContactNoteServices } from './services/note.service';
 import { SuccessResponse } from 'src/common/response/success.res';
 
 @ApiBearerAuth()
 @Controller('/contact')
-@ApiTags('Contact')
-export class ContactNoteController {
-  constructor(private contactNoteService: ContactNoteServices) {}
+@ApiTags('')
+export class NoteController {
+  constructor(private service: NoteService) {}
+  // php/contact/note/store.php
+  @Post('note/add')
+  @UseGuards(TokenGuard)
+  async store(@Body() body: StoreNoteDto) {
+    return this.service.store(body);
+  }
 
   /**
    * /php/contact/note/delete.php 23->39
@@ -24,7 +39,7 @@ export class ContactNoteController {
     @CurrentUser() identity: UserIdentity,
     @Param('id') id: number,
   ): Promise<SuccessResponse> {
-    await this.contactNoteService.deleteByID(id);
+    await this.service.deleteByID(id);
     return {
       success: true,
     };
@@ -40,6 +55,6 @@ export class ContactNoteController {
     @CurrentUser() identity: UserIdentity,
     @Param('id') id: number,
   ) {
-    return await this.contactNoteService.findByID(id);
+    return await this.service.findByID(id);
   }
 }
