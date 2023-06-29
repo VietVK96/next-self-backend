@@ -56,7 +56,6 @@ export class QuotationService {
     ) {
       throw new CBadRequestException(ErrorCode.DELETE_UNSUCCESSFUL);
     }
-    console.log('identity.org', identity.org);
 
     const deleteQuotation = await this.repo.delete(id);
     if (deleteQuotation.affected === 0) {
