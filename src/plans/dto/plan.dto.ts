@@ -40,3 +40,10 @@ export class FindAllStructDto {
   })
   type?: EnumPlanPlfType;
 }
+
+export class DeleteOneStructDto {
+  @ApiProperty({
+    required: false,
+  })
+  id?: number;
+}

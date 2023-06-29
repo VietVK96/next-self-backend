@@ -6,28 +6,61 @@ import { HistoricalController } from './historical.controller';
 import { ContactService } from './services/contact.service';
 import { FindContactService } from './services/find.contact.service';
 import { HistoricalService } from './services/historical.service';
+import { ContactPaymentService } from './services/contact.payment.service';
+import { ContactPaymentController } from './contact.payment.controller';
+import { NoteService } from './services/note.service';
+import { NoteController } from './note.controller';
+import { UserEntity } from 'src/entities/user.entity';
+import { TraceabilityEntity } from 'src/entities/traceability.entity';
 import { ActController } from './act.controller';
 import { ActServices } from './services/act.service';
-import { TraceabilityEntity } from 'src/entities/traceability.entity';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { TaskService } from './services/task.service';
+import { TaskController } from './task.controller';
+import { EventTaskEntity } from 'src/entities/event-task.entity';
+import { UserModule } from 'src/user/userModule';
+import { PatientModule } from 'src/patient/patient.module';
+import { PermissionService } from 'src/user/services/permission.service';
 import { FamilyController } from './family.controller';
 import { FamilyService } from './services/family.service';
-import { PermissionService } from 'src/user/services/permission.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ContactEntity, TraceabilityEntity])],
   controllers: [
     FindContactController,
     HistoricalController,
+    ContactPaymentController,
     ActController,
+    TaskController,
+    NoteController,
     FamilyController,
   ],
   providers: [
     FindContactService,
     HistoricalService,
     ContactService,
+    ContactPaymentService,
+    FindContactService,
+    HistoricalService,
+    ContactService,
+    PatientModule,
+    NoteService,
     ActServices,
-    FamilyService,
+    TaskService,
     PermissionService,
+    FamilyService,
   ],
+  imports: [
+    TypeOrmModule.forFeature([
+      ContactEntity,
+      TraceabilityEntity,
+      ContactNoteEntity,
+      EventTaskEntity,
+      ContactNoteEntity,
+      UserEntity,
+    ]),
+    UserModule,
+    PatientModule,
+  ],
+  exports: [ContactService],
 })
 export class ContactModule {}

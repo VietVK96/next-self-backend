@@ -50,10 +50,28 @@ export class PaymentPlanService {
       .where('payment_schedule_id = :paymentScheduleId', {
         paymentScheduleId: paymentScheduleId,
       });
-
     if (paymentSchedule.lines) {
       paymentSchedule.lines = await qrLine.getRawOne();
     }
+  }
+
+  async delete(id, groupId) {
+    const queryBuiler = this.dataSource.createQueryBuilder();
+    const paymentSchedule = this.find(id, groupId);
+
+    queryBuiler
+      .delete()
+      .from('payment_schedule')
+      .where('id = :id', { id })
+      .andWhere('group_id = :groupId', { groupId })
+      .execute();
+
+    //@TODO
+    // if (!$statement -> rowCount()) {
+    //   throw new InvalidArgumentException(trans("validation.in", [
+    //     '%attribute%' => 'id'
+    //   ]));
+    // }
 
     return paymentSchedule;
   }
