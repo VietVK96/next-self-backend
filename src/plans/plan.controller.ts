@@ -9,7 +9,7 @@ import { FindAllStructDto } from './dto/plan.dto';
 import { PlanService } from './services/plan.service';
 
 @ApiBearerAuth()
-@Controller('/plan')
+@Controller('/contact/plan/all')
 @ApiTags('Plan')
 export class PlanController {
   constructor(private PlanService: PlanService) {}

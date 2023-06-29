@@ -19,6 +19,8 @@ export class PlanService {
   async findAll(request: FindAllStructDto, organizationId: number) {
     const { type, patientId } = request;
 
+    const plansResult = [];
+
     const queryBuiler = this.dataSource.createQueryBuilder();
     const select = `
       T_PLAN_PLF.PLF_ID AS id,
@@ -84,10 +86,10 @@ export class PlanService {
           delete plans[index].payment_schedule_id;
         }
 
-        plans.push(plans[index]);
+        plansResult.push(plans[index]);
       }
     }
 
-    return plans;
+    return plansResult;
   }
 }
