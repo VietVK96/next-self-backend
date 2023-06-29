@@ -39,6 +39,7 @@ export class QuotationService {
       },
     });
   }
+
   async deleteQuotation(identity: UserIdentity, id: number): Promise<any> {
     // @TODO: Vérification de la permission de suppression.
     // if (!$entityManager->getRepository("\App\Entities\User")->hasPermission("PERMISSION_DELETE", 8, $userId)) :

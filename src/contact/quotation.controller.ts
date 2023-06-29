@@ -24,7 +24,7 @@ export class QuotationController {
   constructor(private quotationService: QuotationService) {}
 
   /**
-   * php/dental/quotation/delete.php
+   * php/dental/quotation/delete.php -> full file
    * delete quotation
    */
   @Delete('/quotation/:id')
