@@ -14,3 +14,18 @@ export class EventTaskDto {
   })
   user?: number;
 }
+
+@ApiExtraModels()
+export class EventTaskPatchDto {
+  @ApiProperty()
+  name?: string;
+
+  @ApiProperty()
+  value?: string;
+
+  @ApiProperty()
+  pk?: number;
+
+  @ApiProperty()
+  user?: number;
+}

@@ -1,8 +1,20 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { TokenGuard } from 'src/common/decorator/auth.decorator';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
 import { TaskService } from './services/task.service';
-import { EventTaskDto } from './dto/task.contact.dto';
+import { EventTaskDto, EventTaskPatchDto } from './dto/task.contact.dto';
 
 @ApiBearerAuth()
 @Controller('/event')
@@ -19,5 +31,14 @@ export class TaskController {
   @UseGuards(TokenGuard)
   async updateEventTask(@Body() payload: EventTaskDto) {
     return await this.taskService.updateEventTask(payload);
+  }
+
+  @Post('/task/patch')
+  @UseGuards(TokenGuard)
+  async updateTaskPatch(
+    @Body() payload: EventTaskPatchDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    console.log('updateTaskPatch', payload, identity);
   }
 }
