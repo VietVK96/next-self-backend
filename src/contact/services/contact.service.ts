@@ -21,7 +21,6 @@ import { UserEntity } from 'src/entities/user.entity';
 import { PatientAmcEntity } from 'src/entities/patient-amc.entity';
 import { DataSource } from 'typeorm';
 import { OrganizationEntity } from 'src/entities/organization.entity';
-
 @Injectable()
 export class ContactService {
   constructor(private dataSource: DataSource) {}
@@ -315,5 +314,30 @@ count(CON_ID) as countId,COD_TYPE as codType
         id,
       });
     return qr.getRawOne();
+  }
+
+  async getAmountDue(patientId?: number, practitionerId?: number) {
+    const queryBuiler = this.dataSource.createQueryBuilder();
+    const obj = await queryBuiler
+      .select(
+        `contact_user_cou.cou_amount_due AS amount_due,
+      contact_user_cou.amount_due_care,
+      contact_user_cou.amount_due_prosthesis`,
+      )
+      .from(ContactUserEntity, 'contact_user_cou')
+      .where(
+        `contact_user_cou.con_id = :patientId 
+      AND contact_user_cou.usr_id = :practitionerId`,
+        { patientId, practitionerId },
+      )
+      .execute();
+    if (obj) {
+      return {
+        amount_due: 0,
+        amount_due_care: 0,
+        amount_due_prosthesis: 0,
+      };
+    }
+    return obj;
   }
 }

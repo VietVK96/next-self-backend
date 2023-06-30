@@ -20,6 +20,12 @@ import { TaskController } from './task.controller';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { UserModule } from 'src/user/userModule';
 import { PatientModule } from 'src/patient/patient.module';
+import { PermissionService } from 'src/user/services/permission.service';
+import { FamilyController } from './family.controller';
+import { FamilyService } from './services/family.service';
+import { QuotationController } from './quotation.controller';
+import { QuotationService } from './services/quotation.service';
+import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 
 @Module({
   controllers: [
@@ -29,6 +35,8 @@ import { PatientModule } from 'src/patient/patient.module';
     ActController,
     TaskController,
     NoteController,
+    FamilyController,
+    QuotationController,
   ],
   providers: [
     FindContactService,
@@ -42,6 +50,9 @@ import { PatientModule } from 'src/patient/patient.module';
     NoteService,
     ActServices,
     TaskService,
+    PermissionService,
+    FamilyService,
+    QuotationService,
   ],
   imports: [
     TypeOrmModule.forFeature([
@@ -49,8 +60,8 @@ import { PatientModule } from 'src/patient/patient.module';
       TraceabilityEntity,
       ContactNoteEntity,
       EventTaskEntity,
-      ContactNoteEntity,
       UserEntity,
+      DentalQuotationEntity,
     ]),
     UserModule,
     PatientModule,
