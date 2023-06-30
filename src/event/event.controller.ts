@@ -1,13 +1,31 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { FindEventService } from './services/find.event.services';
+import { SaveEventService } from './services/save.event.service';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { FindEventService } from './services/find.event.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { TokenGuard } from 'src/common/decorator/auth.decorator';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
+import { identity } from 'rxjs';
+import { SaveEventPayloadDto } from './dto/save.event.dto';
 
 @Controller('event')
 @ApiTags('Event')
 @ApiBearerAuth()
 export class EventController {
-  constructor(private readonly findEventService: FindEventService) {}
+  constructor(
+    private readonly findEventService: FindEventService,
+    private readonly saveEventService: SaveEventService,
+  ) {}
 
   @Get()
   @UseGuards(TokenGuard)
@@ -25,5 +43,14 @@ export class EventController {
       viewCancelledEvents,
       confidentiality,
     );
+  }
+
+  @Post('/save')
+  @UseGuards(TokenGuard)
+  async save(
+    @CurrentUser() identity: UserIdentity,
+    @Body() payload: SaveEventPayloadDto,
+  ) {
+    return await this.saveEventService.save(identity.id, payload);
   }
 }
