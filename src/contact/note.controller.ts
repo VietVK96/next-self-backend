@@ -25,8 +25,11 @@ export class NoteController {
   // php/contact/note/store.php
   @Post('note/add')
   @UseGuards(TokenGuard)
-  async store(@Body() body: StoreNoteDto) {
-    return this.service.store(body);
+  async store(
+    @Body() body: StoreNoteDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.service.store(body, identity);
   }
 
   /**
