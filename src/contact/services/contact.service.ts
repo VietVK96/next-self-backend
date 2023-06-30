@@ -1,0 +1,343 @@
+import { Injectable } from '@nestjs/common';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
+import { ErrorCode } from 'src/constants/error';
+import { AddressEntity } from 'src/entities/address.entity';
+import {
+  ContactDocumentEntity,
+  EnumContactDocumentType,
+} from 'src/entities/contact-document.entity';
+import { ContactPhoneCopEntity } from 'src/entities/contact-phone-cop.entity';
+import { ContactUserEntity } from 'src/entities/contact-user.entity';
+import { ContactEntity } from 'src/entities/contact.entity';
+import { CorrespondentEntity } from 'src/entities/correspondent.entity';
+import { GenderEntity } from 'src/entities/gender.entity';
+import { PatientAmoEntity } from 'src/entities/patient-amo.entity';
+import { PatientMedicalEntity } from 'src/entities/patient-medical.entity';
+import { PhoneTypeEntity } from 'src/entities/phone-type.entity';
+import { PhoneEntity } from 'src/entities/phone.entity';
+import { UploadEntity } from 'src/entities/upload.entity';
+import { UserEntity } from 'src/entities/user.entity';
+import { PatientAmcEntity } from 'src/entities/patient-amc.entity';
+import { DataSource } from 'typeorm';
+import { OrganizationEntity } from 'src/entities/organization.entity';
+@Injectable()
+export class ContactService {
+  constructor(private dataSource: DataSource) {}
+
+  async verifyByIdAndGroupId(id: number, orgId: number): Promise<boolean> {
+    const queryBuiler = this.dataSource.createQueryBuilder();
+    const select = `COUNT(CON_ID) as countId`;
+    const qr = queryBuiler
+      .select(select)
+      .from(ContactEntity, 'CON')
+      .where('CON.CON_ID = :id', {
+        id,
+      })
+      .andWhere('CON.organization_id = :orgId', {
+        orgId,
+      });
+
+    const { countId }: { countId: number } = await qr.getRawOne();
+    return countId > 0;
+  }
+
+  /**
+   * Convert from application\Services\Contact.php 38->233
+   * sometimes i ask what is my doing
+   *
+   */
+  async findOne(id: number, doctorId: number, identity: UserIdentity) {
+    const queryBuiler = this.dataSource.createQueryBuilder();
+    const select = `
+      CON.CON_ID as id,
+      CON.CON_NBR as nbr,
+      CON.CON_LASTNAME as lastname,
+      CON.CON_FIRSTNAME as firstname,
+      CON.CON_MAIL as email,
+      CON.CON_PROFESSION as profession,
+      CON.CON_BIRTHDAY as birthday,
+      CON.CON_BIRTH_ORDER as birthOrder,
+      IFNULL(CON.CON_QUALITY, 0) as quality,
+      CON.CON_BREASTFEEDING as breastfeeding,
+      CON.CON_PREGNANCY as pregnancy,
+      CON.CON_CLEARANCE_CREATININE as clearanceCreatinine,
+      CON.CON_HEPATIC_INSUFFICIENCY as hepaticInsufficiency,
+      CON.CON_WEIGHT as weight,
+      CON.CON_SIZE as size,
+      CON.CON_MSG as msg,
+      CON.odontogram_observation,
+      CON.CON_NOTIFICATION_MSG as notificationMsg,
+      CON.CON_NOTIFICATION_ENABLE as notificationEnable,
+      CON.CON_NOTIFICATION_EVERY_TIME as notificationEveryTime,
+      CON.CON_REMINDER_VISIT_TYPE as reminderVisitType,
+      CON.CON_REMINDER_VISIT_DURATION as reminderVisitDuration,
+      CON.CON_REMINDER_VISIT_DATE as reminderVisitDate,
+      CON.CON_REMINDER_VISIT_LAST_DATE as reminderVisitLastDate,
+      CON.CON_COLOR as color,
+      CON.CON_COLOR_MEDICAL as colorMedical,
+      CON.CON_INSEE as insee,
+      CON.CON_INSEE_KEY as inseeKey,
+      CON.social_security_reimbursement_rate,
+      CON.CON_MUTUAL_REPAYMENT_TYPE as mutualRepaymentType,
+      CON.CON_MUTUAL_REPAYMENT_RATE as mutualRepaymentRate,
+      CON.CON_MUTUAL_COMPLEMENT as mutualComplement,
+      CON.CON_MUTUAL_CEILING as mutualCeiling,
+      CON.CON_AGENESIE as agenesie,
+      CON.CON_MALADIE_RARE as maladieRare,
+      CON.CON_RX_SIDEXIS_LOADED as rxSidexisLoaded,
+      CON.COF_ID as contactFamilyId,
+      CON.external_reference_id,
+      GEN.GEN_ID as genderId,
+      GEN.GEN_NAME as genderName,
+      GEN.GEN_TYPE as genderType,
+      ADR.ADR_ID as addressId,
+      ADR.ADR_STREET as addressStreet,
+      ADR.ADR_STREET_COMP as addressStreetComp,
+      ADR.ADR_ZIP_CODE as addressZipCode,
+      ADR.ADR_CITY as addressCity,
+      ADR.ADR_COUNTRY as addressCountry,
+      ADR.ADR_COUNTRY_ABBR as addressCountryAbbr,
+      CPD.CPD_ID as doctor_id,
+      CPD.CPD_LASTNAME as doctor_last_name,
+      CPD.CPD_FIRSTNAME as doctor_first_name,
+      CPD1.CPD_ID as addressed_by_id,
+      CPD1.CPD_LASTNAME as addressed_by_last_name,
+      CPD1.CPD_FIRSTNAME as addressed_by_first_name,
+      USR.USR_ID as practitionerId,
+      USR.USR_ABBR as practitionerAbbr,
+      USR.USR_LASTNAME as practitionerLastname,
+      USR.USR_FIRSTNAME as practitionerFirstname,
+      UPL.UPL_ID as avatarId,
+      UPL.UPL_TOKEN as avatarToken,
+      NULL as avatarUrl,
+      IFNULL(cou.cou_amount_due, 0) as amountDue,
+      IFNULL(cou.amount_due_care, 0) as amountDueCare,
+      IFNULL(cou.amount_due_prosthesis, 0) as amountDueProsthesis,
+      IFNULL(cou.third_party_balance, 0) as third_party_balance,
+      cou.cou_last_payment as lastPayment,
+      cou.cou_last_care as lastCare
+    `;
+    const qr = queryBuiler
+      .select(select)
+      .from(ContactEntity, 'CON')
+      .leftJoin(GenderEntity, 'GEN', 'CON.GEN_ID = GEN.GEN_ID')
+      .leftJoin(AddressEntity, 'ADR', 'ADR.ADR_ID = CON.ADR_ID')
+      .leftJoin(
+        CorrespondentEntity,
+        'CPD',
+        'CPD.CPD_ID = CON.CON_MEDECIN_TRAITANT',
+      )
+      .leftJoin(CorrespondentEntity, 'CPD1', 'CPD1.CPD_ID = CON.CPD_ID')
+      .leftJoin(UserEntity, 'USR', 'USR.USR_ID = CON.USR_ID')
+      .leftJoin(UploadEntity, 'UPL', 'UPL.UPL_ID = CON.UPL_ID')
+      .leftJoin(
+        ContactUserEntity,
+        'cou',
+        'cou.con_id = CON.CON_ID AND cou.usr_id = :usrId',
+        {
+          usrId: doctorId,
+        },
+      )
+      .where('CON.CON_ID = :id AND CON.organization_id = :orgId', {
+        id,
+        orgId: identity.org,
+      });
+    const record = await qr.getRawOne();
+    if (!record) {
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_PATIENT);
+    }
+    record.phones = await this.findPhone(id);
+    if (record.contactFamilyId) {
+      record.members = await this.getMembers(
+        id,
+        doctorId,
+        record.contactFamilyId,
+      );
+    }
+
+    const countDocument = await this.getCountDocument(id);
+    record.document_count = countDocument?.documentCount ?? 0;
+    record.image_count = countDocument?.imageCount ?? 0;
+    record.medical = await this.findMedical(id);
+    record.amos = await this.findAmos(id);
+    record.amcs = await this.findAmcs(id);
+
+    const image = await this.findLibraryLink(id);
+    record.image_library_link = image?.image_library_link ?? null;
+    return record;
+  }
+
+  async findPhone(id: number) {
+    const queryBuiler = this.dataSource.createQueryBuilder();
+    const select = `
+PHO.PHO_ID as id,
+PHO.PHO_NBR as nbr,
+PTY.PTY_ID as phoneTypeId,
+PTY.PTY_NAME as phoneTypeName
+    `;
+
+    const qr = queryBuiler
+      .select(select)
+      .from(ContactPhoneCopEntity, 'COP')
+      .innerJoin(PhoneEntity, 'PHO', 'PHO.PHO_ID = COP.PHO_ID')
+      .innerJoin(PhoneTypeEntity, 'PTY', 'PTY.PTY_ID = PHO.PTY_ID')
+      .where('COP.CON_ID = :id', {
+        id,
+      });
+    return qr.getRawMany();
+  }
+
+  async getMembers(id: number, doctorId: number, contactFamilyId: number) {
+    const queryBuiler = this.dataSource.createQueryBuilder();
+    const select = `
+    CON.CON_ID as id,
+    CON.CON_NBR as nbr,
+    CON.CON_LASTNAME as lastname,
+    CON.CON_FIRSTNAME as firstname,
+    CON.CON_COLOR as color,
+    IFNULL(cou.cou_amount_due, 0) as amountDue,
+    IFNULL(cou.amount_due_care, 0) as amountDueCare,
+    IFNULL(cou.amount_due_prosthesis, 0) as amountDueProsthesis,
+    cou.cou_last_payment as lastPayment,
+    cou.cou_last_care as lastCare
+    `;
+    const qr = queryBuiler
+      .select(select)
+      .from(ContactEntity, 'CON')
+      .leftJoin(
+        ContactUserEntity,
+        'cou',
+        'cou.con_id = CON.CON_ID AND cou.usr_id = :doctorId',
+        {
+          doctorId,
+        },
+      )
+      .where('CON.COF_ID = :contactFamilyId AND CON.CON_ID != :id', {
+        contactFamilyId,
+        id,
+      })
+      .orderBy('CON.CON_LASTNAME, CON.CON_FIRSTNAME');
+
+    return qr.getRawMany();
+  }
+
+  async getCountDocument(id: number): Promise<{
+    documentCount: number;
+    imageCount: number;
+  }> {
+    const queryBuiler = this.dataSource.createQueryBuilder();
+    const select = `
+count(CON_ID) as countId,COD_TYPE as codType
+`;
+    const qr = queryBuiler
+      .select(select)
+      .from(ContactDocumentEntity, 'COD')
+      .where(`CON_ID = :id AND COD_TYPE IN ('file', 'rx')`, {
+        id,
+      })
+      .groupBy('COD_TYPE');
+    const data: { countId: number; codType: string }[] = await qr.getRawMany();
+
+    const re: {
+      documentCount: number;
+      imageCount: number;
+    } = {
+      documentCount: 0,
+      imageCount: 0,
+    };
+    if (data.length > 0) {
+      const document = data.find(
+        (d) => d.codType === EnumContactDocumentType.FILE,
+      );
+      if (document && document.countId) {
+        re.documentCount = document.countId;
+      }
+
+      const image = data.find((d) => d.codType === EnumContactDocumentType.RX);
+      if (image && image.countId) {
+        re.imageCount = image.countId;
+      }
+    }
+    return re;
+  }
+
+  async findMedical(id: number) {
+    const queryBuiler = this.dataSource.createQueryBuilder();
+    const qr = queryBuiler
+      .select('*')
+      .from(PatientMedicalEntity, 'pme')
+      .where(`patient_id = :id`, {
+        id,
+      });
+
+    return qr.getRawOne();
+  }
+
+  async findAmos(id: number) {
+    const queryBuiler = this.dataSource.createQueryBuilder();
+    const qr = queryBuiler
+      .select('*')
+      .from(PatientAmoEntity, 'amo')
+      .where(`patient_id = :id`, {
+        id,
+      });
+
+    return qr.getRawMany();
+  }
+
+  async findAmcs(id: number) {
+    const queryBuiler = this.dataSource.createQueryBuilder();
+    const qr = queryBuiler
+      .select('*')
+      .from(PatientAmcEntity, 'amc')
+      .where(`patient_id = :id`, {
+        id,
+      });
+
+    return qr.getRawMany();
+  }
+
+  async findLibraryLink(id: number): Promise<{
+    image_library_link?: string;
+  }> {
+    const queryBuiler = this.dataSource.createQueryBuilder();
+    const qr = queryBuiler
+      .select('image_library_link')
+      .from(OrganizationEntity, 'T_GROUP_GRP')
+      .innerJoin(
+        ContactEntity,
+        'T_CONTACT_CON',
+        'T_GROUP_GRP.GRP_ID = T_CONTACT_CON.organization_id',
+      )
+      .where(`T_CONTACT_CON.CON_ID = :id`, {
+        id,
+      });
+    return qr.getRawOne();
+  }
+
+  async getAmountDue(patientId?: number, practitionerId?: number) {
+    const queryBuiler = this.dataSource.createQueryBuilder();
+    const obj = await queryBuiler
+      .select(
+        `contact_user_cou.cou_amount_due AS amount_due,
+      contact_user_cou.amount_due_care,
+      contact_user_cou.amount_due_prosthesis`,
+      )
+      .from(ContactUserEntity, 'contact_user_cou')
+      .where(
+        `contact_user_cou.con_id = :patientId 
+      AND contact_user_cou.usr_id = :practitionerId`,
+        { patientId, practitionerId },
+      )
+      .execute();
+    if (obj) {
+      return {
+        amount_due: 0,
+        amount_due_care: 0,
+        amount_due_prosthesis: 0,
+      };
+    }
+    return obj;
+  }
+}

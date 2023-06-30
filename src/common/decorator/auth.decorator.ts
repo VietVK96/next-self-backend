@@ -8,14 +8,15 @@ import {
 import { Cache } from 'cache-manager';
 import { createParamDecorator } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { JWT_LOG_OUT } from 'src/constatns/jwt';
+import { JWT_LOG_OUT } from 'src/constants/jwt';
 import { JwtPayload } from 'jsonwebtoken';
 
 export interface UserIdentity extends JwtPayload {
   id: number;
-  org: number;
+  org: number; // $groupId = $session->get("group");
   un?: string;
   type?: string;
+  dis?: number[]; // list doctor id
 }
 
 export interface RefreshJwt extends JwtPayload {
