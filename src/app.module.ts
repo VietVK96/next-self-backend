@@ -14,10 +14,10 @@ import { WaitingRoomModule } from './waitingRoom/waitingRoom.module';
 import { AntecedentPrestationModule } from './antecedent-prestation/antecedent-prestation.module';
 import { PatientModule } from './patient/patient.module';
 import { MedicalDevicesModule } from './medialDevices/medicalDevices.module';
-import { UserModule } from './user/userModule';
 import { AddressModule } from './address/address.module';
 import { PlanModule } from './plans/plan.module';
 import { MailModule } from './mail/mail.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [

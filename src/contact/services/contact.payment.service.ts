@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { ContactPaymentFindAllDto } from '../dto/contact.payment.dto';
 import { CashingEntity } from 'src/entities/cashing.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
@@ -7,10 +7,20 @@ import { UserEntity } from 'src/entities/user.entity';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { SlipCheckEntity } from 'src/entities/slip-check.entity';
 import { ContactPaymentFindAllRes } from '../response/contact.payment.res';
+import { InjectRepository } from '@nestjs/typeorm';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { PermissionService } from 'src/user/services/permission.service';
 
 @Injectable()
 export class ContactPaymentService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private dataSource: DataSource,
+    @InjectRepository(CashingEntity)
+    private readonly repo: Repository<CashingEntity>,
+    @InjectRepository(CashingContactEntity)
+    private readonly cashingContactRepo: Repository<CashingContactEntity>, // private permissionService: PermissionService,
+  ) {}
 
   /**
    * File: php\contact\payment\findAll.php 13->62
@@ -59,5 +69,55 @@ export class ContactPaymentService {
       delete cash.bordereau_number;
     }
     return cashes;
+  }
+
+  /**
+   * php/payment/delete.php
+   * 21->53
+   */
+  async deleteById(id: number, identity: UserIdentity) {
+    try {
+      const payment = await this.repo.find({
+        where: {
+          id,
+        },
+        relations: {
+          payees: true,
+        },
+      });
+      // check permission
+      if (payment.length) {
+        // TODO permission not working
+        // if (
+        //   !this.permissionService.hasPermission(
+        //     'PERMISSION_PAIEMENT',
+        //     8,
+        //     identity.id,
+        //     payment[0].usrId,
+        //   ) ||
+        //   !this.permissionService.hasPermission(
+        //     'PERMISSION_DELETE',
+        //     8,
+        //     identity.id,
+        //   )
+        // ) {
+        //   throw new CBadRequestException('Permission denied');
+        // }
+
+        // TODO Create Log
+        //  $payees = $payment->getPayees();
+        //   foreach ($payees as $payee) {
+        //     Ids\Log::write('Paiement', $payee->getPatient()->getId(), 3);
+        // }
+        if (payment[0].payees) {
+          const payeesId = payment[0].payees.map((e) => e.id);
+          this.cashingContactRepo.delete(payeesId);
+        }
+        await this.repo.delete({ id });
+        return;
+      }
+    } catch (error) {
+      throw new CBadRequestException(error);
+    }
   }
 }
