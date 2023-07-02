@@ -1,10 +1,6 @@
 import { Body, Controller, Patch, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
-import {
-  CurrentUser,
-  TokenGuard,
-  UserIdentity,
-} from 'src/common/decorator/auth.decorator';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { TokenGuard } from 'src/common/decorator/auth.decorator';
 import {
   PatientBalanceUpdatePayloadDto,
   PatientBalanceUpdateQueryDto,
@@ -17,7 +13,7 @@ export class PatientBalanceController {
   constructor(private service: PatientBalanceService) {}
 
   @Patch('/update')
-  // @UseGuards(TokenGuard)
+  @UseGuards(TokenGuard)
   async findAll(
     @Query() request: PatientBalanceUpdateQueryDto,
     @Body() payload: PatientBalanceUpdatePayloadDto,
