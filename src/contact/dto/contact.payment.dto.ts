@@ -8,3 +8,12 @@ export class ContactPaymentFindAllDto {
   })
   id?: number;
 }
+
+@ApiExtraModels()
+export class ContactPaymentDeleteByIdDto {
+  @ApiProperty({
+    name: 'id',
+    required: true,
+  })
+  id?: number;
+}
