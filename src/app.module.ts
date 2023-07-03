@@ -39,7 +39,7 @@ import { MailModule } from './mail/mail.module';
       inject: [ConfigService],
       useFactory: async (c: ConfigService) => {
         const cacheConfig = c.get<IRedisConfig>('redis');
-        const storeConfig = {
+        const storeConfig: any = {
           socket: {
             host: cacheConfig.host,
             port: cacheConfig.port,
