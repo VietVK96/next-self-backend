@@ -18,7 +18,7 @@ import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { TaskService } from './services/task.service';
 import { TaskController } from './task.controller';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
-import { UserModule } from 'src/user/userModule';
+import { UserModule } from 'src/user/user.module';
 import { PatientModule } from 'src/patient/patient.module';
 import { PermissionService } from 'src/user/services/permission.service';
 import { FamilyController } from './family.controller';

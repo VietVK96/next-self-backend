@@ -5,8 +5,8 @@ import { EventEntity } from 'src/entities/event.entity';
 import { GenderEntity } from 'src/entities/gender.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
-import { findAllWaitingQueryRes } from '../reponse/findAllWaiting.query.res';
-import { findAllWaitingRes } from '../reponse/findAllWaiting.res';
+import { findAllWaitingQueryRes } from '../reponse/find-all-waiting.query.res';
+import { findAllWaitingRes } from '../reponse/find-all-waiting.res';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()

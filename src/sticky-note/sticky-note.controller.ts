@@ -1,14 +1,14 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { StickyNoteService } from './stickyNote.service';
-import { SaveStickNoteDto } from './dto/save.stickyNote.dto';
+import { StickyNoteService } from './sticky-note.service';
+import { SaveStickNoteDto } from './dto/save.sticky-note.dto';
 import {
   CurrentUser,
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
-import { DeleteStickyNoteDto } from './dto/delete.stickyNote.dto';
-import { FindAllStickyNoteDto } from './dto/findAll.stickyNote.dto';
+import { DeleteStickyNoteDto } from './dto/delete.sticky-note.dto';
+import { FindAllStickyNoteDto } from './dto/findAll.sticky-note.dto';
 
 @ApiBearerAuth()
 @ApiTags('StickyNote')
