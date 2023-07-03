@@ -13,7 +13,7 @@ export class PatientBalanceController {
   constructor(private service: PatientBalanceService) {}
 
   @Patch('/update')
-  @UseGuards(TokenGuard)
+  // @UseGuards(TokenGuard)
   async findAll(
     @Query() request: PatientBalanceUpdateQueryDto,
     @Body() payload: PatientBalanceUpdatePayloadDto,
