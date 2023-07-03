@@ -27,6 +27,8 @@ export class UploadService {
   ) {}
 
   private readonly ERR_EXCEED_QUOTAS = 201;
+  private readonly STATUS_BAD_REQUEST = 400;
+
   async uploadPatientPhoto(
     user: UserIdentity,
     contactId: number,
@@ -177,7 +179,7 @@ export class UploadService {
           .execute();
       }
     } catch (e) {
-      Response.error();
+      throw new CBadRequestException(e.message);
     }
   }
 }

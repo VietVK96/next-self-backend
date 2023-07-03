@@ -46,7 +46,9 @@ export class StringHelper {
       }
       return array_reste;
     } else {
-      if (length >= string.length) {return [string];}
+      if (length >= string.length) {
+        return [string];
+      }
       let first_line = string.substring(0, length + 1);
       const pos_last_space = first_line.lastIndexOf(character);
       if (pos_last_space === -1) {
