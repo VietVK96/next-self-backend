@@ -12,6 +12,8 @@ import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-requ
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { RadioAssociationService } from './radio-association.service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { PerCode } from 'src/constants/permissions';
+import { ActDto } from '../dto/act.dto';
 
 @Injectable()
 export class PrestationService {
@@ -187,7 +189,7 @@ export class PrestationService {
       // Vérification de la permission de suppression.
       if (
         !this.permissionService.hasPermission(
-          'PERMISSION_DELETE',
+          PerCode.PERMISSION_DELETE,
           8,
           identity.id,
         )
@@ -218,7 +220,7 @@ export class PrestationService {
         )
         .where('T_EVENT_TASK_ETK.ETK_ID = :etkId', { etkId: id });
 
-      const act = await queryBuilder.getRawOne();
+      const act: ActDto = await queryBuilder.getRawOne();
 
       // Acte non trouvé
       if (!act) {
@@ -261,7 +263,6 @@ export class PrestationService {
           [id],
         );
       } else {
-        // await this.dataSource.query(`DELETE FROM T_EVENT_TASK_ETK WHERE ETK_ID = ?`, [id]);
         await this.dataSource
           .getRepository(EventTaskEntity)
           .createQueryBuilder()

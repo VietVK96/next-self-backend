@@ -1,4 +1,11 @@
-import { Controller, Delete, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PrestationService } from './services/prestation.service';
 import {
@@ -47,10 +54,10 @@ export class PrestationController {
    * @param identity
    * @returns
    */
-  @Delete('/delete')
+  @Delete('/:id')
   @UseGuards(TokenGuard)
   async deletePrestation(
-    @Query('id') id: number,
+    @Param('id') id: number,
     @CurrentUser() identity: UserIdentity,
   ) {
     return this.prestationService.delete(id, identity);

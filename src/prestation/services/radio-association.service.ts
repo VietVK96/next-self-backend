@@ -4,6 +4,7 @@ import { UserEntity } from 'src/entities/user.entity';
 import { DataSource } from 'typeorm';
 import * as dayjs from 'dayjs';
 import { ExceedingEnum } from 'src/enum/exceeding-enum.enum';
+import { RadiographieDto } from '../dto/radiographie.dto';
 
 @Injectable()
 export class RadioAssociationService {
@@ -52,9 +53,10 @@ export class RadioAssociationService {
         detExceeding: ExceedingEnum.NON_REMBOURSABLE,
       });
 
-    const radiographies = await radiographiesStm.getRawMany();
+    const radiographies: RadiographieDto[] =
+      await radiographiesStm.getRawMany();
 
-    const discountedCodes = [];
+    const discountedCodes: string[] = [];
 
     if (radiographies.length > 0) {
       if (
@@ -66,7 +68,7 @@ export class RadioAssociationService {
       ) {
         let etkIdOfFirstRadiographie = 0;
         let isUpdateDetCoef = false;
-        const etkIds = [];
+        const etkIds: number[] = [];
 
         radiographies.forEach((radiographie, index) => {
           if (!index) {
