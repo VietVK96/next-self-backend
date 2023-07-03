@@ -1,6 +1,6 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { FindMedicalDevicesService } from './services/find.medicalDevices.service';
+import { FindMedicalDevicesService } from './services/find.medical-devices.service';
 import {
   CurrentUser,
   TokenGuard,
