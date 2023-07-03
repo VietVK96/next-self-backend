@@ -38,7 +38,7 @@ export class FindContactController {
     return this.findContactService.findAll(request, doctorId, identity.org);
   }
 
-  @Get(':id')
+  @Get('find/:id')
   @ApiQuery({
     name: 'conditions',
     type: FindAllContactDto,
@@ -55,6 +55,7 @@ export class FindContactController {
   ) {
     return this.contactService.findOne(id, doctorId, identity);
   }
+
   // File php\contact\recentlyTreated\findAll.php 1->8
   @Get('/recentlyTreated')
   @UseGuards(TokenGuard)
