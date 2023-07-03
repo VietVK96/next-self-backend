@@ -8,8 +8,12 @@ import { ErrorCode } from 'src/constants/error';
 import { DataSource } from 'typeorm';
 import { ExceedingEnum } from 'src/enum/exceeding-enum.enum';
 import { UserEntity } from 'src/entities/user.entity';
-import { CcamUnitPriceEntity } from 'src/entities/ccamunitprice.entity';
 import { EnumDentalEventTaskComp } from 'src/entities/dental-event-task.entity';
+import { DentalModifierEntity } from 'src/entities/dental-modifier.entity';
+import { CcamUnitPriceEntity } from 'src/entities/ccamunitprice.entity';
+import { CcamEntity } from 'src/entities/ccam.entity';
+import { query } from 'express';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class TaskService {
@@ -18,8 +22,12 @@ export class TaskService {
     private eventTaskRepository: Repository<EventTaskEntity>,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
+    @InjectRepository(DentalModifierEntity)
+    private dentalModifierRepository: Repository<DentalModifierEntity>,
     @InjectRepository(CcamUnitPriceEntity)
     private ccamUnitPriceRepository: Repository<CcamUnitPriceEntity>,
+    @InjectRepository(CcamEntity)
+    private ccamRepository: Repository<CcamEntity>,
     private dataSource: DataSource,
   ) {}
 
@@ -43,9 +51,10 @@ export class TaskService {
     await queryRunner.startTransaction();
 
     let oldDate: EventTaskEntity = null;
-    const id: number = pk;
     let oldComplement: EnumDentalEventTaskComp = null;
     let refreshAmount = false;
+    const id: number = pk;
+    // tao cac ham dung chung
     const canPerformFreeFee = (user: UserEntity): boolean => {
       if (user.droitPermanentDepassement === 1) {
         return true;
@@ -55,23 +64,21 @@ export class TaskService {
       }
       return false;
     };
-    async function getMaximumPriceByCodeAndGridAndDate(
+    async function containsModifier(
       code: string,
-      grid: number,
-      date: Date,
-    ): Promise<number | null> {
-      const result = await this.ccamUnitPriceRepository
-        .createQueryBuilder('cup')
-        .select('cup.maximumPrice')
-        .innerJoin('cup.ccam', 'cm')
-        .where('cm.code = :code', { code })
-        .andWhere('cup.grid = :grid', { grid })
-        .andWhere('cup.createdOn <= :date', { date })
-        .orderBy('cup.createdOn', 'DESC')
-        .take(1)
-        .getRawOne();
+      modifier: string,
+      ccamRepository: Repository<CcamEntity>,
+    ): Promise<boolean> {
+      const queryBuilder = ccamRepository.createQueryBuilder('ccam');
+      queryBuilder.select('COUNT(ccam.id)', 'count');
+      queryBuilder.where('ccam.code = :code', { code });
+      queryBuilder.andWhere('ccam.modifiers LIKE :modifiers', {
+        modifiers: `%${modifier.replace(/%/g, '\\%').replace(/_/g, '\\_')}%`,
+      });
 
-      return result ? result.maximumPrice : null;
+      const result = await queryBuilder.getRawOne();
+      const count = Number(result.count);
+      return Boolean(count);
     }
 
     try {
@@ -99,12 +106,7 @@ export class TaskService {
 
         case 'date':
           // Modification du complément prestation
-          oldDate = await this.dataSource
-            .createQueryBuilder()
-            .select('T_EVENT_TASK_ETK.ETK_DATE')
-            .from('T_EVENT_TASK_ETK', 'T_EVENT_TASK_ETK')
-            .where(`T_EVENT_TASK_ETK.ETK_ID = ${id}`)
-            .getRawOne();
+          oldDate = await this.eventTaskRepository.findOneBy({ id: id });
 
           // Modification de la date
           await queryRunner.query(
@@ -259,11 +261,21 @@ export class TaskService {
             exceeding1 !== ExceedingEnum.NON_REMBOURSABLE &&
             code
           ) {
-            const maximumPrice = await getMaximumPriceByCodeAndGridAndDate(
-              code,
-              grid,
-              date,
-            );
+            const ccamUnitPrice: { maximumPrice: number } =
+              await this.ccamUnitPriceRepository
+                .createQueryBuilder('cup')
+                .select('cup.maximumPrice')
+                .innerJoin('cup.ccam', 'cm')
+                .where('cm.code = :code', { code })
+                .andWhere('cup.grid = :grid', { grid })
+                .andWhere('cup.createdOn <= :date', { date })
+                .orderBy('cup.createdOn', 'DESC')
+                .take(1)
+                .getRawOne();
+
+            const maximumPrice = ccamUnitPrice
+              ? ccamUnitPrice.maximumPrice
+              : null;
             if (maximumPrice && Number(value) > maximumPrice) {
               throw new Error(
                 `L'acte ${code} ne peut être validé au tarif de ${value} euros car il dépasse le plafond de ${maximumPrice} euros.`,
@@ -300,30 +312,33 @@ export class TaskService {
       // des modifications effectuées
       if (refreshAmount) {
         // Récupération de la nomenclature
-        const nomenclatureStatement = await this.dataSource
-          .createQueryBuilder()
-          .select('T_DENTAL_EVENT_TASK_DET.DET_TYPE')
-          .from('T_DENTAL_EVENT_TASK_DET', 'T_DENTAL_EVENT_TASK_DET')
-          .where(`ETK_ID = ${id}`)
-          .getRawOne();
-        if (nomenclatureStatement['DET_TYPE'] === 'CCAM') {
-          const statements = await queryRunner.query(
+        const nomenclatureStatement: { DET_TYPE: string } =
+          await this.dataSource
+            .createQueryBuilder()
+            .select('T_DENTAL_EVENT_TASK_DET.DET_TYPE')
+            .from('T_DENTAL_EVENT_TASK_DET', 'T_DENTAL_EVENT_TASK_DET')
+            .where(`ETK_ID = ${id}`)
+            .getRawOne();
+        if (nomenclatureStatement.DET_TYPE === 'CCAM') {
+          const statements: {
+            amount: number;
+            complement: EnumDentalEventTaskComp;
+            ccamCode: string;
+            ccamModifier: string;
+          }[] = await queryRunner.query(
             `SELECT
                     T_EVENT_TASK_ETK.ETK_AMOUNT AS amount,
                     T_DENTAL_EVENT_TASK_DET.DET_COMP AS complement,
-                    T_DENTAL_EVENT_TASK_DET.DET_CCAM_CODE AS ccam_code,
-                    T_DENTAL_EVENT_TASK_DET.DET_CCAM_MODIFIER AS ccam_modifier
+                    T_DENTAL_EVENT_TASK_DET.DET_CCAM_CODE AS ccamCode,
+                    T_DENTAL_EVENT_TASK_DET.DET_CCAM_MODIFIER AS ccamModifier
                 FROM T_EVENT_TASK_ETK
                 JOIN T_DENTAL_EVENT_TASK_DET
                 WHERE T_EVENT_TASK_ETK.ETK_ID = ?
                   AND T_EVENT_TASK_ETK.ETK_ID = T_DENTAL_EVENT_TASK_DET.ETK_ID`,
             [id],
           );
-          const statement = statements[0];
-          const amount = statement['amount'];
-          const complement = statement['complement'];
-          const ccamCode = statement['ccam_code'];
-          const ccamModifier = statement['ccam_modifier'];
+          let { amount, ccamModifier } = statements[0];
+          const { complement, ccamCode } = statements[0];
           const ngapCcamComplement = {
             N: 'U',
             F: 'F',
@@ -336,10 +351,204 @@ export class TaskService {
           ) {
             const ccamComplement = ngapCcamComplement[oldComplement];
             if (new RegExp(ccamComplement, 'i').test(ccamModifier)) {
+              const ccamModifierStatement =
+                await this.dentalModifierRepository.findOneBy({
+                  code: ccamComplement,
+                });
+              const ccamModifierAmount = ccamModifierStatement.amount;
+              if (ccamModifierAmount) {
+                amount -= parseFloat(ccamModifierAmount.toString());
+                ccamModifier = ccamModifier.replace(ccamComplement, '');
+
+                await queryRunner.query(
+                  `UPDATE T_EVENT_TASK_ETK
+                SET ETK_AMOUNT = ?
+                WHERE ETK_ID = ?`,
+                  [amount, id],
+                );
+
+                await queryRunner.query(
+                  `UPDATE T_DENTAL_EVENT_TASK_DET
+                SET DET_CCAM_MODIFIER = ?
+                WHERE ETK_ID = ?`,
+                  [ccamModifier, id],
+                );
+              }
+            }
+          }
+
+          // Ajout du montant du nouveau complément
+          if (oldComplement && ngapCcamComplement.hasOwnProperty(complement)) {
+            const ccamComplement = ngapCcamComplement[complement];
+            if (new RegExp(ccamComplement, 'i').test(ccamModifier)) {
+              // Vérification si le modificateur que l'on souhaite ajouter
+              // existe dans la liste des modificateurs du code CCAM
+              if (
+                !containsModifier(ccamCode, ccamComplement, this.ccamRepository)
+              ) {
+                throw new Error(
+                  `Complement prestation incompatible avec code de l'acte.`,
+                );
+              }
+              const ccamModifierStatement =
+                await this.dentalModifierRepository.findOneBy({
+                  code: ccamComplement,
+                });
+              const ccamModifierAmount = ccamModifierStatement.amount;
+              if (ccamModifierAmount) {
+                amount += parseFloat(ccamModifierAmount.toString());
+                ccamModifier.concat(ccamComplement);
+
+                await queryRunner.query(
+                  `UPDATE T_EVENT_TASK_ETK
+                SET ETK_AMOUNT = ?
+                WHERE ETK_ID = ?`,
+                  [amount, id],
+                );
+
+                await queryRunner.query(
+                  `UPDATE T_DENTAL_EVENT_TASK_DET
+                SET DET_CCAM_MODIFIER = ?
+                WHERE ETK_ID = ?`,
+                  [ccamModifier, id],
+                );
+              }
+            }
+          }
+        } else if (nomenclatureStatement.DET_TYPE === 'NGAP') {
+          // Récupération des informations NGAP
+          const statements: {
+            coefficient: number;
+            complement: EnumDentalEventTaskComp;
+            socialSecurityAmount: number;
+            complementNight: number;
+            complementHoliday: number;
+          }[] = await queryRunner.query(`
+                SELECT
+                    T_DENTAL_EVENT_TASK_DET.DET_COEF AS coefficient,
+                    T_DENTAL_EVENT_TASK_DET.DET_COMP AS complement,
+                    ngap_key.unit_price AS socialSecurityAmount,
+                    ngap_key.complement_night AS complementNight,
+                    ngap_key.complement_holiday AS complementHoliday
+                FROM T_DENTAL_EVENT_TASK_DET
+                JOIN ngap_key
+                WHERE T_DENTAL_EVENT_TASK_DET.ETK_ID = ?
+                  AND T_DENTAL_EVENT_TASK_DET.ngap_key_id = ngap_key.id`);
+          if (statements.length > 0) {
+            const {
+              complementHoliday,
+              coefficient,
+              complement,
+              socialSecurityAmount,
+              complementNight,
+            } = statements[0];
+
+            // Calcul du nouveau montant
+            let amount = socialSecurityAmount * coefficient;
+            if (complement === 'N') {
+              amount += complementNight;
+            } else if (complement === 'F') {
+              amount += complementHoliday;
+            }
+
+            await queryRunner.query(
+              `
+                    UPDATE T_EVENT_TASK_ETK
+                    SET ETK_AMOUNT = ?
+                    WHERE ETK_ID = ?`,
+              [amount, id],
+            );
+          }
+        }
+      }
+
+      /**
+       * RÈGLES D’ASSOCIATION DES RADIOGRAPHIES EN MÉDECINE BUCCO-DENTAIRE.
+       */
+      const act: EventTaskEntity = await this.eventTaskRepository.findOneBy({
+        id: id,
+      });
+      const radiographies: {
+        id: number;
+        name: string;
+        coef: number;
+        paragraphe: string;
+      }[] = await queryRunner.query(
+        `
+            SELECT
+                T_EVENT_TASK_ETK.ETK_ID as id,
+                T_EVENT_TASK_ETK.ETK_NAME as name,
+                T_DENTAL_EVENT_TASK_DET.DET_COEF as coef,
+                ccam_menu.paragraphe
+            FROM T_EVENT_TASK_ETK
+            JOIN T_DENTAL_EVENT_TASK_DET
+            JOIN ccam
+            JOIN ccam_menu
+            WHERE
+                T_EVENT_TASK_ETK.USR_ID = ? AND
+                T_EVENT_TASK_ETK.CON_ID = ? AND
+                T_EVENT_TASK_ETK.ETK_DATE = ? AND
+                T_EVENT_TASK_ETK.ETK_STATE = 1 AND
+                T_EVENT_TASK_ETK.ETK_ID = T_DENTAL_EVENT_TASK_DET.ETK_ID AND
+                (T_DENTAL_EVENT_TASK_DET.DET_EXCEEDING IS NULL OR T_DENTAL_EVENT_TASK_DET.DET_EXCEEDING != ?) AND
+                T_DENTAL_EVENT_TASK_DET.ccam_id = ccam.id AND
+                ccam.ccam_menu_id = ccam_menu.id AND
+                ccam_menu.paragraphe IN ('07.01.04.01', '11.01.03', '11.01.04')
+            ORDER BY ETK_AMOUNT DESC`,
+        [
+          act.usrId,
+          act.patient.id,
+          dayjs(act.date).format('YYYY-MM-DD'),
+          ExceedingEnum.NON_REMBOURSABLE,
+        ],
+      );
+
+      const discountedCodes: string[] = [];
+      if (radiographies.length > 0) {
+        const reduceResult = radiographies.reduce((reduce, radiographie) => {
+          return (
+            reduce || ['11.01.03', '11.01.04'].includes(radiographie.paragraphe)
+          );
+        }, false);
+        if (reduceResult) {
+          for (const [index, radiographie] of Object.entries(radiographies)) {
+            if (!index) {
+              await queryRunner.query(
+                `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1 WHERE ETK_ID = ${radiographie.id}`,
+              );
+              if (Number(radiographie.coef) === 0.5) {
+                await queryRunner.query(
+                  `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
+                );
+                await queryRunner.query(
+                  `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ${radiographie.id}`,
+                );
+              }
+            } else if (Number(radiographie.coef) === 1) {
+              await queryRunner.query(
+                `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 2, DET_COEF = 0.5 WHERE ETK_ID = ${radiographie.id}`,
+              );
+              await queryRunner.query(
+                `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT / 2 WHERE ETK_ID = ${radiographie.id}`,
+              );
+              discountedCodes.push(radiographie.name);
+            }
+          }
+        } else {
+          for (const [index, radiographie] of Object.entries(radiographies)) {
+            if (Number(radiographie.coef) === 0.5) {
+              await queryRunner.query(
+                `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = NULL, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
+              );
+              await queryRunner.query(
+                `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ${radiographie.id}`,
+              );
             }
           }
         }
       }
+      // for (let discountedCode in discountedCodes) {
+      // }
     } catch (e) {
       await queryRunner.rollbackTransaction();
       return { message: e.message, code: 0 };
