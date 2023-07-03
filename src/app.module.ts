@@ -15,10 +15,11 @@ import { AntecedentPrestationModule } from './antecedent-prestation/antecedent-p
 import { PatientModule } from './patient/patient.module';
 import { MedicalDevicesModule } from './medialDevices/medicalDevices.module';
 import { PrestationModule } from './prestation/prestation.module';
-import { UserModule } from './user/userModule';
+import { UploadModule } from './upload/upload.module';
 import { AddressModule } from './address/address.module';
 import { PlanModule } from './plans/plan.module';
 import { MailModule } from './mail/mail.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { MailModule } from './mail/mail.module';
     AddressModule,
     PlanModule,
     MailModule,
+    UploadModule,
   ],
 })
 export class AppModule {}
