@@ -34,22 +34,23 @@ export class PatientBalanceService {
   ) {
     try {
       const patientId = +request.patient_id;
+      console.log(patientId);
       const { balance, doctorId } = payload;
       const patientUser = await this.patientService.getPatientUser(
         doctorId,
         patientId,
       );
-      if (balance === patientUser.balance) {
+      if (balance === patientUser.amount) {
         throw new CBadRequestException('you input same balance');
       }
 
-      let newBalanceCare = patientUser.balance - balance;
+      let newBalanceCare = patientUser.amount - balance;
       let newBalanceProsthesis = 0;
       if (
-        newBalanceCare > patientUser.balanceCare &&
-        patientUser.balanceProsthesis
+        newBalanceCare > patientUser.amountCare &&
+        patientUser.amountProsthesis
       ) {
-        newBalanceCare = patientUser.balanceCare;
+        newBalanceCare = patientUser.amountCare;
         newBalanceProsthesis = balance - newBalanceCare;
       }
 

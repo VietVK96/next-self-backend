@@ -14,7 +14,7 @@ export class PatientBalanceController {
 
   @Patch('/update')
   // @UseGuards(TokenGuard)
-  async findAll(
+  async update(
     @Query() request: PatientBalanceUpdateQueryDto,
     @Body() payload: PatientBalanceUpdatePayloadDto,
   ) {
