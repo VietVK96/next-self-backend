@@ -28,6 +28,7 @@ import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { UserModule } from 'src/user/user.module';
 import { CashingEntity } from 'src/entities/cashing.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
+import { ContactUserEntity } from 'src/entities/contact-user.entity';
 
 @Module({
   controllers: [
@@ -66,6 +67,7 @@ import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
       DentalQuotationEntity,
       CashingEntity,
       CashingContactEntity,
+      ContactUserEntity,
     ]),
     UserModule,
     PatientModule,

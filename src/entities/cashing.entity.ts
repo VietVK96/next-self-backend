@@ -296,6 +296,14 @@ export class CashingEntity {
   })
   libraryBank?: LibraryBankEntity;
 
+  @Column({
+    name: 'FSE_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  fseId?: number;
+
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Slip\Check", inversedBy="cashings")
    * @ORM\JoinColumn(name="SLC_ID", referencedColumnName="SLC_ID")

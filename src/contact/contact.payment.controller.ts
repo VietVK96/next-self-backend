@@ -1,4 +1,12 @@
-import { Controller, Delete, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -8,6 +16,7 @@ import {
 import {
   ContactPaymentDeleteByIdDto,
   ContactPaymentFindAllDto,
+  ContactPaymentStoreDto,
 } from './dto/contact.payment.dto';
 import { ContactPaymentService } from './services/contact.payment.service';
 
@@ -40,5 +49,12 @@ export class ContactPaymentController {
     @CurrentUser() identity: UserIdentity,
   ) {
     return this.contactPaymentService.deleteById(request.id, identity);
+  }
+
+  // File php\contact\payment\findAll.php 13->62
+  @Post('/payment/store')
+  @UseGuards(TokenGuard)
+  async store(@Body() payload: ContactPaymentStoreDto) {
+    return this.contactPaymentService.store(payload);
   }
 }
