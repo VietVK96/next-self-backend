@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
-import {
-  ContactPaymentFindAllDto,
-  ContactPaymentStoreDto,
-} from '../dto/contact.payment.dto';
+import { ContactPaymentFindAllDto } from '../dto/contact.payment.dto';
 import { CashingEntity } from 'src/entities/cashing.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
 import { UserEntity } from 'src/entities/user.entity';
@@ -123,30 +120,5 @@ export class ContactPaymentService {
     } catch (error) {
       throw new CBadRequestException(error);
     }
-  }
-
-  async store(payload: ContactPaymentStoreDto) {
-    const data = this.refundAmount(payload);
-  }
-
-  protected refundAmount(
-    inputs: ContactPaymentStoreDto,
-  ): ContactPaymentStoreDto {
-    if (inputs.hasOwnProperty('type') && inputs.type === 'remboursement') {
-      function walkRecursive(obj) {
-        for (const key in obj) {
-          if (obj.hasOwnProperty(key)) {
-            if (key.match(/^amount/)) {
-              obj[key] = -Math.abs(obj[key]);
-            }
-            if (typeof obj[key] === 'object') {
-              walkRecursive(obj[key]);
-            }
-          }
-        }
-      }
-      walkRecursive(inputs);
-    }
-    return inputs;
   }
 }
