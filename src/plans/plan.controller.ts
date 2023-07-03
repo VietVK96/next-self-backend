@@ -12,13 +12,13 @@ import { PlanService } from './services/plan.service';
 @Controller('/contact/plan/all')
 @ApiTags('Plan')
 export class PlanController {
-  constructor(private PlanService: PlanService) {}
+  constructor(private planService: PlanService) {}
 
   // File /php/contact/plans/findAll.php
   @Get()
   @UseGuards(TokenGuard)
   async findAll(@Query() request: FindAllStructDto) {
-    return this.PlanService.findAll(request);
+    return this.planService.findAll(request);
   }
 
   @Delete()
@@ -27,7 +27,7 @@ export class PlanController {
     @Query() request: IdStructDto,
     @CurrentUser() identity: UserIdentity,
   ) {
-    return this.PlanService.deleteOne(request, identity);
+    return this.planService.deleteOne(request, identity);
   }
 
   @Get('/get')
@@ -36,6 +36,6 @@ export class PlanController {
     @Query() request: IdStructDto,
     @CurrentUser() identity: UserIdentity,
   ) {
-    return this.PlanService.findOne(request, identity.org);
+    return this.planService.findOne(request, identity.org);
   }
 }
