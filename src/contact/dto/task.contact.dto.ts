@@ -14,3 +14,29 @@ export class EventTaskDto {
   })
   user?: number;
 }
+
+export class EventTaskPatchDto {
+  @ApiProperty({
+    name: 'name',
+    required: false,
+  })
+  name?: string;
+
+  @ApiProperty({
+    name: 'pk',
+    required: false,
+  })
+  pk?: number;
+
+  @ApiProperty({
+    name: 'user',
+    required: false,
+  })
+  user?: number;
+
+  @ApiProperty({
+    name: 'value',
+    required: false,
+  })
+  value?: string | boolean | { ngap_key_id: number; coef: number };
+}
