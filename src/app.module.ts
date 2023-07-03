@@ -13,6 +13,7 @@ import { AntecedentPrestationModule } from './antecedent-prestation/antecedent-p
 import { PatientModule } from './patients/patient.module';
 import { MedicalDevicesModule } from './medialDevices/medicalDevices.module';
 import { EventModule } from './event/event.module';
+import { MemoModule } from './memo/memo.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { EventModule } from './event/event.module';
     PatientModule,
     MedicalDevicesModule,
     EventModule,
+    MemoModule,
   ],
 })
 export class AppModule {}
