@@ -5,14 +5,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
 import { UserEntity } from 'src/entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
-import { StringHelper } from 'src/utils/StringHelper';
+import { StringHelper } from 'src/utils/string-helper';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { UploadEntity } from 'src/entities/upload.entity';
 import { OrganizationService } from 'src/organization/service/organization.service';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import * as fs from 'fs';
 import { ConfigService } from '@nestjs/config';
-import { PermissionService } from 'src/users/services/permission.service';
+import { PermissionService } from 'src/user/services/permission.service';
 import { ContactEntity } from 'src/entities/contact.entity';
 
 @Injectable()

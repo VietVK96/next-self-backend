@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
-import { PermissionService } from './services/permission.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from 'src/entities/user.entity';
-import { AddressModule } from 'src/address/address.module';
 import { UserService } from './services/user.service';
+import { AddressModule } from 'src/address/address.module';
+import { PermissionService } from './services/permission.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserEntity]), AddressModule],
-
-  providers: [PermissionService, UserService],
-  exports: [PermissionService, UserService],
+  controllers: [],
+  providers: [UserService, PermissionService],
+  exports: [UserService, PermissionService],
 })
 export class UserModule {}
