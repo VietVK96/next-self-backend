@@ -58,10 +58,10 @@ export class EventController {
   @Get('/find/:id')
   @UseGuards(TokenGuard)
   async findById(
+    @CurrentDoctor() doctorId: number,
     @CurrentUser() identity: UserIdentity,
     @Param('id') id: number,
   ) {
-    const doctorId = 2;
     return await this.findEventService.findById(doctorId, identity.id, id);
   }
 }

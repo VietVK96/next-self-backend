@@ -9,7 +9,6 @@ import { DataSource } from 'typeorm';
 import {
   SessionRes,
   UserResourceRes,
-  UserUserPreferenceRes,
   UserUserRes,
 } from '../reponse/session.res';
 

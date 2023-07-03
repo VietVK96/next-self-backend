@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { execPath } from 'process';
 
 export class UserResourceRes {
   @ApiProperty()
