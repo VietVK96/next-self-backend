@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Put,
   Query,
@@ -15,8 +16,8 @@ import {
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
-import { identity } from 'rxjs';
 import { SaveEventPayloadDto } from './dto/save.event.dto';
+import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
 
 @Controller('event')
 @ApiTags('Event')
@@ -52,5 +53,15 @@ export class EventController {
     @Body() payload: SaveEventPayloadDto,
   ) {
     return await this.saveEventService.save(identity.id, payload);
+  }
+
+  @Get('/find/:id')
+  @UseGuards(TokenGuard)
+  async findById(
+    @CurrentUser() identity: UserIdentity,
+    @Param('id') id: number,
+  ) {
+    const doctorId = 2;
+    return await this.findEventService.findById(doctorId, identity.id, id);
   }
 }

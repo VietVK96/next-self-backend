@@ -2,6 +2,10 @@ import { DataSource } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { ColorHelper } from 'src/utils/ColorHelper';
 import { FindAllEventDto } from '../dto/findAll.event.dto';
+import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
+import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
+import { FindEventByIdRes } from '../response/find.event.res';
+import { HistoricalsDto, ReminderDto } from '../dto/find.event.dto';
 
 const classNameFromStatuses: Map<number, string> = new Map<number, string>();
 classNameFromStatuses.set(1, 'present');
@@ -234,5 +238,122 @@ export class FindEventService {
       bgevents,
       memos,
     };
+  }
+
+  async findById(doctorId: number, groupId: number, id: number) {
+    try {
+      const timeZone = await this.dataSource
+        .createQueryBuilder()
+        .select(`USP.USP_TIMEZONE`)
+        .from(UserPreferenceEntity, 'USP')
+        .where(`USP.USR_ID = :doctorId`, { doctorId })
+        .getRawOne();
+
+      const events = await this.dataSource.query(
+        `SELECT
+            evo.evo_id AS id,
+            evo.evt_id AS eventId,
+            EVT.EVT_NAME as name,
+            CONCAT_WS(' ', evo.evo_date, TIME(EVT.EVT_START)) AS start,
+            CONCAT_WS(' ', evo.evo_date, TIME(EVT.EVT_END)) AS end,
+            EVT.EVT_MSG as msg,
+            EVT.EVT_PRIVATE as private,
+            EVT.EVT_COLOR as color,
+            EVT.EVT_STATE as state,
+            EVT.lateness,
+            EVT.evt_rrule as rrule,
+            EVT.created_at,
+            IF (EVT.evt_rrule IS NOT NULL, 1, 0) as hasRecurrEvents,
+            resource.id as resourceId,
+            resource.name as resourceName,
+			event_type.id as eventTypeId,
+			event_type.label as eventTypeLabel,
+            USR.USR_ID as practitionerId,
+            USR.USR_LASTNAME as practitionerLastname,
+            USR.USR_FIRSTNAME as practitionerFirstname,
+            CON.CON_ID as contactId,
+            CON.UPL_ID as avatar_id,
+            CON.CON_NBR as contactNbr,
+            CON.CON_LASTNAME as contactLastname,
+            CON.CON_FIRSTNAME as contactFirstname,
+            CON.CON_MAIL as contactEmail,
+            (
+                SELECT GROUP_CONCAT(evobis.evo_date)
+                FROM event_occurrence_evo evobis
+                WHERE evobis.evt_id = evo.evt_id
+                  AND evobis.evo_exception = 0
+            ) as dates,
+            (
+                SELECT GROUP_CONCAT(evobis.evo_date)
+                FROM event_occurrence_evo evobis
+                WHERE evobis.evt_id = evo.evt_id
+                  AND evobis.evo_exception = 1
+            ) as exdates
+        FROM event_occurrence_evo evo
+        JOIN T_EVENT_EVT EVT ON EVT.EVT_ID = evo.evt_id
+        JOIN T_USER_USR USR ON USR.USR_ID = EVT.USR_ID AND USR.organization_id = ?
+        LEFT OUTER JOIN resource ON resource.id = EVT.resource_id
+        LEFT OUTER JOIN event_type ON event_type.id = EVT.event_type_id
+        LEFT OUTER JOIN T_CONTACT_CON CON ON CON.CON_ID = EVT.CON_ID
+        WHERE evo.evo_id = ?`,
+        [groupId, id],
+      );
+
+      if (!events)
+        throw new CNotFoundRequestException("Le rendez-vous n'existe pas.");
+
+      let result: FindEventByIdRes = events.length > 0 ? events[0] : null;
+      const formatColor = ColorHelper.inthex(result.color);
+      result = {
+        ...result,
+        backgroundColor: formatColor[0],
+        textColor: formatColor[1],
+      };
+      if (result.avatar_id) {
+        result.avatar_url = `php/contact/avatar.php?id=${result.contactId}`;
+      }
+
+      const reminders: ReminderDto[] = await this.dataSource.query(
+        `SELECT
+            RMD.RMD_ID as id,
+            RMD.appointment_reminder_library_id,
+            RMD.RMD_NBR as nbr,
+            RMT.RMT_ID as reminderTypeId,
+            RMT.RMT_NAME as reminderTypeName,
+            RMR.RMR_ID as reminderReceiverId,
+            RMR.RMR_NAME as reminderReceiverName,
+            RMU.RMU_ID as reminderUnitId,
+            RMU.RMU_NAME as reminderUnitName,
+            RMU.RMU_NBR as reminderUnitNbr
+        FROM T_REMINDER_RMD RMD
+        LEFT OUTER JOIN T_REMINDER_TYPE_RMT RMT ON RMT.RMT_ID = RMD.RMT_ID
+        LEFT OUTER JOIN T_REMINDER_RECEIVER_RMR RMR ON RMR.RMR_ID = RMD.RMR_ID
+        LEFT OUTER JOIN T_REMINDER_UNIT_RMU RMU ON RMU.RMU_ID = RMD.RMU_ID
+        WHERE RMD.EVT_ID = ?`,
+        [result.eventId],
+      );
+
+      const historicals: HistoricalsDto[] = await this.dataSource.query(
+        `SELECT
+            EHT.EHT_ID as id,
+            EHT.EHT_MSG as msg,
+            EHT.EHT_PREVIOUS as xml,
+            EHT.created_at as createdOn,
+            USR.USR_ID as userId,
+            USR.USR_LASTNAME as userLastname,
+            USR.USR_FIRSTNAME as userFirstname
+        FROM T_EVENT_HISTORY_EHT EHT
+        LEFT OUTER JOIN T_USER_USR USR ON USR.USR_ID = EHT.USR_ID
+        WHERE EHT.EVT_ID = ?
+        ORDER BY EHT.created_at DESC`,
+        [result.eventId],
+      );
+
+      result = { ...result, reminders, historicals };
+
+      return result;
+    } catch (err) {
+      return err;
+    }
   }
 }

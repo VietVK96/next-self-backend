@@ -44,6 +44,9 @@ export class FindAllEventDto {
   resourceName?: string;
 
   @ApiProperty()
+  patientId?: number;
+
+  @ApiProperty()
   number?: number;
 
   @ApiProperty()
@@ -65,7 +68,7 @@ export class FindAllEventDto {
   RMD_FLAG?: number;
 
   @ApiProperty()
-  RMD_NAME?: number;
+  RMT_NAME?: number;
 
   @ApiProperty()
   homePhoneNumber?: string;
@@ -80,7 +83,7 @@ export class FindAllEventDto {
   age?: string;
 
   @ApiProperty()
-  clasName?: string;
+  className?: string;
 
   @ApiProperty()
   resource?: {

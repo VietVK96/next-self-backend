@@ -118,6 +118,7 @@ export class UserUserSettingRes {
 }
 
 export class UserUserPreferenceRes {
+  @ApiProperty()
   id?: number;
 
   @ApiProperty()
