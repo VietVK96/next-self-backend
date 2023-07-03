@@ -274,12 +274,12 @@ export class OrganizationEntity {
    * @ORM\Column(name="GRP_STORAGE_SPACE_USED", type="bigint", options={"default": 0})
    * @Serializer\Type("int")
    */
-  @Column({
-    name: 'GRP_STORAGE_SPACE_USED',
-    type: 'bigint',
-    width: 20,
-    default: 0,
-  })
+  // @Column({
+  //   name: 'GRP_STORAGE_SPACE_USED',
+  //   type: 'bigint',
+  //   width: 20,
+  //   default: 0,
+  // })
   quotaBytesUsed?: number;
 
   /**
@@ -298,12 +298,12 @@ export class OrganizationEntity {
    * @ORM\Column(name="GRP_TOTAL_STORAGE_SPACE", type="bigint", options={"default": 2147483648})
    * @Serializer\Type("int")
    */
-  @Column({
-    name: 'GRP_TOTAL_STORAGE_SPACE',
-    type: 'bigint',
-    width: 20,
-    default: 2147483648,
-  })
+  // @Column({
+  //   name: 'GRP_TOTAL_STORAGE_SPACE',
+  //   type: 'bigint',
+  //   width: 20,
+  //   default: 2147483648,
+  // })
   quotaBytesTotal?: number;
 
   /**
