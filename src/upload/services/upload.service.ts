@@ -12,7 +12,7 @@ import { OrganizationService } from 'src/organization/service/organization.servi
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import * as fs from 'fs';
 import { ConfigService } from '@nestjs/config';
-import { PermissionService } from 'src/users/services/permission.service';
+import { PermissionService } from 'src/user/services/permission.service';
 import { ContactEntity } from 'src/entities/contact.entity';
 
 @Injectable()

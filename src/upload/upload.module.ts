@@ -5,7 +5,7 @@ import { UserEntity } from 'src/entities/user.entity';
 import { UploadController } from './upload.controller';
 import { UploadService } from './services/upload.service';
 import { OrganizationService } from 'src/organization/service/organization.service';
-import { PermissionService } from 'src/users/services/permission.service';
+import { PermissionService } from 'src/user/services/permission.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UploadEntity, UserEntity])],

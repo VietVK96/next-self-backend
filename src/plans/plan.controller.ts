@@ -1,11 +1,24 @@
-import { Controller, Delete, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   CurrentUser,
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
-import { FindAllStructDto, IdStructDto } from './dto/plan.dto';
+import {
+  ActionSaveStructDto,
+  BodySaveStructDto,
+  FindAllStructDto,
+  IdStructDto,
+} from './dto/plan.dto';
 import { PlanService } from './services/plan.service';
 
 @ApiBearerAuth()
@@ -37,5 +50,14 @@ export class PlanController {
     @CurrentUser() identity: UserIdentity,
   ) {
     return this.PlanService.findOne(request, identity.org);
+  }
+  @Post()
+  @UseGuards(TokenGuard)
+  async save(
+    @Query() request: ActionSaveStructDto,
+    @Body() body: BodySaveStructDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.PlanService.save(request, body, identity);
   }
 }
