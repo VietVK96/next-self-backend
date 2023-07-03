@@ -46,10 +46,7 @@ export class StringHelper {
       }
       return array_reste;
     } else {
-      if (length >= string.length) {
-        return [string];
-      }
-
+      if (length >= string.length) {return [string];}
       let first_line = string.substring(0, length + 1);
       const pos_last_space = first_line.lastIndexOf(character);
       if (pos_last_space === -1) {
@@ -65,7 +62,6 @@ export class StringHelper {
         character,
       );
       array_reste.unshift(first_line);
-
       return array_reste;
     }
   }
@@ -86,7 +82,6 @@ export class StringHelper {
     if (format === 'guid') {
       return uuidv4();
     }
-
     // Liste des caractères acceptés.
     let characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
     if (format === 'hex') {
@@ -96,7 +91,6 @@ export class StringHelper {
     } else if (format === 'numeric') {
       characters = '0123456789';
     }
-
     // Calcul de la chaine de caractères aléatoires.
     let random = '';
     for (let i = 0; i < length; i++) {
@@ -104,14 +98,12 @@ export class StringHelper {
         Math.floor(Math.random() * characters.length),
       );
     }
-
     // Formatage MD5 ou SHA1.
     if (format === 'md5') {
       return MD5(random).toString(enc.Hex);
     } else if (format === 'sha1') {
       return SHA1(random).toString(enc.Hex);
     }
-
     return random;
   }
 
@@ -153,7 +145,6 @@ export class StringHelper {
         i++;
       }
     }
-
     return `${bytes.toFixed(2)} ${formats[i]}`;
   }
 
