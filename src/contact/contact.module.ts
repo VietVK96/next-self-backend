@@ -26,6 +26,7 @@ import { FamilyService } from './services/family.service';
 import { QuotationController } from './quotation.controller';
 import { QuotationService } from './services/quotation.service';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
+import { CcamUnitPriceEntity } from 'src/entities/ccamunitprice.entity';
 
 @Module({
   controllers: [
@@ -62,6 +63,7 @@ import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
       EventTaskEntity,
       UserEntity,
       DentalQuotationEntity,
+      CcamUnitPriceEntity,
     ]),
     UserModule,
     PatientModule,

@@ -21,11 +21,16 @@ export class EventTaskPatchDto {
   name?: string;
 
   @ApiProperty()
-  value?: string;
+  value?: string | ValueType;
 
   @ApiProperty()
   pk?: number;
 
   @ApiProperty()
   user?: number;
+}
+
+interface ValueType {
+  ngap_key_id: number;
+  coef: any;
 }
