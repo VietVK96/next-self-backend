@@ -19,7 +19,8 @@ export class ContactPaymentService {
     @InjectRepository(CashingEntity)
     private readonly repo: Repository<CashingEntity>,
     @InjectRepository(CashingContactEntity)
-    private readonly cashingContactRepo: Repository<CashingContactEntity>, // private permissionService: PermissionService,
+    private readonly cashingContactRepo: Repository<CashingContactEntity>,
+    private permissionService: PermissionService,
   ) {}
 
   /**
@@ -87,22 +88,21 @@ export class ContactPaymentService {
       });
       // check permission
       if (payment.length) {
-        // TODO permission not working
-        // if (
-        //   !this.permissionService.hasPermission(
-        //     'PERMISSION_PAIEMENT',
-        //     8,
-        //     identity.id,
-        //     payment[0].usrId,
-        //   ) ||
-        //   !this.permissionService.hasPermission(
-        //     'PERMISSION_DELETE',
-        //     8,
-        //     identity.id,
-        //   )
-        // ) {
-        //   throw new CBadRequestException('Permission denied');
-        // }
+        if (
+          !this.permissionService.hasPermission(
+            'PERMISSION_PAIEMENT',
+            8,
+            identity.id,
+            payment[0].usrId,
+          ) ||
+          !this.permissionService.hasPermission(
+            'PERMISSION_DELETE',
+            8,
+            identity.id,
+          )
+        ) {
+          throw new CBadRequestException('Permission denied');
+        }
 
         // TODO Create Log
         //  $payees = $payment->getPayees();
