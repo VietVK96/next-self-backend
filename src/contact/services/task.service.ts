@@ -5,10 +5,8 @@ import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { EventTaskDto, EventTaskPatchDto } from '../dto/task.contact.dto';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { ErrorCode } from 'src/constants/error';
-import { UserEntity } from 'src/entities/user.entity';
 import { EnumDentalEventTaskComp } from 'src/entities/dental-event-task.entity';
 import { DentalModifierEntity } from 'src/entities/dental-modifier.entity';
-import { CcamUnitPriceEntity } from 'src/entities/ccamunitprice.entity';
 import { CcamEntity } from 'src/entities/ccam.entity';
 import * as dayjs from 'dayjs';
 import { DataSource } from 'typeorm';
@@ -19,12 +17,8 @@ export class TaskService {
   constructor(
     @InjectRepository(EventTaskEntity)
     private eventTaskRepository: Repository<EventTaskEntity>,
-    @InjectRepository(UserEntity)
-    private userRepository: Repository<UserEntity>,
     @InjectRepository(DentalModifierEntity)
     private dentalModifierRepository: Repository<DentalModifierEntity>,
-    @InjectRepository(CcamUnitPriceEntity)
-    private ccamUnitPriceRepository: Repository<CcamUnitPriceEntity>,
     @InjectRepository(CcamEntity)
     private ccamRepository: Repository<CcamEntity>,
     private dataSource: DataSource,
@@ -60,6 +54,11 @@ export class TaskService {
           });
         }
         if (payload?.name === 'date' && (payload.value as string)) {
+          // Modification du complément prestation
+          oldEventTask = await this.eventTaskRepository.findOneBy({
+            id: payload.pk,
+          });
+
           await this.eventTaskRepository.update(payload.pk, {
             date: payload.value,
           });
@@ -105,6 +104,13 @@ export class TaskService {
           ]);
         }
         if (payload?.name === 'comp' && (payload.value as string)) {
+          oldComplement = await this.dataSource
+            .createQueryBuilder()
+            .select('T_DENTAL_EVENT_TASK_DET.DET_COMP')
+            .from('T_DENTAL_EVENT_TASK_DET', 'T_DENTAL_EVENT_TASK_DET')
+            .where(`T_DENTAL_EVENT_TASK_DET.ETK_ID = ${payload.pk}`)
+            .getRawOne();
+
           const installComp = `INSERT INTO T_DENTAL_EVENT_TASK_DET (ETK_ID, DET_COMP)
 					VALUES (?, ?)
 					ON DUPLICATE KEY UPDATE
