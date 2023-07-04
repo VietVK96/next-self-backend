@@ -56,6 +56,7 @@ export class EventController {
     return await this.saveEventService.save(identity.id, payload);
   }
 
+  //ecoodentist-1.31.0\php\event\find.php full file
   @Get('/find/:id')
   @UseGuards(TokenGuard)
   async findById(
