@@ -51,9 +51,9 @@ export class ContactPaymentController {
     return this.contactPaymentService.deleteById(request.id, identity);
   }
 
-  // File php\contact\payment\findAll.php 13->62
+  // File php\contact\payment\store.php 12->22
   @Post('/payment/store')
-  // @UseGuards(TokenGuard)
+  @UseGuards(TokenGuard)
   async store(@Body() payload: ContactPaymentStoreDto) {
     return this.contactPaymentService.store(payload);
   }
