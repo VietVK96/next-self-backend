@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
 import { Injectable } from '@nestjs/common';
-import { ColorHelper } from 'src/utils/ColorHelper';
+import { ColorHelper } from 'src/common/util/color-helper';
 import { FindAllEventDto } from '../dto/findAll.event.dto';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
