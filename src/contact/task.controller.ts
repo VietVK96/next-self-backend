@@ -33,7 +33,7 @@ export class TaskController {
     return await this.taskService.updateEventTask(payload);
   }
 
-  @Post('/task/patch')
+  @Post('task/patch')
   @UseGuards(TokenGuard)
   async updateTaskPatch(@Body() payload: EventTaskPatchDto) {
     return await this.taskService.updateTaskPatch(payload);
