@@ -47,3 +47,20 @@ export class IdStructDto {
   })
   id?: number;
 }
+
+export class ActionSaveStructDto {
+  @ApiProperty({
+    required: false,
+  })
+  action?: string;
+
+  @ApiProperty()
+  id?: number;
+}
+
+export class BodySaveStructDto {
+  @ApiProperty({
+    required: false,
+  })
+  action?: string;
+}
