@@ -14,12 +14,12 @@ import { WaitingRoomModule } from './waiting-room/waiting-room.module';
 import { AntecedentPrestationModule } from './antecedent-prestation/antecedent-prestation.module';
 import { PatientModule } from './patient/patient.module';
 import { PrestationModule } from './prestation/prestation.module';
-import { MedicalDevicesModule } from './medial-devices/medical-devices.module';
+import { MedicalDevicesModule } from './medial-device/medical-device.module';
 import { EventModule } from './event/event.module';
 import { MemoModule } from './memo/memo.module';
 import { UserModule } from './user/user.module';
 import { AddressModule } from './address/address.module';
-import { PlanModule } from './plans/plan.module';
+import { PlanModule } from './plan/plan.module';
 import { MailModule } from './mail/mail.module';
 import { EventTaskModule } from './event-task/event-task.module';
 import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
@@ -68,6 +68,7 @@ import { UploadModule } from './upload/upload.module';
     AntecedentPrestationModule,
     PatientModule,
     MedicalDevicesModule,
+    EventModule,
     PrestationModule,
     EventModule,
     MemoModule,

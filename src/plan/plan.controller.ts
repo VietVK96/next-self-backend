@@ -1,15 +1,28 @@
-import { Controller, Delete, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   CurrentUser,
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
-import { IdStructDto, FindAllStructDto } from './dto/plan.dto';
+import {
+  ActionSaveStructDto,
+  BodySaveStructDto,
+  FindAllStructDto,
+  IdStructDto,
+} from './dto/plan.dto';
 import { PlanService } from './services/plan.service';
 
 @ApiBearerAuth()
-@Controller('/plan')
+@Controller('plan')
 @ApiTags('Plan')
 export class PlanController {
   constructor(private PlanService: PlanService) {}
@@ -21,6 +34,7 @@ export class PlanController {
     return this.PlanService.findAll(request);
   }
 
+  // File /php/plan/delete.php
   @Delete()
   @UseGuards(TokenGuard)
   async deleteOne(
@@ -30,6 +44,7 @@ export class PlanController {
     return this.PlanService.deleteOne(request, identity);
   }
 
+  //File /php/plan/find.php
   @Get('/get')
   @UseGuards(TokenGuard)
   async findOne(
@@ -37,5 +52,16 @@ export class PlanController {
     @CurrentUser() identity: UserIdentity,
   ) {
     return this.PlanService.findOne(request, identity.org);
+  }
+
+  //File /php/plan.php
+  @Post()
+  @UseGuards(TokenGuard)
+  async save(
+    @Query() request: ActionSaveStructDto,
+    @Body() body: BodySaveStructDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.PlanService.save(request, body, identity);
   }
 }
