@@ -15,11 +15,14 @@ import { AntecedentPrestationModule } from './antecedent-prestation/antecedent-p
 import { PatientModule } from './patient/patient.module';
 import { PrestationModule } from './prestation/prestation.module';
 import { MedicalDevicesModule } from './medial-devices/medical-devices.module';
-import { UploadModule } from './upload/upload.module';
+import { EventModule } from './event/event.module';
+import { MemoModule } from './memo/memo.module';
 import { UserModule } from './user/user.module';
 import { AddressModule } from './address/address.module';
 import { PlanModule } from './plans/plan.module';
 import { MailModule } from './mail/mail.module';
+import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -65,11 +68,14 @@ import { MailModule } from './mail/mail.module';
     PatientModule,
     MedicalDevicesModule,
     PrestationModule,
+    EventModule,
+    MemoModule,
     UserModule,
     AddressModule,
     PlanModule,
     MailModule,
     UploadModule,
+    FusionPatientModule,
   ],
 })
 export class AppModule {}

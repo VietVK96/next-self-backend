@@ -5,7 +5,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
 import { UserEntity } from 'src/entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
-import { StringHelper } from 'src/utils/string-helper';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { UploadEntity } from 'src/entities/upload.entity';
 import { OrganizationService } from 'src/organization/service/organization.service';
@@ -14,6 +13,7 @@ import * as fs from 'fs';
 import { ConfigService } from '@nestjs/config';
 import { PermissionService } from 'src/user/services/permission.service';
 import { ContactEntity } from 'src/entities/contact.entity';
+import { StringHelper } from 'src/common/util/string-helper';
 
 @Injectable()
 export class UploadService {
