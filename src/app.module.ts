@@ -18,6 +18,7 @@ import { UserModule } from './user/user.module';
 import { AddressModule } from './address/address.module';
 import { PlanModule } from './plans/plan.module';
 import { MailModule } from './mail/mail.module';
+import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
 import { UploadModule } from './upload/upload.module';
 import { PatientModule } from './patient/patient.module';
 import { MedicalDevicesModule } from './medial-devices/medical-devices.module';
@@ -72,6 +73,7 @@ import { MedicalDevicesModule } from './medial-devices/medical-devices.module';
     PlanModule,
     MailModule,
     UploadModule,
+    FusionPatientModule,
   ],
 })
 export class AppModule {}

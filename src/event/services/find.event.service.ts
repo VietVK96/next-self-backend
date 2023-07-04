@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
 import { Injectable } from '@nestjs/common';
-import { ColorHelper } from 'src/utils/ColorHelper';
+import { ColorHelper } from 'src/common/util/color-helper';
 import { FindAllEventDto } from '../dto/findAll.event.dto';
 
 const classNameFromStatuses: Map<number, string> = new Map<number, string>();
