@@ -54,3 +54,7 @@ export class HistoricalsDto {
   @ApiProperty()
   userFirstname: number;
 }
+
+export class TimeZoneDto {
+  timeZone: string;
+}

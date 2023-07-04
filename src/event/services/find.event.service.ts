@@ -1,11 +1,15 @@
 import { DataSource } from 'typeorm';
 import { Injectable } from '@nestjs/common';
+import { BgEventDto, FindAllEventDto, MemoDto } from '../dto/findAll.event.dto';
 import { ColorHelper } from 'src/common/util/color-helper';
-import { FindAllEventDto } from '../dto/findAll.event.dto';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { FindEventByIdRes } from '../response/find.event.res';
-import { HistoricalsDto, ReminderDto } from '../dto/find.event.dto';
+import {
+  HistoricalsDto,
+  ReminderDto,
+  TimeZoneDto,
+} from '../dto/find.event.dto';
 
 const classNameFromStatuses: Map<number, string> = new Map<number, string>();
 classNameFromStatuses.set(1, 'present');
@@ -19,6 +23,7 @@ classNameFromStatuses.set(6, 'completed');
 export class FindEventService {
   constructor(private readonly dataSource: DataSource) {}
 
+  //ecoodentist-1.31.0\php\event\findAll.php
   async prepareSql(sql: string, key: number, value: string) {
     const result = await this.dataSource.query(sql, [key, value]);
     const resultFormat = result.length === 0 ? null : result[0].PHO_NBR;
@@ -217,7 +222,7 @@ export class FindEventService {
       }
     }
 
-    const memos = await this.dataSource.query(
+    const memos: MemoDto[] = await this.dataSource.query(
       `SELECT T_MEMO_MEM.MEM_ID as id, resource_id as resourceId, resource.name as resourceName,
       MEM_DATE as date FROM T_MEMO_MEM JOIN resource on T_MEMO_MEM.resource_id = resource.id 
       WHERE resource_id in (${formattedResources}) AND MEM_DATE BETWEEN ? AND ? 
@@ -225,7 +230,7 @@ export class FindEventService {
       [startDate, endDate],
     );
 
-    const bgevents = await this.dataSource.query(
+    const bgevents: BgEventDto[] = await this.dataSource.query(
       `SELECT timeslot.id, resource_id as resourceId, resource.name as resourceName, start_date, 
       end_date, timeslot.color, title FROM timeslot JOIN resource ON timeslot.resource_id = resource.id 
       WHERE resource_id IN (${formattedResources}) and start_date >= ? AND end_date < ?
@@ -242,14 +247,14 @@ export class FindEventService {
 
   async findById(doctorId: number, groupId: number, id: number) {
     try {
-      const timeZone = await this.dataSource
+      const timeZone: TimeZoneDto = await this.dataSource
         .createQueryBuilder()
         .select(`USP.USP_TIMEZONE`)
         .from(UserPreferenceEntity, 'USP')
         .where(`USP.USR_ID = :doctorId`, { doctorId })
         .getRawOne();
 
-      const events = await this.dataSource.query(
+      const events: FindEventByIdRes[] = await this.dataSource.query(
         `SELECT
             evo.evo_id AS id,
             evo.evt_id AS eventId,
