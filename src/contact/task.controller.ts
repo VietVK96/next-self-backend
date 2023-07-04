@@ -34,11 +34,8 @@ export class TaskController {
   }
 
   @Post('/task/patch')
-  // @UseGuards(TokenGuard)
-  async updateTaskPatch(
-    @Body() payload: EventTaskPatchDto,
-    // @CurrentUser() identity: UserIdentity,
-  ) {
+  @UseGuards(TokenGuard)
+  async updateTaskPatch(@Body() payload: EventTaskPatchDto) {
     console.log('updateTaskPatch', payload);
     return await this.taskService.updateTaskPatch(payload);
   }
