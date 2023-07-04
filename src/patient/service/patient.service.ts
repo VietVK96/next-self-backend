@@ -15,12 +15,18 @@ import {
 import { AddressEntity } from '../../entities/address.entity';
 import { ContactEntity } from '../../entities/contact.entity';
 import { PhoneEntity } from '../../entities/phone.entity';
-import { PatientExportDto } from '../dto/index.dto';
+import { PatientExportDto, PatientThirdPartyDto } from '../dto/index.dto';
 import { GenderEntity } from 'src/entities/gender.entity';
 import { AddressService } from 'src/address/service/address.service';
 import { ContactService } from 'src/contact/services/contact.service';
 import { UploadEntity } from 'src/entities/upload.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
+import { FseEntity } from 'src/entities/fse.entity';
+import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
+import { AmoEntity } from 'src/entities/amo.entity';
+import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
+import { AmcEntity } from 'src/entities/amc.entity';
+import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 
 const TypeFile = {
   EXCEL: 'xlsx',
@@ -300,5 +306,82 @@ export class PatientService {
       conId: patientId,
       usrId: userId,
     });
+  }
+
+  /**
+   * File: php/patient/third-patry/index.php
+   * Line: 18 -> 112
+   */
+  async getPatientThirdParty(payload: PatientThirdPartyDto) {
+    const { id, direction, filterParam, filterValue, page, per_page, sort } =
+      payload;
+    const patient = await this.patientRepository.find({ where: { id } });
+    if (!patient) {
+      throw new CNotFoundRequestException('Patient Not Found');
+    }
+    const queryBuilder = this.dataSource
+      .createQueryBuilder()
+      .select()
+      .from(FseEntity, 'caresheet')
+      .innerJoin(ContactEntity, 'patient')
+      .andWhere('caresheet.patient = :patient', { patient })
+      .andWhere('caresheet.tiersPayant = true');
+
+    filterParam.forEach((param, index) => {
+      const valueParam = filterValue[index];
+      switch (param) {
+        case 'caresheet.creationDate':
+          queryBuilder.andWhere('caresheet.creationDate = :creationDate', {
+            creationDate: valueParam,
+          });
+          break;
+        case 'caresheet.number':
+          queryBuilder.andWhere('caresheet.number = LPAD(:number, 9, 0)', {
+            number: valueParam,
+          });
+          break;
+        case 'caresheet.tiersPayantStatus':
+          queryBuilder.andWhere(
+            'caresheet.tiersPayantStatus = :tiersPayantStatus',
+            { tiersPayantStatus: valueParam },
+          );
+          break;
+        case 'amo.libelle':
+          queryBuilder.innerJoin(ThirdPartyAmoEntity, 'thirdPartyAmo');
+          queryBuilder.innerJoin(AmoEntity, 'amo');
+          queryBuilder.andWhere('amo.libelle LIKE :amoLibelle', {
+            amoLibelle: `${valueParam}%`,
+          });
+          break;
+        case 'amc.libelle':
+          queryBuilder.innerJoin(ThirdPartyAmcEntity, 'thirdPartyAmc');
+          queryBuilder.innerJoin(AmcEntity, 'amc');
+          queryBuilder.andWhere('amc.libelle LIKE :amcLibelle', {
+            amcLibelle: `${valueParam}%`,
+          });
+          break;
+      }
+    });
+    const patientThirdParties = await queryBuilder.getRawMany();
+    const offSet = (page - 1) * per_page;
+    const dataPaging = patientThirdParties.slice(offSet, offSet + per_page);
+    return {
+      current_page_number: page,
+      custom_parameters: { sorted: true },
+      items: dataPaging,
+      num_item_per_page: per_page,
+      paginator_options: {
+        defaultSortDirection: 'desc',
+        defaultSortFieldName: 'caresheet.creationDate+caresheet.number',
+        distinct: false,
+        filterFieldParameterName: 'filterParam',
+        filterValueParameterName: 'filterValue',
+        pageParameterName: 'page',
+        sortDirectionParameterName: 'direction',
+        sortFieldParameterName: 'sort',
+      },
+      range: 5,
+      total_count: dataPaging?.length,
+    };
   }
 }
