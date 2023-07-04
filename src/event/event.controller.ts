@@ -18,6 +18,7 @@ export class EventController {
     private readonly saveEventService: SaveEventService,
   ) {}
 
+  //ecoodentist-1.31.0\php\event\findAll.php full file
   @Get()
   @UseGuards(TokenGuard)
   async findAll(
@@ -36,7 +37,8 @@ export class EventController {
     );
   }
 
-  @Post('/save')
+  //ecoodentist-1.31.0\php\user\preference\save.php full file
+  @Post()
   @UseGuards(TokenGuard)
   async save(
     @CurrentUser() identity: UserIdentity,
