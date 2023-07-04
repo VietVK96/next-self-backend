@@ -13,12 +13,16 @@ import { StickyNoteModule } from './sticky-note/sticky-note.module';
 import { WaitingRoomModule } from './waiting-room/waiting-room.module';
 import { AntecedentPrestationModule } from './antecedent-prestation/antecedent-prestation.module';
 import { PatientModule } from './patient/patient.module';
-import { MedicalDevicesModule } from './medial-devices/medical-devices.module';
+import { PrestationModule } from './prestation/prestation.module';
+import { MedicalDevicesModule } from './medial-device/medical-device.module';
+import { EventModule } from './event/event.module';
+import { MemoModule } from './memo/memo.module';
+import { AddressModule } from './address/address.module';
+import { PlanModule } from './plan/plan.module';
+import { MailModule } from './mail/mail.module';
+import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
 import { UploadModule } from './upload/upload.module';
 import { UserModule } from './user/user.module';
-import { AddressModule } from './address/address.module';
-import { PlanModule } from './plans/plan.module';
-import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -63,11 +67,16 @@ import { MailModule } from './mail/mail.module';
     AntecedentPrestationModule,
     PatientModule,
     MedicalDevicesModule,
+    EventModule,
+    PrestationModule,
+    EventModule,
+    MemoModule,
     UserModule,
     AddressModule,
     PlanModule,
     MailModule,
     UploadModule,
+    FusionPatientModule,
   ],
 })
 export class AppModule {}

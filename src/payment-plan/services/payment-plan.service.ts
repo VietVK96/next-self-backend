@@ -12,6 +12,7 @@ export class PaymentPlanService {
    *
    */
 
+  //File /application/Services/PaymentSchedule.php, line 82-126
   async find(paymentScheduleId, groupId) {
     const queryBuiler = this.dataSource.createQueryBuilder();
     const select = `
@@ -57,6 +58,7 @@ export class PaymentPlanService {
     return paymentSchedule;
   }
 
+  //File /application/Services/PaymentSchedule.php, line 219-240
   async delete(id, groupId) {
     const queryBuiler = this.dataSource.createQueryBuilder();
     const paymentSchedule = this.find(id, groupId);
