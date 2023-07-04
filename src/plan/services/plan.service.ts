@@ -776,7 +776,7 @@ export class PlanService {
    */
 
   async findAll(request: FindAllStructDto) {
-    const { type, patientId } = request;
+    const { patientId, type } = request;
 
     const plansResult = [];
 
