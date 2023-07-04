@@ -469,11 +469,6 @@ export class TaskService {
         patientId: number,
         date: string,
       ): Promise<string[]> => {
-        console.log('radiographies', date);
-        console.log(
-          'radiographies',
-          dayjs(date.toString()).format('YYYY-MM-DD'),
-        );
         const radiographies: {
           id: number;
           name: string;
@@ -508,7 +503,6 @@ export class TaskService {
             ExceedingEnum.NON_REMBOURSABLE,
           ],
         );
-        console.log('radiographies', dayjs(date).format('YYYY-MM-DD'));
 
         const discountedCodes: string[] = [];
         if (radiographies.length > 0) {
@@ -561,13 +555,11 @@ export class TaskService {
       const act: EventTaskEntity = await this.eventTaskRepository.findOneBy({
         id: id,
       });
-      console.log('EventTaskEntity', act);
       const discountedCodes: string[] = await calculHonoraires(
         act.id,
         act.conId,
         act.date,
       );
-      console.log('discountedCodes', discountedCodes);
       const messages: string[] = [];
       for (const discountedCode in discountedCodes) {
         // @TODO translate
