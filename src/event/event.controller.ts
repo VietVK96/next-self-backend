@@ -1,5 +1,13 @@
 import { SaveEventService } from './services/save.event.service';
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { FindEventService } from './services/find.event.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
@@ -8,6 +16,7 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { SaveEventPayloadDto } from './dto/save.event.dto';
+import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
 
 @Controller('event')
 @ApiTags('Event')
@@ -45,5 +54,16 @@ export class EventController {
     @Body() payload: SaveEventPayloadDto,
   ) {
     return await this.saveEventService.save(identity.id, payload);
+  }
+
+  //ecoodentist-1.31.0\php\event\find.php full file
+  @Get('/find/:id')
+  @UseGuards(TokenGuard)
+  async findById(
+    @CurrentDoctor() doctorId: number,
+    @CurrentUser() identity: UserIdentity,
+    @Param('id') id: number,
+  ) {
+    return await this.findEventService.findById(doctorId, identity.id, id);
   }
 }
