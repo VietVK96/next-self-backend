@@ -24,8 +24,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { PermissionService } from 'src/user/services/permission.service';
-import { IsArray } from 'class-validator';
-import dayjs from 'dayjs';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { FseEntity } from 'src/entities/fse.entity';
@@ -244,7 +242,7 @@ export class ContactPaymentService {
         // Pour chaque bénéficiaire
         for (const beneficiary of beneficiaries) {
           // Insertion du règlement du bénéficiaire.
-          const ww = await queryRunner.query(insertToCSC, [
+          await queryRunner.query(insertToCSC, [
             insertRes.insertId,
             beneficiary.id,
             beneficiary.pivot.amount,
