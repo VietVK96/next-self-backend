@@ -28,6 +28,8 @@ import { QuotationService } from './services/quotation.service';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { CashingEntity } from 'src/entities/cashing.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
+import { PrestationController } from './pretation.controller';
+import { PrestationService } from './services/pretation.service';
 
 @Module({
   controllers: [
@@ -39,6 +41,7 @@ import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
     NoteController,
     FamilyController,
     QuotationController,
+    PrestationController,
   ],
   providers: [
     FindContactService,
@@ -55,6 +58,7 @@ import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
     PermissionService,
     FamilyService,
     QuotationService,
+    PrestationService,
   ],
   imports: [
     TypeOrmModule.forFeature([
