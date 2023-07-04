@@ -19,6 +19,7 @@ import { UserModule } from './user/user.module';
 import { AddressModule } from './address/address.module';
 import { PlanModule } from './plans/plan.module';
 import { MailModule } from './mail/mail.module';
+import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { MailModule } from './mail/mail.module';
     PlanModule,
     MailModule,
     UploadModule,
+    FusionPatientModule,
   ],
 })
 export class AppModule {}
