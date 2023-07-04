@@ -314,8 +314,12 @@ export class FindEventService {
         backgroundColor: formatColor[0],
         textColor: formatColor[1],
       };
+      // TODO
+      // if (result.avatar_id) {
+      //   result.avatar_url = `php/contact/avatar.php?id=${result.contactId}`;
+      // }
       if (result.avatar_id) {
-        result.avatar_url = `php/contact/avatar.php?id=${result.contactId}`;
+        result.avatar_url = '';
       }
 
       const reminders: ReminderDto[] = await this.dataSource.query(
