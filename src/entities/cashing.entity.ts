@@ -419,14 +419,14 @@ export class CashingEntity {
    * @Serializer\Expose
    * @Assert\Choice(callback={"App\Enum\PaymentMethodEnum", "getValues"})
    */
-  @Column({
-    name: 'CSG_PAYMENT',
-    type: 'enum',
-    enum: EnumCashingPayment,
-    default: EnumCashingPayment.CHEQUE,
-    nullable: true,
-  })
-  method?: EnumCashingPayment;
+  // @Column({
+  //   name: 'CSG_PAYMENT',
+  //   type: 'enum',
+  //   enum: EnumCashingPayment,
+  //   default: EnumCashingPayment.CHEQUE,
+  //   nullable: true,
+  // })
+  // method?: EnumCashingPayment;
 
   /**
    * @ORM\Column(name="CSG_CHECK_NBR", type="string", length=255, nullable=true)
