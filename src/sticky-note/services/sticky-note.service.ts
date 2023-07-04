@@ -1,7 +1,7 @@
 import { DataSource, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
-import { SaveStickNoteDto } from './dto/save.stickyNote.dto';
-import { StickyNoteRes } from './response/stickyNote.res';
+import { SaveStickNoteDto } from '../dto/save.sticky-note.dto';
+import { StickyNoteRes } from '../response/sticky-note.res';
 import { InjectRepository } from '@nestjs/typeorm';
 import { StickyNoteEntity } from 'src/entities/sticky-note.entity';
 
