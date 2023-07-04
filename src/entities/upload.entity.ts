@@ -43,14 +43,23 @@ export class UploadEntity {
     type: 'text',
   })
   name?: string;
+  /** File: application\Entity\File.php
+   * @ORM\Column(name="UPL_NAME", type="string", length=255)
+   * @Serializer\Expose
+   * @Serializer\Groups({"file:index", "file:read"})
+   * @Assert\Type("string")
+   * @Assert\NotBlank
+   * @Assert\Length(max=255)
+   */
+  originalFilename?: string;
 
   /**
    * @ORM\Column(name="UPL_FILENAME", type="text")
    */
-  @Column({
-    name: 'UPL_FILENAME',
-    type: 'text',
-  })
+  // @Column({
+  //   name: 'UPL_FILENAME',
+  //   type: 'text',
+  // })
   filename?: string;
 
   /**
@@ -71,6 +80,15 @@ export class UploadEntity {
     length: 50,
   })
   type?: string;
+  /** File: application\Entity\File.php
+   * @ORM\Column(name="UPL_TYPE", type="string", length=255)
+   * @Serializer\Expose
+   * @Serializer\Groups({"file:read"})
+   * @Assert\Type("string")
+   * @Assert\NotBlank
+   * @Assert\Length(max=255)
+   */
+  mimeType?: string;
 
   /**
    * @ORM\Column(name="UPL_SIZE", type="integer")
@@ -82,6 +100,15 @@ export class UploadEntity {
     default: 0,
   })
   size?: number;
+  /** File: application\Entity\File.php
+   * @ORM\Column(name="UPL_SIZE", type="integer", options={"default": 0})
+   * @Serializer\Expose
+   * @Serializer\Groups({"file:read"})
+   * @Assert\Type("integer")
+   * @Assert\NotNull
+   * @Assert\GreaterThanOrEqual(0)
+   */
+  fileSize?: number;
 
   /**
    * @ORM\Column(name="UPL_IP", type="string", length=50, nullable=true)
@@ -129,20 +156,6 @@ export class UploadEntity {
   transmitter?: UserEntity;
 
   /** File: application\Entity\File.php
-   * @ORM\Column(name="UPL_NAME", type="string", length=255)
-   * @Serializer\Expose
-   * @Serializer\Groups({"file:index", "file:read"})
-   * @Assert\Type("string")
-   * @Assert\NotBlank
-   * @Assert\Length(max=255)
-   */
-  @Column({
-    name: 'UPL_NAME',
-    type: 'text',
-  })
-  originalFilename?: string;
-
-  /** File: application\Entity\File.php
    * @ORM\Column(name="UPL_FILENAME", type="string", length=255)
    * @Serializer\Expose
    * @Serializer\Groups({"file:read"})
@@ -155,37 +168,6 @@ export class UploadEntity {
     type: 'text',
   })
   fileName?: string;
-
-  /** File: application\Entity\File.php
-   * @ORM\Column(name="UPL_SIZE", type="integer", options={"default": 0})
-   * @Serializer\Expose
-   * @Serializer\Groups({"file:read"})
-   * @Assert\Type("integer")
-   * @Assert\NotNull
-   * @Assert\GreaterThanOrEqual(0)
-   */
-  @Column({
-    name: 'UPL_SIZE',
-    type: 'int',
-    width: 11,
-    default: 0,
-  })
-  fileSize?: number;
-
-  /** File: application\Entity\File.php
-   * @ORM\Column(name="UPL_TYPE", type="string", length=255)
-   * @Serializer\Expose
-   * @Serializer\Groups({"file:read"})
-   * @Assert\Type("string")
-   * @Assert\NotBlank
-   * @Assert\Length(max=255)
-   */
-  @Column({
-    name: 'UPL_TYPE',
-    type: 'varchar',
-    length: 50,
-  })
-  mimeType?: string;
 
   /**
    * @var UploadedFile|null

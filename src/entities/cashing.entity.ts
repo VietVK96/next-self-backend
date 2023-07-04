@@ -142,16 +142,16 @@ export class CashingEntity {
   })
   paymentDate?: string;
 
-  /**
-   * @ORM\Column(name="CSG_CHECK_NBR", type="string", length=45, nullable=true)
-   */
-  @Column({
-    name: 'CSG_CHECK_NBR',
-    type: 'varchar',
-    length: 45,
-    nullable: true,
-  })
-  checkNbr?: string;
+  // /**
+  //  * @ORM\Column(name="CSG_CHECK_NBR", type="string", length=45, nullable=true)
+  //  */
+  // @Column({
+  //   name: 'CSG_CHECK_NBR',
+  //   type: 'varchar',
+  //   length: 45,
+  //   nullable: true,
+  // })
+  // checkNbr?: string;
 
   /**
    * @ORM\Column(name="CSG_CHECK_BANK", type="string", length=100, nullable=true)
@@ -185,7 +185,7 @@ export class CashingEntity {
     scale: 2,
     default: 0.0,
   })
-  amount?: string;
+  amount?: number;
 
   /**
    * @ORM\Column(name="amount_care", type="decimal", precision=10, scale=2)
@@ -198,7 +198,7 @@ export class CashingEntity {
     scale: 2,
     default: 0.0,
   })
-  amountCare?: string;
+  amountCare?: number;
 
   /**
    * @ORM\Column(name="amount_prosthesis", type="decimal", precision=10, scale=2)
@@ -211,7 +211,7 @@ export class CashingEntity {
     scale: 2,
     default: 0.0,
   })
-  amountProsthesis?: string;
+  amountProsthesis?: number;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\User", inversedBy="cashings")
@@ -296,6 +296,14 @@ export class CashingEntity {
   })
   libraryBank?: LibraryBankEntity;
 
+  @Column({
+    name: 'FSE_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  fseId?: number;
+
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Slip\Check", inversedBy="cashings")
    * @ORM\JoinColumn(name="SLC_ID", referencedColumnName="SLC_ID")
@@ -367,58 +375,58 @@ export class CashingEntity {
   })
   bordereau?: SlipCheckEntity;
 
-  /**
-   * @ORM\Column(name="CSG_DEBTOR", type="string", length=255)
-   * @Serializer\Expose
-   * @Assert\Type("string")
-   * @Assert\NotBlank
-   * @Assert\Length(max=255)
-   */
-  @Column({
-    name: 'CSG_DEBTOR',
-    type: 'text',
-    nullable: true,
-  })
-  label?: string;
+  // /**
+  //  * @ORM\Column(name="CSG_DEBTOR", type="string", length=255)
+  //  * @Serializer\Expose
+  //  * @Assert\Type("string")
+  //  * @Assert\NotBlank
+  //  * @Assert\Length(max=255)
+  //  */
+  // @Column({
+  //   name: 'CSG_DEBTOR',
+  //   type: 'text',
+  //   nullable: true,
+  // })
+  // label?: string;
 
-  /**
-   * @ORM\Column(name="CSG_MSG", type="text", nullable=true)
-   * @Serializer\Expose
-   * @Assert\Type("string")
-   */
-  @Column({
-    name: 'CSG_MSG',
-    type: 'text',
-    nullable: true,
-  })
-  observation?: string;
+  // /**
+  //  * @ORM\Column(name="CSG_MSG", type="text", nullable=true)
+  //  * @Serializer\Expose
+  //  * @Assert\Type("string")
+  //  */
+  // @Column({
+  //   name: 'CSG_MSG',
+  //   type: 'text',
+  //   nullable: true,
+  // })
+  // observation?: string;
 
-  /**
-   * @ORM\Column(name="CSG_DATE", type="date", nullable=true)
-   * @Serializer\Expose
-   * @Serializer\Type("DateTime<'Y-m-d'>")
-   * @Assert\Date
-   */
-  @Column({
-    name: 'CSG_DATE',
-    type: 'date',
-    nullable: true,
-  })
-  entryDate?: string;
+  // /**
+  //  * @ORM\Column(name="CSG_DATE", type="date", nullable=true)
+  //  * @Serializer\Expose
+  //  * @Serializer\Type("DateTime<'Y-m-d'>")
+  //  * @Assert\Date
+  //  */
+  // @Column({
+  //   name: 'CSG_DATE',
+  //   type: 'date',
+  //   nullable: true,
+  // })
+  // entryDate?: string;
 
   /**
    * @ORM\Column(name="CSG_PAYMENT", type="enum_payment_method", nullable=true, options={"default": "cheque"})
    * @Serializer\Expose
    * @Assert\Choice(callback={"App\Enum\PaymentMethodEnum", "getValues"})
    */
-  @Column({
-    name: 'CSG_PAYMENT',
-    type: 'enum',
-    enum: EnumCashingPayment,
-    default: EnumCashingPayment.CHEQUE,
-    nullable: true,
-  })
-  method?: EnumCashingPayment;
+  // @Column({
+  //   name: 'CSG_PAYMENT',
+  //   type: 'enum',
+  //   enum: EnumCashingPayment,
+  //   default: EnumCashingPayment.CHEQUE,
+  //   nullable: true,
+  // })
+  // method?: EnumCashingPayment;
 
   /**
    * @ORM\Column(name="CSG_CHECK_NBR", type="string", length=255, nullable=true)

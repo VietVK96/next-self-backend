@@ -10,6 +10,7 @@ import { StoreNoteDto } from '../dto/noteStore.dto';
 import { UserService } from 'src/user/services/user.service';
 import { PatientService } from 'src/patient/service/patient.service';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { UpdateNoteDto } from '../dto/noteUpdate.dto';
 
 @Injectable()
 export class NoteService {
@@ -94,5 +95,13 @@ export class NoteService {
     } catch (error) {
       throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
+  }
+
+  async update(payload: UpdateNoteDto) {
+    await this.repo.save(payload);
+
+    ///Ids\Log::write('Commentaire', $patientNote['patient']['id'], 2);
+    // TODO create log
+    return await this.find(payload?.id);
   }
 }
