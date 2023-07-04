@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -25,9 +25,10 @@ export class SaveContactController {
   }
 
   @UseGuards(TokenGuard)
-  @Put('/save')
+  @Put('/save/:id')
   async updatePatient(
     @Body() req: SavePatientDto,
+    @Param('id') id: number,
     @CurrentUser() identity: UserIdentity,
   ) {
     return this.savePatientService.savePatient(req, identity.org);

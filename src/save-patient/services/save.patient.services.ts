@@ -172,7 +172,10 @@ export class SaveContactService {
       //   .getRepository(TariffTypeEntity)
       //   .findOneOrFail(options);
 
-      await this.dataSource.manager.save(ContactEntity, patient);
+      const savepPatient = await this.dataSource.manager.save(
+        ContactEntity,
+        patient,
+      );
 
       const inputParameters = [];
       inputParameters.push(reqBody.practitionerId);
@@ -210,7 +213,7 @@ export class SaveContactService {
       inputParameters.push(reqBody.agenesie);
       inputParameters.push(reqBody.maladieRare);
       inputParameters.push(reqBody.rxSidexisLoaded);
-      inputParameters.push(reqBody?.id);
+      inputParameters.push(savepPatient?.id);
 
       const updateContactQuery = `
       UPDATE T_CONTACT_CON

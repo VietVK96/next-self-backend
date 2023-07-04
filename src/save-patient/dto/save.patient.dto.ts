@@ -20,7 +20,7 @@ export class SavePatientDto {
   @ApiProperty({
     required: false,
   })
-  addressId?: string;
+  addressId?: number;
 
   @ApiProperty({
     required: false,
@@ -342,7 +342,7 @@ export class SavePatientDto {
   @ApiProperty({
     required: false,
   })
-  size?: string;
+  size?: number;
 
   @ApiProperty({
     required: false,
@@ -352,7 +352,7 @@ export class SavePatientDto {
   @ApiProperty({
     required: false,
   })
-  weight?: string;
+  weight?: number;
 
   @ApiProperty()
   lastPayment?: string;
