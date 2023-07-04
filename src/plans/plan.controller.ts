@@ -22,7 +22,7 @@ import {
 import { PlanService } from './services/plan.service';
 
 @ApiBearerAuth()
-@Controller('/contact/plan/all')
+@Controller('plan')
 @ApiTags('Plan')
 export class PlanController {
   constructor(private PlanService: PlanService) {}
@@ -51,6 +51,7 @@ export class PlanController {
   ) {
     return this.PlanService.findOne(request, identity.org);
   }
+
   @Post()
   @UseGuards(TokenGuard)
   async save(

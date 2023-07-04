@@ -33,6 +33,21 @@ export class PlanService {
     private dataSource: DataSource,
   ) {}
 
+  private _empty(value: any) {
+    switch (value) {
+      case 0:
+      case '0':
+      case '':
+      case []:
+      case null:
+      case undefined:
+      case false:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   async _getPlan(id: number, groupId: number): Promise<findOnePlanRes> {
     let plan: findOnePlanRes = null;
     const planQuery = `
@@ -290,7 +305,7 @@ export class PlanService {
     return plan;
   }
 
-  async _save(data: any, groupId) {
+  async _save(data: any, groupId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     const events = [];
     const options = {
@@ -309,19 +324,19 @@ export class PlanService {
       ...data,
     };
 
-    if (Array.isArray(options?.events) && options?.events.length > 0) {
+    if (!(Array.isArray(options?.events) && options?.events.length > 0)) {
       throw new BadRequestException(
         'The treatment plan must have at least one event',
       );
     }
 
-    if (options?.patient_id !== null) {
+    if (this._empty(options?.patient_id)) {
       throw new BadRequestException();
     }
 
     try {
       await queryRunner.startTransaction();
-      if (options?.acceptedOn === null && options?.type === 'plan') {
+      if (this._empty(options?.acceptedOn) && options?.type === 'plan') {
         options.acceptedOn = Date.now();
       }
 
@@ -353,10 +368,10 @@ export class PlanService {
         options?.amount_to_be_paid,
       ]);
 
-      if (options?.id === null) {
-        options.id = planNew.id;
+      if (this._empty(options?.id)) {
+        options.id = planNew.insertId;
       }
-      if (options?.acceptedOn !== null) {
+      if (!this._empty(options?.acceptedOn)) {
         const updateDeltaQuery = `
         UPDATE T_DENTAL_QUOTATION_DQO
 				SET DQO_DATE_ACCEPT = ?
@@ -367,7 +382,7 @@ export class PlanService {
           options?.id,
         ]);
       }
-      for (const [eventRoot, key] of options?.events?.entries()) {
+      for (const [key, eventRoot] of options?.events?.entries()) {
         let event = eventRoot;
         const tasks = [];
         event = {
@@ -391,7 +406,7 @@ export class PlanService {
         };
 
         let userPreferenceTimezone = 'UTC';
-        if (event?.user !== null) {
+        if (!this._empty(event?.user)) {
           const userPreferenceEntity = await queryRunner.manager.findOneOrFail(
             UserPreferenceEntity,
             {
@@ -431,8 +446,8 @@ export class PlanService {
           ],
         );
 
-        if (event?.id === null) {
-          event.id = insertEvents[0].EVT_ID;
+        if (this._empty(event?.id)) {
+          event.id = insertEvents.insertId;
           await queryRunner.query(
             `
           INSERT INTO T_REMINDER_RMD (USR_ID, EVT_ID, RMT_ID, RMR_ID, RMU_ID, appointment_reminder_library_id, RMD_NBR)
@@ -454,7 +469,7 @@ export class PlanService {
         );
 
         let duration = event?.plan?.duration;
-        if (/^\d{2}:\d{2}(:\d{2})?$/.test(duration) === false) {
+        if (!/^\d{2}:\d{2}(:\d{2})?$/.test(duration)) {
           duration = '00:30:00';
         }
 
@@ -470,7 +485,7 @@ export class PlanService {
           [event?.id, options?.id, key, event?.plan?.delay, duration],
         );
 
-        for (const [taskRoot, key] of event?.tasks?.entries()) {
+        for (const [key, taskRoot] of event?.tasks?.entries()) {
           let task = taskRoot;
           task = {
             id: 0,
@@ -520,11 +535,20 @@ export class PlanService {
             ],
           );
 
-          if (task?.id === null) {
-            task.id = insertEventTask?.ETK_ID;
-            const act = await this.dataSource.manager.findOneOrFail(
+          if (this._empty(task?.id)) {
+            task.id = insertEventTask?.insertId;
+            const act = await queryRunner.manager.findOneOrFail(
               EventTaskEntity,
-              { where: { id: task?.id } },
+              {
+                where: { id: task?.id },
+                relations: {
+                  libraryActQuantity: {
+                    traceabilities: true,
+                    act: { traceabilities: true },
+                  },
+                  traceabilities: true,
+                },
+              },
             );
             const libraryActQuantity = act?.libraryActQuantity;
             if (libraryActQuantity) {
@@ -533,7 +557,7 @@ export class PlanService {
 
               if (libraryActQuantity?.traceabilityMerged)
                 traceabilities.concat(libraryActQuantity?.act?.traceabilities);
-              if (traceabilities.length === 0) {
+              if (traceabilities.length > 0) {
                 traceabilityStatus = TraceabilityStatusEnum.UNFILLED;
                 for (const traceability of traceabilities) {
                   if (
@@ -556,7 +580,7 @@ export class PlanService {
             }
           }
 
-          if (task?.dental) {
+          if (!this._empty(task?.dental)) {
             const dental = {
               ald: 0,
               type: null,
@@ -640,7 +664,7 @@ export class PlanService {
             }
 
             teeth = teeth.trim() === '' ? teeth.trim() : null;
-            if (dental?.code === 'HBQK002' && teeth === null) {
+            if (dental?.code === 'HBQK002' && this._empty(teeth)) {
               teeth = '00';
             }
 
@@ -649,12 +673,12 @@ export class PlanService {
               dental?.ccam_id ?? null,
               dental?.ngap_key_id ?? null,
               dental?.dental_material_id ?? null,
-              teeth,
+              this._empty(teeth) ? null : teeth,
               dental?.type,
               dental?.coef,
-              dental?.exceeding === '' ? null : dental?.exceeding,
-              dental?.code === '' ? null : dental?.code,
-              dental?.comp === '' ? null : dental?.comp,
+              this._empty(dental?.exceeding) ? null : dental?.exceeding,
+              this._empty(dental?.code) ? null : dental?.code,
+              this._empty(dental?.comp) ? null : dental?.comp,
               !dental?.purchasePrice || dental?.purchasePrice === ''
                 ? 0
                 : dental?.purchasePrice,
@@ -678,7 +702,7 @@ export class PlanService {
           tasks.push(task?.id);
         }
 
-        if (tasks.length > 0) {
+        if (tasks.length === 0) {
           const listTask = tasks.join();
           const sql = `
             DELETE ETK, DET
@@ -692,7 +716,7 @@ export class PlanService {
         events.push(event?.id);
       }
 
-      if (events.length > 0) {
+      if (events.length === 0) {
         const eventStatement = `
         SELECT
           EVT_ID
