@@ -6,7 +6,7 @@ import {
 import { DataSource } from 'typeorm';
 import { FindAllStructDto, IdStructDto } from '../dto/plan.dto';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
-import { PermissionService } from 'src/users/services/permission.service';
+import { PermissionService } from 'src/user/services/permission.service';
 import { PaymentPlanService } from 'src/payment-plan/services/payment-plan.service';
 import {
   EventData,

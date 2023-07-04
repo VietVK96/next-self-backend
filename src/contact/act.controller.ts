@@ -1,6 +1,10 @@
 import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { TokenGuard } from 'src/common/decorator/auth.decorator';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
 import { ActServices } from './services/act.service';
 import { UpdateTraceabilitiesDto } from './dto/act.contact.dto';
 
@@ -25,7 +29,12 @@ export class ActController {
   async updateTraceabilities(
     @Param('id') id: number,
     @Body() payload: UpdateTraceabilitiesDto,
+    @CurrentUser() userIdentity: UserIdentity,
   ) {
-    return await this.actService.updateTraceabilities(id, payload);
+    return await this.actService.updateTraceabilities(
+      id,
+      payload,
+      userIdentity.org,
+    );
   }
 }

@@ -94,7 +94,6 @@ export class ContactPaymentService {
       });
       // check permission
       if (payment.length) {
-        // TODO permission not working
         if (
           !this.permissionService.hasPermission(
             'PERMISSION_PAIEMENT',
@@ -233,7 +232,7 @@ export class ContactPaymentService {
         // Pour chaque bénéficiaire
         for (const beneficiary of beneficiaries) {
           // Insertion du règlement du bénéficiaire.
-          const ww = await queryRunner.query(insertToCSC, [
+          await queryRunner.query(insertToCSC, [
             insertRes.insertId,
             beneficiary.id,
             beneficiary.pivot.amount,
