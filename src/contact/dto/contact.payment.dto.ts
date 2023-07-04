@@ -112,7 +112,7 @@ export class ContactPaymentStoreDto {
     name: 'beneficiaries',
     required: false,
   })
-  beneficiaries?: IBeneficiaries[];
+  beneficiaries?: IBeneficiary[];
 
   @ApiProperty({
     name: 'correspondent',
@@ -133,7 +133,7 @@ export class ContactPaymentStoreDto {
   deadlines?: IDeadline[];
 }
 
-export class IBeneficiaries {
+export class IBeneficiary {
   amount?: number;
   amount_care?: number;
   amount_prosthesis?: number;

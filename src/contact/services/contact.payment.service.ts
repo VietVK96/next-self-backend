@@ -3,7 +3,7 @@ import { DataSource, Repository } from 'typeorm';
 import {
   ContactPaymentFindAllDto,
   ContactPaymentStoreDto,
-  IBeneficiaries,
+  IBeneficiary,
   IDeadline,
 } from '../dto/contact.payment.dto';
 import { CashingEntity } from 'src/entities/cashing.entity';
@@ -127,7 +127,8 @@ export class ContactPaymentService {
       throw new CBadRequestException(error);
     }
   }
-
+  // application/Services/Payment.php
+  // 62 -> 377
   async store(payload: ContactPaymentStoreDto) {
     // Remboursement : montant en négatif.
     const data = this.refundAmount(payload);
@@ -146,7 +147,6 @@ export class ContactPaymentService {
     const correspondentId = data?.correspondent?.id || null;
     const bankId = data?.bank?.id || null;
     const caresheetId = data?.caresheet?.id || null;
-    const debtor = data?.debtor || null;
     const debtorId = data?.debtor?.id || null;
     const debtorName = data?.debtor?.name || null;
 
@@ -163,7 +163,7 @@ export class ContactPaymentService {
     }
 
     // Bénéficiaires du règlement, uniquement ceux ayant un montant.
-    let beneficiaries: IBeneficiaries[];
+    let beneficiaries: IBeneficiary[];
     if (data.beneficiaries && Array.isArray(data.beneficiaries)) {
       beneficiaries = data.beneficiaries.filter((e) => e.pivot.amount);
       beneficiaries.forEach((e) => {
@@ -174,7 +174,7 @@ export class ContactPaymentService {
 
     let deadlines: IDeadline[];
     if (data.deadlines && Array.isArray(data.deadlines)) {
-      deadlines = data.deadlines.filter((e) => !e.amount);
+      deadlines = data.deadlines.filter((e) => e.amount);
     }
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -209,6 +209,7 @@ export class ContactPaymentService {
           WHERE con_id = ?
           AND usr_id = ?
         `;
+
       if (deadlines.length < 2) {
         const insertRes = await queryRunner.query(insertToCSG, [
           practitionerId,
@@ -248,117 +249,119 @@ export class ContactPaymentService {
       } else {
         const deadlinesCount = deadlines.length;
         const descriptionBis = description;
-        deadlines.map(async (deadline, deadlineIndex) => {
-          let amountCareTemp = 0;
-          let amountProsthesisTemp = 0;
-          const deadlineAmountCare = deadline?.amount_care;
-          const deadlineAmountProsthesis = deadline?.amount_prosthesis;
-          const deadlineAmountCareRate = amountCare
-            ? Math.floor(((deadlineAmountCare * 100) / amountCare) * 100) / 100
-            : 0;
-          const deadlineAmountProsthesisRate = amountProsthesis
-            ? Math.floor(
-                ((deadlineAmountProsthesis * 100) / amountProsthesis) * 100,
-              ) / 100
-            : 0;
-          let description = `Echéance n°${
-            deadlineIndex + 1
-          } sur ${deadlinesCount}`;
+        await Promise.all(
+          deadlines.map(async (deadline, deadlineIndex) => {
+            let amountCareTemp = 0;
+            let amountProsthesisTemp = 0;
+            const deadlineAmountCare = deadline?.amount_care;
+            const deadlineAmountProsthesis = deadline?.amount_prosthesis;
+            const deadlineAmountCareRate = amountCare
+              ? this.calculateFloor(deadlineAmountCare, amountCare)
+              : 0;
+            const deadlineAmountProsthesisRate = amountProsthesis
+              ? this.calculateFloor(deadlineAmountProsthesis, amountProsthesis)
+              : 0;
+            let description = `Echéance n°${
+              deadlineIndex + 1
+            } sur ${deadlinesCount}`;
 
-          // Insertion d'un nouveau règlement.
-          const insertRes = await queryRunner.query(insertToCSG, [
-            practitionerId,
-            debtorId,
-            bankId,
-            caresheetId,
-            correspondentId,
-            debtorName,
-            date,
-            description,
-            payment,
-            deadline.date,
-            checkNumber,
-            checkBank,
-            type,
-            deadline.amount,
-            deadline.amount_care,
-            deadline.amount_prosthesis,
-          ]);
-
-          // Pour chaque bénéficiaire.
-          beneficiaries.map(async (beneficiary, beneficiaryIndex) => {
-            let beneficiaryAmountCare = 0;
-            let beneficiaryAmountProsthesis = 0;
-
-            if (deadlineIndex === deadlinesCount - 1) {
-              beneficiaryAmountCare = this.calculateRound(
-                beneficiary?.pivot?.amount_care,
-                beneficiary?.amount_care,
-              );
-              beneficiaryAmountProsthesis = this.calculateRound(
-                beneficiary.pivot.amount_prosthesis,
-                beneficiary.amount_prosthesis,
-              );
-            } else {
-              if (beneficiaryIndex === beneficiaries.length - 1) {
-                beneficiaryAmountCare = this.calculateRound(
-                  deadlineAmountCare,
-                  amountCareTemp,
-                );
-                beneficiaryAmountProsthesis = this.calculateRound(
-                  deadlineAmountProsthesis,
-                  amountProsthesisTemp,
-                );
-              } else {
-                beneficiaryAmountCare = this.calculateCeil(
-                  beneficiary.pivot.amount_care,
-                  deadlineAmountCareRate,
-                );
-                beneficiaryAmountProsthesis = this.calculateCeil(
-                  beneficiary.pivot.amount_prosthesis,
-                  deadlineAmountProsthesisRate,
-                );
-
-                amountCareTemp += beneficiaryAmountCare;
-                amountProsthesisTemp += beneficiaryAmountProsthesis;
-              }
-              beneficiary.amount_care += beneficiaryAmountCare;
-              beneficiary.amount_prosthesis += beneficiaryAmountProsthesis;
-            }
-
-            const beneficiaryAmount = this.calculateRound(
-              beneficiaryAmountCare,
-              beneficiaryAmountProsthesis,
-            );
-
-            // Réinitialise le niveau de relance
-            await queryRunner.query(insertToCSC, [
-              insertRes.insertId,
-              beneficiary.id,
-              beneficiaryAmount,
-              beneficiaryAmountCare,
-              beneficiaryAmountProsthesis,
-            ]);
-
-            // Réinitialise le niveau de relance
-            await queryRunner.query(updateToCOU, [
-              beneficiary.id,
+            // Insertion d'un nouveau règlement.
+            const insertRes = await queryRunner.query(insertToCSG, [
               practitionerId,
+              debtorId,
+              bankId,
+              caresheetId,
+              correspondentId,
+              debtorName,
+              date,
+              description,
+              payment,
+              deadline.date,
+              checkNumber,
+              checkBank,
+              type,
+              deadline.amount,
+              deadline.amount_care,
+              deadline.amount_prosthesis,
             ]);
-            description += `${
-              beneficiary.full_name
-            } pour un montant total de ${beneficiary.pivot.amount.toFixed(
-              2,
-            )}\n`;
-          });
 
-          // Insertion de la description de l'échéance.
-          description += '\n' + descriptionBis;
-          const q = `UPDATE T_CASHING_CSG
+            // Pour chaque bénéficiaire.
+            await Promise.all(
+              beneficiaries.map(async (beneficiary, beneficiaryIndex) => {
+                let beneficiaryAmountCare = 0;
+                let beneficiaryAmountProsthesis = 0;
+
+                if (deadlineIndex === deadlinesCount - 1) {
+                  beneficiaryAmountCare = this.calculateRound(
+                    beneficiary?.pivot?.amount_care,
+                    beneficiary?.amount_care,
+                  );
+                  beneficiaryAmountProsthesis = this.calculateRound(
+                    beneficiary.pivot.amount_prosthesis,
+                    beneficiary.amount_prosthesis,
+                  );
+                } else {
+                  if (beneficiaryIndex === beneficiaries.length - 1) {
+                    beneficiaryAmountCare = this.calculateRound(
+                      deadlineAmountCare,
+                      amountCareTemp,
+                    );
+                    beneficiaryAmountProsthesis = this.calculateRound(
+                      deadlineAmountProsthesis,
+                      amountProsthesisTemp,
+                    );
+                  } else {
+                    beneficiaryAmountCare = this.calculateCeil(
+                      beneficiary.pivot.amount_care,
+                      deadlineAmountCareRate,
+                    );
+                    beneficiaryAmountProsthesis = this.calculateCeil(
+                      beneficiary.pivot.amount_prosthesis,
+                      deadlineAmountProsthesisRate,
+                    );
+
+                    amountCareTemp += beneficiaryAmountCare;
+                    amountProsthesisTemp += beneficiaryAmountProsthesis;
+                  }
+                  beneficiary.amount_care += beneficiaryAmountCare;
+                  beneficiary.amount_prosthesis += beneficiaryAmountProsthesis;
+                }
+
+                const beneficiaryAmount = this.calculateRound(
+                  beneficiaryAmountCare,
+                  beneficiaryAmountProsthesis,
+                  'plus',
+                );
+
+                // Réinitialise le niveau de relance
+                await queryRunner.query(insertToCSC, [
+                  insertRes.insertId,
+                  beneficiary.id,
+                  beneficiaryAmount,
+                  beneficiaryAmountCare,
+                  beneficiaryAmountProsthesis,
+                ]);
+
+                // Réinitialise le niveau de relance
+                await queryRunner.query(updateToCOU, [
+                  beneficiary.id,
+                  practitionerId,
+                ]);
+                description += `${
+                  beneficiary.full_name
+                } pour un montant total de ${beneficiary.pivot.amount.toFixed(
+                  2,
+                )}\n`;
+              }),
+            );
+            // Insertion de la description de l'échéance.
+            description += '\n' + descriptionBis;
+            const q = `UPDATE T_CASHING_CSG
 					SET CSG_MSG = ?
 					WHERE CSG_ID = ?`;
-          await queryRunner.query(q, [description, insertRes.insertId]);
-        });
+            await queryRunner.query(q, [description, insertRes.insertId]);
+          }),
+        );
       }
       await queryRunner.commitTransaction();
     } catch (err) {
@@ -390,10 +393,21 @@ export class ContactPaymentService {
     return inputs;
   }
 
-  protected calculateRound(a: number, b: number): number {
-    return Math.round((a - b) * 100) / 100;
+  protected calculateRound(
+    a: number,
+    b: number,
+    type?: 'plus' | 'minus',
+  ): number {
+    type = type || 'minus';
+    if (type === 'minus') {
+      return Math.round((a - b) * 100) / 100;
+    }
+    return Math.round((a + b) * 100) / 100;
   }
   protected calculateCeil(a: number, b: number): number {
     return Math.ceil(a * (b / 100) * 100) / 100;
+  }
+  protected calculateFloor(a: number, b: number): number {
+    return Math.floor(((a * 100) / b) * 100) / 100;
   }
 }

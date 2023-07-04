@@ -53,7 +53,7 @@ export class ContactPaymentController {
 
   // File php\contact\payment\findAll.php 13->62
   @Post('/payment/store')
-  @UseGuards(TokenGuard)
+  // @UseGuards(TokenGuard)
   async store(@Body() payload: ContactPaymentStoreDto) {
     return this.contactPaymentService.store(payload);
   }
