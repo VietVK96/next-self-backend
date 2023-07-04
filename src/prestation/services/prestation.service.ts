@@ -4,10 +4,24 @@ import { FindAllPrestationStructDto } from '../dto/findAll.prestation.dto';
 import { FindAllPrestationRes } from '../response/findAll.prestation.res';
 import { ExceedingEnum } from '../../enum/exceeding-enum.enum';
 import { FindPrestationStructDto } from '../dto/find.prestation.dto';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { PermissionService } from 'src/user/services/permission.service';
+import { EventTaskEntity } from 'src/entities/event-task.entity';
+import { ErrorCode } from 'src/constants/error';
+import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-request.exception';
+import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
+import { RadioAssociationService } from './radio-association.service';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { PerCode } from 'src/constants/permissions';
+import { ActDto } from '../dto/act.dto';
 
 @Injectable()
 export class PrestationService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private dataSource: DataSource,
+    private permissionService: PermissionService,
+    private radioAssociationService: RadioAssociationService,
+  ) {}
 
   /**
    * php\contact\prestation\findAll.php 16 -> 78
@@ -163,5 +177,115 @@ export class PrestationService {
 
     const results = await queryBuilder.getRawMany();
     return results;
+  }
+
+  /**
+   * php\prestation\delete.php line 15->113
+   * @param id
+   * @param identity
+   */
+  async delete(id: number, identity: UserIdentity) {
+    try {
+      // Vérification de la permission de suppression.
+      if (
+        !this.permissionService.hasPermission(
+          PerCode.PERMISSION_DELETE,
+          8,
+          identity.id,
+        )
+      ) {
+        throw new CForbiddenRequestException(ErrorCode.FORBIDDEN);
+      }
+
+      // Vérification de l'existance de l'acte
+      const queryBuilder = this.dataSource
+        .createQueryBuilder()
+        .select(
+          `
+          T_EVENT_TASK_ETK.ETK_ID AS id,
+          T_EVENT_TASK_ETK.CON_ID AS patient_id`,
+        )
+        .from('T_EVENT_TASK_ETK', 'T_EVENT_TASK_ETK')
+        .leftJoin(
+          'T_CONTACT_CON',
+          'T_CONTACT_CON',
+          'T_CONTACT_CON.CON_ID = T_EVENT_TASK_ETK.CON_ID AND T_CONTACT_CON.organization_id = :groupId',
+          { groupId: identity.org },
+        )
+        .leftJoin(
+          'T_USER_USR',
+          'T_USER_USR',
+          'T_USER_USR.USR_ID = T_EVENT_TASK_ETK.USR_ID AND T_USER_USR.organization_id = :orgId',
+          { orgId: identity.org },
+        )
+        .where('T_EVENT_TASK_ETK.ETK_ID = :etkId', { etkId: id });
+
+      const act: ActDto = await queryBuilder.getRawOne();
+
+      // Acte non trouvé
+      if (!act) {
+        throw new CNotFoundRequestException(ErrorCode.NOT_FOUND);
+      }
+
+      const actEntities: EventTaskEntity[] = await this.dataSource
+        .getRepository(EventTaskEntity)
+        .find({
+          where: {
+            id: id,
+          },
+          relations: {
+            event: true,
+            user: true,
+            patient: true,
+          },
+        });
+      const actEntity: EventTaskEntity =
+        actEntities && actEntities.length > 0 ? actEntities[0] : undefined;
+
+      // Si l'acte fait partie d'un devis ou plan de traitement,
+      // on modifie uniquement son état.
+      const { count: etkCount } = await this.dataSource
+        .createQueryBuilder()
+        .select(`COUNT(*) as count`)
+        .from('T_EVENT_TASK_ETK', 'T_EVENT_TASK_ETK')
+        .innerJoin('T_EVENT_EVT', 'T_EVENT_EVT')
+        .innerJoin('T_PLAN_EVENT_PLV', 'T_PLAN_EVENT_PLV')
+        .innerJoin('T_PLAN_PLF', 'T_PLAN_PLF')
+        .where('T_EVENT_TASK_ETK.ETK_ID = :etkId', { etkId: id })
+        .andWhere('T_EVENT_TASK_ETK.EVT_ID = T_EVENT_EVT.EVT_ID')
+        .andWhere('T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID')
+        .andWhere('T_PLAN_EVENT_PLV.PLF_ID = T_PLAN_PLF.PLF_ID')
+        .getRawOne();
+
+      if (Number(etkCount)) {
+        await this.dataSource.query(
+          `UPDATE T_EVENT_TASK_ETK SET ETK_STATE = 0 WHERE ETK_ID = ?`,
+          [id],
+        );
+      } else {
+        await this.dataSource
+          .getRepository(EventTaskEntity)
+          .createQueryBuilder()
+          .softDelete()
+          .where('ETK_ID = :id', { id: id })
+          .execute();
+      }
+
+      /**
+       * RÈGLES D’ASSOCIATION DES RADIOGRAPHIES EN MÉDECINE BUCCO-DENTAIRE.
+       */
+      await this.radioAssociationService.calculHonoraires(
+        actEntity.user,
+        actEntity.patient,
+        actEntity.date,
+      );
+
+      // Traçabilité IDS
+      if (actEntity.patient) {
+        // @TODO Ids\Log:: write('Acte', $act -> getPatient() -> getId(), 3);
+      }
+    } catch (error) {
+      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
+    }
   }
 }

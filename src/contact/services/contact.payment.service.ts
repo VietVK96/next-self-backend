@@ -104,7 +104,6 @@ export class ContactPaymentService {
       });
       // check permission
       if (payment.length) {
-        // TODO permission not working
         if (
           !this.permissionService.hasPermission(
             'PERMISSION_PAIEMENT',
@@ -137,7 +136,8 @@ export class ContactPaymentService {
       throw new CBadRequestException(error);
     }
   }
-
+  // application/Services/Payment.php
+  // 62 -> 377
   async store(payload: ContactPaymentStoreDto) {
     // Remboursement : montant en négatif.
     const data = this.refundAmount(payload);
@@ -265,13 +265,10 @@ export class ContactPaymentService {
             const deadlineAmountCare = deadline?.amount_care;
             const deadlineAmountProsthesis = deadline?.amount_prosthesis;
             const deadlineAmountCareRate = amountCare
-              ? Math.floor(((deadlineAmountCare * 100) / amountCare) * 100) /
-                100
+              ? this.calculateFloor(deadlineAmountCare, amountCare)
               : 0;
             const deadlineAmountProsthesisRate = amountProsthesis
-              ? Math.floor(
-                  ((deadlineAmountProsthesis * 100) / amountProsthesis) * 100,
-                ) / 100
+              ? this.calculateFloor(deadlineAmountProsthesis, amountProsthesis)
               : 0;
             let description = `Echéance n°${
               deadlineIndex + 1
@@ -342,6 +339,7 @@ export class ContactPaymentService {
                 const beneficiaryAmount = this.calculateRound(
                   beneficiaryAmountCare,
                   beneficiaryAmountProsthesis,
+                  'plus',
                 );
 
                 // Réinitialise le niveau de relance
@@ -689,10 +687,21 @@ export class ContactPaymentService {
     return inputs;
   }
 
-  protected calculateRound(a: number, b: number): number {
-    return Math.round((a - b) * 100) / 100;
+  protected calculateRound(
+    a: number,
+    b: number,
+    type?: 'plus' | 'minus',
+  ): number {
+    type = type || 'minus';
+    if (type === 'minus') {
+      return Math.round((a - b) * 100) / 100;
+    }
+    return Math.round((a + b) * 100) / 100;
   }
   protected calculateCeil(a: number, b: number): number {
     return Math.ceil(a * (b / 100) * 100) / 100;
+  }
+  protected calculateFloor(a: number, b: number): number {
+    return Math.floor(((a * 100) / b) * 100) / 100;
   }
 }

@@ -34,7 +34,6 @@ export class PatientBalanceService {
   ) {
     try {
       const patientId = +request.patient_id;
-      console.log(patientId);
       const { balance, doctorId } = payload;
       const patientUser = await this.patientService.getPatientUser(
         doctorId,
