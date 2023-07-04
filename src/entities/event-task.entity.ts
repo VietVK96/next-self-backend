@@ -95,12 +95,12 @@ export class EventTaskEntity {
    * @var \App\Entities\Contact Entité représentant le patient.
    */
   //   protected $contact;
-  @ManyToOne(() => ContactEntity, {
-    createForeignKeyConstraints: false,
-  })
-  @JoinColumn({
-    name: 'CON_ID',
-  })
+  // @ManyToOne(() => ContactEntity, {
+  //   createForeignKeyConstraints: false,
+  // })
+  // @JoinColumn({
+  //   name: 'CON_ID',
+  // })
   contact?: ContactEntity;
 
   /**
@@ -160,7 +160,11 @@ export class EventTaskEntity {
   /**
    * @ORM\Column(name="ETK_NAME", type="string", length=81, nullable=false)
    */
-
+  // @Column({
+  //   name: 'ETK_NAME',
+  //   length: 255,
+  //   type: 'varchar',
+  // })
   name?: string;
 
   /**
@@ -190,6 +194,11 @@ export class EventTaskEntity {
   /**
    * @ORM\Column(name="ETK_MSG", type="text", nullable=true)
    */
+  // @Column({
+  //   name: 'ETK_MSG',
+  //   type: 'text',
+  //   nullable: true,
+  // })
   msg?: string;
 
   /**
@@ -212,6 +221,12 @@ export class EventTaskEntity {
   /**
    * @ORM\Column(name="ETK_POS", type="integer", nullable=false)
    */
+  // @Column({
+  //   name: 'ETK_POS',
+  //   type: 'int',
+  //   width: 11,
+  //   default: 0,
+  // })
   pos?: number;
 
   /**
@@ -256,6 +271,13 @@ export class EventTaskEntity {
    * @var float Montant sauvegardé suite à la suppression d'une feuille
    * de soin électronique.
    */
+  // @Column({
+  //   name: 'ETK_AMOUNT_SAVED',
+  //   type: 'decimal',
+  //   precision: 10,
+  //   scale: 2,
+  //   nullable: true,
+  // })
   amountSaved?: number;
 
   /**
@@ -300,6 +322,12 @@ export class EventTaskEntity {
   /**
    * @ORM\Column(name="ETK_STATE", type="integer")
    */
+  // @Column({
+  //   name: 'ETK_STATE',
+  //   type: 'int',
+  //   width: 11,
+  //   default: 0,
+  // })
   state?: number;
 
   /**
