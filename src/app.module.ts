@@ -20,6 +20,7 @@ import { MemoModule } from './memo/memo.module';
 import { AddressModule } from './address/address.module';
 import { PlanModule } from './plan/plan.module';
 import { MailModule } from './mail/mail.module';
+import { LibrariesModule } from './libraries/libraries.module';
 import { EventTaskModule } from './event-task/event-task.module';
 import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
 import { UploadModule } from './upload/upload.module';
@@ -76,6 +77,7 @@ import { UserModule } from './user/user.module';
     AddressModule,
     PlanModule,
     MailModule,
+    LibrariesModule,
     EventTaskModule,
     UploadModule,
     FusionPatientModule,
