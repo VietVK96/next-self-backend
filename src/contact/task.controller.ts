@@ -40,6 +40,6 @@ export class TaskController {
     // @CurrentUser() identity: UserIdentity,
   ) {
     console.log('updateTaskPatch', payload);
-    return await this.taskService.updateTaskPatch(1, payload);
+    return await this.taskService.updateTaskPatch(payload);
   }
 }

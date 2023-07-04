@@ -13,7 +13,7 @@ import { DentalModifierEntity } from 'src/entities/dental-modifier.entity';
 import { CcamUnitPriceEntity } from 'src/entities/ccamunitprice.entity';
 import { CcamEntity } from 'src/entities/ccam.entity';
 import { query } from 'express';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class TaskService {
@@ -42,15 +42,14 @@ export class TaskService {
     await this.eventTaskRepository.update(payload.id, { state: 0 });
   }
 
-  async updateTaskPatch(
-    groupId: number,
-    { name, pk, value }: EventTaskPatchDto,
-  ) {
+  // file: php/event/task/patch.php line 32-544
+  // up date lai thong tin task cua event
+  async updateTaskPatch({ name, pk, value }: EventTaskPatchDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
-    let oldDate: EventTaskEntity = null;
+    let oldEventTask: EventTaskEntity = null;
     let oldComplement: EnumDentalEventTaskComp = null;
     let refreshAmount = false;
     const id: number = pk;
@@ -106,7 +105,7 @@ export class TaskService {
 
         case 'date':
           // Modification du complément prestation
-          oldDate = await this.eventTaskRepository.findOneBy({ id: id });
+          oldEventTask = await this.eventTaskRepository.findOneBy({ id: id });
 
           // Modification de la date
           await queryRunner.query(
@@ -465,90 +464,138 @@ export class TaskService {
       /**
        * RÈGLES D’ASSOCIATION DES RADIOGRAPHIES EN MÉDECINE BUCCO-DENTAIRE.
        */
-      const act: EventTaskEntity = await this.eventTaskRepository.findOneBy({
-        id: id,
-      });
-      const radiographies: {
-        id: number;
-        name: string;
-        coef: number;
-        paragraphe: string;
-      }[] = await queryRunner.query(
-        `
-            SELECT
-                T_EVENT_TASK_ETK.ETK_ID as id,
-                T_EVENT_TASK_ETK.ETK_NAME as name,
-                T_DENTAL_EVENT_TASK_DET.DET_COEF as coef,
-                ccam_menu.paragraphe
-            FROM T_EVENT_TASK_ETK
-            JOIN T_DENTAL_EVENT_TASK_DET
-            JOIN ccam
-            JOIN ccam_menu
-            WHERE
-                T_EVENT_TASK_ETK.USR_ID = ? AND
-                T_EVENT_TASK_ETK.CON_ID = ? AND
-                T_EVENT_TASK_ETK.ETK_DATE = ? AND
-                T_EVENT_TASK_ETK.ETK_STATE = 1 AND
-                T_EVENT_TASK_ETK.ETK_ID = T_DENTAL_EVENT_TASK_DET.ETK_ID AND
-                (T_DENTAL_EVENT_TASK_DET.DET_EXCEEDING IS NULL OR T_DENTAL_EVENT_TASK_DET.DET_EXCEEDING != ?) AND
-                T_DENTAL_EVENT_TASK_DET.ccam_id = ccam.id AND
-                ccam.ccam_menu_id = ccam_menu.id AND
-                ccam_menu.paragraphe IN ('07.01.04.01', '11.01.03', '11.01.04')
-            ORDER BY ETK_AMOUNT DESC`,
-        [
-          act.usrId,
-          act.patient.id,
-          dayjs(act.date).format('YYYY-MM-DD'),
-          ExceedingEnum.NON_REMBOURSABLE,
-        ],
-      );
+      const calculHonoraires = async (
+        userId: number,
+        patientId: number,
+        date: string,
+      ): Promise<string[]> => {
+        console.log('radiographies', date);
+        console.log(
+          'radiographies',
+          dayjs(date.toString()).format('YYYY-MM-DD'),
+        );
+        const radiographies: {
+          id: number;
+          name: string;
+          coef: number;
+          paragraphe: string;
+        }[] = await queryRunner.query(
+          `
+              SELECT
+                  T_EVENT_TASK_ETK.ETK_ID as id,
+                  T_EVENT_TASK_ETK.ETK_NAME as name,
+                  T_DENTAL_EVENT_TASK_DET.DET_COEF as coef,
+                  ccam_menu.paragraphe
+              FROM T_EVENT_TASK_ETK
+              JOIN T_DENTAL_EVENT_TASK_DET
+              JOIN ccam
+              JOIN ccam_menu
+              WHERE
+                  T_EVENT_TASK_ETK.USR_ID = ? AND
+                  T_EVENT_TASK_ETK.CON_ID = ? AND
+                  T_EVENT_TASK_ETK.ETK_DATE = ? AND
+                  T_EVENT_TASK_ETK.ETK_STATE = 1 AND
+                  T_EVENT_TASK_ETK.ETK_ID = T_DENTAL_EVENT_TASK_DET.ETK_ID AND
+                  (T_DENTAL_EVENT_TASK_DET.DET_EXCEEDING IS NULL OR T_DENTAL_EVENT_TASK_DET.DET_EXCEEDING != ?) AND
+                  T_DENTAL_EVENT_TASK_DET.ccam_id = ccam.id AND
+                  ccam.ccam_menu_id = ccam_menu.id AND
+                  ccam_menu.paragraphe IN ('07.01.04.01', '11.01.03', '11.01.04')
+              ORDER BY ETK_AMOUNT DESC`,
+          [
+            userId,
+            patientId,
+            dayjs(date).format('YYYY-MM-DD'),
+            ExceedingEnum.NON_REMBOURSABLE,
+          ],
+        );
+        console.log('radiographies', dayjs(date).format('YYYY-MM-DD'));
 
-      const discountedCodes: string[] = [];
-      if (radiographies.length > 0) {
-        const reduceResult = radiographies.reduce((reduce, radiographie) => {
-          return (
-            reduce || ['11.01.03', '11.01.04'].includes(radiographie.paragraphe)
-          );
-        }, false);
-        if (reduceResult) {
-          for (const [index, radiographie] of Object.entries(radiographies)) {
-            if (!index) {
-              await queryRunner.query(
-                `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1 WHERE ETK_ID = ${radiographie.id}`,
-              );
+        const discountedCodes: string[] = [];
+        if (radiographies.length > 0) {
+          const reduceResult = radiographies.reduce((reduce, radiographie) => {
+            return (
+              reduce ||
+              ['11.01.03', '11.01.04'].includes(radiographie.paragraphe)
+            );
+          }, false);
+          if (reduceResult) {
+            for (const [index, radiographie] of Object.entries(radiographies)) {
+              if (!index) {
+                await queryRunner.query(
+                  `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1 WHERE ETK_ID = ${radiographie.id}`,
+                );
+                if (Number(radiographie.coef) === 0.5) {
+                  await queryRunner.query(
+                    `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
+                  );
+                  await queryRunner.query(
+                    `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ${radiographie.id}`,
+                  );
+                }
+              } else if (Number(radiographie.coef) === 1) {
+                await queryRunner.query(
+                  `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 2, DET_COEF = 0.5 WHERE ETK_ID = ${radiographie.id}`,
+                );
+                await queryRunner.query(
+                  `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT / 2 WHERE ETK_ID = ${radiographie.id}`,
+                );
+                discountedCodes.push(radiographie.name);
+              }
+            }
+          } else {
+            for (const [index, radiographie] of Object.entries(radiographies)) {
               if (Number(radiographie.coef) === 0.5) {
                 await queryRunner.query(
-                  `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
+                  `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = NULL, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
                 );
                 await queryRunner.query(
                   `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ${radiographie.id}`,
                 );
               }
-            } else if (Number(radiographie.coef) === 1) {
-              await queryRunner.query(
-                `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 2, DET_COEF = 0.5 WHERE ETK_ID = ${radiographie.id}`,
-              );
-              await queryRunner.query(
-                `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT / 2 WHERE ETK_ID = ${radiographie.id}`,
-              );
-              discountedCodes.push(radiographie.name);
-            }
-          }
-        } else {
-          for (const [index, radiographie] of Object.entries(radiographies)) {
-            if (Number(radiographie.coef) === 0.5) {
-              await queryRunner.query(
-                `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = NULL, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
-              );
-              await queryRunner.query(
-                `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ${radiographie.id}`,
-              );
             }
           }
         }
+        return discountedCodes;
+      };
+
+      const act: EventTaskEntity = await this.eventTaskRepository.findOneBy({
+        id: id,
+      });
+      console.log('EventTaskEntity', act);
+      const discountedCodes: string[] = await calculHonoraires(
+        act.id,
+        act.conId,
+        act.date,
+      );
+      console.log('discountedCodes', discountedCodes);
+      const messages: string[] = [];
+      for (const discountedCode in discountedCodes) {
+        // @TODO translate
+        //   $messages[] = $translator->trans('prestation.warning.associationRadiographie', [
+        //     '%name%' => $discountedCode,
+        // ]);
+        messages.push(
+          `L'acte ${discountedCode} va être facturé à 50% car il s'agit d'un acte de radiographie conventionnelle et doit être décoté par rapport à l'acte de radiographie le plus cher effectué lors de la séance.`,
+        );
       }
-      // for (let discountedCode in discountedCodes) {
-      // }
+      if (oldEventTask) {
+        const discountedCodes2: string[] = await calculHonoraires(
+          act.id,
+          act.conId,
+          oldEventTask.date,
+        );
+        for (const discountedCode in discountedCodes2) {
+          // @TODO translate
+          // $messages[] = $translator->trans('prestation.warning.associationRadiographie',
+          //   '%name%' => $discountedCode,
+          // ]);
+          messages.push(
+            `L'acte ${discountedCode} va être facturé à 50% car il s'agit d'un acte de radiographie conventionnelle et doit être décoté par rapport à l'acte de radiographie le plus cher effectué lors de la séance.`,
+          );
+        }
+      }
+      await queryRunner.commitTransaction();
+      return { messages: messages ? messages : [] };
     } catch (e) {
       await queryRunner.rollbackTransaction();
       return { message: e.message, code: 0 };
