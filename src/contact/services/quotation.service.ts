@@ -9,14 +9,16 @@ import { UserService } from 'src/user/services/user.service';
 import { PatientService } from 'src/patient/service/patient.service';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { PermissionService } from 'src/user/services/permission.service';
+import { PerCode } from 'src/constants/permissions';
+import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-request.exception';
 
 @Injectable()
 export class QuotationService {
   constructor(
     @InjectRepository(DentalQuotationEntity)
     private readonly repo: Repository<DentalQuotationEntity>,
-    private userService: UserService,
-    private patientService: PatientService,
+    private permissionService: PermissionService,
     @InjectRepository(DentalQuotationEntity)
     private readonly detailQuotationRepo: Repository<DentalQuotationEntity>,
   ) {}
@@ -42,11 +44,15 @@ export class QuotationService {
     identity: UserIdentity,
     id: number,
   ): Promise<SuccessResponse> {
-    // @TODO: Vérification de la permission de suppression.
-    // if (!$entityManager->getRepository("\App\Entities\User")->hasPermission("PERMISSION_DELETE", 8, $userId)) :
-    //     Response::sendJSONResponse(array("message" => trans("http_error_forbidden")), Response::STATUS_FORBIDDEN);
-    //     exit;
-    // endif;
+    if (
+      !this.permissionService.hasPermission(
+        PerCode.PERMISSION_DELETE,
+        8,
+        identity.id,
+      )
+    ) {
+      throw new CForbiddenRequestException(ErrorCode.FORBIDDEN);
+    }
     const quotation = await this.findQuotationByID(id);
 
     if (

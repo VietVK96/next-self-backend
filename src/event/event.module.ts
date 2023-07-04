@@ -4,10 +4,29 @@ import { EventEntity } from 'src/entities/event.entity';
 import { EventController } from './event.controller';
 import { FindEventService } from './services/find.event.service';
 import { SaveEventService } from './services/save.event.service';
+import { ContactEntity } from 'src/entities/contact.entity';
+import { EventOccurrenceEntity } from 'src/entities/event-occurrence.entity';
+import { PlanEventEntity } from 'src/entities/plan-event.entity';
+import { UserEntity } from 'src/entities/user.entity';
+import { EventService } from './services/event.service';
+import { PermissionService } from 'src/user/services/permission.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([EventEntity])],
+  imports: [
+    TypeOrmModule.forFeature([
+      EventEntity,
+      EventOccurrenceEntity,
+      ContactEntity,
+      UserEntity,
+      PlanEventEntity,
+    ]),
+  ],
   controllers: [EventController],
-  providers: [FindEventService, SaveEventService],
+  providers: [
+    FindEventService,
+    SaveEventService,
+    EventService,
+    PermissionService,
+  ],
 })
 export class EventModule {}

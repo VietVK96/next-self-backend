@@ -11,6 +11,9 @@ import { UserService } from 'src/user/services/user.service';
 import { PatientService } from 'src/patient/service/patient.service';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { UpdateNoteDto } from '../dto/noteUpdate.dto';
+import { PermissionService } from 'src/user/services/permission.service';
+import { PerCode } from 'src/constants/permissions';
+import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-request.exception';
 
 @Injectable()
 export class NoteService {
@@ -19,6 +22,7 @@ export class NoteService {
     private readonly repo: Repository<ContactNoteEntity>,
     private userService: UserService,
     private patientService: PatientService,
+    private permissionService: PermissionService,
   ) {}
   async store(payload: StoreNoteDto, identity: UserIdentity) {
     try {
@@ -74,11 +78,19 @@ export class NoteService {
     });
   }
 
-  async deleteByID(id: number): Promise<SuccessResponse> {
-    // @TODO: Vérification de la permission de suppression des modèles de courriers.
-    // if (!$em->getRepository('App\Entities\User')->hasPermission('PERMISSION_DELETE', 8, $userId)) {
-    // Response::abort(Response::STATUS_FORBIDDEN);
-    // }
+  async deleteByID(
+    id: number,
+    identity: UserIdentity,
+  ): Promise<SuccessResponse> {
+    if (
+      !this.permissionService.hasPermission(
+        PerCode.PERMISSION_DELETE,
+        8,
+        identity.id,
+      )
+    ) {
+      throw new CForbiddenRequestException(ErrorCode.FORBIDDEN);
+    }
     try {
       const contactNote = await this.findByID(id);
       if (!contactNote)
