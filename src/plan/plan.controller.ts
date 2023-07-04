@@ -34,6 +34,7 @@ export class PlanController {
     return this.PlanService.findAll(request);
   }
 
+  // File /php/plan/delete.php
   @Delete()
   @UseGuards(TokenGuard)
   async deleteOne(
@@ -43,6 +44,7 @@ export class PlanController {
     return this.PlanService.deleteOne(request, identity);
   }
 
+  //File /php/plan/find.php
   @Get('/get')
   @UseGuards(TokenGuard)
   async findOne(
@@ -52,6 +54,7 @@ export class PlanController {
     return this.PlanService.findOne(request, identity.org);
   }
 
+  //File /php/plan.php
   @Post()
   @UseGuards(TokenGuard)
   async save(

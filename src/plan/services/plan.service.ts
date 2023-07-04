@@ -48,6 +48,7 @@ export class PlanService {
     }
   }
 
+  //File /application/Services/Plan.php, line 103-367
   async _getPlan(id: number, groupId: number): Promise<findOnePlanRes> {
     let plan: findOnePlanRes = null;
     const planQuery = `
@@ -305,6 +306,7 @@ export class PlanService {
     return plan;
   }
 
+  //File /application/Services/Plan.php, line 377-924
   async _save(data: any, groupId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     const events = [];
@@ -850,6 +852,7 @@ export class PlanService {
     return plansResult;
   }
 
+  //File /php/plan/delete.php, line 6-203
   async deleteOne(request: IdStructDto, identity: UserIdentity) {
     const { id } = request;
     const queryRunner = this.dataSource.createQueryRunner();
@@ -1014,6 +1017,7 @@ export class PlanService {
     }
   }
 
+  //File /php/plan/find.php, line 6-46
   async findOne(request: IdStructDto, organizationId: number) {
     try {
       const planificationId = request.id;
@@ -1036,6 +1040,7 @@ export class PlanService {
     }
   }
 
+  //File /php/plan.php, line 6-55
   async save(
     request: ActionSaveStructDto,
     body: BodySaveStructDto,
