@@ -8,6 +8,7 @@ import { UserEntity } from 'src/entities/user.entity';
 import { DataSource } from 'typeorm';
 import {
   SessionRes,
+  UserPractitionersRes,
   UserResourceRes,
   UserUserPreferenceRes,
   UserUserRes,
@@ -26,10 +27,11 @@ export class GetSessionService {
     return data;
   }
 
+  //ecoodentist-1.31.0\php\session.php(line 32 - 120)
   async getUser(userId: number): Promise<UserUserRes> {
     const queryBuilder = this.dataSource.createQueryBuilder();
 
-    const user = await queryBuilder
+    const user: UserUserRes = await queryBuilder
       .select([
         'USR.USR_ID as id',
         'USR.USR_ADMIN as admin',
@@ -63,7 +65,7 @@ export class GetSessionService {
       .where('USR.USR_ID = :userId', { userId })
       .getRawOne();
 
-    const userPreferences = await queryBuilder
+    const userPreferences: UserUserPreferenceRes = await queryBuilder
       .select([
         'USP.USR_ID as id',
         'USP.USP_LANGUAGE as language',
@@ -112,7 +114,7 @@ export class GetSessionService {
       .getRawOne();
 
     userPreferences.days = Array.from(
-      String(userPreferences.days.toString(2)).split('').reverse(),
+      String(userPreferences.days.toString()).split('').reverse(),
     )
       .map((digit, index) => (digit === '1' ? index : null))
       .filter((digit) => digit !== null);
@@ -173,7 +175,10 @@ export class GetSessionService {
     return data;
   }
 
-  async getPractitioners(userId: number, orgId: number) {
+  async getPractitioners(
+    userId: number,
+    orgId: number,
+  ): Promise<UserPractitionersRes[]> {
     const queryBuiler = this.dataSource.createQueryBuilder();
     const select = `
       USR.USR_ID as id,

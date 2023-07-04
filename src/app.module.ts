@@ -9,10 +9,17 @@ import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { EntityModule } from './entities';
 import { IRedisConfig } from './common/config/redis.config';
+import { StickyNoteModule } from './sticky-note/sticky-note.module';
+import { WaitingRoomModule } from './waiting-room/waiting-room.module';
 import { AntecedentPrestationModule } from './antecedent-prestation/antecedent-prestation.module';
-import { PatientModule } from './patients/patient.module';
-import { MedicalDevicesModule } from './medialDevices/medicalDevices.module';
 import { EventModule } from './event/event.module';
+import { PatientModule } from './patient/patient.module';
+import { MedicalDevicesModule } from './medial-devices/medical-devices.module';
+import { UploadModule } from './upload/upload.module';
+import { UserModule } from './user/user.module';
+import { AddressModule } from './address/address.module';
+import { PlanModule } from './plans/plan.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -33,7 +40,7 @@ import { EventModule } from './event/event.module';
       inject: [ConfigService],
       useFactory: async (c: ConfigService) => {
         const cacheConfig = c.get<IRedisConfig>('redis');
-        const storeConfig = {
+        const storeConfig: any = {
           socket: {
             host: cacheConfig.host,
             port: cacheConfig.port,
@@ -52,10 +59,17 @@ import { EventModule } from './event/event.module';
     EntityModule,
     ContactModule,
     AuthModule,
+    StickyNoteModule,
+    WaitingRoomModule,
     AntecedentPrestationModule,
     PatientModule,
     MedicalDevicesModule,
     EventModule,
+    UserModule,
+    AddressModule,
+    PlanModule,
+    MailModule,
+    UploadModule,
   ],
 })
 export class AppModule {}
