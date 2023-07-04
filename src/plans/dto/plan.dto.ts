@@ -41,7 +41,7 @@ export class FindAllStructDto {
   type?: EnumPlanPlfType;
 }
 
-export class DeleteOneStructDto {
+export class IdStructDto {
   @ApiProperty({
     required: false,
   })

@@ -5,7 +5,7 @@ import {
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
-import { DeleteOneStructDto, FindAllStructDto } from './dto/plan.dto';
+import { IdStructDto, FindAllStructDto } from './dto/plan.dto';
 import { PlanService } from './services/plan.service';
 
 @ApiBearerAuth()
@@ -24,9 +24,18 @@ export class PlanController {
   @Delete()
   @UseGuards(TokenGuard)
   async deleteOne(
-    @Query() request: DeleteOneStructDto,
+    @Query() request: IdStructDto,
     @CurrentUser() identity: UserIdentity,
   ) {
     return this.PlanService.deleteOne(request, identity);
+  }
+
+  @Get('/get')
+  @UseGuards(TokenGuard)
+  async findOne(
+    @Query() request: IdStructDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.PlanService.findOne(request, identity.org);
   }
 }

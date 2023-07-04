@@ -1,9 +1,4 @@
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  HttpStatus,
-} from '@nestjs/common';
+import { ExceptionFilter, Catch, HttpStatus } from '@nestjs/common';
 import { HttpException } from '@nestjs/common';
 
 // application/Controller/ExceptionController.php Line:32->41.
