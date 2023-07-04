@@ -45,7 +45,7 @@ export class TaskService {
       if (payload?.name) {
         if (payload?.name === 'name' && (payload.value as string)) {
           await this.eventTaskRepository.update(payload.pk, {
-            name: payload.value,
+            label: payload.value,
           });
         }
         if (payload?.name === 'msg' && (payload.value as string)) {
