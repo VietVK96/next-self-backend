@@ -10,15 +10,20 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { EntityModule } from './entities';
 import { IRedisConfig } from './common/config/redis.config';
 import { SavePatienttModule } from './save-patient/patient.module';
-import { StickyNoteModule } from './stickyNote/stickyNote.module';
-import { WaitingRoomModule } from './waitingRoom/waitingRoom.module';
+import { StickyNoteModule } from './sticky-note/sticky-note.module';
+import { WaitingRoomModule } from './waiting-room/waiting-room.module';
 import { AntecedentPrestationModule } from './antecedent-prestation/antecedent-prestation.module';
 import { PatientModule } from './patient/patient.module';
-import { MedicalDevicesModule } from './medialDevices/medicalDevices.module';
-import { UserModule } from './user/userModule';
+import { PrestationModule } from './prestation/prestation.module';
+import { MedicalDevicesModule } from './medial-devices/medical-devices.module';
+import { EventModule } from './event/event.module';
+import { MemoModule } from './memo/memo.module';
+import { UserModule } from './user/user.module';
 import { AddressModule } from './address/address.module';
 import { PlanModule } from './plans/plan.module';
 import { MailModule } from './mail/mail.module';
+import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -39,7 +44,7 @@ import { MailModule } from './mail/mail.module';
       inject: [ConfigService],
       useFactory: async (c: ConfigService) => {
         const cacheConfig = c.get<IRedisConfig>('redis');
-        const storeConfig = {
+        const storeConfig: any = {
           socket: {
             host: cacheConfig.host,
             port: cacheConfig.port,
@@ -64,10 +69,16 @@ import { MailModule } from './mail/mail.module';
     AntecedentPrestationModule,
     PatientModule,
     MedicalDevicesModule,
+    EventModule,
+    PrestationModule,
+    EventModule,
+    MemoModule,
     UserModule,
     AddressModule,
     PlanModule,
     MailModule,
+    UploadModule,
+    FusionPatientModule,
   ],
 })
 export class AppModule {}

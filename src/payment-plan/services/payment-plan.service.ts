@@ -53,6 +53,8 @@ export class PaymentPlanService {
     if (paymentSchedule.lines) {
       paymentSchedule.lines = await qrLine.getRawOne();
     }
+
+    return paymentSchedule;
   }
 
   async delete(id, groupId) {

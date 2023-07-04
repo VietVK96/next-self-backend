@@ -17,7 +17,7 @@ import {
   contactPhoneRes,
   FindAllRecentlyTreatedRes,
 } from '../response/findall.recentlyTreated.res';
-import { ColorHelper } from 'src/utils/ColorHelper';
+import { ColorHelper } from 'src/common/util/color-helper';
 
 @Injectable()
 export class FindContactService {
