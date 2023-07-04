@@ -9,7 +9,7 @@ import { HttpException } from '@nestjs/common';
 // application/Controller/ExceptionController.php Line:32->41.
 @Catch()
 export class ShowActionExceptionFilter implements ExceptionFilter {
-  catch(exception: Error, host: ArgumentsHost): any {
+  catch(exception: Error): any {
     const code =
       exception instanceof HttpException
         ? exception.getStatus()
