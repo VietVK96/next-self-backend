@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { MemoService } from './services/memo.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreateUpdateMemoDto } from './dto/createUpdate.memo.dto';
+import { MemoRes } from './response/memo.res';
 
 @Controller('memo')
 @ApiBearerAuth()
@@ -19,5 +20,17 @@ export class MemoController {
     console.log(id);
 
     return this.memoService.show(id);
+  }
+
+  @Delete('delete/:id')
+  async delete(@Param('id') id: number) {
+    console.log(id);
+
+    return this.memoService.delete(id);
+  }
+
+  @Post('update/:id')
+  async update(@Param('id') id: number, @Body() payload: MemoRes) {
+    return this.memoService.update(id, payload);
   }
 }
