@@ -88,3 +88,40 @@ export class FindAllEventDto {
     name?: string;
   };
 }
+
+export class BgEventDto {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  resourceId: number;
+
+  @ApiProperty()
+  resourceName: string;
+
+  @ApiProperty()
+  start_date: string;
+
+  @ApiProperty()
+  end_date: string;
+
+  @ApiProperty()
+  color?: number;
+
+  @ApiProperty()
+  title?: string;
+}
+
+export class MemoDto {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  resourceId: number;
+
+  @ApiProperty()
+  resourceName: string;
+
+  @ApiProperty()
+  date?: string;
+}

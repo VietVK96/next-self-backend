@@ -67,6 +67,7 @@ import { UploadModule } from './upload/upload.module';
     AntecedentPrestationModule,
     PatientModule,
     MedicalDevicesModule,
+    EventModule,
     PrestationModule,
     EventModule,
     MemoModule,
