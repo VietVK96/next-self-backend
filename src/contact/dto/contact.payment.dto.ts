@@ -233,22 +233,22 @@ export interface IDeadline {
   amount_prosthesis?: number;
 }
 
-interface ICorrespondent {
+export interface ICorrespondent {
   id?: number | null;
   lastname?: string | null;
   firstname?: string | null;
 }
 
-interface ICareSheet {
+export interface ICareSheet {
   id?: number;
 }
 
-interface IDebtor {
+export interface IDebtor {
   id?: number;
   name?: string;
 }
 
-interface IPractitioner {
+export interface IPractitioner {
   id?: number;
   lastname?: number;
   firstname?: string;
