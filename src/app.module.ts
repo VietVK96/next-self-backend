@@ -12,13 +12,15 @@ import { IRedisConfig } from './common/config/redis.config';
 import { StickyNoteModule } from './sticky-note/sticky-note.module';
 import { WaitingRoomModule } from './waiting-room/waiting-room.module';
 import { AntecedentPrestationModule } from './antecedent-prestation/antecedent-prestation.module';
-import { PatientModule } from './patient/patient.module';
-import { MedicalDevicesModule } from './medial-devices/medical-devices.module';
-import { UploadModule } from './upload/upload.module';
+import { EventModule } from './event/event.module';
+import { MemoModule } from './memo/memo.module';
 import { UserModule } from './user/user.module';
 import { AddressModule } from './address/address.module';
 import { PlanModule } from './plans/plan.module';
 import { MailModule } from './mail/mail.module';
+import { UploadModule } from './upload/upload.module';
+import { PatientModule } from './patient/patient.module';
+import { MedicalDevicesModule } from './medial-devices/medical-devices.module';
 
 @Module({
   imports: [
@@ -63,6 +65,8 @@ import { MailModule } from './mail/mail.module';
     AntecedentPrestationModule,
     PatientModule,
     MedicalDevicesModule,
+    EventModule,
+    MemoModule,
     UserModule,
     AddressModule,
     PlanModule,
