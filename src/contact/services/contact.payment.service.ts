@@ -155,7 +155,7 @@ export class ContactPaymentService {
     }
 
     // Montant soins OU prothèses requis
-    if (!amountCare && amountProsthesis) {
+    if (!amountCare && !amountProsthesis) {
       throw new CBadRequestException(
         'Invalid amount care and amount prosthesis',
       );
