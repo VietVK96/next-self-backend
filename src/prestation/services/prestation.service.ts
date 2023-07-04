@@ -52,6 +52,7 @@ export class PrestationService {
         DET.DET_CCAM_MODIFIER ccamModifier,
         DET.exemption_code,
         DET.exceptional_refund,
+        DET.DET_ALD ald,
         DET.DET_SECU_AMOUNT secuAmount,
         DET.FSE_ID caresheetId,
         ccam.id AS ccam_id,
@@ -107,6 +108,11 @@ export class PrestationService {
             }
             break;
         }
+
+        record['medical'] = {
+          ald: Boolean(record.ald),
+        };
+        delete record.ald;
         return record;
       });
       return prestations;
