@@ -185,7 +185,7 @@ export class CashingEntity {
     scale: 2,
     default: 0.0,
   })
-  amount?: string;
+  amount?: number;
 
   /**
    * @ORM\Column(name="amount_care", type="decimal", precision=10, scale=2)
@@ -198,7 +198,7 @@ export class CashingEntity {
     scale: 2,
     default: 0.0,
   })
-  amountCare?: string;
+  amountCare?: number;
 
   /**
    * @ORM\Column(name="amount_prosthesis", type="decimal", precision=10, scale=2)
@@ -211,7 +211,7 @@ export class CashingEntity {
     scale: 2,
     default: 0.0,
   })
-  amountProsthesis?: string;
+  amountProsthesis?: number;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\User", inversedBy="cashings")
@@ -295,6 +295,14 @@ export class CashingEntity {
     name: 'LBK_ID',
   })
   libraryBank?: LibraryBankEntity;
+
+  @Column({
+    name: 'FSE_ID',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  fseId?: number;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Slip\Check", inversedBy="cashings")

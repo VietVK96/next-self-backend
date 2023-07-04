@@ -17,12 +17,12 @@ import { PrestationModule } from './prestation/prestation.module';
 import { MedicalDevicesModule } from './medial-device/medical-device.module';
 import { EventModule } from './event/event.module';
 import { MemoModule } from './memo/memo.module';
-import { UserModule } from './user/user.module';
 import { AddressModule } from './address/address.module';
 import { PlanModule } from './plan/plan.module';
 import { MailModule } from './mail/mail.module';
 import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
 import { UploadModule } from './upload/upload.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
