@@ -6,6 +6,7 @@ import {
   Param,
   UseGuards,
   Get,
+  Patch,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { NoteService } from './services/note.service';
@@ -16,6 +17,7 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { SuccessResponse } from 'src/common/response/success.res';
+import { UpdateNoteDto } from './dto/noteUpdate.dto';
 
 @ApiBearerAuth()
 @Controller('/contact')
@@ -25,8 +27,11 @@ export class NoteController {
   // php/contact/note/store.php
   @Post('note/add')
   @UseGuards(TokenGuard)
-  async store(@Body() body: StoreNoteDto) {
-    return this.service.store(body);
+  async store(
+    @Body() body: StoreNoteDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.service.store(body, identity);
   }
 
   /**
@@ -56,5 +61,15 @@ export class NoteController {
     @Param('id') id: number,
   ) {
     return await this.service.findByID(id);
+  }
+
+  /**
+   * php/contact/note/update.php 14->20
+   * get contact note by id
+   */
+  @Patch('note/:id')
+  @UseGuards(TokenGuard)
+  async updateNote(@Body() payload: UpdateNoteDto) {
+    return await this.service.update(payload);
   }
 }

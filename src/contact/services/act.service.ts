@@ -1,14 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { TraceabilityEntity } from 'src/entities/traceability.entity';
 import { Repository } from 'typeorm/repository/Repository';
 import { UpdateTraceabilitiesDto } from '../dto/act.contact.dto';
+import { EventTaskEntity } from 'src/entities/event-task.entity';
+import { EntityManager, In } from 'typeorm';
+import { TraceabilityStatusEnum } from 'src/constants/act';
 
 @Injectable()
 export class ActServices {
   constructor(
     @InjectRepository(TraceabilityEntity)
     private traceabilityRepository: Repository<TraceabilityEntity>,
+    @InjectRepository(EventTaskEntity)
+    private eventTaskRepository: Repository<EventTaskEntity>,
+    @InjectEntityManager()
+    private readonly entityManager: EntityManager,
   ) {}
 
   async getTraceability(id: number) {
@@ -31,32 +38,62 @@ export class ActServices {
     });
   }
 
-  async updateTraceabilities(id: number, payload: UpdateTraceabilitiesDto) {
-    const data = await this.traceabilityRepository.find({
-      where: { actId: id },
-      select: ['id'],
+  async updateTraceabilities(
+    id: number,
+    payload: UpdateTraceabilitiesDto,
+    organizationId: number,
+  ) {
+    await this.entityManager.transaction(async (manager) => {
+      const etk = await this.eventTaskRepository.findOne({
+        where: { id: id },
+      });
+      const data = await this.traceabilityRepository.find({
+        where: { actId: id },
+        select: ['id'],
+      });
+      const idUpdateDate = payload.traceabilities.filter((e) => e.id);
+      const idDelete = data.filter(
+        (e) => !idUpdateDate.find((v) => v.id == e.id),
+      );
+
+      if (idDelete.length) {
+        const idETKs = idDelete.map((idETK) => idETK.id);
+        const etkDelete = await this.eventTaskRepository.find({
+          where: { id: In(idETKs) },
+        });
+        await manager.save(
+          EventTaskEntity,
+          etkDelete?.map((etk) => ({
+            ...etk,
+            traceabilityStatus: TraceabilityStatusEnum.UNFILLED,
+          })),
+        );
+      }
+      if (data.length) {
+        await manager.save(EventTaskEntity, {
+          id,
+          traceabilityStatus: TraceabilityStatusEnum.FILLED,
+        });
+      }
+      const req = payload.traceabilities.map((up) => {
+        return up?.id
+          ? {
+              medicalDeviceId: up?.medicalDeviceId,
+              reference: up?.reference,
+              observation: up?.observation,
+              actId: id,
+              id: up?.id,
+              organizationId: organizationId,
+            }
+          : {
+              medicalDeviceId: up?.medicalDeviceId,
+              reference: up?.reference,
+              observation: up?.observation,
+              actId: id,
+              organizationId: organizationId,
+            };
+      });
+      return await manager.save(TraceabilityEntity, req);
     });
-    const idUpdateDate = payload.traceabilities.filter((e) => e.id);
-    const idDelete = data.filter(
-      (e) => !idUpdateDate.find((v) => v.id == e.id),
-    );
-    await this.traceabilityRepository.delete(idDelete.map((id) => id.id));
-    const req = payload.traceabilities.map((up) => {
-      return up?.id
-        ? {
-            medicalDeviceId: up?.medicalDeviceId,
-            reference: up?.reference,
-            observation: up?.observation,
-            actId: id,
-            id: up?.id,
-          }
-        : {
-            medicalDeviceId: up?.medicalDeviceId,
-            reference: up?.reference,
-            observation: up?.observation,
-            actId: id,
-          };
-    });
-    return await this.traceabilityRepository.save(req);
   }
 }

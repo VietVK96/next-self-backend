@@ -18,7 +18,6 @@ import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { TaskService } from './services/task.service';
 import { TaskController } from './task.controller';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
-import { UserModule } from 'src/user/userModule';
 import { PatientModule } from 'src/patient/patient.module';
 import { PermissionService } from 'src/user/services/permission.service';
 import { FamilyController } from './family.controller';
@@ -29,6 +28,10 @@ import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { DentalModifierEntity } from 'src/entities/dental-modifier.entity';
 import { CcamUnitPriceEntity } from 'src/entities/ccamunitprice.entity';
 import { CcamEntity } from 'src/entities/ccam.entity';
+import { UserModule } from 'src/user/user.module';
+import { CashingEntity } from 'src/entities/cashing.entity';
+import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
+import { ContactUserEntity } from 'src/entities/contact-user.entity';
 
 @Module({
   controllers: [
@@ -68,6 +71,9 @@ import { CcamEntity } from 'src/entities/ccam.entity';
       DentalModifierEntity,
       CcamUnitPriceEntity,
       CcamEntity,
+      CashingEntity,
+      CashingContactEntity,
+      ContactUserEntity,
     ]),
     UserModule,
     PatientModule,

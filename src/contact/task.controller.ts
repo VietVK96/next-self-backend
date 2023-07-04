@@ -1,18 +1,6 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import {
-  CurrentUser,
-  TokenGuard,
-  UserIdentity,
-} from 'src/common/decorator/auth.decorator';
+import { TokenGuard } from 'src/common/decorator/auth.decorator';
 import { TaskService } from './services/task.service';
 import { EventTaskDto, EventTaskPatchDto } from './dto/task.contact.dto';
 
@@ -35,7 +23,7 @@ export class TaskController {
 
   @Post('task/patch')
   @UseGuards(TokenGuard)
-  async updateTaskPatch(@Body() payload: EventTaskPatchDto) {
-    return await this.taskService.updateTaskPatch(payload);
+  async updateEventTaskPatch(@Body() payload: EventTaskPatchDto) {
+    return await this.taskService.updateEventTaskPatch(payload);
   }
 }

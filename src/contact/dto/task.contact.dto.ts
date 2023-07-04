@@ -15,22 +15,28 @@ export class EventTaskDto {
   user?: number;
 }
 
-@ApiExtraModels()
 export class EventTaskPatchDto {
-  @ApiProperty()
+  @ApiProperty({
+    name: 'name',
+    required: false,
+  })
   name?: string;
 
-  @ApiProperty()
-  value?: string | ValueType;
-
-  @ApiProperty()
+  @ApiProperty({
+    name: 'pk',
+    required: false,
+  })
   pk?: number;
 
-  @ApiProperty()
+  @ApiProperty({
+    name: 'user',
+    required: false,
+  })
   user?: number;
-}
 
-interface ValueType {
-  ngap_key_id: number;
-  coef: any;
+  @ApiProperty({
+    name: 'value',
+    required: false,
+  })
+  value?: string | boolean | { ngap_key_id: number; coef: number };
 }
