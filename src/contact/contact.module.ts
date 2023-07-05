@@ -32,6 +32,7 @@ import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { SaveTaskService } from './services/save.task.service';
 import { CcamEntity } from 'src/entities/ccam.entity';
+import { PatientAmoEntity } from 'src/entities/patient-amo.entity';
 
 @Module({
   controllers: [
@@ -74,6 +75,7 @@ import { CcamEntity } from 'src/entities/ccam.entity';
       UserPreferenceEntity,
       ContactUserEntity,
       CcamEntity,
+      PatientAmoEntity,
     ]),
     UserModule,
     PatientModule,

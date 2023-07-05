@@ -18,6 +18,8 @@ export class SaveTaskService {
     private dataSource: DataSource,
     @InjectRepository(ContactEntity)
     private contactRepo: Repository<ContactEntity>,
+    @InjectRepository(PatientAmoEntity)
+    private patientAmoRepo: Repository<PatientAmoEntity>,
     @InjectRepository(CcamEntity)
     private ccamRepo: Repository<CcamEntity>,
     @InjectRepository(EventTaskEntity)
@@ -28,17 +30,16 @@ export class SaveTaskService {
 
   async save(payload: EventTaskSaveDto) {
     const patient = await this.contactRepo.findOneBy({ id: payload.contact });
-    let codeNatureAssurance = CodeNatureAssuranceEnum.ASSURANCE_MALADIE;
+    const amosOfPatient = await this.patientAmoRepo.findBy({
+      patientId: patient.id,
+    });
     const creationDate = Date.parse(payload.date);
-    console.log('patient.amos', patient);
-    const amos: PatientAmoEntity[] = patient?.amos
-      ? patient.amos.filter(
-          (amo) =>
-            (amo.startDate === null ||
-              Date.parse(amo.startDate) <= creationDate) &&
-            (amo.endDate === null || Date.parse(amo.endDate) >= creationDate),
-        )
-      : [];
+    let codeNatureAssurance = CodeNatureAssuranceEnum.ASSURANCE_MALADIE;
+    const amos: PatientAmoEntity[] = amosOfPatient.filter(
+      (amo) =>
+        (amo.startDate === null || Date.parse(amo.startDate) <= creationDate) &&
+        (amo.endDate === null || Date.parse(amo.endDate) >= creationDate),
+    );
     if (amos.length > 0) {
       codeNatureAssurance = amos[0]
         .codeNatureAssurance as CodeNatureAssuranceEnum;
@@ -192,16 +193,16 @@ export class SaveTaskService {
         await Promise.all(promiseArr);
       }
       act.traceabilityStatus = traceabilityStatus;
-      console.log('act.traceabilityStatus', act);
       await this.eventTaskRepo.save(act);
     }
     const messages = [];
+    console.log('radiographies', act.patient);
     const radiographies: {
       id: number;
       name: string;
       coef: number;
       paragraphe: string;
-    }[] = await queryRunner.query(
+    }[] = await this.dataSource.query(
       `
         SELECT
             T_EVENT_TASK_ETK.ETK_ID as id,
@@ -225,7 +226,7 @@ export class SaveTaskService {
         ORDER BY ETK_AMOUNT DESC`,
       [
         act.usrId,
-        act.patient.id,
+        act.conId,
         dayjs(act.date).format('YYYY-MM-DD'),
         ExceedingEnum.NON_REMBOURSABLE,
       ],
