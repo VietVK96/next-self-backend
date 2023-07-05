@@ -1,4 +1,13 @@
-import { Controller, Delete, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -8,6 +17,8 @@ import {
 import {
   ContactPaymentDeleteByIdDto,
   ContactPaymentFindAllDto,
+  ContactPaymentStoreDto,
+  ContactPaymentUpdateDto,
 } from './dto/contact.payment.dto';
 import { ContactPaymentService } from './services/contact.payment.service';
 
@@ -40,5 +51,19 @@ export class ContactPaymentController {
     @CurrentUser() identity: UserIdentity,
   ) {
     return this.contactPaymentService.deleteById(request.id, identity);
+  }
+
+  // File php\contact\payment\store.php 12->22
+  @Post('/payment/store')
+  @UseGuards(TokenGuard)
+  async store(@Body() payload: ContactPaymentStoreDto) {
+    return this.contactPaymentService.store(payload);
+  }
+
+  // File php\contact\payment\update.php 13->62
+  @Patch('/payment/update')
+  @UseGuards(TokenGuard)
+  async update(@Body() payload: ContactPaymentUpdateDto) {
+    return this.contactPaymentService.update(payload);
   }
 }

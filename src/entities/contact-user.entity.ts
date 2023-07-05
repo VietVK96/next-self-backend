@@ -116,35 +116,35 @@ export class ContactUserEntity {
   })
   relaunchDate?: string;
 
-  /**
-   * @ORM\Column(name="cou_amount_due", type="decimal", precision=10, scale=2)
-   * @var float Montant dû.
-   */
-  @Column({
-    name: 'cou_amount_due',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    nullable: false,
-    default: 0.0,
-  })
-  amountDue?: number;
+  // /**
+  //  * @ORM\Column(name="cou_amount_due", type="decimal", precision=10, scale=2)
+  //  * @var float Montant dû.
+  //  */
+  // @Column({
+  //   name: 'cou_amount_due',
+  //   type: 'decimal',
+  //   precision: 10,
+  //   scale: 2,
+  //   nullable: false,
+  //   default: 0.0,
+  // })
+  // amountDue?: number;
 
-  /**
-   * @ORM\Column(name="cou_amount_due", type="decimal", precision=10, scale=2, options={"default": 0})
-   * @Serializer\Type("float")
-   * @Assert\Type("float")
-   * @Assert\NotNull
-   */
-  @Column({
-    name: 'cou_amount_due',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    nullable: false,
-    default: 0.0,
-  })
-  balance?: number;
+  // /**
+  //  * @ORM\Column(name="cou_amount_due", type="decimal", precision=10, scale=2, options={"default": 0})
+  //  * @Serializer\Type("float")
+  //  * @Assert\Type("float")
+  //  * @Assert\NotNull
+  //  */
+  // @Column({
+  //   name: 'cou_amount_due',
+  //   type: 'decimal',
+  //   precision: 10,
+  //   scale: 2,
+  //   nullable: false,
+  //   default: 0.0,
+  // })
+  // balance?: number;
 
   /**
    * @ORM\Column(name="cou_amount_due", type="decimal", precision=10, scale=2, options={"default": 0})
@@ -164,35 +164,35 @@ export class ContactUserEntity {
   })
   amount?: number;
 
-  /**
-   * @ORM\Column(name="amount_due_care", type="decimal", precision=10, scale=2)
-   * @var float Montant dû des soins.
-   */
-  @Column({
-    name: 'amount_due_care',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    nullable: false,
-    default: 0.0,
-  })
-  amountDueCare?: number;
+  // /**
+  //  * @ORM\Column(name="amount_due_care", type="decimal", precision=10, scale=2)
+  //  * @var float Montant dû des soins.
+  //  */
+  // @Column({
+  //   name: 'amount_due_care',
+  //   type: 'decimal',
+  //   precision: 10,
+  //   scale: 2,
+  //   nullable: false,
+  //   default: 0.0,
+  // })
+  // amountDueCare?: number;
 
-  /**
-   * @ORM\Column(name="amount_due_care", type="decimal", precision=10, scale=2, options={"default": 0})
-   * @Serializer\Type("float")
-   * @Assert\Type("float")
-   * @Assert\NotNull
-   */
-  @Column({
-    name: 'amount_due_care',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    nullable: false,
-    default: 0.0,
-  })
-  balanceCare?: number;
+  // /**
+  //  * @ORM\Column(name="amount_due_care", type="decimal", precision=10, scale=2, options={"default": 0})
+  //  * @Serializer\Type("float")
+  //  * @Assert\Type("float")
+  //  * @Assert\NotNull
+  //  */
+  // @Column({
+  //   name: 'amount_due_care',
+  //   type: 'decimal',
+  //   precision: 10,
+  //   scale: 2,
+  //   nullable: false,
+  //   default: 0.0,
+  // })
+  // balanceCare?: number;
 
   /**
    * @ORM\Column(name="amount_due_care", type="decimal", precision=10, scale=2, options={"default": 0})
@@ -216,15 +216,15 @@ export class ContactUserEntity {
    * @ORM\Column(name="amount_due_prosthesis", type="decimal", precision=10, scale=2)
    * @var float Montant dû des prothèses.
    */
-  @Column({
-    name: 'amount_due_prosthesis',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    nullable: false,
-    default: 0.0,
-  })
-  amountDueProsthesis?: number;
+  // @Column({
+  //   name: 'amount_due_prosthesis',
+  //   type: 'decimal',
+  //   precision: 10,
+  //   scale: 2,
+  //   nullable: false,
+  //   default: 0.0,
+  // })
+  // amountDueProsthesis?: number;
 
   /**
    * @ORM\Column(name="amount_due_prosthesis", type="decimal", precision=10, scale=2, options={"default": 0})
@@ -232,15 +232,15 @@ export class ContactUserEntity {
    * @Assert\Type("float")
    * @Assert\NotNull
    */
-  @Column({
-    name: 'amount_due_prosthesis',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    nullable: false,
-    default: 0.0,
-  })
-  balanceProsthesis?: number;
+  // @Column({
+  //   name: 'amount_due_prosthesis',
+  //   type: 'decimal',
+  //   precision: 10,
+  //   scale: 2,
+  //   nullable: false,
+  //   default: 0.0,
+  // })
+  // balanceProsthesis?: number;
 
   /**
    * @ORM\Column(name="amount_due_prosthesis", type="decimal", precision=10, scale=2, options={"default": 0})
@@ -289,12 +289,12 @@ export class ContactUserEntity {
    * @Serializer\Type("DateTime<'Y-m-d'>")
    * @Assert\Date
    */
-  @Column({
-    name: 'cou_last_care',
-    type: 'date',
-    nullable: true,
-  })
-  visitDate?: string;
+  // @Column({
+  //   name: 'cou_last_care',
+  //   type: 'date',
+  //   nullable: true,
+  // })
+  // visitDate?: string;
 
   /**
    * @ORM\Column(name="cou_force_update", type="integer")

@@ -64,3 +64,19 @@ export class DuplicatePlanDto {
   })
   type?: EnumPlanPlfType;
 }
+export class ActionSaveStructDto {
+  @ApiProperty({
+    required: false,
+  })
+  action?: string;
+
+  @ApiProperty()
+  id?: number;
+}
+
+export class BodySaveStructDto {
+  @ApiProperty({
+    required: false,
+  })
+  action?: string;
+}

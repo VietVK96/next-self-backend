@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 export class UserResourceRes {
   @ApiProperty()
   id?: number;
@@ -116,6 +117,7 @@ export class UserUserSettingRes {
 }
 
 export class UserUserPreferenceRes {
+  @ApiProperty()
   id?: number;
 
   @ApiProperty()

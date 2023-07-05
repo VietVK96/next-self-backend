@@ -18,7 +18,6 @@ import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { TaskService } from './services/task.service';
 import { TaskController } from './task.controller';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
-import { UserModule } from 'src/user/user.module';
 import { PatientModule } from 'src/patient/patient.module';
 import { PermissionService } from 'src/user/services/permission.service';
 import { FamilyController } from './family.controller';
@@ -26,8 +25,15 @@ import { FamilyService } from './services/family.service';
 import { QuotationController } from './quotation.controller';
 import { QuotationService } from './services/quotation.service';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
+import { UserModule } from 'src/user/user.module';
 import { CashingEntity } from 'src/entities/cashing.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
+import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
+import { ContactUserEntity } from 'src/entities/contact-user.entity';
+import { UploadService } from 'src/upload/services/upload.service';
+import { OrganizationService } from 'src/organization/service/organization.service';
+import { UploadEntity } from 'src/entities/upload.entity';
+import { UploadModule } from 'src/upload/upload.module';
 
 @Module({
   controllers: [
@@ -55,6 +61,8 @@ import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
     PermissionService,
     FamilyService,
     QuotationService,
+    UploadService,
+    OrganizationService,
   ],
   imports: [
     TypeOrmModule.forFeature([
@@ -66,9 +74,13 @@ import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
       DentalQuotationEntity,
       CashingEntity,
       CashingContactEntity,
+      UserPreferenceEntity,
+      ContactUserEntity,
+      UploadEntity,
     ]),
     UserModule,
     PatientModule,
+    UploadModule,
   ],
   exports: [ContactService],
 })

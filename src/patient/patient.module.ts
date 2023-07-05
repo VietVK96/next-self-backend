@@ -9,6 +9,11 @@ import { AddressEntity } from '../entities/address.entity';
 import { PhoneEntity } from '../entities/phone.entity';
 import { ContactModule } from 'src/contact/contact.module';
 import { AddressModule } from 'src/address/address.module';
+import { PatientBalanceController } from './patientBalance.controller';
+import { PatientBalanceService } from './service/patientBalance.service';
+import { ContactUserEntity } from 'src/entities/contact-user.entity';
+import { CashingEntity } from 'src/entities/cashing.entity';
+import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
 
 @Module({
   imports: [
@@ -20,11 +25,14 @@ import { AddressModule } from 'src/address/address.module';
       AddressEntity,
       PhoneEntity,
       ContactEntity,
+      CashingEntity,
+      ContactUserEntity,
+      CashingContactEntity,
     ]),
     forwardRef(() => ContactModule),
   ],
-  controllers: [PatientController],
-  providers: [PatientService],
-  exports: [PatientService],
+  controllers: [PatientController, PatientBalanceController],
+  providers: [PatientService, PatientBalanceService],
+  exports: [PatientService, PatientBalanceService],
 })
 export class PatientModule {}
