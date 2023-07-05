@@ -30,6 +30,7 @@ import { CashingEntity } from 'src/entities/cashing.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
+import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 
 @Module({
   controllers: [
@@ -70,6 +71,7 @@ import { ContactUserEntity } from 'src/entities/contact-user.entity';
       CashingContactEntity,
       UserPreferenceEntity,
       ContactUserEntity,
+      DentalEventTaskEntity,
     ]),
     UserModule,
     PatientModule,
