@@ -34,6 +34,21 @@ export class UploadService {
     contactId: number,
     files: Express.Multer.File,
   ) {
+    const allowedMimeTypes = [
+      'image/gif',
+      'image/jpeg',
+      'image/png',
+      'image/bmp',
+      'image/x-windows-bmp',
+      'image/x-ms-bmp',
+      'image/tiff',
+    ];
+    if (!allowedMimeTypes.includes(files.mimetype)) {
+      throw new CBadRequestException('invalid type file');
+    }
+    if (files.size > 2 * 1024 * 1024) {
+      throw new CBadRequestException('file lager than 2m');
+    }
     const queryBuilder = this.dataSource.createQueryBuilder();
     const contactCurrent = await queryBuilder
       .select()

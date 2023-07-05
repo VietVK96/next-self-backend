@@ -30,6 +30,13 @@ import { CashingEntity } from 'src/entities/cashing.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
+import { DocumentServices } from './services/document.service';
+import { DocumentController } from './document.controller';
+import { UploadService } from 'src/upload/services/upload.service';
+import { UploadModule } from 'src/upload/upload.module';
+import { UploadController } from 'src/upload/upload.controller';
+import { OrganizationService } from 'src/organization/service/organization.service';
+import { UploadEntity } from 'src/entities/upload.entity';
 
 @Module({
   controllers: [
@@ -41,8 +48,11 @@ import { ContactUserEntity } from 'src/entities/contact-user.entity';
     NoteController,
     FamilyController,
     QuotationController,
+    DocumentController,
+    UploadController,
   ],
   providers: [
+    UploadService,
     FindContactService,
     HistoricalService,
     ContactService,
@@ -57,6 +67,8 @@ import { ContactUserEntity } from 'src/entities/contact-user.entity';
     PermissionService,
     FamilyService,
     QuotationService,
+    DocumentServices,
+    OrganizationService,
   ],
   imports: [
     TypeOrmModule.forFeature([
@@ -70,9 +82,11 @@ import { ContactUserEntity } from 'src/entities/contact-user.entity';
       CashingContactEntity,
       UserPreferenceEntity,
       ContactUserEntity,
+      UploadEntity,
     ]),
     UserModule,
     PatientModule,
+    UploadModule,
   ],
   exports: [ContactService],
 })
