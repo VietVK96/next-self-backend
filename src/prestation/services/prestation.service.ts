@@ -110,7 +110,7 @@ export class PrestationService {
         }
 
         record['medical'] = {
-          ald: Boolean(record.ald),
+          ald: !!record.ald,
         };
         delete record.ald;
         return record;
