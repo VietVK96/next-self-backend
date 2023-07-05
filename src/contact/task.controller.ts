@@ -1,4 +1,5 @@
-import { Body, Controller, Patch, UseGuards } from '@nestjs/common';
+import { SaveTaskService } from './services/save.task.service';
+import { Body, Controller, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -6,13 +7,16 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { TaskService } from './services/task.service';
-import { EventTaskDto } from './dto/task.contact.dto';
+import { EventTaskDto, EventTaskSaveDto } from './dto/task.contact.dto';
 
 @ApiBearerAuth()
 @Controller('/event')
 @ApiTags('Event')
 export class TaskController {
-  constructor(private taskService: TaskService) {}
+  constructor(
+    private taskService: TaskService,
+    private saveTaskService: SaveTaskService,
+  ) {}
 
   /**
    * php/event/task/unrealized.php
@@ -35,5 +39,11 @@ export class TaskController {
     @CurrentUser() identity: UserIdentity,
   ) {
     return await this.taskService.realizeEventTask(payload, identity);
+  }
+
+  @Post('task/save')
+  // @UseGuards(TokenGuard)
+  async saveEventTask(@Body() payload: EventTaskSaveDto) {
+    return this.saveTaskService.save(payload);
   }
 }
