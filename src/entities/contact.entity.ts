@@ -77,12 +77,12 @@ export class ContactEntity {
    * @Assert\Type("int")
    * @Assert\GreaterThanOrEqual(1)
    */
-  @Column({
-    name: 'CON_NBR',
-    type: 'int',
-    width: 11,
-    nullable: true,
-  })
+  // @Column({
+  //   name: 'CON_NBR',
+  //   type: 'int',
+  //   width: 11,
+  //   nullable: true,
+  // })
   number?: number;
   /**
    * @ORM\Column(name="CON_LASTNAME", type="string", length=50, nullable=false)
@@ -165,11 +165,11 @@ export class ContactEntity {
    * @Expose
    * @var \DateTime|null
    */
-  @Column({
-    name: 'CON_BIRTHDAY',
-    type: 'date',
-    nullable: true,
-  })
+  // @Column({
+  //   name: 'CON_BIRTHDAY',
+  //   type: 'date',
+  //   nullable: true,
+  // })
   birthDate?: string;
 
   /**
@@ -205,12 +205,12 @@ export class ContactEntity {
    * @var integer
    */
 
-  @Column({
-    name: 'CON_BIRTH_ORDER',
-    type: 'int',
-    width: 11,
-    default: 1,
-  })
+  // @Column({
+  //   name: 'CON_BIRTH_ORDER',
+  //   type: 'int',
+  //   width: 11,
+  //   default: 1,
+  // })
   birthRank?: number;
 
   /**
@@ -336,10 +336,10 @@ export class ContactEntity {
    * @var string|null
    */
 
-  @Column({
-    name: 'CON_MSG',
-    type: 'text',
-  })
+  // @Column({
+  //   name: 'CON_MSG',
+  //   type: 'text',
+  // })
   observation?: string;
 
   /**
@@ -427,12 +427,12 @@ export class ContactEntity {
    * @Expose
    * @var string|null
    */
-  @Column({
-    name: 'CON_INSEE',
-    type: 'varchar',
-    length: 13,
-    nullable: true,
-  })
+  // @Column({
+  //   name: 'CON_INSEE',
+  //   type: 'varchar',
+  //   length: 13,
+  //   nullable: true,
+  // })
   inseeNumber?: string;
 
   /**
@@ -453,12 +453,12 @@ export class ContactEntity {
    * @Assert\Type("string")
    * @Assert\Length(min=2, max=2)
    */
-  @Column({
-    name: 'CON_INSEE_KEY',
-    type: 'varchar',
-    length: 2,
-    nullable: true,
-  })
+  // @Column({
+  //   name: 'CON_INSEE_KEY',
+  //   type: 'varchar',
+  //   length: 2,
+  //   nullable: true,
+  // })
   inseeNumberKey?: string;
 
   /**
@@ -476,13 +476,13 @@ export class ContactEntity {
   /**
    * @ORM\Column(name="social_security_reimbursement_rate", type="decimal", precision=10, scale=2, nullable=true)
    */
-  @Column({
-    name: 'social_security_reimbursement_rate',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    nullable: true,
-  })
+  // @Column({
+  //   name: 'social_security_reimbursement_rate',
+  //   type: 'decimal',
+  //   precision: 10,
+  //   scale: 2,
+  //   nullable: true,
+  // })
   amoTaux?: number;
 
   /**
@@ -943,7 +943,7 @@ export class ContactEntity {
    */
   // protected $medical = null;
 
-  @OneToOne(() => PatientMedicalEntity, {
+  @OneToOne(() => PatientMedicalEntity, (e) => e.patient, {
     createForeignKeyConstraints: false,
   })
   medical?: PatientMedicalEntity;
