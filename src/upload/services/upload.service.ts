@@ -174,7 +174,7 @@ export class UploadService {
         await this.dataSource
           .createQueryBuilder()
           .update(ContactEntity)
-          .set({ UPL_ID: null })
+          .set({ uplId: null })
           .where('CON_ID = :contact', { contact })
           .execute();
       }

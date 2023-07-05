@@ -1,4 +1,4 @@
-import { Body, Controller, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -6,7 +6,7 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { TaskService } from './services/task.service';
-import { EventTaskDto } from './dto/task.contact.dto';
+import { EventTaskDto, EventTaskPatchDto } from './dto/task.contact.dto';
 
 @ApiBearerAuth()
 @Controller('/event')
@@ -25,6 +25,11 @@ export class TaskController {
     return await this.taskService.updateEventTask(payload);
   }
 
+  @Post('task/patch')
+  @UseGuards(TokenGuard)
+  async updateEventTaskPatch(@Body() payload: EventTaskPatchDto) {
+    return await this.taskService.updateEventTaskPatch(payload);
+  }
   /**
    * php\event\task\unrealized.php line 1->12
    */

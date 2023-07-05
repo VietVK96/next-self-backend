@@ -1,8 +1,10 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
   Param,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -15,6 +17,7 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { FindAllPrestationStructDto } from './dto/findAll.prestation.dto';
 import { FindPrestationStructDto } from './dto/find.prestation.dto';
+import { PrestationDto } from 'src/contact/dto/prestation.dto';
 
 @ApiBearerAuth()
 @ApiTags('Prestation')
@@ -61,5 +64,11 @@ export class PrestationController {
     @CurrentUser() identity: UserIdentity,
   ) {
     return this.prestationService.delete(id, identity);
+  }
+
+  @Post('/save')
+  @UseGuards(TokenGuard)
+  async updatePrestation(@Body() payload: PrestationDto) {
+    return await this.prestationService.updatePrestation(payload);
   }
 }

@@ -1,5 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+class MedicalRes {
+  @ApiProperty()
+  ald?: boolean;
+}
+
 export class FindAllPrestationRes {
   @ApiProperty()
   id?: number;
@@ -87,4 +92,10 @@ export class FindAllPrestationRes {
 
   @ApiProperty()
   exception?: boolean;
+
+  @ApiProperty()
+  ald?: boolean;
+
+  @ApiProperty()
+  medical?: MedicalRes;
 }
