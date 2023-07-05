@@ -1,12 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-
 import { Repository } from 'typeorm/repository/Repository';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { SuccessResponse } from 'src/common/response/success.res';
-import { UserService } from 'src/user/services/user.service';
-import { PatientService } from 'src/patient/service/patient.service';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 
@@ -15,8 +12,6 @@ export class QuotationService {
   constructor(
     @InjectRepository(DentalQuotationEntity)
     private readonly repo: Repository<DentalQuotationEntity>,
-    private userService: UserService,
-    private patientService: PatientService,
     @InjectRepository(DentalQuotationEntity)
     private readonly detailQuotationRepo: Repository<DentalQuotationEntity>,
   ) {}

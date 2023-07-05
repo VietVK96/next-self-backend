@@ -1,6 +1,10 @@
 import { Body, Controller, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { TokenGuard } from 'src/common/decorator/auth.decorator';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
 import { TaskService } from './services/task.service';
 import { EventTaskDto, EventTaskPatchDto } from './dto/task.contact.dto';
 
@@ -25,5 +29,16 @@ export class TaskController {
   @UseGuards(TokenGuard)
   async updateEventTaskPatch(@Body() payload: EventTaskPatchDto) {
     return await this.taskService.updateEventTaskPatch(payload);
+  }
+  /**
+   * php\event\task\unrealized.php line 1->12
+   */
+  @Patch('task/realized')
+  @UseGuards(TokenGuard)
+  async realizeEventTask(
+    @Body() payload: EventTaskDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return await this.taskService.realizeEventTask(payload, identity);
   }
 }

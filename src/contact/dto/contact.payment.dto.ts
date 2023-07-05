@@ -71,20 +71,13 @@ export class ContactPaymentStoreDto {
     name: 'practitioner',
     required: true,
   })
-  practitioner?: {
-    id?: number;
-    lastname?: number;
-    firstname?: string;
-  };
+  practitioner?: IPractitioner;
 
   @ApiProperty({
     name: 'debtor',
     required: false,
   })
-  debtor?: {
-    id?: number;
-    name?: string;
-  };
+  debtor?: IDebtor;
 
   @ApiProperty({
     name: 'bank',
@@ -133,7 +126,94 @@ export class ContactPaymentStoreDto {
   deadlines?: IDeadline[];
 }
 
-export class IBeneficiary {
+export class ContactPaymentUpdateDto {
+  @ApiProperty()
+  id?: number;
+  @ApiProperty()
+  date?: string;
+
+  @ApiProperty()
+  payment_date?: string;
+
+  @ApiProperty()
+  payment?: string;
+
+  @ApiProperty()
+  type?: string;
+
+  @ApiProperty()
+  amount?: number;
+
+  @ApiProperty()
+  amount_care?: number;
+
+  @ApiProperty()
+  amount_prosthesis?: number;
+
+  @ApiProperty()
+  paymentDate?: string;
+
+  @ApiProperty()
+  is_tp?: number;
+
+  @ApiProperty()
+  msg?: string | null;
+
+  @ApiProperty()
+  debtor?: IDebtor;
+
+  @ApiProperty()
+  practitionerId?: number;
+
+  @ApiProperty()
+  practitionerAbbr?: string;
+
+  @ApiProperty()
+  practitionerLastname?: string;
+
+  @ApiProperty()
+  practitionerFirstname?: string;
+
+  @ApiProperty()
+  bordereau?: string | null;
+
+  @ApiProperty()
+  description?: string;
+
+  @ApiProperty()
+  check_number?: string | null;
+
+  @ApiProperty()
+  check_bank?: string | null;
+
+  @ApiProperty()
+  practitioner?: {
+    id?: 2;
+    lastname?: 'DENTISTE RPPS-ADELI';
+    firstname?: 'Géraldine';
+  };
+
+  @ApiProperty()
+  correspondent?: ICorrespondent;
+
+  @ApiProperty()
+  bank?: {
+    id?: number;
+  };
+
+  @ApiProperty()
+  caresheet?: {
+    id?: number;
+  };
+
+  @ApiProperty()
+  beneficiaries?: IBeneficiary[];
+
+  @ApiProperty()
+  deadlines?: IDeadline[];
+}
+
+export interface IBeneficiary {
   amount?: number;
   amount_care?: number;
   amount_prosthesis?: number;
@@ -153,10 +233,23 @@ export interface IDeadline {
   amount_prosthesis?: number;
 }
 
-interface ICorrespondent {
+export interface ICorrespondent {
+  id?: number | null;
+  lastname?: string | null;
+  firstname?: string | null;
+}
+
+export interface ICareSheet {
   id?: number;
 }
 
-interface ICareSheet {
+export interface IDebtor {
   id?: number;
+  name?: string;
+}
+
+export interface IPractitioner {
+  id?: number;
+  lastname?: number;
+  firstname?: string;
 }

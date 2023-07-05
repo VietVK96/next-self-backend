@@ -31,7 +31,12 @@ import { CcamEntity } from 'src/entities/ccam.entity';
 import { UserModule } from 'src/user/user.module';
 import { CashingEntity } from 'src/entities/cashing.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
+import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
+import { UploadService } from 'src/upload/services/upload.service';
+import { OrganizationService } from 'src/organization/service/organization.service';
+import { UploadEntity } from 'src/entities/upload.entity';
+import { UploadModule } from 'src/upload/upload.module';
 
 @Module({
   controllers: [
@@ -59,6 +64,8 @@ import { ContactUserEntity } from 'src/entities/contact-user.entity';
     PermissionService,
     FamilyService,
     QuotationService,
+    UploadService,
+    OrganizationService,
   ],
   imports: [
     TypeOrmModule.forFeature([
@@ -73,10 +80,13 @@ import { ContactUserEntity } from 'src/entities/contact-user.entity';
       CcamEntity,
       CashingEntity,
       CashingContactEntity,
+      UserPreferenceEntity,
       ContactUserEntity,
+      UploadEntity,
     ]),
     UserModule,
     PatientModule,
+    UploadModule,
   ],
   exports: [ContactService],
 })

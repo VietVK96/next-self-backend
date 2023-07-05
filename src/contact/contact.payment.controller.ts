@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -17,6 +18,7 @@ import {
   ContactPaymentDeleteByIdDto,
   ContactPaymentFindAllDto,
   ContactPaymentStoreDto,
+  ContactPaymentUpdateDto,
 } from './dto/contact.payment.dto';
 import { ContactPaymentService } from './services/contact.payment.service';
 
@@ -56,5 +58,12 @@ export class ContactPaymentController {
   @UseGuards(TokenGuard)
   async store(@Body() payload: ContactPaymentStoreDto) {
     return this.contactPaymentService.store(payload);
+  }
+
+  // File php\contact\payment\update.php 13->62
+  @Patch('/payment/update')
+  @UseGuards(TokenGuard)
+  async update(@Body() payload: ContactPaymentUpdateDto) {
+    return this.contactPaymentService.update(payload);
   }
 }
