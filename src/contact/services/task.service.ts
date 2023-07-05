@@ -226,19 +226,20 @@ export class TaskService {
                   amount -= parseFloat(ccamModifierAmount.toString());
                   ccamModifier = ccamModifier.replace(ccamComplement, '');
 
-                  await queryRunner.query(
-                    `UPDATE T_EVENT_TASK_ETK
-                  SET ETK_AMOUNT = ?
-                  WHERE ETK_ID = ?`,
-                    [amount, id],
-                  );
-
-                  await queryRunner.query(
-                    `UPDATE T_DENTAL_EVENT_TASK_DET
-                  SET DET_CCAM_MODIFIER = ?
-                  WHERE ETK_ID = ?`,
-                    [ccamModifier, id],
-                  );
+                  await Promise.all([
+                    queryRunner.query(
+                      `UPDATE T_EVENT_TASK_ETK
+                    SET ETK_AMOUNT = ?
+                    WHERE ETK_ID = ?`,
+                      [amount, id],
+                    ),
+                    queryRunner.query(
+                      `UPDATE T_DENTAL_EVENT_TASK_DET
+                    SET DET_CCAM_MODIFIER = ?
+                    WHERE ETK_ID = ?`,
+                      [ccamModifier, id],
+                    ),
+                  ]);
                 }
               }
             }
@@ -272,19 +273,20 @@ export class TaskService {
                   amount += parseFloat(ccamModifierAmount.toString());
                   ccamModifier.concat(ccamComplement);
 
-                  await queryRunner.query(
-                    `UPDATE T_EVENT_TASK_ETK
-                  SET ETK_AMOUNT = ?
-                  WHERE ETK_ID = ?`,
-                    [amount, id],
-                  );
-
-                  await queryRunner.query(
-                    `UPDATE T_DENTAL_EVENT_TASK_DET
-                  SET DET_CCAM_MODIFIER = ?
-                  WHERE ETK_ID = ?`,
-                    [ccamModifier, id],
-                  );
+                  await Promise.all([
+                    queryRunner.query(
+                      `UPDATE T_EVENT_TASK_ETK
+                    SET ETK_AMOUNT = ?
+                    WHERE ETK_ID = ?`,
+                      [amount, id],
+                    ),
+                    queryRunner.query(
+                      `UPDATE T_DENTAL_EVENT_TASK_DET
+                    SET DET_CCAM_MODIFIER = ?
+                    WHERE ETK_ID = ?`,
+                      [ccamModifier, id],
+                    ),
+                  ]);
                 }
               }
             }
@@ -396,74 +398,43 @@ export class TaskService {
                       `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1 WHERE ETK_ID = ${radiographie.id}`,
                     );
                     if (Number(radiographie.coef) === 0.5) {
-                      await queryRunner.query(
-                        `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
-                      );
-                      await queryRunner.query(
-                        `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ${radiographie.id}`,
-                      );
+                      await Promise.all([
+                        queryRunner.query(
+                          `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
+                        ),
+                        queryRunner.query(
+                          `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ${radiographie.id}`,
+                        ),
+                      ]);
                     }
                   } else if (Number(radiographie.coef) === 1) {
-                    await queryRunner.query(
-                      `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 2, DET_COEF = 0.5 WHERE ETK_ID = ${radiographie.id}`,
-                    );
-                    await queryRunner.query(
-                      `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT / 2 WHERE ETK_ID = ${radiographie.id}`,
-                    );
+                    await Promise.all([
+                      queryRunner.query(
+                        `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 2, DET_COEF = 0.5 WHERE ETK_ID = ${radiographie.id}`,
+                      ),
+                      queryRunner.query(
+                        `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT / 2 WHERE ETK_ID = ${radiographie.id}`,
+                      ),
+                    ]);
                     discountedCodes.push(radiographie.name);
                   }
                 }),
               );
-              // for (const [index, radiographie] of Object.entries(
-              //   radiographies,
-              // )) {
-              //   if (!index) {
-              //     await queryRunner.query(
-              //       `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1 WHERE ETK_ID = ${radiographie.id}`,
-              //     );
-              //     if (Number(radiographie.coef) === 0.5) {
-              //       await queryRunner.query(
-              //         `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
-              //       );
-              //       await queryRunner.query(
-              //         `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ${radiographie.id}`,
-              //       );
-              //     }
-              //   } else if (Number(radiographie.coef) === 1) {
-              //     await queryRunner.query(
-              //       `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 2, DET_COEF = 0.5 WHERE ETK_ID = ${radiographie.id}`,
-              //     );
-              //     await queryRunner.query(
-              //       `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT / 2 WHERE ETK_ID = ${radiographie.id}`,
-              //     );
-              //     discountedCodes.push(radiographie.name);
-              //   }
-              // }
             } else {
               Promise.all(
                 radiographies.map(async (radiographie, index) => {
                   if (Number(radiographie.coef) === 0.5) {
-                    await queryRunner.query(
-                      `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = NULL, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
-                    );
-                    await queryRunner.query(
-                      `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ${radiographie.id}`,
-                    );
+                    await Promise.all([
+                      queryRunner.query(
+                        `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = NULL, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
+                      ),
+                      queryRunner.query(
+                        `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ${radiographie.id}`,
+                      ),
+                    ]);
                   }
                 }),
               );
-              // for (const [index, radiographie] of Object.entries(
-              //   radiographies,
-              // )) {
-              //   if (Number(radiographie.coef) === 0.5) {
-              //     await queryRunner.query(
-              //       `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = NULL, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
-              //     );
-              //     await queryRunner.query(
-              //       `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ${radiographie.id}`,
-              //     );
-              //   }
-              // }
             }
           }
           return discountedCodes;
