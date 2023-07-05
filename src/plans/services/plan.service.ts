@@ -3,8 +3,12 @@ import {
   NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
-import { DataSource } from 'typeorm';
-import { FindAllStructDto, IdStructDto } from '../dto/plan.dto';
+import { DataSource, Repository } from 'typeorm';
+import {
+  DuplicatePlanDto,
+  FindAllStructDto,
+  IdStructDto,
+} from '../dto/plan.dto';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { PermissionService } from 'src/user/services/permission.service';
 import { PaymentPlanService } from 'src/payment-plan/services/payment-plan.service';
@@ -15,6 +19,11 @@ import {
   findOnePlanRes,
 } from '../response/plan.res';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
+import { EnumPlanPlfType, PlanPlfEntity } from 'src/entities/plan-plf.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EventTaskEntity } from 'src/entities/event-task.entity';
+import { EventEntity } from 'src/entities/event.entity';
 
 @Injectable()
 export class PlanService {
@@ -22,6 +31,8 @@ export class PlanService {
     private permissionService: PermissionService,
     private paymentPlanService: PaymentPlanService,
     private dataSource: DataSource,
+    @InjectRepository(PlanPlfEntity)
+    private planPlfRepository: Repository<PlanPlfEntity>,
   ) {}
 
   async _getPlan(id: number, groupId: number): Promise<findOnePlanRes> {
@@ -87,7 +98,7 @@ export class PlanService {
       plan.quote_template = null;
       plan.payment_schedule_id = null;
 
-      const eventStatement = `
+      const eventcurrentPlanPlf = `
       SELECT
         PLV.PLV_POS as plv_pos,
         PLV.duration as plv_duration,
@@ -111,9 +122,10 @@ export class PlanService {
         AND EVT.EVT_DELETE = 0
         AND evo.evt_id = EVT.EVT_ID
       ORDER BY plv_pos`;
-      const event: EventData[] = await this.dataSource.query(eventStatement, [
-        plan.id,
-      ]);
+      const event: EventData[] = await this.dataSource.query(
+        eventcurrentPlanPlf,
+        [plan.id],
+      );
 
       if (event) {
         for (const e of event) {
@@ -144,7 +156,7 @@ export class PlanService {
                 },
           };
 
-          const actStatement = `
+          const actcurrentPlanPlf = `
               SELECT
                 ETK.ETK_ID as id,
                 ETK.library_act_id,
@@ -197,9 +209,10 @@ export class PlanService {
             GROUP BY ETK.ETK_ID
             ORDER BY ETK.ETK_POS`;
 
-          const task: TaskData[] = await this.dataSource.query(actStatement, [
-            push.id,
-          ]);
+          const task: TaskData[] = await this.dataSource.query(
+            actcurrentPlanPlf,
+            [push.id],
+          );
 
           if (task) {
             for (const t of task) {
@@ -374,7 +387,7 @@ export class PlanService {
         T_PLAN_PLF.payment_schedule_id,
         T_EVENT_EVT.CON_ID AS patient_id`;
 
-      const statement = queryBuiler
+      const currentPlanPlf = queryBuiler
         .select(selectPlan)
         .from('T_PLAN_PLF', 'T_PLAN_PLF')
         .innerJoin('T_PLAN_EVENT_PLV', 'T_PLAN_EVENT_PLV')
@@ -383,7 +396,7 @@ export class PlanService {
         .andWhere('T_PLAN_PLF.PLF_ID = T_PLAN_EVENT_PLV.PLF_ID')
         .andWhere('T_PLAN_EVENT_PLV.EVT_ID = T_EVENT_EVT.EVT_ID')
         .groupBy('T_PLAN_PLF.PLF_ID');
-      const plan = await statement.getRawOne();
+      const plan = await currentPlanPlf.getRawOne();
 
       if (!plan) {
         throw new NotFoundException();
@@ -548,5 +561,167 @@ export class PlanService {
     } catch (error) {
       return error;
     }
+  }
+
+  async duplicate(payload: DuplicatePlanDto, organizationId: number) {
+    // début de la transaction
+    return await this.dataSource.manager.transaction(
+      async (transactionalEntityManager) => {
+        try {
+          // vérification si le plan de traitement appartient bien au groupe
+          // de l'utilisateur connecté puis récupération du type de plan de
+          // traitement à dupliquer
+          // let { id, name, type } = payload
+          const planificationId = payload.id;
+          const planificationName = payload.name;
+          let planificationType = payload.type;
+          const planPlfQueryBuilder = this.dataSource.createQueryBuilder(
+            PlanPlfEntity,
+            'PLF',
+          );
+          const currentPlanPlf: PlanPlfEntity = await planPlfQueryBuilder
+            .select()
+            .innerJoin(`T_PLAN_EVENT_PLV`, 'PLV')
+            .innerJoin(`T_EVENT_EVT`, `EVT`)
+            .innerJoin(`T_USER_USR`, `USR`)
+            .where(`PLF.PLF_ID = :planificationId`, { planificationId })
+            .andWhere(`PLF.PLF_ID = PLV.PLF_ID`)
+            .andWhere(`PLV.EVT_ID = EVT.EVT_ID`)
+            .andWhere(`EVT.USR_ID = USR.USR_ID`)
+            .andWhere(`USR.organization_id = :organizationId`, {
+              organizationId,
+            })
+            .getOne();
+
+          if (!currentPlanPlf) {
+            throw new CBadRequestException(
+              'You cannot access to this planification',
+            );
+          } else if (
+            planificationType !== EnumPlanPlfType?.PLAN &&
+            planificationType !== EnumPlanPlfType.QUOTATION
+          ) {
+            planificationType = currentPlanPlf?.type;
+          }
+
+          const newPlanPlf = await transactionalEntityManager.save(
+            PlanPlfEntity,
+            {
+              organizationId: currentPlanPlf?.organizationId,
+              userId: currentPlanPlf?.userId,
+              patientId: currentPlanPlf?.patientId,
+              name: planificationName,
+              type: planificationType,
+              amount: currentPlanPlf?.amount,
+              mutualCeiling: currentPlanPlf?.mutualCeiling,
+              personRepayment: currentPlanPlf?.personRepayment,
+              personAmount: currentPlanPlf?.personAmount,
+              acceptedOn:
+                currentPlanPlf?.type === 'quotation'
+                  ? null
+                  : currentPlanPlf?.acceptedOn,
+            },
+          );
+
+          const tEvenEvtQueryBuilder = this.dataSource.createQueryBuilder(
+            EventEntity,
+            'EVT',
+          );
+          const evenEVTs: EventEntity[] = await tEvenEvtQueryBuilder
+            .select()
+            .innerJoin('T_PLAN_EVENT_PLV', 'PLV')
+            .where('EVT.EVT_ID = PLV.EVT_ID')
+            .andWhere('PLV.PLF_ID = :planificationId', { planificationId })
+            .getMany();
+
+          for (const evenEVT of evenEVTs) {
+            const appointmentId = evenEVT?.id;
+            const {
+              usrId,
+              conId,
+              type,
+              name,
+              start,
+              startTimezone,
+              end,
+              endTimezone,
+              msg,
+              color,
+              state,
+              solicitation,
+            } = evenEVT;
+            const newEventEvt = await transactionalEntityManager.save(
+              EventEntity,
+              {
+                usrId,
+                conId,
+                type,
+                name,
+                start,
+                startTimezone,
+                end,
+                endTimezone,
+                msg,
+                color,
+                state,
+                solicitation,
+                delete: evenEVT?.delete,
+                private: evenEVT?.private,
+              },
+            );
+
+            //unknown
+            // Duplication de l'occurrence du rendez-vous.
+            //  $connection->executeUpdate("CREATE TEMPORARY TABLE mytmp SELECT * FROM event_occurrence_evo WHERE evt_id = ?", array($appointmentId));
+            //  $connection->executeUpdate("UPDATE mytmp SET evo_id = NULL, evt_id = ?, evo_date = '0000-00-00'", array($appointmentDuplicateId));
+            //  $connection->executeUpdate("INSERT INTO event_occurrence_evo SELECT * FROM mytmp");
+            //  $connection->executeUpdate("DROP TEMPORARY TABLE IF EXISTS mytmp");
+            await transactionalEntityManager.query(
+              `CREATE TEMPORARY TABLE mytmp SELECT * FROM event_occurrence_evo WHERE evt_id = ?`,
+              [appointmentId],
+            );
+            await transactionalEntityManager.query(
+              `UPDATE mytmp SET evo_id = NULL, evt_id = ?, evo_date = '0000-00-00'`,
+              [newEventEvt?.id],
+            );
+            await transactionalEntityManager.query(
+              `INSERT INTO event_occurrence_evo SELECT * FROM mytmp`,
+            );
+            await transactionalEntityManager.query(
+              `DROP TEMPORARY TABLE IF EXISTS mytmp`,
+            );
+
+            await transactionalEntityManager.query(
+              `
+            INSERT INTO T_PLAN_EVENT_PLV (EVT_ID,PLF_ID,PLV_POS,PLV_DELAY, duration)
+            SELECT ?, ?, PLV_POS, PLV_DELAY, duration
+            FROM T_PLAN_EVENT_PLV PLV
+            WHERE PLV.EVT_ID = ?
+              AND PLV.PLF_ID = ?
+          `,
+              [newEventEvt?.id, newPlanPlf?.id, appointmentId, planificationId],
+            );
+
+            const tEvenTaskETKQueryBuilder = this.dataSource.createQueryBuilder(
+              EventTaskEntity,
+              'ETK',
+            );
+            const tEventTaskETKs = await tEvenTaskETKQueryBuilder
+              .select()
+              .innerJoin('T_EVENT_EVT', 'EVT')
+              .where('ETK.EVT_ID = EVT.EVT_ID')
+              .andWhere('EVT.EVT_ID = :appointmentId', { appointmentId })
+              .getMany();
+
+            evenEVT.tasks = tEventTaskETKs;
+          }
+          return { ...newPlanPlf, events: evenEVTs };
+        } catch (err) {
+          throw new CBadRequestException(
+            ErrorCode.STATUS_INTERNAL_SERVER_ERROR,
+          );
+        }
+      },
+    );
   }
 }
