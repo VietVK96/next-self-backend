@@ -63,23 +63,8 @@ export class ActServices {
       );
 
       if (idDelete.length) {
-        const idETKs = idDelete.map((idETK) => idETK.id);
-        const etkDelete = await this.eventTaskRepository.find({
-          where: { id: In(idETKs) },
-        });
-        await manager.save(
-          EventTaskEntity,
-          etkDelete?.map((etk) => ({
-            ...etk,
-            traceabilityStatus: TraceabilityStatusEnum.UNFILLED,
-          })),
-        );
-      }
-      if (data.length) {
-        await manager.save(EventTaskEntity, {
-          id,
-          traceabilityStatus: TraceabilityStatusEnum.FILLED,
-        });
+        const idTraces = idDelete.map((idTrace) => idTrace.id);
+        await this.traceabilityRepository.delete(idTraces);
       }
       const req = payload.traceabilities.map((up) => {
         return up?.id
@@ -99,7 +84,19 @@ export class ActServices {
               organizationId: organizationId,
             };
       });
-      return await manager.save(TraceabilityEntity, req);
+      await manager.save(TraceabilityEntity, req);
+    });
+
+    const dataAfter = await this.traceabilityRepository.find({
+      where: { actId: id },
+      select: ['id'],
+    });
+    const traceabilityStatus = dataAfter?.length
+      ? TraceabilityStatusEnum.FILLED
+      : TraceabilityStatusEnum.NONE;
+    await this.eventTaskRepository.save({
+      id,
+      traceabilityStatus,
     });
   }
 
