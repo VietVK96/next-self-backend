@@ -38,7 +38,7 @@ export class EventController {
   }
 
   //ecoodentist-1.31.0\php\user\preference\save.php full file
-  @Post()
+  @Post('save')
   @UseGuards(TokenGuard)
   async save(
     @CurrentUser() identity: UserIdentity,

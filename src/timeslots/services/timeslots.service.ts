@@ -42,6 +42,7 @@ export class TimeslotsService {
     return `${year}-${month}-${day}`;
   }
 
+  //php/timeslot/index.php full file
   async findAll(
     resources: number[],
     startDate: string,
@@ -59,62 +60,68 @@ export class TimeslotsService {
 
       return timeslots;
     } catch {
-      throw new CNotFoundRequestException(ErrorCode.STATUS_NOT_FOUND);
+      throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
     }
   }
 
+  //php/timeslot/show.php full file
   async find(id: number): Promise<TimeslotRes> {
-    const timeslot = await this.dataSource
-      .createQueryBuilder()
-      .select([
-        'TSL.id as id',
-        'TSL.resource_id',
-        'TSL.recurring_pattern_id',
-        'TSL.start_date as start_date',
-        'TSL.end_date as end_date',
-        'TSL.color as color',
-        'TSL.title as title',
-        'RSR.name',
-        'RSR.color',
-        'RSR.use_default_color',
-        'RCP.week_frequency',
-        'RCP.week_days',
-        'RCP.until',
-      ])
-      .from('timeslot', 'TSL')
-      .leftJoin('TSL.resource', 'RSR')
-      .leftJoin('TSL.recurringPattern', 'RCP')
-      .where('TSL.id = :id', { id })
-      .getRawOne();
+    try {
+      const timeslot = await this.dataSource
+        .createQueryBuilder()
+        .select([
+          'TSL.id as id',
+          'TSL.resource_id',
+          'TSL.recurring_pattern_id',
+          'TSL.start_date as start_date',
+          'TSL.end_date as end_date',
+          'TSL.color as color',
+          'TSL.title as title',
+          'RSR.name',
+          'RSR.color',
+          'RSR.use_default_color',
+          'RCP.week_frequency',
+          'RCP.week_days',
+          'RCP.until',
+        ])
+        .from('timeslot', 'TSL')
+        .leftJoin('TSL.resource', 'RSR')
+        .leftJoin('TSL.recurringPattern', 'RCP')
+        .where('TSL.id = :id', { id })
+        .getRawOne();
 
-    let recurringPattern = null;
-    if (timeslot.recurring_pattern_id !== null) {
-      recurringPattern = {
-        id: timeslot.recurring_pattern_id,
-        week_frequency: timeslot.week_frequency,
-        week_days: timeslot.week_days ? timeslot.week_days.split(',') : [],
-        until: timeslot.RCP_until,
-      };
-    }
+      let recurringPattern = null;
+      if (timeslot.recurring_pattern_id !== null) {
+        recurringPattern = {
+          id: timeslot.recurring_pattern_id,
+          week_frequency: timeslot.week_frequency,
+          week_days: timeslot.week_days ? timeslot.week_days.split(',') : [],
+          until: timeslot.RCP_until,
+        };
+      }
 
-    const result: TimeslotRes = {
-      id: timeslot.id,
-      resource: {
-        id: timeslot.resource_id,
-        name: timeslot.name,
+      const result: TimeslotRes = {
+        id: timeslot.id,
+        resource: {
+          id: timeslot.resource_id,
+          name: timeslot.name,
+          color: timeslot.color,
+          use_default_color: timeslot.use_default_color,
+        },
+        recurring_pattern: recurringPattern,
+        start_date: timeslot.start_date,
+        end_date: timeslot.end_date,
         color: timeslot.color,
-        use_default_color: timeslot.use_default_color,
-      },
-      recurring_pattern: recurringPattern,
-      start_date: timeslot.start_date,
-      end_date: timeslot.end_date,
-      color: timeslot.color,
-      title: timeslot.title,
-    };
+        title: timeslot.title,
+      };
 
-    return result;
+      return result;
+    } catch (err) {
+      throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
+    }
   }
 
+  //php/timeslot/store.php full file
   async create(payload: CreateTimeslotPayloadDto) {
     const queryRunner = this.connection.createQueryRunner();
     try {
@@ -197,12 +204,13 @@ export class TimeslotsService {
       return 1;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new CBadRequestException(error.message);
+      throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
     } finally {
       await queryRunner.release();
     }
   }
 
+  //php/timeslot/delete.php full file
   async delete(id: number, scope: string) {
     const queryRunner = this.connection.createQueryRunner();
     try {
@@ -215,7 +223,8 @@ export class TimeslotsService {
         .from(TimeslotEntity, 'TSL')
         .where('TSL.id = :id', { id })
         .getRawOne();
-      if (!recurringPatternId) throw new Error(ErrorCode.NOT_FOUND);
+      if (!recurringPatternId)
+        throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
 
       if (recurringPatternId?.getId === null || scope === 'one') {
         const deleteTimeslot = await queryRunner.manager.query(
@@ -223,7 +232,7 @@ export class TimeslotsService {
           [id],
         );
         if (deleteTimeslot.affectedRows === 0)
-          throw new Error(ErrorCode.NOT_FOUND);
+          throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
       } else {
         if (scope === 'all') {
           const deleteTimeslot = await queryRunner.manager.query(
@@ -238,7 +247,7 @@ export class TimeslotsService {
             deleteTimeslot.affectedRows === 0 ||
             deleteRulesId.affectedRows === 0
           )
-            throw new Error(ErrorCode.NOT_FOUND);
+            throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
         }
         if (scope === 'tail') {
           const deleteTimeslot = await queryRunner.manager.query(
@@ -246,14 +255,14 @@ export class TimeslotsService {
             [recurringPatternId.getId, id],
           );
           if (deleteTimeslot.affectedRows === 0)
-            throw new Error(ErrorCode.NOT_FOUND);
+            throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
         }
       }
       await queryRunner.commitTransaction();
       return 1;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new CNotFoundRequestException(error.message);
+      throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
     } finally {
       await queryRunner.release();
     }
