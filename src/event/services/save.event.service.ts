@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ContactEntity } from 'src/entities/contact.entity';
 import dayjs from 'dayjs';
 import { EventStateEnum } from 'src/constants/event';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 
 @Injectable()
 export class SaveEventService {
@@ -162,7 +163,7 @@ export class SaveEventService {
         [contactId],
       );
       if (countStatement.count !== 0) {
-        throw new Error(
+        throw new CBadRequestException(
           `Le patient a été supprimé. Veuillez restaurer le patient avant de créer / modifier un rendez-vous.`,
         );
       }
