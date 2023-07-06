@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { TraceabilityEntity } from 'src/entities/traceability.entity';
 import { Repository } from 'typeorm/repository/Repository';
-import { UpdateTraceabilitiesDto } from '../dto/act.contact.dto';
+import { ActDto, UpdateTraceabilitiesDto } from '../dto/act.contact.dto';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { EntityManager, In } from 'typeorm';
 import { TraceabilityStatusEnum } from 'src/constants/act';
+import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
+import { log } from 'console';
+import { id } from 'date-fns/locale';
+import { addListener } from 'process';
 
 @Injectable()
 export class ActServices {
@@ -14,6 +18,8 @@ export class ActServices {
     private traceabilityRepository: Repository<TraceabilityEntity>,
     @InjectRepository(EventTaskEntity)
     private eventTaskRepository: Repository<EventTaskEntity>,
+    @InjectRepository(DentalEventTaskEntity)
+    private dentalEventRepository: Repository<DentalEventTaskEntity>,
     @InjectEntityManager()
     private readonly entityManager: EntityManager,
   ) {}
@@ -57,23 +63,8 @@ export class ActServices {
       );
 
       if (idDelete.length) {
-        const idETKs = idDelete.map((idETK) => idETK.id);
-        const etkDelete = await this.eventTaskRepository.find({
-          where: { id: In(idETKs) },
-        });
-        await manager.save(
-          EventTaskEntity,
-          etkDelete?.map((etk) => ({
-            ...etk,
-            traceabilityStatus: TraceabilityStatusEnum.UNFILLED,
-          })),
-        );
-      }
-      if (data.length) {
-        await manager.save(EventTaskEntity, {
-          id,
-          traceabilityStatus: TraceabilityStatusEnum.FILLED,
-        });
+        const idTraces = idDelete.map((idTrace) => idTrace.id);
+        await this.traceabilityRepository.delete(idTraces);
       }
       const req = payload.traceabilities.map((up) => {
         return up?.id
@@ -93,7 +84,56 @@ export class ActServices {
               organizationId: organizationId,
             };
       });
-      return await manager.save(TraceabilityEntity, req);
+      await manager.save(TraceabilityEntity, req);
     });
+
+    const dataAfter = await this.traceabilityRepository.find({
+      where: { actId: id },
+      select: ['id'],
+    });
+    const traceabilityStatus = dataAfter?.length
+      ? TraceabilityStatusEnum.FILLED
+      : TraceabilityStatusEnum.NONE;
+    await this.eventTaskRepository.save({
+      id,
+      traceabilityStatus,
+    });
+  }
+
+  async getShowAct(id: number) {
+    const data = await this.eventTaskRepository.findOne({
+      where: { id: id },
+    });
+    const dataDental = await this.dentalEventRepository.findOne({
+      where: { id: id },
+    });
+    const { date, label } = data;
+    const { ald } = dataDental;
+    return {
+      date,
+      id,
+      label: label ?? '',
+      medical: { ald: !!ald },
+    };
+  }
+
+  async updateAct(id: number, payload: ActDto) {
+    const ald = payload?.medical?.ald ? 1 : 0;
+    const data = await this.eventTaskRepository.save({
+      id: payload?.id,
+      date: payload?.date,
+      label: payload?.label,
+    });
+    const dataDental = await this.dentalEventRepository.save({
+      id: payload.id,
+      ald,
+    });
+    const { date, label } = data;
+    return {
+      date,
+      id,
+      label: label ?? '',
+      medical: { ald: !!ald },
+    };
   }
 }
