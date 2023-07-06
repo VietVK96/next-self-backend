@@ -1,8 +1,4 @@
-import {
-  HttpStatus,
-  Injectable,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   TimeslotRes,
   TimeslotsAllRes,
@@ -15,8 +11,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateTimeslotPayloadDto } from '../dto/create.timeslots.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { RRule } from 'rrule';
-import { ScopeEnum } from 'src/constants/timeslot';
-import { RecurringPatternEntity } from 'src/entities/recurring-pattern.entity';
 
 @Injectable()
 export class TimeslotsService {
