@@ -538,6 +538,7 @@ export class SaveEventService {
       await queryRunner.commitTransaction();
     } catch (e) {
       await queryRunner.rollbackTransaction();
+      return { message: e.message, code: 0 };
     } finally {
       await queryRunner.release();
     }
