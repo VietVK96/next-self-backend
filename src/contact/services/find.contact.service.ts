@@ -100,7 +100,7 @@ export class FindContactService {
             USR.USR_ABBR as practitionerAbbr,
             USR.USR_LASTNAME as practitionerLastname,
             USR.USR_FIRSTNAME as practitionerFirstname`;
-    const qr = queryBuiler
+    let qr = queryBuiler
       .select(select)
       .from(ContactEntity, 'CON')
       .leftJoin(UserEntity, 'USR', 'USR.USR_ID = CON.USR_ID')
@@ -122,9 +122,9 @@ export class FindContactService {
       );
     // Start $searchCriteria = new \App\Services\SearchCriteria($connection, $fields, $conditions);
     if (request.conditions && request.conditions.length > 0) {
-      this.addWhere(qr, request.conditions);
+      qr = this.addWhere(qr, request.conditions);
     }
-    qr.where('CON.CON_ID <> :id', {
+    qr.andWhere('CON.CON_ID <> :id', {
       id: organizationId,
     });
     qr.addGroupBy('CON.CON_ID');
