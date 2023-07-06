@@ -40,7 +40,7 @@ export class PatientMedicalEntity {
     width: 11,
   })
   patientId?: number;
-  @OneToOne(() => ContactEntity, {
+  @OneToOne(() => ContactEntity, (e) => e.medical, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({ name: 'patient_id' })

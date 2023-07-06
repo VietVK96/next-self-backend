@@ -6,7 +6,12 @@ import { EventEntity } from 'src/entities/event.entity';
 import { GenderEntity } from 'src/entities/gender.entity';
 import { PhoneEntity } from 'src/entities/phone.entity';
 import { UserEntity } from 'src/entities/user.entity';
-import { DataSource, SelectQueryBuilder } from 'typeorm';
+import {
+  DataSource,
+  Repository,
+  SelectQueryBuilder,
+  EntityManager,
+} from 'typeorm';
 import {
   FindAllContactDto,
   FindAllStructDto,
@@ -18,6 +23,9 @@ import {
   FindAllRecentlyTreatedRes,
 } from '../response/findall.recentlyTreated.res';
 import { ColorHelper } from 'src/common/util/color-helper';
+import { InjectRepository } from '@nestjs/typeorm';
+import { CorrespondentEntity } from 'src/entities/correspondent.entity';
+import { FindRetrieveRes } from '../response/find.retrieve.contact.res';
 
 @Injectable()
 export class FindContactService {
@@ -46,7 +54,14 @@ export class FindContactService {
     city: 'ADR.ADR_CITY',
   };
 
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private dataSource: DataSource,
+    @InjectRepository(ContactEntity)
+    private contactRepo: Repository<ContactEntity>,
+    @InjectRepository(CorrespondentEntity)
+    private correspondentRepo: Repository<CorrespondentEntity>,
+    private entityManager: EntityManager,
+  ) {}
 
   // Convert function from application\Services\SearchCriteria.php
   addWhere(
@@ -100,7 +115,7 @@ export class FindContactService {
             USR.USR_ABBR as practitionerAbbr,
             USR.USR_LASTNAME as practitionerLastname,
             USR.USR_FIRSTNAME as practitionerFirstname`;
-    const qr = queryBuiler
+    let qr = queryBuiler
       .select(select)
       .from(ContactEntity, 'CON')
       .leftJoin(UserEntity, 'USR', 'USR.USR_ID = CON.USR_ID')
@@ -122,9 +137,9 @@ export class FindContactService {
       );
     // Start $searchCriteria = new \App\Services\SearchCriteria($connection, $fields, $conditions);
     if (request.conditions && request.conditions.length > 0) {
-      this.addWhere(qr, request.conditions);
+      qr = this.addWhere(qr, request.conditions);
     }
-    qr.where('CON.CON_ID <> :id', {
+    qr.andWhere('CON.CON_ID <> :id', {
       id: organizationId,
     });
     qr.addGroupBy('CON.CON_ID');
@@ -294,5 +309,162 @@ export class FindContactService {
     }
 
     return results;
+  }
+
+  async getPatientInfoAgenda(
+    contactId: number,
+    practitionerId: number,
+    groupId: number,
+  ): Promise<FindRetrieveRes> {
+    const result = await this.entityManager.findOne(ContactEntity, {
+      where: { id: contactId },
+      relations: [
+        'gender',
+        'user',
+        'correspondent',
+        'medecinTraitant',
+        'address',
+        'phones',
+        'family',
+      ],
+    });
+
+    const res: FindRetrieveRes = {
+      id: result.id,
+      nbr: result.nbr,
+      lastname: result.lastname,
+      lastNamePhonetic: result.lastNamePhonetic,
+      firstname: result.firstname,
+      firstNamePhonetic: result.firstNamePhonetic,
+      profession: result.profession,
+      email: result.email,
+      birthday: result.birthDate,
+      birthDateLunar: result.birthDateLunar,
+      birthOrder: result.birthOrder,
+      quality: result.quality,
+      breastfeeding: result.breastfeeding,
+      pregnancy: result.pregnancy,
+      clearanceCreatinine: result.clearanceCreatinine,
+      hepaticInsufficiency: result.hepaticInsufficiency,
+      weight: result.weight,
+      size: result.size,
+      conMedecinTraitantId: result.conMedecinTraitantId,
+      msg: result.msg,
+      odontogramObservation: result.odontogramObservation,
+      notificationMsg: result.notificationMsg,
+      notificationEnable: result.notificationEnable,
+      notificationEveryTime: result.notificationEveryTime,
+      color: result.color,
+      colorMedical: result.colorMedical,
+      insee: result.insee,
+      inseeKey: result.inseeKey,
+      socialSecurityReimbursementRate: result.socialSecurityReimbursementRate,
+      mutualRepaymentType: result.mutualRepaymentType,
+      mutualRepaymentRate: result.mutualRepaymentRate,
+      mutualComplement: result.mutualComplement,
+      mutualCeiling: result.mutualCeiling,
+      agenesie: result.agenesie,
+      maladieRare: result.maladieRare,
+      rxSidexisLoaded: result.rxSidexisLoaded,
+      externalReferenceId: result.externalReferenceId,
+      reminderVisitType: result.reminderVisitType,
+      reminderVisitDuration: result.reminderVisitDuration,
+      reminderVisitDate: result.reminderVisitDate,
+      reminderVisitLastDate: result.reminderVisitLastDate,
+      delete: result.delete,
+      organizationId: result.organizationId,
+      genId: result.genId,
+      adrId: result.adrId,
+      uplId: result.uplId,
+      cpdId: result.cpdId,
+      cofId: result.cofId,
+      ursId: result.ursId,
+      createdAt: null,
+      updatedAt: null,
+      deletedAt: null,
+      gender: {
+        id: result.gender.id,
+        name: result.gender.name,
+        longName: result.gender.longName,
+        type: result.gender.type,
+      },
+      user: result.user,
+      address: result.address,
+      phones: result.phones,
+      family: result.family,
+      addressed_by: null,
+      doctor: null,
+      amountDue: null,
+      reliability: null,
+    };
+    if (result.cpdId) {
+      res.addressed_by = {
+        id: result.correspondent.id,
+        last_name: result.correspondent.lastName,
+        first_name: result.correspondent.firstName,
+      };
+    }
+
+    if (result.medecinTraitant) {
+      res['doctor'] = {
+        id: result.medecinTraitant.id,
+        last_name: result.medecinTraitant.lastName,
+        first_name: result.medecinTraitant.firstName,
+      };
+    }
+
+    const amountDue: [] = await this.dataSource.query(
+      `
+    SELECT IFNULL(cou_amount_due, 0)
+    FROM contact_user_cou cou
+    WHERE cou.con_id = ?
+      AND cou.usr_id = ?`,
+      [contactId, practitionerId],
+    );
+    res.amountDue = amountDue.length > 0 ? true : false;
+
+    let output: {
+      max: number;
+      total: number;
+      value: number;
+      low: number;
+      high: number;
+    } = { max: 0, total: 0, value: 0, low: 0, high: 0 };
+
+    const result2: {
+      max: number;
+      total: number;
+      value: number;
+      low: number;
+      high: number;
+    }[] = await this.dataSource.query(
+      'SELECT COUNT(*) as `max`, COUNT(*) - SUM(IF(EVT.`EVT_STATE` IN (2, 3), 1, 0)) as `value`, ROUND((10 * COUNT(*)) / 100) as `low`, ROUND((50 * COUNT(*)) / 100) as `high` FROM `T_EVENT_EVT` EVT, `T_CONTACT_CON` CON WHERE EVT.`CON_ID` = CON.`CON_ID` AND EVT.`EVT_DELETE` = 0 AND CON.`CON_ID` = ? AND CON.`organization_id` = ? GROUP BY CON.`CON_ID`',
+      [contactId, groupId],
+    );
+
+    if (result2.length > 0) {
+      output = { ...output, ...result2[0] };
+    }
+    res.reliability = output;
+
+    const convertDate = (date: Date) => {
+      return {
+        date: date,
+        timezone_type: 3,
+        timezone: 'UTC',
+      };
+    };
+
+    if (result.createdAt) {
+      res.createdAt = convertDate(result.createdAt);
+    }
+    if (result.updatedAt) {
+      res.updatedAt = convertDate(result.updatedAt);
+    }
+    if (result.deletedAt) {
+      res.deletedAt = convertDate(result.deletedAt);
+    }
+
+    return res;
   }
 }

@@ -16,6 +16,7 @@ import {
 import {
   ActionSaveStructDto,
   BodySaveStructDto,
+  DuplicatePlanDto,
   FindAllStructDto,
   IdStructDto,
 } from './dto/plan.dto';
@@ -63,5 +64,18 @@ export class PlanController {
     @CurrentUser() identity: UserIdentity,
   ) {
     return this.planService.save(request, body, identity);
+  }
+
+  /**
+   * php/plan/duplicate.php
+   * Duplication d'un plan de traitement.
+   */
+  @Post('/duplicate')
+  @UseGuards(TokenGuard)
+  async duplicate(
+    @Body() request: DuplicatePlanDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.planService.duplicate(request, identity?.org);
   }
 }

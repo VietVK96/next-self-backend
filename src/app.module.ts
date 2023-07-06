@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { EntityModule } from './entities';
 import { IRedisConfig } from './common/config/redis.config';
+import { SavePatienttModule } from './save-patient/patient.module';
 import { StickyNoteModule } from './sticky-note/sticky-note.module';
 import { WaitingRoomModule } from './waiting-room/waiting-room.module';
 import { AntecedentPrestationModule } from './antecedent-prestation/antecedent-prestation.module';
@@ -24,8 +25,10 @@ import { LibrariesModule } from './libraries/libraries.module';
 import { EventTaskModule } from './event-task/event-task.module';
 import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
 import { UploadModule } from './upload/upload.module';
+import { TimeslotsModule } from './timeslots/timeslots.module';
 import { UserModule } from './user/user.module';
 import { FileModule } from './file/file.module';
+import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
 
 @Module({
   imports: [
@@ -65,6 +68,7 @@ import { FileModule } from './file/file.module';
     EntityModule,
     ContactModule,
     AuthModule,
+    SavePatienttModule,
     StickyNoteModule,
     WaitingRoomModule,
     AntecedentPrestationModule,
@@ -83,6 +87,8 @@ import { FileModule } from './file/file.module';
     UploadModule,
     FusionPatientModule,
     FileModule,
+    NgapKeysModule,
+    TimeslotsModule,
   ],
 })
 export class AppModule {}

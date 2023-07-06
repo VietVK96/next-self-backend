@@ -218,6 +218,7 @@ export interface IBeneficiary {
   amount_care?: number;
   amount_prosthesis?: number;
   pivot?: {
+    id?: number;
     amount?: number;
     amount_care?: number;
     amount_prosthesis?: number;

@@ -48,6 +48,22 @@ export class IdStructDto {
   id?: number;
 }
 
+export class DuplicatePlanDto {
+  @ApiProperty({
+    required: true,
+  })
+  id?: number;
+
+  @ApiProperty({
+    required: true,
+  })
+  name: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  type?: EnumPlanPlfType;
+}
 export class ActionSaveStructDto {
   @ApiProperty({
     required: false,

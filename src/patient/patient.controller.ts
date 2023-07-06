@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { PatientService } from './service/patient.service';
-import { PatientExportDto } from './dto/index.dto';
+import { PatientExportDto, PatientThirdPartyDto } from './dto/index.dto';
 import { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { TokenGuard } from 'src/common/decorator/auth.decorator';
@@ -34,5 +34,15 @@ export class PatientController {
   @UseGuards(TokenGuard)
   async delete(@Param('id') id: number) {
     return await this.patientService.deletePatient(id);
+  }
+
+  /**
+   * File: php/patients/third-party/index.php
+   */
+  @Get('third-party')
+  @ApiBearerAuth()
+  @UseGuards(TokenGuard)
+  async getPatientThirdParty(@Query() payload: PatientThirdPartyDto) {
+    return await this.patientService.getPatientThirdParty(payload);
   }
 }

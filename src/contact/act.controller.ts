@@ -6,7 +6,7 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { ActServices } from './services/act.service';
-import { UpdateTraceabilitiesDto } from './dto/act.contact.dto';
+import { ActDto, UpdateTraceabilitiesDto } from './dto/act.contact.dto';
 
 @ApiBearerAuth()
 @Controller('/act')
@@ -36,5 +36,17 @@ export class ActController {
       payload,
       userIdentity.org,
     );
+  }
+
+  @Get('show/:id')
+  @UseGuards(TokenGuard)
+  async getShowAct(@Param('id') id: number) {
+    return await this.actService.getShowAct(id);
+  }
+
+  @Patch('update/:id')
+  @UseGuards(TokenGuard)
+  async updateAct(@Param('id') id: number, @Body() payload: ActDto) {
+    return await this.actService.updateAct(id, payload);
   }
 }
