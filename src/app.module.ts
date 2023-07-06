@@ -25,6 +25,7 @@ import { LibrariesModule } from './libraries/libraries.module';
 import { EventTaskModule } from './event-task/event-task.module';
 import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
 import { UploadModule } from './upload/upload.module';
+import { TimeslotsModule } from './timeslots/timeslots.module';
 import { UserModule } from './user/user.module';
 import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
 
@@ -85,6 +86,7 @@ import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
     UploadModule,
     FusionPatientModule,
     NgapKeysModule,
+    TimeslotsModule,
   ],
 })
 export class AppModule {}

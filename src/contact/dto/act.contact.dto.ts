@@ -34,3 +34,36 @@ export class UpdateTraceabilitiesDto {
   })
   traceabilities?: Traceabilities[];
 }
+
+export class Medical {
+  @ApiProperty({
+    name: 'ald',
+    required: false,
+  })
+  ald?: boolean;
+}
+export class ActDto {
+  @ApiProperty({
+    name: 'medical',
+    required: false,
+  })
+  medical?: Medical;
+
+  @ApiProperty({
+    name: 'id',
+    required: false,
+  })
+  id?: number;
+
+  @ApiProperty({
+    name: 'date',
+    required: false,
+  })
+  date?: string;
+
+  @ApiProperty({
+    name: 'label',
+    required: false,
+  })
+  label?: string;
+}

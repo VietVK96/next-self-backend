@@ -33,6 +33,7 @@ import { CashingEntity } from 'src/entities/cashing.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
+import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { UploadService } from 'src/upload/services/upload.service';
 import { OrganizationService } from 'src/organization/service/organization.service';
 import { UploadEntity } from 'src/entities/upload.entity';
@@ -82,6 +83,7 @@ import { UploadModule } from 'src/upload/upload.module';
       CashingContactEntity,
       UserPreferenceEntity,
       ContactUserEntity,
+      DentalEventTaskEntity,
       UploadEntity,
     ]),
     UserModule,
