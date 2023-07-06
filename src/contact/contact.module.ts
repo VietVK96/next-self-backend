@@ -90,6 +90,8 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
       DentalEventTaskEntity,
       UploadEntity,
       CorrespondentEntity,
+      TraceabilityEntity,
+      PatientAmoEntity,
     ]),
     UserModule,
     PatientModule,
