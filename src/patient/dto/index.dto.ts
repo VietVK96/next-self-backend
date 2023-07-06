@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { isArray } from 'class-validator';
 
 export class PatientStructDto {
   @ApiProperty()
@@ -36,9 +37,9 @@ export class PatientThirdPartyDto {
   @ApiProperty()
   sort?: string;
 
-  @ApiProperty()
+  @ApiProperty({ isArray: true, type: String, required: false })
   filterParam?: string[];
 
-  @ApiProperty()
+  @ApiProperty({ isArray: true, type: String, required: false })
   filterValue?: string[];
 }
