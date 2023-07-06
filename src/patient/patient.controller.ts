@@ -40,7 +40,8 @@ export class PatientController {
    * File: php/patients/third-party/index.php
    */
   @Get('third-party')
-  // @UseGuards(TokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(TokenGuard)
   async getPatientThirdParty(@Query() payload: PatientThirdPartyDto) {
     return await this.patientService.getPatientThirdParty(payload);
   }
