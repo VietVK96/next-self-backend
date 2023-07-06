@@ -27,6 +27,7 @@ import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
 import { UploadModule } from './upload/upload.module';
 import { TimeslotsModule } from './timeslots/timeslots.module';
 import { UserModule } from './user/user.module';
+import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
 
 @Module({
   imports: [
@@ -84,6 +85,7 @@ import { UserModule } from './user/user.module';
     EventTaskModule,
     UploadModule,
     FusionPatientModule,
+    NgapKeysModule,
     TimeslotsModule,
   ],
 })
