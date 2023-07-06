@@ -17,6 +17,7 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { SaveEventPayloadDto } from './dto/save.event.dto';
 import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
+import { SaveAgendaDto } from './dto/saveAgenda.event.dto';
 
 @Controller('event')
 @ApiTags('Event')
@@ -47,7 +48,7 @@ export class EventController {
   }
 
   //ecoodentist-1.31.0\php\user\preference\save.php full file
-  @Post()
+  @Post('save')
   @UseGuards(TokenGuard)
   async save(
     @CurrentUser() identity: UserIdentity,
@@ -65,5 +66,14 @@ export class EventController {
     @Param('id') id: number,
   ) {
     return await this.findEventService.findById(doctorId, identity.id, id);
+  }
+
+  @Post('/save')
+  @UseGuards(TokenGuard)
+  async saveAgenda(
+    @Body() payload: SaveAgendaDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.saveEventService.saveAgenda(identity.id, payload);
   }
 }

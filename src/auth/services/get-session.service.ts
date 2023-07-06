@@ -65,7 +65,7 @@ export class GetSessionService {
       .where('USR.USR_ID = :userId', { userId })
       .getRawOne();
 
-    const userPreferences: UserUserPreferenceRes = await queryBuilder
+    const userPreferences = await queryBuilder
       .select([
         'USP.USR_ID as id',
         'USP.USP_LANGUAGE as language',
@@ -113,8 +113,10 @@ export class GetSessionService {
       .where('USP.USR_ID = :userId', { userId })
       .getRawOne();
 
+    console.log(userPreferences);
+
     userPreferences.days = Array.from(
-      String(userPreferences.days.toString()).split('').reverse(),
+      String(userPreferences.days.toString(2)).split('').reverse(),
     )
       .map((digit, index) => (digit === '1' ? index : null))
       .filter((digit) => digit !== null);
