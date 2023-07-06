@@ -38,7 +38,7 @@ export class TaskService {
     ) {
       throw new CNotFoundRequestException(ErrorCode.STATUS_NOT_FOUND);
     }
-    await this.eventTaskRepository.update(payload.id, { state: 0 });
+    await this.eventTaskRepository.update(payload.id, { status: 0 });
   }
 
   /**
