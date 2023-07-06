@@ -91,18 +91,13 @@ export class ActServices {
       where: { actId: id },
       select: ['id'],
     });
-
-    if (dataAfter.length) {
-      await this.eventTaskRepository.save({
-        id,
-        traceabilityStatus: TraceabilityStatusEnum.FILLED,
-      });
-    } else {
-      await this.eventTaskRepository.save({
-        id,
-        traceabilityStatus: TraceabilityStatusEnum.NONE,
-      });
-    }
+    const traceabilityStatus = dataAfter?.length
+      ? TraceabilityStatusEnum.FILLED
+      : TraceabilityStatusEnum.NONE;
+    await this.eventTaskRepository.save({
+      id,
+      traceabilityStatus,
+    });
   }
 
   async getShowAct(id: number) {
