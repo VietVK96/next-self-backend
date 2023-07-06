@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
-import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import {
   PatientBalanceUpdatePayloadDto,
   PatientBalanceUpdateQueryDto,

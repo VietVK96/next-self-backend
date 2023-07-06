@@ -16,6 +16,7 @@ import {
 import {
   ActionSaveStructDto,
   BodySaveStructDto,
+  DuplicatePlanDto,
   FindAllStructDto,
   IdStructDto,
 } from './dto/plan.dto';
@@ -25,13 +26,13 @@ import { PlanService } from './services/plan.service';
 @Controller('plan')
 @ApiTags('Plan')
 export class PlanController {
-  constructor(private PlanService: PlanService) {}
+  constructor(private planService: PlanService) {}
 
   // File /php/contact/plans/findAll.php
   @Get()
   @UseGuards(TokenGuard)
   async findAll(@Query() request: FindAllStructDto) {
-    return this.PlanService.findAll(request);
+    return this.planService.findAll(request);
   }
 
   // File /php/plan/delete.php
@@ -41,7 +42,7 @@ export class PlanController {
     @Query() request: IdStructDto,
     @CurrentUser() identity: UserIdentity,
   ) {
-    return this.PlanService.deleteOne(request, identity);
+    return this.planService.deleteOne(request, identity);
   }
 
   //File /php/plan/find.php
@@ -51,7 +52,7 @@ export class PlanController {
     @Query() request: IdStructDto,
     @CurrentUser() identity: UserIdentity,
   ) {
-    return this.PlanService.findOne(request, identity.org);
+    return this.planService.findOne(request, identity.org);
   }
 
   //File /php/plan.php
@@ -62,6 +63,19 @@ export class PlanController {
     @Body() body: BodySaveStructDto,
     @CurrentUser() identity: UserIdentity,
   ) {
-    return this.PlanService.save(request, body, identity);
+    return this.planService.save(request, body, identity);
+  }
+
+  /**
+   * php/plan/duplicate.php
+   * Duplication d'un plan de traitement.
+   */
+  @Post('/duplicate')
+  @UseGuards(TokenGuard)
+  async duplicate(
+    @Body() request: DuplicatePlanDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.planService.duplicate(request, identity?.org);
   }
 }

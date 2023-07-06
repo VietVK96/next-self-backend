@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -17,8 +18,10 @@ import {
   ContactPaymentDeleteByIdDto,
   ContactPaymentFindAllDto,
   ContactPaymentStoreDto,
+  ContactPaymentUpdateDto,
 } from './dto/contact.payment.dto';
 import { ContactPaymentService } from './services/contact.payment.service';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 
 @ApiBearerAuth()
 @Controller('/contact')
@@ -35,6 +38,14 @@ export class ContactPaymentController {
   @UseGuards(TokenGuard)
   async findAll(@Query() request: ContactPaymentFindAllDto) {
     return this.contactPaymentService.findAll(request);
+  }
+
+  // File php\contact\payment\findAll.php 13->62
+  @Get('/payment/find')
+  @UseGuards(TokenGuard)
+  async find(@Query('id') id: number) {
+    if (!Number(id)) throw new CBadRequestException('id not found');
+    return this.contactPaymentService.show(+id);
   }
 
   // File php\contact\payment\delete.php 21->53
@@ -56,5 +67,12 @@ export class ContactPaymentController {
   @UseGuards(TokenGuard)
   async store(@Body() payload: ContactPaymentStoreDto) {
     return this.contactPaymentService.store(payload);
+  }
+
+  // File php\contact\payment\update.php 13->62
+  @Patch('/payment/update')
+  @UseGuards(TokenGuard)
+  async update(@Body() payload: ContactPaymentUpdateDto) {
+    return this.contactPaymentService.update(payload);
   }
 }
