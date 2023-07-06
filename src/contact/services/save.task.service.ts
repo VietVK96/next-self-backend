@@ -196,7 +196,6 @@ export class SaveTaskService {
       await this.eventTaskRepo.save(act);
     }
     const messages = [];
-    console.log('radiographies', act.patient);
     const radiographies: {
       id: number;
       name: string;
