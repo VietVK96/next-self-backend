@@ -37,6 +37,7 @@ import { UploadModule } from 'src/upload/upload.module';
 import { UploadController } from 'src/upload/upload.controller';
 import { OrganizationService } from 'src/organization/service/organization.service';
 import { UploadEntity } from 'src/entities/upload.entity';
+import { ContactDocumentEntity } from 'src/entities/contact-document.entity';
 
 @Module({
   controllers: [
@@ -83,6 +84,7 @@ import { UploadEntity } from 'src/entities/upload.entity';
       UserPreferenceEntity,
       ContactUserEntity,
       UploadEntity,
+      ContactDocumentEntity,
     ]),
     UserModule,
     PatientModule,

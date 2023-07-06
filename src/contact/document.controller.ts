@@ -4,8 +4,11 @@ import {
   Patch,
   Post,
   Req,
+  Get,
   UseGuards,
   UseInterceptors,
+  Param,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import {
@@ -14,7 +17,6 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { DocumentServices } from './services/document.service';
-import { EventTaskDto } from './dto/task.contact.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiBearerAuth()
@@ -24,7 +26,7 @@ export class DocumentController {
   constructor(private documentService: DocumentServices) {}
 
   /**
-   * /php/contact/document/upload.php
+   * /php/contact/document/upload.php -> full
    *
    */
   @Post('/document/upload')
@@ -51,6 +53,22 @@ export class DocumentController {
   async upload(@CurrentUser() user: UserIdentity, @Req() request: Request) {
     const contactId = request.body['contact'];
     const files: Express.Multer.File = request['file'];
-    return await this.documentService.upload(user.org, contactId, files);
+    const type: string = request.body['type'];
+    return await this.documentService.upload(user.org, contactId, files, type);
+  }
+
+  /**
+   * php/contact/document/findAll.php -> full
+   *
+   */
+  @Get('/document/:id')
+  @UseGuards(TokenGuard)
+  async findAll(
+    @CurrentUser() identity: UserIdentity,
+    @Param('id') id: number,
+    @Query('type') type = 'file',
+    @Query('tags') tags: string[] = [],
+  ) {
+    return await this.documentService.findAll(identity, id, type, tags);
   }
 }
