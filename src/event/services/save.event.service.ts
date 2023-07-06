@@ -120,6 +120,8 @@ export class SaveEventService {
     }
   }
 
+  // file php/event/save.php full file
+  // create and update calendar
   async saveAgenda(userId: number, payload: SaveAgendaDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -159,9 +161,11 @@ export class SaveEventService {
           AND deleted_at IS NOT NULL`,
         [contactId],
       );
-      // if (countStatement.count !== 0) {
-      //   throw new Error(`Le patient a été supprimé. Veuillez restaurer le patient avant de créer / modifier un rendez-vous.`)
-      // }
+      if (countStatement.count !== 0) {
+        throw new Error(
+          `Le patient a été supprimé. Veuillez restaurer le patient avant de créer / modifier un rendez-vous.`,
+        );
+      }
 
       if (!id) {
         await queryRunner.query(
