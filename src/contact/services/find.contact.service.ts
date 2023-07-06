@@ -25,6 +25,7 @@ import {
 import { ColorHelper } from 'src/common/util/color-helper';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
+import { FindRetrieveRes } from '../response/find.retrieve.contact.res';
 
 @Injectable()
 export class FindContactService {
@@ -310,7 +311,11 @@ export class FindContactService {
     return results;
   }
 
-  async getPatientInfoAgenda(contactId: number, practitionerId: number) {
+  async getPatientInfoAgenda(
+    contactId: number,
+    practitionerId: number,
+    groupId: number,
+  ): Promise<FindRetrieveRes> {
     const result = await this.entityManager.findOne(ContactEntity, {
       where: { id: contactId },
       relations: [
@@ -324,159 +329,142 @@ export class FindContactService {
       ],
     });
 
-    // result['addressed_by'] = null;
-    // if (result.cpdId) {
-    //   result['addressed_by'] = {
-    //     result.cores
-    //     id: correspondent.id,
-    //     last_name: correspondent.lastName,
-    //     first_name: correspondent.firstName
-    //   }
-    // };
+    const res: FindRetrieveRes = {
+      id: result.id,
+      nbr: result.nbr,
+      lastname: result.lastname,
+      lastNamePhonetic: result.lastNamePhonetic,
+      firstname: result.firstname,
+      firstNamePhonetic: result.firstNamePhonetic,
+      profession: result.profession,
+      email: result.email,
+      birthday: result.birthDate,
+      birthDateLunar: result.birthDateLunar,
+      birthOrder: result.birthOrder,
+      quality: result.quality,
+      breastfeeding: result.breastfeeding,
+      pregnancy: result.pregnancy,
+      clearanceCreatinine: result.clearanceCreatinine,
+      hepaticInsufficiency: result.hepaticInsufficiency,
+      weight: result.weight,
+      size: result.size,
+      conMedecinTraitantId: result.conMedecinTraitantId,
+      msg: result.msg,
+      odontogramObservation: result.odontogramObservation,
+      notificationMsg: result.notificationMsg,
+      notificationEnable: result.notificationEnable,
+      notificationEveryTime: result.notificationEveryTime,
+      color: result.color,
+      colorMedical: result.colorMedical,
+      insee: result.insee,
+      inseeKey: result.inseeKey,
+      socialSecurityReimbursementRate: result.socialSecurityReimbursementRate,
+      mutualRepaymentType: result.mutualRepaymentType,
+      mutualRepaymentRate: result.mutualRepaymentRate,
+      mutualComplement: result.mutualComplement,
+      mutualCeiling: result.mutualCeiling,
+      agenesie: result.agenesie,
+      maladieRare: result.maladieRare,
+      rxSidexisLoaded: result.rxSidexisLoaded,
+      externalReferenceId: result.externalReferenceId,
+      reminderVisitType: result.reminderVisitType,
+      reminderVisitDuration: result.reminderVisitDuration,
+      reminderVisitDate: result.reminderVisitDate,
+      reminderVisitLastDate: result.reminderVisitLastDate,
+      delete: result.delete,
+      organizationId: result.organizationId,
+      genId: result.genId,
+      adrId: result.adrId,
+      uplId: result.uplId,
+      cpdId: result.cpdId,
+      cofId: result.cofId,
+      ursId: result.ursId,
+      createdAt: null,
+      updatedAt: null,
+      deletedAt: null,
+      gender: {
+        id: result.gender.id,
+        name: result.gender.name,
+        longName: result.gender.longName,
+        type: result.gender.type,
+      },
+      user: result.user,
+      address: result.address,
+      phones: result.phones,
+      family: result.family,
+      addressed_by: null,
+      doctor: null,
+      amountDue: null,
+      reliability: null,
+    };
+    if (result.cpdId) {
+      res.addressed_by = {
+        id: result.correspondent.id,
+        last_name: result.correspondent.lastName,
+        first_name: result.correspondent.firstName,
+      };
+    }
 
-    result['doctor'] = null;
-    console.log(result);
+    if (result.medecinTraitant) {
+      res['doctor'] = {
+        id: result.medecinTraitant.id,
+        last_name: result.medecinTraitant.lastName,
+        first_name: result.medecinTraitant.firstName,
+      };
+    }
+
+    const amountDue: [] = await this.dataSource.query(
+      `
+    SELECT IFNULL(cou_amount_due, 0)
+    FROM contact_user_cou cou
+    WHERE cou.con_id = ?
+      AND cou.usr_id = ?`,
+      [contactId, practitionerId],
+    );
+    res.amountDue = amountDue.length > 0 ? true : false;
+
+    let output: {
+      max: number;
+      total: number;
+      value: number;
+      low: number;
+      high: number;
+    } = { max: 0, total: 0, value: 0, low: 0, high: 0 };
+
+    const result2: {
+      max: number;
+      total: number;
+      value: number;
+      low: number;
+      high: number;
+    }[] = await this.dataSource.query(
+      'SELECT COUNT(*) as `max`, COUNT(*) - SUM(IF(EVT.`EVT_STATE` IN (2, 3), 1, 0)) as `value`, ROUND((10 * COUNT(*)) / 100) as `low`, ROUND((50 * COUNT(*)) / 100) as `high` FROM `T_EVENT_EVT` EVT, `T_CONTACT_CON` CON WHERE EVT.`CON_ID` = CON.`CON_ID` AND EVT.`EVT_DELETE` = 0 AND CON.`CON_ID` = ? AND CON.`organization_id` = ? GROUP BY CON.`CON_ID`',
+      [contactId, groupId],
+    );
+
+    if (result2.length > 0) {
+      output = { ...output, ...result2[0] };
+    }
+    res.reliability = output;
+
+    const convertDate = (date: Date) => {
+      return {
+        date: date,
+        timezone_type: 3,
+        timezone: 'UTC',
+      };
+    };
+
+    if (result.createdAt) {
+      res.createdAt = convertDate(result.createdAt);
+    }
+    if (result.updatedAt) {
+      res.updatedAt = convertDate(result.updatedAt);
+    }
+    if (result.deletedAt) {
+      res.deletedAt = convertDate(result.deletedAt);
+    }
+
+    return res;
   }
 }
-
-// {
-//   "id": 128,
-//   "nbr": 25,
-//   "lastname": "PHUONG ANH",
-//   "lastNamePhonetic": "FNKN",
-//   "firstname": "Nguyen",
-//   "firstNamePhonetic": "NKYN",
-//   "profession": "",
-//   "email": "",
-//   "birthday": null,
-//   "birthOrder": 1,
-//   "quality": 0,
-//   "breastfeeding": 0,
-//   "pregnancy": 0,
-//   "clearanceCreatinine": 0,
-//   "hepaticInsufficiency": "",
-//   "weight": 0,
-//   "size": 0,
-//   "msg": "",
-//   "notificationMsg": "",
-//   "notificationEnable": 0,
-//   "notificationEveryTime": 0,
-//   "color": -3840,
-//   "colorMedical": -3840,
-//   "insee": "0220910005144",
-//   "inseeKey": "12",
-//   "socialSecurityReimbursementRate": "26.00",
-//   "mutualRepaymentType": 1,
-//   "mutualRepaymentRate": 0,
-//   "mutualComplement": 0,
-//   "mutualCeiling": 0,
-//   "agenesie": 0,
-//   "maladieRare": 0,
-//   "rxSidexisLoaded": 0,
-//   "reminderVisitType": "duration",
-//   "reminderVisitDuration": 0,
-//   "reminderVisitDate": null,
-//   "reminderVisitLastDate": null,
-//   "delete": 0,
-//   "deletedAt": null,
-//   "createdAt": {
-//       "date": "2023-06-29 08:03:25.000000",
-//       "timezone_type": 3,
-//       "timezone": "UTC"
-//   },
-//   "updatedAt": {
-//       "date": "2023-06-29 08:03:27.000000",
-//       "timezone_type": 3,
-//       "timezone": "UTC"
-//   },
-//   "gender": {
-//       "id": 1,
-//       "name": "M",
-//       "longName": "Monsieur",
-//       "type": "M"
-//   },
-//   "user": {
-//       "id": 1,
-//       "admin": 1,
-//       "log": "demoecoo",
-//       "password": "$2y$10$pOhK3821mP1QxozKrUEC9uy\/MqTYKoqfjeMxaPIYy8NLuF4x27K3K",
-//       "passwordHash": true,
-//       "email": "support@ecoodentist.com",
-//       "validated": {
-//           "date": "1995-06-18 00:00:00.000000",
-//           "timezone_type": 3,
-//           "timezone": "UTC"
-//       },
-//       "abbr": "123",
-//       "lastname": "ROULETTE",
-//       "firstname": "Paul",
-//       "color": {
-//           "backColor": "#007bff",
-//           "foreColor": "#ffffff"
-//       },
-//       "gsm": "",
-//       "phoneNumber": "",
-//       "faxNumber": "",
-//       "permissionLibrary": 15,
-//       "permissionPatient": 15,
-//       "permissionPatientView": 1,
-//       "permissionPassword": 15,
-//       "permissionDelete": 15,
-//       "agaMember": 0,
-//       "freelance": false,
-//       "droitPermanentDepassement": 1,
-//       "numeroFacturant": "994003143",
-//       "finess": "12",
-//       "fluxCps": null,
-//       "rateCharges": 4,
-//       "socialSecurityReimbursementBaseRate": "100.00",
-//       "socialSecurityReimbursementRate": "1.00",
-//       "bcbLicense": "999999998",
-//       "signature": null,
-//       "pendingDeletion": 0,
-//       "client": 1,
-//       "token": "fb3d5e0f-794b-3747-b1e1-a4ff555829de",
-//       "createdAt": {
-//           "date": "2023-05-29 13:57:06.000000",
-//           "timezone_type": 3,
-//           "timezone": "UTC"
-//       },
-//       "updatedAt": {
-//           "date": "2023-07-05 11:37:16.000000",
-//           "timezone_type": 3,
-//           "timezone": "UTC"
-//       },
-//       "deletedAt": null
-//   },
-//   "address": {
-//       "id": 30,
-//       "street": "",
-//       "streetComp": "",
-//       "zipCode": "",
-//       "city": "",
-//       "country": "France",
-//       "countryAbbr": "FR",
-//       "createdAt": {
-//           "date": "2023-06-15 07:01:58.000000",
-//           "timezone_type": 3,
-//           "timezone": "UTC"
-//       },
-//       "updatedAt": {
-//           "date": "2023-06-15 07:01:58.000000",
-//           "timezone_type": 3,
-//           "timezone": "UTC"
-//       }
-//   },
-//   "phones": [],
-//   "family": null,
-//   "addressed_by": null,
-//   "doctor": null,
-//   "amountDue": false,
-//   "reliability": {
-//       "total": 0,
-//       "value": "4",
-//       "low": "0",
-//       "high": "2",
-//       "max": 4
-//   }
-// }

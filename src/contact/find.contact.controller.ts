@@ -69,6 +69,10 @@ export class FindContactController {
     @Param('id') id: number,
     @CurrentUser() identity: UserIdentity,
   ) {
-    return this.findContactService.getPatientInfoAgenda(id, identity.id);
+    return this.findContactService.getPatientInfoAgenda(
+      id,
+      identity.id,
+      identity.org,
+    );
   }
 }
