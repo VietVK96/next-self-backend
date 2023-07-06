@@ -153,12 +153,12 @@ export class CorrespondentEntity {
    * @Serializer\Expose
    * @Assert\Type("string")
    */
-  @Column({
-    name: 'CPD_MSG',
-    type: 'text',
-    nullable: true,
-  })
-  observation?: string;
+  // @Column({
+  //   name: 'CPD_MSG',
+  //   type: 'text',
+  //   nullable: true,
+  // })
+  // observation?: string;
 
   /**
    * @ORM\Column(name="CPD_MSG", type="text", nullable=true)

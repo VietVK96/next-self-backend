@@ -40,6 +40,7 @@ import { UploadEntity } from 'src/entities/upload.entity';
 import { UploadModule } from 'src/upload/upload.module';
 import { SaveTaskService } from './services/save.task.service';
 import { PatientAmoEntity } from 'src/entities/patient-amo.entity';
+import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 
 @Module({
   controllers: [
@@ -86,6 +87,9 @@ import { PatientAmoEntity } from 'src/entities/patient-amo.entity';
       CashingContactEntity,
       UserPreferenceEntity,
       ContactUserEntity,
+      DentalEventTaskEntity,
+      UploadEntity,
+      CorrespondentEntity,
     ]),
     UserModule,
     PatientModule,

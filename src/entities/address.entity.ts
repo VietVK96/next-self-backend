@@ -53,13 +53,13 @@ export class AddressEntity {
    * @Assert\Type("string")
    * @Assert\Length(max=255)
    */
-  @Column({
-    name: 'ADR_STREET_COMP',
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-  })
-  street2?: string;
+  // @Column({
+  //   name: 'ADR_STREET_COMP',
+  //   type: 'varchar',
+  //   length: 255,
+  //   nullable: true,
+  // })
+  // street2?: string;
 
   /**
    * @ORM\Column(name="ADR_ZIP_CODE", type="string", length=6, nullable=true)
@@ -114,13 +114,13 @@ export class AddressEntity {
    * @Expose
    * @var string|null
    */
-  @Column({
-    name: 'ADR_COUNTRY_ABBR',
-    type: 'varchar',
-    length: 3,
-    nullable: true,
-  })
-  countryCode?: string;
+  // @Column({
+  //   name: 'ADR_COUNTRY_ABBR',
+  //   type: 'varchar',
+  //   length: 3,
+  //   nullable: true,
+  // })
+  // countryCode?: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

@@ -191,6 +191,7 @@ export class TaskService {
           }
         }
         if (payload?.name === 'caresheet' && (payload.value as boolean)) {
+          const state = payload.value ? 2 : 1;
           const installCaresheet = `
 					UPDATE T_EVENT_TASK_ETK
                 JOIN T_DENTAL_EVENT_TASK_DET
@@ -199,7 +200,7 @@ export class TaskService {
                   AND T_EVENT_TASK_ETK.ETK_ID = T_DENTAL_EVENT_TASK_DET.ETK_ID
                   AND T_DENTAL_EVENT_TASK_DET.FSE_ID IS NULL`;
           await this.dataSource.manager.query(installCaresheet, [
-            payload?.value,
+            state,
             payload?.pk,
           ]);
         }
