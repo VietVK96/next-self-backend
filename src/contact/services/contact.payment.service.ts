@@ -257,7 +257,7 @@ export class ContactPaymentService {
         }
       } else {
         const deadlinesCount = deadlines.length;
-        const descriptionBis = description;
+        const descriptionBis = description || '';
         await Promise.all(
           deadlines.map(async (deadline, deadlineIndex) => {
             let amountCareTemp = 0;
@@ -433,6 +433,7 @@ export class ContactPaymentService {
       const paymentPayees: CashingContactEntity[] = beneficiaries.map(
         (beneficiary) => {
           return {
+            id: beneficiary?.pivot?.id,
             csgId: insertPayment.id,
             conId: beneficiary.id,
             amount: beneficiary.pivot.amount,
