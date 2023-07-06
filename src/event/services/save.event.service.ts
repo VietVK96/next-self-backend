@@ -229,7 +229,6 @@ export class SaveEventService {
           await Promise.all(promiseArr);
         }
       } else {
-        console.log('event');
         const eventStatement: { status: number; lateness: number }[] =
           await queryRunner.query(
             `
