@@ -70,7 +70,6 @@ export class UserService {
   }
 
   async updateUserMedical(id: number, payload: UpdateTherapeuticDto) {
-    console.log('payload', JSON.stringify(payload.therapeutic_alternative));
     const datas = await this.userMedicalRepository.find({
       where: { userId: id },
     });
