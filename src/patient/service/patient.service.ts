@@ -39,6 +39,8 @@ export class PatientService {
     private patientRepository: Repository<ContactEntity>,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
+    @InjectRepository(ContactUserEntity)
+    private contactUserRepository: Repository<ContactUserEntity>,
   ) {}
 
   async getExportQuery(res: Response, request: PatientExportDto): Promise<any> {
@@ -271,5 +273,32 @@ export class PatientService {
       doctor: doctorStm,
       doctors: doctorsRes,
     };
+  }
+
+  /**
+   * application/Entity/Patient.php
+   * getPatientUser() 684 -> 700
+   *
+   */
+  async getPatientUser(userId: number, patientId: number) {
+    const patient = await this.patientRepository.find({
+      where: { id: patientId },
+      relations: {
+        patientUsers: true,
+      },
+    });
+
+    const patientUser = patient[0].patientUsers.find((e) => e.usrId === userId);
+    if (patientUser) {
+      return patientUser;
+    }
+
+    // ! this save not working with err
+    // Column 'cou_last_care' specified twice
+    // PHP Code with same err
+    return await this.contactUserRepository.save({
+      conId: patientId,
+      usrId: userId,
+    });
   }
 }
