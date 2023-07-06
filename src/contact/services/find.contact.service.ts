@@ -6,7 +6,12 @@ import { EventEntity } from 'src/entities/event.entity';
 import { GenderEntity } from 'src/entities/gender.entity';
 import { PhoneEntity } from 'src/entities/phone.entity';
 import { UserEntity } from 'src/entities/user.entity';
-import { DataSource, SelectQueryBuilder } from 'typeorm';
+import {
+  DataSource,
+  Repository,
+  SelectQueryBuilder,
+  EntityManager,
+} from 'typeorm';
 import {
   FindAllContactDto,
   FindAllStructDto,
@@ -18,6 +23,8 @@ import {
   FindAllRecentlyTreatedRes,
 } from '../response/findall.recentlyTreated.res';
 import { ColorHelper } from 'src/common/util/color-helper';
+import { InjectRepository } from '@nestjs/typeorm';
+import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 
 @Injectable()
 export class FindContactService {
@@ -46,7 +53,14 @@ export class FindContactService {
     city: 'ADR.ADR_CITY',
   };
 
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private dataSource: DataSource,
+    @InjectRepository(ContactEntity)
+    private contactRepo: Repository<ContactEntity>,
+    @InjectRepository(CorrespondentEntity)
+    private correspondentRepo: Repository<CorrespondentEntity>,
+    private entityManager: EntityManager,
+  ) {}
 
   // Convert function from application\Services\SearchCriteria.php
   addWhere(
@@ -295,4 +309,174 @@ export class FindContactService {
 
     return results;
   }
+
+  async getPatientInfoAgenda(contactId: number, practitionerId: number) {
+    const result = await this.entityManager.findOne(ContactEntity, {
+      where: { id: contactId },
+      relations: [
+        'gender',
+        'user',
+        'correspondent',
+        'medecinTraitant',
+        'address',
+        'phones',
+        'family',
+      ],
+    });
+
+    // result['addressed_by'] = null;
+    // if (result.cpdId) {
+    //   result['addressed_by'] = {
+    //     result.cores
+    //     id: correspondent.id,
+    //     last_name: correspondent.lastName,
+    //     first_name: correspondent.firstName
+    //   }
+    // };
+
+    result['doctor'] = null;
+    console.log(result);
+  }
 }
+
+// {
+//   "id": 128,
+//   "nbr": 25,
+//   "lastname": "PHUONG ANH",
+//   "lastNamePhonetic": "FNKN",
+//   "firstname": "Nguyen",
+//   "firstNamePhonetic": "NKYN",
+//   "profession": "",
+//   "email": "",
+//   "birthday": null,
+//   "birthOrder": 1,
+//   "quality": 0,
+//   "breastfeeding": 0,
+//   "pregnancy": 0,
+//   "clearanceCreatinine": 0,
+//   "hepaticInsufficiency": "",
+//   "weight": 0,
+//   "size": 0,
+//   "msg": "",
+//   "notificationMsg": "",
+//   "notificationEnable": 0,
+//   "notificationEveryTime": 0,
+//   "color": -3840,
+//   "colorMedical": -3840,
+//   "insee": "0220910005144",
+//   "inseeKey": "12",
+//   "socialSecurityReimbursementRate": "26.00",
+//   "mutualRepaymentType": 1,
+//   "mutualRepaymentRate": 0,
+//   "mutualComplement": 0,
+//   "mutualCeiling": 0,
+//   "agenesie": 0,
+//   "maladieRare": 0,
+//   "rxSidexisLoaded": 0,
+//   "reminderVisitType": "duration",
+//   "reminderVisitDuration": 0,
+//   "reminderVisitDate": null,
+//   "reminderVisitLastDate": null,
+//   "delete": 0,
+//   "deletedAt": null,
+//   "createdAt": {
+//       "date": "2023-06-29 08:03:25.000000",
+//       "timezone_type": 3,
+//       "timezone": "UTC"
+//   },
+//   "updatedAt": {
+//       "date": "2023-06-29 08:03:27.000000",
+//       "timezone_type": 3,
+//       "timezone": "UTC"
+//   },
+//   "gender": {
+//       "id": 1,
+//       "name": "M",
+//       "longName": "Monsieur",
+//       "type": "M"
+//   },
+//   "user": {
+//       "id": 1,
+//       "admin": 1,
+//       "log": "demoecoo",
+//       "password": "$2y$10$pOhK3821mP1QxozKrUEC9uy\/MqTYKoqfjeMxaPIYy8NLuF4x27K3K",
+//       "passwordHash": true,
+//       "email": "support@ecoodentist.com",
+//       "validated": {
+//           "date": "1995-06-18 00:00:00.000000",
+//           "timezone_type": 3,
+//           "timezone": "UTC"
+//       },
+//       "abbr": "123",
+//       "lastname": "ROULETTE",
+//       "firstname": "Paul",
+//       "color": {
+//           "backColor": "#007bff",
+//           "foreColor": "#ffffff"
+//       },
+//       "gsm": "",
+//       "phoneNumber": "",
+//       "faxNumber": "",
+//       "permissionLibrary": 15,
+//       "permissionPatient": 15,
+//       "permissionPatientView": 1,
+//       "permissionPassword": 15,
+//       "permissionDelete": 15,
+//       "agaMember": 0,
+//       "freelance": false,
+//       "droitPermanentDepassement": 1,
+//       "numeroFacturant": "994003143",
+//       "finess": "12",
+//       "fluxCps": null,
+//       "rateCharges": 4,
+//       "socialSecurityReimbursementBaseRate": "100.00",
+//       "socialSecurityReimbursementRate": "1.00",
+//       "bcbLicense": "999999998",
+//       "signature": null,
+//       "pendingDeletion": 0,
+//       "client": 1,
+//       "token": "fb3d5e0f-794b-3747-b1e1-a4ff555829de",
+//       "createdAt": {
+//           "date": "2023-05-29 13:57:06.000000",
+//           "timezone_type": 3,
+//           "timezone": "UTC"
+//       },
+//       "updatedAt": {
+//           "date": "2023-07-05 11:37:16.000000",
+//           "timezone_type": 3,
+//           "timezone": "UTC"
+//       },
+//       "deletedAt": null
+//   },
+//   "address": {
+//       "id": 30,
+//       "street": "",
+//       "streetComp": "",
+//       "zipCode": "",
+//       "city": "",
+//       "country": "France",
+//       "countryAbbr": "FR",
+//       "createdAt": {
+//           "date": "2023-06-15 07:01:58.000000",
+//           "timezone_type": 3,
+//           "timezone": "UTC"
+//       },
+//       "updatedAt": {
+//           "date": "2023-06-15 07:01:58.000000",
+//           "timezone_type": 3,
+//           "timezone": "UTC"
+//       }
+//   },
+//   "phones": [],
+//   "family": null,
+//   "addressed_by": null,
+//   "doctor": null,
+//   "amountDue": false,
+//   "reliability": {
+//       "total": 0,
+//       "value": "4",
+//       "low": "0",
+//       "high": "2",
+//       "max": 4
+//   }
+// }
