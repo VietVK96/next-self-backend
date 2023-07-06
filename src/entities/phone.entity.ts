@@ -49,12 +49,12 @@ export class PhoneEntity {
    * @Assert\NotBlank
    * @Assert\Length(max=15)
    */
-  @Column({
-    name: 'PHO_NBR',
-    type: 'varchar',
-    length: 15,
-  })
-  number?: string;
+  // @Column({
+  //   name: 'PHO_NBR',
+  //   type: 'varchar',
+  //   length: 15,
+  // })
+  // number?: string;
 
   /** File: application\Entities\Phone.php and application\Entities\PhoneEntity.php
    * Type de numéro de téléphone.

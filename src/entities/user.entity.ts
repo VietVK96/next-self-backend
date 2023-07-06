@@ -117,12 +117,12 @@ export class UserEntity {
    * @Assert\NotBlank
    * @Assert\Length(max=255)
    */
-  @Column({
-    name: 'USR_LOG',
-    type: 'varchar',
-    length: 31,
-  })
-  username?: string;
+  // @Column({
+  //   name: 'USR_LOG',
+  //   type: 'varchar',
+  //   length: 31,
+  // })
+  // username?: string;
 
   /**
    * @ORM\Column(name="password_accounting", type="string", length=255, nullable=true)
@@ -196,12 +196,12 @@ export class UserEntity {
    * @Assert\NotBlank
    * @Assert\Length(max=3)
    */
-  @Column({
-    name: 'USR_ABBR',
-    type: 'varchar',
-    length: 3,
-  })
-  shortName?: string;
+  // @Column({
+  //   name: 'USR_ABBR',
+  //   type: 'varchar',
+  //   length: 3,
+  // })
+  // shortName?: string;
 
   /**
    * @ORM\Column(name="USR_LASTNAME", type="string", length=50)
@@ -262,13 +262,13 @@ export class UserEntity {
    * @Assert\Type("string")
    * @Assert\Length(max=45)
    */
-  @Column({
-    name: 'USR_PHONE_NUMBER',
-    nullable: true,
-    type: 'varchar',
-    length: 45,
-  })
-  homePhoneNumber?: string;
+  // @Column({
+  //   name: 'USR_PHONE_NUMBER',
+  //   nullable: true,
+  //   type: 'varchar',
+  //   length: 45,
+  // })
+  // homePhoneNumber?: string;
 
   /**
    * @ORM\Column(name="USR_FAX_NUMBER", type="string", length=45, nullable=true)
@@ -371,13 +371,13 @@ export class UserEntity {
    * @Assert\Type("bool")
    * @Assert\NotNull
    */
-  @Column({
-    name: 'USR_AGA_MEMBER',
-    type: 'tinyint',
-    width: 1,
-    default: 0,
-  })
-  memberOfApprovedAssociation?: number;
+  // @Column({
+  //   name: 'USR_AGA_MEMBER',
+  //   type: 'tinyint',
+  //   width: 1,
+  //   default: 0,
+  // })
+  // memberOfApprovedAssociation?: number;
 
   /**
    * @ORM\Column(name="freelance", type="boolean", options={"default": false})
@@ -421,13 +421,13 @@ export class UserEntity {
    * @Expose
    * @var string
    */
-  @Column({
-    name: 'USR_NUMERO_FACTURANT',
-    type: 'varchar',
-    length: 13,
-    nullable: true,
-  })
-  adeliNumber?: string;
+  // @Column({
+  //   name: 'USR_NUMERO_FACTURANT',
+  //   type: 'varchar',
+  //   length: 13,
+  //   nullable: true,
+  // })
+  // adeliNumber?: string;
 
   /**
    * @ORM\Column(name="finess", type="string", length=9, nullable=true)
@@ -446,13 +446,13 @@ export class UserEntity {
    * @Assert\Type("string")
    * @Assert\Length(max=9)
    */
-  @Column({
-    name: 'finess',
-    type: 'varchar',
-    length: 9,
-    nullable: true,
-  })
-  finessNumber?: string;
+  // @Column({
+  //   name: 'finess',
+  //   type: 'varchar',
+  //   length: 9,
+  //   nullable: true,
+  // })
+  // finessNumber?: string;
 
   /**
    * @ORM\Column(name="USR_FLUX_CPS", type="text", nullable=true)
@@ -518,12 +518,12 @@ export class UserEntity {
   /**
    * @ORM\Column(name="USR_BCB_LICENSE", type="string", length=255, nullable=true)
    */
-  @Column({
-    name: 'USR_BCB_LICENSE',
-    type: 'text',
-    nullable: true,
-  })
-  claudeBernardLicence?: string;
+  // @Column({
+  //   name: 'USR_BCB_LICENSE',
+  //   type: 'text',
+  //   nullable: true,
+  // })
+  // claudeBernardLicence?: string;
 
   /**
    * @ORM\Column(name="settings", type="json")
@@ -574,13 +574,13 @@ export class UserEntity {
    * @ORM\Column(name="USR_CLIENT", type="integer", options={"default": 0})
    * @Assert\Choice(callback={"App\Enum\AccountStatusEnum", "getValues"})
    */
-  @Column({
-    name: 'USR_CLIENT',
-    type: 'tinyint',
-    width: 4,
-    default: 0,
-  })
-  accountStatus?: number;
+  // @Column({
+  //   name: 'USR_CLIENT',
+  //   type: 'tinyint',
+  //   width: 4,
+  //   default: 0,
+  // })
+  // accountStatus?: number;
 
   /**
    * @ORM\Column(name="USR_TOKEN", type="string", length=23, nullable=false)
