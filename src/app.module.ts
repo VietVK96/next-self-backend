@@ -23,6 +23,7 @@ import { PlanModule } from './plans/plan.module';
 import { MailModule } from './mail/mail.module';
 import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
 import { UploadModule } from './upload/upload.module';
+import { TimeslotsModule } from './timeslots/timeslots.module';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { UploadModule } from './upload/upload.module';
     MailModule,
     UploadModule,
     FusionPatientModule,
+    TimeslotsModule,
   ],
 })
 export class AppModule {}

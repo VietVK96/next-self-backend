@@ -17,10 +17,25 @@ export class FindEventService {
   constructor(private readonly dataSource: DataSource) {}
 
   //ecoodentist-1.31.0\php\event\findAll.php
-  async prepareSql(sql: string, key: number, value: string) {
-    const result = await this.dataSource.query(sql, [key, value]);
-    const resultFormat = result.length === 0 ? null : result[0].PHO_NBR;
-    return resultFormat;
+  async prepareSql(sql: string, value: string) {
+    const result = await this.dataSource.query(sql, [value]);
+    return result;
+  }
+
+  getPhoneNumberByContactId(arr, contactId: number): string | null {
+    let previousPhoneNumber: string | null = null;
+    const phoneNumber =
+      arr.find((item) => {
+        if (item.CON_ID === contactId) {
+          if (previousPhoneNumber === null) {
+            previousPhoneNumber = item.PHO_NBR;
+          }
+          return true;
+        }
+        return false;
+      })?.PHO_NBR || previousPhoneNumber;
+
+    return phoneNumber;
   }
 
   calculateAge(birthDate: string): string {
@@ -52,6 +67,8 @@ export class FindEventService {
     return ageString;
   }
 
+  getPhoneNumber;
+
   getStartDay(date: string) {
     const modifiedDate = new Date(date);
     modifiedDate.setHours(0, 0, 0, 0);
@@ -82,35 +99,37 @@ export class FindEventService {
   ) {
     const formattedResources = resources.map((item) => `'${item}'`).join(',');
 
-    const sqlHome = `SELECT T_PHONE_PHO.PHO_NBR
-    FROM T_CONTACT_PHONE_COP
-    JOIN T_PHONE_PHO
-    JOIN T_PHONE_TYPE_PTY
-    WHERE T_CONTACT_PHONE_COP.CON_ID = ? AND
-    T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
-      AND T_PHONE_PHO.PTY_ID = T_PHONE_TYPE_PTY.PTY_ID
-      AND T_PHONE_TYPE_PTY.PTY_NAME = ?
-    LIMIT 1`;
-
-    const sqlMobile = `SELECT T_PHONE_PHO.PHO_NBR
+    const sqlHome = await this.prepareSql(
+      `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
      FROM T_CONTACT_PHONE_COP
     JOIN T_PHONE_PHO
     JOIN T_PHONE_TYPE_PTY
-    WHERE T_CONTACT_PHONE_COP.CON_ID = ?
-    AND T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
+    WHERE T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
     AND T_PHONE_PHO.PTY_ID = T_PHONE_TYPE_PTY.PTY_ID
-    AND T_PHONE_TYPE_PTY.PTY_NAME = ?
-    LIMIT 1`;
+    AND T_PHONE_TYPE_PTY.PTY_NAME = ?`,
+      'home',
+    );
 
-    const sqlSms = `SELECT T_PHONE_PHO.PHO_NBR
+    const sqlMobile = await this.prepareSql(
+      `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
      FROM T_CONTACT_PHONE_COP
     JOIN T_PHONE_PHO
     JOIN T_PHONE_TYPE_PTY
-    WHERE T_CONTACT_PHONE_COP.CON_ID = ?
-    AND T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
+    WHERE T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
     AND T_PHONE_PHO.PTY_ID = T_PHONE_TYPE_PTY.PTY_ID
-    AND T_PHONE_TYPE_PTY.PTY_NAME = ?
-    LIMIT 1`;
+    AND T_PHONE_TYPE_PTY.PTY_NAME = ?`,
+      'mobile',
+    );
+    const sqlSms = await this.prepareSql(
+      `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
+     FROM T_CONTACT_PHONE_COP
+    JOIN T_PHONE_PHO
+    JOIN T_PHONE_TYPE_PTY
+    WHERE T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
+    AND T_PHONE_PHO.PTY_ID = T_PHONE_TYPE_PTY.PTY_ID
+    AND T_PHONE_TYPE_PTY.PTY_NAME = ?`,
+      'sms',
+    );
 
     const result = await this.dataSource.query(
       `SELECT
@@ -172,15 +191,15 @@ export class FindEventService {
           homePhoneNumber:
             item.patientId === null
               ? null
-              : await this.prepareSql(sqlHome, item.patientId, 'home'),
+              : this.getPhoneNumberByContactId(sqlHome, item.patientId),
           mobilePhoneNumber:
             item.patientId === null
               ? null
-              : await this.prepareSql(sqlMobile, item.patientId, 'mobile'),
+              : this.getPhoneNumberByContactId(sqlMobile, item.patientId),
           smsPhoneNumber:
             item.patientId === null
               ? null
-              : await this.prepareSql(sqlSms, item.patientId, 'sms'),
+              : this.getPhoneNumberByContactId(sqlSms, item.patientId),
           age: this.calculateAge(item.birthDate),
           className:
             item.state === 0 ? null : classNameFromStatuses.get(item.state),
