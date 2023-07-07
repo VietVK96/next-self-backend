@@ -68,7 +68,7 @@ export class EventController {
     return await this.findEventService.findById(doctorId, identity.id, id);
   }
 
-  @Post('/save')
+  @Post('/task/save')
   @UseGuards(TokenGuard)
   async saveAgenda(
     @Body() payload: SaveAgendaDto,
