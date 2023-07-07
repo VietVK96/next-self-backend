@@ -476,7 +476,7 @@ export class TaskService {
               );
             } else {
               Promise.all(
-                radiographies.map(async (radiographie, index) => {
+                radiographies.map(async (radiographie) => {
                   if (Number(radiographie.coef) === 0.5) {
                     await Promise.all([
                       queryRunner.query(
