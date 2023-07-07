@@ -28,6 +28,8 @@ import { UploadModule } from './upload/upload.module';
 import { TimeslotsModule } from './timeslots/timeslots.module';
 import { UserModule } from './user/user.module';
 import { PlanPlfModule } from './plan-plf/plan-plf.module';
+import { FileModule } from './file/file.module';
+import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
 
 @Module({
   imports: [
@@ -85,6 +87,8 @@ import { PlanPlfModule } from './plan-plf/plan-plf.module';
     EventTaskModule,
     UploadModule,
     FusionPatientModule,
+    FileModule,
+    NgapKeysModule,
     TimeslotsModule,
     PlanPlfModule,
   ],
