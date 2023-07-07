@@ -7,7 +7,7 @@ import { CNotFoundRequestException } from 'src/common/exceptions/notfound-reques
 import { ErrorCode } from 'src/constants/error';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import * as utc from 'dayjs/plugin/utc';
 import * as timezone from 'dayjs/plugin/timezone';
 import { EnumDentalEventTaskComp } from 'src/entities/dental-event-task.entity';
@@ -15,6 +15,8 @@ import { DentalModifierEntity } from 'src/entities/dental-modifier.entity';
 import { CcamEntity } from 'src/entities/ccam.entity';
 import { DataSource } from 'typeorm';
 import { ExceedingEnum } from 'src/constants/act';
+import { UserEntity } from 'src/entities/user.entity';
+import { CcamUnitPriceEntity } from 'src/entities/ccamunitprice.entity';
 
 @Injectable()
 export class TaskService {
@@ -27,6 +29,8 @@ export class TaskService {
     private dentalModifierRepository: Repository<DentalModifierEntity>,
     @InjectRepository(CcamEntity)
     private ccamRepository: Repository<CcamEntity>,
+    @InjectRepository(UserEntity)
+    private userRepo: Repository<UserEntity>,
     private dataSource: DataSource,
   ) {}
 
@@ -189,6 +193,78 @@ export class TaskService {
 						WHERE ETK_ID = ?`;
             await this.dataSource.manager.query(updateAMOUNT, [payload.pk]);
           }
+        }
+        if (payload.name === 'amount' && (payload.value as string)) {
+          const event = await this.dataSource.manager.query(
+            `
+                SELECT
+                    T_EVENT_TASK_ETK.ETK_DATE,
+                    T_DENTAL_EVENT_TASK_DET.DET_EXCEEDING,
+                    T_DENTAL_EVENT_TASK_DET.DET_CCAM_CODE,
+                    T_USER_USR.USR_ID,
+                    T_USER_PREFERENCE_USP.ccam_price_list
+                FROM T_EVENT_TASK_ETK
+                JOIN T_DENTAL_EVENT_TASK_DET
+                JOIN T_USER_USR
+                JOIN T_USER_PREFERENCE_USP
+                WHERE T_EVENT_TASK_ETK.ETK_ID = ?
+                  AND T_EVENT_TASK_ETK.ETK_ID = T_DENTAL_EVENT_TASK_DET.ETK_ID
+                  AND T_EVENT_TASK_ETK.USR_ID = T_USER_USR.USR_ID
+                  AND T_USER_USR.USR_ID = T_USER_PREFERENCE_USP.USR_ID
+            `,
+            [payload.pk],
+          );
+
+          const date = dayjs(event[0].ETK_DATE).format('YYYY-MM-DD');
+          const exceeding = event[0].DET_EXCEEDING;
+          const code = event[0].DET_CCAM_CODE;
+          const grid = event[0].ccam_price_list;
+
+          const user: UserEntity = await this.userRepo.findOne({
+            relations: {
+              amo: true,
+            },
+            where: {
+              id: event[0].USR_ID,
+            },
+          });
+
+          if (
+            !(
+              user.droitPermanentDepassement ||
+              user.amo.codeConvention === 0 ||
+              false
+            ) &&
+            exceeding !== ExceedingEnum.NON_REMBOURSABLE &&
+            code
+          ) {
+            const ccamUnitPrice: CcamUnitPriceEntity = await this.dataSource
+              .createQueryBuilder(CcamUnitPriceEntity, 'cup')
+              .select('cup.maximumPrice')
+              .innerJoin('cup.ccam', 'cm')
+              .andWhere('cm.code = :code', { code })
+              .andWhere('cup.grid = :grid', { grid })
+              .andWhere('cup.createdOn <= :date', { date })
+              .orderBy('cup.createdOn', 'DESC')
+              .getOne();
+
+            if (
+              ccamUnitPrice.maximumPrice &&
+              Number(payload.value) > ccamUnitPrice.maximumPrice
+            ) {
+              // @TODO const messages = `Le montant des honoraires facturés ne respecte pas la convention. Il vous appartient d'en informer votre patient (le plafond est de ${ccamUnitPrice.maximumPrice}€).`;
+            }
+          }
+
+          // Modification du montant
+          await this.dataSource.manager.query(
+            `
+            UPDATE T_EVENT_TASK_ETK
+            SET ETK_AMOUNT = ?
+            WHERE ETK_ID = ?
+          `,
+            [Number(payload.value), payload.pk],
+          );
         }
         if (payload?.name === 'caresheet' && (payload.value as boolean)) {
           const state = payload.value ? 2 : 1;
