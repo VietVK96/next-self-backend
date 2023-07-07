@@ -28,6 +28,7 @@ import { UploadModule } from './upload/upload.module';
 import { TimeslotsModule } from './timeslots/timeslots.module';
 import { UserModule } from './user/user.module';
 import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
+import { BcbModule } from './bcb/bcb.module';
 
 @Module({
   imports: [
@@ -87,6 +88,7 @@ import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
     FusionPatientModule,
     NgapKeysModule,
     TimeslotsModule,
+    BcbModule,
   ],
 })
 export class AppModule {}

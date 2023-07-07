@@ -13,3 +13,7 @@ export enum ErrorCode {
   STATUS_NOT_FOUND = '404',
   STATUS_INTERNAL_SERVER_ERROR = 'STATUS_INTERNAL_SERVER_ERROR',
 }
+
+export enum HttpStatus {
+  BAD_REQUEST = 400,
+}
