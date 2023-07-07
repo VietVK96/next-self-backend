@@ -12,7 +12,7 @@ export class BcbController {
 
   //ecoodentist-1.31.0\php\bcb\findAll.php full file
   @Post()
-  //   @UseGuards(TokenGuard)
+  @UseGuards(TokenGuard)
   async findAll(@Body() payload: BcbDto) {
     return await this.bcbServices.findAll(payload);
   }
