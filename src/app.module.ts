@@ -29,6 +29,7 @@ import { TimeslotsModule } from './timeslots/timeslots.module';
 import { UserModule } from './user/user.module';
 import { FileModule } from './file/file.module';
 import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
+import { InterfacageModule } from './interfacage/interfacage.module';
 
 @Module({
   imports: [
@@ -89,6 +90,7 @@ import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
     FileModule,
     NgapKeysModule,
     TimeslotsModule,
+    InterfacageModule,
   ],
 })
 export class AppModule {}
