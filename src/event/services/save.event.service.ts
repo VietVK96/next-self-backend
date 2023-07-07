@@ -240,8 +240,6 @@ export class SaveEventService {
             WHERE EVT_ID = ?`,
             [eventId],
           );
-        const eventStatus = eventStatement[0].status;
-        const eventLateness = eventStatement[0].lateness;
 
         if (!hasRecurrEvents) {
           await Promise.all([

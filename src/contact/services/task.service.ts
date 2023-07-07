@@ -226,7 +226,7 @@ export class TaskService {
         return Boolean(count);
       }
       try {
-        const { name, pk, value } = payload;
+        const { pk } = payload;
         const id: number = pk;
         // Re-calcule du montant de l'acte en fonction
         // des modifications effectuées

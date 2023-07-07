@@ -267,7 +267,7 @@ export class FindEventService {
 
   async findById(doctorId: number, groupId: number, id: number) {
     try {
-      const timeZone: TimeZoneDto = await this.dataSource
+      await this.dataSource
         .createQueryBuilder()
         .select(`USP.USP_TIMEZONE`)
         .from(UserPreferenceEntity, 'USP')
