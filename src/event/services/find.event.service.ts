@@ -385,4 +385,71 @@ export class FindEventService {
       return err;
     }
   }
+
+  /**
+   * File php/event/next.php
+   * Line 14 -> 50
+   */
+  async getNextEvent(contact: number, start: string) {
+    const nextQuery = `
+    SELECT
+        evo.evo_id id,
+        EVT.EVT_NAME name,
+        CONCAT_WS(' ', evo.evo_date, TIME(EVT.EVT_START)) start,
+        CONCAT_WS(' ', evo.evo_date, TIME(EVT.EVT_END)) end,
+        EVT.EVT_COLOR color,
+        EVT.EVT_STATE AS status,
+        EVT.EVT_ID eventId,
+        USR.USR_ID practitionerId,
+        USR.USR_ABBR practitionerAbbr,
+        CONCAT_WS(' ', USR.USR_LASTNAME, USR.USR_FIRSTNAME) practitionerName,
+        resource.id resourceId,
+        resource.name resourceName
+    FROM T_EVENT_EVT EVT
+    JOIN event_occurrence_evo evo ON evo.evt_id = EVT.EVT_ID
+    JOIN resource ON resource.id = EVT.resource_id
+    JOIN T_USER_USR USR ON USR.USR_ID = EVT.USR_ID
+    LEFT OUTER JOIN T_CONTACT_CON CON ON CON.CON_ID = EVT.CON_ID
+    WHERE EVT.CON_ID = ?
+      AND EVT.EVT_DELETE = 0
+      AND evo.evo_date >= DATE(?)
+      AND evo.evo_exception = 0
+    ORDER BY start, end`;
+    const result = await this.dataSource.query(nextQuery, [contact, start]);
+    return result;
+  }
+
+  /**
+   * File php/event/previous.php
+   * Line 14 -> 50
+   */
+  async getPreviousEvent(contact: number, end: string) {
+    const previousQuery = `
+    SELECT
+        evo.evo_id id,
+        EVT.EVT_NAME name,
+        CONCAT_WS(' ', evo.evo_date, TIME(EVT.EVT_START)) start,
+        CONCAT_WS(' ', evo.evo_date, TIME(EVT.EVT_END)) end,
+        EVT.EVT_COLOR color,
+        EVT.EVT_STATE AS status,
+        EVT.EVT_ID eventId,
+        USR.USR_ID practitionerId,
+        USR.USR_ABBR practitionerAbbr,
+        CONCAT_WS(' ', USR.USR_LASTNAME, USR.USR_FIRSTNAME) practitionerName,
+        resource.id resourceId,
+        resource.name resourceName
+    FROM T_EVENT_EVT EVT
+    JOIN event_occurrence_evo evo ON evo.evt_id = EVT.EVT_ID
+    JOIN resource ON resource.id = EVT.resource_id
+    JOIN T_USER_USR USR ON USR.USR_ID = EVT.USR_ID
+    LEFT OUTER JOIN T_CONTACT_CON CON ON CON.CON_ID = EVT.CON_ID
+    WHERE EVT.CON_ID = ?
+      AND EVT.EVT_DELETE = 0
+      AND evo.evo_date < DATE(?)
+      AND evo.evo_date != '0000-00-00'
+      AND evo.evo_exception = 0
+    ORDER BY start, end`;
+    const result = await this.dataSource.query(previousQuery, [contact, end]);
+    return result;
+  }
 }
