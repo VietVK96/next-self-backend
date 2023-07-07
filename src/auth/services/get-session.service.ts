@@ -112,8 +112,6 @@ export class GetSessionService {
       .where('USP.USR_ID = :userId', { userId })
       .getRawOne();
 
-    console.log(userPreferences);
-
     userPreferences.days = Array.from(
       String(userPreferences.days.toString(2)).split('').reverse(),
     )

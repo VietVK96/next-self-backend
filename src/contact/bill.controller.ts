@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Param, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -14,7 +14,7 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 export class BillController {
   constructor(private billService: BillService) {}
 
-  @Get('/delete/:id')
+  @Delete('/delete/:id')
   @UseGuards(TokenGuard)
   async getTraceability(
     @Param('id') id: number,

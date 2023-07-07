@@ -99,7 +99,6 @@ export class DocumentServices {
   }
 
   async getAllFile(orgId, patientId: number, type: string, tags?: string[]) {
-    console.log('aa', orgId, patientId, type);
     let query = `
     SELECT
       UPL.UPL_ID AS id,

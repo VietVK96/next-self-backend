@@ -4,7 +4,7 @@ import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { BillLineEntity } from 'src/entities/bill-line.entity';
 import { BillEntity } from 'src/entities/bill.entity';
-import { PlanEntity } from 'src/entities/plan.entity';
+import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
 import { PermissionService } from 'src/user/services/permission.service';
 import { DataSource, Repository } from 'typeorm';
 
@@ -53,29 +53,27 @@ export class BillService {
       try {
         await queryRunner.manager
           .createQueryBuilder()
-          .update(PlanEntity)
-          .set({ bill: null })
-          .where('bill = :billId', { billId: id })
+          .update(PlanPlfEntity)
+          .set({ bilId: null })
+          .where({ bilId: id })
           .execute();
 
         await queryRunner.manager
           .createQueryBuilder()
           .delete()
           .from(BillLineEntity)
-          .where('bill = :billId', { billId: id })
+          .where({ bilId: id })
           .execute();
 
         await queryRunner.manager
           .createQueryBuilder()
           .delete()
           .from(BillEntity)
-          .where('id = :billId', { billId: id })
+          .where({ id })
           .execute();
-        await queryRunner.commitTransaction();
-        return;
+        return await queryRunner.commitTransaction();
       } catch (err) {
         await queryRunner.rollbackTransaction();
-        throw new CBadRequestException('query failed');
       } finally {
         await queryRunner.release();
       }
