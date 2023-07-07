@@ -5,7 +5,7 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { ErrorCode } from 'src/constants/error';
 import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
 import { PermissionService } from 'src/user/services/permission.service';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 @Injectable()
 export class MedicalOrderService {
   constructor(

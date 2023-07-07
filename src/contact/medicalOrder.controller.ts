@@ -1,5 +1,5 @@
-import { Controller, Delete, Param, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Controller, Delete, Param, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
   TokenGuard,
