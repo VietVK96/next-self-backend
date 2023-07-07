@@ -33,11 +33,17 @@ import { CashingEntity } from 'src/entities/cashing.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
-import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
+import { DocumentServices } from './services/document.service';
+import { DocumentController } from './document.controller';
 import { UploadService } from 'src/upload/services/upload.service';
+import { UploadModule } from 'src/upload/upload.module';
+import { UploadController } from 'src/upload/upload.controller';
 import { OrganizationService } from 'src/organization/service/organization.service';
 import { UploadEntity } from 'src/entities/upload.entity';
-import { UploadModule } from 'src/upload/upload.module';
+import { ContactDocumentEntity } from 'src/entities/contact-document.entity';
+import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
+import { SaveTaskService } from './services/save.task.service';
+import { PatientAmoEntity } from 'src/entities/patient-amo.entity';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 
 @Module({
@@ -50,8 +56,11 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
     NoteController,
     FamilyController,
     QuotationController,
+    DocumentController,
+    UploadController,
   ],
   providers: [
+    UploadService,
     FindContactService,
     HistoricalService,
     ContactService,
@@ -66,8 +75,11 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
     PermissionService,
     FamilyService,
     QuotationService,
+    DocumentServices,
+    OrganizationService,
     UploadService,
     OrganizationService,
+    SaveTaskService,
   ],
   imports: [
     TypeOrmModule.forFeature([
@@ -84,9 +96,13 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
       CashingContactEntity,
       UserPreferenceEntity,
       ContactUserEntity,
+      UploadEntity,
+      ContactDocumentEntity,
       DentalEventTaskEntity,
       UploadEntity,
       CorrespondentEntity,
+      TraceabilityEntity,
+      PatientAmoEntity,
     ]),
     UserModule,
     PatientModule,

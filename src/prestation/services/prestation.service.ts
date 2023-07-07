@@ -105,7 +105,7 @@ export class PrestationService {
             break;
           case 'NGAP':
             if (record.code) {
-              record.cotation = `${record.code} ${record.code}`;
+              record.cotation = `${record.code} ${record.coef}`;
             }
             break;
         }
