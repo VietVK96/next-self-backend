@@ -10,7 +10,6 @@ import {
   SessionRes,
   UserPractitionersRes,
   UserResourceRes,
-  UserUserPreferenceRes,
   UserUserRes,
 } from '../reponse/session.res';
 

@@ -7,7 +7,6 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { BillService } from './services/bill.service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { identity } from 'rxjs';
 
 @ApiBearerAuth()
 @Controller('/bill')
