@@ -88,7 +88,7 @@ export class EventController {
     return await this.findEventService.getPreviousEvent(contact, end);
   }
 
-  @Post('/save')
+  @Post('/task/save')
   @UseGuards(TokenGuard)
   async saveAgenda(
     @Body() payload: SaveAgendaDto,
