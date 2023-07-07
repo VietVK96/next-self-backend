@@ -27,6 +27,7 @@ import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
 import { UploadModule } from './upload/upload.module';
 import { TimeslotsModule } from './timeslots/timeslots.module';
 import { UserModule } from './user/user.module';
+import { PlanPlfModule } from './plan-plf/plan-plf.module';
 
 @Module({
   imports: [
@@ -85,6 +86,7 @@ import { UserModule } from './user/user.module';
     UploadModule,
     FusionPatientModule,
     TimeslotsModule,
+    PlanPlfModule,
   ],
 })
 export class AppModule {}

@@ -5,12 +5,14 @@ import { BgEventDto, FindAllEventDto, MemoDto } from '../dto/findAll.event.dto';
 import { ColorHelper } from 'src/common/util/color-helper';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
-import { FindEventByIdRes } from '../response/find.event.res';
 import {
   HistoricalsDto,
   ReminderDto,
   TimeZoneDto,
 } from '../dto/find.event.dto';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
+import { FindEventByIdRes } from '../response/find.event.res';
 
 const classNameFromStatuses: Map<number, string> = new Map<number, string>();
 classNameFromStatuses.set(1, 'present');
