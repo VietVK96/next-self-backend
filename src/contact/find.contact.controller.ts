@@ -83,4 +83,17 @@ export class FindContactController {
   ) {
     return this.contactService.getPreviousContact(contact, practitioner);
   }
+
+  @Get('retrieve/:id')
+  @UseGuards(TokenGuard)
+  async getPatientInfoAgenda(
+    @Param('id') id: number,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.findContactService.getPatientInfoAgenda(
+      id,
+      identity.id,
+      identity.org,
+    );
+  }
 }

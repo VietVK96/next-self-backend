@@ -14,6 +14,10 @@ import { PatientBalanceService } from './service/patientBalance.service';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { CashingEntity } from 'src/entities/cashing.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
+import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
+import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
+import { AmoEntity } from 'src/entities/amo.entity';
+import { AmcEntity } from 'src/entities/amc.entity';
 
 @Module({
   imports: [
@@ -28,6 +32,10 @@ import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
       CashingEntity,
       ContactUserEntity,
       CashingContactEntity,
+      ThirdPartyAmcEntity,
+      ThirdPartyAmoEntity,
+      AmoEntity,
+      AmcEntity,
     ]),
     forwardRef(() => ContactModule),
   ],
