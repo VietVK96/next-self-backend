@@ -103,6 +103,7 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
       CorrespondentEntity,
       TraceabilityEntity,
       PatientAmoEntity,
+      ContactEntity,
     ]),
     UserModule,
     PatientModule,
