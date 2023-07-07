@@ -230,16 +230,15 @@ export class SaveEventService {
           await Promise.all(promiseArr);
         }
       } else {
-        const eventStatement: { status: number; lateness: number }[] =
-          await queryRunner.query(
-            `
+        await queryRunner.query(
+          `
         SELECT
                 EVT_STATE AS status,
                 lateness
             FROM T_EVENT_EVT
             WHERE EVT_ID = ?`,
-            [eventId],
-          );
+          [eventId],
+        );
 
         if (!hasRecurrEvents) {
           await Promise.all([
