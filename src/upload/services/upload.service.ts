@@ -34,18 +34,63 @@ export class UploadService {
     contactId: number,
     files: Express.Multer.File,
   ) {
+    const allowedMimeTypes = [
+      'image/gif',
+      'image/jpeg',
+      'image/png',
+      'image/bmp',
+      'image/x-windows-bmp',
+      'image/x-ms-bmp',
+      'image/tiff',
+    ];
+    if (!allowedMimeTypes.includes(files.mimetype)) {
+      throw new CBadRequestException('invalid type file');
+    }
+    if (files.size > 2 * 1024 * 1024) {
+      throw new CBadRequestException('file lager than 2m');
+    }
+    const contactCurrent = await this.getContactCurrent(contactId);
+    const groupId = contactCurrent?.organization_id;
+    const userCurrent = await this.getContactCurrent(groupId);
+    const auth = `${groupId.toString().padStart(5, '0')}`;
+    const dir = await this.configService.get('app.uploadDir');
+    this.removeOldFile(userCurrent, dir, auth);
+    if (files) {
+      await this._checkGroupStorageSpace(groupId, files?.size);
+    }
+    await this._saveFilesInformationsIntoDatabase(
+      files,
+      userCurrent,
+      dir,
+      auth,
+    );
+
+    const uplId = (
+      await this.uploadRepository.findOne({
+        where: { token: userCurrent?.USR_TOKEN },
+      })
+    ).id;
+    await this.dataSource
+      .getRepository(ContactEntity)
+      .update(contactId, { uplId });
+  }
+
+  async getContactCurrent(contactId: number) {
     const queryBuilder = this.dataSource.createQueryBuilder();
-    const contactCurrent = await queryBuilder
+    return await queryBuilder
       .select()
       .from(ContactEntity, 'CON')
       .where('CON.CON_ID = :contactId', { contactId })
       .getRawOne();
+  }
 
-    const groupId = contactCurrent?.organization_id;
-    if (files) {
-      await this._checkGroupStorageSpace(groupId, files?.size);
-    }
-    await this._saveFilesInformationsIntoDatabase(groupId, files, contactId);
+  async getCurrentUser(groupId: number) {
+    const queryBuilder = this.dataSource.createQueryBuilder();
+    return await queryBuilder
+      .select()
+      .from(UserEntity, 'USR')
+      .where('USR.organizationId = :groupId', { groupId })
+      .getRawOne();
   }
 
   async _checkGroupStorageSpace(groupId: number, fileSize: number) {
@@ -69,37 +114,30 @@ export class UploadService {
       });
     }
   }
+  async removeOldFile(userCurrent: any, dir: string, auth: string) {
+    const oldFile = await this.uploadRepository.findOne({
+      where: { token: userCurrent?.USR_TOKEN },
+    });
 
+    if (!fs.existsSync(`${dir}/${auth}`)) {
+      fs.mkdirSync(`${dir}/${auth}`, { recursive: true });
+    }
+
+    if (oldFile) {
+      const filename = oldFile.name;
+      if (fs.existsSync(`${dir}/${auth}/${filename}`)) {
+        fs.unlinkSync(`${dir}/${auth}/${filename}`);
+      }
+      await this.uploadRepository.delete(oldFile.id);
+    }
+  }
   async _saveFilesInformationsIntoDatabase(
-    groupId: number,
     files: Express.Multer.File,
-    contactId: number,
-  ): Promise<void> {
-    const queryBuilder = this.dataSource.createQueryBuilder();
-    const userCurrent = await queryBuilder
-      .select()
-      .from(UserEntity, 'USR')
-      .where('USR.organizationId = :groupId', { groupId })
-      .getRawOne();
-
-    const token = userCurrent?.USR_TOKEN;
-    const oldFile = await this.uploadRepository.findOne({ where: { token } });
-    const auth = `${groupId.toString().padStart(5, '0')}`;
-    const dir = await this.configService.get('app.uploadDir');
-
+    userCurrent: any,
+    dir: string,
+    auth: string,
+  ): Promise<UploadEntity> {
     try {
-      if (!fs.existsSync(`${dir}/${auth}`)) {
-        fs.mkdirSync(`${dir}/${auth}`, { recursive: true });
-      }
-
-      if (oldFile) {
-        const filename = oldFile.name;
-        if (fs.existsSync(`${dir}/${auth}/${filename}`)) {
-          fs.unlinkSync(`${dir}/${auth}/${filename}`);
-        }
-        await this.uploadRepository.delete(oldFile.id);
-      }
-
       if (files) {
         const mimeTypes = files?.mimetype;
         const uploadEntity = new UploadEntity();
@@ -115,12 +153,7 @@ export class UploadService {
         fs.writeFileSync(dirFile, files?.buffer);
         files['uploadEntity'] = uploadEntity;
         await this.dataSource.getRepository(UploadEntity).save(uploadEntity);
-        const uplId = (
-          await this.uploadRepository.findOne({ where: { token } })
-        ).id;
-        await this.dataSource
-          .getRepository(ContactEntity)
-          .update(contactId, { uplId });
+        return uploadEntity;
       }
     } catch (error) {
       throw new CBadRequestException(error.message);

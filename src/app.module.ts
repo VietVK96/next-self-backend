@@ -27,6 +27,7 @@ import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
 import { UploadModule } from './upload/upload.module';
 import { TimeslotsModule } from './timeslots/timeslots.module';
 import { UserModule } from './user/user.module';
+import { FileModule } from './file/file.module';
 import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
 
 @Module({
@@ -85,6 +86,7 @@ import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
     EventTaskModule,
     UploadModule,
     FusionPatientModule,
+    FileModule,
     NgapKeysModule,
     TimeslotsModule,
   ],
