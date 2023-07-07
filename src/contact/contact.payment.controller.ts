@@ -83,7 +83,7 @@ export class ContactPaymentController {
 
   // File php\contact\patch.php
   @Patch('/patch')
-  @UseGuards(TokenGuard)
+  // @UseGuards(TokenGuard)
   async patch(@Body() payload: ContactPatchDto) {
     return this.contactService.patch(payload);
   }
