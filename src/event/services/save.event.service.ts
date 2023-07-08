@@ -153,6 +153,7 @@ export class SaveEventService {
 
     let eventStatus = 0;
     let eventLateness = 0;
+    console.log(payload);
     try {
       const countStatement: { count: number } = await queryRunner.query(
         `
@@ -192,7 +193,7 @@ export class SaveEventService {
           'SELECT LAST_INSERT_ID() AS lastInsertId',
         );
         eventId = result[0].lastInsertId;
-        if (!hasRecurrEvents) {
+        if (!Number(hasRecurrEvents)) {
           // Nouvelle occurrence pour DATE(start)
           await queryRunner.query(
             `INSERT INTO event_occurrence_evo (evt_id, resource_id, evo_date)
