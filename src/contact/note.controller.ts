@@ -44,7 +44,7 @@ export class NoteController {
     @CurrentUser() identity: UserIdentity,
     @Param('id') id: number,
   ): Promise<SuccessResponse> {
-    await this.service.deleteByID(id);
+    await this.service.deleteByID(id, identity);
     return {
       success: true,
     };

@@ -30,6 +30,8 @@ import { UserModule } from './user/user.module';
 import { FileModule } from './file/file.module';
 import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
 import { InterfacageModule } from './interfacage/interfacage.module';
+import { TagModule } from './tag/tag.module';
+import { ContraindicationsModule } from './contraindications/contraindications.module';
 
 @Module({
   imports: [
@@ -90,6 +92,8 @@ import { InterfacageModule } from './interfacage/interfacage.module';
     FileModule,
     NgapKeysModule,
     TimeslotsModule,
+    TagModule,
+    ContraindicationsModule,
     InterfacageModule,
   ],
 })

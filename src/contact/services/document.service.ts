@@ -99,7 +99,6 @@ export class DocumentServices {
   }
 
   async getAllFile(orgId, patientId: number, type: string, tags?: string[]) {
-    console.log('aa', orgId, patientId, type);
     let query = `
     SELECT
       UPL.UPL_ID AS id,
@@ -128,7 +127,7 @@ export class DocumentServices {
     const queryParameters = [orgId, patientId, type];
 
     if (tags && tags.length > 0) {
-      const placeholders = tags.map((_, index) => `?`).join(',');
+      const placeholders = tags.map(() => `?`).join(',');
       query += `
         AND tag.id IN (${placeholders})
         GROUP BY UPL.UPL_ID
