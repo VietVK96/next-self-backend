@@ -32,6 +32,10 @@ export class InterfacageService {
     private ccamRepository: Repository<CcamEntity>,
   ) {}
 
+  /**
+   * php/interfacage/fs.php
+   */
+
   async fs(request: FsDto) {
     try {
       const { patient_id, user_id, act_id } = request;
