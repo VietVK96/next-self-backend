@@ -400,6 +400,7 @@ export class PrestationService {
       DET_PERSON_REPAYMENT = VALUES(DET_PERSON_REPAYMENT),
       DET_PERSON_AMOUNT = VALUES(DET_PERSON_AMOUNT)
       `;
+
       await this.dataSource.query(installDentalTask, [
         payload?.id,
         payload?.ngapKeyId,

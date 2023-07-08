@@ -1,4 +1,4 @@
-import path, { extname, basename } from 'path';
+import { extname, basename } from 'path';
 import * as sharp from 'sharp';
 import * as fs from 'fs';
 import { createCanvas, loadImage } from 'canvas';

@@ -303,7 +303,7 @@ export class TaskService {
         return Boolean(count);
       }
       try {
-        const { name, pk, value } = payload;
+        const { pk } = payload;
         const id: number = pk;
         // Re-calcule du montant de l'acte en fonction
         // des modifications effectuées
@@ -556,7 +556,7 @@ export class TaskService {
               );
             } else {
               Promise.all(
-                radiographies.map(async (radiographie, index) => {
+                radiographies.map(async (radiographie) => {
                   if (Number(radiographie.coef) === 0.5) {
                     await Promise.all([
                       queryRunner.query(

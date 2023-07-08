@@ -235,16 +235,15 @@ export class SaveEventService {
           }
         }
       } else {
-        const eventStatement: { status: number; lateness: number }[] =
-          await queryRunner.query(
-            `
+        const eventStatement = await queryRunner.query(
+          `
         SELECT
                 EVT_STATE AS status,
                 lateness
             FROM T_EVENT_EVT
             WHERE EVT_ID = ?`,
-            [eventId],
-          );
+          [eventId],
+        );
         eventStatus = eventStatement[0].status;
         eventLateness = eventStatement[0].lateness;
 

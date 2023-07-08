@@ -33,7 +33,7 @@ export class MemoService {
         .from(ResourceEntity, 'RES')
         .where('id = :resource_id', { resource_id: payload.resourceId })
         .getRawOne();
-      const { resourceId, ...restPayload } = payload;
+      const { ...restPayload } = payload;
       const result: MemoRes = {
         id: createMemo.insertId,
         ...restPayload,
@@ -71,7 +71,7 @@ export class MemoService {
         .where('id = :resource_id', { resource_id: memo.resourceId })
         .getRawOne();
 
-      const { resourceId, ...restMemo } = memo;
+      const { ...restMemo } = memo;
       const result: MemoRes = {
         ...restMemo,
         resource,
