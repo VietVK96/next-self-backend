@@ -51,6 +51,9 @@ import { BillEntity } from 'src/entities/bill.entity';
 import { MedicalOrderController } from './medicalOrder.controller';
 import { MedicalOrderService } from './services/medicalOrder.service';
 import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
+import { ContraindicationEntity } from 'src/entities/contraindication.entity';
+import { ContraindicationContactController } from './contraindication.contact.controller';
+import { ContraindicationContactService } from './services/contraindication.contact.service';
 
 @Module({
   controllers: [
@@ -66,6 +69,7 @@ import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
     UploadController,
     MedicalOrderController,
     BillController,
+    ContraindicationContactController,
   ],
   providers: [
     UploadService,
@@ -90,6 +94,7 @@ import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
     SaveTaskService,
     MedicalOrderService,
     BillService,
+    ContraindicationContactService,
   ],
   imports: [
     TypeOrmModule.forFeature([
@@ -115,6 +120,7 @@ import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
       PatientAmoEntity,
       MedicalOrderEntity,
       BillEntity,
+      ContraindicationEntity,
     ]),
     UserModule,
     PatientModule,

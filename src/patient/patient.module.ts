@@ -18,6 +18,7 @@ import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
 import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 import { AmoEntity } from 'src/entities/amo.entity';
 import { AmcEntity } from 'src/entities/amc.entity';
+import { ContraindicationEntity } from 'src/entities/contraindication.entity';
 import { PermissionService } from 'src/user/services/permission.service';
 
 @Module({
@@ -37,6 +38,7 @@ import { PermissionService } from 'src/user/services/permission.service';
       ThirdPartyAmoEntity,
       AmoEntity,
       AmcEntity,
+      ContraindicationEntity,
     ]),
     forwardRef(() => ContactModule),
   ],

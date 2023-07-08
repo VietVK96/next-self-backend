@@ -1,7 +1,6 @@
 import { extname, basename } from 'path';
-import * as sharp from 'sharp';
 import * as fs from 'fs';
-
+import * as sharp from 'sharp';
 const RESERVED_CHARACTERS_PATTERN =
   /[<>:"/\\|?*]|[\x00-\x1F]|[\x7F\xA0\xAD]|[#\[\]@!$&'()+,;=]|[{}^\~`]/g;
 

@@ -49,4 +49,13 @@ export class PatientController {
   async getPatientThirdParty(@Query() payload: PatientThirdPartyDto) {
     return await this.patientService.getPatientThirdParty(payload);
   }
+
+  /**
+   * php/patients/contraindications/index.php
+   */
+  @Get('/contraindications/:id')
+  @UseGuards(TokenGuard)
+  async findAllContraindications(@Param('id') id: number) {
+    return this.patientService.findAllContraindications(id);
+  }
 }
