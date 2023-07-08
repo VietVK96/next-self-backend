@@ -48,6 +48,9 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { BillController } from './bill.controller';
 import { BillService } from './services/bill.service';
 import { BillEntity } from 'src/entities/bill.entity';
+import { MedicalOrderController } from './medicalOrder.controller';
+import { MedicalOrderService } from './services/medicalOrder.service';
+import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
 
 @Module({
   controllers: [
@@ -61,6 +64,7 @@ import { BillEntity } from 'src/entities/bill.entity';
     QuotationController,
     DocumentController,
     UploadController,
+    MedicalOrderController,
     BillController,
   ],
   providers: [
@@ -84,6 +88,7 @@ import { BillEntity } from 'src/entities/bill.entity';
     UploadService,
     OrganizationService,
     SaveTaskService,
+    MedicalOrderService,
     BillService,
   ],
   imports: [
@@ -108,6 +113,7 @@ import { BillEntity } from 'src/entities/bill.entity';
       CorrespondentEntity,
       TraceabilityEntity,
       PatientAmoEntity,
+      MedicalOrderEntity,
       BillEntity,
     ]),
     UserModule,
