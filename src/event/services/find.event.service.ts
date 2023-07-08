@@ -6,11 +6,7 @@ import { ColorHelper } from 'src/common/util/color-helper';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { FindEventByIdRes } from '../response/find.event.res';
-import {
-  HistoricalsDto,
-  ReminderDto,
-  TimeZoneDto,
-} from '../dto/find.event.dto';
+import { HistoricalsDto, ReminderDto } from '../dto/find.event.dto';
 
 const classNameFromStatuses: Map<number, string> = new Map<number, string>();
 classNameFromStatuses.set(1, 'present');
@@ -267,7 +263,7 @@ export class FindEventService {
 
   async findById(doctorId: number, groupId: number, id: number) {
     try {
-      const timeZone: TimeZoneDto = await this.dataSource
+      await this.dataSource
         .createQueryBuilder()
         .select(`USP.USP_TIMEZONE`)
         .from(UserPreferenceEntity, 'USP')

@@ -8,7 +8,6 @@ import {
 import { NgapKeysService } from './services/ngap-keys.service';
 import { FindManyOptions } from 'typeorm';
 import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
-import { identity } from 'rxjs';
 
 @ApiBearerAuth()
 @ApiTags('NgapKeys')

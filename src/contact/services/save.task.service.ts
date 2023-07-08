@@ -273,7 +273,7 @@ export class SaveTaskService {
           }
         }
       } else {
-        for (const [index, radiographie] of Object.entries(radiographies)) {
+        for (const radiographie of radiographies) {
           if (Number(radiographie.coef) === 0.5) {
             promiseArr2.push(
               queryRunner.query(

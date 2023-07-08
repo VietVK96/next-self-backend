@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotAcceptableException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm/repository/Repository';
@@ -11,10 +11,12 @@ import { UserService } from 'src/user/services/user.service';
 import { PatientService } from 'src/patient/service/patient.service';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { UpdateNoteDto } from '../dto/noteUpdate.dto';
+import { PermissionService } from 'src/user/services/permission.service';
 
 @Injectable()
 export class NoteService {
   constructor(
+    private permissionService: PermissionService,
     @InjectRepository(ContactNoteEntity)
     private readonly repo: Repository<ContactNoteEntity>,
     private userService: UserService,
@@ -74,11 +76,15 @@ export class NoteService {
     });
   }
 
-  async deleteByID(id: number): Promise<SuccessResponse> {
-    // @TODO: Vérification de la permission de suppression des modèles de courriers.
-    // if (!$em->getRepository('App\Entities\User')->hasPermission('PERMISSION_DELETE', 8, $userId)) {
-    // Response::abort(Response::STATUS_FORBIDDEN);
-    // }
+  async deleteByID(
+    id: number,
+    identity: UserIdentity,
+  ): Promise<SuccessResponse> {
+    if (
+      !this.permissionService.hasPermission('PERMISSION_DELETE', 8, identity.id)
+    ) {
+      throw new NotAcceptableException();
+    }
     try {
       const contactNote = await this.findByID(id);
       if (!contactNote)

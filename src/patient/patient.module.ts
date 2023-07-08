@@ -18,6 +18,7 @@ import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
 import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 import { AmoEntity } from 'src/entities/amo.entity';
 import { AmcEntity } from 'src/entities/amc.entity';
+import { PermissionService } from 'src/user/services/permission.service';
 
 @Module({
   imports: [
@@ -40,7 +41,7 @@ import { AmcEntity } from 'src/entities/amc.entity';
     forwardRef(() => ContactModule),
   ],
   controllers: [PatientController, PatientBalanceController],
-  providers: [PatientService, PatientBalanceService],
+  providers: [PermissionService, PatientService, PatientBalanceService],
   exports: [PatientService, PatientBalanceService],
 })
 export class PatientModule {}
