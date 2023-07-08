@@ -29,6 +29,7 @@ import { AmcEntity } from 'src/entities/amc.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { PatientThirdPartyRes } from '../reponse/index.res';
 import { format } from 'date-fns';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
 
 const TypeFile = {
   EXCEL: 'xlsx',
@@ -495,5 +496,21 @@ export class PatientService {
       total_count: dataPaging?.length,
     };
     return data;
+  }
+
+  /**
+   * php/patients/contraindications/index.php
+   */
+  async findAllContraindications(id: number) {
+    const patient: ContactEntity = await this.patientRepository.findOne({
+      relations: {
+        contraindications: true,
+      },
+      where: {
+        id: id,
+      },
+    });
+
+    return patient?.contraindications.sort((a, b) => a.position - b.position);
   }
 }

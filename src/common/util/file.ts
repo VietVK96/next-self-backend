@@ -1,7 +1,7 @@
 import { extname, basename } from 'path';
-import * as sharp from 'sharp';
 import * as fs from 'fs';
 import { createCanvas, loadImage } from 'canvas';
+import * as sharp from 'sharp';
 const RESERVED_CHARACTERS_PATTERN =
   /[<>:"/\\|?*]|[\x00-\x1F]|[\x7F\xA0\xAD]|[#\[\]@!$&'()+,;=]|[{}^\~`]/g;
 
