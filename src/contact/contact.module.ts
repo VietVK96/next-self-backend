@@ -45,6 +45,9 @@ import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { SaveTaskService } from './services/save.task.service';
 import { PatientAmoEntity } from 'src/entities/patient-amo.entity';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
+import { MedicalOrderController } from './medicalOrder.controller';
+import { MedicalOrderService } from './services/medicalOrder.service';
+import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
 
 @Module({
   controllers: [
@@ -58,6 +61,7 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
     QuotationController,
     DocumentController,
     UploadController,
+    MedicalOrderController,
   ],
   providers: [
     UploadService,
@@ -80,6 +84,7 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
     UploadService,
     OrganizationService,
     SaveTaskService,
+    MedicalOrderService,
   ],
   imports: [
     TypeOrmModule.forFeature([
@@ -103,6 +108,7 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
       CorrespondentEntity,
       TraceabilityEntity,
       PatientAmoEntity,
+      MedicalOrderEntity,
     ]),
     UserModule,
     PatientModule,

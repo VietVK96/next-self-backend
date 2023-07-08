@@ -9,15 +9,12 @@ import { MedicalOrderService } from './services/medicalOrder.service';
 
 @ApiBearerAuth()
 @Controller('/medicalOrder')
-@ApiTags('')
+@ApiTags('MedicalOrder')
 export class MedicalOrderController {
   constructor(private service: MedicalOrderService) {}
   @Delete('/delete/:id')
   @UseGuards(TokenGuard)
-  async findAll(
-    @Param('id') id: number,
-    @CurrentUser() identity: UserIdentity,
-  ) {
+  async delete(@Param('id') id: number, @CurrentUser() identity: UserIdentity) {
     return await this.service.deleteById(id, identity);
   }
 }
