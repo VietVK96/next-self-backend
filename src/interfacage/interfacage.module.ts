@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CcamEntity } from 'src/entities/ccam.entity';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
@@ -16,6 +17,7 @@ import { InterfacageService } from './services/interfacage.service';
       UserEntity,
       EventTaskEntity,
       DentalEventTaskEntity,
+      CcamEntity,
     ]),
   ],
   controllers: [InterfacageController],
