@@ -1,7 +1,7 @@
 import path, { extname, basename } from 'path';
 import * as sharp from 'sharp';
 import * as fs from 'fs';
-import { createCanvas, loadImage } from 'canvas';
+
 const RESERVED_CHARACTERS_PATTERN =
   /[<>:"/\\|?*]|[\x00-\x1F]|[\x7F\xA0\xAD]|[#\[\]@!$&'()+,;=]|[{}^\~`]/g;
 
@@ -42,26 +42,4 @@ export function resize(path, format, width, height) {
 // resize thumbnail with detault height and width
 export function resizeThumbnail(path: string, format: string) {
   return resize(path, format, HEIGHT_THUMBNAIL, WIDTH_THUMBNAIL);
-}
-
-// add a text in centre of image
-export async function addTextToImage(imagePath: string, text: string) {
-  const image = await loadImage(imagePath);
-  const canvas = createCanvas(image.width, image.height);
-  const context = canvas.getContext('2d');
-
-  context.drawImage(image, 0, 0);
-
-  context.font = '14px Arial';
-  context.fillStyle = '#bbbbbb';
-  context.textAlign = 'center';
-  context.textBaseline = 'middle';
-
-  const x = canvas.width / 2;
-  const y = canvas.height / 2;
-
-  context.fillText(text, x, y);
-
-  const buffer = canvas.toBuffer('image/png');
-  return buffer;
 }
