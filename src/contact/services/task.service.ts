@@ -249,6 +249,7 @@ export class TaskService {
               .getOne();
 
             if (
+              ccamUnitPrice &&
               ccamUnitPrice.maximumPrice &&
               Number(payload.value) > ccamUnitPrice.maximumPrice
             ) {
@@ -428,7 +429,8 @@ export class TaskService {
               socialSecurityAmount: number;
               complementNight: number;
               complementHoliday: number;
-            }[] = await queryRunner.query(`
+            }[] = await queryRunner.query(
+              `
                   SELECT
                       T_DENTAL_EVENT_TASK_DET.DET_COEF AS coefficient,
                       T_DENTAL_EVENT_TASK_DET.DET_COMP AS complement,
@@ -438,7 +440,9 @@ export class TaskService {
                   FROM T_DENTAL_EVENT_TASK_DET
                   JOIN ngap_key
                   WHERE T_DENTAL_EVENT_TASK_DET.ETK_ID = ?
-                    AND T_DENTAL_EVENT_TASK_DET.ngap_key_id = ngap_key.id`);
+                    AND T_DENTAL_EVENT_TASK_DET.ngap_key_id = ngap_key.id`,
+              [payload.pk],
+            );
             if (statements.length > 0) {
               const {
                 complementHoliday,
