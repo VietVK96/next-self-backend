@@ -151,8 +151,8 @@ export class SaveEventService {
     const dates = payload.dates ? payload.dates.split(',') : [];
     const exdates = payload.exdates ? payload.exdates.split(',') : [];
 
-    const eventStatus = 0;
-    const eventLateness = 0;
+    let eventStatus = 0;
+    let eventLateness = 0;
     try {
       const countStatement: { count: number } = await queryRunner.query(
         `
@@ -244,8 +244,8 @@ export class SaveEventService {
             WHERE EVT_ID = ?`,
             [eventId],
           );
-        const eventStatus = eventStatement[0].status;
-        const eventLateness = eventStatement[0].lateness;
+        eventStatus = eventStatement[0].status;
+        eventLateness = eventStatement[0].lateness;
 
         if (!hasRecurrEvents) {
           await Promise.all([
