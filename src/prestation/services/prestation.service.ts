@@ -182,7 +182,7 @@ export class PrestationService {
       .orderBy('ETK.ETK_POS')
       .setParameter('etkId', prestationId);
 
-    const results = await queryBuilder.getRawMany();
+    const results: PrestationDto[] = await queryBuilder.getRawMany();
     return results;
   }
 
@@ -400,6 +400,7 @@ export class PrestationService {
       DET_PERSON_REPAYMENT = VALUES(DET_PERSON_REPAYMENT),
       DET_PERSON_AMOUNT = VALUES(DET_PERSON_AMOUNT)
       `;
+
       await this.dataSource.query(installDentalTask, [
         payload?.id,
         payload?.ngapKeyId,

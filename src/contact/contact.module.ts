@@ -45,6 +45,9 @@ import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { SaveTaskService } from './services/save.task.service';
 import { PatientAmoEntity } from 'src/entities/patient-amo.entity';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
+import { BillController } from './bill.controller';
+import { BillService } from './services/bill.service';
+import { BillEntity } from 'src/entities/bill.entity';
 import { MedicalOrderController } from './medicalOrder.controller';
 import { MedicalOrderService } from './services/medicalOrder.service';
 import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
@@ -62,6 +65,7 @@ import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
     DocumentController,
     UploadController,
     MedicalOrderController,
+    BillController,
   ],
   providers: [
     UploadService,
@@ -85,6 +89,7 @@ import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
     OrganizationService,
     SaveTaskService,
     MedicalOrderService,
+    BillService,
   ],
   imports: [
     TypeOrmModule.forFeature([
@@ -109,6 +114,7 @@ import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
       TraceabilityEntity,
       PatientAmoEntity,
       MedicalOrderEntity,
+      BillEntity,
     ]),
     UserModule,
     PatientModule,
