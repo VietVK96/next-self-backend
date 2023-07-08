@@ -119,10 +119,6 @@ export class UploadService {
       where: { token: userCurrent?.USR_TOKEN },
     });
 
-    if (!fs.existsSync(`${dir}/${auth}`)) {
-      fs.mkdirSync(`${dir}/${auth}`, { recursive: true });
-    }
-
     if (oldFile) {
       const filename = oldFile.name;
       if (fs.existsSync(`${dir}/${auth}/${filename}`)) {
@@ -150,6 +146,9 @@ export class UploadService {
         uploadEntity.token = userCurrent.USR_TOKEN;
         uploadEntity.user = userCurrent;
         const dirFile = `${dir}/${auth}/${files?.originalname}`;
+        if (!fs.existsSync(`${dir}/${auth}`)) {
+          fs.mkdirSync(`${dir}/${auth}`, { recursive: true });
+        }
         fs.writeFileSync(dirFile, files?.buffer);
         files['uploadEntity'] = uploadEntity;
         await this.dataSource.getRepository(UploadEntity).save(uploadEntity);

@@ -36,8 +36,8 @@ export class PatientController {
   @Delete('delete/:id')
   @ApiBearerAuth()
   @UseGuards(TokenGuard)
-  async delete(@Param('id') id: number) {
-    return await this.patientService.deletePatient(id);
+  async delete(@Param('id') id: number, @CurrentUser() identity: UserIdentity) {
+    return await this.patientService.deletePatient(id, identity);
   }
 
   /**

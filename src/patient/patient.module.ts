@@ -19,6 +19,7 @@ import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 import { AmoEntity } from 'src/entities/amo.entity';
 import { AmcEntity } from 'src/entities/amc.entity';
 import { ContraindicationEntity } from 'src/entities/contraindication.entity';
+import { PermissionService } from 'src/user/services/permission.service';
 
 @Module({
   imports: [
@@ -42,7 +43,7 @@ import { ContraindicationEntity } from 'src/entities/contraindication.entity';
     forwardRef(() => ContactModule),
   ],
   controllers: [PatientController, PatientBalanceController],
-  providers: [PatientService, PatientBalanceService],
+  providers: [PermissionService, PatientService, PatientBalanceService],
   exports: [PatientService, PatientBalanceService],
 })
 export class PatientModule {}
