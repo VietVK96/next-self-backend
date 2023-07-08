@@ -162,7 +162,7 @@ export class SaveEventService {
           AND deleted_at IS NOT NULL`,
         [contactId],
       );
-      if (countStatement.count !== 0) {
+      if (countStatement.count === 0) {
         throw new CBadRequestException(
           `Le patient a été supprimé. Veuillez restaurer le patient avant de créer / modifier un rendez-vous.`,
         );
@@ -227,7 +227,11 @@ export class SaveEventService {
               );
             }
           }
-          await Promise.all(promiseArr);
+          const totalBatch = Math.ceil(promiseArr.length / 100);
+          for (let i = 0; i < totalBatch; i++) {
+            const batch = promiseArr.splice(0, 100);
+            await Promise.all(batch);
+          }
         }
       } else {
         const eventStatement: { status: number; lateness: number }[] =
@@ -388,7 +392,11 @@ export class SaveEventService {
                 ),
               );
             }
-            await Promise.all(promiseArr);
+            const totalBatch = Math.ceil(promiseArr.length / 100);
+            for (let i = 0; i < totalBatch; i++) {
+              const batch = promiseArr.splice(0, 100);
+              await Promise.all(batch);
+            }
           } else {
             await Promise.all([
               queryRunner.query(
