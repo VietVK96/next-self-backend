@@ -182,7 +182,7 @@ export class PrestationService {
       .orderBy('ETK.ETK_POS')
       .setParameter('etkId', prestationId);
 
-    const results = await queryBuilder.getRawMany();
+    const results: PrestationDto[] = await queryBuilder.getRawMany();
     return results;
   }
 
