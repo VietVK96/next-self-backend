@@ -23,7 +23,7 @@ export class GetSessionService {
     const resources = await this.getResource(identity.id);
     data.resources = resources;
     data.user = await this.getUser(identity.id);
-    data.practitioners = await this.getPractitioners(identity.org, identity.id);
+    data.practitioners = await this.getPractitioners(identity.id, identity.org);
     return data;
   }
 

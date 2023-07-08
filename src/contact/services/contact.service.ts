@@ -21,6 +21,7 @@ import { UserEntity } from 'src/entities/user.entity';
 import { PatientAmcEntity } from 'src/entities/patient-amc.entity';
 import { DataSource } from 'typeorm';
 import { OrganizationEntity } from 'src/entities/organization.entity';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 @Injectable()
 export class ContactService {
   constructor(private dataSource: DataSource) {}
@@ -339,5 +340,99 @@ count(CON_ID) as countId,COD_TYPE as codType
       };
     }
     return obj;
+  }
+
+  /**
+   * File: php/contact/next.php
+   * Line 13 -> 60
+   */
+  async getNextContact(
+    contact: number,
+    practitioner: number,
+    identity: UserIdentity,
+  ) {
+    try {
+      const nextContactQuery = `
+      SELECT EVT.CON_ID as id
+      FROM T_EVENT_EVT EVT
+      WHERE EVT.EVT_ID = (
+        SELECT EVT.EVT_ID
+        FROM T_EVENT_EVT EVT
+        WHERE EVT.USR_ID = ?
+        AND EVT.EVT_DELETE = 0
+          AND EVT.EVT_STATE NOT IN (2,3)
+          AND EVT.EVT_START > (
+            SELECT EVT.EVT_START
+            FROM T_EVENT_EVT EVT
+            JOIN T_USER_USR USR ON USR.USR_ID = EVT.USR_ID AND USR.organization_id = ?
+            WHERE DATE(EVT.EVT_START) = CURDATE()
+            AND EVT.USR_ID = ?
+            AND EVT.CON_ID = ?
+              AND EVT.EVT_DELETE = 0
+            LIMIT 1
+          )
+          ORDER BY EVT.EVT_START
+          LIMIT 1
+          )`;
+      const nextIdResult = await this.dataSource.query(nextContactQuery, [
+        practitioner,
+        identity.org,
+        practitioner,
+        contact,
+      ]);
+      const nextId = nextIdResult[0];
+      console.log(nextId);
+      if (!nextId) {
+        throw new CBadRequestException(
+          "Aucun patient du jour suivant n'a été trouvé.",
+        );
+      }
+      return nextId;
+    } catch (error) {
+      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
+    }
+  }
+
+  /**
+   * php/contact/previous.php
+   * Line 13 -> 56
+   */
+  async getPreviousContact(contact: number, practitioner: number) {
+    try {
+      const previousContactQuery = `
+      SELECT EVT.CON_ID as id
+        FROM T_EVENT_EVT EVT
+        WHERE EVT.EVT_ID = (
+            SELECT EVT.EVT_ID
+            FROM T_EVENT_EVT EVT
+            WHERE EVT.USR_ID = ?
+              AND EVT.EVT_DELETE = 0
+              AND EVT.EVT_STATE NOT IN (2,3)
+              AND EVT.EVT_START < (
+                SELECT EVT.EVT_START
+                FROM T_EVENT_EVT EVT
+                WHERE DATE(EVT.EVT_START) = CURDATE()
+                  AND EVT.USR_ID = ?
+                  AND EVT.CON_ID = ?
+                  AND EVT.EVT_DELETE = 0
+                LIMIT 1
+              )
+            ORDER BY EVT.EVT_START DESC
+            LIMIT 1
+        )`;
+      const previousIdResult = await this.dataSource.query(
+        previousContactQuery,
+        [practitioner, practitioner, contact],
+      );
+      const previousId = previousIdResult[0];
+      if (!previousId) {
+        throw new CBadRequestException(
+          "Aucun patient du jour suivant n'a été trouvé.",
+        );
+      }
+      return previousId;
+    } catch (error) {
+      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
+    }
   }
 }

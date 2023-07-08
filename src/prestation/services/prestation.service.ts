@@ -105,7 +105,7 @@ export class PrestationService {
             break;
           case 'NGAP':
             if (record.code) {
-              record.cotation = `${record.code} ${record.code}`;
+              record.cotation = `${record.code} ${record.coef}`;
             }
             break;
         }
@@ -182,7 +182,7 @@ export class PrestationService {
       .orderBy('ETK.ETK_POS')
       .setParameter('etkId', prestationId);
 
-    const results = await queryBuilder.getRawMany();
+    const results: PrestationDto[] = await queryBuilder.getRawMany();
     return results;
   }
 

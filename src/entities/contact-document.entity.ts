@@ -29,7 +29,7 @@ export class ContactDocumentEntity {
    * @ORM\GeneratedValue(strategy="NONE")
    */
   //   protected $contact;
-  @PrimaryColumn({
+  @Column({
     name: 'CON_ID',
     type: 'int',
     width: 11,
@@ -39,6 +39,9 @@ export class ContactDocumentEntity {
   @ManyToOne(() => ContactEntity, {
     createForeignKeyConstraints: false,
   })
+  @JoinColumn({
+    name: 'CON_ID',
+  })
   contact?: ContactEntity;
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Upload")
@@ -47,7 +50,7 @@ export class ContactDocumentEntity {
    * @ORM\GeneratedValue(strategy="NONE")
    */
   //   protected $upload;
-  @Column({
+  @PrimaryColumn({
     name: 'UPL_ID',
     type: 'int',
     width: 11,

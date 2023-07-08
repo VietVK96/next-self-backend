@@ -63,6 +63,27 @@ export class FindContactController {
     return this.findContactService.findAllRecentlyTreated(practitioner);
   }
 
+  // File php/contact/next.php
+  @Get('/next')
+  @UseGuards(TokenGuard)
+  async getNextContact(
+    @CurrentUser() identity: UserIdentity,
+    @Query('practitioner') practitioner?: number,
+    @Query('contact') contact?: number,
+  ) {
+    return this.contactService.getNextContact(contact, practitioner, identity);
+  }
+
+  // File php/contact/previous.php
+  @Get('/previous')
+  @UseGuards(TokenGuard)
+  async getPreviousContact(
+    @Query('practitioner') practitioner?: number,
+    @Query('contact') contact?: number,
+  ) {
+    return this.contactService.getPreviousContact(contact, practitioner);
+  }
+
   @Get('retrieve/:id')
   @UseGuards(TokenGuard)
   async getPatientInfoAgenda(

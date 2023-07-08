@@ -130,7 +130,7 @@ import { UserTypeEntity } from './user-type.entity';
 import { WorkstationEntity } from './workstation.entity';
 import { WzagendaContactEntity } from './wzagenda-contact.entity';
 import { ContactPhoneCopEntity } from './contact-phone-cop.entity';
-
+import { FileTagEntity } from './file-tag.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -264,6 +264,7 @@ import { ContactPhoneCopEntity } from './contact-phone-cop.entity';
       WorkstationEntity,
       WzagendaContactEntity,
       ContactPhoneCopEntity,
+      FileTagEntity,
     ]),
   ],
   controllers: [],
