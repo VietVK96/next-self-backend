@@ -151,8 +151,9 @@ export class SaveEventService {
     const dates = payload.dates ? payload.dates.split(',') : [];
     const exdates = payload.exdates ? payload.exdates.split(',') : [];
 
-    const eventStatus = 0;
-    const eventLateness = 0;
+    let eventStatus = 0;
+    let eventLateness = 0;
+    console.log(payload);
     try {
       const countStatement: { count: number } = await queryRunner.query(
         `
@@ -162,7 +163,7 @@ export class SaveEventService {
           AND deleted_at IS NOT NULL`,
         [contactId],
       );
-      if (countStatement.count !== 0) {
+      if (countStatement.count === 0) {
         throw new CBadRequestException(
           `Le patient a été supprimé. Veuillez restaurer le patient avant de créer / modifier un rendez-vous.`,
         );
@@ -192,7 +193,7 @@ export class SaveEventService {
           'SELECT LAST_INSERT_ID() AS lastInsertId',
         );
         eventId = result[0].lastInsertId;
-        if (!hasRecurrEvents) {
+        if (!Number(hasRecurrEvents)) {
           // Nouvelle occurrence pour DATE(start)
           await queryRunner.query(
             `INSERT INTO event_occurrence_evo (evt_id, resource_id, evo_date)
@@ -227,7 +228,11 @@ export class SaveEventService {
               );
             }
           }
-          await Promise.all(promiseArr);
+          const totalBatch = Math.ceil(promiseArr.length / 100);
+          for (let i = 0; i < totalBatch; i++) {
+            const batch = promiseArr.splice(0, 100);
+            await Promise.all(batch);
+          }
         }
       } else {
         const eventStatement: { status: number; lateness: number }[] =
@@ -240,8 +245,8 @@ export class SaveEventService {
             WHERE EVT_ID = ?`,
             [eventId],
           );
-        const eventStatus = eventStatement[0].status;
-        const eventLateness = eventStatement[0].lateness;
+        eventStatus = eventStatement[0].status;
+        eventLateness = eventStatement[0].lateness;
 
         if (!hasRecurrEvents) {
           await Promise.all([
@@ -388,7 +393,11 @@ export class SaveEventService {
                 ),
               );
             }
-            await Promise.all(promiseArr);
+            const totalBatch = Math.ceil(promiseArr.length / 100);
+            for (let i = 0; i < totalBatch; i++) {
+              const batch = promiseArr.splice(0, 100);
+              await Promise.all(batch);
+            }
           } else {
             await Promise.all([
               queryRunner.query(
