@@ -22,9 +22,14 @@ import { PatientAmcEntity } from 'src/entities/patient-amc.entity';
 import { DataSource } from 'typeorm';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import * as fs from 'fs';
+import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class ContactService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private configService: ConfigService,
+    private dataSource: DataSource,
+  ) {}
 
   async verifyByIdAndGroupId(id: number, orgId: number): Promise<boolean> {
     const queryBuiler = this.dataSource.createQueryBuilder();
@@ -434,5 +439,29 @@ count(CON_ID) as countId,COD_TYPE as codType
     } catch (error) {
       throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
+  }
+
+  async getAvatar(contactId: number, identity: UserIdentity) {
+    const query = this.dataSource.createQueryBuilder();
+    const uplId = await query
+      .select('CON.UPL_ID')
+      .from(ContactEntity, 'CON')
+      .where('CON.CON_ID = :contactId', { contactId })
+      .getRawOne();
+
+    const fileC = await this.dataSource
+      .createQueryBuilder()
+      .select()
+      .from(UploadEntity, 'UPL')
+      .where('UPL.UPL_ID = :id', { id: uplId.UPL_ID })
+      .getRawOne();
+
+    const filename = fileC.UPL_NAME;
+    const path = fileC.UPL_PATH;
+    const dir = await this.configService.get('app.uploadDir');
+
+    return {
+      file: `${dir}/${path}${filename}`,
+    };
   }
 }

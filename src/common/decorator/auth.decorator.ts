@@ -40,9 +40,12 @@ export class TokenGuard extends AuthGuard('jwt') {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = this.getRequest(context);
 
-    const authorization = request.headers?.authorization;
+    let authorization = request.headers?.authorization;
     if (!authorization || authorization === '') {
-      throw new UnauthorizedException();
+      if (!request?.query?.token || request?.query?.token === '') {
+        throw new UnauthorizedException();
+      }
+      authorization = `Bearer ${request?.query?.token}`;
     }
     const tokens = authorization.split(' ');
     if (!tokens || tokens.length !== 2) {
