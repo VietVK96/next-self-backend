@@ -4,12 +4,20 @@ import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
 import { DentalController } from './dental.controller';
 import { OrdonnancesServices } from './services/ordonnances.services';
+import { FactureServices } from './services/facture.services';
+import { BillEntity } from 'src/entities/bill.entity';
+import { BillLineEntity } from 'src/entities/bill-line.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([MedicalHeaderEntity, MedicalOrderEntity]),
+    TypeOrmModule.forFeature([
+      MedicalHeaderEntity,
+      MedicalOrderEntity,
+      BillEntity,
+      BillLineEntity,
+    ]),
   ],
   controllers: [DentalController],
-  providers: [OrdonnancesServices],
+  providers: [OrdonnancesServices, FactureServices],
 })
 export class DentalModule {}
