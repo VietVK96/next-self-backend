@@ -9,7 +9,10 @@ import {
 } from 'src/entities/contact-document.entity';
 import { ContactPhoneCopEntity } from 'src/entities/contact-phone-cop.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
-import { ContactEntity } from 'src/entities/contact.entity';
+import {
+  ContactEntity,
+  EnumContactReminderVisitType,
+} from 'src/entities/contact.entity';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { GenderEntity } from 'src/entities/gender.entity';
 import { PatientAmoEntity } from 'src/entities/patient-amo.entity';
@@ -22,6 +25,10 @@ import { PatientAmcEntity } from 'src/entities/patient-amc.entity';
 import { DataSource } from 'typeorm';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ContactDetailDto } from '../dto/contact-detail.dto';
+import { isNumber } from 'class-validator';
+import { PolicyHolderEntity } from 'src/entities/policy-holder.entity';
+import * as dayjs from 'dayjs';
 @Injectable()
 export class ContactService {
   constructor(private dataSource: DataSource) {}
@@ -381,7 +388,6 @@ count(CON_ID) as countId,COD_TYPE as codType
         contact,
       ]);
       const nextId = nextIdResult[0];
-      console.log(nextId);
       if (!nextId) {
         throw new CBadRequestException(
           "Aucun patient du jour suivant n'a été trouvé.",
@@ -433,6 +439,154 @@ count(CON_ID) as countId,COD_TYPE as codType
       return previousId;
     } catch (error) {
       throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
+    }
+  }
+
+  async saveContact(reqBody: ContactDetailDto, identity: UserIdentity) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const address: AddressEntity = {
+        street: reqBody.addressStreet,
+        streetComp: reqBody.addressStreetComp,
+        zipCode: reqBody.addressZipCode,
+        city: reqBody.addressCity,
+        country: reqBody.addressCountry,
+        countryAbbr: reqBody.addressCountryAbbr,
+      };
+      if (
+        address.street ||
+        address.streetComp ||
+        address.zipCode ||
+        address.city ||
+        address.country ||
+        address.countryAbbr
+      ) {
+        const resultAddress = await queryRunner.manager
+          .createQueryBuilder()
+          .insert()
+          .into(AddressEntity)
+          .values(address)
+          .execute();
+        address.id = resultAddress.raw.id;
+      }
+
+      if (!isNumber(reqBody.social_security_reimbursement_rate)) {
+        reqBody.social_security_reimbursement_rate = null;
+      }
+
+      const patient: ContactEntity = {
+        organizationId: identity.org,
+        nbr: reqBody.nbr,
+        lastname: reqBody.lastname,
+        firstname: reqBody.firstname,
+        birthOrder: reqBody.birthOrder,
+        insee: reqBody.insee,
+        inseeKey: reqBody.inseeKey,
+        odontogramObservation: reqBody.odontogram_observation?.trim() ?? null,
+        ursId: reqBody.practitionerId,
+        genId: reqBody.genderId,
+        adrId: address.id,
+        uplId: reqBody.avatarId,
+        cpdId: reqBody.addressed_by?.id ?? null,
+        cofId: reqBody.contactFamilyId,
+        profession: reqBody.profession,
+        email: reqBody.email,
+        birthDate: dayjs(reqBody.birthday).isValid() ? reqBody.birthday : null,
+        quality: +reqBody.quality,
+        breastfeeding: reqBody.breastfeeding,
+        pregnancy: reqBody.pregnancy ?? 0,
+        clearanceCreatinine: reqBody.clearanceCreatinine ?? 0,
+        hepaticInsufficiency: reqBody.hepaticInsufficiency,
+        weight: reqBody.weight,
+        size: reqBody.size,
+        conMedecinTraitantId: reqBody.doctor.id ?? null,
+        msg: reqBody.msg,
+        notificationMsg: reqBody.notificationMsg,
+        notificationEnable: reqBody.notificationEnable,
+        notificationEveryTime: reqBody.notificationEveryTime,
+        reminderVisitType:
+          EnumContactReminderVisitType[reqBody.reminderVisitType.toUpperCase()],
+        reminderVisitDuration: reqBody.reminderVisitDuration,
+        reminderVisitDate: reqBody.reminderVisitDate ?? null,
+        reminderVisitLastDate: reqBody.reminderVisitLastDate ?? null,
+        color: reqBody.color,
+        colorMedical: reqBody.colorMedical,
+        socialSecurityReimbursementRate:
+          reqBody.social_security_reimbursement_rate,
+        mutualRepaymentType: reqBody.mutualRepaymentType ?? 1,
+        mutualRepaymentRate: reqBody.mutualRepaymentRate ?? 0,
+        mutualComplement: reqBody.mutualComplement ?? 0,
+        mutualCeiling: reqBody.mutualCeiling ?? 0,
+        agenesie: reqBody.agenesie,
+        maladieRare: reqBody.maladieRare,
+        rxSidexisLoaded: reqBody.rxSidexisLoaded,
+      };
+
+      const savePatient = await queryRunner.manager
+        .createQueryBuilder()
+        .insert()
+        .into(ContactEntity)
+        .values(patient)
+        .execute();
+
+      const policyHolderName = reqBody?.medical.policy_holder?.name;
+      const inseeNumber = reqBody?.medical?.policy_holder?.insee_number ?? null;
+      const policyHolderPatientId =
+        reqBody?.medical?.policy_holder?.patient?.id ?? null;
+      if (policyHolderName) {
+        const policyHolder: PolicyHolderEntity = {
+          inseeNumber,
+          name: policyHolderName,
+          patientId: policyHolderPatientId,
+        };
+        const savedPolicyHolder = await queryRunner.manager
+          .createQueryBuilder()
+          .insert()
+          .into(PolicyHolderEntity)
+          .values(policyHolder)
+          .execute();
+        await queryRunner.manager
+          .createQueryBuilder()
+          .insert()
+          .into(PatientMedicalEntity)
+          .values({
+            patientId: savePatient.raw.id,
+            policyHolderId: savedPolicyHolder.raw.id,
+          })
+          .execute();
+      } else {
+        await queryRunner.manager
+          .createQueryBuilder()
+          .insert()
+          .into(PatientMedicalEntity)
+          .values({
+            patientId: savePatient.raw.insertId,
+          })
+          .execute();
+      }
+
+      if (reqBody?.phones) {
+        const phones: PhoneEntity[] = reqBody.phones.map((e) => {
+          return {
+            nbr: e.nbr,
+            ptyId: e.phoneTypeId,
+          };
+        });
+        await queryRunner.manager
+          .createQueryBuilder()
+          .insert()
+          .into(PhoneEntity)
+          .values(phones)
+          .execute();
+      }
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      queryRunner.rollbackTransaction();
+      throw new CBadRequestException(ErrorCode.INSERT_FAILED);
+    } finally {
+      await queryRunner.release();
     }
   }
 }
