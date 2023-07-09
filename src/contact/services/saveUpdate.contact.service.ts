@@ -234,12 +234,9 @@ export class SaveUpdateContactService {
         identity,
       );
     } catch (err) {
-      console.log(err);
       queryRunner.rollbackTransaction();
       throw new CBadRequestException(ErrorCode.INSERT_FAILED);
     } finally {
-      console.log('release transaction');
-
       await queryRunner.release();
     }
   }
