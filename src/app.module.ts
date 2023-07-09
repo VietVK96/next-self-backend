@@ -30,6 +30,8 @@ import { UserModule } from './user/user.module';
 import { FileModule } from './file/file.module';
 import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
 import { DentalModule } from './dental/dental.module';
+import { TagModule } from './tag/tag.module';
+import { ContraindicationsModule } from './contraindications/contraindications.module';
 
 @Module({
   imports: [
@@ -92,6 +94,8 @@ import { DentalModule } from './dental/dental.module';
     TimeslotsModule,
 
     DentalModule,
+    TagModule,
+    ContraindicationsModule,
   ],
 })
 export class AppModule {}

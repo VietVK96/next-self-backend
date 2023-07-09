@@ -1,4 +1,13 @@
-import { Controller, Get, Param, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FileService } from './services/file.service';
 import {
@@ -9,7 +18,8 @@ import {
 import { Response } from 'express';
 import { join } from 'path';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { addTextToImage, resizeThumbnail } from 'src/common/util/file';
+import { resizeThumbnail } from 'src/common/util/file';
+import { UpdateFileDto } from './dto/index.dto';
 
 @ApiTags('File')
 @Controller('files')
@@ -86,10 +96,42 @@ export class FileController {
     } catch (error) {
       const notFoundPath = '/front/notfound.jpg';
       const fullPath = join(__dirname, '..', '..', notFoundPath);
-      const streamFile = await addTextToImage(fullPath, 'nnon disponible');
+      const streamFile = resizeThumbnail(fullPath, 'jpg');
 
       res.setHeader('Content-Type', 'image/png');
-      res.send(streamFile);
+      streamFile.pipe(res);
+    }
+  }
+
+  /**
+   * php/files/update.php -> full
+   *
+   */
+  @Patch('/:id')
+  @UseGuards(TokenGuard)
+  async update(
+    @CurrentUser() user: UserIdentity,
+    @Param('id') id: number,
+    @Body() payload: UpdateFileDto,
+  ) {
+    try {
+      return await this.fileService.updateFile(id, payload);
+    } catch (error) {
+      throw new CBadRequestException('cannot update file', error);
+    }
+  }
+
+  /**
+   * php/files/delete.php -> full
+   *
+   */
+  @Delete('/:id')
+  @UseGuards(TokenGuard)
+  async delete(@CurrentUser() identity: UserIdentity, @Param('id') id: number) {
+    try {
+      return await this.fileService.deleteFile(id, identity);
+    } catch (error) {
+      throw new CBadRequestException('cannot delete file', error);
     }
   }
 }

@@ -57,19 +57,19 @@ export class MedicalOrderEntity {
   })
   date?: string;
 
-  /**
-   * @ORM\Column(name="MDO_DATE", type="date")
-   * @Serializer\Expose
-   * @Serializer\Type("DateTime<'Y-m-d'>")
-   * @Assert\Type("DateTimeInterface")
-   * @Assert\NotNull
-   */
-  @Column({
-    name: 'MDO_DATE',
-    type: 'date',
-    nullable: true,
-  })
-  creationDate?: string;
+  // /**
+  //  * @ORM\Column(name="MDO_DATE", type="date")
+  //  * @Serializer\Expose
+  //  * @Serializer\Type("DateTime<'Y-m-d'>")
+  //  * @Assert\Type("DateTimeInterface")
+  //  * @Assert\NotNull
+  //  */
+  // @Column({
+  //   name: 'MDO_DATE',
+  //   type: 'date',
+  //   nullable: true,
+  // })
+  // creationDate?: string;
 
   /**
    * @ORM\Column(name="title", type="string", length=255)
