@@ -14,7 +14,7 @@ export class NgapKeysService {
     private ngapKeysRepo: Repository<NgapKeyEntity>,
   ) {}
 
-  async findAll(used: string) {
+  async findAll(used: string, identity: UserIdentity) {
     let usedCondition = 1;
     if (used && used.toLowerCase?.() !== 'true' && used.toLowerCase?.() !== '1')
       usedCondition = 0;
@@ -22,6 +22,7 @@ export class NgapKeysService {
     const ngapKeys: NgapKeyEntity[] = await this.ngapKeysRepo.find({
       where: {
         used: usedCondition,
+        organizationId: identity.org,
       },
     });
 

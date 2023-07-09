@@ -8,7 +8,6 @@ import {
 import { NgapKeysService } from './services/ngap-keys.service';
 import { FindManyOptions } from 'typeorm';
 import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
-import { identity } from 'rxjs';
 
 @ApiBearerAuth()
 @ApiTags('NgapKeys')
@@ -21,8 +20,11 @@ export class NgapKeysController {
    */
   @Get()
   @UseGuards(TokenGuard)
-  async findAllNgapKeys(@Query('used') used?: string) {
-    return this.ngapKeysService.findAll(used);
+  async findAllNgapKeys(
+    @CurrentUser() identity: UserIdentity,
+    @Query('used') used?: string,
+  ) {
+    return this.ngapKeysService.findAll(used, identity);
   }
 
   @Post('/find')
@@ -39,8 +41,8 @@ export class NgapKeysController {
   })
   @UseGuards(TokenGuard)
   async findByConditions(
-    @Body() conditions: FindManyOptions<NgapKeyEntity>,
     @CurrentUser() identity: UserIdentity,
+    @Body() conditions: FindManyOptions<NgapKeyEntity>,
   ) {
     return await this.ngapKeysService.findByCondition(conditions, identity);
   }

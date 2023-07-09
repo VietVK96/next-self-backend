@@ -82,11 +82,12 @@ export class PlanService {
       id,
     ]);
     plan = plans[0];
-    if (plan) {
+    if (!this._empty(plan)) {
       plan.displayBill = false;
       plan.bill = null;
       plan.quotation = null;
-      if (plan.quote_id) {
+      plan.events = [];
+      if (!this._empty(plan.quote_id)) {
         const quoteId = plan.quote_id;
         const quoteTemplate = plan.quote_template;
 
@@ -100,7 +101,7 @@ export class PlanService {
         };
       }
 
-      if (plan.bill_id) {
+      if (!this._empty(plan.bill_id)) {
         plan.bill = {
           id: plan.bill_id,
         };
@@ -119,7 +120,7 @@ export class PlanService {
       plan.quote_template = null;
       plan.payment_schedule_id = null;
 
-      const eventcurrentPlanPlf = `
+      const eventCurrentPlanPlfQuery = `
       SELECT
         PLV.PLV_POS as plv_pos,
         PLV.duration as plv_duration,
@@ -144,7 +145,7 @@ export class PlanService {
         AND evo.evt_id = EVT.EVT_ID
       ORDER BY plv_pos`;
       const event: EventData[] = await this.dataSource.query(
-        eventcurrentPlanPlf,
+        eventCurrentPlanPlfQuery,
         [plan.id],
       );
 
@@ -169,7 +170,7 @@ export class PlanService {
               duration: e.plv_duration,
               delay: e.plv_delay,
             },
-            event_type: e.event_type_id
+            event_type: !e.event_type_id
               ? null
               : {
                   id: e.event_type_id,
@@ -177,7 +178,7 @@ export class PlanService {
                 },
           };
 
-          const actcurrentPlanPlf = `
+          const actCurrentPlanPlfQuery = `
               SELECT
                 ETK.ETK_ID as id,
                 ETK.library_act_id,
@@ -231,7 +232,7 @@ export class PlanService {
             ORDER BY ETK.ETK_POS`;
 
           const task: TaskData[] = await this.dataSource.query(
-            actcurrentPlanPlf,
+            actCurrentPlanPlfQuery,
             [push.id],
           );
 
@@ -304,7 +305,7 @@ export class PlanService {
               }
             }
 
-            plan.events = push;
+            plan.events.push(push);
           }
         }
       }
@@ -405,7 +406,7 @@ export class PlanService {
           event_type: null,
           color: {
             background: -12303,
-            foreground: '#000000',
+            foreground: -3840,
           },
           plan: {
             pos: 1,
