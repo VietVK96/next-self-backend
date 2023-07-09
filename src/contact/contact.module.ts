@@ -45,6 +45,18 @@ import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { SaveTaskService } from './services/save.task.service';
 import { PatientAmoEntity } from 'src/entities/patient-amo.entity';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
+import { BillController } from './bill.controller';
+import { BillService } from './services/bill.service';
+import { BillEntity } from 'src/entities/bill.entity';
+import { MedicalOrderController } from './medicalOrder.controller';
+import { MedicalOrderService } from './services/medicalOrder.service';
+import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
+import { ContactController } from './contact.controller';
+import { SaveUpdateContactService } from './services/saveUpdate.contact.service';
+import { PatientMedicalEntity } from 'src/entities/patient-medical.entity';
+import { ContraindicationEntity } from 'src/entities/contraindication.entity';
+import { ContraindicationContactController } from './contraindication.contact.controller';
+import { ContraindicationContactService } from './services/contraindication.contact.service';
 
 @Module({
   controllers: [
@@ -58,6 +70,10 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
     QuotationController,
     DocumentController,
     UploadController,
+    MedicalOrderController,
+    BillController,
+    ContactController,
+    ContraindicationContactController,
   ],
   providers: [
     UploadService,
@@ -80,6 +96,10 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
     UploadService,
     OrganizationService,
     SaveTaskService,
+    MedicalOrderService,
+    BillService,
+    SaveUpdateContactService,
+    ContraindicationContactService,
   ],
   imports: [
     TypeOrmModule.forFeature([
@@ -103,6 +123,11 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
       CorrespondentEntity,
       TraceabilityEntity,
       PatientAmoEntity,
+      ContactEntity,
+      MedicalOrderEntity,
+      BillEntity,
+      PatientMedicalEntity,
+      ContraindicationEntity,
     ]),
     UserModule,
     PatientModule,

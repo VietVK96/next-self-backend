@@ -1,7 +1,5 @@
 import {
-  Body,
   Controller,
-  Patch,
   Post,
   Req,
   Get,
@@ -18,6 +16,7 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { DocumentServices } from './services/document.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Request } from 'express';
 
 @ApiBearerAuth()
 @Controller('/contact')

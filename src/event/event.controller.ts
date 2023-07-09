@@ -48,7 +48,7 @@ export class EventController {
   }
 
   //ecoodentist-1.31.0\php\user\preference\save.php full file
-  @Post('save')
+  @Post('preference/save')
   @UseGuards(TokenGuard)
   async save(
     @CurrentUser() identity: UserIdentity,
@@ -65,10 +65,31 @@ export class EventController {
     @CurrentUser() identity: UserIdentity,
     @Param('id') id: number,
   ) {
-    return await this.findEventService.findById(doctorId, identity.id, id);
+    return await this.findEventService.findById(doctorId, identity.org, id);
   }
 
-  @Post('/save')
+  @Post('save')
+  //File php/event/next.php
+  @Get('/next')
+  @UseGuards(TokenGuard)
+  async getNextEvent(
+    @Query('contact') contact?: number,
+    @Query('start') start?: string,
+  ) {
+    return await this.findEventService.getNextEvent(contact, start);
+  }
+
+  //File php/event/previous.php
+  @Get('/previous')
+  @UseGuards(TokenGuard)
+  async getPreviousEvent(
+    @Query('contact') contact?: number,
+    @Query('end') end?: string,
+  ) {
+    return await this.findEventService.getPreviousEvent(contact, end);
+  }
+
+  @Post('/task/save')
   @UseGuards(TokenGuard)
   async saveAgenda(
     @Body() payload: SaveAgendaDto,
