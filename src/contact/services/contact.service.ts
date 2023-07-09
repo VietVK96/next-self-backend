@@ -19,12 +19,21 @@ import { PhoneEntity } from 'src/entities/phone.entity';
 import { UploadEntity } from 'src/entities/upload.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { PatientAmcEntity } from 'src/entities/patient-amc.entity';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { OrganizationEntity } from 'src/entities/organization.entity';
+import { ContactPatchDto } from '../dto/contact.payment.dto';
+import { InjectRepository } from '@nestjs/typeorm';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ConfigService } from '@nestjs/config';
+
 @Injectable()
 export class ContactService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private configService: ConfigService,
+    private dataSource: DataSource,
+    @InjectRepository(ContactEntity)
+    private contactRepository: Repository<ContactEntity>,
+  ) {}
 
   async verifyByIdAndGroupId(id: number, orgId: number): Promise<boolean> {
     const queryBuiler = this.dataSource.createQueryBuilder();
@@ -342,6 +351,83 @@ count(CON_ID) as countId,COD_TYPE as codType
     return obj;
   }
 
+  async patch(payload: ContactPatchDto) {
+    try {
+      switch (payload.name) {
+        case 'weight': {
+          await this.contactRepository.save({
+            id: payload?.pk,
+            weight: +payload.value,
+          });
+          break;
+        }
+        case 'size': {
+          await this.contactRepository.save({
+            id: payload?.pk,
+            size: +payload.value,
+          });
+          break;
+        }
+        case 'clearanceCreatinine': {
+          await this.contactRepository.save({
+            id: payload?.pk,
+            clearanceCreatinine: +payload.value,
+          });
+          break;
+        }
+        case 'pregnancy': {
+          await this.contactRepository.save({
+            id: payload?.pk,
+            pregnancy: +payload.value,
+          });
+          break;
+        }
+        case 'breastfeeding': {
+          await this.contactRepository.save({
+            id: payload?.pk,
+            breastfeeding: +payload.value,
+          });
+          break;
+        }
+        case 'hepaticInsufficiency': {
+          await this.contactRepository.save({
+            id: payload?.pk,
+            hepaticInsufficiency: `${payload?.value}`,
+          });
+          break;
+        }
+        case 'msg': {
+          await this.contactRepository.save({
+            id: payload?.pk,
+            msg: `${payload?.value}`,
+          });
+          break;
+        }
+        case 'color': {
+          await this.contactRepository.save({
+            id: payload?.pk,
+            color: +payload?.value,
+          });
+          break;
+        }
+        case 'notificationMsg': {
+          await this.contactRepository.save({
+            id: payload?.pk,
+            notificationMsg: `${payload?.value}`,
+          });
+          break;
+        }
+        default:
+          throw new CBadRequestException(
+            'The value of the "name" parameter is incorrect',
+          );
+      }
+    } catch {
+      throw new CNotFoundRequestException(
+        ErrorCode.STATUS_INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
   /**
    * File: php/contact/next.php
    * Line 13 -> 60
@@ -433,5 +519,29 @@ count(CON_ID) as countId,COD_TYPE as codType
     } catch (error) {
       throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
+  }
+
+  async getAvatar(contactId: number, identity: UserIdentity) {
+    const query = this.dataSource.createQueryBuilder();
+    const uplId = await query
+      .select('CON.UPL_ID')
+      .from(ContactEntity, 'CON')
+      .where('CON.CON_ID = :contactId', { contactId })
+      .getRawOne();
+
+    const fileC = await this.dataSource
+      .createQueryBuilder()
+      .select()
+      .from(UploadEntity, 'UPL')
+      .where('UPL.UPL_ID = :id', { id: uplId.UPL_ID })
+      .getRawOne();
+
+    const filename = fileC.UPL_NAME;
+    const path = fileC.UPL_PATH;
+    const dir = await this.configService.get('app.uploadDir');
+
+    return {
+      file: `${dir}/${path}${filename}`,
+    };
   }
 }
