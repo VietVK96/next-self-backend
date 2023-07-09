@@ -31,6 +31,8 @@ import { FileModule } from './file/file.module';
 import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
 import { TagModule } from './tag/tag.module';
 import { ContraindicationsModule } from './contraindications/contraindications.module';
+import { TrashContactModule } from './trash/contact/trash.contact.module';
+import { TrashEventModule } from './trash/event/trash.event.module';
 
 @Module({
   imports: [
@@ -93,6 +95,8 @@ import { ContraindicationsModule } from './contraindications/contraindications.m
     TimeslotsModule,
     TagModule,
     ContraindicationsModule,
+    TrashContactModule,
+    TrashEventModule,
   ],
 })
 export class AppModule {}
