@@ -11,7 +11,6 @@ import { ErrorCode } from 'src/constants/error';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { EventEntity } from 'src/entities/event.entity';
 import { EnumPlanPlfType, PlanPlfEntity } from 'src/entities/plan-plf.entity';
-import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { TraceabilityStatusEnum } from 'src/enum/traceability-status-enum';
 import { PaymentPlanService } from 'src/payment-plan/services/payment-plan.service';
 import { PermissionService } from 'src/user/services/permission.service';
@@ -415,21 +414,6 @@ export class PlanService {
           tasks: [],
           ...event,
         };
-
-        let userPreferenceTimezone = 'UTC';
-        if (!this._empty(event?.user)) {
-          const userPreferenceEntity = await queryRunner.manager.findOneOrFail(
-            UserPreferenceEntity,
-            {
-              where: {
-                usrId: event?.user?.id,
-              },
-            },
-          );
-          if (userPreferenceEntity) {
-            userPreferenceTimezone = userPreferenceEntity?.timezone;
-          }
-        }
 
         const color = event?.color?.background;
 

@@ -15,6 +15,7 @@ import { BillLineEntity } from 'src/entities/bill-line.entity';
       MedicalOrderEntity,
       BillEntity,
       BillLineEntity,
+      MedicalHeaderEntity,
     ]),
   ],
   controllers: [DentalController],

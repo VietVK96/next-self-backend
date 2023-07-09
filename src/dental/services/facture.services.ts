@@ -4,6 +4,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EnregistrerFactureDto } from '../dto/facture.dto';
 import { BillEntity } from 'src/entities/bill.entity';
 import { BillLineEntity } from 'src/entities/bill-line.entity';
+import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class FactureServices {
@@ -12,6 +15,8 @@ export class FactureServices {
     private billRepository: Repository<BillEntity>,
     @InjectRepository(BillLineEntity)
     private billLineRepository: Repository<BillLineEntity>,
+    @InjectRepository(MedicalHeaderEntity)
+    private medicalHeaderRepository: Repository<MedicalHeaderEntity>,
   ) {}
 
   async update(payload: EnregistrerFactureDto) {
@@ -56,6 +61,99 @@ export class FactureServices {
           }
         } catch {
           return "Erreur -5 : Problème durant la suppression d'une ligne de la facture ... ";
+        }
+      }
+
+      case 'enregistrerEnteteParDefaut': {
+        try {
+          const medicalHeader = await this.medicalHeaderRepository.findOne({
+            where: { userId: payload?.userId },
+          });
+          if (!medicalHeader) {
+            await this.medicalHeaderRepository.create({
+              userId: payload?.userId,
+              name: payload?.titreFacture,
+              address: payload?.addrPrat,
+              identPrat: payload?.identPrat,
+            });
+          }
+          await this.medicalHeaderRepository.update(medicalHeader.id, {
+            userId: payload?.userId,
+            name: payload?.titreFacture,
+            address: payload?.addrPrat,
+            identPrat: payload?.identPrat,
+          });
+        } catch {
+          throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
+        }
+        break;
+      }
+
+      case 'enregistrerLigne': {
+        try {
+          let data;
+          if (payload?.typeLigne === 'operation') {
+            if (payload?.dateLigne !== null) {
+              const dateLigne = new Date(payload?.dateLigne);
+            }
+            const billLine = await this.billLineRepository.findOne({
+              where: { id: payload?.idFactureLigne },
+            });
+            if (!billLine) {
+              data = await this.billLineRepository.create({
+                amount: payload?.prixLigne,
+                teeth: payload?.dentsLigne,
+                cotation: payload?.cotation,
+                secuAmount: payload?.secuAmount,
+                materials: payload?.materials,
+                bilId: payload?.idFacture,
+                date: payload?.dateLigne,
+                msg: payload?.descriptionLigne,
+                pos: payload?.noSequence,
+                type: payload?.typeLigne,
+              });
+              return data.id;
+            }
+            data = await this.billLineRepository.update(
+              payload?.idFactureLigne,
+              {
+                amount: payload?.prixLigne,
+                teeth: payload?.dentsLigne,
+                cotation: payload?.cotation,
+                secuAmount: payload?.secuAmount,
+                materials: payload?.materials,
+                bilId: payload?.idFacture,
+                date: payload?.dateLigne,
+                msg: payload?.descriptionLigne,
+                pos: payload?.noSequence,
+                type: payload?.typeLigne,
+              },
+            );
+            return data.id;
+          } else {
+            const billLine = await this.billLineRepository.findOne({
+              where: { id: payload?.idFactureLigne },
+            });
+            if (!billLine) {
+              data = await this.billLineRepository.create({
+                bilId: payload?.idFactureLigne,
+                pos: payload?.noSequence,
+                type: payload?.typeLigne,
+              });
+              return data.id;
+            }
+            data = await this.billLineRepository.update(
+              payload?.idFactureLigne,
+              {
+                bilId: payload?.idFactureLigne,
+                pos: payload?.noSequence,
+                type: payload?.typeLigne,
+              },
+            );
+            return data.id;
+          }
+        } catch {
+          throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
         }
       }
     }

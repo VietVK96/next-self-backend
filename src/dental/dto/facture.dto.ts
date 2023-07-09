@@ -1,4 +1,5 @@
 import { ApiProperty, ApiExtraModels } from '@nestjs/swagger';
+import { EnumBillLineType } from 'src/entities/bill-line.entity';
 
 @ApiExtraModels()
 export class EnregistrerFactureDto {
@@ -91,4 +92,58 @@ export class EnregistrerFactureDto {
     required: false,
   })
   idFactureLigne?: number;
+
+  @ApiProperty({
+    name: 'user_id',
+    required: false,
+  })
+  userId?: number;
+
+  @ApiProperty({
+    name: 'typeLigne',
+    required: false,
+  })
+  typeLigne?: EnumBillLineType;
+
+  @ApiProperty({
+    name: 'dateLigne',
+    required: false,
+  })
+  dateLigne?: string;
+
+  @ApiProperty({
+    name: 'prixLigne',
+    required: false,
+  })
+  prixLigne?: number;
+
+  @ApiProperty({
+    name: 'dentsLigne',
+    required: false,
+  })
+  dentsLigne?: string;
+
+  @ApiProperty({
+    name: 'cotation',
+    required: false,
+  })
+  cotation?: string;
+
+  @ApiProperty({
+    name: 'materials',
+    required: false,
+  })
+  materials?: string;
+
+  @ApiProperty({
+    name: 'descriptionLigne',
+    required: false,
+  })
+  descriptionLigne?: string;
+
+  @ApiProperty({
+    name: 'noSequence',
+    required: false,
+  })
+  noSequence?: number;
 }
