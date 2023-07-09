@@ -16,3 +16,7 @@ export enum ErrorCode {
   PERMISSION_DENIED = 'PERMISSION_DENIED',
   INSERT_FAILED = 'INSERT_FAILED',
 }
+
+export enum HttpStatus {
+  BAD_REQUEST = 400,
+}
