@@ -467,7 +467,6 @@ count(CON_ID) as countId,COD_TYPE as codType
         contact,
       ]);
       const nextId = nextIdResult[0];
-      console.log(nextId);
       if (!nextId) {
         throw new CBadRequestException(
           "Aucun patient du jour suivant n'a été trouvé.",
@@ -522,7 +521,7 @@ count(CON_ID) as countId,COD_TYPE as codType
     }
   }
 
-  async getAvatar(contactId: number, identity: UserIdentity) {
+  async getAvatar(contactId: number) {
     const query = this.dataSource.createQueryBuilder();
     const uplId = await query
       .select('CON.UPL_ID')

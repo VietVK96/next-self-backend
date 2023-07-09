@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Param,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { TokenGuard } from 'src/common/decorator/auth.decorator';
 import { OrdonnancesServices } from './services/ordonnances.services';

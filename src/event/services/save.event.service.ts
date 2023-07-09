@@ -153,7 +153,6 @@ export class SaveEventService {
 
     let eventStatus = 0;
     let eventLateness = 0;
-    console.log(payload);
     try {
       const countStatement: { count: number } = await queryRunner.query(
         `

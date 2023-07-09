@@ -9,7 +9,6 @@ import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { EntityModule } from './entities';
 import { IRedisConfig } from './common/config/redis.config';
-import { SavePatienttModule } from './save-patient/patient.module';
 import { StickyNoteModule } from './sticky-note/sticky-note.module';
 import { WaitingRoomModule } from './waiting-room/waiting-room.module';
 import { AntecedentPrestationModule } from './antecedent-prestation/antecedent-prestation.module';
@@ -71,7 +70,6 @@ import { ContraindicationsModule } from './contraindications/contraindications.m
     EntityModule,
     ContactModule,
     AuthModule,
-    SavePatienttModule,
     StickyNoteModule,
     WaitingRoomModule,
     AntecedentPrestationModule,

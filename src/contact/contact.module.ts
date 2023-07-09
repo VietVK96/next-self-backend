@@ -51,6 +51,9 @@ import { BillEntity } from 'src/entities/bill.entity';
 import { MedicalOrderController } from './medicalOrder.controller';
 import { MedicalOrderService } from './services/medicalOrder.service';
 import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
+import { ContactController } from './contact.controller';
+import { SaveUpdateContactService } from './services/saveUpdate.contact.service';
+import { PatientMedicalEntity } from 'src/entities/patient-medical.entity';
 import { ContraindicationEntity } from 'src/entities/contraindication.entity';
 import { ContraindicationContactController } from './contraindication.contact.controller';
 import { ContraindicationContactService } from './services/contraindication.contact.service';
@@ -69,6 +72,7 @@ import { ContraindicationContactService } from './services/contraindication.cont
     UploadController,
     MedicalOrderController,
     BillController,
+    ContactController,
     ContraindicationContactController,
   ],
   providers: [
@@ -94,6 +98,7 @@ import { ContraindicationContactService } from './services/contraindication.cont
     SaveTaskService,
     MedicalOrderService,
     BillService,
+    SaveUpdateContactService,
     ContraindicationContactService,
   ],
   imports: [
@@ -121,6 +126,7 @@ import { ContraindicationContactService } from './services/contraindication.cont
       ContactEntity,
       MedicalOrderEntity,
       BillEntity,
+      PatientMedicalEntity,
       ContraindicationEntity,
     ]),
     UserModule,
