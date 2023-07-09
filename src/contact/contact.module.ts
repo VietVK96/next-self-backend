@@ -118,6 +118,7 @@ import { ContraindicationContactService } from './services/contraindication.cont
       CorrespondentEntity,
       TraceabilityEntity,
       PatientAmoEntity,
+      ContactEntity,
       MedicalOrderEntity,
       BillEntity,
       ContraindicationEntity,
