@@ -7,6 +7,7 @@ import { OrdonnancesServices } from './services/ordonnances.services';
 import { FactureServices } from './services/facture.services';
 import { BillEntity } from 'src/entities/bill.entity';
 import { BillLineEntity } from 'src/entities/bill-line.entity';
+import { EventTaskEntity } from 'src/entities/event-task.entity';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { BillLineEntity } from 'src/entities/bill-line.entity';
       BillEntity,
       BillLineEntity,
       MedicalHeaderEntity,
+      EventTaskEntity,
     ]),
   ],
   controllers: [DentalController],

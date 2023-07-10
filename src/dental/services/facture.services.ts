@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { And, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EnregistrerFactureDto } from '../dto/facture.dto';
 import { BillEntity } from 'src/entities/bill.entity';
@@ -7,6 +7,10 @@ import { BillLineEntity } from 'src/entities/bill-line.entity';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
+import { EventTaskEntity } from 'src/entities/event-task.entity';
+import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
+import { EventEntity } from 'src/entities/event.entity';
+import { OrganizationEntity } from 'src/entities/organization.entity';
 
 @Injectable()
 export class FactureServices {
@@ -17,6 +21,12 @@ export class FactureServices {
     private billLineRepository: Repository<BillLineEntity>,
     @InjectRepository(MedicalHeaderEntity)
     private medicalHeaderRepository: Repository<MedicalHeaderEntity>,
+    @InjectRepository(EventTaskEntity)
+    private eventTaskRepository: Repository<EventTaskEntity>,
+    @InjectRepository(DentalEventTaskEntity)
+    private dentalEventTaskRepository: Repository<DentalEventTaskEntity>, //dental
+    @InjectRepository(EventEntity)
+    private eventRepository: Repository<EventEntity>, //event
   ) {}
 
   async update(payload: EnregistrerFactureDto) {
@@ -155,6 +165,18 @@ export class FactureServices {
         } catch {
           throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
         }
+      }
+
+      case 'seances': {
+        const data = await this.eventTaskRepository
+          .createQueryBuilder()
+          .select()
+          .leftJoin(EventEntity, 'e')
+          .leftJoin(DentalEventTaskEntity, 'det')
+          .leftJoin(OrganizationEntity, 'o')
+          .where('')
+          .andWhere('');
+        return data;
       }
     }
   }

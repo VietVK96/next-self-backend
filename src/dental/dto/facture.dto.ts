@@ -146,4 +146,22 @@ export class EnregistrerFactureDto {
     required: false,
   })
   noSequence?: number;
+
+  @ApiProperty({
+    name: 'patient_id',
+    required: false,
+  })
+  patientId?: number;
+
+  @ApiProperty({
+    name: 'dateDeb',
+    required: false,
+  })
+  dateDeb?: Date;
+
+  @ApiProperty({
+    name: 'dateFin',
+    required: false,
+  })
+  dateFin?: string;
 }
