@@ -26,6 +26,7 @@ import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
 import { UploadModule } from './upload/upload.module';
 import { TimeslotsModule } from './timeslots/timeslots.module';
 import { UserModule } from './user/user.module';
+import { PlanPlfModule } from './plan-plf/plan-plf.module';
 import { FileModule } from './file/file.module';
 import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
 import { BcbModule } from './bcb/bcb.module';
@@ -92,6 +93,7 @@ import { CorrespondentModule } from './correspondent/correspondent.module';
     FileModule,
     NgapKeysModule,
     TimeslotsModule,
+    PlanPlfModule,
     BcbModule,
     DentalModule,
     ContraindicationsModule,
