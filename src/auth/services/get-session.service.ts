@@ -10,7 +10,6 @@ import {
   SessionRes,
   UserPractitionersRes,
   UserResourceRes,
-  UserUserPreferenceRes,
   UserUserRes,
 } from '../reponse/session.res';
 
@@ -112,8 +111,6 @@ export class GetSessionService {
       .from('T_USER_PREFERENCE_USP', 'USP')
       .where('USP.USR_ID = :userId', { userId })
       .getRawOne();
-
-    console.log(userPreferences);
 
     userPreferences.days = Array.from(
       String(userPreferences.days.toString(2)).split('').reverse(),

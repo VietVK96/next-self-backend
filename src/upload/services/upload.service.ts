@@ -50,8 +50,8 @@ export class UploadService {
       throw new CBadRequestException('file lager than 2m');
     }
     const contactCurrent = await this.getContactCurrent(contactId);
-    const groupId = contactCurrent?.organization_id;
-    const userCurrent = await this.getContactCurrent(groupId);
+    const groupId = contactCurrent?.organizationId;
+    const userCurrent = await this.getCurrentUser(groupId);
     const auth = `${groupId.toString().padStart(5, '0')}`;
     const dir = await this.configService.get('app.uploadDir');
     this.removeOldFile(userCurrent, dir, auth);
@@ -67,7 +67,10 @@ export class UploadService {
 
     const uplId = (
       await this.uploadRepository.findOne({
-        where: { token: userCurrent?.USR_TOKEN },
+        where: { token: userCurrent?.token },
+        order: {
+          id: 'desc',
+        },
       })
     ).id;
     await this.dataSource
@@ -75,22 +78,24 @@ export class UploadService {
       .update(contactId, { uplId });
   }
 
-  async getContactCurrent(contactId: number) {
-    const queryBuilder = this.dataSource.createQueryBuilder();
+  async getContactCurrent(contactId: number): Promise<ContactEntity> {
+    const queryBuilder = this.dataSource
+      .getRepository(ContactEntity)
+      .createQueryBuilder();
     return await queryBuilder
       .select()
-      .from(ContactEntity, 'CON')
-      .where('CON.CON_ID = :contactId', { contactId })
-      .getRawOne();
+      .where('CON_ID = :contactId', { contactId })
+      .getOne();
   }
 
-  async getCurrentUser(groupId: number) {
-    const queryBuilder = this.dataSource.createQueryBuilder();
+  async getCurrentUser(groupId: number): Promise<UserEntity> {
+    const queryBuilder = this.dataSource
+      .getRepository(UserEntity)
+      .createQueryBuilder();
     return await queryBuilder
       .select()
-      .from(UserEntity, 'USR')
-      .where('USR.organizationId = :groupId', { groupId })
-      .getRawOne();
+      .where('organization_id = :groupId', { groupId })
+      .getOne();
   }
 
   async _checkGroupStorageSpace(groupId: number, fileSize: number) {
@@ -114,14 +119,10 @@ export class UploadService {
       });
     }
   }
-  async removeOldFile(userCurrent: any, dir: string, auth: string) {
+  async removeOldFile(userCurrent: UserEntity, dir: string, auth: string) {
     const oldFile = await this.uploadRepository.findOne({
-      where: { token: userCurrent?.USR_TOKEN },
+      where: { token: userCurrent?.token },
     });
-
-    if (!fs.existsSync(`${dir}/${auth}`)) {
-      fs.mkdirSync(`${dir}/${auth}`, { recursive: true });
-    }
 
     if (oldFile) {
       const filename = oldFile.name;
@@ -133,7 +134,7 @@ export class UploadService {
   }
   async _saveFilesInformationsIntoDatabase(
     files: Express.Multer.File,
-    userCurrent: any,
+    userCurrent: UserEntity,
     dir: string,
     auth: string,
   ): Promise<UploadEntity> {
@@ -142,14 +143,17 @@ export class UploadService {
         const mimeTypes = files?.mimetype;
         const uploadEntity = new UploadEntity();
         uploadEntity.path = `${auth}/`;
-        uploadEntity.userId = userCurrent.USR_ID;
+        uploadEntity.userId = userCurrent.id;
         uploadEntity.fileName = `${auth}/${files?.originalname}`;
         uploadEntity.name = files.originalname;
         uploadEntity.type = mimeTypes;
         uploadEntity.size = files.size;
-        uploadEntity.token = userCurrent.USR_TOKEN;
+        uploadEntity.token = userCurrent.token;
         uploadEntity.user = userCurrent;
         const dirFile = `${dir}/${auth}/${files?.originalname}`;
+        if (!fs.existsSync(`${dir}/${auth}`)) {
+          fs.mkdirSync(`${dir}/${auth}`, { recursive: true });
+        }
         fs.writeFileSync(dirFile, files?.buffer);
         files['uploadEntity'] = uploadEntity;
         await this.dataSource.getRepository(UploadEntity).save(uploadEntity);

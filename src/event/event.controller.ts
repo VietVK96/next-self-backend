@@ -48,7 +48,7 @@ export class EventController {
   }
 
   //ecoodentist-1.31.0\php\user\preference\save.php full file
-  @Post()
+  @Post('preference/save')
   @UseGuards(TokenGuard)
   async save(
     @CurrentUser() identity: UserIdentity,
@@ -68,6 +68,7 @@ export class EventController {
     return await this.findEventService.findById(doctorId, identity.org, id);
   }
 
+  @Post('save')
   //File php/event/next.php
   @Get('/next')
   @UseGuards(TokenGuard)

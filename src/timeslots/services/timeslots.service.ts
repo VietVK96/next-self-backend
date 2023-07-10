@@ -4,7 +4,6 @@ import {
   TimeslotsAllRes,
 } from '../response/findAll.timeslots.res';
 import { DataSource, Repository, Connection } from 'typeorm';
-import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { TimeslotEntity } from 'src/entities/timeslot.entity';
 import { InjectRepository } from '@nestjs/typeorm';

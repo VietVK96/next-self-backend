@@ -97,7 +97,7 @@ export class findOnePlanRes {
   quotation?: PlanQuotation;
 
   @ApiProperty()
-  events?: PlanEvent;
+  events?: PlanEvent[];
 
   @ApiProperty()
   payment_schedule?: PaymentItemRes;
@@ -127,7 +127,7 @@ export class PlanEvent {
   name?: string;
 
   @ApiProperty()
-  color?: number;
+  color?: PlanEventColor;
 
   @ApiProperty()
   start?: Date;
@@ -308,7 +308,7 @@ export class EventData {
   name?: string;
 
   @ApiProperty()
-  color?: number;
+  color?: PlanEventColor;
 
   @ApiProperty()
   start?: Date;
@@ -455,4 +455,12 @@ export class TaskData {
 
   @ApiProperty()
   ccam_panier_color?: string;
+}
+
+export class PlanEventColor {
+  @ApiProperty()
+  background?: string;
+
+  @ApiProperty()
+  foreground?: string;
 }

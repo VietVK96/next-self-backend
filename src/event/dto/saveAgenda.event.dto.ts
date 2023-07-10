@@ -29,7 +29,7 @@ export class SaveAgendaDto {
   exdates?: string;
 
   @ApiProperty()
-  hasRecurrEvents?: boolean;
+  hasRecurrEvents?: boolean | string;
 
   @ApiProperty()
   scp?: string;

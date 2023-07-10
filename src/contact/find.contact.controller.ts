@@ -1,5 +1,14 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  Res,
+  StreamableFile,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiQuery, ApiHeader } from '@nestjs/swagger';
+import type { Response } from 'express';
 import {
   CurrentUser,
   TokenGuard,
@@ -9,6 +18,7 @@ import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
 import { FindAllContactDto } from './dto/findAll.contact.dto';
 import { ContactService } from './services/contact.service';
 import { FindContactService } from './services/find.contact.service';
+import { createReadStream } from 'fs';
 
 @ApiBearerAuth()
 @Controller('/contact')
@@ -95,5 +105,22 @@ export class FindContactController {
       identity.id,
       identity.org,
     );
+  }
+
+  // File : php/contact/avatar.php 100%
+  @Get('avatar/:contactId')
+  // @UseGuards(TokenGuard)
+  async getAvatar(
+    @Param('contactId') contactId: number,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const fileRes = await this.contactService.getAvatar(contactId);
+    const file = createReadStream(fileRes.file);
+    res.set({
+      'Content-Type': 'image/jpeg',
+    });
+    // res.sendFile(fileRes.file);
+    return new StreamableFile(file);
+    // res.end();
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotAcceptableException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Workbook } from 'exceljs';
 import { Response } from 'express';
@@ -29,6 +29,8 @@ import { AmcEntity } from 'src/entities/amc.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { PatientThirdPartyRes } from '../reponse/index.res';
 import { format } from 'date-fns';
+import { PermissionService } from 'src/user/services/permission.service';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
 
 const TypeFile = {
   EXCEL: 'xlsx',
@@ -40,6 +42,7 @@ export class PatientService {
   private readonly logger: Logger = new Logger(PatientService.name);
 
   constructor(
+    private permissionService: PermissionService,
     private addressService: AddressService,
     private contactService: ContactService,
     private dataSource: DataSource,
@@ -142,11 +145,12 @@ export class PatientService {
     }
   }
 
-  async deletePatient(id: number): Promise<any> {
-    // Vérification de la permission de suppression d'une fiche patient.
-    // if (!$em -> getRepository(User:: class) -> hasPermission('PERMISSION_DELETE', 8, $session -> get('id'))) {
-    //   throw new AccessDeniedHttpException();
-    // }
+  async deletePatient(id: number, identity: UserIdentity): Promise<any> {
+    if (
+      !this.permissionService.hasPermission('PERMISSION_DELETE', 8, identity.id)
+    ) {
+      throw new NotAcceptableException();
+    }
     try {
       const patient = await this.dataSource
         .createQueryBuilder()
@@ -495,5 +499,21 @@ export class PatientService {
       total_count: dataPaging?.length,
     };
     return data;
+  }
+
+  /**
+   * php/patients/contraindications/index.php
+   */
+  async findAllContraindications(id: number) {
+    const patient: ContactEntity = await this.patientRepository.findOne({
+      relations: {
+        contraindications: true,
+      },
+      where: {
+        id: id,
+      },
+    });
+
+    return patient?.contraindications.sort((a, b) => a.position - b.position);
   }
 }
