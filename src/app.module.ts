@@ -32,6 +32,7 @@ import { BcbModule } from './bcb/bcb.module';
 import { DentalModule } from './dental/dental.module';
 import { TagModule } from './tag/tag.module';
 import { ContraindicationsModule } from './contraindications/contraindications.module';
+import { CorrespondentModule } from './correspondent/correspondent.module';
 
 @Module({
   imports: [
@@ -94,6 +95,7 @@ import { ContraindicationsModule } from './contraindications/contraindications.m
     BcbModule,
     DentalModule,
     ContraindicationsModule,
+    CorrespondentModule,
     TagModule,
   ],
 })
