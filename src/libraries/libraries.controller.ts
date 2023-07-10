@@ -8,13 +8,17 @@ import {
 import { LibraryActFamilyEntity } from 'src/entities/library-act-family.entity';
 import { LibraryActEntity } from 'src/entities/library-act.entity';
 import { ActFamiliesDto } from './dto/act-families.dto';
+import { LibraryActsService } from './services/acts.service';
 import { LibrariesService } from './services/libraries.service';
 
 @ApiTags('Libraries')
 @Controller('libraries')
 @ApiBearerAuth()
 export class LibrariesController {
-  constructor(private librariesService: LibrariesService) {}
+  constructor(
+    private librariesService: LibrariesService,
+    private actService: LibraryActsService,
+  ) {}
 
   /**
    * File: php/libraries/act-families/index.php
@@ -33,11 +37,23 @@ export class LibrariesController {
    */
   @Get('act-families/:id')
   @UseGuards(TokenGuard)
-  async getAct(
+  async getActFamilies(
     @Param('id') id: number,
     @CurrentUser() identity: UserIdentity,
     @Query() request: ActFamiliesDto,
   ): Promise<LibraryActEntity[]> {
     return await this.librariesService.getAct(id, identity, request);
+  }
+
+  /**
+   * File: php/libraries/acts/show.php 100%
+   */
+  @Get('acts/:id')
+  @UseGuards(TokenGuard)
+  async getActs(
+    @Param('id') id: number,
+    @CurrentUser() identity: UserIdentity,
+  ): Promise<LibraryActEntity> {
+    return await this.actService.getActs(id, identity);
   }
 }

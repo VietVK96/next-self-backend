@@ -209,7 +209,7 @@ export class LibraryActQuantityEntity {
     width: 11,
     default: 0,
   })
-  numberOfTeeth?: string;
+  numberOfTeeth?: number;
 
   /**
    * @ORM\Column(name="amount", type="decimal", precision=10, scale=2, options={"default": 0})
