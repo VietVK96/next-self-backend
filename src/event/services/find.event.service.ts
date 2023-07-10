@@ -5,8 +5,9 @@ import { BgEventDto, FindAllEventDto, MemoDto } from '../dto/findAll.event.dto';
 import { ColorHelper } from 'src/common/util/color-helper';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
-import { FindEventByIdRes } from '../response/find.event.res';
 import { HistoricalsDto, ReminderDto } from '../dto/find.event.dto';
+
+import { FindEventByIdRes } from '../response/find.event.res';
 
 const classNameFromStatuses: Map<number, string> = new Map<number, string>();
 classNameFromStatuses.set(1, 'present');
@@ -391,6 +392,7 @@ export class FindEventService {
     SELECT
         evo.evo_id id,
         EVT.EVT_NAME name,
+        EVT.CON_ID as contacId,
         CONCAT_WS(' ', evo.evo_date, TIME(EVT.EVT_START)) start,
         CONCAT_WS(' ', evo.evo_date, TIME(EVT.EVT_END)) end,
         EVT.EVT_COLOR color,
@@ -423,6 +425,7 @@ export class FindEventService {
     const previousQuery = `
     SELECT
         evo.evo_id id,
+        EVT.CON_ID as contacId,
         EVT.EVT_NAME name,
         CONCAT_WS(' ', evo.evo_date, TIME(EVT.EVT_START)) start,
         CONCAT_WS(' ', evo.evo_date, TIME(EVT.EVT_END)) end,

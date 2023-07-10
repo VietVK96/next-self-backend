@@ -26,6 +26,7 @@ import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
 import { UploadModule } from './upload/upload.module';
 import { TimeslotsModule } from './timeslots/timeslots.module';
 import { UserModule } from './user/user.module';
+import { PlanPlfModule } from './plan-plf/plan-plf.module';
 import { FileModule } from './file/file.module';
 import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
 import { BcbModule } from './bcb/bcb.module';
@@ -34,6 +35,7 @@ import { TagModule } from './tag/tag.module';
 import { ContraindicationsModule } from './contraindications/contraindications.module';
 import { TrashContactModule } from './trash/contact/trash.contact.module';
 import { TrashEventModule } from './trash/event/trash.event.module';
+import { CorrespondentModule } from './correspondent/correspondent.module';
 
 @Module({
   imports: [
@@ -93,11 +95,13 @@ import { TrashEventModule } from './trash/event/trash.event.module';
     FileModule,
     NgapKeysModule,
     TimeslotsModule,
+    PlanPlfModule,
     BcbModule,
     DentalModule,
     ContraindicationsModule,
     TrashContactModule,
     TrashEventModule,
+    CorrespondentModule,
     TagModule,
   ],
 })
