@@ -94,6 +94,7 @@ import { ContraindicationsModule } from './contraindications/contraindications.m
     BcbModule,
     DentalModule,
     ContraindicationsModule,
+    TagModule,
   ],
 })
 export class AppModule {}
