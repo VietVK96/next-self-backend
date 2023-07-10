@@ -13,6 +13,10 @@ import {
 export class TrashContactController {
   constructor(private readonly trashContactService: TrashContactService) {}
 
+  /**?
+   * php/trash/contact/findAll.php
+   *
+   */
   @Get()
   @UseGuards(TokenGuard)
   async findAll(
@@ -23,6 +27,10 @@ export class TrashContactController {
     return await this.trashContactService.findAll(identity.org, start, length);
   }
 
+  /**?
+   * php/trash/contact/restore.php
+   *
+   */
   @Post()
   @UseGuards(TokenGuard)
   async restore(
