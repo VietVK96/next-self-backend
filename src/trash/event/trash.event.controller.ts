@@ -14,6 +14,10 @@ import {
 export class TrashEventController {
   constructor(private readonly trashEventService: TrashEventService) {}
 
+  /**?
+   * php/trash/event/findAll.php
+   *
+   */
   @Get()
   @UseGuards(TokenGuard)
   async findAll(
@@ -24,6 +28,10 @@ export class TrashEventController {
     return this.trashEventService.findAll(doctorId, start, length);
   }
 
+  /**?
+   * php/trash/event/restore.php
+   *
+   */
   @Post()
   @UseGuards(TokenGuard)
   async restore(

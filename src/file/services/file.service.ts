@@ -9,7 +9,6 @@ import { ConfigService } from '@nestjs/config';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { sanitizeFilename } from 'src/common/util/file';
 import { UpdateFileDto } from '../dto/index.dto';
-import { TagService } from 'src/tag/services/tag.service';
 import { TagEntity } from 'src/entities/tag.entity';
 import { PermissionService } from 'src/user/services/permission.service';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
