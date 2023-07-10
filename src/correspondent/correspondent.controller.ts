@@ -13,6 +13,9 @@ import { CorrespondentService } from './services/correspondent.service';
 export class CorrespondentController {
   constructor(private readonly correspondentService: CorrespondentService) {}
 
+  /**?
+   * php/suggest/correspondantLookup.php
+   */
   @Get('lookup/:term')
   @UseGuards(TokenGuard)
   async lookUp(
@@ -22,12 +25,18 @@ export class CorrespondentController {
     return await this.correspondentService.lookUp(identity.org, term);
   }
 
+  /**?
+   * php/correspondent/find.php full
+   */
   @Get('find/:id')
   @UseGuards(TokenGuard)
   async findById(@Param('id') id: number) {
     return await this.correspondentService.find(id);
   }
 
+  /**?
+   * /php/correspondent/save.php full
+   */
   @Post()
   @UseGuards(TokenGuard)
   async save(@CurrentUser() identity: UserIdentity, @Body() payload: any) {
