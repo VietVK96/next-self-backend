@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { TrashContactService } from './services/trash.contact.service';
 import {
@@ -20,8 +20,15 @@ export class TrashContactController {
     @Query('start') start: number,
     @Query('length') length: number,
   ) {
-    console.log('hihi');
-
     return await this.trashContactService.findAll(identity.org, start, length);
+  }
+
+  @Post()
+  @UseGuards(TokenGuard)
+  async restore(
+    @CurrentUser() identity: UserIdentity,
+    @Body() payload: number[],
+  ) {
+    return await this.trashContactService.restore(identity.org, payload);
   }
 }

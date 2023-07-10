@@ -1,12 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
+import { ContactEntity } from 'src/entities/contact.entity';
+import { DataSource, In, IsNull, Not, Repository } from 'typeorm';
 
 @Injectable()
 export class TrashContactService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(
+    private readonly dataSource: DataSource,
+    @InjectRepository(ContactEntity)
+    private readonly contactRepo: Repository<ContactEntity>,
+  ) {}
 
   async findAll(groupId?: number, start?: number, length?: number) {
-    const startPage = (start - 1) * length;
     const totalData = await this.dataSource.query(
       ` SELECT SQL_CALC_FOUND_ROWS
         CON.CON_ID id,
@@ -34,5 +41,29 @@ export class TrashContactService {
       pageData: results.length,
       totalData: totalData.length,
     };
+  }
+
+  async restore(groupId?: number, ids?: number[]) {
+    try {
+      const contacts = await this.contactRepo.find({
+        where: {
+          id: In(ids),
+          organizationId: groupId,
+          deletedAt: Not(IsNull()),
+        },
+        withDeleted: true,
+      });
+
+      if (contacts.length === 0)
+        throw new CBadRequestException(ErrorCode.NOT_FOUND_CONTACT);
+      const updateContacts = contacts.map((item) => {
+        item.deletedAt = null;
+        return item;
+      });
+      await this.contactRepo.save(updateContacts);
+      return;
+    } catch {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND_CONTACT);
+    }
   }
 }
