@@ -111,11 +111,10 @@ export class FindContactController {
   @Get('avatar/:contactId')
   // @UseGuards(TokenGuard)
   async getAvatar(
-    @CurrentUser() identity: UserIdentity,
     @Param('contactId') contactId: number,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const fileRes = await this.contactService.getAvatar(contactId, identity);
+    const fileRes = await this.contactService.getAvatar(contactId);
     const file = createReadStream(fileRes.file);
     res.set({
       'Content-Type': 'image/jpeg',

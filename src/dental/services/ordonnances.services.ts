@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { DataSource, Repository } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
+import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrdonnancesDto } from '../dto/ordonnances.dto';
 import { MedicalOrderEntity } from 'src/entities/medical-order.entity';

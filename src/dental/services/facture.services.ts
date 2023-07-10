@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { And, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EnregistrerFactureDto } from '../dto/facture.dto';
 import { BillEntity } from 'src/entities/bill.entity';
@@ -10,7 +10,6 @@ import { ErrorCode } from 'src/constants/error';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { EventEntity } from 'src/entities/event.entity';
-import { OrganizationEntity } from 'src/entities/organization.entity';
 
 @Injectable()
 export class FactureServices {
@@ -165,18 +164,6 @@ export class FactureServices {
         } catch {
           throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
         }
-      }
-
-      case 'seances': {
-        const data = await this.eventTaskRepository
-          .createQueryBuilder()
-          .select()
-          .leftJoin(EventEntity, 'e')
-          .leftJoin(DentalEventTaskEntity, 'det')
-          .leftJoin(OrganizationEntity, 'o')
-          .where('')
-          .andWhere('');
-        return data;
       }
     }
   }
