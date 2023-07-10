@@ -791,10 +791,12 @@ export class PlanService {
     const plansResult = [];
 
     const queryBuiler = this.dataSource.createQueryBuilder();
-    const select = `
+
+    const planQuery = `
+    SELECT
       T_PLAN_PLF.PLF_ID AS id,
       T_EVENT_EVT.USR_ID AS doctor_id,
-      T_PLAN_PLF.payment_schedule_id AS payment_schedule_id,
+      T_PLAN_PLF.payment_schedule_id,
       T_PLAN_PLF.PLF_NAME AS name,
       T_PLAN_PLF.PLF_AMOUNT AS amount,
       T_PLAN_PLF.created_at,
@@ -802,20 +804,17 @@ export class PlanService {
       IF (UNIX_TIMESTAMP(T_PLAN_PLF.PLF_ACCEPTED_ON) = 0, NULL, T_PLAN_PLF.PLF_ACCEPTED_ON) AS accepted_at,
               sent_to_patient,
               sending_date_to_patient
-    `;
-    const qr = queryBuiler
-      .select(select)
-      .from('T_PLAN_PLF', 'T_PLAN_PLF')
-      .innerJoin('T_PLAN_EVENT_PLV', 'T_PLAN_EVENT_PLV')
-      .innerJoin('T_EVENT_EVT', 'T_EVENT_EVT')
-      .where('T_PLAN_PLF.PLF_TYPE = :type', { type: type })
-      .andWhere('T_PLAN_PLF.PLF_ID = T_PLAN_EVENT_PLV.PLF_ID')
-      .andWhere('T_PLAN_EVENT_PLV.EVT_ID = T_EVENT_EVT.EVT_ID')
-      .andWhere('T_EVENT_EVT.CON_ID = :patientId', { patientId: patientId })
-      .groupBy('T_PLAN_PLF.PLF_ID')
-      .orderBy('T_PLAN_PLF.updated_at', 'DESC');
+    FROM T_PLAN_PLF
+    JOIN T_PLAN_EVENT_PLV
+    JOIN T_EVENT_EVT
+    WHERE T_PLAN_PLF.PLF_TYPE = ?
+            AND T_PLAN_PLF.PLF_ID = T_PLAN_EVENT_PLV.PLF_ID
+            AND T_PLAN_EVENT_PLV.EVT_ID = T_EVENT_EVT.EVT_ID
+            AND T_EVENT_EVT.CON_ID = ?
+    GROUP BY T_PLAN_PLF.PLF_ID
+    ORDER BY T_PLAN_PLF.updated_at DESC`;
 
-    const plans = await qr.getRawMany();
+    const plans = await this.dataSource.query(planQuery, [type, patientId]);
 
     const doctorIds = plans.map((plan) => plan.doctor_id);
 
@@ -840,19 +839,20 @@ export class PlanService {
         const doctor = doctors.find((x) => x.id === plans[index].doctor_id);
 
         plans[index].doctor = doctor;
-        delete plans[index]['doctor_id'];
+        plans[index]['doctor_id'] = null;
 
         try {
           // Récupération de l'échéancier
-          const paymentSchedule = await this.paymentPlanService
-            .find(plans[index].payment_schedule_id, doctor['group_id'])
-            .then((res) => res);
+          const paymentSchedule = await this.paymentPlanService.find(
+            plans[index].payment_schedule_id,
+            doctor['group_id'],
+          );
 
           plans[index].payment_schedule = paymentSchedule;
         } catch (error) {
           plans[index].payment_schedule = null;
         } finally {
-          delete plans[index].payment_schedule_id;
+          plans[index].payment_schedule_id = null;
         }
 
         plansResult.push(plans[index]);
