@@ -1,11 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { identity } from 'rxjs';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
-import { FindAllStructDto } from 'src/contact/dto/findAll.contact.dto';
-import { FindContactService } from 'src/contact/services/find.contact.service';
 import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
-import { Condition, FindOneOptions, Repository } from 'typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
 
 @Injectable()
 export class NgapKeysService {
