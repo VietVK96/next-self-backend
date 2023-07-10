@@ -31,6 +31,7 @@ import { FileModule } from './file/file.module';
 import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
 import { TagModule } from './tag/tag.module';
 import { ContraindicationsModule } from './contraindications/contraindications.module';
+import { CorrespondentModule } from './correspondent/correspondent.module';
 
 @Module({
   imports: [
@@ -93,6 +94,7 @@ import { ContraindicationsModule } from './contraindications/contraindications.m
     TimeslotsModule,
     TagModule,
     ContraindicationsModule,
+    CorrespondentModule,
   ],
 })
 export class AppModule {}
