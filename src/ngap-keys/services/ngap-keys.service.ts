@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
-import { Repository } from 'typeorm';
+import { FindOneOptions, Repository } from 'typeorm';
 
 @Injectable()
 export class NgapKeysService {
@@ -22,5 +23,15 @@ export class NgapKeysService {
     });
 
     return ngapKeys;
+  }
+
+  async findByCondition(
+    condition: FindOneOptions<NgapKeyEntity>,
+    identity: UserIdentity,
+  ) {
+    return await this.ngapKeysRepo.findOneBy({
+      ...condition,
+      organizationId: identity.org,
+    });
   }
 }

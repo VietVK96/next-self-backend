@@ -10,7 +10,6 @@ import {
   SessionRes,
   UserPractitionersRes,
   UserResourceRes,
-  UserUserPreferenceRes,
   UserUserRes,
 } from '../reponse/session.res';
 
@@ -23,7 +22,7 @@ export class GetSessionService {
     const resources = await this.getResource(identity.id);
     data.resources = resources;
     data.user = await this.getUser(identity.id);
-    data.practitioners = await this.getPractitioners(identity.org, identity.id);
+    data.practitioners = await this.getPractitioners(identity.id, identity.org);
     return data;
   }
 
@@ -112,8 +111,6 @@ export class GetSessionService {
       .from('T_USER_PREFERENCE_USP', 'USP')
       .where('USP.USR_ID = :userId', { userId })
       .getRawOne();
-
-    console.log(userPreferences);
 
     userPreferences.days = Array.from(
       String(userPreferences.days.toString(2)).split('').reverse(),

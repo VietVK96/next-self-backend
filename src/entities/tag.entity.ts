@@ -49,7 +49,7 @@ export class TagEntity {
    * @Assert\Length(max=255)
    */
   @Column({
-    name: 'tiltle',
+    name: 'title',
     type: 'varchar',
     length: 255,
   })

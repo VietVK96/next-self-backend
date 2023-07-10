@@ -254,3 +254,24 @@ export interface IPractitioner {
   lastname?: number;
   firstname?: string;
 }
+
+@ApiExtraModels()
+export class ContactPatchDto {
+  @ApiProperty({
+    name: 'pk',
+    required: false,
+  })
+  pk?: number;
+
+  @ApiProperty({
+    name: 'name',
+    required: false,
+  })
+  name?: string;
+
+  @ApiProperty({
+    name: 'value',
+    required: false,
+  })
+  value?: string | number;
+}
