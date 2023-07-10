@@ -5,6 +5,10 @@ import { DataSource, Repository } from 'typeorm';
 import { FindGlossariesRes } from './responsive/find.glossaries.res';
 import { GlossaryEntryEntity } from 'src/entities/glossary-entry.entity';
 import { GlossaryEntryRes } from './responsive/glossaryEntry.glossaries.res';
+import { saveGlossaryEntryPayload } from './dto/saveEntry.glossaries.dto';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { SaveGlossaryDto } from './dto/save.glossaries.dto';
+import { MAX_ENTRIES, MAX_GLOSSARY } from 'src/constants/glassary';
 
 @Injectable()
 export class GlossariesService {
@@ -20,12 +24,7 @@ export class GlossariesService {
   async findGlossaries(): Promise<FindGlossariesRes[]> {
     const glossaries = await this.glossaryRepo.find();
     const res = glossaries.map((glossary) => {
-      return {
-        id: glossary.id,
-        name: glossary.name,
-        position: glossary.position,
-        entry_count: glossary.entryCount,
-      };
+      return this.convertToGlossaryRes(glossary);
     });
     return res;
   }
@@ -36,11 +35,7 @@ export class GlossariesService {
       glossaryId: id,
     });
     const res = glossaryEntries.map((glossaryEntry) => {
-      return {
-        id: glossaryEntry.id,
-        content: glossaryEntry.content,
-        position: glossaryEntry.position,
-      };
+      return this.convertToGlossaryEntryRes(glossaryEntry);
     });
     return res;
   }
@@ -51,6 +46,88 @@ export class GlossariesService {
     return {
       content: glossaryEntry.content,
       position: glossaryEntry.position,
+    };
+  }
+
+  async saveGlossaryEntry(
+    payload: saveGlossaryEntryPayload,
+    orgId: number,
+  ): Promise<GlossaryEntryRes> {
+    const count = await this.glossaryRepo.count();
+    if (count > MAX_ENTRIES) {
+      throw new CBadRequestException(
+        `Le nombre maximal de glossaire entry a ${MAX_ENTRIES}`,
+      );
+    }
+    const glossaryEntry = await this.glossaryEntryRepo.findOneBy({
+      content: payload.content,
+    });
+    if (glossaryEntry) {
+      return this.convertToGlossaryEntryRes(glossaryEntry);
+    } else {
+      const lastGlossaryEntry: GlossaryEntryEntity[] =
+        await this.dataSource.query(
+          `SELECT * FROM glossary_entry WHERE glossary_id = ${orgId} ORDER BY position DESC LIMIT 1`,
+        );
+      const glossaryEntry = new GlossaryEntryEntity();
+      glossaryEntry.glossaryId = Number(payload.glossary);
+      glossaryEntry.organizationId = orgId;
+      glossaryEntry.content = payload.content;
+      glossaryEntry.position = lastGlossaryEntry[0].position + 1;
+      const newGlossaryEntry: GlossaryEntryEntity =
+        await this.glossaryEntryRepo.save(glossaryEntry);
+      const glossary: GlossaryEntity = await this.glossaryRepo.findOneBy({
+        id: Number(payload.glossary),
+      });
+      ++glossary.entryCount;
+      await this.glossaryRepo.save(glossary);
+      return this.convertToGlossaryEntryRes(newGlossaryEntry);
+    }
+  }
+
+  async saveGlossary(
+    payload: SaveGlossaryDto,
+    orgId: number,
+  ): Promise<FindGlossariesRes> {
+    const count = await this.glossaryRepo.count();
+    if (count > MAX_GLOSSARY) {
+      throw new CBadRequestException(
+        `Le nombre maximal de glossaire a ${MAX_GLOSSARY}`,
+      );
+    }
+
+    const glossary = await this.glossaryRepo.findOneBy({ name: payload.name });
+    if (glossary) return this.convertToGlossaryRes(glossary);
+    else {
+      const lastGlossary: GlossaryEntity[] = await this.dataSource.query(
+        `SELECT * FROM glossary ORDER BY position DESC LIMIT 1`,
+      );
+      const glossary = new GlossaryEntity();
+      glossary.name = payload.name;
+      glossary.organizationId = orgId;
+      glossary.entryCount = 0;
+      glossary.position = lastGlossary[0].position + 1;
+      const newGlossary: GlossaryEntity = await this.glossaryRepo.save(
+        glossary,
+      );
+      return this.convertToGlossaryRes(newGlossary);
+    }
+  }
+
+  private convertToGlossaryEntryRes(e: GlossaryEntryEntity): GlossaryEntryRes {
+    return {
+      id: e.id,
+      content: e.content,
+      position: e.position,
+    };
+  }
+
+  private convertToGlossaryRes(e: GlossaryEntity): FindGlossariesRes {
+    return {
+      id: e.id,
+      name: e.name,
+      position: e.position,
+      entry_count: e.entryCount,
     };
   }
 }
