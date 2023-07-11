@@ -31,7 +31,7 @@ import { FileModule } from './file/file.module';
 import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
 import { TagModule } from './tag/tag.module';
 import { ContraindicationsModule } from './contraindications/contraindications.module';
-
+import { OrganizationModule } from './organization/organization.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -93,6 +93,7 @@ import { ContraindicationsModule } from './contraindications/contraindications.m
     TimeslotsModule,
     TagModule,
     ContraindicationsModule,
+    OrganizationModule,
   ],
 })
 export class AppModule {}

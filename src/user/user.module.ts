@@ -6,14 +6,19 @@ import { PermissionService } from './services/permission.service';
 import { UserService } from './services/user.service';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { UserController } from './user.controller';
+import { AddressService } from 'src/address/service/address.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserEntity, UserMedicalEntity]),
+    TypeOrmModule.forFeature([
+      UserEntity,
+      UserMedicalEntity,
+      UserMedicalEntity,
+    ]),
     AddressModule,
   ],
 
-  providers: [PermissionService, UserService],
+  providers: [PermissionService, UserService, AddressService],
   exports: [PermissionService, UserService],
   controllers: [UserController],
 })
