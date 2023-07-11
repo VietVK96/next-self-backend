@@ -59,30 +59,25 @@ export class GlossariesService {
         `Le nombre maximal de glossaire entry a ${MAX_ENTRIES}`,
       );
     }
-    const glossaryEntry = await this.glossaryEntryRepo.findOneBy({
-      content: payload.content,
+
+    const lastGlossaryEntry: GlossaryEntryEntity[] =
+      await this.dataSource.query(
+        `SELECT * FROM glossary_entry WHERE glossary_id = ${orgId} ORDER BY position DESC LIMIT 1`,
+      );
+    const glossaryEntry = new GlossaryEntryEntity();
+    glossaryEntry.glossaryId = Number(payload.glossary);
+    glossaryEntry.organizationId = orgId;
+    glossaryEntry.content = payload.content;
+    glossaryEntry.position =
+      lastGlossaryEntry.length !== 0 ? lastGlossaryEntry[0].position + 1 : 0;
+    const newGlossaryEntry: GlossaryEntryEntity =
+      await this.glossaryEntryRepo.save(glossaryEntry);
+    const glossary: GlossaryEntity = await this.glossaryRepo.findOneBy({
+      id: Number(payload.glossary),
     });
-    if (glossaryEntry) {
-      return this.convertToGlossaryEntryRes(glossaryEntry);
-    } else {
-      const lastGlossaryEntry: GlossaryEntryEntity[] =
-        await this.dataSource.query(
-          `SELECT * FROM glossary_entry WHERE glossary_id = ${orgId} ORDER BY position DESC LIMIT 1`,
-        );
-      const glossaryEntry = new GlossaryEntryEntity();
-      glossaryEntry.glossaryId = Number(payload.glossary);
-      glossaryEntry.organizationId = orgId;
-      glossaryEntry.content = payload.content;
-      glossaryEntry.position = lastGlossaryEntry[0].position + 1;
-      const newGlossaryEntry: GlossaryEntryEntity =
-        await this.glossaryEntryRepo.save(glossaryEntry);
-      const glossary: GlossaryEntity = await this.glossaryRepo.findOneBy({
-        id: Number(payload.glossary),
-      });
-      ++glossary.entryCount;
-      await this.glossaryRepo.save(glossary);
-      return this.convertToGlossaryEntryRes(newGlossaryEntry);
-    }
+    ++glossary.entryCount;
+    await this.glossaryRepo.save(glossary);
+    return this.convertToGlossaryEntryRes(newGlossaryEntry);
   }
 
   async saveGlossary(
@@ -96,22 +91,17 @@ export class GlossariesService {
       );
     }
 
-    const glossary = await this.glossaryRepo.findOneBy({ name: payload.name });
-    if (glossary) return this.convertToGlossaryRes(glossary);
-    else {
-      const lastGlossary: GlossaryEntity[] = await this.dataSource.query(
-        `SELECT * FROM glossary ORDER BY position DESC LIMIT 1`,
-      );
-      const glossary = new GlossaryEntity();
-      glossary.name = payload.name;
-      glossary.organizationId = orgId;
-      glossary.entryCount = 0;
-      glossary.position = lastGlossary[0].position + 1;
-      const newGlossary: GlossaryEntity = await this.glossaryRepo.save(
-        glossary,
-      );
-      return this.convertToGlossaryRes(newGlossary);
-    }
+    const lastGlossary: GlossaryEntity[] = await this.dataSource.query(
+      `SELECT * FROM glossary ORDER BY position DESC LIMIT 1`,
+    );
+    const glossary = new GlossaryEntity();
+    glossary.name = payload.name;
+    glossary.organizationId = orgId;
+    glossary.entryCount = 0;
+    glossary.position =
+      lastGlossary.length !== 0 ? lastGlossary[0].position + 1 : 0;
+    const newGlossary: GlossaryEntity = await this.glossaryRepo.save(glossary);
+    return this.convertToGlossaryRes(newGlossary);
   }
 
   private convertToGlossaryEntryRes(e: GlossaryEntryEntity): GlossaryEntryRes {
