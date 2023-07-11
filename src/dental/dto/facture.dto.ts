@@ -13,7 +13,7 @@ export class EnregistrerFactureDto {
     name: 'id_facture',
     required: false,
   })
-  idFacture?: number;
+  id_facture?: number;
 
   @ApiProperty({
     name: 'dateFacture',
@@ -34,7 +34,7 @@ export class EnregistrerFactureDto {
   identPrat?: string;
 
   @ApiProperty({
-    name: 'N° ADELI',
+    name: 'adeli',
     required: false,
   })
   adeli?: string;
@@ -85,19 +85,19 @@ export class EnregistrerFactureDto {
     name: 'signature_doctor',
     required: false,
   })
-  signatureDoctor?: string;
+  signature_doctor?: string;
 
   @ApiProperty({
     name: 'id_facture_ligne',
     required: false,
   })
-  idFactureLigne?: number;
+  id_facture_ligne?: number;
 
   @ApiProperty({
     name: 'user_id',
     required: false,
   })
-  userId?: number;
+  user_id?: number;
 
   @ApiProperty({
     name: 'typeLigne',
@@ -151,7 +151,7 @@ export class EnregistrerFactureDto {
     name: 'patient_id',
     required: false,
   })
-  patientId?: number;
+  patient_id?: number;
 
   @ApiProperty({
     name: 'dateDeb',
@@ -164,4 +164,28 @@ export class EnregistrerFactureDto {
     required: false,
   })
   dateFin?: string;
+
+  @ApiProperty({
+    name: 'signatureDoctor',
+    required: false,
+  })
+  signatureDoctor?: string;
+
+  @ApiProperty({
+    name: 'displayOnlyActsRealized',
+    required: false,
+  })
+  displayOnlyActsRealized?: string;
+
+  @ApiProperty({
+    name: 'displayOnlyActsListed',
+    required: false,
+  })
+  displayOnlyActsListed?: string;
+
+  @ApiProperty({
+    name: 'displayOnlyProsthesis',
+    required: false,
+  })
+  displayOnlyProsthesis?: string;
 }
