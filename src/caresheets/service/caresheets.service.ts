@@ -22,6 +22,7 @@ import { ExemptionCodeEnum } from 'src/enum/exemption-code.enum';
 import { CcamEntity } from 'src/entities/ccam.entity';
 import { ConfigService } from '@nestjs/config';
 import { CaresheetStatusEntity } from 'src/entities/caresheet-status.entity';
+import { RequestException } from 'src/common/exceptions/request-exception.exception';
 
 const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
 const PAV_MINIMUM_AMOUNT = 120;
@@ -494,6 +495,33 @@ export class CaresheetsService {
   };
 
   async sendRequest(action: string, contents: string): Promise<any> {
-    return null;
+    const endpoint = await this.configService.get('app.sesamVitale.endPoint');
+    const url = `${endpoint}/webservices/Fsv_SesamVitale.asmx`;
+
+    const headers = {
+      'Content-Type': 'text/xml; charset=utf-8',
+    };
+
+    const response = await axios.post(url, contents, { headers });
+
+    const body = response.data.replace(/(<\/?)(\w+):([^>]*>)/g, '$1$2$3'); // Strip the namespaces
+    const xml = new DOMParser().parseFromString(body, 'text/xml');
+    const result =
+      xml.getElementsByTagName('soapBody')[0][`${action}Response`][
+        `${action}Result`
+      ];
+
+    if (result.erreur && result.erreur.libelleErreur) {
+      throw new RequestException(result.erreur.libelleErreur, response);
+    }
+
+    const resultToArray = JSON.parse(
+      JSON.stringify(result).replace(/:\{\}/g, ':null'),
+    );
+
+    // Modifie le type de certaines valeurs
+    // array_walk_recursive($resultToArray, array($this, 'cast'));
+
+    return resultToArray;
   }
 }
