@@ -127,7 +127,7 @@ export class MedicalService {
         version: 20000,
         errors: [
           {
-            error: e.response.msg,
+            error: e?.response?.msg,
           },
         ],
       };
