@@ -34,9 +34,12 @@ import { BcbModule } from './bcb/bcb.module';
 import { DentalModule } from './dental/dental.module';
 import { TagModule } from './tag/tag.module';
 import { ContraindicationsModule } from './contraindications/contraindications.module';
+import { GlossariesModule } from './glossaries/glossaries.module';
+import { OrganizationModule } from './organization/organization.module';
 import { TrashContactModule } from './trash/contact/trash.contact.module';
 import { TrashEventModule } from './trash/event/trash.event.module';
 import { CorrespondentModule } from './correspondent/correspondent.module';
+import { MedicalModule } from './medical/medical.module';
 import { CaresheetsModule } from './caresheets/caresheets.module';
 
 @Module({
@@ -100,6 +103,7 @@ import { CaresheetsModule } from './caresheets/caresheets.module';
     DentalModule,
     TagModule,
     ContraindicationsModule,
+    OrganizationModule,
     PlanPlfModule,
     BcbModule,
     DentalModule,
@@ -108,8 +112,10 @@ import { CaresheetsModule } from './caresheets/caresheets.module';
     TrashEventModule,
     CorrespondentModule,
     TagModule,
+    GlossariesModule,
+    MedicalModule,
     InterfacageModule,
     CaresheetsModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }
