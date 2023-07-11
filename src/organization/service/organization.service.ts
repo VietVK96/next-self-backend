@@ -10,7 +10,6 @@ import { UserEntity } from 'src/entities/user.entity';
 import { UserService } from 'src/user/services/user.service';
 import { DataSource, Repository } from 'typeorm';
 import * as fs from 'fs';
-import Twig from 'twig';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
@@ -109,7 +108,6 @@ export class OrganizationService {
     }
 
     const user = await this.userService.find(identity.id);
-
     const packageJson = fs.readFileSync(
       `${process.cwd()}/package.json`,
       'utf8',

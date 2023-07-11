@@ -60,7 +60,6 @@
     "rrule": "^2.7.2",
     "rxjs": "^7.5.5",
     "sharp": "^0.32.1",
-    "twig": "^1.16.0",
     "typeorm": "^0.3.16"
   },
   "devDependencies": {
