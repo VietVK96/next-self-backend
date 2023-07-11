@@ -175,7 +175,7 @@ export class DocumentServices {
       file.tags = tagStm.map((row) => ({
         id: row.id,
         title: row.title,
-        color: JSON.parse(row.color),
+        color: JSON.parse(JSON.stringify(row.color)),
         internal_reference: row.internal_reference,
       }));
     }
