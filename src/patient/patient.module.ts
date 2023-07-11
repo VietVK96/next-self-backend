@@ -30,7 +30,6 @@ import { PermissionService } from 'src/user/services/permission.service';
       OrganizationEntity,
       AddressEntity,
       PhoneEntity,
-      ContactEntity,
       CashingEntity,
       ContactUserEntity,
       CashingContactEntity,
