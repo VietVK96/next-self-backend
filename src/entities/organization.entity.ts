@@ -95,11 +95,11 @@ export class OrganizationEntity {
    */
   // protected $upload;
 
-  @OneToOne(() => UploadEntity, {
-    createForeignKeyConstraints: false,
-  })
-  @JoinColumn({ name: 'UPL_ID' })
-  upload?: UploadEntity;
+  // @OneToOne(() => UploadEntity, {
+  //   createForeignKeyConstraints: false,
+  // })
+  // @JoinColumn({ name: 'UPL_ID' })
+  // upload?: UploadEntity;
 
   /**
    * @ORM\Column(name="GRP_NAME", type="string", length=255)
@@ -147,12 +147,12 @@ export class OrganizationEntity {
    * @ORM\Column(name="GRP_PHONE", type="string", length=15, nullable=true)
    * @AcmeAssert\PhoneNumber(regionPath="countryCode")
    */
-  @Column({
-    name: 'GRP_PHONE',
-    type: 'varchar',
-    length: 20,
-    nullable: true,
-  })
+  // @Column({
+  //   name: 'GRP_PHONE',
+  //   type: 'varchar',
+  //   length: 20,
+  //   nullable: true,
+  // })
   phoneNumber?: string;
 
   /**
@@ -199,12 +199,12 @@ export class OrganizationEntity {
   /**
    * @ORM\Column(name="GRP_SHARE_SMS", type="integer")
    */
-  @Column({
-    name: 'GRP_SHARE_SMS',
-    type: 'tinyint',
-    width: 1,
-    default: 0,
-  })
+  // @Column({
+  //   name: 'GRP_SHARE_SMS',
+  //   type: 'tinyint',
+  //   width: 1,
+  //   default: 0,
+  // })
   shareSms?: number;
 
   /**
@@ -213,12 +213,12 @@ export class OrganizationEntity {
    * @Assert\Type("bool")
    * @Assert\NotNull
    */
-  @Column({
-    name: 'GRP_SHARE_SMS',
-    type: 'tinyint',
-    width: 1,
-    default: 0,
-  })
+  // @Column({
+  //   name: 'GRP_SHARE_SMS',
+  //   type: 'tinyint',
+  //   width: 1,
+  //   default: 0,
+  // })
   smsShared?: number;
 
   /**

@@ -4,13 +4,9 @@ import { TraceabilityEntity } from 'src/entities/traceability.entity';
 import { Repository } from 'typeorm/repository/Repository';
 import { ActDto, UpdateTraceabilitiesDto } from '../dto/act.contact.dto';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
-import { EntityManager, In } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { TraceabilityStatusEnum } from 'src/constants/act';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
-import { log } from 'console';
-import { id } from 'date-fns/locale';
-import { addListener } from 'process';
-
 @Injectable()
 export class ActServices {
   constructor(
@@ -50,7 +46,7 @@ export class ActServices {
     organizationId: number,
   ) {
     await this.entityManager.transaction(async (manager) => {
-      const etk = await this.eventTaskRepository.findOne({
+      await this.eventTaskRepository.findOne({
         where: { id: id },
       });
       const data = await this.traceabilityRepository.find({
@@ -124,7 +120,7 @@ export class ActServices {
       date: payload?.date,
       label: payload?.label,
     });
-    const dataDental = await this.dentalEventRepository.save({
+    await this.dentalEventRepository.save({
       id: payload.id,
       ald,
     });
