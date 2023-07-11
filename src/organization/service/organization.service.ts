@@ -65,7 +65,6 @@ export class OrganizationService {
       .where('organization.id = :organizationId', { organizationId })
       .getRawOne();
 
-    console.log('smsQuantiy :>> ', smsQuantity);
     return smsQuantity;
   }
 
