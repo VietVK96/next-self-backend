@@ -10,6 +10,7 @@ import { BillLineEntity } from 'src/entities/bill-line.entity';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { EventEntity } from 'src/entities/event.entity';
+import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
 
 @Module({
   imports: [
@@ -20,8 +21,9 @@ import { EventEntity } from 'src/entities/event.entity';
       BillLineEntity,
       MedicalHeaderEntity,
       EventTaskEntity,
-      DentalEventTaskEntity,
       EventEntity,
+      DentalEventTaskEntity,
+      NgapKeyEntity,
     ]),
   ],
   controllers: [DentalController],

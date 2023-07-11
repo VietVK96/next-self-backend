@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { MoreThanOrEqual, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EnregistrerFactureDto } from '../dto/facture.dto';
 import { BillEntity } from 'src/entities/bill.entity';
@@ -10,6 +10,8 @@ import { ErrorCode } from 'src/constants/error';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { EventEntity } from 'src/entities/event.entity';
+import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
+import { da } from 'date-fns/locale';
 
 @Injectable()
 export class FactureServices {
@@ -26,6 +28,8 @@ export class FactureServices {
     private dentalEventTaskRepository: Repository<DentalEventTaskEntity>, //dental
     @InjectRepository(EventEntity)
     private eventRepository: Repository<EventEntity>, //event
+    @InjectRepository(NgapKeyEntity)
+    private ngapKeyRepository: Repository<NgapKeyEntity>, //ngap_key
   ) {}
 
   async update(payload: EnregistrerFactureDto) {
@@ -33,11 +37,11 @@ export class FactureServices {
       case 'enregistrer': {
         try {
           const idBill = await this.billRepository.findOne({
-            where: { id: payload?.idFacture },
+            where: { id: payload?.id_facture },
           });
           if (idBill) {
             await this.billRepository.save({
-              id: payload?.idFacture,
+              id: payload?.id_facture,
               date: payload?.dateFacture,
               name: payload?.titreFacture,
               identPrat: payload?.identPrat,
@@ -61,11 +65,11 @@ export class FactureServices {
       case 'supprimerLigne': {
         try {
           const billlines = await this.billLineRepository.find({
-            where: { id: payload?.idFactureLigne },
+            where: { id: payload?.id_facture_ligne },
           });
           if (billlines) {
             return await this.billLineRepository.delete(
-              payload?.idFactureLigne,
+              payload?.id_facture_ligne,
             );
           }
         } catch {
@@ -76,18 +80,18 @@ export class FactureServices {
       case 'enregistrerEnteteParDefaut': {
         try {
           const medicalHeader = await this.medicalHeaderRepository.findOne({
-            where: { userId: payload?.userId },
+            where: { userId: payload?.user_id },
           });
           if (!medicalHeader) {
             await this.medicalHeaderRepository.create({
-              userId: payload?.userId,
+              userId: payload?.user_id,
               name: payload?.titreFacture,
               address: payload?.addrPrat,
               identPrat: payload?.identPrat,
             });
           }
           await this.medicalHeaderRepository.update(medicalHeader.id, {
-            userId: payload?.userId,
+            userId: payload?.user_id,
             name: payload?.titreFacture,
             address: payload?.addrPrat,
             identPrat: payload?.identPrat,
@@ -106,7 +110,7 @@ export class FactureServices {
               const dateLigne = new Date(payload?.dateLigne);
             }
             const billLine = await this.billLineRepository.findOne({
-              where: { id: payload?.idFactureLigne },
+              where: { id: payload?.id_facture_ligne },
             });
             if (!billLine) {
               data = await this.billLineRepository.create({
@@ -115,7 +119,7 @@ export class FactureServices {
                 cotation: payload?.cotation,
                 secuAmount: payload?.secuAmount,
                 materials: payload?.materials,
-                bilId: payload?.idFacture,
+                bilId: payload?.id_facture,
                 date: payload?.dateLigne,
                 msg: payload?.descriptionLigne,
                 pos: payload?.noSequence,
@@ -124,14 +128,14 @@ export class FactureServices {
               return data.id;
             }
             data = await this.billLineRepository.update(
-              payload?.idFactureLigne,
+              payload?.id_facture_ligne,
               {
                 amount: payload?.prixLigne,
                 teeth: payload?.dentsLigne,
                 cotation: payload?.cotation,
                 secuAmount: payload?.secuAmount,
                 materials: payload?.materials,
-                bilId: payload?.idFacture,
+                bilId: payload?.id_facture,
                 date: payload?.dateLigne,
                 msg: payload?.descriptionLigne,
                 pos: payload?.noSequence,
@@ -141,20 +145,20 @@ export class FactureServices {
             return data.id;
           } else {
             const billLine = await this.billLineRepository.findOne({
-              where: { id: payload?.idFactureLigne },
+              where: { id: payload?.id_facture },
             });
             if (!billLine) {
               data = await this.billLineRepository.create({
-                bilId: payload?.idFactureLigne,
+                bilId: payload?.id_facture_ligne,
                 pos: payload?.noSequence,
                 type: payload?.typeLigne,
               });
               return data.id;
             }
             data = await this.billLineRepository.update(
-              payload?.idFactureLigne,
+              payload?.id_facture_ligne,
               {
-                bilId: payload?.idFactureLigne,
+                bilId: payload?.id_facture_ligne,
                 pos: payload?.noSequence,
                 type: payload?.typeLigne,
               },
@@ -165,6 +169,117 @@ export class FactureServices {
           throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
         }
       }
+
+      case 'seances':
+        {
+          if (payload?.displayOnlyActsRealized === 'on') {
+            const dataEventTasks = await this.eventTaskRepository.find({
+              where: {
+                usrId: payload?.user_id,
+                conId: payload?.patient_id,
+                status: 0,
+                amountSaved: null,
+              },
+              relations: ['event', 'dental'],
+            });
+            const dataFilDate = dataEventTasks?.filter((dataEventTask) => {
+              return (
+                new Date(dataEventTask?.date)?.getTime() >=
+                  new Date(payload?.dateDeb).getTime() &&
+                new Date(dataEventTask?.date)?.getTime() <=
+                  new Date(payload?.dateFin).getTime()
+              );
+            });
+            const ngap_keys = await this.ngapKeyRepository.find();
+            const res: any = [];
+            return dataFilDate?.map((data) => {
+              const current_ngap_key = ngap_keys?.find((key) => {
+                return key?.id === data?.dental?.ngapKeyId;
+              });
+              return {
+                date: data?.date,
+                name: data?.name,
+                amount: data?.amount,
+                ccamFamily: data?.ccamFamily,
+                teeth: data?.dental?.teeth,
+                secuAmount: data?.dental?.secuAmount,
+                exceeding: data?.dental?.exceeding,
+                type: data?.dental?.type,
+                ccamCode: data?.dental?.ccamCode,
+                coef: data?.dental?.coef,
+                ngapKeyName: current_ngap_key?.name,
+              };
+            });
+          }
+          if (payload?.displayOnlyActsListed) {
+            const dataEventTasks = await this.eventTaskRepository.find({
+              where: {
+                usrId: payload?.user_id,
+                conId: payload?.patient_id,
+                amountSaved: null,
+              },
+              relations: ['event', 'dental'],
+            });
+            const dataFilDate = dataEventTasks?.filter((dataEventTask) => {
+              return (
+                new Date(dataEventTask?.date)?.getTime() >=
+                  new Date(payload?.dateDeb).getTime() &&
+                new Date(dataEventTask?.date)?.getTime() <=
+                  new Date(payload?.dateFin).getTime()
+              );
+            });
+            const ngap_keys = await this.ngapKeyRepository.find();
+            const res: any = [];
+            return dataFilDate?.map((data) => {
+              const current_ngap_key = ngap_keys?.find((key) => {
+                return key?.id === data?.dental?.ngapKeyId;
+              });
+              return {
+                date: data?.date,
+                name: data?.name,
+                amount: data?.amount,
+                ccamFamily: data?.ccamFamily,
+                teeth: data?.dental?.teeth,
+                secuAmount: data?.dental?.secuAmount,
+                exceeding: data?.dental?.exceeding,
+                type: data?.dental?.type,
+                ccamCode: data?.dental?.ccamCode,
+                coef: data?.dental?.coef,
+                ngapKeyName: current_ngap_key?.name,
+              };
+            });
+          }
+
+          if (payload?.displayOnlyProsthesis) {
+            const dataEventTasks = await this.eventTaskRepository.find({
+              where: {
+                usrId: payload?.user_id,
+                conId: payload?.patient_id,
+                amountSaved: null,
+              },
+              relations: ['event', 'dental'],
+            });
+            const dataFilDate = dataEventTasks?.filter((dataEventTask) => {
+              return (
+                new Date(dataEventTask?.date)?.getTime() >=
+                  new Date(payload?.dateDeb).getTime() &&
+                new Date(dataEventTask?.date)?.getTime() <=
+                  new Date(payload?.dateFin).getTime()
+              );
+            });
+            const ngap_keys = await this.ngapKeyRepository.find();
+            const res: any = [];
+            return dataFilDate?.map((data) => {
+              const current_ngap_key = ngap_keys?.find((key) => {
+                return key?.id === data?.dental?.ngapKeyId;
+              });
+              return {
+                ccamFamily: data?.ccamFamily,
+              };
+            });
+          }
+        }
+        break;
     }
   }
 }
