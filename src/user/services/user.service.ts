@@ -8,6 +8,8 @@ import { UserEntity } from 'src/entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
 import { UpdateTherapeuticDto } from '../dto/therapeutic.dto';
 import { InjectRepository } from '@nestjs/typeorm';
+import { OrganizationEntity } from 'src/entities/organization.entity';
+import { UserSmsEntity } from 'src/entities/user-sms.entity';
 @Injectable()
 export class UserService {
   constructor(
@@ -79,5 +81,31 @@ export class UserService {
     }));
     await this.userMedicalRepository.save(ids);
     return ids;
+  }
+
+  async getSmsQuantity(id: number) {
+    const queryBuilder = this.dataSource.createQueryBuilder();
+    const select = `
+      SUM(
+        CASE WHEN organization.smsSharing = true
+        THEN sms.USS_STOCK
+        ELSE (
+            CASE WHEN user.id = ${id}
+            THEN sms.USS_STOCK
+            ELSE 0
+            END
+        )
+        END
+      )`;
+    return await queryBuilder
+      .select(select, 'smsQuantity')
+      .from(UserEntity, 'user')
+      .innerJoin(
+        OrganizationEntity,
+        'organization',
+        'organization.id = user.organization_id',
+      )
+      .innerJoin(UserSmsEntity, 'sms', 'sms.USR_ID = user.id')
+      .getRawOne();
   }
 }

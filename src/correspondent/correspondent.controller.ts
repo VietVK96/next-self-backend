@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBasicAuth, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -41,5 +49,14 @@ export class CorrespondentController {
   @UseGuards(TokenGuard)
   async save(@CurrentUser() identity: UserIdentity, @Body() payload: any) {
     return await this.correspondentService.save(identity.org, payload);
+  }
+
+  @Get('/type')
+  @UseGuards(TokenGuard)
+  async findAllType(
+    @CurrentUser() identity: UserIdentity,
+    @Query('search') search?: string,
+  ) {
+    return await this.correspondentService.findAllType(identity.org, search);
   }
 }

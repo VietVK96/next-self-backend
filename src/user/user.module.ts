@@ -8,6 +8,7 @@ import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { UserController } from './user.controller';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { PreferenceService } from './services/preference.sevece';
+import { AddressService } from 'src/address/service/address.service';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { PreferenceService } from './services/preference.sevece';
       UserEntity,
       UserMedicalEntity,
       UserPreferenceEntity,
+      UserMedicalEntity,
     ]),
     AddressModule,
   ],
