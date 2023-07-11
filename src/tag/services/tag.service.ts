@@ -1,6 +1,6 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
-import { Like, Repository } from 'typeorm';
+import { DataSource, Like, Repository } from 'typeorm';
 import { TagDto } from '../dto/index.dto';
 import { TagEntity } from 'src/entities/tag.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
@@ -18,6 +18,7 @@ export class TagService {
   constructor(
     @InjectRepository(TagEntity)
     private tagRepository: Repository<TagEntity>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async getTags(identity: UserIdentity, payload: TagDto) {
@@ -58,6 +59,20 @@ export class TagService {
       return data;
     } catch (e) {
       throw new CBadRequestException('cannot get tags');
+    }
+  }
+
+  async store(groupId: number, title: string) {
+    try {
+      const obj = { background: '#e0e0e0', foreground: '#343a40' };
+
+      await this.dataSource.query(
+        `INSERT INTO tag (organization_id, title, color) VALUES (?,?,?) `,
+        [groupId, title, JSON.stringify(obj)],
+      );
+      return;
+    } catch {
+      throw new CBadRequestException('title has already exist');
     }
   }
 }
