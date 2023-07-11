@@ -20,6 +20,9 @@ import { CodeNatureAssuranceEnum } from 'src/constants/act';
 import { PatientAmoEntity } from 'src/entities/patient-amo.entity';
 import { ExemptionCodeEnum } from 'src/enum/exemption-code.enum';
 import { CcamEntity } from 'src/entities/ccam.entity';
+import { ConfigService } from '@nestjs/config';
+import { CaresheetStatusEntity } from 'src/entities/caresheet-status.entity';
+
 const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
 const PAV_MINIMUM_AMOUNT = 120;
 
@@ -34,6 +37,7 @@ export class CaresheetsService {
   private readonly logger: Logger = new Logger(CaresheetsService.name);
 
   constructor(
+    private configService: ConfigService,
     private dataSource: DataSource,
     private interfacageService: InterfacageService,
     @InjectRepository(ContactEntity)
@@ -46,6 +50,8 @@ export class CaresheetsService {
     private eventTaskRepository: Repository<EventTaskEntity>,
     @InjectRepository(DentalEventTaskEntity)
     private dentalEventTaskRepository: Repository<DentalEventTaskEntity>,
+    @InjectRepository(CaresheetStatusEntity)
+    private caresheetStatusRepository: Repository<CaresheetStatusEntity>,
   ) {}
 
   /**
@@ -93,8 +99,12 @@ export class CaresheetsService {
       caresheet.conId = patient?.id;
       caresheet.numeroFacturation = user?.medical?.finessNumber;
       caresheet.date = format(new Date(), 'yyyy-MM-dd');
-      // caresheet.fseStatus =
-      // caresheet.dreStatus =
+      caresheet.fseStatus = await this.caresheetStatusRepository.findOne({
+        where: { value: 0 },
+      });
+      caresheet.dreStatus = await this.caresheetStatusRepository.findOne({
+        where: { value: 0 },
+      });
       acts.forEach((act) => {
         this.dentalEventTaskRepository.save(act);
       });

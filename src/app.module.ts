@@ -9,7 +9,6 @@ import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { EntityModule } from './entities';
 import { IRedisConfig } from './common/config/redis.config';
-import { SavePatienttModule } from './save-patient/patient.module';
 import { StickyNoteModule } from './sticky-note/sticky-note.module';
 import { WaitingRoomModule } from './waiting-room/waiting-room.module';
 import { AntecedentPrestationModule } from './antecedent-prestation/antecedent-prestation.module';
@@ -27,11 +26,18 @@ import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
 import { UploadModule } from './upload/upload.module';
 import { TimeslotsModule } from './timeslots/timeslots.module';
 import { UserModule } from './user/user.module';
+import { PlanPlfModule } from './plan-plf/plan-plf.module';
 import { FileModule } from './file/file.module';
 import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
 import { InterfacageModule } from './interfacage/interfacage.module';
+import { BcbModule } from './bcb/bcb.module';
+import { DentalModule } from './dental/dental.module';
 import { TagModule } from './tag/tag.module';
 import { ContraindicationsModule } from './contraindications/contraindications.module';
+import { TrashContactModule } from './trash/contact/trash.contact.module';
+import { TrashEventModule } from './trash/event/trash.event.module';
+import { CorrespondentModule } from './correspondent/correspondent.module';
+import { CaresheetsModule } from './caresheets/caresheets.module';
 
 @Module({
   imports: [
@@ -71,7 +77,6 @@ import { ContraindicationsModule } from './contraindications/contraindications.m
     EntityModule,
     ContactModule,
     AuthModule,
-    SavePatienttModule,
     StickyNoteModule,
     WaitingRoomModule,
     AntecedentPrestationModule,
@@ -92,9 +97,19 @@ import { ContraindicationsModule } from './contraindications/contraindications.m
     FileModule,
     NgapKeysModule,
     TimeslotsModule,
+    DentalModule,
     TagModule,
     ContraindicationsModule,
+    PlanPlfModule,
+    BcbModule,
+    DentalModule,
+    ContraindicationsModule,
+    TrashContactModule,
+    TrashEventModule,
+    CorrespondentModule,
+    TagModule,
     InterfacageModule,
+    CaresheetsModule,
   ],
 })
 export class AppModule {}

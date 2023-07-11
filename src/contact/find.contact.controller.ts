@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Logger,
   Param,
   Query,
   Res,
@@ -19,11 +20,13 @@ import { FindAllContactDto } from './dto/findAll.contact.dto';
 import { ContactService } from './services/contact.service';
 import { FindContactService } from './services/find.contact.service';
 import { createReadStream } from 'fs';
+import { join } from 'path';
 
 @ApiBearerAuth()
 @Controller('/contact')
 @ApiTags('Contact')
 export class FindContactController {
+  private logger: Logger = new Logger(FindContactController.name);
   constructor(
     private findContactService: FindContactService,
     private contactService: ContactService,
@@ -111,17 +114,32 @@ export class FindContactController {
   @Get('avatar/:contactId')
   // @UseGuards(TokenGuard)
   async getAvatar(
-    @CurrentUser() identity: UserIdentity,
     @Param('contactId') contactId: number,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const fileRes = await this.contactService.getAvatar(contactId, identity);
-    const file = createReadStream(fileRes.file);
+    try {
+      const fileRes = await this.contactService.getAvatar(contactId);
+      const file = createReadStream(fileRes.file);
+      file.on('error', (e) => {
+        this.logger.error(e);
+        res.set({
+          'Content-Type': 'image/jpeg',
+        });
+        createReadStream(join(process.cwd(), 'front/no_image.png')).pipe(res);
+        return;
+      });
+      res.set({
+        'Content-Type': 'image/jpeg',
+      });
+      return new StreamableFile(file);
+    } catch (e) {
+      this.logger.error(e);
+    }
     res.set({
       'Content-Type': 'image/jpeg',
     });
-    // res.sendFile(fileRes.file);
-    return new StreamableFile(file);
-    // res.end();
+    return new StreamableFile(
+      createReadStream(join(process.cwd(), 'front/no_image.png')),
+    );
   }
 }
