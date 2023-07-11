@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { isArray } from 'class-validator';
 
 export class PatientStructDto {
   @ApiProperty()

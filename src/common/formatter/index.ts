@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { PhoneNumberFormat, PhoneNumberUtil } from 'google-libphonenumber';
 
 export const addressFormatter = (address) => {
   const street = `${address?.street.trim()} ${address?.street2.trim()}`.trim();
@@ -30,4 +31,17 @@ export const dateFormatter = (date: '') => {
   if (!date) return null;
   const day = new Date(date);
   return format(day, 'dd/MM/yyyy');
+};
+
+export const phoneNumberFormatter = (phoneNumber: string) => {
+  const defaultRegion = 'FR';
+  const numberFormat = PhoneNumberFormat.NATIONAL;
+  try {
+    const phoneNumberUtil = PhoneNumberUtil.getInstance();
+    const phoneNumberProto = phoneNumberUtil.parse(phoneNumber, defaultRegion);
+
+    return phoneNumberUtil.format(phoneNumberProto, numberFormat);
+  } catch (error) {
+    return phoneNumber;
+  }
 };

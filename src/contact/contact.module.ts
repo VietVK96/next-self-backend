@@ -45,6 +45,8 @@ import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { SaveTaskService } from './services/save.task.service';
 import { PatientAmoEntity } from 'src/entities/patient-amo.entity';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
+import { ContactPdfService } from './services/contact.pdf.service';
+import { ContactPdfController } from './contact.pdf.controller';
 
 @Module({
   controllers: [
@@ -58,6 +60,7 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
     QuotationController,
     DocumentController,
     UploadController,
+    ContactPdfController,
   ],
   providers: [
     UploadService,
@@ -80,6 +83,7 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
     UploadService,
     OrganizationService,
     SaveTaskService,
+    ContactPdfService,
   ],
   imports: [
     TypeOrmModule.forFeature([
