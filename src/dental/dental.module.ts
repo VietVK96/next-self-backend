@@ -21,6 +21,8 @@ import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
       BillLineEntity,
       MedicalHeaderEntity,
       EventTaskEntity,
+      DentalEventTaskEntity,
+      EventEntity,
       EventEntity,
       DentalEventTaskEntity,
       NgapKeyEntity,

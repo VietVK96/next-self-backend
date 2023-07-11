@@ -38,6 +38,7 @@ import { OrganizationModule } from './organization/organization.module';
 import { TrashContactModule } from './trash/contact/trash.contact.module';
 import { TrashEventModule } from './trash/event/trash.event.module';
 import { CorrespondentModule } from './correspondent/correspondent.module';
+import { MedicalModule } from './medical/medical.module';
 import { CaresheetsModule } from './caresheets/caresheets.module';
 
 @Module({
@@ -110,6 +111,7 @@ import { CaresheetsModule } from './caresheets/caresheets.module';
     TrashEventModule,
     CorrespondentModule,
     TagModule,
+    MedicalModule,
     InterfacageModule,
     CaresheetsModule,
   ],
