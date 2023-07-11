@@ -1,7 +1,11 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { TagService } from './services/tag.service';
-import { TokenGuard } from 'src/common/decorator/auth.decorator';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
 
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { TagDto } from './dto/index.dto';
@@ -18,9 +22,12 @@ export class TagController {
    */
   @Get('')
   @UseGuards(TokenGuard)
-  async getTags(@Query() payload: TagDto) {
+  async getTags(
+    @CurrentUser() identity: UserIdentity,
+    @Query() payload: TagDto,
+  ) {
     try {
-      return await this.tagService.getTags(payload);
+      return await this.tagService.getTags(identity, payload);
     } catch (error) {
       throw new CBadRequestException('tags not found', error);
     }
