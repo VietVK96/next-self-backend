@@ -16,3 +16,20 @@ export class CNotFoundRequestException extends HttpException {
     );
   }
 }
+
+export class BadRequestHttpException extends HttpException {
+  constructor(
+    message: string,
+    objectOrError?: string | object | any,
+    description = 'Bad Request',
+  ) {
+    const data = {
+      msg: message,
+      data: objectOrError,
+    };
+    super(
+      HttpException.createBody(data, description, HttpStatus.BAD_REQUEST),
+      HttpStatus.BAD_REQUEST,
+    );
+  }
+}

@@ -16,7 +16,7 @@ export class MemoService {
 
   async create(payload: CreateUpdateMemoDto): Promise<MemoRes> {
     if (payload.message === null) {
-      throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
     const queryRunner = this.connection.createQueryRunner();
     try {

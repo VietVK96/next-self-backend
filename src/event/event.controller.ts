@@ -68,7 +68,6 @@ export class EventController {
     return await this.findEventService.findById(doctorId, identity.org, id);
   }
 
-  @Post('save')
   //File php/event/next.php
   @Get('/next')
   @UseGuards(TokenGuard)
@@ -89,7 +88,7 @@ export class EventController {
     return await this.findEventService.getPreviousEvent(contact, end);
   }
 
-  @Post('/task/save')
+  @Post('/save')
   @UseGuards(TokenGuard)
   async saveAgenda(
     @Body() payload: SaveAgendaDto,
