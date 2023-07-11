@@ -36,6 +36,7 @@ import { ContraindicationsModule } from './contraindications/contraindications.m
 import { TrashContactModule } from './trash/contact/trash.contact.module';
 import { TrashEventModule } from './trash/event/trash.event.module';
 import { CorrespondentModule } from './correspondent/correspondent.module';
+import { MedicalModule } from './medical/medical.module';
 
 @Module({
   imports: [
@@ -106,6 +107,7 @@ import { CorrespondentModule } from './correspondent/correspondent.module';
     TrashEventModule,
     CorrespondentModule,
     TagModule,
+    MedicalModule,
   ],
 })
 export class AppModule {}
