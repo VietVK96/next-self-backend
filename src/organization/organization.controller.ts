@@ -30,7 +30,6 @@ export class OrganizationController {
    *
    */
   @Get('/about')
-  @Render('src/partial/organizations/about.html.twig')
   @UseGuards(TokenGuard)
   async about(@CurrentUser() identity: UserIdentity) {
     try {

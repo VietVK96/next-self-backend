@@ -94,7 +94,6 @@ export class OrganizationService {
   }
 
   async about(identity: UserIdentity) {
-    // const queryBuilder = this.dataSource.createQueryBuilder();
     const organization = await this.infoOrganization(identity.org);
     const userOrg = await this.userByOrgId(identity.org);
     const userUnique = userOrg.filter((object, index, arr) => {
@@ -106,29 +105,18 @@ export class OrganizationService {
 
     for (const user of organization.users) {
       const smsQuantity = await this.userService.getSmsQuantity(user.USR_ID);
-      console.log('smsQuantity', smsQuantity);
       user.smsQuantity = smsQuantity.smsQuantity || 0;
     }
+
     const user = await this.userService.find(identity.id);
-    console.log('user', user);
 
     const packageJson = fs.readFileSync(
-      '/home/nguyenpd/go/dental/backend/package.json',
+      `${process.cwd()}/package.json`,
       'utf8',
     );
     const packageData = JSON.parse(packageJson);
-    console.log('packageData', packageData);
-
     const versionNumber = packageData.version;
-    console.log('versionNumber', versionNumber);
 
-    // return Twig.renderFile(
-    //   'src/partial/organizations/about.html.twig',
-    //   { organization: 'bar', user: user, versionNumber: versionNumber },
-    //   (err, html) => {
-    //     html; // compiled string
-    //   },
-    // );
     return { organization, user, versionNumber };
   }
 }
