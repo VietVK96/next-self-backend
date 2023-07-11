@@ -2,26 +2,30 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
 import { UploadEntity } from 'src/entities/upload.entity';
 import { UserEntity } from 'src/entities/user.entity';
-import { UploadController } from './upload.controller';
-import { UploadService } from './services/upload.service';
-import { OrganizationService } from 'src/organization/service/organization.service';
+import { OrganizationController } from './organization.controller';
+import { OrganizationService } from './service/organization.service';
 import { PermissionService } from 'src/user/services/permission.service';
+import { TagEntity } from 'src/entities/tag.entity';
 import { UserService } from 'src/user/services/user.service';
-import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { AddressService } from 'src/address/service/address.service';
+import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserMedicalEntity, UploadEntity, UserEntity]),
+    TypeOrmModule.forFeature([
+      UploadEntity,
+      UserEntity,
+      TagEntity,
+      UserMedicalEntity,
+    ]),
   ],
-  controllers: [UploadController],
+  controllers: [OrganizationController],
   providers: [
-    UploadService,
-    UserService,
     OrganizationService,
-    AddressService,
     PermissionService,
+    UserService,
+    AddressService,
   ],
-  exports: [UploadService],
+  exports: [],
 })
-export class UploadModule {}
+export class OrganizationModule {}

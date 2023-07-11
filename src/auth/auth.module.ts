@@ -10,10 +10,16 @@ import { ValidationService } from './services/validation.service';
 import { AddressEntity } from 'src/entities/address.entity';
 import { JwtStrategy } from './jwt.strategy';
 import { GetSessionService } from './services/get-session.service';
+import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserEntity, OrganizationEntity, AddressEntity]),
+    TypeOrmModule.forFeature([
+      UserEntity,
+      OrganizationEntity,
+      AddressEntity,
+      UserMedicalEntity,
+    ]),
     JwtModule.register({
       secret: JWT_SECRET,
       signOptions: { expiresIn: `${JWT_LIFETIME}s` },

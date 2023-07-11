@@ -5,17 +5,25 @@ import { PrivilegeEntity } from 'src/entities/privilege.entity';
 import { ResourceEntity } from 'src/entities/resource.entity';
 import { UserResourceEntity } from 'src/entities/user-resource.entity';
 import { UserEntity } from 'src/entities/user.entity';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import {
   SessionRes,
   UserPractitionersRes,
   UserResourceRes,
   UserUserRes,
 } from '../reponse/session.res';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 
 @Injectable()
 export class GetSessionService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private dataSource: DataSource,
+    @InjectRepository(UserEntity)
+    private userRepository: Repository<UserEntity>,
+    @InjectRepository(UserMedicalEntity)
+    private userMedicalRepository: Repository<UserMedicalEntity>,
+  ) {}
 
   async getSession(identity: UserIdentity) {
     const data = new SessionRes();
@@ -130,6 +138,10 @@ export class GetSessionService {
     }));
     user.eventTypes = userEventTypes;
 
+    const userMedical = await this.userMedicalRepository?.findOne({
+      where: { userId },
+    });
+    user.rppsNumber = userMedical?.rppsNumber;
     return user;
   }
 
