@@ -11,7 +11,11 @@ export class RequestException extends HttpException {
       data: objectOrError,
     };
     super(
-      HttpException.createBody(data, description, HttpStatus.BAD_REQUEST),
+      HttpException.createBody(
+        data,
+        description,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      ),
       HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }
