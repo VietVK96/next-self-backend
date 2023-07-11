@@ -34,10 +34,11 @@
     "@nestjs/core": "^9.4.3",
     "@nestjs/jwt": "^10.0.3",
     "@nestjs/passport": "^9.0.3",
-    "@nestjs/platform-express": "^9.0.0",
+    "@nestjs/platform-express": "^10.0.5",
     "@nestjs/swagger": "^6.3.0",
     "@nestjs/typeorm": "^9.0.1",
     "@types/multer": "^1.4.7",
+    "axios": "^1.4.0",
     "cache-manager": "^5.2.2",
     "cache-manager-redis-store": "^3.0.1",
     "class-transformer": "^0.5.1",
@@ -60,7 +61,8 @@
     "rrule": "^2.7.2",
     "rxjs": "^7.5.5",
     "sharp": "^0.32.1",
-    "typeorm": "^0.3.16"
+    "typeorm": "^0.3.16",
+    "xmlbuilder2": "^3.1.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.3.0",

@@ -4,6 +4,7 @@ import { Like, Repository } from 'typeorm';
 import { TagDto } from '../dto/index.dto';
 import { TagEntity } from 'src/entities/tag.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
 
 export interface PaginatedResponse<T> {
   items: T[];
@@ -19,7 +20,7 @@ export class TagService {
     private tagRepository: Repository<TagEntity>,
   ) {}
 
-  async getTags(payload: TagDto) {
+  async getTags(identity: UserIdentity, payload: TagDto) {
     try {
       const { per_page, query } = payload;
       let page = payload?.page || 1;
@@ -28,7 +29,9 @@ export class TagService {
       }
 
       const [items, total] = await this.tagRepository.findAndCount({
-        where: query ? { title: Like(`%${query}%`) } : undefined,
+        where: query
+          ? { organizationId: identity.org, title: Like(`%${query}%`) }
+          : { organizationId: identity.org },
         skip: (page - 1) * per_page,
         take: per_page,
         order: {
