@@ -29,6 +29,7 @@ import { UserModule } from './user/user.module';
 import { PlanPlfModule } from './plan-plf/plan-plf.module';
 import { FileModule } from './file/file.module';
 import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
+import { InterfacageModule } from './interfacage/interfacage.module';
 import { BcbModule } from './bcb/bcb.module';
 import { DentalModule } from './dental/dental.module';
 import { TagModule } from './tag/tag.module';
@@ -37,6 +38,7 @@ import { OrganizationModule } from './organization/organization.module';
 import { TrashContactModule } from './trash/contact/trash.contact.module';
 import { TrashEventModule } from './trash/event/trash.event.module';
 import { CorrespondentModule } from './correspondent/correspondent.module';
+import { CaresheetsModule } from './caresheets/caresheets.module';
 
 @Module({
   imports: [
@@ -108,6 +110,8 @@ import { CorrespondentModule } from './correspondent/correspondent.module';
     TrashEventModule,
     CorrespondentModule,
     TagModule,
+    InterfacageModule,
+    CaresheetsModule,
   ],
 })
 export class AppModule {}
