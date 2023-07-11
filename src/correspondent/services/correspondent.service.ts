@@ -284,4 +284,12 @@ WHERE CPD_ID = ?`,
       await queryRunner.release();
     }
   }
+
+  async findAllType(groupId: number, search: string) {
+    const sql = await this.dataSource.query(
+      `SELECT id, name FROM correspondent_type WHERE group_id = ? AND name LIKE ?`,
+      [groupId, `%${search}%`],
+    );
+    return sql;
+  }
 }
