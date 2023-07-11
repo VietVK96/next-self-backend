@@ -285,10 +285,10 @@ WHERE CPD_ID = ?`,
     }
   }
 
-  async findAllType(groupId: number, search: string) {
+  async findAllType(search: string) {
     const sql = await this.dataSource.query(
-      `SELECT id, name FROM correspondent_type WHERE group_id = ? AND name LIKE ?`,
-      [groupId, `%${search}%`],
+      `SELECT id, name FROM correspondent_type WHERE name LIKE ?`,
+      [`%${search}%`],
     );
     return sql;
   }
