@@ -69,16 +69,15 @@ export class InterfacageService {
         caresheet.amountAssure = caresheet?.amountAssure + act?.amount;
       });
       this.compute(caresheet);
-
-      return {};
+      return await this.fseRepository.save({ ...caresheet });
     } catch (error) {
-      return new ShowActionExceptionFilter();
+      // return (new ExceptionController($container -> get('twig'))) -> showAction($request, $e) -> send();
+      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
   }
 
-  private async compute(caresheet: FseEntity) {
+  async compute(caresheet: FseEntity) {
     const groupByDates: any = {};
-
     caresheet.tasks.forEach((actMedical) => {
       const dateKey =
         actMedical && actMedical?.act?.date
