@@ -53,10 +53,7 @@ export class CorrespondentController {
 
   @Get('/type')
   @UseGuards(TokenGuard)
-  async findAllType(
-    @CurrentUser() identity: UserIdentity,
-    @Query('search') search?: string,
-  ) {
-    return await this.correspondentService.findAllType(identity.org, search);
+  async findAllType(@Query('search') search?: string) {
+    return await this.correspondentService.findAllType(search);
   }
 }
