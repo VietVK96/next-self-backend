@@ -177,14 +177,12 @@ WHERE CPD_ID = ?`,
           ...payload,
           id: newCorresponden.insertId,
           address: { id: addressInsert.insertId, ...payload.address },
-          phones: phoneIds.map(
-            ({ createdAt, updatedAt, ptyId, type, ...rest }) => ({
-              ...rest,
-              number: rest.nbr,
-              phoneTypeId: ptyId,
-              type: type,
-            }),
-          ),
+          phones: phoneIds.map(({ ptyId, type, ...rest }) => ({
+            ...rest,
+            number: rest.nbr,
+            phoneTypeId: ptyId,
+            type: type,
+          })),
         };
       } else {
         const checkCorresponden = await queryRunner.manager.query(
@@ -267,14 +265,12 @@ WHERE CPD_ID = ?`,
         return {
           ...payload,
           address: { ...payload.address },
-          phones: phoneIds.map(
-            ({ createdAt, updatedAt, ptyId, type, ...rest }) => ({
-              ...rest,
-              number: rest.nbr,
-              phoneTypeId: ptyId,
-              type: type,
-            }),
-          ),
+          phones: phoneIds.map(({ ptyId, type, ...rest }) => ({
+            ...rest,
+            number: rest.nbr,
+            phoneTypeId: ptyId,
+            type: type,
+          })),
         };
       }
     } catch {

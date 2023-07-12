@@ -30,12 +30,6 @@ export class MedicalService {
 
       // }
 
-      const errors = {
-        checking: true,
-        version: 20000,
-        errors: [],
-      };
-
       const profilPatientQueryBuilder =
         this.contactRepo.createQueryBuilder('con');
       profilPatientQueryBuilder.select(

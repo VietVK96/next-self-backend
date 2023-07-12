@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository, In } from 'typeorm';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
-import { ShowActionExceptionFilter } from 'src/common/exceptions/show-action.exception';
 import { FsDto } from '../dto/index.dto';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { UserEntity } from 'src/entities/user.entity';
@@ -13,6 +12,7 @@ import { format } from 'date-fns';
 import { CaresheetModeEnum } from 'src/enum/caresheet.enum';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { CcamEntity } from 'src/entities/ccam.entity';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class InterfacageService {
@@ -77,21 +77,19 @@ export class InterfacageService {
   }
 
   async compute(caresheet: FseEntity) {
-    const groupByDates: any = {};
+    const groupByDates: Record<string, DentalEventTaskEntity[]> = {};
     caresheet.tasks.forEach((actMedical) => {
       const dateKey =
         actMedical && actMedical?.act?.date
-          ? new Date(actMedical?.act?.date)
-              .toISOString()
-              .split('T')[0]
-              .replace(/-/g, '')
+          ? dayjs(actMedical?.act?.date).format('YYYYMMDD')
           : '';
       if (!groupByDates[dateKey]) {
         groupByDates[dateKey] = [];
       }
       groupByDates[dateKey].push(actMedical);
     });
-    for (const [key, groupByDate] of groupByDates) {
+
+    for (const [_key, groupByDate] of Object.entries(groupByDates)) {
       if (groupByDate.length <= 1) continue;
       let associationCode = 4;
       const actMedicalCcams = groupByDate.filter((v) => v?.ccam);
