@@ -191,12 +191,13 @@ export class FactureServices {
               );
             });
             const ngap_keys = await this.ngapKeyRepository.find();
-            const res: any = [];
-            return dataFilDate?.map((data) => {
+            const res: { date: string; data: any[] }[] = [];
+            for (const data of dataFilDate) {
               const current_ngap_key = ngap_keys?.find((key) => {
                 return key?.id === data?.dental?.ngapKeyId;
               });
-              return {
+              const exist = res.find((r) => r.date === data.date);
+              const newData = {
                 date: data?.date,
                 name: data?.name,
                 amount: data?.amount,
@@ -209,7 +210,16 @@ export class FactureServices {
                 coef: data?.dental?.coef,
                 ngapKeyName: current_ngap_key?.name,
               };
-            });
+              if (exist) {
+                exist.data.push(newData);
+              } else {
+                res.push({
+                  date: data.date,
+                  data: [newData],
+                });
+              }
+            }
+            return res;
           }
           if (payload?.displayOnlyActsListed) {
             const dataEventTasks = await this.eventTaskRepository.find({
@@ -229,12 +239,13 @@ export class FactureServices {
               );
             });
             const ngap_keys = await this.ngapKeyRepository.find();
-            const res: any = [];
-            return dataFilDate?.map((data) => {
+            const res: { date: string; data: any[] }[] = [];
+            for (const data of dataFilDate) {
               const current_ngap_key = ngap_keys?.find((key) => {
                 return key?.id === data?.dental?.ngapKeyId;
               });
-              return {
+              const exist = res.find((r) => r.date === data.date);
+              const newData = {
                 date: data?.date,
                 name: data?.name,
                 amount: data?.amount,
@@ -247,7 +258,16 @@ export class FactureServices {
                 coef: data?.dental?.coef,
                 ngapKeyName: current_ngap_key?.name,
               };
-            });
+              if (exist) {
+                exist.data.push(newData);
+              } else {
+                res.push({
+                  date: data.date,
+                  data: [newData],
+                });
+              }
+            }
+            return res;
           }
 
           if (payload?.displayOnlyProsthesis) {
