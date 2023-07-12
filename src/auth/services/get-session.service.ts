@@ -5,25 +5,32 @@ import { PrivilegeEntity } from 'src/entities/privilege.entity';
 import { ResourceEntity } from 'src/entities/resource.entity';
 import { UserResourceEntity } from 'src/entities/user-resource.entity';
 import { UserEntity } from 'src/entities/user.entity';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import {
   SessionRes,
   UserPractitionersRes,
   UserResourceRes,
-  UserUserPreferenceRes,
   UserUserRes,
 } from '../reponse/session.res';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 
 @Injectable()
 export class GetSessionService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private dataSource: DataSource,
+    @InjectRepository(UserEntity)
+    private userRepository: Repository<UserEntity>,
+    @InjectRepository(UserMedicalEntity)
+    private userMedicalRepository: Repository<UserMedicalEntity>,
+  ) {}
 
   async getSession(identity: UserIdentity) {
     const data = new SessionRes();
     const resources = await this.getResource(identity.id);
     data.resources = resources;
     data.user = await this.getUser(identity.id);
-    data.practitioners = await this.getPractitioners(identity.org, identity.id);
+    data.practitioners = await this.getPractitioners(identity.id, identity.org);
     return data;
   }
 
@@ -65,7 +72,7 @@ export class GetSessionService {
       .where('USR.USR_ID = :userId', { userId })
       .getRawOne();
 
-    const userPreferences: UserUserPreferenceRes = await queryBuilder
+    const userPreferences = await queryBuilder
       .select([
         'USP.USR_ID as id',
         'USP.USP_LANGUAGE as language',
@@ -114,7 +121,7 @@ export class GetSessionService {
       .getRawOne();
 
     userPreferences.days = Array.from(
-      String(userPreferences.days.toString()).split('').reverse(),
+      String(userPreferences.days.toString(2)).split('').reverse(),
     )
       .map((digit, index) => (digit === '1' ? index : null))
       .filter((digit) => digit !== null);
@@ -131,6 +138,10 @@ export class GetSessionService {
     }));
     user.eventTypes = userEventTypes;
 
+    const userMedical = await this.userMedicalRepository?.findOne({
+      where: { userId },
+    });
+    user.rppsNumber = userMedical?.rppsNumber;
     return user;
   }
 

@@ -27,6 +27,7 @@ import { PermissionService } from 'src/user/services/permission.service';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { FseEntity } from 'src/entities/fse.entity';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class ContactPaymentService {
@@ -49,7 +50,7 @@ export class ContactPaymentService {
       csg.CSG_ID AS id,
       csg.CSG_PAYMENT AS payment,
       csg.CSG_PAYMENT_DATE AS paymentDate,
-      csg.CSG_TYPE AS TYPE,
+      csg.CSG_TYPE AS type,
       csg.is_tp,
       csc.amount_care,
       csc.amount_prosthesis,
@@ -94,7 +95,7 @@ export class ContactPaymentService {
    */
   async deleteById(id: number, identity: UserIdentity) {
     try {
-      const payment = await this.repo.find({
+      const payment = await this.repo.findOne({
         where: {
           id,
         },
@@ -103,13 +104,13 @@ export class ContactPaymentService {
         },
       });
       // check permission
-      if (payment.length) {
+      if (payment) {
         if (
           !this.permissionService.hasPermission(
             'PERMISSION_PAIEMENT',
             8,
             identity.id,
-            payment[0].usrId,
+            payment.usrId,
           ) ||
           !this.permissionService.hasPermission(
             'PERMISSION_DELETE',
@@ -117,7 +118,7 @@ export class ContactPaymentService {
             identity.id,
           )
         ) {
-          throw new CBadRequestException('Permission denied');
+          throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
         }
 
         // TODO Create Log
@@ -125,8 +126,8 @@ export class ContactPaymentService {
         //   foreach (payees as payee) {
         //     Ids\Log::write('Paiement', payee->getPatient()->getId(), 3);
         // }
-        if (payment[0].payees) {
-          const payeesId = payment[0].payees.map((e) => e.id);
+        if (payment.payees) {
+          const payeesId = payment.payees.map((e) => e.id);
           this.cashingContactRepo.delete(payeesId);
         }
         await this.repo.delete({ id });
@@ -257,7 +258,7 @@ export class ContactPaymentService {
         }
       } else {
         const deadlinesCount = deadlines.length;
-        const descriptionBis = description;
+        const descriptionBis = description || '';
         await Promise.all(
           deadlines.map(async (deadline, deadlineIndex) => {
             let amountCareTemp = 0;
@@ -433,6 +434,7 @@ export class ContactPaymentService {
       const paymentPayees: CashingContactEntity[] = beneficiaries.map(
         (beneficiary) => {
           return {
+            id: beneficiary?.pivot?.id,
             csgId: insertPayment.id,
             conId: beneficiary.id,
             amount: beneficiary.pivot.amount,

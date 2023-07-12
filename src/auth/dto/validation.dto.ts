@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ValidationDto {
-  @ApiProperty()
+  @ApiProperty({ example: 'demoecoo1' })
   username?: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'demoecoo1' })
   password?: string;
 }

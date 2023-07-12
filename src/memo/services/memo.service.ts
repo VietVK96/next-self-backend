@@ -1,14 +1,11 @@
-import {
-  Injectable,
-  UnprocessableEntityException,
-  HttpStatus,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Connection, DataSource } from 'typeorm';
 import { CreateUpdateMemoDto } from '../dto/createUpdate.memo.dto';
 import { MemoRes } from '../response/memo.res';
 import { ResourceEntity } from 'src/entities/resource.entity';
 import { MemoEntity } from 'src/entities/memo.entity';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class MemoService {
@@ -19,10 +16,7 @@ export class MemoService {
 
   async create(payload: CreateUpdateMemoDto): Promise<MemoRes> {
     if (payload.message === null) {
-      throw new UnprocessableEntityException(
-        HttpStatus.UNPROCESSABLE_ENTITY,
-        'This value should not be blank.',
-      );
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
     const queryRunner = this.connection.createQueryRunner();
     try {
@@ -39,7 +33,7 @@ export class MemoService {
         .from(ResourceEntity, 'RES')
         .where('id = :resource_id', { resource_id: payload.resourceId })
         .getRawOne();
-      const { resourceId, ...restPayload } = payload;
+      const { ...restPayload } = payload;
       const result: MemoRes = {
         id: createMemo.insertId,
         ...restPayload,
@@ -49,7 +43,7 @@ export class MemoService {
       return result;
     } catch (err) {
       await queryRunner.rollbackTransaction();
-      throw err;
+      throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
     } finally {
       await queryRunner.release();
     }
@@ -67,9 +61,7 @@ export class MemoService {
         .getRawOne();
 
       if (!memo) {
-        throw new Error(
-          'No result was found for query although at least one row was expected.',
-        );
+        throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
       }
 
       const resource = await this.dataSource
@@ -79,7 +71,7 @@ export class MemoService {
         .where('id = :resource_id', { resource_id: memo.resourceId })
         .getRawOne();
 
-      const { resourceId, ...restMemo } = memo;
+      const { ...restMemo } = memo;
       const result: MemoRes = {
         ...restMemo,
         resource,
@@ -87,11 +79,7 @@ export class MemoService {
 
       return result;
     } catch (error) {
-      throw new InternalServerErrorException({
-        code: 500,
-        message: 'Internal Server Error',
-        data: error.message,
-      });
+      throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
     }
   }
 
@@ -107,11 +95,7 @@ export class MemoService {
         );
       return {};
     } catch (error) {
-      throw new InternalServerErrorException({
-        code: 500,
-        message: 'Internal Server Error',
-        exception: error.message,
-      });
+      throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
     }
   }
 
@@ -129,9 +113,7 @@ export class MemoService {
         .execute();
 
       if (memo.affected === 0)
-        throw new Error(
-          'No result was found for query although at least one row was expected.',
-        );
+        throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
 
       await queryRunner.commitTransaction();
       const result = {
@@ -141,11 +123,7 @@ export class MemoService {
       return result;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new InternalServerErrorException({
-        code: 500,
-        message: 'Internal Server Error',
-        data: error.message,
-      });
+      throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
     } finally {
       await queryRunner.release();
     }

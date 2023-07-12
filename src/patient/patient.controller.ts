@@ -8,10 +8,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { PatientService } from './service/patient.service';
-import { PatientExportDto } from './dto/index.dto';
+import { PatientExportDto, PatientThirdPartyDto } from './dto/index.dto';
 import { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { TokenGuard } from 'src/common/decorator/auth.decorator';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
 
 @ApiTags('Patients')
 @Controller('patients')
@@ -32,7 +36,26 @@ export class PatientController {
   @Delete('delete/:id')
   @ApiBearerAuth()
   @UseGuards(TokenGuard)
-  async delete(@Param('id') id: number) {
-    return await this.patientService.deletePatient(id);
+  async delete(@Param('id') id: number, @CurrentUser() identity: UserIdentity) {
+    return await this.patientService.deletePatient(id, identity);
+  }
+
+  /**
+   * File: php/patients/third-party/index.php
+   */
+  @Get('third-party')
+  @ApiBearerAuth()
+  @UseGuards(TokenGuard)
+  async getPatientThirdParty(@Query() payload: PatientThirdPartyDto) {
+    return await this.patientService.getPatientThirdParty(payload);
+  }
+
+  /**
+   * php/patients/contraindications/index.php
+   */
+  @Get('/contraindications/:id')
+  @UseGuards(TokenGuard)
+  async findAllContraindications(@Param('id') id: number) {
+    return this.patientService.findAllContraindications(id);
   }
 }

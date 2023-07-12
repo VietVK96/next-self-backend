@@ -20,6 +20,7 @@ import { SaveEventPayloadDto } from './dto/save.event.dto';
 import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
 import { EventService } from './services/event.service';
 import { DeteleEventDto } from './dto/delete.event.dto';
+import { SaveAgendaDto } from './dto/saveAgenda.event.dto';
 
 @Controller('event')
 @ApiTags('Event')
@@ -51,7 +52,7 @@ export class EventController {
   }
 
   //ecoodentist-1.31.0\php\user\preference\save.php full file
-  @Post()
+  @Post('preference/save')
   @UseGuards(TokenGuard)
   async save(
     @CurrentUser() identity: UserIdentity,
@@ -68,7 +69,36 @@ export class EventController {
     @CurrentUser() identity: UserIdentity,
     @Param('id') id: number,
   ) {
-    return await this.findEventService.findById(doctorId, identity.id, id);
+    return await this.findEventService.findById(doctorId, identity.org, id);
+  }
+
+  //File php/event/next.php
+  @Get('/next')
+  @UseGuards(TokenGuard)
+  async getNextEvent(
+    @Query('contact') contact?: number,
+    @Query('start') start?: string,
+  ) {
+    return await this.findEventService.getNextEvent(contact, start);
+  }
+
+  //File php/event/previous.php
+  @Get('/previous')
+  @UseGuards(TokenGuard)
+  async getPreviousEvent(
+    @Query('contact') contact?: number,
+    @Query('end') end?: string,
+  ) {
+    return await this.findEventService.getPreviousEvent(contact, end);
+  }
+
+  @Post('/save')
+  @UseGuards(TokenGuard)
+  async saveAgenda(
+    @Body() payload: SaveAgendaDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.saveEventService.saveAgenda(identity.id, payload);
   }
 
   // php/event/delete.php -> line: 23 -> 121

@@ -174,7 +174,8 @@ export class FseEntity {
     length: 9,
     nullable: true,
   })
-  protected $numeroFacturation = null;
+  // protected $numeroFacturation = null;
+  numeroFacturation?: string;
 
   /**
    * @ORM\Column(name="FSE_NBR", type="string", length=45)

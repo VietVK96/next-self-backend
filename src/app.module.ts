@@ -20,10 +20,27 @@ import { MemoModule } from './memo/memo.module';
 import { AddressModule } from './address/address.module';
 import { PlanModule } from './plan/plan.module';
 import { MailModule } from './mail/mail.module';
+import { LibrariesModule } from './libraries/libraries.module';
 import { EventTaskModule } from './event-task/event-task.module';
 import { FusionPatientModule } from './fusion-patient/fusion-patient.module';
 import { UploadModule } from './upload/upload.module';
+import { TimeslotsModule } from './timeslots/timeslots.module';
 import { UserModule } from './user/user.module';
+import { PlanPlfModule } from './plan-plf/plan-plf.module';
+import { FileModule } from './file/file.module';
+import { NgapKeysModule } from './ngap-keys/ngap-keys.module';
+import { InterfacageModule } from './interfacage/interfacage.module';
+import { BcbModule } from './bcb/bcb.module';
+import { DentalModule } from './dental/dental.module';
+import { TagModule } from './tag/tag.module';
+import { ContraindicationsModule } from './contraindications/contraindications.module';
+import { GlossariesModule } from './glossaries/glossaries.module';
+import { OrganizationModule } from './organization/organization.module';
+import { TrashContactModule } from './trash/contact/trash.contact.module';
+import { TrashEventModule } from './trash/event/trash.event.module';
+import { CorrespondentModule } from './correspondent/correspondent.module';
+import { MedicalModule } from './medical/medical.module';
+import { CaresheetsModule } from './caresheets/caresheets.module';
 
 @Module({
   imports: [
@@ -76,9 +93,29 @@ import { UserModule } from './user/user.module';
     AddressModule,
     PlanModule,
     MailModule,
+    LibrariesModule,
     EventTaskModule,
     UploadModule,
     FusionPatientModule,
+    FileModule,
+    NgapKeysModule,
+    TimeslotsModule,
+    DentalModule,
+    TagModule,
+    ContraindicationsModule,
+    OrganizationModule,
+    PlanPlfModule,
+    BcbModule,
+    DentalModule,
+    ContraindicationsModule,
+    TrashContactModule,
+    TrashEventModule,
+    CorrespondentModule,
+    TagModule,
+    GlossariesModule,
+    MedicalModule,
+    InterfacageModule,
+    CaresheetsModule,
   ],
 })
 export class AppModule {}

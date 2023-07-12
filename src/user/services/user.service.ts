@@ -5,12 +5,18 @@ import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { UserTypeEntity } from 'src/entities/user-type.entity';
 import { UserEntity } from 'src/entities/user.entity';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { UpdateTherapeuticDto } from '../dto/therapeutic.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { OrganizationEntity } from 'src/entities/organization.entity';
+import { UserSmsEntity } from 'src/entities/user-sms.entity';
 @Injectable()
 export class UserService {
   constructor(
     private addressService: AddressService,
     private dataSource: DataSource,
+    @InjectRepository(UserMedicalEntity)
+    private userMedicalRepository: Repository<UserMedicalEntity>,
   ) {}
   async find(id: number) {
     const queryBuiler = this.dataSource.createQueryBuilder();
@@ -63,5 +69,43 @@ export class UserService {
         ...address,
       },
     };
+  }
+
+  async updateUserMedical(id: number, payload: UpdateTherapeuticDto) {
+    const datas = await this.userMedicalRepository.find({
+      where: { userId: id },
+    });
+    const ids = datas.map((user) => ({
+      ...user,
+      therapeuticAlternative: JSON.stringify(payload?.therapeutic_alternative),
+    }));
+    await this.userMedicalRepository.save(ids);
+    return ids;
+  }
+
+  async getSmsQuantity(id: number) {
+    const queryBuilder = this.dataSource.createQueryBuilder();
+    const select = `
+      SUM(
+        CASE WHEN organization.smsSharing = true
+        THEN sms.USS_STOCK
+        ELSE (
+            CASE WHEN user.id = ${id}
+            THEN sms.USS_STOCK
+            ELSE 0
+            END
+        )
+        END
+      )`;
+    return await queryBuilder
+      .select(select, 'smsQuantity')
+      .from(UserEntity, 'user')
+      .innerJoin(
+        OrganizationEntity,
+        'organization',
+        'organization.id = user.organization_id',
+      )
+      .innerJoin(UserSmsEntity, 'sms', 'sms.USR_ID = user.id')
+      .getRawOne();
   }
 }

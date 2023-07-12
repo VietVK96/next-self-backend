@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotAcceptableException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm/repository/Repository';
@@ -18,11 +18,11 @@ import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-requ
 @Injectable()
 export class NoteService {
   constructor(
+    private permissionService: PermissionService,
     @InjectRepository(ContactNoteEntity)
     private readonly repo: Repository<ContactNoteEntity>,
     private userService: UserService,
     private patientService: PatientService,
-    private permissionService: PermissionService,
   ) {}
   async store(payload: StoreNoteDto, identity: UserIdentity) {
     try {

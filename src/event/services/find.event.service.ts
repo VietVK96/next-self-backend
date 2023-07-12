@@ -5,12 +5,11 @@ import { BgEventDto, FindAllEventDto, MemoDto } from '../dto/findAll.event.dto';
 import { ColorHelper } from 'src/common/util/color-helper';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
+import { HistoricalsDto, ReminderDto } from '../dto/find.event.dto';
+
 import { FindEventByIdRes } from '../response/find.event.res';
-import {
-  HistoricalsDto,
-  ReminderDto,
-  TimeZoneDto,
-} from '../dto/find.event.dto';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 const classNameFromStatuses: Map<number, string> = new Map<number, string>();
 classNameFromStatuses.set(1, 'present');
@@ -25,10 +24,25 @@ export class FindEventService {
   constructor(private readonly dataSource: DataSource) {}
 
   //ecoodentist-1.31.0\php\event\findAll.php
-  async prepareSql(sql: string, key: number, value: string) {
-    const result = await this.dataSource.query(sql, [key, value]);
-    const resultFormat = result.length === 0 ? null : result[0].PHO_NBR;
-    return resultFormat;
+  async prepareSql(sql: string, value: string) {
+    const result = await this.dataSource.query(sql, [value]);
+    return result;
+  }
+
+  getPhoneNumberByContactId(arr, contactId: number): string | null {
+    let previousPhoneNumber: string | null = null;
+    const phoneNumber =
+      arr.find((item) => {
+        if (item.CON_ID === contactId) {
+          if (previousPhoneNumber === null) {
+            previousPhoneNumber = item.PHO_NBR;
+          }
+          return true;
+        }
+        return false;
+      })?.PHO_NBR || previousPhoneNumber;
+
+    return phoneNumber;
   }
 
   calculateAge(birthDate: string): string {
@@ -60,6 +74,8 @@ export class FindEventService {
     return ageString;
   }
 
+  getPhoneNumber;
+
   getStartDay(date: string) {
     const modifiedDate = new Date(date);
     modifiedDate.setHours(0, 0, 0, 0);
@@ -88,40 +104,43 @@ export class FindEventService {
     viewCancelledEvents: number,
     confidentiality: number,
   ) {
-    const formattedResources = resources.map((item) => `'${item}'`).join(',');
+    try {
+      const formattedResources = resources.map((item) => `'${item}'`).join(',');
 
-    const sqlHome = `SELECT T_PHONE_PHO.PHO_NBR
-    FROM T_CONTACT_PHONE_COP
-    JOIN T_PHONE_PHO
-    JOIN T_PHONE_TYPE_PTY
-    WHERE T_CONTACT_PHONE_COP.CON_ID = ? AND
-    T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
-      AND T_PHONE_PHO.PTY_ID = T_PHONE_TYPE_PTY.PTY_ID
-      AND T_PHONE_TYPE_PTY.PTY_NAME = ?
-    LIMIT 1`;
-
-    const sqlMobile = `SELECT T_PHONE_PHO.PHO_NBR
+      const sqlHome = await this.prepareSql(
+        `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
      FROM T_CONTACT_PHONE_COP
     JOIN T_PHONE_PHO
     JOIN T_PHONE_TYPE_PTY
-    WHERE T_CONTACT_PHONE_COP.CON_ID = ?
-    AND T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
+    WHERE T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
     AND T_PHONE_PHO.PTY_ID = T_PHONE_TYPE_PTY.PTY_ID
-    AND T_PHONE_TYPE_PTY.PTY_NAME = ?
-    LIMIT 1`;
+    AND T_PHONE_TYPE_PTY.PTY_NAME = ?`,
+        'home',
+      );
 
-    const sqlSms = `SELECT T_PHONE_PHO.PHO_NBR
+      const sqlMobile = await this.prepareSql(
+        `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
      FROM T_CONTACT_PHONE_COP
     JOIN T_PHONE_PHO
     JOIN T_PHONE_TYPE_PTY
-    WHERE T_CONTACT_PHONE_COP.CON_ID = ?
-    AND T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
+    WHERE T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
     AND T_PHONE_PHO.PTY_ID = T_PHONE_TYPE_PTY.PTY_ID
-    AND T_PHONE_TYPE_PTY.PTY_NAME = ?
-    LIMIT 1`;
+    AND T_PHONE_TYPE_PTY.PTY_NAME = ?`,
+        'mobile',
+      );
+      const sqlSms = await this.prepareSql(
+        `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
+     FROM T_CONTACT_PHONE_COP
+    JOIN T_PHONE_PHO
+    JOIN T_PHONE_TYPE_PTY
+    WHERE T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
+    AND T_PHONE_PHO.PTY_ID = T_PHONE_TYPE_PTY.PTY_ID
+    AND T_PHONE_TYPE_PTY.PTY_NAME = ?`,
+        'sms',
+      );
 
-    const result = await this.dataSource.query(
-      `SELECT
+      const result = await this.dataSource.query(
+        `SELECT
         event_occurrence_evo.evo_id AS id,
         CONCAT_WS(' ', event_occurrence_evo.evo_date, TIME(T_EVENT_EVT.EVT_START)) AS start_date,
         CONCAT_WS(' ', event_occurrence_evo.evo_date, TIME(T_EVENT_EVT.EVT_END)) AS end_date,
@@ -165,90 +184,93 @@ export class FindEventService {
       AND CASE WHEN 0 = ? THEN T_EVENT_EVT.EVT_STATE NOT IN (2,3) ELSE 1 = 1 END
     GROUP BY event_occurrence_evo.evo_id
     ORDER BY start_date, end_date`,
-      [startDate, endDate, viewCancelledEvents],
-    );
-    const events: FindAllEventDto[] = [];
-    if (confidentiality === 0) {
-      for (const item of result) {
-        const colorArr = ColorHelper.inthex(Number(item.color));
-        const newItem = {
-          ...item,
-          color: {
-            background: colorArr[0],
-            foreground: colorArr[1],
-          },
-          homePhoneNumber:
-            item.patientId === null
-              ? null
-              : await this.prepareSql(sqlHome, item.patientId, 'home'),
-          mobilePhoneNumber:
-            item.patientId === null
-              ? null
-              : await this.prepareSql(sqlMobile, item.patientId, 'mobile'),
-          smsPhoneNumber:
-            item.patientId === null
-              ? null
-              : await this.prepareSql(sqlSms, item.patientId, 'sms'),
-          age: this.calculateAge(item.birthDate),
-          className:
-            item.state === 0 ? null : classNameFromStatuses.get(item.state),
-          resources: {
-            id: item.resourceId,
-            name: item.resourceName,
-          },
-        };
+        [startDate, endDate, viewCancelledEvents],
+      );
+      const events: FindAllEventDto[] = [];
+      if (confidentiality === 0) {
+        for (const item of result) {
+          const colorArr = ColorHelper.inthex(Number(item.color));
+          const newItem = {
+            ...item,
+            color: {
+              background: colorArr[0],
+              foreground: colorArr[1],
+            },
+            homePhoneNumber:
+              item.patientId === null
+                ? null
+                : this.getPhoneNumberByContactId(sqlHome, item.patientId),
+            mobilePhoneNumber:
+              item.patientId === null
+                ? null
+                : this.getPhoneNumberByContactId(sqlMobile, item.patientId),
+            smsPhoneNumber:
+              item.patientId === null
+                ? null
+                : this.getPhoneNumberByContactId(sqlSms, item.patientId),
+            age: this.calculateAge(item.birthDate),
+            className:
+              item.state === 0 ? null : classNameFromStatuses.get(item.state),
+            resources: {
+              id: item.resourceId,
+              name: item.resourceName,
+            },
+          };
 
-        events.push(newItem);
+          events.push(newItem);
+        }
+      } else {
+        for (const item of result) {
+          const colorArr = ColorHelper.inthex(Number(item.color));
+          const newItem = {
+            ...item,
+            color: {
+              background: colorArr[0],
+              foreground: colorArr[1],
+            },
+            lastName: null,
+            firstName: null,
+            number: null,
+            civilityTitle: null,
+            age: null,
+            email: null,
+            homePhoneNumber: null,
+            mobilePhoneNumber: null,
+            smsPhoneNumber: null,
+          };
+          events.push(newItem);
+        }
       }
-    } else {
-      for (const item of result) {
-        const colorArr = ColorHelper.inthex(Number(item.color));
-        const newItem = {
-          ...item,
-          color: {
-            background: colorArr[0],
-            foreground: colorArr[1],
-          },
-          lastName: null,
-          firstName: null,
-          number: null,
-          civilityTitle: null,
-          age: null,
-          email: null,
-          homePhoneNumber: null,
-          mobilePhoneNumber: null,
-          smsPhoneNumber: null,
-        };
-        events.push(newItem);
-      }
-    }
 
-    const memos: MemoDto[] = await this.dataSource.query(
-      `SELECT T_MEMO_MEM.MEM_ID as id, resource_id as resourceId, resource.name as resourceName,
+      const memos: MemoDto[] = await this.dataSource.query(
+        `SELECT T_MEMO_MEM.MEM_ID as id, resource_id as resourceId, resource.name as resourceName,
       MEM_DATE as date FROM T_MEMO_MEM JOIN resource on T_MEMO_MEM.resource_id = resource.id 
       WHERE resource_id in (${formattedResources}) AND MEM_DATE BETWEEN ? AND ? 
       ORDER BY MEM_DATE ASC`,
-      [startDate, endDate],
-    );
+        [startDate, endDate],
+      );
 
-    const bgevents: BgEventDto[] = await this.dataSource.query(
-      `SELECT timeslot.id, resource_id as resourceId, resource.name as resourceName, start_date, 
+      const bgevents: BgEventDto[] = await this.dataSource.query(
+        `SELECT timeslot.id, resource_id as resourceId, resource.name as resourceName, start_date, 
       end_date, timeslot.color, title FROM timeslot JOIN resource ON timeslot.resource_id = resource.id 
       WHERE resource_id IN (${formattedResources}) and start_date >= ? AND end_date < ?
        ORDER BY start_date ASC, end_date ASC`,
-      [this.getStartDay(startDate), this.getEndDay(endDate)],
-    );
+        [this.getStartDay(startDate), this.getEndDay(endDate)],
+      );
 
-    return {
-      events,
-      bgevents,
-      memos,
-    };
+      return {
+        events,
+        bgevents,
+        memos,
+      };
+    } catch {
+      throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
+    }
   }
 
   async findById(doctorId: number, groupId: number, id: number) {
     try {
-      const timeZone: TimeZoneDto = await this.dataSource
+      await this.dataSource
         .createQueryBuilder()
         .select(`USP.USP_TIMEZONE`)
         .from(UserPreferenceEntity, 'USP')
@@ -365,5 +387,74 @@ export class FindEventService {
     } catch (err) {
       return err;
     }
+  }
+
+  /**
+   * File php/event/next.php
+   * Line 14 -> 50
+   */
+  async getNextEvent(contact: number, start: string) {
+    const nextQuery = `
+    SELECT
+        evo.evo_id id,
+        EVT.EVT_NAME name,
+        EVT.CON_ID as contacId,
+        CONCAT_WS(' ', evo.evo_date, TIME(EVT.EVT_START)) start,
+        CONCAT_WS(' ', evo.evo_date, TIME(EVT.EVT_END)) end,
+        EVT.EVT_COLOR color,
+        EVT.EVT_STATE AS status,
+        EVT.EVT_ID eventId,
+        USR.USR_ID practitionerId,
+        USR.USR_ABBR practitionerAbbr,
+        CONCAT_WS(' ', USR.USR_LASTNAME, USR.USR_FIRSTNAME) practitionerName,
+        resource.id resourceId,
+        resource.name resourceName
+    FROM T_EVENT_EVT EVT
+    JOIN event_occurrence_evo evo ON evo.evt_id = EVT.EVT_ID
+    JOIN resource ON resource.id = EVT.resource_id
+    JOIN T_USER_USR USR ON USR.USR_ID = EVT.USR_ID
+    LEFT OUTER JOIN T_CONTACT_CON CON ON CON.CON_ID = EVT.CON_ID
+    WHERE EVT.CON_ID = ?
+      AND EVT.EVT_DELETE = 0
+      AND evo.evo_date >= DATE(?)
+      AND evo.evo_exception = 0
+    ORDER BY start, end`;
+    const result = await this.dataSource.query(nextQuery, [contact, start]);
+    return result;
+  }
+
+  /**
+   * File php/event/previous.php
+   * Line 14 -> 50
+   */
+  async getPreviousEvent(contact: number, end: string) {
+    const previousQuery = `
+    SELECT
+        evo.evo_id id,
+        EVT.CON_ID as contacId,
+        EVT.EVT_NAME name,
+        CONCAT_WS(' ', evo.evo_date, TIME(EVT.EVT_START)) start,
+        CONCAT_WS(' ', evo.evo_date, TIME(EVT.EVT_END)) end,
+        EVT.EVT_COLOR color,
+        EVT.EVT_STATE AS status,
+        EVT.EVT_ID eventId,
+        USR.USR_ID practitionerId,
+        USR.USR_ABBR practitionerAbbr,
+        CONCAT_WS(' ', USR.USR_LASTNAME, USR.USR_FIRSTNAME) practitionerName,
+        resource.id resourceId,
+        resource.name resourceName
+    FROM T_EVENT_EVT EVT
+    JOIN event_occurrence_evo evo ON evo.evt_id = EVT.EVT_ID
+    JOIN resource ON resource.id = EVT.resource_id
+    JOIN T_USER_USR USR ON USR.USR_ID = EVT.USR_ID
+    LEFT OUTER JOIN T_CONTACT_CON CON ON CON.CON_ID = EVT.CON_ID
+    WHERE EVT.CON_ID = ?
+      AND EVT.EVT_DELETE = 0
+      AND evo.evo_date < DATE(?)
+      AND evo.evo_date != '0000-00-00'
+      AND evo.evo_exception = 0
+    ORDER BY start, end`;
+    const result = await this.dataSource.query(previousQuery, [contact, end]);
+    return result;
   }
 }

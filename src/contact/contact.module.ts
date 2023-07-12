@@ -25,11 +25,38 @@ import { FamilyService } from './services/family.service';
 import { QuotationController } from './quotation.controller';
 import { QuotationService } from './services/quotation.service';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
+import { DentalModifierEntity } from 'src/entities/dental-modifier.entity';
+import { CcamUnitPriceEntity } from 'src/entities/ccamunitprice.entity';
+import { CcamEntity } from 'src/entities/ccam.entity';
 import { UserModule } from 'src/user/user.module';
 import { CashingEntity } from 'src/entities/cashing.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
+import { DocumentServices } from './services/document.service';
+import { DocumentController } from './document.controller';
+import { UploadService } from 'src/upload/services/upload.service';
+import { UploadModule } from 'src/upload/upload.module';
+import { UploadController } from 'src/upload/upload.controller';
+import { OrganizationService } from 'src/organization/service/organization.service';
+import { UploadEntity } from 'src/entities/upload.entity';
+import { ContactDocumentEntity } from 'src/entities/contact-document.entity';
+import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
+import { SaveTaskService } from './services/save.task.service';
+import { PatientAmoEntity } from 'src/entities/patient-amo.entity';
+import { CorrespondentEntity } from 'src/entities/correspondent.entity';
+import { BillController } from './bill.controller';
+import { BillService } from './services/bill.service';
+import { BillEntity } from 'src/entities/bill.entity';
+import { MedicalOrderController } from './medicalOrder.controller';
+import { MedicalOrderService } from './services/medicalOrder.service';
+import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
+import { ContactController } from './contact.controller';
+import { SaveUpdateContactService } from './services/saveUpdate.contact.service';
+import { PatientMedicalEntity } from 'src/entities/patient-medical.entity';
+import { ContraindicationEntity } from 'src/entities/contraindication.entity';
+import { ContraindicationContactController } from './contraindication.contact.controller';
+import { ContraindicationContactService } from './services/contraindication.contact.service';
 
 @Module({
   controllers: [
@@ -41,8 +68,15 @@ import { ContactUserEntity } from 'src/entities/contact-user.entity';
     NoteController,
     FamilyController,
     QuotationController,
+    DocumentController,
+    UploadController,
+    MedicalOrderController,
+    BillController,
+    ContactController,
+    ContraindicationContactController,
   ],
   providers: [
+    UploadService,
     FindContactService,
     HistoricalService,
     ContactService,
@@ -57,6 +91,15 @@ import { ContactUserEntity } from 'src/entities/contact-user.entity';
     PermissionService,
     FamilyService,
     QuotationService,
+    DocumentServices,
+    OrganizationService,
+    UploadService,
+    OrganizationService,
+    SaveTaskService,
+    MedicalOrderService,
+    BillService,
+    SaveUpdateContactService,
+    ContraindicationContactService,
   ],
   imports: [
     TypeOrmModule.forFeature([
@@ -66,13 +109,29 @@ import { ContactUserEntity } from 'src/entities/contact-user.entity';
       EventTaskEntity,
       UserEntity,
       DentalQuotationEntity,
+      DentalModifierEntity,
+      CcamUnitPriceEntity,
+      CcamEntity,
       CashingEntity,
       CashingContactEntity,
       UserPreferenceEntity,
       ContactUserEntity,
+      UploadEntity,
+      ContactDocumentEntity,
+      DentalEventTaskEntity,
+      UploadEntity,
+      CorrespondentEntity,
+      TraceabilityEntity,
+      PatientAmoEntity,
+      ContactEntity,
+      MedicalOrderEntity,
+      BillEntity,
+      PatientMedicalEntity,
+      ContraindicationEntity,
     ]),
     UserModule,
     PatientModule,
+    UploadModule,
   ],
   exports: [ContactService],
 })

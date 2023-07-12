@@ -1,0 +1,80 @@
+import { InjectRepository } from '@nestjs/typeorm';
+import { Injectable } from '@nestjs/common';
+import { DataSource, Like, Repository } from 'typeorm';
+import { TagDto } from '../dto/index.dto';
+import { TagEntity } from 'src/entities/tag.entity';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  perPage: number;
+}
+
+@Injectable()
+export class TagService {
+  constructor(
+    @InjectRepository(TagEntity)
+    private tagRepository: Repository<TagEntity>,
+    private readonly dataSource: DataSource,
+  ) {}
+
+  async getTags(identity: UserIdentity, payload: TagDto) {
+    try {
+      const { per_page, query } = payload;
+      let page = payload?.page || 1;
+      if (page < 0) {
+        page = 1;
+      }
+
+      const [items, total] = await this.tagRepository.findAndCount({
+        where: query
+          ? { organizationId: identity.org, title: Like(`%${query}%`) }
+          : { organizationId: identity.org },
+        skip: (page - 1) * per_page,
+        take: per_page,
+        order: {
+          title: 'ASC',
+        },
+      });
+
+      const data = {
+        current_page_number: page,
+        custom_parameters: { sorted: true },
+        items: items,
+        num_item_per_page: per_page,
+        paginator_options: {
+          pageParameterName: 'page',
+          sortFieldParameterName: 'sort',
+          sortDirectionParameterName: 'direction',
+          filterFieldParameterName: 'filterParam',
+          filterValueParameterName: 'filterValue',
+          distinct: true,
+        },
+        range: 5,
+        total_count: total,
+      };
+      return data;
+    } catch (e) {
+      throw new CBadRequestException('cannot get tags');
+    }
+  }
+
+  async store(groupId: number, title: string) {
+    try {
+      const obj = { background: '#e0e0e0', foreground: '#343a40' };
+
+      const newTags = await this.dataSource.query(
+        `INSERT INTO tag (organization_id, title, color) VALUES (?,?,?) `,
+        [groupId, title, JSON.stringify(obj)],
+      );
+      return await this.tagRepository.findOne({
+        where: { id: newTags.insertId },
+      });
+    } catch {
+      throw new CBadRequestException('title has already exist');
+    }
+  }
+}

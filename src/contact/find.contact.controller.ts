@@ -1,5 +1,15 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Logger,
+  Param,
+  Query,
+  Res,
+  StreamableFile,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiQuery, ApiHeader } from '@nestjs/swagger';
+import type { Response } from 'express';
 import {
   CurrentUser,
   TokenGuard,
@@ -9,11 +19,14 @@ import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
 import { FindAllContactDto } from './dto/findAll.contact.dto';
 import { ContactService } from './services/contact.service';
 import { FindContactService } from './services/find.contact.service';
+import { createReadStream } from 'fs';
+import { join } from 'path';
 
 @ApiBearerAuth()
 @Controller('/contact')
 @ApiTags('Contact')
 export class FindContactController {
+  private logger: Logger = new Logger(FindContactController.name);
   constructor(
     private findContactService: FindContactService,
     private contactService: ContactService,
@@ -61,5 +74,72 @@ export class FindContactController {
   @UseGuards(TokenGuard)
   async findAllRecentlyTreated(@Query('practitioner') practitioner?: number) {
     return this.findContactService.findAllRecentlyTreated(practitioner);
+  }
+
+  // File php/contact/next.php
+  @Get('/next')
+  @UseGuards(TokenGuard)
+  async getNextContact(
+    @CurrentUser() identity: UserIdentity,
+    @Query('practitioner') practitioner?: number,
+    @Query('contact') contact?: number,
+  ) {
+    return this.contactService.getNextContact(contact, practitioner, identity);
+  }
+
+  // File php/contact/previous.php
+  @Get('/previous')
+  @UseGuards(TokenGuard)
+  async getPreviousContact(
+    @Query('practitioner') practitioner?: number,
+    @Query('contact') contact?: number,
+  ) {
+    return this.contactService.getPreviousContact(contact, practitioner);
+  }
+
+  @Get('retrieve/:id')
+  @UseGuards(TokenGuard)
+  async getPatientInfoAgenda(
+    @Param('id') id: number,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.findContactService.getPatientInfoAgenda(
+      id,
+      identity.id,
+      identity.org,
+    );
+  }
+
+  // File : php/contact/avatar.php 100%
+  @Get('avatar/:contactId')
+  // @UseGuards(TokenGuard)
+  async getAvatar(
+    @Param('contactId') contactId: number,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    try {
+      const fileRes = await this.contactService.getAvatar(contactId);
+      const file = createReadStream(fileRes.file);
+      file.on('error', (e) => {
+        this.logger.error(e);
+        res.set({
+          'Content-Type': 'image/jpeg',
+        });
+        createReadStream(join(process.cwd(), 'front/no_image.png')).pipe(res);
+        return;
+      });
+      res.set({
+        'Content-Type': 'image/jpeg',
+      });
+      return new StreamableFile(file);
+    } catch (e) {
+      this.logger.error(e);
+    }
+    res.set({
+      'Content-Type': 'image/jpeg',
+    });
+    return new StreamableFile(
+      createReadStream(join(process.cwd(), 'front/no_image.png')),
+    );
   }
 }
