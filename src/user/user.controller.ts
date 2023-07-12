@@ -48,6 +48,7 @@ export class UserController {
     return await this.preferenceService.pacth(payload);
   }
 
+  // File php/user/therapeutic-alternatives/index.php
   @Get('/therapeutic-alternatives')
   @UseGuards(TokenGuard)
   async getPrestation(@Query() param: UpdateTherapeuticParamDto) {
