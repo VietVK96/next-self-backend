@@ -118,4 +118,4 @@ import { CaresheetsModule } from './caresheets/caresheets.module';
     CaresheetsModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}
