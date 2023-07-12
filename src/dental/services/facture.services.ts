@@ -279,12 +279,11 @@ export class FactureServices {
                   new Date(payload?.dateFin).getTime()
               );
             });
-            const ngap_keys = await this.ngapKeyRepository.find();
-            const res: any = [];
+            // const ngap_keys = await this.ngapKeyRepository.find();
             return dataFilDate?.map((data) => {
-              const current_ngap_key = ngap_keys?.find((key) => {
-                return key?.id === data?.dental?.ngapKeyId;
-              });
+              // const current_ngap_key = ngap_keys?.find((key) => {
+              //   return key?.id === data?.dental?.ngapKeyId;
+              // });
               return {
                 ccamFamily: data?.ccamFamily,
               };
