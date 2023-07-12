@@ -21,7 +21,7 @@ classNameFromStatuses.set(6, 'completed');
 export class FindEventService {
   constructor(private readonly dataSource: DataSource) {}
 
-  //ecoodentist-1.31.0\php\event\findAll.php
+  // php/event/findAll.php
   async prepareSql(sql: string, value: string) {
     const result = await this.dataSource.query(sql, [value]);
     return result;

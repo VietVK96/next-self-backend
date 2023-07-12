@@ -18,7 +18,7 @@ export class FindWaitingService {
   ) {}
 
   /**
-   * File: php\waitingRoom\findAll.php 21-99
+   * File: php/waitingRoom/findAll.php 21-99
    * @function main function
    *
    */

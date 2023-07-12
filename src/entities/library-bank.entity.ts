@@ -55,12 +55,12 @@ export class LibraryBankEntity {
    * @Assert\NotBlank
    * @Assert\Length(max=10)
    */
-  @Column({
-    name: 'LBK_ABBR',
-    type: 'varchar',
-    length: 10,
-  })
-  shortName?: string;
+  // @Column({
+  //   name: 'LBK_ABBR',
+  //   type: 'varchar',
+  //   length: 10,
+  // })
+  // shortName?: string;
 
   /**
    * @ORM\Column(name="LBK_ABBR", type="string", length=10)
@@ -89,13 +89,13 @@ export class LibraryBankEntity {
    * @Assert\Type(type={"digit"})
    * @Assert\Length(min=5, max=5)
    */
-  @Column({
-    name: 'LBK_BANK_CODE',
-    type: 'varchar',
-    length: 5,
-    nullable: true,
-  })
-  code?: string;
+  // @Column({
+  //   name: 'LBK_BANK_CODE',
+  //   type: 'varchar',
+  //   length: 5,
+  //   nullable: true,
+  // })
+  // code?: string;
 
   /**
    * @ORM\Column(name="LBK_BANK_CODE", type="string", length=5, nullable=true)
@@ -115,13 +115,13 @@ export class LibraryBankEntity {
    * @Assert\Type(type={"digit"})
    * @Assert\Length(min=5, max=5)
    */
-  @Column({
-    name: 'LBK_BRANCH_CODE',
-    type: 'varchar',
-    length: 5,
-    nullable: true,
-  })
-  agencyCode?: string;
+  // @Column({
+  //   name: 'LBK_BRANCH_CODE',
+  //   type: 'varchar',
+  //   length: 5,
+  //   nullable: true,
+  // })
+  // agencyCode?: string;
 
   /**
    * @ORM\Column(name="LBK_BRANCH_CODE", type="string", length=5, nullable=true)
@@ -167,13 +167,13 @@ export class LibraryBankEntity {
    * @Assert\Type(type={"digit"})
    * @Assert\Length(min=2, max=2)
    */
-  @Column({
-    name: 'LBK_BANK_DETAILS',
-    type: 'varchar',
-    length: 2,
-    nullable: true,
-  })
-  key?: string;
+  // @Column({
+  //   name: 'LBK_BANK_DETAILS',
+  //   type: 'varchar',
+  //   length: 2,
+  //   nullable: true,
+  // })
+  // key?: string;
 
   /**
    * @ORM\Column(name="LBK_BANK_DETAILS", type="string", length=2, nullable=true)
@@ -240,13 +240,13 @@ export class LibraryBankEntity {
    * @Assert\GreaterThanOrEqual(1)
    * @Assert\NotNull
    */
-  @Column({
-    name: 'LBK_SLIP_CHECK_NBR',
-    type: 'int',
-    width: 11,
-    default: 1,
-  })
-  nextBordereauNumber?: number;
+  // @Column({
+  //   name: 'LBK_SLIP_CHECK_NBR',
+  //   type: 'int',
+  //   width: 11,
+  //   default: 1,
+  // })
+  // nextBordereauNumber?: number;
 
   /**
    * @ORM\Column(name="LBK_SLIP_CHECK_NBR", type="integer")
@@ -311,13 +311,13 @@ export class LibraryBankEntity {
    * @Assert\NotNull
    * @Assert\GreaterThanOrEqual(0)
    */
-  @Column({
-    name: 'LBK_POS',
-    type: 'int',
-    width: 11,
-    default: 0,
-  })
-  position?: number;
+  // @Column({
+  //   name: 'LBK_POS',
+  //   type: 'int',
+  //   width: 11,
+  //   default: 0,
+  // })
+  // position?: number;
 
   /**
    * @ORM\Column(name="LBK_POS", type="integer")
