@@ -12,7 +12,7 @@ import { PatientBalanceService } from './service/patientBalance.service';
 export class PatientBalanceController {
   constructor(private service: PatientBalanceService) {}
 
-  @Patch('/update')
+  @Patch('/balance/update')
   @UseGuards(TokenGuard)
   async update(
     @Query() request: PatientBalanceUpdateQueryDto,
