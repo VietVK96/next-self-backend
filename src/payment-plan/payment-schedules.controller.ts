@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -6,7 +6,6 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { PaymentPlanService } from './services/payment-plan.service';
-import { identity } from 'rxjs';
 import { PaymentSchedulesDto } from './dto/payment.dto';
 @ApiBearerAuth()
 @Controller('/payment-schedules')
