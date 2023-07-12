@@ -42,7 +42,7 @@ export class DentalController {
   }
 
   @Post('/facture/facture_requetes_ajax')
-  // @UseGuards(TokenGuard)
+  @UseGuards(TokenGuard)
   async update(@Body() payload: EnregistrerFactureDto) {
     return this.factureServices.update(payload);
   }

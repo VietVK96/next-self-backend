@@ -239,25 +239,6 @@ export class FactureServices {
               );
             });
             const ngap_keys = await this.ngapKeyRepository.find();
-            // const res: any = [];
-            // return dataFilDate?.map((data) => {
-            //   const current_ngap_key = ngap_keys?.find((key) => {
-            //     return key?.id === data?.dental?.ngapKeyId;
-            //   });
-            //   return {
-            //     date: data?.date,
-            //     name: data?.name,
-            //     amount: data?.amount,
-            //     ccamFamily: data?.ccamFamily,
-            //     teeth: data?.dental?.teeth,
-            //     secuAmount: data?.dental?.secuAmount,
-            //     exceeding: data?.dental?.exceeding,
-            //     type: data?.dental?.type,
-            //     ccamCode: data?.dental?.ccamCode,
-            //     coef: data?.dental?.coef,
-            //     ngapKeyName: current_ngap_key?.name,
-            //   };
-            // });
             const res: { date: string; data: any[] }[] = [];
             for (const data of dataFilDate) {
               const current_ngap_key = ngap_keys?.find((key) => {
