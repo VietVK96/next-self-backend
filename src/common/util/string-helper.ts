@@ -133,6 +133,7 @@ export class StringHelper {
   public static formatBytes(bytes: number, format: string | false): string {
     const formats = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
     const size = 1024;
+    bytes /= size;
     let i = 0;
 
     if (format && !formats.includes(format)) {
