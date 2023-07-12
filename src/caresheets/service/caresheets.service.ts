@@ -23,6 +23,8 @@ import { CcamEntity } from 'src/entities/ccam.entity';
 import { ConfigService } from '@nestjs/config';
 import { CaresheetStatusEntity } from 'src/entities/caresheet-status.entity';
 import { RequestException } from 'src/common/exceptions/request-exception.exception';
+import { da } from 'date-fns/locale';
+import { map } from 'rxjs';
 
 const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
 const PAV_MINIMUM_AMOUNT = 120;
@@ -76,7 +78,6 @@ export class CaresheetsService {
         code_accord_prealable,
         suite_exp,
       } = request;
-
       const [patient, user] = await Promise.all([
         this.patientRepository.findOneOrFail({
           relations: ['amos'],
@@ -89,33 +90,44 @@ export class CaresheetsService {
       ]);
       const dataActs: EventTaskEntity[] = await this.eventTaskRepository.find({
         relations: ['medical'],
-        where: { id: In(act_id) },
+        where: { id: In(act_id), conId: patient_id },
       });
-      const acts = dataActs.filter((act) => act.conId === patient.id);
-      if (!!acts) {
+      if (!dataActs.length) {
         throw new CBadRequestException(ErrorCode.ERROR_CARESHEET_ACTS_IS_EMPTY);
       }
-      const caresheet: FseEntity = null;
+      const caresheet: FseEntity = {};
       caresheet.usrId = user?.id;
       caresheet.conId = patient?.id;
       caresheet.numeroFacturation = user?.medical?.finessNumber;
       caresheet.date = format(new Date(), 'yyyy-MM-dd');
+      caresheet.tasks = [];
       caresheet.fseStatus = await this.caresheetStatusRepository.findOne({
         where: { value: 0 },
       });
-      caresheet.dreStatus = await this.caresheetStatusRepository.findOne({
-        where: { value: 0 },
-      });
-      acts.forEach((act) => {
-        this.dentalEventTaskRepository.save(act);
+      caresheet.dreStatus = caresheet.fseStatus;
+      dataActs.forEach((act) => {
+        caresheet.tasks.push(act);
       });
       await this.interfacageService.compute(caresheet);
+      //convert funtion transmettrePatient in client services
+      if (
+        !patient?.firstname &&
+        !patient?.lastname &&
+        !patient?.birthDate &&
+        !patient?.birthRank &&
+        !patient?.inseeNumber &&
+        !patient?.inseeNumberKey
+      ) {
+        throw new CBadRequestException(ErrorCode.ERROR_PATIENT_IS_REQUIRED);
+      } else {
+        this.transmettrePatient(user, patient);
+      }
 
       let datePrescription: Date;
       if (date_prescription) {
         datePrescription = new Date(date_prescription);
       } else {
-        const actDates = acts.map((act) => new Date(act?.date).getTime());
+        const actDates = dataActs.map((act) => new Date(act?.date).getTime());
         const minDate = actDates.length ? new Date(Math.min(...actDates)) : '';
         datePrescription = minDate ? new Date(minDate) : new Date();
       }
@@ -140,7 +152,7 @@ export class CaresheetsService {
             prenomMedecinOrienteur: prenom_medecin_orienteur,
           },
         },
-        actes: {},
+        actes: [],
       };
 
       const relatedToAnAld = related_ald ?? false;
@@ -154,7 +166,7 @@ export class CaresheetsService {
       ) {
         const groupBy: { [key: string]: EventTaskEntity[] } = {};
 
-        acts.forEach((act) => {
+        dataActs.forEach((act) => {
           const dateKey = new Date(act?.date)
             .toISOString()
             .split('T')[0]
@@ -191,7 +203,7 @@ export class CaresheetsService {
       // - PRÉLÈVEMENT OROPHARYNGÉ : C 0.25
       let codeJustifExoneration = null;
       if (
-        acts.reduce(
+        dataActs.reduce(
           (isTestAntigenique, act) =>
             isTestAntigenique || this.isTestAntigenique(act?.medical),
           false,
@@ -199,7 +211,7 @@ export class CaresheetsService {
       ) {
         codeJustifExoneration = 3;
       }
-      for (const act of acts) {
+      for (const act of dataActs) {
         const amount = act?.amount;
         const amoAmount = act?.medical?.amoAmount;
         const coefficient = act?.medical?.coefficient;
@@ -281,16 +293,292 @@ export class CaresheetsService {
           facture.identification.isTpAmo = true;
         }
         acte.isAld = !!relatedToAnAld;
-        facture.actes = acte;
+        facture.actes.push(acte);
       }
+      this.transmettreFactureXml(facture);
       // On transmet la facture à FSV.
-      const response = await this.transmettreFacture(facture);
-      caresheet.externalReferenceId = response?.idFacture;
+      // const response = await this.transmettreFacture(facture);
+      // caresheet.externalReferenceId = response?.idFacture;
       return await this.fseRepository.save({ ...caresheet });
     } catch (error) {
       // return (new ExceptionController($container -> get('twig'))) -> showAction($request, $e) -> send();
       throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
+  }
+  private transmettrePatient = (user: UserEntity, patient: ContactEntity) => {
+    const getTimeString = (date: string, type: string) => {
+      if (!date) return '';
+      const currentDate = format(new Date(date), 'yyyy-MM-dd');
+      const time = currentDate.split('-');
+      switch (type) {
+        case 'day':
+          return time[0];
+        case 'month':
+          return time[1];
+        case 'year':
+          return time[2];
+      }
+    };
+    const numFacturation = user?.medical?.finessNumber ?? '';
+    const numRpps = user?.medical?.nationalIdentifierNumber ?? '';
+    const idPatient = patient?.externalReferenceId ?? '';
+    const nom = patient.lastname ?? '';
+    const prenom = patient.firstname ?? '';
+    const jour = getTimeString(patient?.birthDate, 'day');
+    const mois = getTimeString(patient?.birthDate, 'month');
+    const annee = getTimeString(patient?.birthDate, 'year');
+    const lunaire = !!patient?.birthDateLunar ? 'true' : 'false';
+    const numeroSS = patient?.inseeNumber ?? '';
+    const cleNumeroSS = patient?.inseeNumberKey ?? '';
+    const rangNaissance = patient?.birthRank ?? '';
+    const xml = `
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">
+      <soapenv:Body>
+        <jux:transmettrePatient>
+          <xsd:appelTransmettrePatient>
+            <xsd:numFacturation>${numFacturation}</xsd:numFacturation>
+            <xsd:numRpps>${numRpps}</xsd:numRpps>
+            ${idPatient ? `<xsd:idPatient>${numRpps}</xsd:idPatient>` : ``}
+            <xsd:nom>${nom}</xsd:nom>
+            <xsd:prenom>${prenom}</xsd:prenom>
+            <xsd:dateNaissance>
+              <xsd:jour>${jour}</xsd:jour>
+              <xsd:mois>${mois}</xsd:mois>
+              <xsd:annee>${annee}</xsd:annee>
+              <xsd:lunaire>${lunaire}</xsd:lunaire>
+            </xsd:dateNaissance>
+            <xsd:numeroSS>${numeroSS}</xsd:numeroSS>
+            <xsd:cleNumeroSS>${cleNumeroSS}</xsd:cleNumeroSS>
+            <xsd:rangNaissance>${rangNaissance}</xsd:rangNaissance>
+          </xsd:appelTransmettrePatient>
+        </jux:transmettrePatient>
+      </soapenv:Body>
+    </soapenv:Envelope>`;
+
+    // $response = $this->sendRequest('transmettrePatient', $xml->outputMemory());
+    // if (!$patient->getExternalReferenceId()) {
+    //     $patient->setExternalReferenceId($response['idPatient']);
+    //     $this->em->persist($patient);
+    //     $this->em->flush();
+    // }
+    // return $response;
+    return xml;
+  };
+  private transmettreFactureXml(data: {
+    identification: {
+      idPatient?: number;
+      dateFacturation?: Date;
+      datePrescription?: Date;
+      numFiness?: string;
+      numNatPs?: string;
+      numNatPsRemplace?: string;
+      isTpAmo?: boolean;
+      isTpAmc?: boolean;
+      prescripteur?: string;
+      modeSecurisation?: string;
+      ParcoursDeSoin: {
+        situationParcoursDeSoin?: string;
+        nomMedecinOrienteur?: string;
+        prenomMedecinOrienteur?: string;
+      };
+      genererDRE?: boolean;
+    };
+    actes: any[];
+  }) {
+    const _getpPescripteurXml = (prescripteur: any) => {
+      const codeConditionExercice = prescripteur?.codeConditionExercice ?? '';
+      const numIdFacPresc = prescripteur?.numIdFacPresc ?? '';
+      const rppsPresc = prescripteur?.rppsPresc ?? '';
+      const numeroStructure = prescripteur?.numeroStructure ?? '';
+      const codeSpecialite = prescripteur?.codeSpecialite ?? '';
+      const estPrescipteurSncf = prescripteur?.estPrescipteurSncf ?? '';
+      if (numIdFacPresc) {
+        return `
+        <xsd:prescripteur>
+          <xsd:codeConditionExercice>${codeConditionExercice}</xsd:codeConditionExercice>
+          <xsd:numIdFacPresc>${numIdFacPresc?.slice(0, -1)}</xsd:numIdFacPresc>
+          <xsd:numIdFacPrescCle>${numIdFacPresc?.slice(
+            -1,
+          )}</xsd:numIdFacPrescCle>
+          <xsd:codeSpecialite>${codeSpecialite}</xsd:codeSpecialite>
+          <xsd:rppsPresc>${rppsPresc?.slice(0, -1)}</xsd:rppsPresc>
+          <xsd:rppsPrescCle>${rppsPresc?.slice(-1)}</xsd:rppsPrescCle>
+          <xsd:numeroStructure>${numeroStructure}</xsd:numeroStructure>
+          <xsd:estPrescipteurSncf>${estPrescipteurSncf}</xsd:estPrescipteurSncf>
+        <xsd:prescripteur/>
+        `;
+      }
+      return '';
+    };
+
+    const _getSituationParcoursDeSoin = () => {
+      const situationParcoursDeSoin =
+        data?.identification?.ParcoursDeSoin?.situationParcoursDeSoin ?? '';
+      if (situationParcoursDeSoin) {
+        const nomMedecinOrienteur =
+          data?.identification?.ParcoursDeSoin?.nomMedecinOrienteur ?? '';
+        const prenomMedecinOrienteur =
+          data?.identification?.ParcoursDeSoin?.prenomMedecinOrienteur ?? '';
+        return `
+        <xsd:ParcoursDeSoin>
+          <xsd:situationParcoursDeSoin>${situationParcoursDeSoin}</xsd:situationParcoursDeSoin>
+          <xsd:nomMedecinOrienteur>${nomMedecinOrienteur}</xsd:nomMedecinOrienteur>
+          <xsd:prenomMedecinOrienteur>${prenomMedecinOrienteur}</xsd:prenomMedecinOrienteur>
+        </xsd:ParcoursDeSoin>
+        `;
+      }
+      return '';
+    };
+
+    const formatDate = (date?: string | Date) => {
+      try {
+        if (!date) return '';
+        if (date === 'Invalid Date') return '';
+        return format(new Date(date), 'yyyyMMdd');
+      } catch {
+        return '';
+      }
+    };
+    const xml = `
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">
+      <soapenv:Body>
+        <jux:TransmettreFacture>
+          <xsd:appelTransmettreFacture>
+            <xsd:identification>
+              <xsd:idPatient>${
+                data?.identification?.idPatient ?? ''
+              }</xsd:idPatient>
+              <xsd:source>weclever</xsd:source>
+              <xsd:dateFacturation format="yyyyMMdd">${formatDate(
+                data?.identification?.dateFacturation,
+              )}</xsd:dateFacturation>
+              <xsd:datePrescription format="yyyyMMdd">${formatDate(
+                data?.identification?.datePrescription,
+              )}</xsd:datePrescription>
+              <xsd:numNatPs>${
+                data?.identification?.numNatPs ?? ''
+              }</xsd:numNatPs>
+              <xsd:numFiness>${
+                data?.identification?.numFiness ?? ''
+              }</xsd:numFiness>
+              <xsd:numNatPsRemplace>${
+                data?.identification?.numNatPsRemplace ?? ''
+              }</xsd:numNatPsRemplace>
+              <xsd:isTpAmo>${
+                data?.identification?.isTpAmo ? 'true' : 'false'
+              }</xsd:isTpAmo>
+              <xsd:isTpAmc>${
+                data?.identification?.isTpAmc ? 'true' : 'false'
+              }</xsd:isTpAmc>
+              ${
+                (data?.identification?.genererDRE ?? null) !== null
+                  ? `<xsd:GenererDRE>${
+                      data?.identification?.genererDRE ? 'true' : 'false'
+                    }</xsd:GenererDRE>`
+                  : ``
+              }
+              ${
+                (data?.identification?.modeSecurisation ?? null) !== null
+                  ? `<xsd:modeSecurisation>${data?.identification?.modeSecurisation}</xsd:GenererDRE>`
+                  : ``
+              }
+              ${_getpPescripteurXml(data?.identification?.prescripteur)}
+              ${_getSituationParcoursDeSoin()}
+            </xsd:identification>
+            ${data?.actes
+              ?.map(
+                (acte, index) => `
+                <xsd:acte>
+                <xsd:numero>${index}</xsd:numero>
+                <xsd:dateExecution format="yyyyMMdd">${formatDate(
+                  acte?.dateExecution,
+                )}</xsd:dateExecution>
+                <xsd:codeActe>${acte?.codeActe ?? ''}</xsd:codeActe>
+                <xsd:qte>${acte?.qte ?? ''}</xsd:qte>
+                <xsd:montantHonoraire>${
+                  acte?.montantHonoraire ?? ''
+                }</xsd:montantHonoraire>
+                <xsd:libelle>${acte?.libelle ?? ''}</xsd:libelle>
+                <xsd:numeroDents>${acte?.numeroDents ?? ''}</xsd:numeroDents>
+                <xsd:coefficient>${acte?.coefficient ?? ''}</xsd:coefficient>
+                ${
+                  acte?.codeAssociation
+                    ? `<xsd:codeAssociation>${acte?.coefficient}</xsd:codeAssociation>`
+                    : ``
+                }
+                ${
+                  acte?.qualifDepense
+                    ? `<xsd:qualifDepense>${acte?.qualifDepense}</xsd:qualifDepense>`
+                    : ``
+                }
+                ${
+                  acte?.complementPrestation
+                    ? `<xsd:complementPrestation>${acte?.complementPrestation}</xsd:complementPrestation>`
+                    : ``
+                }
+                ${
+                  acte?.codeModificateur1
+                    ? `<xsd:codeModificateur1>${acte?.codeModificateur1}</xsd:codeModificateur1>`
+                    : ``
+                }
+                ${
+                  acte?.codeModificateur2
+                    ? `<xsd:codeModificateur2>${acte?.codeModificateur2}</xsd:codeModificateur2>`
+                    : ``
+                }
+                ${
+                  acte?.codeModificateur3
+                    ? `<xsd:codeModificateur3>${acte?.codeModificateur3}</xsd:codeModificateur3>`
+                    : ``
+                }
+                ${
+                  acte?.codeModificateur4
+                    ? `<xsd:codeModificateur4>${acte?.codeModificateur4}</xsd:codeModificateur4>`
+                    : ``
+                }
+                ${
+                  acte?.remboursementExceptionnel !== undefined
+                    ? `<xsd:remboursementExceptionnel>${
+                        !!acte?.remboursementExceptionnel ? 'true' : 'false'
+                      }</xsd:remboursementExceptionnel>`
+                    : ``
+                }
+                ${
+                  acte?.codeJustifExoneration
+                    ? `<xsd:codeJustifExoneration>${acte?.codeJustifExoneration}</xsd:codeJustifExoneration>`
+                    : ``
+                }
+                ${
+                  acte?.isAld !== undefined
+                    ? `<xsd:isAld>${
+                        !!acte?.isAld ? 'true' : 'false'
+                      }</xsd:isAld>`
+                    : ``
+                }
+                ${
+                  acte?.dateDemandePrealable
+                    ? `<xsd:dateDemandePrealable format="yyyyMMdd">${formatDate(
+                        acte?.dateDemandePrealable,
+                      )}</xsd:dateDemandePrealable>`
+                    : ``
+                }
+                ${
+                  acte?.codeAccordPrealable
+                    ? `<xsd:dateDemandePrealable">${acte?.codeAccordPrealable}</xsd:dateDemandePrealable>`
+                    : ``
+                }
+              </xsd:acte>
+              `,
+              )
+              .join('')}
+           
+          </xsd:appelTransmettreFacture>
+        </jux:TransmettreFacture>
+      </soapenv:Body>
+    </soapenv:Envelope>`;
+
+    // return $this->sendRequest('TransmettreFacture', $xml->outputMemory());
+    return xml;
   }
 
   private isTestAntigenique(medical): boolean {
