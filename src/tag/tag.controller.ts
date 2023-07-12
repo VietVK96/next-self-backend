@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { TagService } from './services/tag.service';
 import {
@@ -31,5 +31,14 @@ export class TagController {
     } catch (error) {
       throw new CBadRequestException('tags not found', error);
     }
+  }
+
+  @Post()
+  @UseGuards(TokenGuard)
+  async store(
+    @CurrentUser() identity: UserIdentity,
+    @Body() payload: { title: string },
+  ) {
+    return this.tagService.store(identity.org, payload.title);
   }
 }

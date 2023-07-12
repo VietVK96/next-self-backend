@@ -174,8 +174,8 @@ WHERE CPD_ID = ?`,
         await Promise.all(arr);
         await queryRunner.commitTransaction();
         return {
-          id: newCorresponden.insertId,
           ...payload,
+          id: newCorresponden.insertId,
           address: { id: addressInsert.insertId, ...payload.address },
           phones: phoneIds.map(
             ({ createdAt, updatedAt, ptyId, type, ...rest }) => ({
@@ -283,5 +283,13 @@ WHERE CPD_ID = ?`,
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async findAllType(search: string) {
+    const sql = await this.dataSource.query(
+      `SELECT id, name FROM correspondent_type WHERE name LIKE ?`,
+      [`%${search}%`],
+    );
+    return sql;
   }
 }

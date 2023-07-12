@@ -6,6 +6,8 @@ import { OrdonnancesDto } from '../dto/ordonnances.dto';
 import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
 import { ErrorCode } from 'src/constants/error';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 
 @Injectable()
 export class OrdonnancesServices {
@@ -53,5 +55,15 @@ export class OrdonnancesServices {
     } catch {
       return new CBadRequestException(ErrorCode.NOT_FOUND);
     }
+  }
+
+  async getMedicalByPatientId(patientId: number, currentUser: UserIdentity) {
+    const medicalOrder = await this.medicalRepository.findOne({
+      where: { conId: patientId, usrId: currentUser?.id },
+      order: { createdAt: 'DESC' },
+    });
+    if (!medicalOrder)
+      throw new CNotFoundRequestException(ErrorCode.STATUS_NOT_FOUND);
+    return medicalOrder;
   }
 }
