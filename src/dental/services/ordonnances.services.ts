@@ -8,6 +8,7 @@ import { ErrorCode } from 'src/constants/error';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
+import { EnregistrerFactureDto } from '../dto/facture.dto';
 
 @Injectable()
 export class OrdonnancesServices {
@@ -20,37 +21,46 @@ export class OrdonnancesServices {
 
   async update(payload: OrdonnancesDto) {
     try {
-      if ((payload?.creationDate as string) && (payload?.endDate as string)) {
+      if ((payload?.creation_date as string) && (payload?.end_date as string)) {
         await this.medicalRepository.save({
-          usrId: payload?.userId,
-          conId: payload?.patientId,
+          usrId: payload?.user_id,
+          conId: payload?.patient_id,
           title: payload?.title,
-          date: payload?.creationDate,
-          endDate: payload?.endDate,
+          date: payload?.creation_date,
+          endDate: payload?.end_date,
         });
       }
-      if (payload?.keepParams === 1) {
+
+      if (payload?.keep_params === 1) {
         const medicalHeader = this.medicalHeaderRepository.findOne({
-          where: { userId: payload?.userId },
+          where: { userId: payload?.user_id },
         });
         if (!medicalHeader) {
           await this.medicalHeaderRepository.create({
-            userId: payload?.userId,
+            userId: payload?.user_id,
+            msg: payload?.header_msg,
+            address: payload?.address,
+            identPrat: payload?.ident_prat,
+            height: payload?.header_height,
+            format: payload?.format,
           });
         }
         await this.medicalHeaderRepository.save({
-          userId: payload?.userId,
-          msg: payload?.headerMsg,
+          userId: payload?.user_id,
+          msg: payload?.header_msg,
           address: payload?.address,
-          identPrat: payload?.identPrat,
-          height: payload?.headerHeight,
+          identPrat: payload?.ident_prat,
+          height: payload?.header_height,
           format: payload?.format,
-          headerEnable: payload?.headerEnable,
+          headerEnable: payload?.header_enable,
         });
         return medicalHeader;
       }
       {
-        throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
+        const medicalHeader = this.medicalHeaderRepository.findOne({
+          where: { userId: payload?.user_id },
+        });
+        return (await medicalHeader).id;
       }
     } catch {
       return new CBadRequestException(ErrorCode.NOT_FOUND);
@@ -65,5 +75,12 @@ export class OrdonnancesServices {
     if (!medicalOrder)
       throw new CNotFoundRequestException(ErrorCode.STATUS_NOT_FOUND);
     return medicalOrder;
+  }
+
+  async getMail(payload: EnregistrerFactureDto) {
+    if (payload?.user_id) {
+      return payload?.user_id;
+    }
+    return new CNotFoundRequestException(ErrorCode.STATUS_NOT_FOUND);
   }
 }
