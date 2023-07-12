@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository, In } from 'typeorm';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
-import { ShowActionExceptionFilter } from 'src/common/exceptions/show-action.exception';
 import { FsDto } from '../dto/index.dto';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { UserEntity } from 'src/entities/user.entity';

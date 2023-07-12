@@ -1,12 +1,7 @@
 import { Controller, Post, Query, Res } from '@nestjs/common';
 import { CaresheetsDto } from './dto/index.dto';
 import { Response } from 'express';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import {
-  CurrentUser,
-  TokenGuard,
-  UserIdentity,
-} from 'src/common/decorator/auth.decorator';
+import { ApiTags } from '@nestjs/swagger';
 import { CaresheetsService } from './service/caresheets.service';
 
 @ApiTags('Caresheets')

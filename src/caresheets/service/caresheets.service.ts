@@ -4,34 +4,24 @@ import { DataSource, Repository, In } from 'typeorm';
 import { format, isAfter, isBefore } from 'date-fns';
 import { create } from 'xmlbuilder2';
 import axios from 'axios';
-import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { UserEntity } from 'src/entities/user.entity';
 import { ContactEntity } from '../../entities/contact.entity';
-import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CaresheetsDto } from '../dto/index.dto';
 import { FseEntity } from 'src/entities/fse.entity';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
-import { CaresheetModeEnum } from 'src/enum/caresheet.enum';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { InterfacageService } from 'src/interfacage/services/interfacage.service';
 import { CodeNatureAssuranceEnum } from 'src/constants/act';
 import { PatientAmoEntity } from 'src/entities/patient-amo.entity';
 import { ExemptionCodeEnum } from 'src/enum/exemption-code.enum';
-import { CcamEntity } from 'src/entities/ccam.entity';
 import { ConfigService } from '@nestjs/config';
 import { CaresheetStatusEntity } from 'src/entities/caresheet-status.entity';
 import { RequestException } from 'src/common/exceptions/request-exception.exception';
 
 const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
 const PAV_MINIMUM_AMOUNT = 120;
-
-interface ErrorResponse {
-  erreur: {
-    libelleErreur: string;
-  };
-}
 
 @Injectable()
 export class CaresheetsService {

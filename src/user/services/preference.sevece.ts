@@ -6,7 +6,6 @@ import { ErrorCode } from 'src/constants/error';
 import { UserEntity } from 'src/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
-import { UserPreferenceQuotationDisplayOdontogramType } from 'src/entities/user-preference-quotation.entity';
 
 @Injectable()
 export class PreferenceService {
