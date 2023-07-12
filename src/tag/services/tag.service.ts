@@ -66,11 +66,13 @@ export class TagService {
     try {
       const obj = { background: '#e0e0e0', foreground: '#343a40' };
 
-      await this.dataSource.query(
+      const newTags = await this.dataSource.query(
         `INSERT INTO tag (organization_id, title, color) VALUES (?,?,?) `,
         [groupId, title, JSON.stringify(obj)],
       );
-      return;
+      return await this.tagRepository.findOne({
+        where: { id: newTags.insertId },
+      });
     } catch {
       throw new CBadRequestException('title has already exist');
     }

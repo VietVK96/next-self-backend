@@ -50,7 +50,7 @@ export class ContactPaymentService {
       csg.CSG_ID AS id,
       csg.CSG_PAYMENT AS payment,
       csg.CSG_PAYMENT_DATE AS paymentDate,
-      csg.CSG_TYPE AS TYPE,
+      csg.CSG_TYPE AS type,
       csg.is_tp,
       csc.amount_care,
       csc.amount_prosthesis,
