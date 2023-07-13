@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotAcceptableException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository, In } from 'typeorm';
 import { format, isAfter, isBefore } from 'date-fns';
@@ -64,7 +64,7 @@ export class CaresheetsService {
         related_ald,
         date_demande_prealable,
         code_accord_prealable,
-        suite_exp,
+        // suite_exp,
       } = request;
 
       const [patient, user] = await Promise.all([
@@ -154,7 +154,7 @@ export class CaresheetsService {
           }
           groupBy[dateKey].push(act);
         });
-        for (const [key, raws] of Object.entries(groupBy)) {
+        for (const [_, raws] of Object.entries(groupBy)) {
           const collectionFilteredByFamilyCode = raws.filter(
             (act) =>
               act?.medical?.ccam &&

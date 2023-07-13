@@ -34,7 +34,7 @@ export class GetSessionService {
     return data;
   }
 
-  //ecoodentist-1.31.0\php\session.php(line 32 - 120)
+  // php/session.php(line 32 - 120)
   async getUser(userId: number): Promise<UserUserRes> {
     const queryBuilder = this.dataSource.createQueryBuilder();
 

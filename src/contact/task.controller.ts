@@ -39,7 +39,7 @@ export class TaskController {
     return await this.taskService.updateEventTaskPatch(payload);
   }
   /**
-   * php\event\task\unrealized.php line 1->12
+   * php/event/task/unrealized.php line 1->12
    */
   @Patch('task/realized')
   @UseGuards(TokenGuard)

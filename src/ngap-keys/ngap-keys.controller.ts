@@ -16,7 +16,7 @@ export class NgapKeysController {
   constructor(private ngapKeysService: NgapKeysService) {}
 
   /**
-   * php\ngap-keys\index.php
+   * php/ngap-keys/index.php
    */
   @Get()
   @UseGuards(TokenGuard)

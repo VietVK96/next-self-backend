@@ -26,7 +26,7 @@ export class PrestationController {
   constructor(private prestationService: PrestationService) {}
 
   /**
-   * php\contact\prestation\findAll.php 1->14
+   * /contact/prestation/findAll.php 1->14
    * @param payload
    * @param identity
    * @returns
@@ -41,7 +41,7 @@ export class PrestationController {
   }
 
   /**
-   * php\prestation\find.php line 1->8
+   * php/prestation/find.php line 1->8
    * @param payload
    * @returns
    */
@@ -52,7 +52,7 @@ export class PrestationController {
   }
 
   /**
-   * php\prestation\delete.php line 1->13
+   * php/prestation/delete.php line 1->13
    * @param id
    * @param identity
    * @returns

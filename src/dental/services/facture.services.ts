@@ -82,12 +82,13 @@ export class FactureServices {
             where: { userId: payload?.user_id },
           });
           if (!medicalHeader) {
-            await this.medicalHeaderRepository.create({
+            const medicalHeaderData = this.medicalHeaderRepository.create({
               userId: payload?.user_id,
               name: payload?.titreFacture,
               address: payload?.addrPrat,
               identPrat: payload?.identPrat,
             });
+            await this.medicalHeaderRepository.save(medicalHeaderData);
           }
           await this.medicalHeaderRepository.update(medicalHeader.id, {
             userId: payload?.user_id,
@@ -103,16 +104,12 @@ export class FactureServices {
 
       case 'enregistrerLigne': {
         try {
-          let data;
           if (payload?.typeLigne === 'operation') {
-            if (payload?.dateLigne !== null) {
-              const dateLigne = new Date(payload?.dateLigne);
-            }
             const billLine = await this.billLineRepository.findOne({
               where: { id: payload?.id_facture_ligne },
             });
             if (!billLine) {
-              data = await this.billLineRepository.create({
+              const dataBillLine = this.billLineRepository.create({
                 amount: payload?.prixLigne,
                 teeth: payload?.dentsLigne,
                 cotation: payload?.cotation,
@@ -124,45 +121,41 @@ export class FactureServices {
                 pos: payload?.noSequence,
                 type: payload?.typeLigne,
               });
+              const data = await this.billLineRepository.save(dataBillLine);
               return data.id;
             }
-            data = await this.billLineRepository.update(
-              payload?.id_facture_ligne,
-              {
-                amount: payload?.prixLigne,
-                teeth: payload?.dentsLigne,
-                cotation: payload?.cotation,
-                secuAmount: payload?.secuAmount,
-                materials: payload?.materials,
-                bilId: payload?.id_facture,
-                date: payload?.dateLigne,
-                msg: payload?.descriptionLigne,
-                pos: payload?.noSequence,
-                type: payload?.typeLigne,
-              },
-            );
-            return data.id;
+            await this.billLineRepository.update(payload?.id_facture_ligne, {
+              amount: payload?.prixLigne,
+              teeth: payload?.dentsLigne,
+              cotation: payload?.cotation,
+              secuAmount: payload?.secuAmount,
+              materials: payload?.materials,
+              bilId: payload?.id_facture,
+              date: payload?.dateLigne,
+              msg: payload?.descriptionLigne,
+              pos: payload?.noSequence,
+              type: payload?.typeLigne,
+            });
+            return payload?.id_facture_ligne;
           } else {
             const billLine = await this.billLineRepository.findOne({
               where: { id: payload?.id_facture },
             });
             if (!billLine) {
-              data = await this.billLineRepository.create({
+              const billLineData = this.billLineRepository.create({
                 bilId: payload?.id_facture_ligne,
                 pos: payload?.noSequence,
                 type: payload?.typeLigne,
               });
+              const data = await this.billLineRepository.save(billLineData);
               return data.id;
             }
-            data = await this.billLineRepository.update(
-              payload?.id_facture_ligne,
-              {
-                bilId: payload?.id_facture_ligne,
-                pos: payload?.noSequence,
-                type: payload?.typeLigne,
-              },
-            );
-            return data.id;
+            await this.billLineRepository.update(payload?.id_facture_ligne, {
+              bilId: payload?.id_facture_ligne,
+              pos: payload?.noSequence,
+              type: payload?.typeLigne,
+            });
+            return payload?.id_facture_ligne;
           }
         } catch {
           throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
@@ -190,12 +183,13 @@ export class FactureServices {
               );
             });
             const ngap_keys = await this.ngapKeyRepository.find();
-            const res: any = [];
-            return dataFilDate?.map((data) => {
+            const res: { date: string; data: any[] }[] = [];
+            for (const data of dataFilDate) {
               const current_ngap_key = ngap_keys?.find((key) => {
                 return key?.id === data?.dental?.ngapKeyId;
               });
-              return {
+              const exist = res.find((r) => r.date === data.date);
+              const newData = {
                 date: data?.date,
                 name: data?.name,
                 amount: data?.amount,
@@ -208,7 +202,16 @@ export class FactureServices {
                 coef: data?.dental?.coef,
                 ngapKeyName: current_ngap_key?.name,
               };
-            });
+              if (exist) {
+                exist.data.push(newData);
+              } else {
+                res.push({
+                  date: data.date,
+                  data: [newData],
+                });
+              }
+            }
+            return res;
           }
           if (payload?.displayOnlyActsListed) {
             const dataEventTasks = await this.eventTaskRepository.find({
@@ -228,12 +231,13 @@ export class FactureServices {
               );
             });
             const ngap_keys = await this.ngapKeyRepository.find();
-            const res: any = [];
-            return dataFilDate?.map((data) => {
+            const res: { date: string; data: any[] }[] = [];
+            for (const data of dataFilDate) {
               const current_ngap_key = ngap_keys?.find((key) => {
                 return key?.id === data?.dental?.ngapKeyId;
               });
-              return {
+              const exist = res.find((r) => r.date === data.date);
+              const newData = {
                 date: data?.date,
                 name: data?.name,
                 amount: data?.amount,
@@ -246,7 +250,16 @@ export class FactureServices {
                 coef: data?.dental?.coef,
                 ngapKeyName: current_ngap_key?.name,
               };
-            });
+              if (exist) {
+                exist.data.push(newData);
+              } else {
+                res.push({
+                  date: data.date,
+                  data: [newData],
+                });
+              }
+            }
+            return res;
           }
 
           if (payload?.displayOnlyProsthesis) {
@@ -266,12 +279,11 @@ export class FactureServices {
                   new Date(payload?.dateFin).getTime()
               );
             });
-            const ngap_keys = await this.ngapKeyRepository.find();
-            const res: any = [];
+            // const ngap_keys = await this.ngapKeyRepository.find();
             return dataFilDate?.map((data) => {
-              const current_ngap_key = ngap_keys?.find((key) => {
-                return key?.id === data?.dental?.ngapKeyId;
-              });
+              // const current_ngap_key = ngap_keys?.find((key) => {
+              //   return key?.id === data?.dental?.ngapKeyId;
+              // });
               return {
                 ccamFamily: data?.ccamFamily,
               };

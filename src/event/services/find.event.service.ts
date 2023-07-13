@@ -8,6 +8,8 @@ import { CNotFoundRequestException } from 'src/common/exceptions/notfound-reques
 import { HistoricalsDto, ReminderDto } from '../dto/find.event.dto';
 
 import { FindEventByIdRes } from '../response/find.event.res';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 const classNameFromStatuses: Map<number, string> = new Map<number, string>();
 classNameFromStatuses.set(1, 'present');
@@ -21,7 +23,7 @@ classNameFromStatuses.set(6, 'completed');
 export class FindEventService {
   constructor(private readonly dataSource: DataSource) {}
 
-  //ecoodentist-1.31.0\php\event\findAll.php
+  // php/event/findAll.php
   async prepareSql(sql: string, value: string) {
     const result = await this.dataSource.query(sql, [value]);
     return result;
@@ -102,42 +104,43 @@ export class FindEventService {
     viewCancelledEvents: number,
     confidentiality: number,
   ) {
-    const formattedResources = resources.map((item) => `'${item}'`).join(',');
+    try {
+      const formattedResources = resources.map((item) => `'${item}'`).join(',');
 
-    const sqlHome = await this.prepareSql(
-      `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
+      const sqlHome = await this.prepareSql(
+        `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
      FROM T_CONTACT_PHONE_COP
     JOIN T_PHONE_PHO
     JOIN T_PHONE_TYPE_PTY
     WHERE T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
     AND T_PHONE_PHO.PTY_ID = T_PHONE_TYPE_PTY.PTY_ID
     AND T_PHONE_TYPE_PTY.PTY_NAME = ?`,
-      'home',
-    );
+        'home',
+      );
 
-    const sqlMobile = await this.prepareSql(
-      `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
+      const sqlMobile = await this.prepareSql(
+        `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
      FROM T_CONTACT_PHONE_COP
     JOIN T_PHONE_PHO
     JOIN T_PHONE_TYPE_PTY
     WHERE T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
     AND T_PHONE_PHO.PTY_ID = T_PHONE_TYPE_PTY.PTY_ID
     AND T_PHONE_TYPE_PTY.PTY_NAME = ?`,
-      'mobile',
-    );
-    const sqlSms = await this.prepareSql(
-      `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
+        'mobile',
+      );
+      const sqlSms = await this.prepareSql(
+        `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
      FROM T_CONTACT_PHONE_COP
     JOIN T_PHONE_PHO
     JOIN T_PHONE_TYPE_PTY
     WHERE T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
     AND T_PHONE_PHO.PTY_ID = T_PHONE_TYPE_PTY.PTY_ID
     AND T_PHONE_TYPE_PTY.PTY_NAME = ?`,
-      'sms',
-    );
+        'sms',
+      );
 
-    const result = await this.dataSource.query(
-      `SELECT
+      const result = await this.dataSource.query(
+        `SELECT
         event_occurrence_evo.evo_id AS id,
         CONCAT_WS(' ', event_occurrence_evo.evo_date, TIME(T_EVENT_EVT.EVT_START)) AS start_date,
         CONCAT_WS(' ', event_occurrence_evo.evo_date, TIME(T_EVENT_EVT.EVT_END)) AS end_date,
@@ -181,85 +184,88 @@ export class FindEventService {
       AND CASE WHEN 0 = ? THEN T_EVENT_EVT.EVT_STATE NOT IN (2,3) ELSE 1 = 1 END
     GROUP BY event_occurrence_evo.evo_id
     ORDER BY start_date, end_date`,
-      [startDate, endDate, viewCancelledEvents],
-    );
-    const events: FindAllEventDto[] = [];
-    if (confidentiality === 0) {
-      for (const item of result) {
-        const colorArr = ColorHelper.inthex(Number(item.color));
-        const newItem = {
-          ...item,
-          color: {
-            background: colorArr[0],
-            foreground: colorArr[1],
-          },
-          homePhoneNumber:
-            item.patientId === null
-              ? null
-              : this.getPhoneNumberByContactId(sqlHome, item.patientId),
-          mobilePhoneNumber:
-            item.patientId === null
-              ? null
-              : this.getPhoneNumberByContactId(sqlMobile, item.patientId),
-          smsPhoneNumber:
-            item.patientId === null
-              ? null
-              : this.getPhoneNumberByContactId(sqlSms, item.patientId),
-          age: this.calculateAge(item.birthDate),
-          className:
-            item.state === 0 ? null : classNameFromStatuses.get(item.state),
-          resources: {
-            id: item.resourceId,
-            name: item.resourceName,
-          },
-        };
+        [startDate, endDate, viewCancelledEvents],
+      );
+      const events: FindAllEventDto[] = [];
+      if (confidentiality === 0) {
+        for (const item of result) {
+          const colorArr = ColorHelper.inthex(Number(item.color));
+          const newItem = {
+            ...item,
+            color: {
+              background: colorArr[0],
+              foreground: colorArr[1],
+            },
+            homePhoneNumber:
+              item.patientId === null
+                ? null
+                : this.getPhoneNumberByContactId(sqlHome, item.patientId),
+            mobilePhoneNumber:
+              item.patientId === null
+                ? null
+                : this.getPhoneNumberByContactId(sqlMobile, item.patientId),
+            smsPhoneNumber:
+              item.patientId === null
+                ? null
+                : this.getPhoneNumberByContactId(sqlSms, item.patientId),
+            age: this.calculateAge(item.birthDate),
+            className:
+              item.state === 0 ? null : classNameFromStatuses.get(item.state),
+            resources: {
+              id: item.resourceId,
+              name: item.resourceName,
+            },
+          };
 
-        events.push(newItem);
+          events.push(newItem);
+        }
+      } else {
+        for (const item of result) {
+          const colorArr = ColorHelper.inthex(Number(item.color));
+          const newItem = {
+            ...item,
+            color: {
+              background: colorArr[0],
+              foreground: colorArr[1],
+            },
+            lastName: null,
+            firstName: null,
+            number: null,
+            civilityTitle: null,
+            age: null,
+            email: null,
+            homePhoneNumber: null,
+            mobilePhoneNumber: null,
+            smsPhoneNumber: null,
+          };
+          events.push(newItem);
+        }
       }
-    } else {
-      for (const item of result) {
-        const colorArr = ColorHelper.inthex(Number(item.color));
-        const newItem = {
-          ...item,
-          color: {
-            background: colorArr[0],
-            foreground: colorArr[1],
-          },
-          lastName: null,
-          firstName: null,
-          number: null,
-          civilityTitle: null,
-          age: null,
-          email: null,
-          homePhoneNumber: null,
-          mobilePhoneNumber: null,
-          smsPhoneNumber: null,
-        };
-        events.push(newItem);
-      }
-    }
 
-    const memos: MemoDto[] = await this.dataSource.query(
-      `SELECT T_MEMO_MEM.MEM_ID as id, resource_id as resourceId, resource.name as resourceName,
+      const memos: MemoDto[] = await this.dataSource.query(
+        `SELECT T_MEMO_MEM.MEM_ID as id, resource_id as resourceId, resource.name as resourceName,
       MEM_DATE as date FROM T_MEMO_MEM JOIN resource on T_MEMO_MEM.resource_id = resource.id 
       WHERE resource_id in (${formattedResources}) AND MEM_DATE BETWEEN ? AND ? 
       ORDER BY MEM_DATE ASC`,
-      [startDate, endDate],
-    );
+        [startDate, endDate],
+      );
 
-    const bgevents: BgEventDto[] = await this.dataSource.query(
-      `SELECT timeslot.id, resource_id as resourceId, resource.name as resourceName, start_date, 
+      const bgevents: BgEventDto[] = await this.dataSource.query(
+        `SELECT timeslot.id, resource_id as resourceId, resource.name as resourceName, start_date, 
       end_date, timeslot.color, title FROM timeslot JOIN resource ON timeslot.resource_id = resource.id 
       WHERE resource_id IN (${formattedResources}) and start_date >= ? AND end_date < ?
        ORDER BY start_date ASC, end_date ASC`,
-      [this.getStartDay(startDate), this.getEndDay(endDate)],
-    );
+        [this.getStartDay(startDate), this.getEndDay(endDate)],
+      );
 
-    return {
-      events,
-      bgevents,
-      memos,
-    };
+      return {
+        events,
+        bgevents,
+        memos,
+      };
+    } catch {
+      throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
+    }
   }
 
   async findById(doctorId: number, groupId: number, id: number) {

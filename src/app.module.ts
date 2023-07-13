@@ -41,6 +41,8 @@ import { TrashEventModule } from './trash/event/trash.event.module';
 import { CorrespondentModule } from './correspondent/correspondent.module';
 import { MedicalModule } from './medical/medical.module';
 import { CaresheetsModule } from './caresheets/caresheets.module';
+import { BankModule } from './bank/bank.module';
+import { PaymentSchedulesModule } from './payment-plan/payment-schedules.module';
 
 @Module({
   imports: [
@@ -116,6 +118,8 @@ import { CaresheetsModule } from './caresheets/caresheets.module';
     MedicalModule,
     InterfacageModule,
     CaresheetsModule,
+    BankModule,
+    PaymentSchedulesModule,
   ],
 })
 export class AppModule {}
