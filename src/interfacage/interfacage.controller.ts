@@ -9,7 +9,9 @@ import { InterfacageService } from './services/interfacage.service';
 @ApiTags('Interfacage')
 export class InterfacageController {
   constructor(private service: InterfacageService) {}
-
+  /**
+   * file: php/service/interfacage/fs.php
+   */
   @Post('/fs')
   @UseGuards(TokenGuard)
   async CheckMaximumPrice(@Body() request: FsDto) {
