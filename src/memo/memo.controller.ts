@@ -19,28 +19,28 @@ import { TokenGuard } from 'src/common/decorator/auth.decorator';
 export class MemoController {
   constructor(private readonly memoService: MemoService) {}
 
-  //ecoodentist-1.31.0\php\memo\store.php
+  // php/memo/store.php
   @Post('save')
   @UseGuards(TokenGuard)
   async create(@Body() payload: CreateUpdateMemoDto) {
     return this.memoService.create(payload);
   }
 
-  //ecoodentist-1.31.0\php\memo\show.php
+  // php/memo/show.php
   @Get('show/:id')
   @UseGuards(TokenGuard)
   async show(@Param('id') id: number) {
     return this.memoService.show(id);
   }
 
-  //ecoodentist-1.31.0\php\memo\delete.php
+  // php/memo/delete.php
   @Delete('delete/:id')
   @UseGuards(TokenGuard)
   async delete(@Param('id') id: number) {
     return this.memoService.delete(id);
   }
 
-  //ecoodentist-1.31.0\php\memo\update.php
+  // php/memo/update.php
   @Post('update/:id')
   @UseGuards(TokenGuard)
   async update(@Param('id') id: number, @Body() payload: MemoRes) {

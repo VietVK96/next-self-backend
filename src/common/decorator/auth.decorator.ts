@@ -13,7 +13,7 @@ import { JwtPayload } from 'jsonwebtoken';
 
 export interface UserIdentity extends JwtPayload {
   id: number;
-  org: number; // $groupId = $session->get("group");
+  org: number; // $groupId = $session->get("group"); $session->get('organization_id');
   un?: string;
   type?: string;
   dis?: number[]; // list doctor id

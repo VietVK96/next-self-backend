@@ -6,15 +6,22 @@ import { PermissionService } from './services/permission.service';
 import { UserService } from './services/user.service';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { UserController } from './user.controller';
+import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
+import { PreferenceService } from './services/preference.sevece';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserEntity, UserMedicalEntity]),
+    TypeOrmModule.forFeature([
+      UserEntity,
+      UserMedicalEntity,
+      UserPreferenceEntity,
+      UserMedicalEntity,
+    ]),
     AddressModule,
   ],
 
-  providers: [PermissionService, UserService],
-  exports: [PermissionService, UserService],
+  providers: [PermissionService, UserService, PreferenceService],
+  exports: [PermissionService, UserService, PreferenceService],
   controllers: [UserController],
 })
 export class UserModule {}

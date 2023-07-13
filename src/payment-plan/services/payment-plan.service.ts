@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { PaymentItemRes } from '../response/payment.res';
+import { PaymentSchedulesDto } from '../dto/payment.dto';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
 
 @Injectable()
 export class PaymentPlanService {
@@ -78,5 +80,44 @@ export class PaymentPlanService {
     // }
 
     return paymentSchedule;
+  }
+
+  // application/Services/PaymentSchedule.php 18->72
+  async store(payload: PaymentSchedulesDto, identity: UserIdentity) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const q = `INSERT INTO payment_schedule (group_id, doctor_id, patient_id, label, amount, observation)
+      VALUES (?, ?, ?, ?, ?, ?)`;
+
+      const paymentSchedule = await queryRunner.query(q, [
+        identity.org,
+        payload.doctor_id,
+        payload.patient_id,
+        payload.label,
+        payload.amount,
+        payload.observation || null,
+      ]);
+
+      const q2 = `INSERT INTO payment_schedule_line (payment_schedule_id, date, amount)
+      VALUES (?, ?, ?)`;
+
+      Promise.all(
+        payload?.lines?.map(async (line) => {
+          await queryRunner.query(q2, [
+            paymentSchedule.insertId,
+            line.date,
+            line.amount,
+          ]);
+        }),
+      );
+      await queryRunner.commitTransaction();
+      return paymentSchedule;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

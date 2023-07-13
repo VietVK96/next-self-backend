@@ -25,7 +25,7 @@ export class PrestationService {
   ) {}
 
   /**
-   * php\contact\prestation\findAll.php 16 -> 78
+   * php/contact/prestation/findAll.php 16 -> 78
    * @param payload
    * @param orgId
    */
@@ -121,7 +121,7 @@ export class PrestationService {
   }
 
   /**
-   * php\prestation\find.php line 9->15
+   * php/prestation/find.php line 9->15
    * @param payload
    */
   async find(payload: FindPrestationStructDto): Promise<any> {
@@ -187,7 +187,7 @@ export class PrestationService {
   }
 
   /**
-   * php\prestation\delete.php line 15->113
+   * php/prestation/delete.php line 15->113
    * @param id
    * @param identity
    */
@@ -348,9 +348,7 @@ export class PrestationService {
           payload?.state,
           payload?.ccamFamily,
         ]);
-        console.log('Acte', payload.contactId, 1);
       } else {
-        console.log('Acte', payload.contactId, 2);
       }
 
       const installDentalTask = `

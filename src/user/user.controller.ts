@@ -10,17 +10,24 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { TokenGuard } from 'src/common/decorator/auth.decorator';
 import { UserService } from './services/user.service';
-import { UpdateTherapeuticDto } from './dto/therapeutic.dto';
+import {
+  UpdatePreferenceDto,
+  UpdateTherapeuticDto,
+} from './dto/therapeutic.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { PreferenceService } from './services/preference.sevece';
 
 @ApiBearerAuth()
 @ApiTags('User')
 @Controller('/user')
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private preferenceService: PreferenceService,
+  ) {}
 
   /**
-   * php\contact\prestation\findAll.php 1->14
+   * php/contact/prestation/findAll.php 1->14
    * @param payload
    * @param identity
    * @returns
@@ -36,9 +43,15 @@ export class UserController {
   }
 
   @Get('/find')
-  // @UseGuards(TokenGuard)
+  @UseGuards(TokenGuard)
   async findUserById(@Query('id') id: number) {
     if (!Number(id)) throw new CBadRequestException('id must be a number');
     return await this.userService.find(id);
+  }
+
+  @Post('preference/patch')
+  @UseGuards(TokenGuard)
+  async updatePreference(@Body() payload: UpdatePreferenceDto) {
+    return await this.preferenceService.pacth(payload);
   }
 }

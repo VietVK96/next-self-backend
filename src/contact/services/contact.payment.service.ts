@@ -41,7 +41,7 @@ export class ContactPaymentService {
   ) {}
 
   /**
-   * File: php\contact\payment\findAll.php 13->62
+   * File: php/contact/payment/findAll.php 13->62
    */
   async findAll(
     request?: ContactPaymentFindAllDto,
@@ -50,7 +50,7 @@ export class ContactPaymentService {
       csg.CSG_ID AS id,
       csg.CSG_PAYMENT AS payment,
       csg.CSG_PAYMENT_DATE AS paymentDate,
-      csg.CSG_TYPE AS TYPE,
+      csg.CSG_TYPE AS type,
       csg.is_tp,
       csc.amount_care,
       csc.amount_prosthesis,

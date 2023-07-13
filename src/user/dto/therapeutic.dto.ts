@@ -1,4 +1,9 @@
 import { ApiProperty, ApiExtraModels } from '@nestjs/swagger';
+import {
+  UserPreferenceQuotationDisplayDetailsType,
+  UserPreferenceViewType,
+  UserPreferenceQuotationDisplayOdontogramType,
+} from 'src/entities/user-preference.entity';
 
 @ApiExtraModels()
 export class UpdateTherapeuticDto {
@@ -7,4 +12,29 @@ export class UpdateTherapeuticDto {
     required: false,
   })
   therapeutic_alternative?: string[];
+}
+
+export class UpdatePreferenceDto {
+  @ApiProperty({
+    name: 'user',
+    required: false,
+  })
+  user?: number;
+
+  @ApiProperty({
+    name: 'value',
+    required: false,
+  })
+  value:
+    | string
+    | number
+    | UserPreferenceQuotationDisplayOdontogramType
+    | UserPreferenceViewType
+    | UserPreferenceQuotationDisplayDetailsType;
+
+  @ApiProperty({
+    name: 'name',
+    required: false,
+  })
+  name?: string;
 }
