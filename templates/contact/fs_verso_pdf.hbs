@@ -1,0 +1,140 @@
+<html lang='en'>
+
+<head>
+  <meta charset='utf-8' />
+  <meta name='viewport' content='width=device-width, initial-scale=1' />
+  <style>
+    .page {
+      font-family: courier;
+    }
+
+    .AssureImm {
+      display: block;
+      position: absolute;
+      top: 16.2mm;
+      left: 50mm;
+    }
+
+    .Assurecle {
+      display: block;
+      position: absolute;
+      top: 16.2mm;
+      left: 92.5mm;
+    }
+
+    .dateNais {
+      display: block;
+      position: absolute;
+      top: 20.9mm;
+      font-size: 12px;
+      left: 40mm;
+    }
+
+    .Accid {
+      display: block;
+      position: absolute;
+      top: 24.9mm;
+      left: 125mm;
+    }
+
+    .dateAccid {
+      display: block;
+      position: absolute;
+      top: 25mm;
+      font-size: 12px;
+      left: 153mm;
+    }
+
+    .NoAccid {
+      display: block;
+      position: absolute;
+      top: 24.9mm;
+      left: 176mm;
+    }
+
+    .NomPrenom {
+      display: block;
+      position: absolute;
+      top: 25mm;
+      left: 24mm;
+    }
+
+    .adressAss0 {
+      display: block;
+      position: absolute;
+      top: 37.6mm;
+      left: 25mm;
+    }
+
+    .adressAss1 {
+      display: block;
+      position: absolute;
+      top: 42mm;
+      left: 25mm;
+    }
+
+    .adressAss2 {
+      display: block;
+      position: absolute;
+      top: 46mm;
+      left: 25mm;
+    }
+
+    .Beneficiaire {
+      display: block;
+      position: absolute;
+      top: 46mm;
+      left: 118mm;
+    }
+
+    .BeneficiairePreNom {
+      display: block;
+      position: absolute;
+      top: 50mm;
+      left: 118mm;
+    }
+
+    .BeneficiaireDNAIS {
+      display: block;
+      position: absolute;
+      top: 50.5mm;
+      font-size: 8pt;
+      left: 179mm;
+    }
+
+    .adresseBen1 {
+      display: block;
+      position: absolute;
+      top: 67mm;
+      left: 105mm;
+    }
+
+    .adresseBen2 {
+      display: block;
+      position: absolute;
+      top: 71.4mm;
+      left: 105mm;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+   <div class="AssureImm" >{{policyHolderNumber}}</div>
+   <div class="Assurecle" >{{policyHolderNumberKey}}</div>
+   <div class="dateNais" >{{policyHolderBirthday}}</div>
+   <div class="NomPrenom" >{{policyHolderLastname}} {{policyHolderFirstname}}</div>
+   {{#ifCond policyHolderAddressCollection.length '>' 0}}
+     {{#each policyHolderAddressCollection}}
+      <div class="adressAss{{@index}}">{{this}}</div>
+     {{/each}}
+   {{/ifCond}}
+   <div class="Beneficiaire" >{{personLastname}}</div>
+   <div class="BeneficiairePreNom" >{{personFirstname}}</div>
+   <div class="BeneficiaireDNAIS" >{{personBirthday}}</div>
+   <div class="adresseBen1" >{{personAddressStreet}}</div>
+   <div class="adresseBen2" >{{personAddressZipCode}} {{personAddressCity}}</div>
+  </div>
+</body>
+
+</html>
