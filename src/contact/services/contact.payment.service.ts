@@ -41,7 +41,7 @@ export class ContactPaymentService {
   ) {}
 
   /**
-   * File: php\contact\payment\findAll.php 13->62
+   * File: php/contact/payment/findAll.php 13->62
    */
   async findAll(
     request?: ContactPaymentFindAllDto,

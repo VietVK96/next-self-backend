@@ -10,7 +10,7 @@ import { BcbDto } from './dto/bcb.dto';
 export class BcbController {
   constructor(private readonly bcbServices: BcbServices) {}
 
-  //ecoodentist-1.31.0\php\bcb\findAll.php full file
+  // php/bcb/findAll.php full file
   @Post()
   @UseGuards(TokenGuard)
   async findAll(@Body() payload: BcbDto) {
