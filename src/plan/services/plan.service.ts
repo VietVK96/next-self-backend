@@ -12,7 +12,7 @@ import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { EventEntity } from 'src/entities/event.entity';
 import { EnumPlanPlfType, PlanPlfEntity } from 'src/entities/plan-plf.entity';
 import { TraceabilityStatusEnum } from 'src/enum/traceability-status-enum';
-import { PaymentPlanService } from 'src/payment-plan/services/payment-plan.service';
+import { PaymentPlanService } from 'src/payment-schedule/services/payment-schedule.service';
 import { PermissionService } from 'src/user/services/permission.service';
 import { DataSource, Repository } from 'typeorm';
 import {

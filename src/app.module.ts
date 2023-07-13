@@ -41,8 +41,8 @@ import { TrashEventModule } from './trash/event/trash.event.module';
 import { CorrespondentModule } from './correspondent/correspondent.module';
 import { MedicalModule } from './medical/medical.module';
 import { CaresheetsModule } from './caresheets/caresheets.module';
+import { PaymentSchedulesModule } from './payment-schedule/payment-schedule.module';
 import { BankModule } from './bank/bank.module';
-import { PaymentSchedulesModule } from './payment-plan/payment-schedules.module';
 
 @Module({
   imports: [

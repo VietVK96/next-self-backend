@@ -15,7 +15,7 @@ export class PaymentPlanService {
    */
 
   //File /application/Services/PaymentSchedule.php, line 82-126
-  async find(paymentScheduleId, groupId) {
+  async find(paymentScheduleId: number, groupId: number) {
     const queryBuiler = this.dataSource.createQueryBuilder();
     const select = `
       id,
@@ -53,15 +53,13 @@ export class PaymentPlanService {
       .where('payment_schedule_id = :paymentScheduleId', {
         paymentScheduleId: paymentScheduleId,
       });
-    if (paymentSchedule.lines) {
-      paymentSchedule.lines = await qrLine.getRawOne();
-    }
+    paymentSchedule.lines = await qrLine.getRawMany();
 
     return paymentSchedule;
   }
 
   //File /application/Services/PaymentSchedule.php, line 219-240
-  async delete(id, groupId) {
+  async delete(id: number, groupId: number) {
     const queryBuiler = this.dataSource.createQueryBuilder();
     const paymentSchedule = this.find(id, groupId);
 
