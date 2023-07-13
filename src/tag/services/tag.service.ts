@@ -1,9 +1,10 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
-import { Like, Repository } from 'typeorm';
+import { DataSource, Like, Repository } from 'typeorm';
 import { TagDto } from '../dto/index.dto';
 import { TagEntity } from 'src/entities/tag.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
 
 export interface PaginatedResponse<T> {
   items: T[];
@@ -17,9 +18,10 @@ export class TagService {
   constructor(
     @InjectRepository(TagEntity)
     private tagRepository: Repository<TagEntity>,
+    private readonly dataSource: DataSource,
   ) {}
 
-  async getTags(payload: TagDto) {
+  async getTags(identity: UserIdentity, payload: TagDto) {
     try {
       const { per_page, query } = payload;
       let page = payload?.page || 1;
@@ -28,7 +30,9 @@ export class TagService {
       }
 
       const [items, total] = await this.tagRepository.findAndCount({
-        where: query ? { title: Like(`%${query}%`) } : undefined,
+        where: query
+          ? { organizationId: identity.org, title: Like(`%${query}%`) }
+          : { organizationId: identity.org },
         skip: (page - 1) * per_page,
         take: per_page,
         order: {
@@ -55,6 +59,22 @@ export class TagService {
       return data;
     } catch (e) {
       throw new CBadRequestException('cannot get tags');
+    }
+  }
+
+  async store(groupId: number, title: string) {
+    try {
+      const obj = { background: '#e0e0e0', foreground: '#343a40' };
+
+      const newTags = await this.dataSource.query(
+        `INSERT INTO tag (organization_id, title, color) VALUES (?,?,?) `,
+        [groupId, title, JSON.stringify(obj)],
+      );
+      return await this.tagRepository.findOne({
+        where: { id: newTags.insertId },
+      });
+    } catch {
+      throw new CBadRequestException('title has already exist');
     }
   }
 }

@@ -348,9 +348,7 @@ export class PrestationService {
           payload?.state,
           payload?.ccamFamily,
         ]);
-        console.log('Acte', payload.contactId, 1);
       } else {
-        console.log('Acte', payload.contactId, 2);
       }
 
       const installDentalTask = `

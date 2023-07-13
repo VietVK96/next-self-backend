@@ -350,6 +350,9 @@ export class UserUserRes {
 
   @ApiProperty()
   eventTypes: UserUserEventTypeRes[];
+
+  @ApiProperty()
+  rppsNumber?: string;
 }
 
 export class SessionRes {

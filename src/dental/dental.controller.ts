@@ -1,6 +1,10 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { TokenGuard } from 'src/common/decorator/auth.decorator';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
 import { OrdonnancesServices } from './services/ordonnances.services';
 import { OrdonnancesDto } from './dto/ordonnances.dto';
 import { FactureServices } from './services/facture.services';
@@ -25,10 +29,27 @@ export class DentalController {
   async store(@Body() payload: OrdonnancesDto) {
     return this.ordonnancesServices.update(payload);
   }
+  @Get('/ordonnances/medical/:patientId')
+  @UseGuards(TokenGuard)
+  async getMedical(
+    @Param('patientId') patientId: number,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return await this.ordonnancesServices.getMedicalByPatientId(
+      patientId,
+      identity,
+    );
+  }
 
   @Post('/facture/facture_requetes_ajax')
   @UseGuards(TokenGuard)
   async update(@Body() payload: EnregistrerFactureDto) {
     return this.factureServices.update(payload);
+  }
+
+  @Post('/ordonnances/ordo_email')
+  @UseGuards(TokenGuard)
+  async mail(@Body() payload: EnregistrerFactureDto) {
+    return this.ordonnancesServices.getMail(payload);
   }
 }
