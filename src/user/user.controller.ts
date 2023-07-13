@@ -27,7 +27,7 @@ export class UserController {
   ) {}
 
   /**
-   * php\contact\prestation\findAll.php 1->14
+   * php/contact/prestation/findAll.php 1->14
    * @param payload
    * @param identity
    * @returns
