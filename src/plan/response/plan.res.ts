@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { PaymentItemRes } from 'src/payment-plan/response/payment.res';
+import { PaymentItemRes } from 'src/payment-schedule/response/payment.res';
 
 export class FindAllPlanItemRes {
   @ApiProperty()

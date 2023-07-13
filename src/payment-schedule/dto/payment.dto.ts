@@ -17,11 +17,16 @@ export class PaymentSchedulesDto {
   lines?: Line[];
 }
 
-class Line {
+export class Line {
   @ApiProperty()
   id?: number;
   @ApiProperty()
   date?: string;
   @ApiProperty()
   amount?: string;
+}
+
+export class PaymentSchedulesParamDto {
+  @ApiProperty()
+  id?: number;
 }
