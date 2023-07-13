@@ -6,7 +6,6 @@ import { ErrorCode } from 'src/constants/error';
 import { UserEntity } from 'src/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
-import { UserPreferenceQuotationDisplayOdontogramType } from 'src/entities/user-preference-quotation.entity';
 
 @Injectable()
 export class PreferenceService {
@@ -19,7 +18,6 @@ export class PreferenceService {
   ) {}
 
   async pacth(payload: UpdatePreferenceDto) {
-    const dsad = payload?.value;
     try {
       switch (payload?.name) {
         case 'quotationDisplayOdontogram': {
@@ -79,7 +77,7 @@ export class PreferenceService {
           break;
         }
         case 'orderDuplicata': {
-          return await this.userPreferenceRepository.save({
+          await this.userPreferenceRepository.save({
             usrId: payload.user,
             orderDuplicata: payload.value,
           } as UserPreferenceEntity);
@@ -93,7 +91,7 @@ export class PreferenceService {
           break;
         }
         case 'orderPreprintedHeaderSize': {
-          let size;
+          let size: number | string;
           if (payload?.value === null) {
             size = 35;
           }

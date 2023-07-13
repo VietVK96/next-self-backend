@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { MoreThanOrEqual, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EnregistrerFactureDto } from '../dto/facture.dto';
 import { BillEntity } from 'src/entities/bill.entity';
@@ -11,7 +11,6 @@ import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { EventEntity } from 'src/entities/event.entity';
 import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
-import { da } from 'date-fns/locale';
 
 @Injectable()
 export class FactureServices {
@@ -83,12 +82,13 @@ export class FactureServices {
             where: { userId: payload?.user_id },
           });
           if (!medicalHeader) {
-            await this.medicalHeaderRepository.create({
+            const medicalHeaderData = this.medicalHeaderRepository.create({
               userId: payload?.user_id,
               name: payload?.titreFacture,
               address: payload?.addrPrat,
               identPrat: payload?.identPrat,
             });
+            await this.medicalHeaderRepository.save(medicalHeaderData);
           }
           await this.medicalHeaderRepository.update(medicalHeader.id, {
             userId: payload?.user_id,
@@ -104,16 +104,12 @@ export class FactureServices {
 
       case 'enregistrerLigne': {
         try {
-          let data;
           if (payload?.typeLigne === 'operation') {
-            if (payload?.dateLigne !== null) {
-              const dateLigne = new Date(payload?.dateLigne);
-            }
             const billLine = await this.billLineRepository.findOne({
               where: { id: payload?.id_facture_ligne },
             });
             if (!billLine) {
-              data = await this.billLineRepository.create({
+              const dataBillLine = this.billLineRepository.create({
                 amount: payload?.prixLigne,
                 teeth: payload?.dentsLigne,
                 cotation: payload?.cotation,
@@ -125,45 +121,41 @@ export class FactureServices {
                 pos: payload?.noSequence,
                 type: payload?.typeLigne,
               });
+              const data = await this.billLineRepository.save(dataBillLine);
               return data.id;
             }
-            data = await this.billLineRepository.update(
-              payload?.id_facture_ligne,
-              {
-                amount: payload?.prixLigne,
-                teeth: payload?.dentsLigne,
-                cotation: payload?.cotation,
-                secuAmount: payload?.secuAmount,
-                materials: payload?.materials,
-                bilId: payload?.id_facture,
-                date: payload?.dateLigne,
-                msg: payload?.descriptionLigne,
-                pos: payload?.noSequence,
-                type: payload?.typeLigne,
-              },
-            );
-            return data.id;
+            await this.billLineRepository.update(payload?.id_facture_ligne, {
+              amount: payload?.prixLigne,
+              teeth: payload?.dentsLigne,
+              cotation: payload?.cotation,
+              secuAmount: payload?.secuAmount,
+              materials: payload?.materials,
+              bilId: payload?.id_facture,
+              date: payload?.dateLigne,
+              msg: payload?.descriptionLigne,
+              pos: payload?.noSequence,
+              type: payload?.typeLigne,
+            });
+            return payload?.id_facture_ligne;
           } else {
             const billLine = await this.billLineRepository.findOne({
               where: { id: payload?.id_facture },
             });
             if (!billLine) {
-              data = await this.billLineRepository.create({
+              const billLineData = this.billLineRepository.create({
                 bilId: payload?.id_facture_ligne,
                 pos: payload?.noSequence,
                 type: payload?.typeLigne,
               });
+              const data = await this.billLineRepository.save(billLineData);
               return data.id;
             }
-            data = await this.billLineRepository.update(
-              payload?.id_facture_ligne,
-              {
-                bilId: payload?.id_facture_ligne,
-                pos: payload?.noSequence,
-                type: payload?.typeLigne,
-              },
-            );
-            return data.id;
+            await this.billLineRepository.update(payload?.id_facture_ligne, {
+              bilId: payload?.id_facture_ligne,
+              pos: payload?.noSequence,
+              type: payload?.typeLigne,
+            });
+            return payload?.id_facture_ligne;
           }
         } catch {
           throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
@@ -287,12 +279,11 @@ export class FactureServices {
                   new Date(payload?.dateFin).getTime()
               );
             });
-            const ngap_keys = await this.ngapKeyRepository.find();
-            const res: any = [];
+            // const ngap_keys = await this.ngapKeyRepository.find();
             return dataFilDate?.map((data) => {
-              const current_ngap_key = ngap_keys?.find((key) => {
-                return key?.id === data?.dental?.ngapKeyId;
-              });
+              // const current_ngap_key = ngap_keys?.find((key) => {
+              //   return key?.id === data?.dental?.ngapKeyId;
+              // });
               return {
                 ccamFamily: data?.ccamFamily,
               };

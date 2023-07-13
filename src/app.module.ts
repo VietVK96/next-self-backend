@@ -42,6 +42,7 @@ import { CorrespondentModule } from './correspondent/correspondent.module';
 import { MedicalModule } from './medical/medical.module';
 import { CaresheetsModule } from './caresheets/caresheets.module';
 import { BankModule } from './bank/bank.module';
+import { PaymentSchedulesModule } from './payment-plan/payment-schedules.module';
 
 @Module({
   imports: [
@@ -118,6 +119,7 @@ import { BankModule } from './bank/bank.module';
     InterfacageModule,
     CaresheetsModule,
     BankModule,
+    PaymentSchedulesModule,
   ],
 })
 export class AppModule {}

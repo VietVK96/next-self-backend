@@ -19,7 +19,11 @@ export class LibraryActsService {
     const data = await this.libraryActRepo.findOne({
       where,
       relations: {
-        quantities: true,
+        quantities: {
+          ccam: {
+            conditions: true,
+          },
+        },
       },
     });
     return data;
