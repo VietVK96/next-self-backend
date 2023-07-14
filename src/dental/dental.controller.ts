@@ -46,4 +46,10 @@ export class DentalController {
   async update(@Body() payload: EnregistrerFactureDto) {
     return this.factureServices.update(payload);
   }
+
+  @Post('/ordonnances/ordo_email')
+  @UseGuards(TokenGuard)
+  async mail(@Body() payload: EnregistrerFactureDto) {
+    return this.ordonnancesServices.getMail(payload);
+  }
 }

@@ -32,7 +32,7 @@ export class EventController {
     private readonly eventService: EventService,
   ) {}
 
-  //ecoodentist-1.31.0\php\event\findAll.php full file
+  // php/event/findAll.php full file
   @Get()
   @UseGuards(TokenGuard)
   async findAll(
@@ -51,7 +51,7 @@ export class EventController {
     );
   }
 
-  //ecoodentist-1.31.0\php\user\preference\save.php full file
+  // php/user/preference/save.php full file
   @Post('preference/save')
   @UseGuards(TokenGuard)
   async save(
@@ -61,7 +61,7 @@ export class EventController {
     return await this.saveEventService.save(identity.id, payload);
   }
 
-  //ecoodentist-1.31.0\php\event\find.php full file
+  // php/event/find.php full file
   @Get('/find/:id')
   @UseGuards(TokenGuard)
   async findById(

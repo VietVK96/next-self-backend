@@ -242,7 +242,8 @@ export class OrganizationEntity {
     name: 'settings',
     type: 'json',
   })
-  protected $settings;
+  settings?: any;
+  // protected settings;
 
   /**
    * @ORM\Column(name="customer_max_number", type="integer", options={"default": 0})

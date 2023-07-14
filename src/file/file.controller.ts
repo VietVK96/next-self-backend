@@ -94,9 +94,10 @@ export class FileController {
 
       streamFile.pipe(res);
     } catch (error) {
-      const notFoundPath = '/front/notfound.jpg';
-      const fullPath = join(__dirname, '..', '..', notFoundPath);
-      const streamFile = resizeThumbnail(fullPath, 'jpg');
+      const streamFile = resizeThumbnail(
+        join(process.cwd(), 'front/no_image.png'),
+        'jpg',
+      );
 
       res.setHeader('Content-Type', 'image/png');
       streamFile.pipe(res);

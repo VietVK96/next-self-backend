@@ -18,7 +18,7 @@ export class MailService {
     private dataSource: DataSource,
   ) {}
 
-  //php\mail\findAll.php
+  // php/mail/findAll.php
   async findAll(
     draw: string,
     pageIndex: number,
@@ -124,7 +124,7 @@ export class MailService {
     return result;
   }
 
-  //php\mail\find.php
+  // php/mail/find.php
   async findById(id: number) {
     const qr = await this.lettersRepo.findOne({
       where: { id: id },
@@ -210,7 +210,7 @@ export class MailService {
     return mail;
   }
 
-  //php\mail\store.php
+  // php/mail/store.php
   async duplicate(payload: CreateUpdateMailDto): Promise<CreateUpdateMailRes> {
     const qr = await this.lettersRepo.query(
       `INSERT INTO T_LETTERS_LET
