@@ -60,4 +60,10 @@ export class DentalController {
       identity,
     );
   }
+
+  @Post('/ordonnances/ordo_email')
+  @UseGuards(TokenGuard)
+  async mail(@Body() payload: EnregistrerFactureDto) {
+    return this.ordonnancesServices.getMail(payload);
+  }
 }

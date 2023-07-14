@@ -38,3 +38,10 @@ export class UpdatePreferenceDto {
   })
   name?: string;
 }
+
+export class UpdateTherapeuticParamDto {
+  @ApiProperty({
+    required: true,
+  })
+  user_id?: number;
+}

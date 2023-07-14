@@ -20,9 +20,14 @@ export class PaymentItemRes {
   observation?: string;
 
   @ApiProperty()
-  lines?: {
-    id?: number;
-    date?: string;
-    amount?: number;
-  };
+  lines?: PaymentLines[];
+}
+
+export class PaymentLines {
+  @ApiProperty()
+  id?: number;
+  @ApiProperty()
+  date?: string;
+  @ApiProperty()
+  amount?: number;
 }

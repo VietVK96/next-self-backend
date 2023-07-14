@@ -7,19 +7,19 @@ export class OrdonnancesDto {
     name: 'user_id',
     required: false,
   })
-  userId?: number;
+  user_id?: number;
 
   @ApiProperty({
     name: 'patient_id',
     required: false,
   })
-  patientId?: number;
+  patient_id?: number;
 
   @ApiProperty({
     name: 'keep_params',
     required: false,
   })
-  keepParams?: number;
+  keep_params?: number;
 
   @ApiProperty({
     name: 'bcbVersion',
@@ -37,13 +37,13 @@ export class OrdonnancesDto {
     name: 'creation_date',
     required: false,
   })
-  creationDate?: string;
+  creation_date?: string;
 
   @ApiProperty({
     name: 'end_date',
     required: false,
   })
-  endDate?: string;
+  end_date?: string;
 
   @ApiProperty({
     name: 'format',
@@ -55,13 +55,13 @@ export class OrdonnancesDto {
     name: 'ident_prat',
     required: false,
   })
-  identPrat?: string;
+  ident_prat?: string;
 
   @ApiProperty({
     name: 'ident_contact',
     required: false,
   })
-  identContact?: string;
+  ident_contact?: string;
 
   @ApiProperty({
     name: 'address',
@@ -91,19 +91,19 @@ export class OrdonnancesDto {
     name: 'header_msg',
     required: false,
   })
-  headerMsg?: string;
+  header_msg?: string;
 
   @ApiProperty({
     name: 'header_height',
     required: false,
   })
-  headerHeight?: number;
+  header_height?: number;
 
   @ApiProperty({
     name: 'header_enable',
     required: false,
   })
-  headerEnable?: number;
+  header_enable?: number;
 
   @ApiProperty({
     name: 'signaturePraticien',

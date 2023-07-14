@@ -2,7 +2,6 @@ import { DataSource } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 
 import { BgEventDto, FindAllEventDto, MemoDto } from '../dto/findAll.event.dto';
-import { ColorHelper } from 'src/common/util/color-helper';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { HistoricalsDto, ReminderDto } from '../dto/find.event.dto';
@@ -23,7 +22,7 @@ classNameFromStatuses.set(6, 'completed');
 export class FindEventService {
   constructor(private readonly dataSource: DataSource) {}
 
-  //ecoodentist-1.31.0\php\event\findAll.php
+  // php/event/findAll.php
   async prepareSql(sql: string, value: string) {
     const result = await this.dataSource.query(sql, [value]);
     return result;
@@ -189,13 +188,8 @@ export class FindEventService {
       const events: FindAllEventDto[] = [];
       if (confidentiality === 0) {
         for (const item of result) {
-          const colorArr = ColorHelper.inthex(Number(item.color));
           const newItem = {
             ...item,
-            color: {
-              background: colorArr[0],
-              foreground: colorArr[1],
-            },
             homePhoneNumber:
               item.patientId === null
                 ? null
@@ -221,13 +215,8 @@ export class FindEventService {
         }
       } else {
         for (const item of result) {
-          const colorArr = ColorHelper.inthex(Number(item.color));
           const newItem = {
             ...item,
-            color: {
-              background: colorArr[0],
-              foreground: colorArr[1],
-            },
             lastName: null,
             firstName: null,
             number: null,
@@ -331,12 +320,6 @@ export class FindEventService {
         throw new CNotFoundRequestException("Le rendez-vous n'existe pas.");
 
       let result: FindEventByIdRes = events.length > 0 ? events[0] : null;
-      const formatColor = ColorHelper.inthex(result.color);
-      result = {
-        ...result,
-        backgroundColor: formatColor[0],
-        textColor: formatColor[1],
-      };
       // TODO
       // if (result.avatar_id) {
       //   result.avatar_url = `php/contact/avatar.php?id=${result.contactId}`;

@@ -22,7 +22,6 @@ import {
   contactPhoneRes,
   FindAllRecentlyTreatedRes,
 } from '../response/findall.recentlyTreated.res';
-import { ColorHelper } from 'src/common/util/color-helper';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { FindRetrieveRes } from '../response/find.retrieve.contact.res';
@@ -86,7 +85,7 @@ export class FindContactService {
   }
 
   /**
-   * File: php\contact\findAll.php 21-91
+   * File: php/contact/findAll.php 21-91
    * @function main function
    *
    */
@@ -149,7 +148,7 @@ export class FindContactService {
     const conIds = contacts.map((a) => a.id);
 
     /**
-     * Logic in php\contact\findAll.php line 34 and line 79->82
+     * Logic in php/contact/findAll.php line 34 and line 79->82
      */
     if (conIds && conIds.length > 0) {
       const reliabilityQr = this.dataSource
@@ -187,7 +186,7 @@ export class FindContactService {
   }
 
   /**
-   * File: php\contact\recentlyTreated\findAll.php 14->77
+   * File: php/contact/recentlyTreated/findAll.php 14->77
    */
   async findAllRecentlyTreated(
     practitioner?: number,
@@ -246,7 +245,7 @@ export class FindContactService {
     const results = await qr.getRawMany();
 
     /**
-     * Logic in php\contact\recentlyTreated\findAll.php line 18->23, line 65->75
+     * Logic in php/contact/recentlyTreated/findAll.php line 18->23, line 65->75
      */
     const conIds = results.map((a) => a.id);
     if (conIds && conIds.length > 0) {
@@ -291,15 +290,8 @@ export class FindContactService {
           contact.reliability = reliability.reliability;
         }
 
-        // convert color
-        const colorArr = ColorHelper.inthex(Number(contact.color));
-
         const tmp: FindAllRecentlyTreatedRes = {
           ...contact,
-          color: {
-            background: colorArr[0],
-            foreground: colorArr[1],
-          },
           phones: pArr[index],
         };
         return tmp;
