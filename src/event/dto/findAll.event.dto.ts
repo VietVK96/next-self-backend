@@ -17,10 +17,7 @@ export class FindAllEventDto {
   observation?: string;
 
   @ApiProperty()
-  color?: {
-    background?: string;
-    foreground?: string;
-  };
+  color?: number;
 
   @ApiProperty()
   state?: number;

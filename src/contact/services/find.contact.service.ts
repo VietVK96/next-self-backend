@@ -22,7 +22,6 @@ import {
   contactPhoneRes,
   FindAllRecentlyTreatedRes,
 } from '../response/findall.recentlyTreated.res';
-import { ColorHelper } from 'src/common/util/color-helper';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { FindRetrieveRes } from '../response/find.retrieve.contact.res';
@@ -291,15 +290,8 @@ export class FindContactService {
           contact.reliability = reliability.reliability;
         }
 
-        // convert color
-        const colorArr = ColorHelper.inthex(Number(contact.color));
-
         const tmp: FindAllRecentlyTreatedRes = {
           ...contact,
-          color: {
-            background: colorArr[0],
-            foreground: colorArr[1],
-          },
           phones: pArr[index],
         };
         return tmp;
