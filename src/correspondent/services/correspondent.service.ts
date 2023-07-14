@@ -9,7 +9,10 @@ import { PhoneEntity } from 'src/entities/phone.entity';
 import {
   CorrespondentRes,
   LookUpRes,
+  findAllCorrRes,
 } from '../response/find.correspondent.res';
+import { UserEntity } from 'src/entities/user.entity';
+import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 
 @Injectable()
 export class CorrespondentService {
@@ -18,6 +21,8 @@ export class CorrespondentService {
     private readonly connection: Connection,
     @InjectRepository(PhoneEntity)
     private readonly phoneRepo: Repository<PhoneEntity>,
+    @InjectRepository(CorrespondentEntity)
+    private readonly corresRepo: Repository<CorrespondentEntity>,
   ) {}
 
   async lookUp(groupId: number, term: string): Promise<LookUpRes[]> {
@@ -79,7 +84,7 @@ WHERE CPD_ID = ?`,
       id: results.typeId,
       name: results.typeName,
     };
-    results.phone = phone;
+    results.phones = phone;
 
     delete results.typeId;
     delete results.typeName;
@@ -287,5 +292,127 @@ WHERE CPD_ID = ?`,
       [`%${search}%`],
     );
     return sql;
+  }
+
+  async findAllCorrespondents(
+    groupId: number,
+    search: string,
+    page?: number,
+    sort?: string,
+  ) {
+    const sql = await this.dataSource.query(
+      `SELECT SQL_CALC_FOUND_ROWS
+    CPD.CPD_ID AS id,
+    CPD.CPD_ID AS DT_RowId,
+    CPD.CPD_LASTNAME AS lastname,
+    CPD.CPD_FIRSTNAME AS firstname,
+    CPD.CPD_TYPE AS type,
+    CPD.correspondent_type_id AS correspondent_type_id,
+    correspondent_type.name as correspondentName,
+    CONCAT_WS(' ', CPD.CPD_LASTNAME, CPD.CPD_FIRSTNAME) AS fullname,
+    GROUP_CONCAT(DISTINCT PHO.PHO_NBR) AS phones
+FROM T_CORRESPONDENT_CPD CPD
+LEFT OUTER JOIN T_CORRESPONDENT_PHONE_CPP CPP ON CPP.CPD_ID = CPD.CPD_ID
+LEFT OUTER JOIN T_PHONE_PHO PHO ON PHO.PHO_ID = CPP.PHO_ID
+LEFT OUTER JOIN correspondent_type ON correspondent_type.id = CPD.correspondent_type_id
+WHERE CPD.organization_id = ?
+    AND (CPD.CPD_LASTNAME LIKE CONCAT(?, '%') OR CPD.CPD_FIRSTNAME LIKE CONCAT(?, '%') OR CPD.CPD_TYPE LIKE CONCAT(?, '%'))
+    AND (CPD.correspondent_type_id IS NULL OR CPD.correspondent_type_id NOT IN (1,2))
+GROUP BY CPD.CPD_ID ${sort}`,
+      [groupId, search, search, search], // CPD.CPD_LASTNAME, CPD.CPD_FIRSTNAME ;
+    );
+
+    const offSet = (page - 1) * 100;
+    const results = sql.slice(offSet, offSet + 100);
+
+    const formatResults: findAllCorrRes[] = [];
+    results.map((item) => {
+      const { correspondent_type_id, correspondentName, phones, ...rest } =
+        item;
+      const corr = {
+        ...rest,
+        correspondent_type: {
+          id: correspondent_type_id,
+          name: correspondentName,
+        },
+        phones:
+          phones === null
+            ? [{ nbr: '' }]
+            : phones.split(',').map((nbr) => ({ nbr })),
+      };
+      formatResults.push(corr);
+    });
+    return {
+      data: formatResults,
+      pageIndex: page,
+      pageData: results.length,
+      totalData: sql.length,
+    };
+  }
+
+  async delete(userId: number, id: number) {
+    const queryRunner = this.connection.createQueryRunner();
+    const checkRoleDelete = await queryRunner.manager
+      .createQueryBuilder()
+      .select(`USR_PERMISSION_DELETE`)
+      .from(UserEntity, 'USR')
+      .where(`USR.USR_ID = :userId`, { userId })
+      .getRawOne();
+    if (checkRoleDelete.USR_PERMISSION_DELETE < 8)
+      throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
+    const correspondentDelete = await this.corresRepo.findOne({
+      where: { id },
+    });
+    if (!correspondentDelete)
+      throw new CBadRequestException(ErrorCode.NOT_FOUND_CORRESPONDENT);
+    try {
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+
+      await queryRunner.manager.query(
+        `UPDATE T_LETTERS_LET SET CPD_ID = NULL WHERE CPD_ID = ?`,
+        [id],
+      );
+      await queryRunner.manager.query(
+        `UPDATE T_CONTACT_CON SET CPD_ID = NULL WHERE CPD_ID = ?`,
+        [id],
+      );
+      await queryRunner.manager.query(
+        `UPDATE T_CONTACT_CON SET CON_MEDECIN_TRAITANT = NULL WHERE CON_MEDECIN_TRAITANT = ?`,
+        [id],
+      );
+      await queryRunner.manager.query(
+        `UPDATE T_CORRESPONDENT_CPD CPD SET CPD.ADR_ID = NULL WHERE CPD.CPD_ID = ?`,
+        [id],
+      );
+
+      await queryRunner.manager.query(
+        `DELETE T_ADDRESS_ADR FROM T_ADDRESS_ADR JOIN T_CORRESPONDENT_CPD WHERE T_CORRESPONDENT_CPD.CPD_ID = ? AND T_CORRESPONDENT_CPD.ADR_ID = T_ADDRESS_ADR.ADR_ID`,
+        [id],
+      );
+
+      await queryRunner.manager.query(
+        `DELETE T_PHONE_PHO FROM T_PHONE_PHO JOIN T_CORRESPONDENT_PHONE_CPP WHERE T_CORRESPONDENT_PHONE_CPP.CPD_ID = ? AND T_CORRESPONDENT_PHONE_CPP.PHO_ID = T_PHONE_PHO.PHO_ID`,
+        [id],
+      );
+
+      await queryRunner.manager.query(
+        `DELETE T_CORRESPONDENT_PHONE_CPP FROM T_CORRESPONDENT_PHONE_CPP WHERE T_CORRESPONDENT_PHONE_CPP.CPD_ID = ?`,
+        [id],
+      );
+
+      await queryRunner.manager.query(
+        `DELETE T_CORRESPONDENT_CPD FROM T_CORRESPONDENT_CPD WHERE T_CORRESPONDENT_CPD.CPD_ID = ?`,
+        [id],
+      );
+
+      await queryRunner.commitTransaction();
+      return correspondentDelete;
+    } catch {
+      await queryRunner.rollbackTransaction();
+      throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

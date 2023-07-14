@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -14,6 +15,7 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { CorrespondentService } from './services/correspondent.service';
+import { identity } from 'rxjs';
 
 @Controller('correspondent')
 @ApiTags('Correspondent')
@@ -51,9 +53,34 @@ export class CorrespondentController {
     return await this.correspondentService.save(identity.org, payload);
   }
 
+  /**?
+   * php/correspondent/type/findAll.php full
+   *
+   */
   @Get('/type')
   @UseGuards(TokenGuard)
   async findAllType(@Query('search') search?: string) {
     return await this.correspondentService.findAllType(search);
+  }
+
+  @Get()
+  @UseGuards(TokenGuard)
+  async findAllCorrespondents(
+    @CurrentUser() identity: UserIdentity,
+    @Query('search') search?: string,
+    @Query('page') page?: number,
+    @Query('sort') sort?: string,
+  ) {
+    return await this.correspondentService.findAllCorrespondents(
+      identity.org,
+      search,
+      page,
+      sort,
+    );
+  }
+  @Delete('/:id')
+  @UseGuards(TokenGuard)
+  async delete(@CurrentUser() identity: UserIdentity, @Param('id') id: number) {
+    return await this.correspondentService.delete(identity.id, id);
   }
 }
