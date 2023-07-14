@@ -20,6 +20,10 @@ import { AmoEntity } from 'src/entities/amo.entity';
 import { AmcEntity } from 'src/entities/amc.entity';
 import { ContraindicationEntity } from 'src/entities/contraindication.entity';
 import { PermissionService } from 'src/user/services/permission.service';
+import { PatientOdontogramService } from './service/patientOdontogram.service';
+import { PatientOdontogramController } from './patientOdongram.controler';
+import { EventTaskEntity } from 'src/entities/event-task.entity';
+import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 
 @Module({
   imports: [
@@ -38,11 +42,23 @@ import { PermissionService } from 'src/user/services/permission.service';
       AmoEntity,
       AmcEntity,
       ContraindicationEntity,
+      EventTaskEntity,
+      ContactEntity,
+      DentalEventTaskEntity,
     ]),
     forwardRef(() => ContactModule),
   ],
-  controllers: [PatientController, PatientBalanceController],
-  providers: [PermissionService, PatientService, PatientBalanceService],
-  exports: [PatientService, PatientBalanceService],
+  controllers: [
+    PatientController,
+    PatientBalanceController,
+    PatientOdontogramController,
+  ],
+  providers: [
+    PermissionService,
+    PatientService,
+    PatientBalanceService,
+    PatientOdontogramService,
+  ],
+  exports: [PatientService, PatientBalanceService, PatientOdontogramService],
 })
 export class PatientModule {}

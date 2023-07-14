@@ -22,3 +22,10 @@ export class PatientBalanceUpdatePayloadDto {
   })
   doctorId?: number;
 }
+
+export class OdontogramCurrentDto {
+  @ApiProperty({
+    required: true,
+  })
+  patientId: number;
+}
