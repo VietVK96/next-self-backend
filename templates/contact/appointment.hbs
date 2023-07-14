@@ -1,0 +1,72 @@
+<html lang='en'>
+
+<head>
+  <meta charset='utf-8' />
+  <meta name='viewport' content='width=device-width, initial-scale=1' />
+  <style>
+    .text-center {
+      text-align: center;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    table {
+      border-spacing: 0;
+      border-collapse: collapse;
+      margin-top: 2mm;
+      width: 100%;
+    }
+
+    table td,
+    table th {
+      padding: 2mm;
+      border: solid 1px black;
+    }
+
+    table td.date,
+    table th.date {
+      width: 20%;
+    }
+
+    table td.name,
+    table th.name {
+      width: 80%;
+    }
+
+    .subtitle {
+      padding: 0.6mm;
+      margin: 0 0 2mm;
+      background-color: #333;
+      color: #fff;
+      text-transform: uppercase;
+      font-weight: bold;
+      font-size: 16pt;
+    }
+  </style>
+</head>
+
+<body>
+  <div>
+    <h2>{{contactName}}</h2>
+    <h2 class='subtitle'>RENDEZ-VOUS</h2>
+    <table class="cashingCollection">
+      <thead>
+        <tr>
+          <th class="date text-center">Date</th>
+          <th class="name text-center">Libellé</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each appointmentCollection}}
+        <tr>
+          <td>{{start}}</td>
+          <td>{{name}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

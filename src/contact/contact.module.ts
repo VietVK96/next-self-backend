@@ -45,6 +45,8 @@ import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { SaveTaskService } from './services/save.task.service';
 import { PatientAmoEntity } from 'src/entities/patient-amo.entity';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
+import { ContactPdfService } from './services/contact.pdf.service';
+import { ContactPdfController } from './contact.pdf.controller';
 import { BillController } from './bill.controller';
 import { BillService } from './services/bill.service';
 import { BillEntity } from 'src/entities/bill.entity';
@@ -70,6 +72,7 @@ import { ContraindicationContactService } from './services/contraindication.cont
     QuotationController,
     DocumentController,
     UploadController,
+    ContactPdfController,
     MedicalOrderController,
     BillController,
     ContactController,
@@ -96,6 +99,7 @@ import { ContraindicationContactService } from './services/contraindication.cont
     UploadService,
     OrganizationService,
     SaveTaskService,
+    ContactPdfService,
     MedicalOrderService,
     BillService,
     SaveUpdateContactService,
