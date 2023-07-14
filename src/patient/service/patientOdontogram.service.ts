@@ -20,7 +20,7 @@ export class PatientOdontogramService {
     private dentalEvenTaskRepository: Repository<DentalEventTaskEntity>,
   ) {}
 
-  async getCurrent(request: OdontogramCurrentDto, user: UserIdentity) {
+  async getCurrent(request: OdontogramCurrentDto) {
     try {
       const evenTasks = await this.eventTaskRepository.find({
         where: {

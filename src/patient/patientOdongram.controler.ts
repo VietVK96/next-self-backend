@@ -15,10 +15,7 @@ export class PatientOdontogramController {
 
   @Get('/odontogram/current')
   @UseGuards(TokenGuard)
-  async getCurrent(
-    @CurrentUser() user: UserIdentity,
-    @Query() request: OdontogramCurrentDto,
-  ) {
-    return await this.service.getCurrent(request, user);
+  async getCurrent(@Query() request: OdontogramCurrentDto) {
+    return await this.service.getCurrent(request);
   }
 }
