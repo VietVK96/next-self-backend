@@ -74,6 +74,7 @@ export class PatientService {
       .orderBy('patient.lastname')
       .groupBy('patient.id')
       .getRawMany();
+
     const rows = [];
     for (const patient of patients) {
       rows.push({

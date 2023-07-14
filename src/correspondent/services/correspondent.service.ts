@@ -13,6 +13,15 @@ import {
 } from '../response/find.correspondent.res';
 import { UserEntity } from 'src/entities/user.entity';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
+import { Response } from 'express';
+import { Parser } from 'json2csv';
+import {
+  addressFormatter,
+  dateFormatter,
+  inseeFormatter,
+} from '../../common/formatter/index';
+import { ContactEntity } from 'src/entities/contact.entity';
+import { AddressEntity } from 'src/entities/address.entity';
 
 @Injectable()
 export class CorrespondentService {
@@ -414,5 +423,50 @@ GROUP BY CPD.CPD_ID ${sort}`,
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async getExportQuery(res: Response, id: number): Promise<any> {
+    const patients = await this.dataSource.query(
+      `SELECT T_CONTACT_CON.*, T_ADDRESS_ADR.*, GROUP_CONCAT(T_PHONE_PHO.PHO_NBR) AS phoneNumber_numbers  FROM T_CONTACT_CON LEFT JOIN T_ADDRESS_ADR ON T_CONTACT_CON.ADR_ID = T_ADDRESS_ADR.ADR_ID
+LEFT JOIN T_PHONE_PHO ON T_CONTACT_CON.CON_ID = T_PHONE_PHO.PHO_ID 
+WHERE T_CONTACT_CON.CPD_ID = ? GROUP BY T_CONTACT_CON.CON_ID ORDER BY T_CONTACT_CON.created_at DESC`,
+      [id],
+    );
+
+    const rows = [];
+    for (const patient of patients) {
+      rows.push({
+        lastname: patient?.CON_LASTNAME,
+        firstname: patient?.CON_FIRSTNAME,
+        number: patient?.CON_NBR,
+        insee: inseeFormatter(`${patient?.CON_INSEE}${patient.CON_INSEE_KEY}`),
+        email: patient?.CON_MAIL,
+        date: dateFormatter(patient?.created_at),
+        phoneNumber_numbers: patient?.phoneNumber_numbers,
+        address: addressFormatter({
+          street: patient?.ADR_STREET || '',
+          street2: patient?.ADR_STREET_COMP || '',
+          zipCode: patient?.ADR_ZIP_CODE || '',
+          city: patient?.ADR_CITY || '',
+          country: patient?.ADR_COUNTRY || '',
+        }),
+      });
+    }
+
+    const fields = [
+      { label: 'Numéro', value: 'number' },
+      { label: 'Nom', value: 'lastname' },
+      { label: 'Prénom', value: 'firstname' },
+      { label: 'N° de Sécurité Sociale', value: 'insee' },
+      { label: 'Email', value: 'email' },
+      { label: 'Numéros de téléphone', value: 'phoneNumber_numbers' },
+      { label: 'Adresse postale', value: 'address' },
+      { label: 'Date de création du dossier', value: 'date' },
+    ];
+    const parser = new Parser({ fields });
+    const data = parser.parse(rows);
+    res.header('Content-Type', 'text/csv');
+    res.attachment('patient.csv');
+    res.status(200).send(data);
   }
 }

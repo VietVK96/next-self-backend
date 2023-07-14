@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBasicAuth, ApiTags } from '@nestjs/swagger';
@@ -15,7 +16,7 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { CorrespondentService } from './services/correspondent.service';
-import { identity } from 'rxjs';
+import { Response } from 'express';
 
 @Controller('correspondent')
 @ApiTags('Correspondent')
@@ -82,5 +83,11 @@ export class CorrespondentController {
   @UseGuards(TokenGuard)
   async delete(@CurrentUser() identity: UserIdentity, @Param('id') id: number) {
     return await this.correspondentService.delete(identity.id, id);
+  }
+
+  @Get('export/:id')
+  @UseGuards(TokenGuard)
+  async export(@Param('id') id: number, @Res() res: Response) {
+    return await this.correspondentService.getExportQuery(res, id);
   }
 }

@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateTimeslotPayloadDto } from '../dto/create.timeslots.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { RRule } from 'rrule';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class TimeslotsService {
@@ -127,7 +128,7 @@ export class TimeslotsService {
       await queryRunner.connect();
       await queryRunner.startTransaction();
 
-      if (payload.recurring_pattern !== null) {
+      if (payload.recurring) {
         const createRecurringPattern = await queryRunner.manager.query(
           `INSERT INTO recurring_pattern(week_frequency,week_days,until) VALUES (?,?,?)`,
           [
@@ -141,7 +142,9 @@ export class TimeslotsService {
         const endDateTime = new Date(payload.end_date);
         const weekFrequency = payload.recurring_pattern.week_frequency;
         const weekDays = payload.recurring_pattern.week_days;
-        const untilDate = '2024-01-01';
+        const untilDate = dayjs(startDateTime)
+          .add(1, 'year')
+          .format('YYYY-MM-DD');
 
         const byWeekdays = weekDays.map((weekday) => RRule[weekday]);
 
@@ -203,7 +206,7 @@ export class TimeslotsService {
       return 1;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
+      throw new CBadRequestException(error);
     } finally {
       await queryRunner.release();
     }
