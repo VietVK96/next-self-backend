@@ -377,44 +377,21 @@ GROUP BY CPD.CPD_ID ${sort}`,
     try {
       await queryRunner.connect();
       await queryRunner.startTransaction();
-
-      await queryRunner.manager.query(
+      const queries = [
         `UPDATE T_LETTERS_LET SET CPD_ID = NULL WHERE CPD_ID = ?`,
-        [id],
-      );
-      await queryRunner.manager.query(
         `UPDATE T_CONTACT_CON SET CPD_ID = NULL WHERE CPD_ID = ?`,
-        [id],
-      );
-      await queryRunner.manager.query(
         `UPDATE T_CONTACT_CON SET CON_MEDECIN_TRAITANT = NULL WHERE CON_MEDECIN_TRAITANT = ?`,
-        [id],
-      );
-      await queryRunner.manager.query(
         `UPDATE T_CORRESPONDENT_CPD CPD SET CPD.ADR_ID = NULL WHERE CPD.CPD_ID = ?`,
-        [id],
-      );
-
-      await queryRunner.manager.query(
         `DELETE T_ADDRESS_ADR FROM T_ADDRESS_ADR JOIN T_CORRESPONDENT_CPD WHERE T_CORRESPONDENT_CPD.CPD_ID = ? AND T_CORRESPONDENT_CPD.ADR_ID = T_ADDRESS_ADR.ADR_ID`,
-        [id],
-      );
-
-      await queryRunner.manager.query(
         `DELETE T_PHONE_PHO FROM T_PHONE_PHO JOIN T_CORRESPONDENT_PHONE_CPP WHERE T_CORRESPONDENT_PHONE_CPP.CPD_ID = ? AND T_CORRESPONDENT_PHONE_CPP.PHO_ID = T_PHONE_PHO.PHO_ID`,
-        [id],
-      );
-
-      await queryRunner.manager.query(
         `DELETE T_CORRESPONDENT_PHONE_CPP FROM T_CORRESPONDENT_PHONE_CPP WHERE T_CORRESPONDENT_PHONE_CPP.CPD_ID = ?`,
-        [id],
-      );
-
-      await queryRunner.manager.query(
         `DELETE T_CORRESPONDENT_CPD FROM T_CORRESPONDENT_CPD WHERE T_CORRESPONDENT_CPD.CPD_ID = ?`,
-        [id],
-      );
-
+      ];
+      let promises = [];
+      promises = queries.map((query) => {
+        return queryRunner.manager.query(query, [id]);
+      });
+      await Promise.all(promises);
       await queryRunner.commitTransaction();
       return correspondentDelete;
     } catch {
