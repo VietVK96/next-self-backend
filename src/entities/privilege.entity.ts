@@ -8,7 +8,7 @@ import {
 import { UserEntity } from './user.entity';
 
 // enum('none', 'outline', 'readonly', 'all')
-enum EnumPrivilegeTypeType {
+export enum EnumPrivilegeTypeType {
   NONE = 'none',
   OUTLINE = 'outline',
   READONLY = 'readonly',

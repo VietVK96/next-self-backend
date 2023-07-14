@@ -46,4 +46,18 @@ export class DentalController {
   async update(@Body() payload: EnregistrerFactureDto) {
     return this.factureServices.update(payload);
   }
+
+  @Get('/ordonnances/medical/:id_user/:id_contact')
+  @UseGuards(TokenGuard)
+  async getInitChamps(
+    @Param('id_user') userId: number[],
+    @Param('id_contact') contactId: number,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return await this.factureServices.getInitChamps(
+      userId,
+      contactId,
+      identity,
+    );
+  }
 }

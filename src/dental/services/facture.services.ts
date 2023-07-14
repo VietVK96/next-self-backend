@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { DataSource, In, Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EnregistrerFactureDto } from '../dto/facture.dto';
 import { BillEntity } from 'src/entities/bill.entity';
@@ -11,6 +11,17 @@ import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { EventEntity } from 'src/entities/event.entity';
 import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import {
+  EnumPrivilegeTypeType,
+  PrivilegeEntity,
+} from 'src/entities/privilege.entity';
+import { UserEntity } from 'src/entities/user.entity';
+import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
+import { StringHelper } from 'src/common/util/string-helper';
+import { ContactEntity } from 'src/entities/contact.entity';
+import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
+import { AddressEntity } from 'src/entities/address.entity';
 
 @Injectable()
 export class FactureServices {
@@ -29,8 +40,20 @@ export class FactureServices {
     private eventRepository: Repository<EventEntity>, //event
     @InjectRepository(NgapKeyEntity)
     private ngapKeyRepository: Repository<NgapKeyEntity>, //ngap_key
+    @InjectRepository(PrivilegeEntity)
+    private privilegeRepository: Repository<PrivilegeEntity>,
+    @InjectRepository(UserEntity)
+    private userRepository: Repository<UserEntity>,
+    @InjectRepository(UserPreferenceEntity)
+    private userPreferenceRepository: Repository<UserPreferenceEntity>,
+    @InjectRepository(ContactEntity)
+    private contactRepository: Repository<ContactEntity>,
+    @InjectRepository(DentalQuotationEntity)
+    private dentalQuotationRepository: Repository<DentalQuotationEntity>,
+    @InjectRepository(AddressEntity)
+    private addressRepository: Repository<AddressEntity>,
+    private dataSource: DataSource,
   ) {}
-
   async update(payload: EnregistrerFactureDto) {
     switch (payload.operation) {
       case 'enregistrer': {
@@ -291,6 +314,366 @@ export class FactureServices {
           }
         }
         break;
+    }
+  }
+
+  async getInitChamps(
+    userId: number[],
+    contactId: number,
+    identity: UserIdentity,
+  ) {
+    const withs = userId;
+    const userID = identity?.id as number;
+    const groupID = identity?.org;
+    // const disableColumnByGroup = [158, 181];
+    // const colonneDate = true;
+    let userIds: number[];
+
+    const id_facture = 0;
+    const id_societe = 0;
+    const id_user = userID;
+    // const medical_entete_id = 0;
+    const id_devis = 0;
+    const id_contact = 0;
+    const dateFacture = new Date().toISOString().split('T')[0];
+    // const noFacture: string;
+    // const details: string[];
+    const infosCompl = '';
+    const modePaiement = 'Non Payee';
+
+    // let billSignatureDoctor = '';
+    // let billAmount = 0;
+    // let billSecuAmount = 0;
+    // let billTemplate = 1;
+    // let contactFullname = '';
+    // let contactBirthday = '';
+    // let contactInsee = '';
+
+    if (withs !== null) {
+      const type = EnumPrivilegeTypeType.NONE;
+      const privilege = await this.privilegeRepository.find({
+        where: {
+          usrId: userID,
+          usrWithId: In(withs),
+          type: Not(type),
+        },
+      });
+      if (privilege === null) {
+        console.error(
+          "Vous n'avez pas assez de privilège pour accéder aux factures",
+        );
+      } else {
+        userIds = withs;
+      }
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: In(userIds) },
+    });
+    if (user === null) {
+      console.error(
+        "Vous n'avez pas assez de privilège pour accéder aux factures",
+      );
+    }
+
+    const userSignature = user?.signature;
+    const userPreferenceEntity = await this.userPreferenceRepository.findOne({
+      where: { usrId: userID },
+    });
+    const userPreferenceBillDisplayTooltip =
+      userPreferenceEntity?.billDisplayTooltip;
+    const userPreferenceBillTemplate = userPreferenceEntity?.billTemplate;
+    let identPrat = user?.lastname + user?.firstname + '\nChirurgien Dentiste';
+    let adressePrat = '';
+    let titreFacture = encodeURIComponent(
+      "Note d'honoraires pour traitement bucco-dentaire",
+    );
+    let identPat: string;
+    const adressePratEntity = user?.address;
+    if (adressePratEntity) {
+      adressePrat =
+        adressePratEntity?.street +
+        '\n' +
+        adressePratEntity?.zipCode +
+        '' +
+        adressePratEntity?.city +
+        '\n\n';
+    }
+    const userNumeroFacturant = user?.numeroFacturant;
+    if (userNumeroFacturant) {
+      adressePrat = 'N° ADELI : ' + userNumeroFacturant;
+    }
+
+    const medicalHeader = await this.medicalHeaderRepository.findOneBy({
+      userId: userID,
+    });
+    if (medicalHeader) {
+      const medicalEnteteId = medicalHeader?.id;
+      identPrat =
+        medicalHeader?.identPrat !== null
+          ? StringHelper.br2nl(medicalHeader?.identPrat, '')
+          : identPrat;
+      adressePrat =
+        medicalHeader?.address !== null
+          ? StringHelper.br2nl(medicalHeader?.address, '')
+          : adressePrat;
+      titreFacture = medicalHeader?.name || titreFacture;
+    }
+    if (
+      user?.freelance &&
+      !/("Entrepreneur Individuel"|"EI")/.test(identPrat)
+    ) {
+      identPrat = identPrat.replace(
+        new RegExp('(' + user.lastname + user?.firstname + ')'),
+        '$1 "EI"',
+      );
+    } else if (
+      !user?.freelance &&
+      /("Entrepreneur Individuel"|"EI")/.test(identPrat)
+    ) {
+      identPrat = identPrat.replace(/("Entrepreneur Individuel"|"EI")/, '');
+    }
+
+    // ==== vérification si il y a un identifiant de contact ====
+    if (contactId) {
+      try {
+        const contact = await this.contactRepository.findOne({
+          where: { id: contactId, organizationId: groupID },
+        });
+        const addressEntity = contact?.adrId;
+        identPat = contact?.lastname + '' + contact?.firstname;
+        const address = await this.addressRepository.findOne({
+          where: { id: addressEntity },
+        });
+        if (address) {
+          identPat =
+            '\n' +
+            address?.street +
+            '\n' +
+            address?.zipCode +
+            ' ' +
+            address?.city;
+        }
+        let personInsee = contact?.insee;
+        let personInseeKey = contact?.inseeKey;
+        if (personInsee || personInseeKey) {
+          personInsee = personInsee.replace(/\s/g, '');
+          personInseeKey = personInseeKey.replace(
+            /^(\w{1})(\w{2})(\w{2})(\w{2})(\w{3})(\w{3})$/i,
+            '$1 $2 $3 $4 $5 $6',
+          );
+          identPat += '\n\n' + [personInsee, personInseeKey].join(' ');
+        }
+        return this.newFacture({
+          id_facture,
+          id_user,
+          id_societe,
+          id_contact,
+          id_devis,
+          dateFacture,
+          titreFacture,
+          identPrat,
+          adressePrat,
+          identPat,
+          infosCompl,
+          modePaiement,
+        });
+      } catch {}
+    }
+  }
+
+  async newFacture({
+    id_facture,
+    id_user,
+    id_societe,
+    id_contact,
+    id_devis,
+    dateFacture,
+    titreFacture,
+    identPrat,
+    adressePrat,
+    identPat,
+    infosCompl,
+    modePaiement,
+  }: {
+    id_facture: number;
+    id_user: number;
+    id_societe: number;
+    id_contact: number;
+    id_devis: number;
+    dateFacture: string;
+    titreFacture: string;
+    identPrat: string;
+    adressePrat: string;
+    identPat: string;
+    infosCompl: string;
+    modePaiement: string;
+  }) {
+    let noFacture: string;
+    const dateFormat = '%Y%j';
+    const currentDate = new Date();
+    const formattedDate =
+      currentDate.getFullYear().toString() +
+      (currentDate.getMonth() + 1).toString().padStart(2, '0') +
+      currentDate.getDate().toString().padStart(2, '0');
+
+    try {
+      const stm = await this.dataSource.query(
+        `
+      SELECT
+      MAX(T_BILL_BIL.BIL_NBR) AS noFacture
+      FROM T_BILL_BIL
+      WHERE T_BILL_BIL.USR_ID = ?
+      AND T_BILL_BIL.BIL_NBR LIKE CONCAT('u', ?, '-', DATE_FORMAT(NOW(), ?), '-', '%')`,
+        [id_user, id_user, dateFormat],
+      );
+
+      noFacture = stm[0].noFacture;
+      if (noFacture) {
+        noFacture = id_user + '-' + formattedDate + '-00005';
+      } else {
+        noFacture =
+          'u' +
+          id_user +
+          '-' +
+          new Date().toISOString().slice(0, 10).replace(/-/g, '') +
+          '-' +
+          String(
+            Number(noFacture.substring(noFacture.lastIndexOf('-') + 1)) + 1,
+          ).padStart(5, '0');
+      }
+
+      const bill = await this.billRepository.save({
+        nbr: noFacture,
+        creationDate: dateFacture,
+        identPrat: identPrat,
+        adressePrat: adressePrat,
+        name: titreFacture,
+        identContact: identPat,
+        payload: modePaiement,
+        infosCompl: infosCompl,
+        id_user: id_user,
+        conId: id_contact,
+        id_devis: id_devis,
+      });
+      return bill;
+    } catch (err) {
+      console.error(
+        '-1002 : Probl&egrave;me durant la création de la facture. Merci de réessayer plus tard.',
+      );
+    }
+  }
+
+  async initFacture({
+    object_connexion,
+    id_user,
+    id_societe,
+    id_facture,
+    noFacture,
+    dateFacture,
+    titreFacture,
+    identPrat,
+    adressePrat,
+    identPat,
+    modePaiement,
+    infosCompl,
+    details,
+    pdf,
+
+    billSignatureDoctor,
+    billAmount,
+    billSecuAmount,
+    billTemplate,
+    userNumeroFacturant,
+    contactFullname,
+    contactBirthday,
+    contactInsee,
+
+    groupId,
+  }: {
+    object_connexion: string;
+    id_user: number;
+    id_societe: number;
+    id_facture: number;
+    noFacture: string;
+    dateFacture: string;
+    titreFacture: string;
+    identPrat: string;
+    adressePrat: string;
+    identPat: string;
+    modePaiement: string;
+    infosCompl: string;
+    details: string;
+    pdf: string;
+
+    billSignatureDoctor: string;
+    billAmount: number;
+    billSecuAmount: number;
+    billTemplate: number;
+    userNumeroFacturant: string;
+    contactFullname: string;
+    contactBirthday: string;
+    contactInsee: string;
+
+    groupId: number;
+  }) {
+    let lock: number;
+    try {
+      const bill = await this.billRepository.findOne({
+        where: { id: id_facture, delete: 0 },
+        relations: ['user', 'patient'],
+      });
+      if (bill) {
+        (noFacture = bill?.nbr), (dateFacture = bill?.date);
+        titreFacture = bill?.name;
+        identPrat = bill?.identPrat;
+        adressePrat = bill?.addrPrat;
+        identPat = bill?.identContact;
+        modePaiement = bill?.payment;
+        infosCompl = bill?.info;
+        lock = bill?.lock;
+        billSignatureDoctor = bill?.signature_doctor;
+        billAmount = bill?.amount;
+        billSecuAmount = bill?.secuAmount;
+        billTemplate = bill?.template;
+        userNumeroFacturant = bill?.user?.numeroFacturant;
+
+        contactFullname = bill?.contact?.lastname + bill?.contact?.firstname;
+        contactBirthday = bill?.contact?.birthDate;
+        contactInsee = bill?.contact?.insee + bill?.contact?.inseeKey;
+
+        if (!pdf && lock) {
+          window.location.href = 'facture_pdf.php?id_facture=' + id_facture;
+          return;
+        }
+        const billLines = await this.billLineRepository.find({
+          where: { id: id_facture },
+          order: { pos: 'ASC' },
+        });
+        const res = [];
+        for (const billLine of billLines) {
+          const dentals = {
+            id_facture_line: billLine?.bilId,
+            typeLigne: billLine?.type,
+            dateLigne: billLine?.date || '',
+            dentsLigne: billLine?.teeth || '',
+            descriptionLigne: billLine?.msg,
+            prixLigne: billLine?.amount || '',
+            name: billLine?.msg.replace(/^[^-]*-\s?/, ''),
+            cotation: billLine?.cotation,
+            secuAmount: billLine?.secuAmount,
+            materials: billLine?.materials,
+          };
+          res.push(dentals);
+        }
+        return res;
+      } else {
+        throw new Error(
+          '-3003 : Problème durant le rapatriement des informations de la facture ...',
+        );
+      }
+    } catch {
+      return new Error('404');
     }
   }
 }
