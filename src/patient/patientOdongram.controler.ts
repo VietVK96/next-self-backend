@@ -13,6 +13,9 @@ import { PatientOdontogramService } from './service/patientOdontogram.service';
 export class PatientOdontogramController {
   constructor(private service: PatientOdontogramService) {}
 
+  /**
+   * php/patient/odontogram/current?view=adulte
+   */
   @Get('/odontogram/current')
   @UseGuards(TokenGuard)
   async getCurrent(@Query() request: OdontogramCurrentDto) {
