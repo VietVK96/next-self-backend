@@ -11,6 +11,7 @@ import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { EventEntity } from 'src/entities/event.entity';
 import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
+import { DevisStd2Services } from './services/devisStd2.services';
 
 @Module({
   imports: [
@@ -29,6 +30,6 @@ import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
     ]),
   ],
   controllers: [DentalController],
-  providers: [OrdonnancesServices, FactureServices],
+  providers: [OrdonnancesServices, FactureServices, DevisStd2Services],
 })
 export class DentalModule {}
