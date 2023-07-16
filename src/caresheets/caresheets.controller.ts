@@ -1,6 +1,7 @@
-import { Controller, Post, Query } from '@nestjs/common';
-import { CaresheetsDto } from './dto/index.dto';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { TokenGuard } from 'src/common/decorator/auth.decorator';
+import { CaresheetsDto } from './dto/index.dto';
 import { CaresheetsService } from './service/caresheets.service';
 
 @ApiTags('Caresheets')
@@ -9,10 +10,11 @@ export class CaresheetsController {
   constructor(private service: CaresheetsService) {}
 
   /**
-   * File: auth\validation.php
+   * file: php/service/caresheet/store.php
    */
   @Post('store')
-  async store(@Query() request: CaresheetsDto) {
+  @UseGuards(TokenGuard)
+  async store(@Body() request: CaresheetsDto) {
     return await this.service.store(request);
   }
 }

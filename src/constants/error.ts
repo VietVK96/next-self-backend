@@ -16,6 +16,7 @@ export enum ErrorCode {
   PERMISSION_DENIED = 'PERMISSION_DENIED',
   INSERT_FAILED = 'INSERT_FAILED',
   ERROR_CARESHEET_ACTS_IS_EMPTY = 'error.caresheet.acts.is_empty',
+  ERROR_PATIENT_IS_REQUIRED = 'error.patient.fields_required',
   MESSAGE_SHOULD_NOT_BE_BLANK = 'message_should_not_be_blank',
   NOT_FOUND_CORRESPONDENT = 'NOT_FOUND_CORRESPONDENT',
 }
