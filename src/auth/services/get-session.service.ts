@@ -142,6 +142,7 @@ export class GetSessionService {
       where: { userId },
     });
     user.rppsNumber = userMedical?.rppsNumber;
+    user.national_identifier_number = userMedical?.nationalIdentifierNumber;
     return user;
   }
 
