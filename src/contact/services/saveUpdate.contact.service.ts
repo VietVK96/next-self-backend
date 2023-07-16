@@ -225,7 +225,10 @@ export class SaveUpdateContactService {
         WHERE COP.CON_ID = ?
           AND COP.PHO_ID = PHO.PHO_ID
           AND PHO.PHO_ID NOT IN (?)`;
-      await queryRunner.query(q, [patient.id, reqBody.phones.map((e) => e.id)]);
+      await queryRunner.query(q, [
+        patient.id,
+        reqBody.phones.map((e) => e.id).join(),
+      ]);
 
       await queryRunner.commitTransaction();
       return await this.contactService.findOne(
