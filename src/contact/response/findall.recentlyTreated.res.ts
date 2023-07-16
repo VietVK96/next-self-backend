@@ -18,10 +18,7 @@ export class FindAllRecentlyTreatedRes {
   birthday?: string;
 
   @ApiProperty()
-  color?: {
-    background?: string;
-    foreground?: string;
-  };
+  color?: number;
 
   @ApiProperty()
   firstname?: string;

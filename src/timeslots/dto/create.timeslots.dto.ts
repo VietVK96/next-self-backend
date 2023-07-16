@@ -5,6 +5,9 @@ export class CreateTimeslotPayloadDto {
   title?: string;
 
   @ApiProperty()
+  recurring?: boolean;
+
+  @ApiProperty()
   color?: {
     background?: string;
     foreground?: string;

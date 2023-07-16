@@ -18,6 +18,8 @@ export class UserService {
     @InjectRepository(UserMedicalEntity)
     private userMedicalRepository: Repository<UserMedicalEntity>,
   ) {}
+
+  // application/Services/User.php 153 -> 207
   async find(id: number) {
     const queryBuiler = this.dataSource.createQueryBuilder();
     const select = `

@@ -353,6 +353,9 @@ export class UserUserRes {
 
   @ApiProperty()
   rppsNumber?: string;
+
+  @ApiProperty()
+  national_identifier_number: string;
 }
 
 export class SessionRes {

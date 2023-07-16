@@ -93,3 +93,36 @@ export class PhoneStructRes {
   @ApiProperty()
   phoneTypeId?: number;
 }
+
+export class findAllCorrRes {
+  @ApiProperty()
+  id?: number;
+
+  @ApiProperty()
+  DT_RowId?: number;
+
+  @ApiProperty()
+  lastname?: string;
+
+  @ApiProperty()
+  firstname?: string;
+
+  @ApiProperty()
+  type?: string;
+
+  @ApiProperty()
+  fullname: string;
+
+  @ApiProperty()
+  phones: [
+    {
+      nbr: string;
+    },
+  ];
+
+  @ApiProperty()
+  correspondent_type: {
+    id: number;
+    name: string;
+  };
+}
