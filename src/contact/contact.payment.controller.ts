@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
@@ -20,6 +21,7 @@ import {
   ContactPaymentFindAllDto,
   ContactPaymentStoreDto,
   ContactPaymentUpdateDto,
+  ReceiptDto,
 } from './dto/contact.payment.dto';
 import { ContactPaymentService } from './services/contact.payment.service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
@@ -86,5 +88,30 @@ export class ContactPaymentController {
   @UseGuards(TokenGuard)
   async patch(@Body() payload: ContactPatchDto) {
     return this.contactService.patch(payload);
+  }
+  // php/payment/receipt.php
+  @Get('/payment/receipt')
+  @UseGuards(TokenGuard)
+  async receipt(
+    @Res() res,
+    @Query() payload: ReceiptDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    const buffer = await this.contactPaymentService.getReceipt(
+      payload,
+      identity,
+    );
+
+    res.set({
+      // pdf
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=print.pdf`,
+      'Content-Length': buffer.length,
+      // prevent cache
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: 0,
+    });
+    res.end(buffer);
   }
 }

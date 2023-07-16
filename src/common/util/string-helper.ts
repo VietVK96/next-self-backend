@@ -31,8 +31,8 @@ export class StringHelper {
    */
   public static trunkLine(
     string: string,
-    length: number,
-    character: string,
+    length?: number,
+    character?: string,
   ): string[] {
     if (!length) length = 76;
     if (!character) character = ' ';

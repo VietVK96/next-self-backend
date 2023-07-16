@@ -9,6 +9,7 @@ import { ContactEntity } from 'src/entities/contact.entity';
 import dayjs from 'dayjs';
 import { EventStateEnum } from 'src/constants/event';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class SaveEventService {
@@ -546,7 +547,7 @@ export class SaveEventService {
       await queryRunner.commitTransaction();
     } catch (e) {
       await queryRunner.rollbackTransaction();
-      return { message: e.message, code: 0 };
+      return new CBadRequestException(ErrorCode.SAVE_FAILED);
     } finally {
       await queryRunner.release();
     }

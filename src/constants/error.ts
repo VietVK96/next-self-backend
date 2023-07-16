@@ -17,6 +17,10 @@ export enum ErrorCode {
   INSERT_FAILED = 'INSERT_FAILED',
   ERROR_CARESHEET_ACTS_IS_EMPTY = 'error.caresheet.acts.is_empty',
   MESSAGE_SHOULD_NOT_BE_BLANK = 'message_should_not_be_blank',
+  ERROR_GET_BANKS = 'ERROR_GET_BANKS',
+  ERROR_GET_BANK_CHECK = 'ERROR_GET_BANK_CHECK',
+  ERROR_GET_PDF = 'ERROR_GET_PDF',
+  SAVE_FAILED = 'SAVE_FAILED',
 }
 
 export enum HttpStatus {
