@@ -18,6 +18,10 @@ export enum ErrorCode {
   ERROR_CARESHEET_ACTS_IS_EMPTY = 'error.caresheet.acts.is_empty',
   ERROR_PATIENT_IS_REQUIRED = 'error.patient.fields_required',
   MESSAGE_SHOULD_NOT_BE_BLANK = 'message_should_not_be_blank',
+  ERROR_GET_BANKS = 'ERROR_GET_BANKS',
+  ERROR_GET_BANK_CHECK = 'ERROR_GET_BANK_CHECK',
+  ERROR_GET_PDF = 'ERROR_GET_PDF',
+  SAVE_FAILED = 'SAVE_FAILED',
   NOT_FOUND_CORRESPONDENT = 'NOT_FOUND_CORRESPONDENT',
 }
 

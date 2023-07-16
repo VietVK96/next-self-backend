@@ -125,6 +125,19 @@ export class ContactPaymentStoreDto {
   })
   deadlines?: IDeadline[];
 }
+@ApiExtraModels()
+export class ReceiptDto {
+  @ApiProperty()
+  practitioner_id: number;
+  @ApiProperty()
+  payer_id: number;
+  @ApiProperty()
+  amount: number;
+  @ApiProperty()
+  payment_choice: string;
+  @ApiProperty()
+  payment_type: string;
+}
 
 export class ContactPaymentUpdateDto {
   @ApiProperty()
