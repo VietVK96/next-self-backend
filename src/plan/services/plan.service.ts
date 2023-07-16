@@ -44,7 +44,6 @@ export class PlanService {
       case 0:
       case '0':
       case '':
-      case []:
       case null:
       case undefined:
       case false:
@@ -369,7 +368,7 @@ export class PlanService {
         groupId,
         options?.user_id,
         options?.patient_id,
-        options?.payment_schedule.id ?? null,
+        options?.payment_schedule?.id ?? null,
         options?.name,
         options?.type,
         options?.acceptedOn,
@@ -416,7 +415,7 @@ export class PlanService {
           ...event,
         };
 
-        const color = event?.color?.background;
+        const color = event?.color?.background ?? event?.color;
 
         const insertEvents = await queryRunner.query(
           `
@@ -660,7 +659,7 @@ export class PlanService {
             }
 
             teeth = teeth.trim() === '' ? teeth.trim() : null;
-            if (dental?.code === 'HBQK002' && this._empty(teeth)) {
+            if (dental?.code === 'HBQK002' && teeth.length === 0) {
               teeth = '00';
             }
 
@@ -669,7 +668,7 @@ export class PlanService {
               dental?.ccam_id ?? null,
               dental?.ngap_key_id ?? null,
               dental?.dental_material_id ?? null,
-              this._empty(teeth) ? null : teeth,
+              teeth.length === 0 ? null : teeth,
               dental?.type,
               dental?.coef,
               this._empty(dental?.exceeding) ? null : dental?.exceeding,
@@ -698,7 +697,7 @@ export class PlanService {
           tasks.push(task?.id);
         }
 
-        if (tasks.length === 0) {
+        if (tasks.length > 0) {
           const listTask = tasks.join();
           const sql = `
             DELETE ETK, DET
@@ -712,7 +711,7 @@ export class PlanService {
         events.push(event?.id);
       }
 
-      if (events.length === 0) {
+      if (events.length > 0) {
         const eventStatement = `
         SELECT
           EVT_ID
