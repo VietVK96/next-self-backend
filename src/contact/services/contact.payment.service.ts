@@ -683,7 +683,7 @@ export class ContactPaymentService {
   }
 
   // php/payment/receipt.php 31 - 127
-  async getReceipt(payload: ReceiptDto, identity: UserIdentity) {
+  async getReceipt(payload: ReceiptDto) {
     let currencyName = 'Euro';
     let header = '';
     // const dirname = String(identity.org).padStart(5, '0');
