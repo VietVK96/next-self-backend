@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { PaymentItemRes } from '../response/payment.res';
-import { PaymentSchedulesDto } from '../dto/payment.dto';
+import { PaymentSchedulesDto, Line } from '../dto/payment.dto';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 
 @Injectable()
@@ -119,5 +119,27 @@ export class PaymentPlanService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  // application/Services/PaymentSchedule.php 206->209
+  async duplicate(id, groupId, identity: UserIdentity) {
+    const paymentSchedule = await this.find(id, groupId);
+    const lines: Line[] = [
+      {
+        id: paymentSchedule?.lines?.id,
+        date: paymentSchedule?.lines?.date,
+        amount: paymentSchedule?.lines?.amount.toString(),
+      },
+    ];
+    const payload: PaymentSchedulesDto = {
+      id: paymentSchedule?.id,
+      patient_id: paymentSchedule?.patient_id,
+      doctor_id: paymentSchedule?.doctor_id,
+      amount: paymentSchedule?.amount,
+      label: paymentSchedule?.label,
+      observation: paymentSchedule?.observation,
+      lines,
+    };
+    return await this.store(payload, identity);
   }
 }

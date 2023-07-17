@@ -17,7 +17,7 @@ export class PaymentSchedulesDto {
   lines?: Line[];
 }
 
-class Line {
+export class Line {
   @ApiProperty()
   id?: number;
   @ApiProperty()

@@ -102,12 +102,6 @@ export class DentalQuotationEntity {
    * @Assert\Type("string")
    * @Assert\Length(max=13)
    */
-  @Column({
-    name: 'reference',
-    type: 'varchar',
-    length: 13,
-    nullable: true,
-  })
   referenceNumber?: string;
 
   /**
@@ -170,11 +164,6 @@ export class DentalQuotationEntity {
    * @Serializer\Type("DateTime<'Y-m-d'>")
    * @Assert\Date
    */
-  @Column({
-    name: 'DQO_DATE_ACCEPT',
-    type: 'date',
-    nullable: true,
-  })
   acceptedOn?: string;
 
   /**
@@ -223,11 +212,6 @@ export class DentalQuotationEntity {
    * @Serializer\Groups({"detail"})
    * @Assert\Type("string")
    */
-  @Column({
-    name: 'DQO_MSG',
-    type: 'text',
-    nullable: true,
-  })
   description?: string;
 
   /**
@@ -478,12 +462,6 @@ export class DentalQuotationEntity {
    * @Assert\Type("bool")
    * @Assert\NotNull
    */
-  @Column({
-    name: 'DQO_DISPLAY_NOTICE',
-    type: 'tinyint',
-    width: 1,
-    default: 1,
-  })
   printExplanatoryNote?: number;
 
   /**
@@ -503,11 +481,6 @@ export class DentalQuotationEntity {
    * @Serializer\Groups({"detail"})
    * @Assert\Type("string")
    */
-  @Column({
-    name: 'DQO_SIGNATURE_PATIENT',
-    type: 'mediumtext',
-    nullable: true,
-  })
   patientSignature?: string;
 
   /**
@@ -527,11 +500,6 @@ export class DentalQuotationEntity {
    * @Serializer\Groups({"detail"})
    * @Assert\Type("string")
    */
-  @Column({
-    name: 'DQO_SIGNATURE_PRATICIEN',
-    type: 'mediumtext',
-    nullable: true,
-  })
   practitionerSignature?: string;
 
   /**
