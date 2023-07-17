@@ -11,6 +11,12 @@ import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { EventEntity } from 'src/entities/event.entity';
 import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
+import { PrivilegeEntity } from 'src/entities/privilege.entity';
+import { UserEntity } from 'src/entities/user.entity';
+import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
+import { ContactEntity } from 'src/entities/contact.entity';
+import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
+import { AddressEntity } from 'src/entities/address.entity';
 
 @Module({
   imports: [
@@ -26,6 +32,12 @@ import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
       EventEntity,
       DentalEventTaskEntity,
       NgapKeyEntity,
+      PrivilegeEntity,
+      UserEntity,
+      UserPreferenceEntity,
+      ContactEntity,
+      DentalQuotationEntity,
+      AddressEntity,
     ]),
   ],
   controllers: [DentalController],

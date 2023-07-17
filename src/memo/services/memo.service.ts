@@ -33,10 +33,9 @@ export class MemoService {
         .from(ResourceEntity, 'RES')
         .where('id = :resource_id', { resource_id: payload.resourceId })
         .getRawOne();
-      const { resourceId, ...restPayload } = payload;
       const result: MemoRes = {
+        ...payload,
         id: createMemo.insertId,
-        ...restPayload,
         resource,
       };
       await queryRunner.commitTransaction();

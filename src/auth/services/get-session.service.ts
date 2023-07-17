@@ -142,6 +142,7 @@ export class GetSessionService {
       where: { userId },
     });
     user.rppsNumber = userMedical?.rppsNumber;
+    user.national_identifier_number = userMedical?.nationalIdentifierNumber;
     return user;
   }
 
@@ -218,7 +219,11 @@ export class GetSessionService {
       USR.color,
       resource.id as resourceId,
       resource.name as resourceName,
-      USR.organization_id as groupId
+      USR.organization_id as groupId,
+      medical.id as medical_id,
+      medical.finess_number as medical_finess_number,
+      medical.national_identifier_number as medical_national_identifier_number,
+      medical.rpps_number as medical_rpps_number
     `;
 
     const qr = queryBuiler
@@ -227,6 +232,7 @@ export class GetSessionService {
       .innerJoin(LicenseEntity, 'LIC', 'USR.USR_ID = LIC.USR_ID')
       .innerJoin(PrivilegeEntity, 'PVG', 'USR.USR_ID = PVG.USR_WITH_ID')
       .leftJoin(ResourceEntity, 'resource', 'resource.id = USR.resource_id')
+      .leftJoin(UserMedicalEntity, 'medical', 'USR.USR_ID = medical.user_id')
       .where(
         'USR.organization_id = :orgId AND LIC.LIC_END >= CURDATE() AND PVG.USR_ID = :userId AND PVG.PVG_ENABLE = 1',
         {

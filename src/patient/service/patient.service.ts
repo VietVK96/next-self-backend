@@ -66,7 +66,7 @@ export class PatientService {
     const patients = await this.dataSource
       .createQueryBuilder()
       .select(
-        'DISTINCT `patient`.*, `address`.*, GROUP_CONCAT(phoneNumber.number) AS phoneNumber_numbers',
+        'DISTINCT `patient`.*, `address`.*, GROUP_CONCAT(phoneNumber.PHO_NBR) AS phoneNumber_numbers',
       )
       .from(ContactEntity, 'patient')
       .leftJoin(AddressEntity, 'address', 'address.id = patient.id')
@@ -74,6 +74,7 @@ export class PatientService {
       .orderBy('patient.lastname')
       .groupBy('patient.id')
       .getRawMany();
+
     const rows = [];
     for (const patient of patients) {
       rows.push({

@@ -59,6 +59,7 @@ import { PatientMedicalEntity } from 'src/entities/patient-medical.entity';
 import { ContraindicationEntity } from 'src/entities/contraindication.entity';
 import { ContraindicationContactController } from './contraindication.contact.controller';
 import { ContraindicationContactService } from './services/contraindication.contact.service';
+import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 
 @Module({
   controllers: [
@@ -132,6 +133,7 @@ import { ContraindicationContactService } from './services/contraindication.cont
       BillEntity,
       PatientMedicalEntity,
       ContraindicationEntity,
+      MedicalHeaderEntity,
     ]),
     UserModule,
     PatientModule,

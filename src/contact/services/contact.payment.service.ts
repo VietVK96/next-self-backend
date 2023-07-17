@@ -6,6 +6,7 @@ import {
   ContactPaymentUpdateDto,
   IBeneficiary,
   IDeadline,
+  ReceiptDto,
 } from '../dto/contact.payment.dto';
 import {
   CashingEntity,
@@ -28,6 +29,13 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { FseEntity } from 'src/entities/fse.entity';
 import { ErrorCode } from 'src/constants/error';
+import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
+import * as numberToWords from 'number-to-words';
+import * as path from 'path';
+import { createPdf } from '@saemhco/nestjs-html-pdf';
+import * as dayjs from 'dayjs';
+import { br2nl } from 'src/common/util/string';
+// import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ContactPaymentService {
@@ -35,9 +43,15 @@ export class ContactPaymentService {
     private dataSource: DataSource,
     @InjectRepository(CashingEntity)
     private readonly repo: Repository<CashingEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepo: Repository<UserEntity>,
+    @InjectRepository(ContactEntity)
+    private readonly contactRepo: Repository<ContactEntity>,
+    @InjectRepository(MedicalHeaderEntity)
+    private readonly medicalHeaderRepo: Repository<MedicalHeaderEntity>,
+    private permissionService: PermissionService,
     @InjectRepository(CashingContactEntity)
     private readonly cashingContactRepo: Repository<CashingContactEntity>,
-    private permissionService: PermissionService,
   ) {}
 
   /**
@@ -666,6 +680,94 @@ export class ContactPaymentService {
     };
 
     return newResults;
+  }
+
+  // php/payment/receipt.php 31 - 127
+  async getReceipt(payload: ReceiptDto, identity: UserIdentity) {
+    let currencyName = 'Euro';
+    let header = '';
+    // const dirname = String(identity.org).padStart(5, '0');
+    // const fileName = `${uuidv4()}.pdf`;
+
+    try {
+      const user = await this.userRepo.findOneOrFail({
+        where: { id: payload?.practitioner_id },
+        relations: {
+          address: true,
+          medical: true,
+        },
+      });
+      const patient = await this.contactRepo.findOneOrFail({
+        where: {
+          id: payload?.payer_id,
+        },
+      });
+      const medicalHeader = await this.medicalHeaderRepo.findOneOrFail({
+        where: { userId: user?.id },
+      });
+      if (medicalHeader) {
+        header = `${medicalHeader.identPrat} \n ${medicalHeader.address}`;
+      }
+
+      const amount = Number(payload?.amount)
+        ? payload?.amount?.toFixed(2)
+        : '0';
+      const amountParts = amount.split('.');
+      currencyName += +amountParts[0] >= 2 ? 's' : '';
+      const amountSpellouts: string[] = [numberToWords.toWords(amountParts[0])];
+      amountSpellouts.push(currencyName);
+      if (amountParts[1]) {
+        amountSpellouts.push(numberToWords.toWords(amountParts[1]));
+      }
+      const amountSpellout = amountSpellouts.join(' ').toUpperCase();
+      if (payload.payment_choice) {
+        payload.payment_choice =
+          EnumCashingPayment[payload.payment_choice.toUpperCase()];
+      }
+      const isRefund = EnumCashingType.REMBOURSEMENT === payload.payment_type;
+      if (payload.payment_type) {
+        payload.payment_type =
+          EnumCashingType[payload?.payment_type?.toUpperCase()];
+      }
+
+      const filePath = path.join(
+        process.cwd(),
+        'templates/bank_check',
+        'receipt.hbs',
+      );
+
+      const options = {
+        format: 'A4',
+        displayHeaderFooter: true,
+        headerTemplate: '<div></div>',
+        footerTemplate: '<div></div>',
+        margin: {
+          left: '10mm',
+          top: '25mm',
+          right: '10mm',
+          bottom: '15mm',
+        },
+        landscape: true,
+      };
+
+      const data = {
+        user,
+        patient,
+        header: br2nl(header),
+        amount,
+        amountSpellout,
+        paymentChoice: payload?.payment_choice,
+        paymentType: payload?.payment_type,
+        isRefund,
+        time: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+      };
+
+      // TODO save file to server and insert to database
+
+      return await createPdf(filePath, options, data);
+    } catch (error) {
+      return new CBadRequestException(ErrorCode.ERROR_GET_PDF);
+    }
   }
 
   protected refundAmount(
