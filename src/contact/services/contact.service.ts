@@ -542,25 +542,19 @@ count(CON_ID) as countId,COD_TYPE as codType
       const path = fileC?.UPL_PATH;
       const dir = await this.configService.get('app.uploadDir');
 
-      if (!filename || !path) {
-        return {
-          file: `front/no_image.png`,
-        };
+      if (!filename || !path || !dir) {
+        return null;
       }
       fs.stat(`${dir}/${path}${filename}`, (err) => {
         if (err) {
-          return {
-            file: `front/no_image.png`,
-          };
+          return null;
         }
         return {
           file: `${dir}/${path}${filename}`,
         };
       });
     } catch (error) {
-      return {
-        file: `front/no_image.png`,
-      };
+      return null;
     }
   }
 }
