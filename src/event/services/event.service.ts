@@ -1,13 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-
 import { Repository } from 'typeorm/repository/Repository';
-import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { SuccessResponse } from 'src/common/response/success.res';
-import { UserService } from 'src/user/services/user.service';
-import { PatientService } from 'src/patient/service/patient.service';
 import { PermissionService } from 'src/user/services/permission.service';
 import { PerCode } from 'src/constants/permissions';
 import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-request.exception';
@@ -17,13 +13,14 @@ import { DataSource } from 'typeorm';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { PlanEventEntity } from 'src/entities/plan-event.entity';
-import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { DeteleEventDto } from '../dto/delete.event.dto';
 
 @Injectable()
 export class EventService {
   constructor(
     private dataSource: DataSource,
+    @InjectRepository(EventEntity)
+    private readonly repoEvent: Repository<EventEntity>,
     @InjectRepository(EventOccurrenceEntity)
     private readonly repoEventOccurrent: Repository<EventOccurrenceEntity>,
     private permissionService: PermissionService,
@@ -34,9 +31,9 @@ export class EventService {
     return await queryBuiler
       .select(
         `EVT.EVT_ID AS eventId,
-      EVT.CON_ID AS contactId,
-      EVT.USR_ID AS practitionerId,
-      PLV.PLF_ID AS planId`,
+        EVT.CON_ID AS contactId,
+        EVT.USR_ID AS practitionerId,
+        PLV.PLF_ID AS planId`,
       )
       .from(EventOccurrenceEntity, 'evo')
       .innerJoin(EventEntity, 'EVT', 'EVT.EVT_ID = evo.evt_id')
@@ -54,54 +51,41 @@ export class EventService {
     orgId: number,
     payload: DeteleEventDto,
   ): Promise<SuccessResponse> {
+    const { eventId, practitionerId, planId } =
+      await this.recordEventOccurrence(id);
+    if (
+      !this.permissionService.hasPermission(
+        PerCode.PERMISSION_DELETE,
+        8,
+        orgId,
+      ) ||
+      !this.permissionService.hasPermission(
+        PerCode.PERMISSION_CALENDAR,
+        8,
+        practitionerId,
+      )
+    ) {
+      throw new CForbiddenRequestException(ErrorCode.FORBIDDEN);
+    }
     try {
-      const { eventId, contactId, practitionerId, planId } =
-        await this.recordEventOccurrence(id);
-      if (
-        !this.permissionService.hasPermission(
-          PerCode.PERMISSION_DELETE,
-          8,
-          orgId,
-        ) ||
-        !this.permissionService.hasPermission(
-          PerCode.PERMISSION_CALENDAR,
-          8,
-          practitionerId,
-        )
-      ) {
-        throw new CForbiddenRequestException(ErrorCode.FORBIDDEN);
-      }
-
-      const queryBuiler = this.dataSource.createQueryBuilder();
       if (!planId) {
-        await queryBuiler
-          .update(EventEntity)
-          .set({ EVT_START: null, EVT_END: null })
-          .where('`EVT_ID` = :eventId', { eventId })
-          .execute();
-
-        await queryBuiler
-          .update(EventOccurrenceEntity)
-          .set({ evo_date: null })
-          .where('`evt_id` = :eventId', { eventId })
-          .execute();
+        await this.repoEvent.update(
+          { id: eventId },
+          { start: null, end: null },
+        );
+        await this.repoEventOccurrent.update(
+          { evtId: eventId },
+          { date: null },
+        );
       } else {
         if (!payload.hasRecurrEvents) {
-          await queryBuiler
-            .update(EventEntity)
-            .set({ EVT_DELETE: 1 })
-            .where('`EVT_ID` = :eventId', { eventId })
-            .execute();
+          await this.repoEvent.update({ id: eventId }, { delete: 1 });
         } else {
           if (payload.scp === 'all') {
-            await queryBuiler
-              .update(EventEntity)
-              .set({ EVT_DELETE: 1 })
-              .where('`EVT_ID` = :eventId', { eventId })
-              .execute();
+            await this.repoEvent.update({ id: eventId }, { delete: 1 });
           } else if (payload.scp === 'tail') {
             await this.dataSource.query(
-              `UPDATE event_occurrence_evo evo
+              ` UPDATE event_occurrence_evo evo
               INNER JOIN event_occurrence_evo evo1 ON evo1.evo_id = ?
               SET evo.evo_exception = 1
               WHERE evo.evo_date >= evo1.evo_date
@@ -109,14 +93,11 @@ export class EventService {
               [id],
             );
           } else {
-            await queryBuiler
-              .update(EventOccurrenceEntity)
-              .set({ evo_exception: 1 })
-              .where('`evo_id` = :id', { id })
-              .execute();
+            await this.repoEventOccurrent.update({ id }, { exception: 1 });
           }
         }
       }
+
       return {
         success: true,
       };

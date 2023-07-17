@@ -105,7 +105,6 @@ export class EventController {
   @Delete('/:id')
   @UseGuards(TokenGuard)
   async delete(
-    @CurrentDoctor() doctorId: number,
     @CurrentUser() identity: UserIdentity,
     @Body() payload: DeteleEventDto,
     @Param('id') id: number,
