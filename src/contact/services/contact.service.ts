@@ -25,6 +25,7 @@ import { ContactPatchDto } from '../dto/contact.payment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ConfigService } from '@nestjs/config';
+import fs from 'fs';
 
 @Injectable()
 export class ContactService {
@@ -522,26 +523,44 @@ count(CON_ID) as countId,COD_TYPE as codType
   }
 
   async getAvatar(contactId: number) {
-    const query = this.dataSource.createQueryBuilder();
-    const uplId = await query
-      .select('CON.UPL_ID')
-      .from(ContactEntity, 'CON')
-      .where('CON.CON_ID = :contactId', { contactId })
-      .getRawOne();
+    try {
+      const query = this.dataSource.createQueryBuilder();
+      const uplId = await query
+        .select('CON.UPL_ID')
+        .from(ContactEntity, 'CON')
+        .where('CON.CON_ID = :contactId', { contactId })
+        .getRawOne();
 
-    const fileC = await this.dataSource
-      .createQueryBuilder()
-      .select()
-      .from(UploadEntity, 'UPL')
-      .where('UPL.UPL_ID = :id', { id: uplId.UPL_ID })
-      .getRawOne();
+      const fileC = await this.dataSource
+        .createQueryBuilder()
+        .select()
+        .from(UploadEntity, 'UPL')
+        .where('UPL.UPL_ID = :id', { id: uplId?.UPL_ID })
+        .getRawOne();
 
-    const filename = fileC.UPL_NAME;
-    const path = fileC.UPL_PATH;
-    const dir = await this.configService.get('app.uploadDir');
+      const filename = fileC?.UPL_NAME;
+      const path = fileC?.UPL_PATH;
+      const dir = await this.configService.get('app.uploadDir');
 
-    return {
-      file: `${dir}/${path}${filename}`,
-    };
+      if (!filename || !path) {
+        return {
+          file: `front/no_image.png`,
+        };
+      }
+      fs.stat(`${dir}/${path}${filename}`, (err) => {
+        if (err) {
+          return {
+            file: `front/no_image.png`,
+          };
+        }
+        return {
+          file: `${dir}/${path}${filename}`,
+        };
+      });
+    } catch (error) {
+      return {
+        file: `front/no_image.png`,
+      };
+    }
   }
 }
