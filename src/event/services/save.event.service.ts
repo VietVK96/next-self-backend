@@ -195,11 +195,6 @@ export class SaveEventService {
 
         eventId = result.insertId;
         if (!hasRecurrEvents) {
-          console.log(
-            '🚀 ~ file: save.event.service.ts:199 ~ SaveEventService ~ saveAgenda ~ hasRecurrEvents:',
-            hasRecurrEvents,
-          );
-
           // Nouvelle occurrence pour DATE(start)
           await queryRunner.query(
             `INSERT INTO event_occurrence_evo (evt_id, resource_id, evo_date)
@@ -234,10 +229,6 @@ export class SaveEventService {
               );
             }
           }
-          console.log(
-            '🚀 ~ file: save.event.service.ts:236 ~ SaveEventService ~ saveAgenda ~ promiseArr:',
-            promiseArr,
-          );
           const totalBatch = Math.ceil(promiseArr.length / 100);
           for (let i = 0; i < totalBatch; i++) {
             const batch = promiseArr.splice(0, 100);
