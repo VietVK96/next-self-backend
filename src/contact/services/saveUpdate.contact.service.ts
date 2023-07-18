@@ -56,15 +56,15 @@ export class SaveUpdateContactService {
           .createQueryBuilder()
           .update(AddressEntity)
           .set(address)
-          .where({ id: address.id })
+          .where({ id: address?.id })
           .execute();
       } else {
-        if (address.id) {
+        if (address?.id) {
           await queryRunner.manager
             .createQueryBuilder()
             .delete()
             .from(AddressEntity)
-            .where({ id: address.id })
+            .where({ id: address?.id })
             .execute();
         }
       }
@@ -129,7 +129,7 @@ export class SaveUpdateContactService {
         .createQueryBuilder()
         .update(ContactEntity)
         .set(patient)
-        .where({ id: patient.id })
+        .where({ id: patient?.id })
         .execute();
 
       const policyHolderName = reqBody?.medical?.policy_holder?.name || null;
@@ -138,7 +138,7 @@ export class SaveUpdateContactService {
         reqBody?.medical?.policy_holder?.patient?.id || null;
 
       const patientMedical = await this.patientMedicalRepository.findOneOrFail({
-        where: { patientId: patient.id },
+        where: { patientId: patient?.id },
         relations: {
           policyHolder: true,
         },
@@ -163,7 +163,7 @@ export class SaveUpdateContactService {
             .createQueryBuilder()
             .update(PolicyHolderEntity)
             .set(policyHolder)
-            .where({ id: policyHolder.id })
+            .where({ id: policyHolder?.id })
             .execute();
         } else {
           policyHolder = {
@@ -194,7 +194,7 @@ export class SaveUpdateContactService {
             .set({
               policyHolderId: null,
             })
-            .where({ patientId: patient.id })
+            .where({ patientId: patient?.id })
             .execute();
 
           await queryRunner.manager
@@ -219,7 +219,10 @@ export class SaveUpdateContactService {
           phoneids.push(phone.id);
           const qUpdateContactPhone = `INSERT IGNORE INTO T_CONTACT_PHONE_COP (PHO_ID, CON_ID)
             VALUES (?, ?)`;
-          await queryRunner.query(qUpdateContactPhone, [phone.id, patient.id]);
+          await queryRunner.query(qUpdateContactPhone, [
+            phone?.id,
+            patient?.id,
+          ]);
         }),
       );
 
@@ -261,12 +264,12 @@ export class SaveUpdateContactService {
         countryAbbr: reqBody?.addressCountryAbbr,
       };
       if (
-        address.street ||
-        address.streetComp ||
-        address.zipCode ||
-        address.city ||
-        address.country ||
-        address.countryAbbr
+        address?.street ||
+        address?.streetComp ||
+        address?.zipCode ||
+        address?.city ||
+        address?.country ||
+        address?.countryAbbr
       ) {
         const resultAddress = await queryRunner.manager
           .createQueryBuilder()
@@ -274,10 +277,10 @@ export class SaveUpdateContactService {
           .into(AddressEntity)
           .values(address)
           .execute();
-        address.id = resultAddress.raw.insertId;
+        address.id = resultAddress?.raw?.insertId;
       }
 
-      if (!isNumber(reqBody.social_security_reimbursement_rate)) {
+      if (!isNumber(reqBody?.social_security_reimbursement_rate)) {
         reqBody.social_security_reimbursement_rate = null;
       }
 
@@ -389,7 +392,7 @@ export class SaveUpdateContactService {
           .values(phones)
           .execute();
 
-        const contactPhones = insertPhoneResult.identifiers.map(
+        const contactPhones = insertPhoneResult?.identifiers?.map(
           (identifier) => {
             return {
               id: identifier?.id,

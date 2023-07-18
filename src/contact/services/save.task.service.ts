@@ -29,26 +29,27 @@ export class SaveTaskService {
   ) {}
 
   async save(payload: EventTaskSaveDto) {
-    const patient = await this.contactRepo.findOneBy({ id: payload.contact });
+    const patient = await this.contactRepo.findOneBy({ id: payload?.contact });
     const amosOfPatient = await this.patientAmoRepo.findBy({
-      patientId: patient.id,
+      patientId: patient?.id,
     });
-    const creationDate = Date.parse(payload.date);
+    const creationDate = Date.parse(payload?.date);
     let codeNatureAssurance = CodeNatureAssuranceEnum.ASSURANCE_MALADIE;
     const amos: PatientAmoEntity[] = amosOfPatient.filter(
       (amo) =>
-        (amo.startDate === null || Date.parse(amo.startDate) <= creationDate) &&
-        (amo.endDate === null || Date.parse(amo.endDate) >= creationDate),
+        (amo?.startDate === null ||
+          Date.parse(amo?.startDate) <= creationDate) &&
+        (amo?.endDate === null || Date.parse(amo?.endDate) >= creationDate),
     );
     if (amos.length > 0) {
       codeNatureAssurance = amos[0]
         .codeNatureAssurance as CodeNatureAssuranceEnum;
     }
 
-    const doctorId = payload.user;
-    let amount = payload.amount ? parseFloat(payload.amount.toString()) : 0;
-    const socialSecurityAmount = payload.secuAmount
-      ? parseFloat(payload.secuAmount.toString())
+    const doctorId = payload?.user;
+    let amount = payload?.amount ? parseFloat(payload?.amount.toString()) : 0;
+    const socialSecurityAmount = payload?.secuAmount
+      ? parseFloat(payload?.secuAmount?.toString())
       : 0;
     let coefficient = payload.coef ? parseFloat(payload.coef.toString()) : 1;
     let teeth = payload.teeth ? payload.teeth : null;

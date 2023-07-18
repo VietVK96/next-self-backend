@@ -92,8 +92,15 @@ export class ContactPaymentController {
   // php/payment/receipt.php
   @Get('/payment/receipt')
   @UseGuards(TokenGuard)
-  async receipt(@Res() res, @Query() payload: ReceiptDto) {
-    const buffer = await this.contactPaymentService.getReceipt(payload);
+  async receipt(
+    @Res() res,
+    @Query() payload: ReceiptDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    const buffer = await this.contactPaymentService.getReceipt(
+      payload,
+      identity,
+    );
 
     res.set({
       // pdf
