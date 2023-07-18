@@ -110,8 +110,8 @@ export class SaveAgendaDto {
 class reminder {
   id?: number | null;
   nbr?: string | number;
-  appointment_reminder_library_id?: string | number;
-  reminderTypeId?: string | number;
-  reminderReceiverId?: string | number;
-  reminderUnitId?: string | number;
+  appointment_reminder_library_id?: number | null;
+  reminderTypeId?: number;
+  reminderReceiverId?: number;
+  reminderUnitId?: number;
 }

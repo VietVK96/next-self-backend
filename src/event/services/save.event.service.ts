@@ -509,19 +509,13 @@ export class SaveEventService {
         const promiseArr = [];
         for (const reminder of reminders) {
           const reminderId = checkId(reminder?.id);
-          console.log(
-            '🚀 ~ file: save.event.service.ts:512 ~ SaveEventService ~ saveAgenda ~ reminderId:',
-            reminderId,
-          );
-
           const reminderNbr = reminder['nbr'];
-          const reminderTypeId = reminder['reminderTypeId'];
-          const reminderReceiverId = reminder['reminderReceiverId'];
-          const reminderUnitId = reminder['reminderUnitId'];
-          const appointmentReminderLibraryId =
-            reminder?.appointment_reminder_library_id
-              ? reminder.appointment_reminder_library_id
-              : null;
+          const reminderTypeId = checkId(reminder?.reminderTypeId);
+          const reminderReceiverId = checkId(reminder?.reminderReceiverId);
+          const reminderUnitId = checkId(reminder?.reminderUnitId);
+          const appointmentReminderLibraryId = checkId(
+            reminder?.appointment_reminder_library_id,
+          );
 
           promiseArr.push(
             queryRunner.query(
@@ -552,11 +546,6 @@ export class SaveEventService {
       }
       await queryRunner.commitTransaction();
     } catch (e) {
-      console.log(
-        '🚀 ~ file: save.event.service.ts:550 ~ SaveEventService ~ saveAgenda ~ e:',
-        e,
-      );
-
       await queryRunner.rollbackTransaction();
       return new CBadRequestException(ErrorCode.SAVE_FAILED);
     } finally {
