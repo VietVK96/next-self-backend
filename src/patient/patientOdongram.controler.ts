@@ -1,10 +1,6 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import {
-  CurrentUser,
-  TokenGuard,
-  UserIdentity,
-} from 'src/common/decorator/auth.decorator';
+import { TokenGuard } from 'src/common/decorator/auth.decorator';
 import { OdontogramCurrentDto } from './dto/patientBalance.dto';
 import { PatientOdontogramService } from './service/patientOdontogram.service';
 @ApiBearerAuth()

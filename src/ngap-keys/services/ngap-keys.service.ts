@@ -21,6 +21,9 @@ export class NgapKeysService {
         used: usedCondition,
         organizationId: identity.org,
       },
+      order: {
+        name: 'ASC',
+      },
     });
 
     return ngapKeys;

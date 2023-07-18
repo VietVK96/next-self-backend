@@ -35,11 +35,20 @@ import * as path from 'path';
 import { createPdf } from '@saemhco/nestjs-html-pdf';
 import * as dayjs from 'dayjs';
 import { br2nl } from 'src/common/util/string';
-// import { v4 as uuidv4 } from 'uuid';
+import * as fs from 'fs';
+import { ConfigService } from '@nestjs/config';
+import { v4 as uuidv4 } from 'uuid';
+import { UploadEntity } from 'src/entities/upload.entity';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import {
+  ContactDocumentEntity,
+  EnumContactDocumentType,
+} from 'src/entities/contact-document.entity';
 
 @Injectable()
 export class ContactPaymentService {
   constructor(
+    private configService: ConfigService,
     private dataSource: DataSource,
     @InjectRepository(CashingEntity)
     private readonly repo: Repository<CashingEntity>,
@@ -52,6 +61,12 @@ export class ContactPaymentService {
     private permissionService: PermissionService,
     @InjectRepository(CashingContactEntity)
     private readonly cashingContactRepo: Repository<CashingContactEntity>,
+    @InjectRepository(UploadEntity)
+    private readonly uploadRepo: Repository<UploadEntity>,
+    @InjectRepository(ContactNoteEntity)
+    private readonly contactNote: Repository<ContactNoteEntity>,
+    @InjectRepository(ContactDocumentEntity)
+    private readonly contactDocumentRepo: Repository<ContactDocumentEntity>,
   ) {}
 
   /**
@@ -686,8 +701,9 @@ export class ContactPaymentService {
   async getReceipt(payload: ReceiptDto, identity: UserIdentity) {
     let currencyName = 'Euro';
     let header = '';
-    // const dirname = String(identity.org).padStart(5, '0');
-    // const fileName = `${uuidv4()}.pdf`;
+
+    const dirname = String(identity.org).padStart(5, '0');
+    const fileName = `${uuidv4()}.pdf`;
 
     try {
       const user = await this.userRepo.findOneOrFail({
@@ -762,9 +778,38 @@ export class ContactPaymentService {
         time: dayjs().format('YYYY-MM-DD HH:mm:ss'),
       };
 
-      // TODO save file to server and insert to database
+      const pdf = await createPdf(filePath, options, data);
+      const dir = await this.configService.get('app.uploadDir');
 
-      return await createPdf(filePath, options, data);
+      const savePath = `${dir}/${dirname}/${fileName}`;
+      if (!fs.existsSync(`${dir}/${dirname}`)) {
+        fs.mkdirSync(`${dir}/${dirname}`, { recursive: true });
+      }
+      fs.writeFileSync(savePath, pdf);
+      const stats = fs.statSync(savePath);
+      const fileSizeInKB = stats.size / 1024;
+      const file: UploadEntity = {
+        userId: payload?.practitioner_id || 1,
+        fileName: `${dirname}/${fileName}`,
+        size: fileSizeInKB,
+        type: 'application/pdf',
+        name: fileName,
+      };
+      const fileData = await this.uploadRepo.save(file);
+
+      const patientNote: ContactNoteEntity = {
+        userId: payload?.practitioner_id,
+        conId: payload?.payer_id,
+        date: dayjs().format('YYYY-MM-DD'),
+        message: `Impression d'un reçu d'un montant de ${amount} ${currencyName}`,
+      };
+      await this.contactNote.save(patientNote);
+      await this.contactDocumentRepo.save({
+        conId: payload?.payer_id,
+        uplId: fileData.id,
+        type: EnumContactDocumentType.FILE,
+      });
+      return pdf;
     } catch (error) {
       return new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }

@@ -3,7 +3,7 @@
  */
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable, NotAcceptableException } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { FindOneOptions, FindOptionsWhere, Repository } from 'typeorm';
 import { UploadEntity } from 'src/entities/upload.entity';
 import { ConfigService } from '@nestjs/config';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
@@ -55,8 +55,14 @@ export class FileService {
       throw new CBadRequestException('original_filename is required');
     }
     if (payload.tags && payload.tags.length > 0) {
-      for (const tagId of payload.tags) {
-        const tag = await this.tagRepository.findOne({ where: { id: tagId } });
+      for (const tagParam of payload.tags) {
+        const condition: FindOptionsWhere<TagEntity> =
+          typeof tagParam == 'number'
+            ? { id: tagParam }
+            : { internalReference: tagParam };
+        const tag = await this.tagRepository.findOne({
+          where: condition,
+        });
         tags.push(tag);
       }
     }

@@ -2,6 +2,7 @@ import { SaveEventService } from './services/save.event.service';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -17,6 +18,8 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { SaveEventPayloadDto } from './dto/save.event.dto';
 import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
+import { EventService } from './services/event.service';
+import { DeteleEventDto } from './dto/delete.event.dto';
 import { SaveAgendaDto } from './dto/saveAgenda.event.dto';
 
 @Controller('event')
@@ -26,6 +29,7 @@ export class EventController {
   constructor(
     private readonly findEventService: FindEventService,
     private readonly saveEventService: SaveEventService,
+    private readonly eventService: EventService,
   ) {}
 
   // php/event/findAll.php full file
@@ -95,5 +99,16 @@ export class EventController {
     @CurrentUser() identity: UserIdentity,
   ) {
     return this.saveEventService.saveAgenda(identity.id, payload);
+  }
+
+  // php/event/delete.php -> line: 23 -> 121
+  @Delete('/:id')
+  @UseGuards(TokenGuard)
+  async delete(
+    @CurrentUser() identity: UserIdentity,
+    @Body() payload: DeteleEventDto,
+    @Param('id') id: number,
+  ) {
+    return await this.eventService.detete(id, identity.org, payload);
   }
 }
