@@ -164,7 +164,7 @@ export class PatientService {
       return await this.dataSource
         .getRepository(ContactEntity)
         .createQueryBuilder()
-        .delete()
+        .softDelete()
         .where('id = :id', { id: patient?.id })
         .execute();
     } catch (error) {

@@ -101,16 +101,16 @@ export class DocumentServices {
   async getAllFile(orgId, patientId: number, type: string, tags?: string[]) {
     let query = `
     SELECT
-      UPL.UPL_ID AS id,
-      UPL.UPL_TOKEN token,
-      UPL.UPL_NAME name,
-      UPL.UPL_NAME original_filename,
-      UPL.UPL_TYPE mimetype,
-      UPL.UPL_SIZE size,
-      DATE_FORMAT(UPL.created_at, '%Y-%m-%dT%H:%i:%sZ') AS created_at,
-      USR.USR_ID ownerId,
-      USR.USR_LASTNAME ownerLastname,
-      USR.USR_FIRSTNAME ownerFirstname
+        UPL.UPL_ID AS id,
+        UPL.UPL_TOKEN token,
+        UPL.UPL_NAME name,
+        UPL.UPL_NAME original_filename,
+        UPL.UPL_TYPE mimetype,
+        UPL.UPL_SIZE size,
+        DATE_FORMAT(UPL.created_at, '%Y-%m-%dT%H:%i:%sZ') AS created_at,
+        USR.USR_ID ownerId,
+        USR.USR_LASTNAME ownerLastname,
+        USR.USR_FIRSTNAME ownerFirstname
     FROM T_CONTACT_CON CON
     JOIN T_CONTACT_DOCUMENT_COD COD
     JOIN T_UPLOAD_UPL UPL
@@ -146,7 +146,13 @@ export class DocumentServices {
   ) {
     const host = await this.configService.get('app.host');
     const files = await this.getAllFile(identity.org, patientId, type, tags);
+    const filesRes = [];
+    const mapId = new Map();
     for (const file of files) {
+      if (mapId.get(file.id)) {
+        continue;
+      }
+      mapId.set(file.id, 1);
       const id = file.id;
 
       file.tags = [];
@@ -178,8 +184,9 @@ export class DocumentServices {
         color: JSON.parse(JSON.stringify(row.color)),
         internal_reference: row.internal_reference,
       }));
+      filesRes.push(file);
     }
 
-    return files;
+    return filesRes;
   }
 }
