@@ -20,6 +20,7 @@ import { join } from 'path';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { resizeThumbnail } from 'src/common/util/file';
 import { UpdateFileDto } from './dto/index.dto';
+import { ErrorCode } from 'src/constants/error';
 
 @ApiTags('File')
 @Controller('files')
@@ -72,7 +73,7 @@ export class FileController {
       res.setHeader('Content-Disposition', disposition);
       res.sendFile(join(__dirname, '..', '..', path));
     } catch (error) {
-      throw new CBadRequestException('file not found', error);
+      throw new CBadRequestException(ErrorCode.FILE_NOT_FOUND, error);
     }
   }
 
@@ -118,7 +119,7 @@ export class FileController {
     try {
       return await this.fileService.updateFile(id, payload);
     } catch (error) {
-      throw new CBadRequestException('cannot update file', error);
+      throw new CBadRequestException(ErrorCode.CANNOT_UPDATE_FILE, error);
     }
   }
 
