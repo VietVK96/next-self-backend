@@ -28,6 +28,7 @@ import { PaymentPlanService } from 'src/payment-plan/services/payment-plan.servi
 import { LibraryActEntity } from 'src/entities/library-act.entity';
 import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
 import { CcamEntity } from 'src/entities/ccam.entity';
+import { PatientMedicalEntity } from 'src/entities/patient-medical.entity';
 
 @Injectable()
 export class QuotesServices {
@@ -592,9 +593,64 @@ export class QuotesServices {
       const quoteUser = users.find((u) => u?.id === quote?.userId);
       quote.user = quoteUser;
 
+      //Test fronend
+      let amountTotal = 0;
+      let amoAmountTotal = 0;
+      let amoRefundTotal = 0;
+      let patientAmountTotal = 0;
+
+      for (const act of quote?.acts) {
+        const ccam = act?.libraryActQuantity
+          ? act.libraryActQuantity?.ccam
+          : null;
+        let maximumPrice = null;
+        let panier = null;
+        const listTeeth = act?.teeth?.split(' ') ?? [];
+        if (ccam) {
+          if (
+            this.isCmuPatient(quote?.date, quote?.user) &&
+            this.isCmuCcam(listTeeth, ccam)
+          ) {
+            maximumPrice =
+              ccam?.cmuCodifications[0] &&
+              ccam?.cmuCodifications[0]?.maximumPrice
+                ? ccam.cmuCodifications[0].maximumPrice
+                : null;
+            panier = 4;
+          } else if (act?.amoAmount) {
+            const grid = quote?.user?.setting?.priceGrid ?? null;
+            maximumPrice = this.getUnitPriceCcam(grid, quote?.date, ccam);
+            if (ccam?.family?.panier) {
+              panier = ccam?.family?.panier?.code;
+            }
+          }
+        }
+        const amount = act?.amount ? parseFloat(act?.amount?.toString()) : 0;
+        const amoAmount = act?.secuAmount
+          ? parseFloat(act?.secuAmount?.toString())
+          : 0;
+        const amoRefund = act?.secuRepayment
+          ? parseFloat(act?.secuRepayment?.toString())
+          : 0;
+        const patientAmount = amount - amoRefund;
+
+        amountTotal = amountTotal + amount;
+        amoAmountTotal = amoAmountTotal + amoAmount;
+        amoRefundTotal = amoRefundTotal + amoRefund;
+        patientAmountTotal = patientAmountTotal + patientAmount;
+
+        act['patientAmountTotal'] = patientAmountTotal;
+        act['maximumPrice'] = maximumPrice;
+        act['panier'] = panier;
+      }
+
       return {
         quote,
         attachments,
+        amountTotal,
+        amoAmountTotal,
+        amoRefundTotal,
+        patientAmountTotal,
       };
     } catch (e) {
       if (queryRunner?.isTransactionActive) {
@@ -647,5 +703,58 @@ export class QuotesServices {
       return unitPrices[0];
     }
     return null;
+  }
+
+  /**
+   * /application/Entity/Patient.php
+   * Line 805-> 820
+   */
+  async isCmuPatient(datetime: string, patient: ContactEntity) {
+    const activeCmu = this.getActiveAmcPatient(datetime, patient);
+    const medical = patient?.medical;
+    if (activeCmu) {
+      return !!activeCmu?.isCmu;
+    }
+    if (medical) {
+      return this.isActiveAcsMedicalPatient(medical);
+    }
+    return false;
+  }
+
+  /**
+   * /application/Entity/Patient.php
+   * Line 599-> 610
+   */
+  getActiveAmcPatient(datetime: string, patient: ContactEntity) {
+    const listAmcs = patient?.amcs ?? [];
+    const amcs = listAmcs.map((amc) => {
+      if (
+        (!amc?.startDate ||
+          new Date(amc?.startDate).getTime() <= new Date(datetime).getTime()) &&
+        (!amc?.endDate ||
+          new Date(amc?.endDate).getTime() >= new Date(datetime).getTime())
+      ) {
+        return amc;
+      }
+    });
+    if (!checkEmpty(amcs)) {
+      return amcs[0];
+    }
+    return null;
+  }
+
+  /**
+   * /application/Entity/PatientMedical.php
+   * Line: 152 -> 157
+   */
+  isActiveAcsMedicalPatient(medical: PatientMedicalEntity) {
+    const now = new Date();
+    return (
+      ['11', '12', '13', '14'].includes(medical?.serviceAmoCode) &&
+      (!medical?.serviceAmoStartDate ||
+        now.getTime() >= new Date(medical?.serviceAmoStartDate).getTime()) &&
+      (!medical?.serviceAmoEndDate ||
+        now.getTime() <= new Date(medical?.serviceAmoEndDate).getTime())
+    );
   }
 }
