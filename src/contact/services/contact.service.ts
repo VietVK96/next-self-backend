@@ -530,6 +530,7 @@ count(CON_ID) as countId,COD_TYPE as codType
         .from(ContactEntity, 'CON')
         .where('CON.CON_ID = :contactId', { contactId })
         .getRawOne();
+      if (!uplId.UPL_ID) return null;
 
       const fileC = await this.dataSource
         .createQueryBuilder()
@@ -537,15 +538,17 @@ count(CON_ID) as countId,COD_TYPE as codType
         .from(UploadEntity, 'UPL')
         .where('UPL.UPL_ID = :id', { id: uplId?.UPL_ID })
         .getRawOne();
+      if (!fileC) return null;
 
       const filename = fileC?.UPL_NAME;
       const path = fileC?.UPL_PATH;
       const dir = await this.configService.get('app.uploadDir');
-
-      if (!filename || !path || !dir) {
+      try {
+        fs.accessSync(`${dir}/${path}${filename}`);
+        return { file: `${dir}/${path}${filename}` };
+      } catch (e) {
         return null;
       }
-      return { file: `${dir}/${path}${filename}` };
     } catch (error) {
       return null;
     }

@@ -118,9 +118,17 @@ export class FindContactController {
   ) {
     try {
       const fileRes = await this.contactService.getAvatar(contactId);
+      if (!fileRes) {
+        res.set({
+          'Content-Type': 'image/jpeg',
+        });
+        return new StreamableFile(
+          createReadStream(join(process.cwd(), 'front/no_image.png')),
+        );
+      }
       const file = createReadStream(fileRes?.file);
       file.on('error', (e) => {
-        this.logger.error(e);
+        // this.logger.error(e);
         res.set({
           'Content-Type': 'image/jpeg',
         });
@@ -134,11 +142,5 @@ export class FindContactController {
     } catch (e) {
       this.logger.error(e);
     }
-    res.set({
-      'Content-Type': 'image/jpeg',
-    });
-    return new StreamableFile(
-      createReadStream(join(process.cwd(), 'front/no_image.png')),
-    );
   }
 }
