@@ -14,6 +14,7 @@ import { ConfigService } from '@nestjs/config';
 import { PermissionService } from 'src/user/services/permission.service';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { StringHelper } from 'src/common/util/string-helper';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UploadService {
@@ -141,6 +142,7 @@ export class UploadService {
     try {
       if (files) {
         const mimeTypes = files?.mimetype;
+        const token = uuidv4();
         const uploadEntity = new UploadEntity();
         uploadEntity.path = `${auth}/`;
         uploadEntity.userId = userCurrent.id;
@@ -148,7 +150,7 @@ export class UploadService {
         uploadEntity.name = files.originalname;
         uploadEntity.type = mimeTypes;
         uploadEntity.size = files.size;
-        uploadEntity.token = userCurrent.token;
+        uploadEntity.token = token;
         uploadEntity.user = userCurrent;
         const dirFile = `${dir}/${auth}/${files?.originalname}`;
         if (!fs.existsSync(`${dir}/${auth}`)) {
