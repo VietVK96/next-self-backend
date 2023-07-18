@@ -543,6 +543,7 @@ export class SaveEventService {
             ),
           );
         }
+        await Promise.all(promiseArr);
       }
       await queryRunner.commitTransaction();
     } catch (e) {

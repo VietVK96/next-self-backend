@@ -18,6 +18,7 @@ import { ContactService } from './contact.service';
 import { ContactDetailRes } from '../response/contact-detail.res';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ContactPhoneCopEntity } from 'src/entities/contact-phone-cop.entity';
+import { checkId, checkNumber } from 'src/common/util/number';
 @Injectable()
 export class SaveUpdateContactService {
   constructor(
@@ -74,55 +75,54 @@ export class SaveUpdateContactService {
 
       const patient: ContactEntity = {
         id: reqBody?.id,
-        organizationId: identity?.org,
-        nbr: reqBody?.nbr,
-        lastname: reqBody?.lastname,
-        firstname: reqBody?.firstname,
-        birthOrder: reqBody?.birthOrder,
-        insee: reqBody?.insee,
-        inseeKey: reqBody?.inseeKey,
-        odontogramObservation: reqBody?.odontogram_observation?.trim() ?? null,
-        ursId: reqBody?.practitionerId,
-        genId: reqBody?.genderId,
-        adrId: address?.id,
-        uplId: reqBody?.avatarId,
-        cpdId: reqBody?.addressed_by?.id ?? null,
-        cofId: reqBody?.contactFamilyId,
-        profession: reqBody?.profession,
-        email: reqBody?.email,
-        birthday: dayjs(reqBody?.birthday)?.isValid()
-          ? reqBody?.birthday
-          : null,
-        quality: +reqBody?.quality,
-        breastfeeding: reqBody?.breastfeeding,
-        pregnancy: reqBody?.pregnancy ?? 0,
-        clearanceCreatinine: reqBody?.clearanceCreatinine ?? 0,
-        hepaticInsufficiency: reqBody?.hepaticInsufficiency,
-        weight: reqBody?.weight,
-        size: reqBody?.size,
-        conMedecinTraitantId: reqBody?.doctor?.id ?? null,
-        msg: reqBody?.msg,
-        notificationMsg: reqBody?.notificationMsg,
-        notificationEnable: reqBody?.notificationEnable,
-        notificationEveryTime: reqBody?.notificationEveryTime,
+        organizationId: identity.org,
+        nbr: checkNumber(reqBody?.nbr),
+        lastname: reqBody?.lastname || '',
+        firstname: reqBody?.firstname || '',
+        birthOrder: checkNumber(reqBody?.birthOrder) || 1,
+        insee: reqBody?.insee || null,
+        inseeKey: reqBody?.inseeKey || null,
+        odontogramObservation: reqBody?.odontogram_observation?.trim() || null,
+        ursId: checkId(reqBody?.practitionerId),
+        genId: Number(reqBody?.genderId) || null,
+        adrId: address.id,
+        uplId: checkId(reqBody?.avatarId),
+        cpdId: checkId(reqBody?.addressed_by?.id),
+        cofId: checkId(reqBody?.contactFamilyId),
+        profession: reqBody?.profession || null,
+        email: reqBody?.email || null,
+        birthDate: dayjs(reqBody.birthday).isValid() ? reqBody?.birthday : null,
+        quality: checkNumber(reqBody.quality),
+        breastfeeding: checkNumber(reqBody?.breastfeeding) || 0,
+        pregnancy: checkNumber(reqBody?.pregnancy) || 0,
+        clearanceCreatinine: checkNumber(reqBody?.clearanceCreatinine) || 0,
+        hepaticInsufficiency: reqBody?.hepaticInsufficiency || '',
+        weight: checkNumber(reqBody?.weight) || 0,
+        size: checkNumber(reqBody?.size) || 0,
+        conMedecinTraitantId: checkId(reqBody?.doctor.id),
+        msg: reqBody?.msg || null,
+        notificationMsg: reqBody?.notificationMsg || null,
+        notificationEnable: checkNumber(reqBody?.notificationEnable) || 1,
+        notificationEveryTime: checkNumber(reqBody?.notificationEveryTime) || 0,
         reminderVisitType:
           EnumContactReminderVisitType[
-            reqBody?.reminderVisitType?.toUpperCase()
-          ],
-        reminderVisitDuration: reqBody?.reminderVisitDuration,
-        reminderVisitDate: reqBody?.reminderVisitDate ?? null,
-        reminderVisitLastDate: reqBody?.reminderVisitLastDate ?? null,
-        color: reqBody?.color,
-        colorMedical: reqBody?.colorMedical,
-        socialSecurityReimbursementRate:
+            reqBody.reminderVisitType.toUpperCase()
+          ] || EnumContactReminderVisitType.DURATION,
+        reminderVisitDuration: checkNumber(reqBody?.reminderVisitDuration),
+        reminderVisitDate: reqBody?.reminderVisitDate || null,
+        reminderVisitLastDate: reqBody?.reminderVisitLastDate || null,
+        color: checkNumber(reqBody?.color) || -3840,
+        colorMedical: checkNumber(reqBody?.colorMedical) || -3840,
+        socialSecurityReimbursementRate: checkNumber(
           reqBody?.social_security_reimbursement_rate,
-        mutualRepaymentType: reqBody?.mutualRepaymentType ?? 1,
-        mutualRepaymentRate: reqBody?.mutualRepaymentRate ?? 0,
-        mutualComplement: reqBody?.mutualComplement ?? 0,
-        mutualCeiling: reqBody?.mutualCeiling ?? 0,
-        agenesie: reqBody?.agenesie,
-        maladieRare: reqBody?.maladieRare,
-        rxSidexisLoaded: reqBody?.rxSidexisLoaded,
+        ),
+        mutualRepaymentType: checkNumber(reqBody?.mutualRepaymentType) || 1,
+        mutualRepaymentRate: checkNumber(reqBody?.mutualRepaymentRate) || 0,
+        mutualComplement: checkNumber(reqBody?.mutualComplement) || 0,
+        mutualCeiling: checkNumber(reqBody?.mutualCeiling) || 0,
+        agenesie: checkNumber(reqBody?.agenesie) || 0,
+        maladieRare: checkNumber(reqBody?.maladieRare) || 0,
+        rxSidexisLoaded: checkNumber(reqBody?.rxSidexisLoaded) || 0,
       };
 
       await queryRunner.manager
@@ -132,10 +132,10 @@ export class SaveUpdateContactService {
         .where({ id: patient?.id })
         .execute();
 
-      const policyHolderName = reqBody?.medical.policy_holder?.name;
-      const inseeNumber = reqBody?.medical?.policy_holder?.insee_number ?? null;
+      const policyHolderName = reqBody?.medical?.policy_holder?.name || null;
+      const inseeNumber = reqBody?.medical?.policy_holder?.insee_number || null;
       const policyHolderPatientId =
-        reqBody?.medical?.policy_holder?.patient?.id ?? null;
+        reqBody?.medical?.policy_holder?.patient?.id || null;
 
       const patientMedical = await this.patientMedicalRepository.findOneOrFail({
         where: { patientId: patient?.id },
@@ -187,7 +187,7 @@ export class SaveUpdateContactService {
             .execute();
         }
       } else {
-        if (patientMedical.policyHolder) {
+        if (patientMedical?.policyHolder) {
           await queryRunner.manager
             .createQueryBuilder()
             .update(PatientMedicalEntity)
@@ -207,8 +207,8 @@ export class SaveUpdateContactService {
       }
       const phoneids: number[] = [0];
       Promise.all(
-        reqBody.phones.map(async (phone) => {
-          const qPhone = [phone?.id, phone?.phoneTypeId, phone?.nbr];
+        reqBody?.phones.map(async (phone) => {
+          const qPhone = [phone.id, phone.phoneTypeId, phone.nbr];
 
           const q = `INSERT INTO T_PHONE_PHO (PHO_ID, PTY_ID, PHO_NBR)
                 VALUES (?, ?, ?)
@@ -233,13 +233,13 @@ export class SaveUpdateContactService {
           AND COP.PHO_ID = PHO.PHO_ID
           AND PHO.PHO_ID NOT IN (?)`;
       await queryRunner.query(q, [
-        patient?.id,
-        reqBody?.phones?.map((e) => e.id).join(),
+        patient.id,
+        reqBody?.phones.map((e) => e.id).join(),
       ]);
 
       await queryRunner.commitTransaction();
       return await this.contactService.findOne(
-        patient?.id,
+        patient.id,
         reqBody?.practitionerId,
         identity,
       );
@@ -285,57 +285,55 @@ export class SaveUpdateContactService {
       }
 
       const patient: ContactEntity = {
-        organizationId: identity?.org,
-        nbr: reqBody?.nbr,
-        lastname: reqBody?.lastname,
-        firstname: reqBody?.firstname,
-        birthOrder: reqBody?.birthOrder,
-        insee: reqBody?.insee,
-        inseeKey: reqBody?.inseeKey,
-        odontogramObservation: reqBody?.odontogram_observation?.trim() ?? null,
-        ursId: reqBody?.practitionerId,
-        genId: reqBody?.genderId,
-        adrId: address?.id,
-        uplId: reqBody?.avatarId,
-        cpdId: reqBody?.addressed_by?.id ?? null,
-        cofId: reqBody?.contactFamilyId,
-        profession: reqBody?.profession,
-        email: reqBody?.email,
-        birthDate: dayjs(reqBody?.birthday)?.isValid()
-          ? reqBody?.birthday
-          : null,
-        quality: +reqBody?.quality,
-        breastfeeding: reqBody?.breastfeeding,
-        pregnancy: reqBody?.pregnancy ?? 0,
-        clearanceCreatinine: reqBody?.clearanceCreatinine ?? 0,
-        hepaticInsufficiency: reqBody?.hepaticInsufficiency,
-        weight: reqBody?.weight,
-        size: reqBody?.size,
-        conMedecinTraitantId: reqBody?.doctor?.id ?? null,
-        msg: reqBody?.msg,
-        notificationMsg: reqBody?.notificationMsg,
-        notificationEnable: reqBody?.notificationEnable,
-        notificationEveryTime: reqBody?.notificationEveryTime,
+        organizationId: identity.org,
+        nbr: checkNumber(reqBody?.nbr),
+        lastname: reqBody?.lastname || '',
+        firstname: reqBody?.firstname || '',
+        birthOrder: checkNumber(reqBody?.birthOrder) || 1,
+        insee: reqBody?.insee || null,
+        inseeKey: reqBody?.inseeKey || null,
+        odontogramObservation: reqBody?.odontogram_observation?.trim() || null,
+        ursId: checkId(reqBody?.practitionerId),
+        genId: Number(reqBody?.genderId) || null,
+        adrId: address.id,
+        uplId: checkId(reqBody?.avatarId),
+        cpdId: checkId(reqBody?.addressed_by?.id),
+        cofId: checkId(reqBody?.contactFamilyId),
+        profession: reqBody?.profession || null,
+        email: reqBody?.email || null,
+        birthDate: dayjs(reqBody.birthday).isValid() ? reqBody?.birthday : null,
+        quality: checkNumber(reqBody.quality),
+        breastfeeding: checkNumber(reqBody?.breastfeeding) || 0,
+        pregnancy: checkNumber(reqBody?.pregnancy) || 0,
+        clearanceCreatinine: checkNumber(reqBody?.clearanceCreatinine) || 0,
+        hepaticInsufficiency: reqBody?.hepaticInsufficiency || '',
+        weight: checkNumber(reqBody?.weight) || 0,
+        size: checkNumber(reqBody?.size) || 0,
+        conMedecinTraitantId: checkId(reqBody?.doctor.id),
+        msg: reqBody?.msg || null,
+        notificationMsg: reqBody?.notificationMsg || null,
+        notificationEnable: checkNumber(reqBody?.notificationEnable) || 1,
+        notificationEveryTime: checkNumber(reqBody?.notificationEveryTime) || 0,
         reminderVisitType:
           EnumContactReminderVisitType[
-            reqBody?.reminderVisitType?.toUpperCase()
-          ],
-        reminderVisitDuration: reqBody?.reminderVisitDuration,
-        reminderVisitDate: reqBody?.reminderVisitDate ?? null,
-        reminderVisitLastDate: reqBody?.reminderVisitLastDate ?? null,
-        color: reqBody?.color,
-        colorMedical: reqBody?.colorMedical,
-        socialSecurityReimbursementRate:
+            reqBody.reminderVisitType.toUpperCase()
+          ] || EnumContactReminderVisitType.DURATION,
+        reminderVisitDuration: checkNumber(reqBody?.reminderVisitDuration),
+        reminderVisitDate: reqBody?.reminderVisitDate || null,
+        reminderVisitLastDate: reqBody?.reminderVisitLastDate || null,
+        color: checkNumber(reqBody?.color) || -3840,
+        colorMedical: checkNumber(reqBody?.colorMedical) || -3840,
+        socialSecurityReimbursementRate: checkNumber(
           reqBody?.social_security_reimbursement_rate,
-        mutualRepaymentType: reqBody?.mutualRepaymentType ?? 1,
-        mutualRepaymentRate: reqBody?.mutualRepaymentRate ?? 0,
-        mutualComplement: reqBody?.mutualComplement ?? 0,
-        mutualCeiling: reqBody?.mutualCeiling ?? 0,
-        agenesie: reqBody?.agenesie,
-        maladieRare: reqBody?.maladieRare,
-        rxSidexisLoaded: reqBody?.rxSidexisLoaded,
+        ),
+        mutualRepaymentType: checkNumber(reqBody?.mutualRepaymentType) || 1,
+        mutualRepaymentRate: checkNumber(reqBody?.mutualRepaymentRate) || 0,
+        mutualComplement: checkNumber(reqBody?.mutualComplement) || 0,
+        mutualCeiling: checkNumber(reqBody?.mutualCeiling) || 0,
+        agenesie: checkNumber(reqBody?.agenesie) || 0,
+        maladieRare: checkNumber(reqBody?.maladieRare) || 0,
+        rxSidexisLoaded: checkNumber(reqBody?.rxSidexisLoaded) || 0,
       };
-
       const savePatient = await queryRunner.manager
         .createQueryBuilder()
         .insert()
@@ -343,10 +341,11 @@ export class SaveUpdateContactService {
         .values(patient)
         .execute();
 
-      const policyHolderName = reqBody?.medical.policy_holder?.name;
-      const inseeNumber = reqBody?.medical?.policy_holder?.insee_number ?? null;
-      const policyHolderPatientId =
-        reqBody?.medical?.policy_holder?.patient?.id ?? null;
+      const policyHolderName = reqBody?.medical.policy_holder?.name || '';
+      const inseeNumber = reqBody?.medical?.policy_holder?.insee_number || null;
+      const policyHolderPatientId = checkId(
+        reqBody?.medical?.policy_holder?.patient?.id,
+      );
       if (policyHolderName) {
         const policyHolder: PolicyHolderEntity = {
           inseeNumber,
@@ -380,7 +379,7 @@ export class SaveUpdateContactService {
       }
 
       if (reqBody?.phones) {
-        const phones: PhoneEntity[] = reqBody?.phones.map((e) => {
+        const phones: PhoneEntity[] = reqBody?.phones?.map((e) => {
           return {
             nbr: e?.nbr,
             ptyId: e?.phoneTypeId,

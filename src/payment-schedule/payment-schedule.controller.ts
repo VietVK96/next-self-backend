@@ -12,7 +12,7 @@ import {
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
-import { PaymentPlanService } from './services/payment-schedule.service';
+import { PaymentScheduleService } from './services/payment-schedule.service';
 import {
   PaymentSchedulesDto,
   PaymentSchedulesParamDto,
@@ -21,7 +21,7 @@ import {
 @Controller('/payment-schedule')
 @ApiTags('Payment Schedule')
 export class PaymentSchedulesController {
-  constructor(private service: PaymentPlanService) {}
+  constructor(private service: PaymentScheduleService) {}
 
   // php/payment-schedules/store.php
   @Post('/store')

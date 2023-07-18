@@ -14,6 +14,7 @@ import { ConfigService } from '@nestjs/config';
 import { PermissionService } from 'src/user/services/permission.service';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { StringHelper } from 'src/common/util/string-helper';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UploadService {
@@ -58,24 +59,17 @@ export class UploadService {
     if (files) {
       await this._checkGroupStorageSpace(groupId, files?.size);
     }
-    await this._saveFilesInformationsIntoDatabase(
+    const upload = await this._saveFilesInformationsIntoDatabase(
       files,
       userCurrent,
       dir,
       auth,
     );
 
-    const uplId = (
-      await this.uploadRepository.findOne({
-        where: { token: userCurrent?.token },
-        order: {
-          id: 'desc',
-        },
-      })
-    ).id;
     await this.dataSource
       .getRepository(ContactEntity)
-      .update(contactId, { uplId });
+      .update(contactId, { uplId: upload?.id });
+    return upload;
   }
 
   async getContactCurrent(contactId: number): Promise<ContactEntity> {
@@ -141,6 +135,7 @@ export class UploadService {
     try {
       if (files) {
         const mimeTypes = files?.mimetype;
+        const token = uuidv4();
         const uploadEntity = new UploadEntity();
         uploadEntity.path = `${auth}/`;
         uploadEntity.userId = userCurrent.id;
@@ -148,7 +143,7 @@ export class UploadService {
         uploadEntity.name = files.originalname;
         uploadEntity.type = mimeTypes;
         uploadEntity.size = files.size;
-        uploadEntity.token = userCurrent.token;
+        uploadEntity.token = token;
         uploadEntity.user = userCurrent;
         const dirFile = `${dir}/${auth}/${files?.originalname}`;
         if (!fs.existsSync(`${dir}/${auth}`)) {
@@ -156,8 +151,9 @@ export class UploadService {
         }
         fs.writeFileSync(dirFile, files?.buffer);
         files['uploadEntity'] = uploadEntity;
-        await this.dataSource.getRepository(UploadEntity).save(uploadEntity);
-        return uploadEntity;
+        return await this.dataSource
+          .getRepository(UploadEntity)
+          .save(uploadEntity);
       }
     } catch (error) {
       throw new CBadRequestException(error.message);
