@@ -13,6 +13,7 @@ import { CaresheetStatusEntity } from 'src/entities/caresheet-status.entity';
 import { InterfacageService } from 'src/interfacage/services/interfacage.service';
 import { PermissionService } from 'src/user/services/permission.service';
 import { CaresheetsService } from './service/caresheets.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { CaresheetsService } from './service/caresheets.service';
       CaresheetStatusEntity,
     ]),
     forwardRef(() => ContactModule),
+    HttpModule,
   ],
   controllers: [CaresheetsController],
   providers: [PermissionService, CaresheetsService, InterfacageService],
