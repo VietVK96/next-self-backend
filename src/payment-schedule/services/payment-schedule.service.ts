@@ -5,7 +5,7 @@ import { PaymentSchedulesDto } from '../dto/payment.dto';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 
 @Injectable()
-export class PaymentPlanService {
+export class PaymentScheduleService {
   constructor(private dataSource: DataSource) {}
 
   /**

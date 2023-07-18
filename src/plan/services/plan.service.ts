@@ -12,7 +12,7 @@ import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { EventEntity } from 'src/entities/event.entity';
 import { EnumPlanPlfType, PlanPlfEntity } from 'src/entities/plan-plf.entity';
 import { TraceabilityStatusEnum } from 'src/enum/traceability-status-enum';
-import { PaymentPlanService } from 'src/payment-schedule/services/payment-schedule.service';
+import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { PermissionService } from 'src/user/services/permission.service';
 import { DataSource, Repository } from 'typeorm';
 import {
@@ -33,7 +33,7 @@ import {
 export class PlanService {
   constructor(
     private permissionService: PermissionService,
-    private paymentPlanService: PaymentPlanService,
+    private paymentPlanService: PaymentScheduleService,
     private dataSource: DataSource,
     @InjectRepository(PlanPlfEntity)
     private planPlfRepository: Repository<PlanPlfEntity>,
@@ -514,7 +514,7 @@ export class PlanService {
             [
               task?.id,
               event?.user?.id,
-              options?.parent_id,
+              options?.patient_id,
               event?.id,
               task?.library_act_id ?? null,
               task?.library_act_quantity_id ?? null,
@@ -721,8 +721,8 @@ export class PlanService {
         const eventResult = await queryRunner.query(eventStatement, [
           options?.id,
         ]);
-        const eventId = eventResult[0];
-        if (eventId) {
+        const eventsId = eventResult.map((item) => item.EVT_ID);
+        for (const eventId of eventsId) {
           await queryRunner.query(`
           DELETE T_PLAN_EVENT_PLV
           FROM T_PLAN_EVENT_PLV
