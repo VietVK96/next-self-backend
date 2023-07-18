@@ -128,7 +128,6 @@ export class FindContactController {
       }
       const file = createReadStream(fileRes?.file);
       file.on('error', (e) => {
-        // this.logger.error(e);
         res.set({
           'Content-Type': 'image/jpeg',
         });
