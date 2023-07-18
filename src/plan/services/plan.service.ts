@@ -28,6 +28,7 @@ import {
   TaskData,
   findOnePlanRes,
 } from '../response/plan.res';
+import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 
 @Injectable()
 export class PlanService {
@@ -1035,7 +1036,7 @@ export class PlanService {
 
   async duplicate(payload: DuplicatePlanDto, organizationId: number) {
     // début de la transaction
-    return await this.dataSource.manager.transaction(
+    await this.dataSource.manager.transaction(
       async (transactionalEntityManager) => {
         try {
           // vérification si le plan de traitement appartient bien au groupe
@@ -1104,7 +1105,7 @@ export class PlanService {
             .andWhere('PLV.PLF_ID = :planificationId', { planificationId })
             .getMany();
 
-          for (const evenEVT of evenEVTs) {
+          for (let evenEVT of evenEVTs) {
             const appointmentId = evenEVT?.id;
             const {
               usrId,
@@ -1168,7 +1169,7 @@ export class PlanService {
             FROM T_PLAN_EVENT_PLV PLV
             WHERE PLV.EVT_ID = ?
               AND PLV.PLF_ID = ?
-          `,
+            `,
               [newEventEvt?.id, newPlanPlf?.id, appointmentId, planificationId],
             );
 
@@ -1182,8 +1183,33 @@ export class PlanService {
               .where('ETK.EVT_ID = EVT.EVT_ID')
               .andWhere('EVT.EVT_ID = :appointmentId', { appointmentId })
               .getMany();
-
-            evenEVT.tasks = tEventTaskETKs;
+            const newTasks = [];
+            for (const task of tEventTaskETKs) {
+              const newTask = await transactionalEntityManager.save(
+                EventTaskEntity,
+                {
+                  ...task,
+                  evtId: newEventEvt.id,
+                  id: null,
+                },
+              );
+              const currentDental = await this.dataSource.manager.findOneOrFail(
+                DentalEventTaskEntity,
+                {
+                  where: {
+                    id: task.id,
+                  },
+                },
+              );
+              const newDentalTask = await transactionalEntityManager.save(
+                DentalEventTaskEntity,
+                { ...currentDental, fse: null, id: newTask.id },
+              );
+              newTask.dental = newDentalTask;
+              newTasks.push(newTask);
+            }
+            newEventEvt.tasks = newTasks;
+            evenEVT = newEventEvt;
           }
           return { ...newPlanPlf, events: evenEVTs };
         } catch (err) {
