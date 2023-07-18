@@ -1,6 +1,4 @@
-import { Injectable, NotAcceptableException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-
 import { Repository } from 'typeorm/repository/Repository';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
@@ -14,6 +12,7 @@ import { UpdateNoteDto } from '../dto/noteUpdate.dto';
 import { PermissionService } from 'src/user/services/permission.service';
 import { PerCode } from 'src/constants/permissions';
 import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-request.exception';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class NoteService {
