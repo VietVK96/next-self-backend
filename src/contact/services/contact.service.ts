@@ -545,14 +545,7 @@ count(CON_ID) as countId,COD_TYPE as codType
       if (!filename || !path || !dir) {
         return null;
       }
-      fs.stat(`${dir}/${path}${filename}`, (err) => {
-        if (err) {
-          return null;
-        }
-        return {
-          file: `${dir}/${path}${filename}`,
-        };
-      });
+      return { file: `${dir}/${path}${filename}` };
     } catch (error) {
       return null;
     }
