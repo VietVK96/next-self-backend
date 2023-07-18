@@ -25,7 +25,7 @@ import { ContactPatchDto } from '../dto/contact.payment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ConfigService } from '@nestjs/config';
-import fs from 'fs';
+import * as fs from 'fs';
 
 @Injectable()
 export class ContactService {
@@ -543,12 +543,9 @@ count(CON_ID) as countId,COD_TYPE as codType
       const filename = fileC?.UPL_NAME;
       const path = fileC?.UPL_PATH;
       const dir = await this.configService.get('app.uploadDir');
-      try {
-        fs.accessSync(`${dir}/${path}${filename}`);
-        return { file: `${dir}/${path}${filename}` };
-      } catch (e) {
-        return null;
-      }
+      if (!fs.existsSync(`${dir}/${path}${filename}`)) return null;
+
+      return { file: `${dir}/${path}${filename}` };
     } catch (error) {
       return null;
     }

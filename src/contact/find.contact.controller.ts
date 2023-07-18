@@ -19,7 +19,7 @@ import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
 import { FindAllContactDto } from './dto/findAll.contact.dto';
 import { ContactService } from './services/contact.service';
 import { FindContactService } from './services/find.contact.service';
-import { createReadStream } from 'fs';
+import { createReadStream, existsSync } from 'fs';
 import { join } from 'path';
 @ApiBearerAuth()
 @Controller('/contact')
@@ -118,7 +118,7 @@ export class FindContactController {
   ) {
     try {
       const fileRes = await this.contactService.getAvatar(contactId);
-      if (!fileRes) {
+      if (!fileRes || !existsSync(fileRes?.file)) {
         res.set({
           'Content-Type': 'image/jpeg',
         });
