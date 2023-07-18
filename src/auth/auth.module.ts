@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JWT_LIFETIME, JWT_SECRET } from 'src/constants/jwt';
@@ -11,6 +11,7 @@ import { AddressEntity } from 'src/entities/address.entity';
 import { JwtStrategy } from './jwt.strategy';
 import { GetSessionService } from './services/get-session.service';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
+import { AuthMiddleware } from 'src/middleware/auth.middleware';
 
 @Module({
   imports: [
@@ -33,4 +34,11 @@ import { UserMedicalEntity } from 'src/entities/user-medical.entity';
     GetSessionService,
   ],
 })
-export class AuthModule {}
+export class AuthModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AuthMiddleware).forRoutes(
+      { path: 'securities/verify-password', method: RequestMethod.POST },
+      // Thêm các route khác mà bạn muốn sử dụng middleware trong đó
+    );
+  }
+}
