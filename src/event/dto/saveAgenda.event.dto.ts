@@ -71,7 +71,7 @@ export class SaveAgendaDto {
   eventTypeLabel?: string;
 
   @ApiProperty()
-  reminders?: { [key: string]: string }[];
+  reminders?: reminder[];
 
   @ApiProperty()
   created_at?: string;
@@ -105,4 +105,13 @@ export class SaveAgendaDto {
 
   @ApiProperty()
   historicals?: { [key: string]: string }[];
+}
+
+class reminder {
+  id?: string | number;
+  nbr?: string | number;
+  appointment_reminder_library_id?: string | number;
+  reminderTypeId?: string | number;
+  reminderReceiverId?: string | number;
+  reminderUnitId?: string | number;
 }
