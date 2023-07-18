@@ -37,7 +37,7 @@ export class BeneficiariesRes {
 
 export class PatientRes {
   id: number;
-  number: number;
+  number: string;
   lastname: string;
   firstname: string;
 }

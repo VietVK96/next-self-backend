@@ -11,7 +11,6 @@ import {
   CashingPrintDto,
   CashingQueryOptions,
   PrintCashingTotal,
-  PrintCashingTotalText,
 } from '../dto/cashing.dto';
 import { UserEntity } from 'src/entities/user.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
@@ -27,7 +26,6 @@ import * as dayjs from 'dayjs';
 import { DEFAULT_LOCALE } from 'src/constants/locale';
 import * as path from 'path';
 import { createPdf } from '@saemhco/nestjs-html-pdf';
-import * as numberToWords from 'number-to-words';
 
 dayjs.locale(DEFAULT_LOCALE);
 @Injectable()
@@ -73,71 +71,14 @@ export class CashingService {
       const periods = filteredConditions?.map((condition) => condition?.value);
       if (periods) {
         // Find the minimum date in the array
-        const sortedPeriods = periods?.sort((a, b) => {
-          return +dayjs(a).format('X') - +dayjs(b).format('X');
-        });
-        periodTitle = `${periodTitle} du ${dayjs(sortedPeriods[0]).format(
+        periodTitle = `{periodTitle} du {dayjs(sortedPeriods[0]).format(
           'DD/MM/YYYY',
-        )} au ${dayjs(sortedPeriods[sortedPeriods.length - 1]).format(
+        )} au {dayjs(sortedPeriods[sortedPeriods.length - 1]).format(
           'DD/MM/YYYY',
         )}`;
       }
 
-      const total: PrintCashingTotal = [
-        ...Object.values(EnumCashingPayment),
-        ...Object.values(EnumCashingType),
-      ].reduce((acc, item) => {
-        acc[item] = {
-          amount: 0,
-          amountCare: 0,
-          amountProsthesis: 0,
-        };
-        return acc;
-      }, {});
-      total.total = { total: 0 };
-      // let position = 0;
-      const byDay: ByDayRes = {};
-      payments.forEach((payment) => {
-        const paymentDate = payment?.paymentDate;
-        const type = payment?.type;
-        const mode = payment?.payment;
-        const amount = +Number(payment?.amount).toFixed(2);
-        console.log(amount);
-
-        total[type].total = total[type].total
-          ? +total[type].total.toFixed(2)
-          : 0;
-        total[mode].total = total[mode].total
-          ? +total[mode].total.toFixed(2)
-          : 0;
-        total.total.total += +amount.toFixed(2);
-        total[type].amount += +amount.toFixed(2);
-        total[mode].amount += +amount.toFixed(2);
-        const dateTime = paymentDate ? dayjs(paymentDate) : null;
-        if (dateTime) {
-          let dateFormat = dateTime.format('DD/MM/YYYY');
-
-          if (payload?.group === 'month') {
-            dateFormat = dateTime.format('MM/YYYY');
-          }
-
-          if (!byDay[dateFormat]) {
-            byDay[dateFormat] = { total: 0 };
-          }
-
-          byDay[dateFormat].total = +amount;
-          if (!byDay[dateFormat][mode]) {
-            byDay[dateFormat][mode] = 0;
-          }
-
-          byDay[dateFormat][mode] += +amount;
-        }
-      });
-      const totalText: PrintCashingTotalText = {};
-      for (const e in total) {
-        const tt = total[e]?.total ? numberToWords.toWords(total[e].total) : '';
-        totalText[e] = { total: tt };
-      }
+      const total: PrintCashingTotal = {};
 
       const filePath = path.join(
         process.cwd(),
@@ -162,25 +103,133 @@ export class CashingService {
         payload?.group && ['day', 'month'].includes(payload?.group)
       );
 
-      const newByDay = Object.entries(byDay);
-      console.log(
-        '🚀 ~ file: cashing.service.ts:166 ~ CashingService ~ print ~ newByDay:',
-        payments,
-      );
-      const data = {
-        payments,
-        sinh: 'sinh',
-        groupValid,
-        paymentMethods: EnumCashingPayment,
-        total,
-        totalText,
-        numberToWords,
-        byDay: newByDay,
-      };
+      if (groupValid) {
+        const byDay: ByDayRes = {};
+        payments.forEach((payment) => {
+          const paymentDate = payment?.paymentDate;
+          const type = payment?.type;
+          const mode = payment?.payment;
+          const amount = +Number(payment?.amount).toFixed(2);
 
-      return await createPdf(filePath, options, data);
+          if (type) {
+            total[type] = total[type]
+              ? { total: +total[type]?.total.toFixed(2) }
+              : { total: 0 };
+          }
+          if (mode) {
+            total[mode] = total[mode]
+              ? { total: +total[mode]?.total.toFixed(2) }
+              : { total: 0 };
+          }
+          const dateTime = paymentDate ? dayjs(paymentDate) : null;
+          if (dateTime) {
+            let dateFormat = dateTime.format('DD/MM/YYYY');
+
+            if (payload?.group === 'month') {
+              dateFormat = dateTime.format('MM/YYYY');
+            }
+
+            if (!byDay[dateFormat]) {
+              byDay[dateFormat] = { total: 0 };
+            }
+
+            byDay[dateFormat].total = +amount;
+            if (!byDay[dateFormat][mode]) {
+              byDay[dateFormat][mode] = 0;
+            }
+            byDay[dateFormat][mode] += +amount;
+          }
+        });
+        const data = {
+          paymentMethods: Object.entries(EnumCashingPayment),
+          paymentTypes: Object.entries(EnumCashingType),
+          groupValid,
+          total,
+          byDay,
+        };
+
+        return await createPdf(filePath, options, data);
+      } else {
+        let amountTotal = 0;
+        let amountCareTotal = 0;
+        let amountProsthesisTotal = 0;
+        const total: any[] = [];
+        payments.forEach((payment) => {
+          let payer = payment?.debtor;
+          const mode = payment?.payment;
+          const type = payment?.type;
+          let amount = +payment?.amount;
+          let amountCare = +payment?.amount_care;
+          let amountProsthesis = +payment?.amount_prosthesis;
+          // Partie versante
+          if (payment?.patient) {
+            if (payload?.anonymous) {
+              payer = payment?.patient?.number;
+            } else {
+              payer = `${
+                payment?.patient?.number ? payment?.patient?.number + ' - ' : ''
+              }${payment?.patient?.lastname || ''} ${
+                payment?.patient?.firstname || ''
+              }`;
+            }
+            // Bénéficiaires
+            if (payload?.contact && payment?.beneficiaries) {
+              amount = +payment?.beneficiaries[0]?.amount;
+              amountCare = +payment?.beneficiaries[0]?.amount_care;
+              amountProsthesis = +payment?.beneficiaries[0]?.amount_prosthesis;
+            }
+            amountTotal += amount;
+            amountCareTotal += amountCare;
+            amountProsthesisTotal += amountProsthesis;
+            if (mode) {
+              total[mode] = type[mode]
+                ? {
+                    amount: type[mode].amount + amount,
+                    amountCare: type[mode].amountCare + amountCare,
+                    amountProsthesis:
+                      type[mode].amountProsthesis + amountProsthesis,
+                  }
+                : {
+                    amount: amount,
+                    amountCare: amountCare,
+                    amountProsthesis: amountProsthesis,
+                  };
+            }
+
+            if (type) {
+              total[type] = total[type]
+                ? {
+                    amount: +(total[type].amount + amount).toFixed(2),
+                    amountCare: +(total[type].amountCare + amountCare).toFixed(
+                      2,
+                    ),
+                    amountProsthesis: +(
+                      total[type].amountProsthesis + amountProsthesis
+                    ).toFixed(2),
+                  }
+                : {
+                    amount: amount,
+                    amountCare: amountCare,
+                    amountProsthesis: amountProsthesis,
+                  };
+            }
+
+            payment.debtor = payer;
+          }
+        });
+
+        const data = {
+          amountTotal: amountTotal.toFixed(2),
+          amountCareTotal: amountCareTotal.toFixed(2),
+          amountProsthesisTotal: amountProsthesisTotal.toFixed(2),
+          payments,
+          groupValid,
+          total,
+        };
+
+        return await createPdf(filePath, options, data);
+      }
     } catch (error) {
-      console.log(error);
       return new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
@@ -306,7 +355,7 @@ export class CashingService {
     qrPayment
       .andWhere('CSG.USR_ID = :id', { id: doctorId })
       .groupBy('CSG.CSG_ID')
-      .orderBy(`{orderBy} {order}, CSG.created_at DESC`)
+      .orderBy(`${orderBy} ${order}, CSG.created_at DESC`)
       .limit(limit)
       .offset(offset);
     const payments = await qrPayment.getRawMany();
@@ -326,11 +375,16 @@ export class CashingService {
         .where('SLC.SLC_ID = :id', { id: payment.slip_check_id })
         .andWhere('SLC.LBK_ID = LBK.LBK_ID')
         .getRawOne();
-
+      const paymentDate = dayjs(payment.paymentDate).isValid()
+        ? dayjs(payment.paymentDate).format('YYYY-MM-DD')
+        : null;
+      const date = dayjs(payment.date).isValid()
+        ? dayjs(payment.date).format('YYYY-MM-DD')
+        : null;
       result.push({
         ...payment,
-        paymentDate: dayjs(payment.paymentDate).format('YYYY-MM-DD'),
-        date: dayjs(payment.date).format('YYYY-MM-DD'),
+        paymentDate,
+        date,
         patient,
         beneficiaries,
         bank,
@@ -391,10 +445,16 @@ export class CashingService {
         .where('CSC.CSG_ID = :id', { id: payment.id })
         .andWhere('CSC.CON_ID = CON.CON_ID')
         .getRawMany();
+      const paymentDate = dayjs(payment.paymentDate).isValid()
+        ? dayjs(payment.paymentDate).format('YYYY-MM-DD')
+        : null;
+      const date = dayjs(payment.date).isValid()
+        ? dayjs(payment.date).format('YYYY-MM-DD')
+        : null;
       results.push({
         ...payment,
-        paymentDate: dayjs(payment.paymentDate).format('YYYY-MM-DD'),
-        date: dayjs(payment.date).format('YYYY-MM-DD'),
+        paymentDate,
+        date,
         patient,
         beneficiaries,
       });

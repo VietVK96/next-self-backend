@@ -25,27 +25,27 @@
         {{#if header}}
         {{ header}}
         {{else}}
-        <div>
-            Docteur  {{user.fullName}}
-        </div>
-        {{#if user.address}}
-        <div>
-            <div>
-                {{ user.address.street }}
-            </div>
-            {{#if user.address.streetComp}}
-            <div>
-                {{ user.address.streetComp }}
-            </div>
+        <p style="width: 100%;">
+            Docteur  {{user.fullName}} 
+        </p>
+        {{#if user.address}} 
+        <div style="width: 100%;">
+            <p style="width: 100%;">
+                {{ user.address.street }} 
+            </p>
+             {{#if user.address.streetComp}} 
+            <p style="width: 100%;">
+                {{ user.address.streetComp }} 
+            </p>
             {{/if}}
-            <div>
-                {{ user.address.zipCode }} {{ user.address.city }}
-            </div>
+            <p style="width: 100%;">
+                {{ user.address.zipCode }} {{ user.address.city }} 
+            </p>
         </div>
         {{/if}}
-        {{#if user.medical.finessNumber}}
+        {{#if user.medical.finessNumber}} 
         <div>
-            Numéro ADELI: {{ user.medical.finessNumber }}
+            Numéro ADELI: {{ user.medical.finessNumber }} 
         </div>
         {{/if}}
         {{/if}}

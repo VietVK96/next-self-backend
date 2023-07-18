@@ -36,7 +36,6 @@ import { createPdf } from '@saemhco/nestjs-html-pdf';
 import * as dayjs from 'dayjs';
 import { br2nl } from 'src/common/util/string';
 import * as fs from 'fs';
-import * as mime from 'mime-types';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuidv4 } from 'uuid';
 import { UploadEntity } from 'src/entities/upload.entity';
@@ -699,9 +698,10 @@ export class ContactPaymentService {
   }
 
   // php/payment/receipt.php 31 - 127
-  async getReceipt(payload: ReceiptDto) {
+  async getReceipt(payload: ReceiptDto, identity: UserIdentity) {
     let currencyName = 'Euro';
     let header = '';
+
     const dirname = String(identity.org).padStart(5, '0');
     const fileName = `${uuidv4()}.pdf`;
 

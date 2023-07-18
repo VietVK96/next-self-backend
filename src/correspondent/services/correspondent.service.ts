@@ -20,8 +20,6 @@ import {
   dateFormatter,
   inseeFormatter,
 } from '../../common/formatter/index';
-import { ContactEntity } from 'src/entities/contact.entity';
-import { AddressEntity } from 'src/entities/address.entity';
 
 @Injectable()
 export class CorrespondentService {

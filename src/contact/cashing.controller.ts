@@ -16,11 +16,7 @@ export class CashingController {
   // php/cashing/print.php
   @Get('/print')
   @UseGuards(TokenGuard)
-  async print(
-    @Res() res,
-    @Query() payload: CashingPrintDto,
-    // @CurrentUser() identity: UserIdentity,
-  ) {
+  async print(@Res() res, @Query() payload: CashingPrintDto) {
     const buffer = await this.service.print(payload);
 
     res.set({
