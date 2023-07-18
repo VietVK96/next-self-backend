@@ -187,7 +187,7 @@ export class SaveEventService {
             color,
             state,
             lateness,
-            rrule,
+            rrule === '' ? null : rrule,
           ],
         );
         const result = await queryRunner.query(
