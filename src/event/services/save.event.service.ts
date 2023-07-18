@@ -10,6 +10,7 @@ import dayjs from 'dayjs';
 import { EventStateEnum } from 'src/constants/event';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
+import { checkId } from 'src/common/util/number';
 
 @Injectable()
 export class SaveEventService {
@@ -507,16 +508,14 @@ export class SaveEventService {
 
         const promiseArr = [];
         for (const reminder of reminders) {
-          const reminderId =
-            reminder['id'] !== undefined ? reminder['id'] : null;
+          const reminderId = checkId(reminder?.id);
           const reminderNbr = reminder['nbr'];
-          const reminderTypeId = reminder['reminderTypeId'];
-          const reminderReceiverId = reminder['reminderReceiverId'];
-          const reminderUnitId = reminder['reminderUnitId'];
-          const appointmentReminderLibraryId =
-            reminder['appointment_reminder_library_id'] !== undefined
-              ? reminder['appointment_reminder_library_id']
-              : null;
+          const reminderTypeId = checkId(reminder?.reminderTypeId);
+          const reminderReceiverId = checkId(reminder?.reminderReceiverId);
+          const reminderUnitId = checkId(reminder?.reminderUnitId);
+          const appointmentReminderLibraryId = checkId(
+            reminder?.appointment_reminder_library_id,
+          );
 
           promiseArr.push(
             queryRunner.query(
