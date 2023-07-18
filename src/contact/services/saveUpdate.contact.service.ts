@@ -18,6 +18,7 @@ import { ContactService } from './contact.service';
 import { ContactDetailRes } from '../response/contact-detail.res';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ContactPhoneCopEntity } from 'src/entities/contact-phone-cop.entity';
+import { checkId, checkNumber } from 'src/common/util/number';
 @Injectable()
 export class SaveUpdateContactService {
   constructor(
@@ -75,59 +76,53 @@ export class SaveUpdateContactService {
       const patient: ContactEntity = {
         id: reqBody?.id,
         organizationId: identity.org,
-        nbr: Number(reqBody?.nbr) || null,
+        nbr: checkNumber(reqBody?.nbr),
         lastname: reqBody?.lastname || '',
         firstname: reqBody?.firstname || '',
-        birthOrder: Number(reqBody?.birthOrder) || 1,
+        birthOrder: checkNumber(reqBody?.birthOrder) || 1,
         insee: reqBody?.insee || null,
         inseeKey: reqBody?.inseeKey || null,
         odontogramObservation: reqBody?.odontogram_observation?.trim() || null,
-        ursId: Number(reqBody?.practitionerId),
+        ursId: checkId(reqBody?.practitionerId),
         genId: Number(reqBody?.genderId) || null,
         adrId: address.id,
-        uplId: Number(reqBody?.avatarId) || null,
-        cpdId:
-          Number(reqBody?.addressed_by?.id) &&
-          Number(reqBody?.addressed_by?.id) !== 0
-            ? +reqBody?.addressed_by?.id
-            : null,
-        cofId: Number(reqBody?.contactFamilyId) || null,
+        uplId: checkId(reqBody?.avatarId),
+        cpdId: checkId(reqBody?.addressed_by?.id),
+        cofId: checkId(reqBody?.contactFamilyId),
         profession: reqBody?.profession || null,
         email: reqBody?.email || null,
         birthDate: dayjs(reqBody.birthday).isValid() ? reqBody?.birthday : null,
-        quality: Number(reqBody.quality) || null,
-        breastfeeding: Number(reqBody?.breastfeeding) || 0,
-        pregnancy: Number(reqBody?.pregnancy) ?? 0,
-        clearanceCreatinine: Number(reqBody?.clearanceCreatinine) ?? 0,
+        quality: checkNumber(reqBody.quality),
+        breastfeeding: checkNumber(reqBody?.breastfeeding) || 0,
+        pregnancy: checkNumber(reqBody?.pregnancy) || 0,
+        clearanceCreatinine: checkNumber(reqBody?.clearanceCreatinine) || 0,
         hepaticInsufficiency: reqBody?.hepaticInsufficiency || '',
-        weight: Number(reqBody?.weight) || 0,
-        size: Number(reqBody?.size) || 0,
-        conMedecinTraitantId:
-          Number(reqBody?.doctor.id) && Number(reqBody?.doctor.id) !== 0
-            ? +reqBody?.doctor.id
-            : null,
+        weight: checkNumber(reqBody?.weight) || 0,
+        size: checkNumber(reqBody?.size) || 0,
+        conMedecinTraitantId: checkId(reqBody?.doctor.id),
         msg: reqBody?.msg || null,
         notificationMsg: reqBody?.notificationMsg || null,
-        notificationEnable: Number(reqBody?.notificationEnable) || 1,
-        notificationEveryTime: Number(reqBody?.notificationEveryTime) || 0,
+        notificationEnable: checkNumber(reqBody?.notificationEnable) || 1,
+        notificationEveryTime: checkNumber(reqBody?.notificationEveryTime) || 0,
         reminderVisitType:
           EnumContactReminderVisitType[
             reqBody.reminderVisitType.toUpperCase()
           ] || EnumContactReminderVisitType.DURATION,
-        reminderVisitDuration: Number(reqBody?.reminderVisitDuration) || null,
-        reminderVisitDate: reqBody?.reminderVisitDate ?? null,
-        reminderVisitLastDate: reqBody?.reminderVisitLastDate ?? null,
-        color: Number(reqBody?.color) || -3840,
-        colorMedical: Number(reqBody?.colorMedical) || -3840,
-        socialSecurityReimbursementRate:
-          Number(reqBody?.social_security_reimbursement_rate) || null,
-        mutualRepaymentType: Number(reqBody?.mutualRepaymentType) ?? 1,
-        mutualRepaymentRate: Number(reqBody?.mutualRepaymentRate) ?? 0,
-        mutualComplement: Number(reqBody?.mutualComplement) ?? 0,
-        mutualCeiling: Number(reqBody?.mutualCeiling) ?? 0,
-        agenesie: Number(reqBody?.agenesie) || 0,
-        maladieRare: Number(reqBody?.maladieRare) || 0,
-        rxSidexisLoaded: Number(reqBody?.rxSidexisLoaded) || 0,
+        reminderVisitDuration: checkNumber(reqBody?.reminderVisitDuration),
+        reminderVisitDate: reqBody?.reminderVisitDate || null,
+        reminderVisitLastDate: reqBody?.reminderVisitLastDate || null,
+        color: checkNumber(reqBody?.color) || -3840,
+        colorMedical: checkNumber(reqBody?.colorMedical) || -3840,
+        socialSecurityReimbursementRate: checkNumber(
+          reqBody?.social_security_reimbursement_rate,
+        ),
+        mutualRepaymentType: checkNumber(reqBody?.mutualRepaymentType) || 1,
+        mutualRepaymentRate: checkNumber(reqBody?.mutualRepaymentRate) || 0,
+        mutualComplement: checkNumber(reqBody?.mutualComplement) || 0,
+        mutualCeiling: checkNumber(reqBody?.mutualCeiling) || 0,
+        agenesie: checkNumber(reqBody?.agenesie) || 0,
+        maladieRare: checkNumber(reqBody?.maladieRare) || 0,
+        rxSidexisLoaded: checkNumber(reqBody?.rxSidexisLoaded) || 0,
       };
 
       await queryRunner.manager
@@ -137,10 +132,10 @@ export class SaveUpdateContactService {
         .where({ id: patient.id })
         .execute();
 
-      const policyHolderName = reqBody?.medical?.policy_holder?.name ?? null;
-      const inseeNumber = reqBody?.medical?.policy_holder?.insee_number ?? null;
+      const policyHolderName = reqBody?.medical?.policy_holder?.name || null;
+      const inseeNumber = reqBody?.medical?.policy_holder?.insee_number || null;
       const policyHolderPatientId =
-        reqBody?.medical?.policy_holder?.patient?.id ?? null;
+        reqBody?.medical?.policy_holder?.patient?.id || null;
 
       const patientMedical = await this.patientMedicalRepository.findOneOrFail({
         where: { patientId: patient.id },
@@ -288,59 +283,53 @@ export class SaveUpdateContactService {
 
       const patient: ContactEntity = {
         organizationId: identity.org,
-        nbr: Number(reqBody?.nbr) || null,
+        nbr: checkNumber(reqBody?.nbr),
         lastname: reqBody?.lastname || '',
         firstname: reqBody?.firstname || '',
-        birthOrder: Number(reqBody?.birthOrder) || 1,
+        birthOrder: checkNumber(reqBody?.birthOrder) || 1,
         insee: reqBody?.insee || null,
         inseeKey: reqBody?.inseeKey || null,
         odontogramObservation: reqBody?.odontogram_observation?.trim() || null,
-        ursId: Number(reqBody?.practitionerId),
+        ursId: checkId(reqBody?.practitionerId),
         genId: Number(reqBody?.genderId) || null,
         adrId: address.id,
-        uplId: Number(reqBody?.avatarId) || null,
-        cpdId:
-          Number(reqBody?.addressed_by?.id) &&
-          Number(reqBody?.addressed_by?.id) !== 0
-            ? +reqBody?.addressed_by?.id
-            : null,
-        cofId: Number(reqBody?.contactFamilyId) || null,
+        uplId: checkId(reqBody?.avatarId),
+        cpdId: checkId(reqBody?.addressed_by?.id),
+        cofId: checkId(reqBody?.contactFamilyId),
         profession: reqBody?.profession || null,
         email: reqBody?.email || null,
         birthDate: dayjs(reqBody.birthday).isValid() ? reqBody?.birthday : null,
-        quality: Number(reqBody.quality) || null,
-        breastfeeding: Number(reqBody?.breastfeeding) || 0,
-        pregnancy: Number(reqBody?.pregnancy) ?? 0,
-        clearanceCreatinine: Number(reqBody?.clearanceCreatinine) ?? 0,
+        quality: checkNumber(reqBody.quality),
+        breastfeeding: checkNumber(reqBody?.breastfeeding) || 0,
+        pregnancy: checkNumber(reqBody?.pregnancy) || 0,
+        clearanceCreatinine: checkNumber(reqBody?.clearanceCreatinine) || 0,
         hepaticInsufficiency: reqBody?.hepaticInsufficiency || '',
-        weight: Number(reqBody?.weight) || 0,
-        size: Number(reqBody?.size) || 0,
-        conMedecinTraitantId:
-          Number(reqBody?.doctor.id) && Number(reqBody?.doctor.id) !== 0
-            ? +reqBody?.doctor.id
-            : null,
+        weight: checkNumber(reqBody?.weight) || 0,
+        size: checkNumber(reqBody?.size) || 0,
+        conMedecinTraitantId: checkId(reqBody?.doctor.id),
         msg: reqBody?.msg || null,
         notificationMsg: reqBody?.notificationMsg || null,
-        notificationEnable: Number(reqBody?.notificationEnable) || 1,
-        notificationEveryTime: Number(reqBody?.notificationEveryTime) || 0,
+        notificationEnable: checkNumber(reqBody?.notificationEnable) || 1,
+        notificationEveryTime: checkNumber(reqBody?.notificationEveryTime) || 0,
         reminderVisitType:
           EnumContactReminderVisitType[
             reqBody.reminderVisitType.toUpperCase()
           ] || EnumContactReminderVisitType.DURATION,
-        reminderVisitDuration: Number(reqBody?.reminderVisitDuration) || null,
-        reminderVisitDate: reqBody?.reminderVisitDate ?? null,
-        reminderVisitLastDate: reqBody?.reminderVisitLastDate ?? null,
-        color: Number(reqBody?.color) || -3840,
-        colorMedical: Number(reqBody?.colorMedical) || -3840,
-        socialSecurityReimbursementRate:
-          Number(reqBody?.social_security_reimbursement_rate) || null,
-        mutualRepaymentType: Number(reqBody?.mutualRepaymentType) ?? 1,
-        mutualRepaymentRate: Number(reqBody?.mutualRepaymentRate) ?? 0,
-        mutualComplement: Number(reqBody?.mutualComplement) ?? 0,
-        mutualCeiling: Number(reqBody?.mutualCeiling) ?? 0,
-        agenesie: Number(reqBody?.agenesie) || 0,
-        maladieRare: Number(reqBody?.maladieRare) || 0,
-        rxSidexisLoaded: Number(reqBody?.rxSidexisLoaded) || 0,
+        reminderVisitDuration: checkNumber(reqBody?.reminderVisitDuration),
+        reminderVisitDate: reqBody?.reminderVisitDate || null,
+        reminderVisitLastDate: reqBody?.reminderVisitLastDate || null,
+        color: checkNumber(reqBody?.color) || -3840,
+        colorMedical: checkNumber(reqBody?.colorMedical) || -3840,
+        socialSecurityReimbursementRate: checkNumber(
+          reqBody?.social_security_reimbursement_rate,
+        ),
+        mutualRepaymentType: checkNumber(reqBody?.mutualRepaymentType) || 1,
+        mutualRepaymentRate: checkNumber(reqBody?.mutualRepaymentRate) || 0,
+        mutualComplement: checkNumber(reqBody?.mutualComplement) || 0,
+        mutualCeiling: checkNumber(reqBody?.mutualCeiling) || 0,
+        agenesie: checkNumber(reqBody?.agenesie) || 0,
+        maladieRare: checkNumber(reqBody?.maladieRare) || 0,
+        rxSidexisLoaded: checkNumber(reqBody?.rxSidexisLoaded) || 0,
       };
       const savePatient = await queryRunner.manager
         .createQueryBuilder()
@@ -349,10 +338,11 @@ export class SaveUpdateContactService {
         .values(patient)
         .execute();
 
-      const policyHolderName = reqBody?.medical.policy_holder?.name;
-      const inseeNumber = reqBody?.medical?.policy_holder?.insee_number ?? null;
-      const policyHolderPatientId =
-        reqBody?.medical?.policy_holder?.patient?.id ?? null;
+      const policyHolderName = reqBody?.medical.policy_holder?.name || '';
+      const inseeNumber = reqBody?.medical?.policy_holder?.insee_number || null;
+      const policyHolderPatientId = checkId(
+        reqBody?.medical?.policy_holder?.patient?.id,
+      );
       if (policyHolderName) {
         const policyHolder: PolicyHolderEntity = {
           inseeNumber,
