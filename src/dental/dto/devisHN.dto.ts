@@ -219,7 +219,7 @@ export class DevisRequestAjaxDto {
     name: 'id_devisHN',
     required: false,
   })
-  id_devisHN?: string;
+  id_devisHN?: number;
 
   @ApiProperty({
     name: 'datedevisHN',

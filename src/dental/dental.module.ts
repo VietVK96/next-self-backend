@@ -17,6 +17,8 @@ import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { AddressEntity } from 'src/entities/address.entity';
+import { DevisHNController } from './devisHN.controller';
+import { DevisHNServices } from './services/devisRequestAjax.service';
 
 @Module({
   imports: [
@@ -40,7 +42,7 @@ import { AddressEntity } from 'src/entities/address.entity';
       AddressEntity,
     ]),
   ],
-  controllers: [DentalController],
-  providers: [OrdonnancesServices, FactureServices],
+  controllers: [DentalController, DevisHNController],
+  providers: [OrdonnancesServices, FactureServices, DevisHNServices],
 })
 export class DentalModule {}

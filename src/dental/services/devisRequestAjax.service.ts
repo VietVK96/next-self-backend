@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { Repository } from 'typeorm';
 import { DevisRequestAjaxDto } from '../dto/devisHN.dto';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import { DEFAULT_LOCALE } from 'src/constants/locale';
 import { id } from 'date-fns/locale';
 @Injectable()
@@ -36,9 +36,11 @@ export class DevisHNServices {
     const acceptedAt = dayjs(payload.date_acceptation)
       .locale(DEFAULT_LOCALE)
       .format('d/m/Y');
-    // const dentalQuotation = this.dentalQuotationRepository.find({
-    //   id: id_devisHN,
-    // });
-    return '';
+    const dentalQuotation = await this.dentalQuotationRepository.find({
+      where: {
+        id: id_devisHN,
+      },
+    });
+    return dentalQuotation;
   }
 }
