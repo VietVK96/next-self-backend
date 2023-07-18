@@ -118,7 +118,7 @@ export class FindContactController {
   ) {
     try {
       const fileRes = await this.contactService.getAvatar(contactId);
-      const file = createReadStream(fileRes.file);
+      const file = createReadStream(fileRes?.file);
       file.on('error', (e) => {
         this.logger.error(e);
         res.set({

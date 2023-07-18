@@ -59,24 +59,17 @@ export class UploadService {
     if (files) {
       await this._checkGroupStorageSpace(groupId, files?.size);
     }
-    await this._saveFilesInformationsIntoDatabase(
+    const upload = await this._saveFilesInformationsIntoDatabase(
       files,
       userCurrent,
       dir,
       auth,
     );
 
-    const uplId = (
-      await this.uploadRepository.findOne({
-        where: { token: userCurrent?.token },
-        order: {
-          id: 'desc',
-        },
-      })
-    ).id;
     await this.dataSource
       .getRepository(ContactEntity)
-      .update(contactId, { uplId });
+      .update(contactId, { uplId: upload?.id });
+    return upload;
   }
 
   async getContactCurrent(contactId: number): Promise<ContactEntity> {
@@ -158,8 +151,9 @@ export class UploadService {
         }
         fs.writeFileSync(dirFile, files?.buffer);
         files['uploadEntity'] = uploadEntity;
-        await this.dataSource.getRepository(UploadEntity).save(uploadEntity);
-        return uploadEntity;
+        return await this.dataSource
+          .getRepository(UploadEntity)
+          .save(uploadEntity);
       }
     } catch (error) {
       throw new CBadRequestException(error.message);
