@@ -121,7 +121,6 @@ export class ContactService {
       USR.USR_FIRSTNAME as practitionerFirstname,
       UPL.UPL_ID as avatarId,
       UPL.UPL_TOKEN as avatarToken,
-      NULL as avatarUrl,
       IFNULL(cou.cou_amount_due, 0) as amountDue,
       IFNULL(cou.amount_due_care, 0) as amountDueCare,
       IFNULL(cou.amount_due_prosthesis, 0) as amountDueProsthesis,
