@@ -51,7 +51,7 @@ export class TaskController {
   }
 
   @Post('task/save')
-  // @UseGuards(TokenGuard)
+  @UseGuards(TokenGuard)
   async saveEventTask(@Body() payload: EventTaskSaveDto) {
     return this.saveTaskService.save(payload);
   }
