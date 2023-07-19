@@ -43,12 +43,19 @@ import { MedicalModule } from './medical/medical.module';
 import { CaresheetsModule } from './caresheets/caresheets.module';
 import { PaymentSchedulesModule } from './payment-schedule/payment-schedule.module';
 import { BankModule } from './bank/bank.module';
-import { join } from 'path';
+import path, { join } from 'path';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { HttpModule } from '@nestjs/axios';
 import { LoggerMiddleware } from './common/util/logrequest';
 
+console.log(
+  `join(
+  process.cwd(),
+  'templates/mail'
+)`,
+  join(process.cwd(), 'templates/mail'),
+);
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -100,7 +107,7 @@ import { LoggerMiddleware } from './common/util/logrequest';
           from: config.get('EMAIL_FROM_USER'),
         },
         template: {
-          dir: join(__dirname, './templates/mail/'),
+          dir: join(process.cwd(), 'templates/mail'),
           adapter: new HandlebarsAdapter(),
           options: {
             strict: true,

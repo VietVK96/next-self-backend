@@ -30,6 +30,7 @@ export class DevisServices {
     private dataSource: DataSource,
   ) {}
 
+  // dental/quotation-mutual/devis_requetes_ajax.php (line 7 - 270)
   async devisRequestAjax(req: DevisRequestAjaxDto, identity: UserIdentity) {
     const {
       ident_prat,
@@ -121,7 +122,6 @@ export class DevisServices {
           signaturePraticien ?? null,
           id_devis,
         ];
-
         await this.dataSource.query(
           `UPDATE T_DENTAL_QUOTATION_DQO DQO
           SET DQO.USR_ID = ?,
@@ -154,10 +154,10 @@ export class DevisServices {
           WHERE DQO_ID = ?`,
           inputParameters,
         );
-
         let medicalHeader = await this.medicalHeaderRepository.findOne({
           where: { userId: identity?.id },
         });
+
         if (!(medicalHeader instanceof MedicalHeaderEntity)) {
           const user = await this.userRepository.findOne({
             where: { id: identity?.id },
@@ -168,19 +168,21 @@ export class DevisServices {
         medicalHeader.identPratQuot = ident_prat;
         medicalHeader.quotationMutualTitle = title;
         this.medicalHeaderRepository.save(medicalHeader);
-
-        const quote = await this.dentalQuotationRepository.findOne({
-          relations: { attachments: true },
-          where: { id: id_devis },
-        });
-        quote?.attachments.forEach(async (attachment, index) => {
-          await this.lettersRepository.save({
-            id: attachment?.id,
-            quote: null,
+        const quote = await this.dentalQuotationRepository
+          .createQueryBuilder('quote')
+          .leftJoin('quote.attachments', 'attachments')
+          .where('quote.id= :id', { id: id_devis })
+          .getOne();
+        console.log('3 :>> ', 3);
+        if (quote?.attachments.length > 0) {
+          quote?.attachments.forEach(async (attachment, index) => {
+            await this.dentalQuotationRepository.save({
+              id: attachment?.id,
+              quote: null,
+            });
+            delete quote[index];
           });
-          delete quote[index];
-        });
-
+        }
         if (attachments.length > 0) {
           attachments.map(async (id) => {
             const mail = await this.mailService.find(id);
@@ -298,5 +300,9 @@ export class DevisServices {
     console.error(
       '-1002 : Probl&egrave;me durant la création de la facture. Merci de réessayer plus tard.',
     );
+  }
+
+  async sendMail(identity: UserIdentity) {
+    await this.mailService.sendTest();
   }
 }

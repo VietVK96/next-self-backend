@@ -723,4 +723,13 @@ export class MailService {
       return null;
     }
   }
+
+  async sendTest() {
+    await this.mailerService.sendMail({
+      to: 'nguyenthanh.rise.88@gmail.com',
+      subject: 'Greeting from NestJS NodeMailer',
+      template: 'test.hbs',
+      context: {},
+    });
+  }
 }

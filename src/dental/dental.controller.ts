@@ -84,4 +84,10 @@ export class DentalController {
   ) {
     return this.devisServices.devisRequestAjax(payload, identity);
   }
+
+  @Get('/quotation-mutual/send-email')
+  @UseGuards(TokenGuard)
+  async sendMail(@CurrentUser() identity: UserIdentity) {
+    return this.devisServices.sendMail(identity);
+  }
 }
