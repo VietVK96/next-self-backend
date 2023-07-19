@@ -5,6 +5,9 @@ import { UserEntity } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 import crypto from 'crypto';
 import * as phpPassword from 'node-php-password';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class SecuritiesService {
@@ -14,11 +17,10 @@ export class SecuritiesService {
   ) {}
   async verifyPassword(
     verifyPassWordDto: VerifyPasswordDto,
-    request: any,
+    curentUser: UserIdentity,
   ): Promise<any> {
     try {
-      const id = request?.user?.id;
-
+      const id = curentUser?.id;
       const { password } = verifyPassWordDto;
       const user = await this.userRepository.findOne({
         where: {
@@ -31,17 +33,17 @@ export class SecuritiesService {
         const shasum = crypto.createHash('sha1');
         const passwordHash = shasum.update(password).digest('hex');
         if (passwordHash !== user.password) {
-          throw new BadRequestException('Invalid password');
+          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
         }
       } else {
         if (!phpPassword.verify(password, user.password)) {
-          throw new BadRequestException('Invalid password');
+          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
         }
       }
 
       return { password_verified: true };
     } catch (e) {
-      throw new BadRequestException(e.message);
+      throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
     }
   }
 }

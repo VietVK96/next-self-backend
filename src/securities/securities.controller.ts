@@ -1,18 +1,13 @@
-import {
-  Controller,
-  Inject,
-  BadRequestException,
-  Body,
-  Post,
-  UseGuards,
-  Headers,
-  Req,
-} from '@nestjs/common';
+import { Controller, Body, Post, UseGuards, Req } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SecuritiesService } from './securities.service';
 import { VerifyPasswordDto } from './dto/veiry-password.dto';
-import { TokenGuard } from 'src/common/decorator/auth.decorator';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
 
 @ApiBearerAuth()
 @ApiTags('Securities') // Thêm nhãn API nếu cần thiết
@@ -27,8 +22,8 @@ export class SecuritiesController {
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   verifyPassword(
     @Body() verifyPassWordDto: VerifyPasswordDto,
-    @Req() request: any,
+    @CurrentUser() user: UserIdentity,
   ) {
-    return this.securituesService.verifyPassword(verifyPassWordDto, request);
+    return this.securituesService.verifyPassword(verifyPassWordDto, user);
   }
 }
