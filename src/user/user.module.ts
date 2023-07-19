@@ -25,7 +25,6 @@ import { LotCareSheetEntity } from 'src/entities/lot-caresheet.entity';
   imports: [
     TypeOrmModule.forFeature([
       UserEntity,
-      UserMedicalEntity,
       UserPreferenceEntity,
       UserMedicalEntity,
       TeletransmissionEntity,
