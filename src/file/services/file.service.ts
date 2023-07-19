@@ -3,7 +3,7 @@
  */
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable, NotAcceptableException } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { UploadEntity } from 'src/entities/upload.entity';
 import { ConfigService } from '@nestjs/config';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
@@ -15,6 +15,7 @@ import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import * as fs from 'fs';
 import { SuccessResponse } from 'src/common/response/success.res';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class FileService {
@@ -28,17 +29,20 @@ export class FileService {
   ) {}
 
   async getPathFile(id: number) {
-    const file = await this.uploadRepository.find({
+    const file = await this.uploadRepository.findOne({
       where: { id: id },
     });
-    if (!file || file.length < 1) {
-      throw new CNotFoundRequestException('file not found');
+    if (!file) {
+      throw new CNotFoundRequestException(ErrorCode.FILE_NOT_FOUND);
     }
 
-    const originalFilename = sanitizeFilename(file[0].name);
-    const fileName = file[0].fileName;
+    const originalFilename = sanitizeFilename(file.name);
+    const fileName = file.fileName;
     const dir = await this.configService.get('app.uploadDir');
-
+    const fullPath = `${dir}/${fileName}`;
+    if (!fs.existsSync(fullPath)) {
+      throw new CBadRequestException(ErrorCode.FILE_NOT_FOUND);
+    }
     return {
       mimeType: file[0].type,
       path: `${dir}/${fileName}`,
@@ -50,14 +54,21 @@ export class FileService {
     const file = await this.uploadRepository.findOne({
       where: { id: id },
     });
+    if (!file) throw new CBadRequestException(ErrorCode.CANNOT_UPDATE_FILE);
     const tags = [];
     if (!payload || !payload.original_filename) {
-      throw new CBadRequestException('original_filename is required');
+      throw new CBadRequestException(ErrorCode.ORIGINAL_FILENAME_IS_REQUIRED);
     }
     if (payload.tags && payload.tags.length > 0) {
-      for (const tagId of payload.tags) {
-        const tag = await this.tagRepository.findOne({ where: { id: tagId } });
-        tags.push(tag);
+      for (const tagParam of payload.tags) {
+        const condition: FindOptionsWhere<TagEntity> =
+          typeof tagParam == 'number'
+            ? { id: tagParam }
+            : { internalReference: tagParam };
+        const tag = await this.tagRepository.findOne({
+          where: condition,
+        });
+        if (tags) tags.push(tag);
       }
     }
     file.tags = tags;
@@ -87,18 +98,22 @@ export class FileService {
     ) {
       throw new NotAcceptableException();
     }
-    const file = await this.uploadRepository.findOne({
-      where: { id: id },
-    });
-    if (!file) {
-      throw new CBadRequestException('the file is not in existence');
+    try {
+      const file = await this.uploadRepository.findOne({
+        where: { id: id },
+      });
+      if (!file) {
+        throw new CBadRequestException(ErrorCode.FILE_NOT_FOUND);
+      }
+      await this.uploadRepository.delete({ id });
+
+      const dir = await this.configService.get('app.uploadDir');
+      const dirFile = `${dir}/${file?.fileName}`;
+      fs.unlinkSync(dirFile);
+
+      return { success: true };
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.DELETE_UNSUCCESSFUL);
     }
-    await this.uploadRepository.delete({ id });
-
-    const dir = await this.configService.get('app.uploadDir');
-    const dirFile = `${dir}/${file?.fileName}`;
-    fs.unlinkSync(dirFile);
-
-    return { success: true };
   }
 }

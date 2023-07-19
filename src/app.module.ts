@@ -43,6 +43,7 @@ import { MedicalModule } from './medical/medical.module';
 import { CaresheetsModule } from './caresheets/caresheets.module';
 import { PaymentSchedulesModule } from './payment-schedule/payment-schedule.module';
 import { BankModule } from './bank/bank.module';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [

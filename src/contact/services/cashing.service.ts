@@ -57,27 +57,6 @@ export class CashingService {
       payments = payments?.filter(
         (payment) => payment?.date || payment?.paymentDate,
       );
-      let periodTitle =
-        payload?.group === 'day'
-          ? 'Livre des honoraires journaliers'
-          : payload?.group === 'month'
-          ? 'Livre des honoraires mensuels'
-          : 'Journal des encaissements';
-      const filteredConditions = payload?.conditions
-        ? payload?.conditions?.filter((condition) =>
-            ['CSG.date', 'CSG.paymentDate'].includes(condition?.field),
-          )
-        : [];
-      const periods = filteredConditions?.map((condition) => condition?.value);
-      if (periods) {
-        // Find the minimum date in the array
-        periodTitle = `{periodTitle} du {dayjs(sortedPeriods[0]).format(
-          'DD/MM/YYYY',
-        )} au {dayjs(sortedPeriods[sortedPeriods.length - 1]).format(
-          'DD/MM/YYYY',
-        )}`;
-      }
-
       const total: PrintCashingTotal = {};
 
       const filePath = path.join(
