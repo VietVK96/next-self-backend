@@ -517,4 +517,90 @@ export class PatientService {
 
     return patient?.contraindications.sort((a, b) => a.position - b.position);
   }
+
+  /**
+   * application/Services/Patient.php => 180 -> 264
+   */
+  async getNextReminderByDoctor(id: number, doctorId: number) {
+    const patient = await this.dataSource.query(
+      `
+      SELECT
+        CON_REMINDER_VISIT_TYPE AS type,
+        CON_REMINDER_VISIT_DATE AS date
+      FROM T_CONTACT_CON
+      WHERE CON_ID = ?`,
+      [id],
+    );
+    const type = patient?.type;
+    if (type === 'date') return patient?.date;
+    if (type === 'duration') {
+      const duration = await this.dataSource.query(
+        `
+        SELECT
+          USP_REMINDER_VISIT_DURATION
+        FROM T_USER_PREFERENCE_USP
+        WHERE USR_ID = ?
+      `,
+        [doctorId],
+      );
+      return await this.dataSource.query(
+        `
+        SELECT
+            MAX(t1.max_date) + INTERVAL IF(
+                CON_REMINDER_VISIT_DURATION IS NULL OR CON_REMINDER_VISIT_DURATION = 0,
+                ?,
+                CON_REMINDER_VISIT_DURATION
+            ) MONTH
+        FROM T_CONTACT_CON
+        JOIN (
+            (
+                SELECT
+                    MAX(T_EVENT_TASK_ETK.ETK_DATE) AS max_date
+                FROM T_CONTACT_CON
+                JOIN T_EVENT_TASK_ETK
+                WHERE T_CONTACT_CON.CON_ID = ?
+                  AND T_CONTACT_CON.CON_ID = T_EVENT_TASK_ETK.CON_ID
+                  AND T_EVENT_TASK_ETK.USR_ID = ?
+                GROUP BY T_CONTACT_CON.CON_ID
+            )
+            UNION
+            (
+                SELECT
+                    MAX(event_occurrence_evo.evo_date) AS max_date
+                FROM T_CONTACT_CON
+                JOIN T_EVENT_EVT
+                JOIN event_occurrence_evo
+                WHERE T_CONTACT_CON.CON_ID = ?
+                  AND T_CONTACT_CON.CON_ID = T_EVENT_EVT.CON_ID
+                  AND T_EVENT_EVT.USR_ID = ?
+                  AND T_EVENT_EVT.EVT_ID = event_occurrence_evo.evt_id
+                GROUP BY T_CONTACT_CON.CON_ID
+            )
+        ) AS t1
+        WHERE T_CONTACT_CON.CON_ID = ?
+      `,
+        [duration, id, doctorId, id, doctorId, id],
+      );
+      return duration ?? null;
+    }
+  }
+
+  /**
+   * application/Services/Patient.php => 180 -> 264
+   */
+  async getNextAppointment(patientId: number) {
+    return await this.dataSource.query(`
+      SELECT
+        T_EVENT_EVT.EVT_NAME,
+        T_EVENT_EVT.EVT_START,
+        T_EVENT_EVT.EVT_END
+      FROM T_EVENT_EVT
+      WHERE
+        T_EVENT_EVT.CON_ID = ${patientId} AND
+        T_EVENT_EVT.EVT_START > CURRENT_TIMESTAMP() AND
+        T_EVENT_EVT.deleted_at IS NULL
+      ORDER BY
+        T_EVENT_EVT.EVT_START
+      LIMIT 1`);
+  }
 }

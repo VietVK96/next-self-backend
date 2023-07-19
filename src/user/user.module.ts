@@ -13,7 +13,6 @@ import { PreferenceService } from './services/preference.sevece';
   imports: [
     TypeOrmModule.forFeature([
       UserEntity,
-      UserMedicalEntity,
       UserPreferenceEntity,
       UserMedicalEntity,
     ]),
