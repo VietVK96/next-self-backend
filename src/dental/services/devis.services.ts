@@ -173,7 +173,6 @@ export class DevisServices {
           .leftJoin('quote.attachments', 'attachments')
           .where('quote.id= :id', { id: id_devis })
           .getOne();
-        console.log('3 :>> ', 3);
         if (quote?.attachments.length > 0) {
           quote?.attachments.forEach(async (attachment, index) => {
             await this.dentalQuotationRepository.save({
