@@ -132,6 +132,7 @@ import { WzagendaContactEntity } from './wzagenda-contact.entity';
 import { ContactPhoneCopEntity } from './contact-phone-cop.entity';
 import { FileTagEntity } from './file-tag.entity';
 import { LotCareSheetEntity } from './lot-caresheet.entity';
+import { CorrespondentPhoneCppEntity } from './correspondent-phone-cpp.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -267,6 +268,7 @@ import { LotCareSheetEntity } from './lot-caresheet.entity';
       ContactPhoneCopEntity,
       FileTagEntity,
       LotCareSheetEntity,
+      CorrespondentPhoneCppEntity,
     ]),
   ],
   controllers: [],
