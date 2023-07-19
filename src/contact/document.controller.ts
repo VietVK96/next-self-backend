@@ -53,7 +53,6 @@ export class DocumentController {
     const contactId = request.body['contact'];
     const files: Express.Multer.File = request['file'];
     const type: string = request.body['type'];
-    console.log('upload');
 
     return await this.documentService.upload(user.org, contactId, files, type);
   }
