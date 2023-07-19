@@ -15,7 +15,10 @@ import {
 export class SecuritiesController {
   constructor(private securituesService: SecuritiesService) {}
 
-  // Verify the password matches
+  /**
+   * File php: php/securities/password-accounting/verify.php from line 22 to line 31.
+   * Verify the password matches
+   */
   @UseGuards(TokenGuard)
   @Post('verify-password')
   @ApiResponse({ status: 200, description: 'Password verified: true' })

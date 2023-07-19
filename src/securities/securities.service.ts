@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { VerifyPasswordDto } from './dto/veiry-password.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from 'src/entities/user.entity';
@@ -8,6 +8,7 @@ import * as phpPassword from 'node-php-password';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
+import { VerifyPasswordRes } from './res/services/verify-password.res';
 
 @Injectable()
 export class SecuritiesService {
@@ -18,7 +19,7 @@ export class SecuritiesService {
   async verifyPassword(
     verifyPassWordDto: VerifyPasswordDto,
     curentUser: UserIdentity,
-  ): Promise<any> {
+  ): Promise<VerifyPasswordRes> {
     try {
       const id = curentUser?.id;
       const { password } = verifyPassWordDto;
