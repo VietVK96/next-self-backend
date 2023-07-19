@@ -276,7 +276,7 @@ export class DevisServices {
         .where('usr.id =:id', { id: userId })
         .andWhere('user.group =:groupId', { group: identity?.org })
         .getRawOne();
-      const userPreferenceQuotation = user?.upq;
+      // const userPreferenceQuotation = user?.upq;
       if (user?.upq instanceof UserPreferenceQuotationEntity) {
         await this.userPreferenceQuotationRepository.save({ user: user });
       }
@@ -298,7 +298,7 @@ export class DevisServices {
   }
   catch(err) {
     console.error(
-      '-1002 : Probl&egrave;me durant la création de la facture. Merci de réessayer plus tard.',
+      `-1002 : Probl&egrave;me durant la création de la facture. Merci de réessayer plus tard. ${err?.message}`,
     );
   }
 
