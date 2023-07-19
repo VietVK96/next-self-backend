@@ -59,7 +59,7 @@ export class SaveTaskService {
       const ccam = await this.ccamRepo.findOneBy({ id: ccamId });
       if (ccam !== null) {
         const code = ccam.code;
-        if (code === 'HBQK002' && teeth === null) {
+        if (code === 'HBQK002' && !teeth) {
           teeth = 0;
         }
         if (code === 'HBJD001') {
@@ -131,7 +131,7 @@ export class SaveTaskService {
           DET_PURCHASE_PRICE, 
           DET_CCAM_CODE, 
           DET_CCAM_OPPOSABLE, 
-          DET_CCAM_TELEM, 
+          DET_CCAM_TELEM,  
           DET_CCAM_MODIFIER,
           code_nature_assurance,
           exemption_code,
@@ -161,7 +161,7 @@ export class SaveTaskService {
           socialSecurityAmount,
         ],
       );
-      // await queryRunner.commitTransaction();
+      await queryRunner.commitTransaction();
     } catch (e) {
       await queryRunner.rollbackTransaction();
     } finally {
