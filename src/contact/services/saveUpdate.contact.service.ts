@@ -137,7 +137,7 @@ export class SaveUpdateContactService {
       const policyHolderPatientId =
         reqBody?.medical?.policy_holder?.patient?.id || null;
 
-      const patientMedical = await this.patientMedicalRepository.findOneOrFail({
+      const patientMedical = await this.patientMedicalRepository.findOne({
         where: { patientId: patient?.id },
         relations: {
           policyHolder: true,
