@@ -19,9 +19,6 @@ import { ExemptionCodeEnum } from 'src/enum/exemption-code.enum';
 import { ConfigService } from '@nestjs/config';
 import { CaresheetStatusEntity } from 'src/entities/caresheet-status.entity';
 import { RequestException } from 'src/common/exceptions/request-exception.exception';
-import { da } from 'date-fns/locale';
-import { map } from 'rxjs';
-
 const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
 const PAV_MINIMUM_AMOUNT = 120;
 

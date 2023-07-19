@@ -1,10 +1,6 @@
 import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import {
-  CurrentUser,
-  TokenGuard,
-  UserIdentity,
-} from 'src/common/decorator/auth.decorator';
+import { TokenGuard } from 'src/common/decorator/auth.decorator';
 import { CashingService } from './services/cashing.service';
 import { CashingPrintDto } from './dto/cashing.dto';
 @ApiBearerAuth()

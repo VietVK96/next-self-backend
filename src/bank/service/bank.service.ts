@@ -13,6 +13,9 @@ import * as numberToWords from 'number-to-words';
 import * as path from 'path';
 import { createPdf } from '@saemhco/nestjs-html-pdf';
 import * as dayjs from 'dayjs';
+import { checkId, checkNumber } from 'src/common/util/number';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class BankService {
@@ -77,9 +80,9 @@ export class BankService {
 
   async print(params: BankCheckPrintDto) {
     try {
-      const id = Number(params.id);
-      const doctor_id = Number(params.doctor_id);
-      const amount = Number(params.amount)
+      const id = checkId(params.id);
+      const doctor_id = checkId(params.doctor_id);
+      const amount = checkNumber(params.amount)
         ? Number(params.amount).toFixed(2)
         : '0';
       const amountSplit = amount.split('.');
@@ -137,7 +140,7 @@ export class BankService {
 
       return await createPdf(filePath, options, data);
     } catch (error) {
-      return error.message;
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
 }

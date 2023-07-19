@@ -1,5 +1,5 @@
 import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
-import { FindAllContactDto, FindAllStructDto } from './findAll.contact.dto';
+import { FindAllStructDto } from './findAll.contact.dto';
 @ApiExtraModels()
 export class CashingPrintDto {
   @ApiProperty()

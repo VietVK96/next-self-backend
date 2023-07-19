@@ -44,6 +44,7 @@ import { CaresheetsModule } from './caresheets/caresheets.module';
 import { PaymentSchedulesModule } from './payment-schedule/payment-schedule.module';
 import { BankModule } from './bank/bank.module';
 import { SecuritiesModule } from './securities/securities.module';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [

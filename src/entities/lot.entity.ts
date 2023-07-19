@@ -96,6 +96,7 @@ export class LotEntity {
     nullable: true,
   })
   amcId?: number;
+
   @ManyToOne(() => AmcEntity, {
     createForeignKeyConstraints: false,
   })
