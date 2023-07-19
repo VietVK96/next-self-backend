@@ -43,8 +43,19 @@ import { MedicalModule } from './medical/medical.module';
 import { CaresheetsModule } from './caresheets/caresheets.module';
 import { PaymentSchedulesModule } from './payment-schedule/payment-schedule.module';
 import { BankModule } from './bank/bank.module';
+import { join } from 'path';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { SecuritiesModule } from './securities/securities.module';
 import { LoggerMiddleware } from './common/util/logrequest';
 
+console.log(
+  `join(
+  process.cwd(),
+  'templates/mail'
+)`,
+  join(process.cwd(), 'templates/mail'),
+);
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -79,6 +90,31 @@ import { LoggerMiddleware } from './common/util/logrequest';
         };
       },
       isGlobal: true,
+    }),
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (config: ConfigService) => ({
+        transport: {
+          host: config.get('EMAIL_HOST'),
+          secure: false,
+          auth: {
+            pass: config.get('EMAIL_PASSWORD'),
+            user: config.get('EMAIL_USER'),
+            port: config.get('EMAIL_PORT'),
+          },
+        },
+        defaults: {
+          from: config.get('EMAIL_FROM_USER'),
+        },
+        template: {
+          dir: join(process.cwd(), 'templates/mail'),
+          adapter: new HandlebarsAdapter(),
+          options: {
+            strict: true,
+          },
+        },
+      }),
+      inject: [ConfigService],
     }),
     EntityModule,
     ContactModule,
@@ -121,6 +157,7 @@ import { LoggerMiddleware } from './common/util/logrequest';
     CaresheetsModule,
     BankModule,
     PaymentSchedulesModule,
+    SecuritiesModule,
   ],
 })
 export class AppModule {

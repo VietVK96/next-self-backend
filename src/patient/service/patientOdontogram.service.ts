@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, IsNull, MoreThan, Not, Repository } from 'typeorm';
 import { OdontogramCurrentDto } from '../dto/patientBalance.dto';
-import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { InjectRepository } from '@nestjs/typeorm';
