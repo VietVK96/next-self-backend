@@ -15,7 +15,7 @@ import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
 import { AmoEntity } from 'src/entities/amo.entity';
 import { AmcEntity } from 'src/entities/amc.entity';
-import { PaymentPlanService } from 'src/payment-schedule/services/payment-schedule.service';
+import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 
 @Module({
   imports: [
@@ -37,7 +37,7 @@ import { PaymentPlanService } from 'src/payment-schedule/services/payment-schedu
     ContactService,
     PermissionService,
     AddressService,
-    PaymentPlanService,
+    PaymentScheduleService,
   ],
   exports: [MailService],
 })

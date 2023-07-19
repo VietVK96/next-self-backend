@@ -46,6 +46,7 @@ import { BankModule } from './bank/bank.module';
 import { join } from 'path';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [

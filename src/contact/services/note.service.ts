@@ -1,6 +1,4 @@
-import { Injectable, NotAcceptableException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-
 import { Repository } from 'typeorm/repository/Repository';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
@@ -12,6 +10,9 @@ import { PatientService } from 'src/patient/service/patient.service';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { UpdateNoteDto } from '../dto/noteUpdate.dto';
 import { PermissionService } from 'src/user/services/permission.service';
+import { PerCode } from 'src/constants/permissions';
+import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-request.exception';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class NoteService {
@@ -81,9 +82,13 @@ export class NoteService {
     identity: UserIdentity,
   ): Promise<SuccessResponse> {
     if (
-      !this.permissionService.hasPermission('PERMISSION_DELETE', 8, identity.id)
+      !this.permissionService.hasPermission(
+        PerCode.PERMISSION_DELETE,
+        8,
+        identity.id,
+      )
     ) {
-      throw new NotAcceptableException();
+      throw new CForbiddenRequestException(ErrorCode.FORBIDDEN);
     }
     try {
       const contactNote = await this.findByID(id);

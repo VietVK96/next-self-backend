@@ -30,7 +30,7 @@ import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
 import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 import { AmoEntity } from 'src/entities/amo.entity';
 import { AmcEntity } from 'src/entities/amc.entity';
-import { PaymentPlanService } from 'src/payment-schedule/services/payment-schedule.service';
+import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
 
 @Module({
@@ -70,7 +70,7 @@ import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quot
     PatientService,
     PermissionService,
     AddressService,
-    PaymentPlanService,
+    PaymentScheduleService,
   ],
 })
 export class DentalModule {}

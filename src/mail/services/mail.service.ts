@@ -22,7 +22,7 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { PatientService } from 'src/patient/service/patient.service';
 import { ConfigService } from '@nestjs/config';
 import { fr } from 'date-fns/locale';
-import { PaymentPlanService } from 'src/payment-schedule/services/payment-schedule.service';
+import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { LettersEntity } from '../../entities/letters.entity';
 
 @Injectable()
@@ -31,7 +31,7 @@ export class MailService {
     private configService: ConfigService,
     private mailerService: MailerService,
     private patientService: PatientService,
-    private paymentScheduleService: PaymentPlanService,
+    private paymentScheduleService: PaymentScheduleService,
     @InjectRepository(LettersEntity)
     private lettersRepo: Repository<LettersEntity>,
     private dataSource: DataSource,
@@ -481,6 +481,7 @@ export class MailService {
       const nextAppointment = await this.patientService.getNextAppointment(
         context?.contact?.id,
       );
+
       // if(nextAppointment && nextAppointment?.EVT_START){
       // $datetime1 = new \DateTime($nextAppointment['EVT_START']);
       // $datetime2 = new \DateTime($nextAppointment['EVT_END']);

@@ -25,6 +25,7 @@ import { ContactPatchDto } from '../dto/contact.payment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ConfigService } from '@nestjs/config';
+import * as fs from 'fs';
 
 @Injectable()
 export class ContactService {
@@ -522,26 +523,31 @@ count(CON_ID) as countId,COD_TYPE as codType
   }
 
   async getAvatar(contactId: number) {
-    const query = this.dataSource.createQueryBuilder();
-    const uplId = await query
-      .select('CON.UPL_ID')
-      .from(ContactEntity, 'CON')
-      .where('CON.CON_ID = :contactId', { contactId })
-      .getRawOne();
+    try {
+      const query = this.dataSource.createQueryBuilder();
+      const uplId = await query
+        .select('CON.UPL_ID')
+        .from(ContactEntity, 'CON')
+        .where('CON.CON_ID = :contactId', { contactId })
+        .getRawOne();
+      if (!uplId.UPL_ID) return null;
 
-    const fileC = await this.dataSource
-      .createQueryBuilder()
-      .select()
-      .from(UploadEntity, 'UPL')
-      .where('UPL.UPL_ID = :id', { id: uplId.UPL_ID })
-      .getRawOne();
+      const fileC = await this.dataSource
+        .createQueryBuilder()
+        .select()
+        .from(UploadEntity, 'UPL')
+        .where('UPL.UPL_ID = :id', { id: uplId?.UPL_ID })
+        .getRawOne();
+      if (!fileC) return null;
 
-    const filename = fileC.UPL_NAME;
-    const path = fileC.UPL_PATH;
-    const dir = await this.configService.get('app.uploadDir');
+      const filename = fileC?.UPL_NAME;
+      const path = fileC?.UPL_PATH;
+      const dir = await this.configService.get('app.uploadDir');
+      if (!fs.existsSync(`${dir}/${path}${filename}`)) return null;
 
-    return {
-      file: `${dir}/${path}${filename}`,
-    };
+      return { file: `${dir}/${path}${filename}` };
+    } catch (error) {
+      return null;
+    }
   }
 }
