@@ -43,6 +43,8 @@ import { MedicalModule } from './medical/medical.module';
 import { CaresheetsModule } from './caresheets/caresheets.module';
 import { PaymentSchedulesModule } from './payment-schedule/payment-schedule.module';
 import { BankModule } from './bank/bank.module';
+import { SecuritiesModule } from './securities/securities.module';
+import { HttpModule } from '@nestjs/axios';
 import { LoggerMiddleware } from './common/util/logrequest';
 
 @Module({
@@ -121,6 +123,7 @@ import { LoggerMiddleware } from './common/util/logrequest';
     CaresheetsModule,
     BankModule,
     PaymentSchedulesModule,
+    SecuritiesModule,
   ],
 })
 export class AppModule {
