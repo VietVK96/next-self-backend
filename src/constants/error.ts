@@ -1,5 +1,6 @@
 export enum ErrorCode {
   AVATAR_NOT_FOUND = 'AVATAR_NOT_FOUND',
+  INVALID_PASSWORD = 'INVALID_PASSWORD',
   CAN_NOT_LOGIN = 'CAN_NOT_LOGIN', // Une erreur est survenue : veuillez vérifier votre nom d'utilisateur et mot de passe.
   CANNOT_DELETE_HISTORICAL = 'CANNOT_DELETE_HISTORICAL',
   DELETE_UNSUCCESSFUL = 'DELETE_UNSUCCESSFUL',

@@ -46,6 +46,7 @@ import { BankModule } from './bank/bank.module';
 import path, { join } from 'path';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { SecuritiesModule } from './securities/securities.module';
 import { HttpModule } from '@nestjs/axios';
 import { LoggerMiddleware } from './common/util/logrequest';
 
@@ -157,6 +158,7 @@ console.log(
     CaresheetsModule,
     BankModule,
     PaymentSchedulesModule,
+    SecuritiesModule,
   ],
 })
 export class AppModule {
