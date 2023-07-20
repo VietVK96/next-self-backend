@@ -92,8 +92,8 @@ export class ActServices {
     });
     const traceabilityStatus = dataAfter?.length
       ? dataAfter.some((e) => e?.reference !== '')
-        ? TraceabilityStatusEnum.UNFILLED
-        : TraceabilityStatusEnum.FILLED
+        ? TraceabilityStatusEnum.FILLED
+        : TraceabilityStatusEnum.UNFILLED
       : TraceabilityStatusEnum.NONE;
     await this.eventTaskRepository.save({
       id,
