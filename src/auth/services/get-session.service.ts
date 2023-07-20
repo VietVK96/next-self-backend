@@ -11,6 +11,7 @@ import {
   UserPractitionersRes,
   UserResourceRes,
   UserUserRes,
+  UserUserSettingRes,
 } from '../reponse/session.res';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
@@ -73,7 +74,9 @@ export class GetSessionService {
       .getRawOne();
     const user: UserUserRes = {
       ...userResult,
-      settings: JSON.parse(userResult?.settings || ''),
+      settings: userResult?.settings
+        ? JSON.parse(userResult?.settings)
+        : ({} as UserUserSettingRes),
     };
     const userPreferences = await queryBuilder
       .select([
