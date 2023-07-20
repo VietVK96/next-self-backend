@@ -20,6 +20,9 @@ import { AmcEntity } from 'src/entities/amc.entity';
 import { AmoEntity } from 'src/entities/amo.entity';
 import { LotStatusEntity } from 'src/entities/lot-status.entity';
 import { LotCareSheetEntity } from 'src/entities/lot-caresheet.entity';
+import { JwtModule } from '@nestjs/jwt';
+import { TokenDownloadService } from './services/token-download.service';
+import { JWT_SECRET_DOWNLOAD } from 'src/constants/jwt';
 
 @Module({
   imports: [
@@ -39,6 +42,9 @@ import { LotCareSheetEntity } from 'src/entities/lot-caresheet.entity';
     ]),
     AddressModule,
     HttpModule,
+    JwtModule.register({
+      secret: JWT_SECRET_DOWNLOAD,
+    }),
   ],
 
   providers: [
@@ -47,6 +53,7 @@ import { LotCareSheetEntity } from 'src/entities/lot-caresheet.entity';
     PreferenceService,
     TeletranmistionService,
     SesamvitaleTeletranmistionService,
+    TokenDownloadService,
   ],
   exports: [PermissionService, UserService, PreferenceService],
   controllers: [UserController, UserTeletranmistionController],
