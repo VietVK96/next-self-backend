@@ -15,6 +15,7 @@ import {
 } from '../reponse/session.res';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
+import { parseJson } from 'src/common/util/json';
 
 @Injectable()
 export class GetSessionService {
@@ -75,7 +76,7 @@ export class GetSessionService {
     const user: UserUserRes = {
       ...userResult,
       settings: userResult?.settings
-        ? JSON.parse(userResult?.settings)
+        ? parseJson<UserUserSettingRes>(userResult?.settings)
         : ({} as UserUserSettingRes),
     };
     const userPreferences = await queryBuilder
