@@ -49,13 +49,6 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { SecuritiesModule } from './securities/securities.module';
 import { LoggerMiddleware } from './common/util/logrequest';
 
-console.log(
-  `join(
-  process.cwd(),
-  'templates/mail'
-)`,
-  join(process.cwd(), 'templates/mail'),
-);
 @Module({
   imports: [
     ConfigModule.forRoot({
