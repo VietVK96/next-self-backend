@@ -85,10 +85,15 @@ export class ActServices {
 
     const dataAfter = await this.traceabilityRepository.find({
       where: { actId: id },
-      select: ['id'],
+      select: {
+        id: true,
+        reference: true,
+      },
     });
     const traceabilityStatus = dataAfter?.length
-      ? TraceabilityStatusEnum.FILLED
+      ? dataAfter.some((e) => e?.reference !== '')
+        ? TraceabilityStatusEnum.UNFILLED
+        : TraceabilityStatusEnum.FILLED
       : TraceabilityStatusEnum.NONE;
     await this.eventTaskRepository.save({
       id,

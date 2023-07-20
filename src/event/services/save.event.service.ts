@@ -138,7 +138,7 @@ export class SaveEventService {
     const start = payload?.start || '';
     const end = payload?.end || '';
     const state = checkNumber(payload?.state);
-    const lateness = payload?.lateness || '';
+    const lateness = payload?.lateness ? 1 : 0;
     const msg = payload?.msg || '';
     const color = checkNumber(payload?.color) || -15;
     const rrule = payload?.rrule;
@@ -541,6 +541,11 @@ export class SaveEventService {
       }
       await queryRunner.commitTransaction();
     } catch (e) {
+      console.log(
+        '🚀 ~ file: save.event.service.ts:544 ~ SaveEventService ~ saveAgenda ~ e:',
+        e,
+      );
+
       await queryRunner.rollbackTransaction();
       return new CBadRequestException(ErrorCode.SAVE_FAILED);
     } finally {

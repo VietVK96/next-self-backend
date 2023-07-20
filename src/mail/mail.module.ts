@@ -5,7 +5,6 @@ import { MailController } from './mail.controller';
 import { MailService } from './services/mail.service';
 import { PatientService } from 'src/patient/service/patient.service';
 import { ContactEntity } from 'src/entities/contact.entity';
-import { DataSource } from 'typeorm';
 import { ContactService } from 'src/contact/services/contact.service';
 import { PermissionService } from 'src/user/services/permission.service';
 import { AddressService } from 'src/address/service/address.service';

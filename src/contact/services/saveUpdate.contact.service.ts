@@ -24,6 +24,8 @@ export class SaveUpdateContactService {
   constructor(
     @InjectRepository(PatientMedicalEntity)
     private readonly patientMedicalRepository: Repository<PatientMedicalEntity>,
+    @InjectRepository(ContactEntity)
+    private readonly contactRepo: Repository<ContactEntity>,
     private dataSource: DataSource,
     private contactService: ContactService,
   ) {}
@@ -340,7 +342,12 @@ export class SaveUpdateContactService {
         .into(ContactEntity)
         .values(patient)
         .execute();
-
+      await queryRunner.manager
+        .createQueryBuilder()
+        .update(ContactEntity)
+        .set({ nbr: savePatient.raw.insertId })
+        .where('id = :id', { id: savePatient.raw.insertId })
+        .execute();
       const policyHolderName = reqBody?.medical.policy_holder?.name || '';
       const inseeNumber = reqBody?.medical?.policy_holder?.insee_number || null;
       const policyHolderPatientId = checkId(
@@ -415,6 +422,10 @@ export class SaveUpdateContactService {
         identity,
       );
     } catch (err) {
+      console.log(
+        '🚀 ~ file: saveUpdate.contact.service.ts:427 ~ SaveUpdateContactService ~ saveContact ~ err:',
+        err,
+      );
       queryRunner.rollbackTransaction();
       throw new CBadRequestException(ErrorCode.INSERT_FAILED);
     } finally {
