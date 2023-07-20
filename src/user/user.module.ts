@@ -28,7 +28,6 @@ import { JWT_SECRET_DOWNLOAD } from 'src/constants/jwt';
   imports: [
     TypeOrmModule.forFeature([
       UserEntity,
-      UserMedicalEntity,
       UserPreferenceEntity,
       UserMedicalEntity,
       TeletransmissionEntity,
