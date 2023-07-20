@@ -50,13 +50,6 @@ import { SecuritiesModule } from './securities/securities.module';
 import { HttpModule } from '@nestjs/axios';
 import { LoggerMiddleware } from './common/util/logrequest';
 
-console.log(
-  `join(
-  process.cwd(),
-  'templates/mail'
-)`,
-  join(process.cwd(), 'templates/mail'),
-);
 @Module({
   imports: [
     ConfigModule.forRoot({

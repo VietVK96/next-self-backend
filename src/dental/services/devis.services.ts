@@ -157,7 +157,6 @@ export class DevisServices {
         let medicalHeader = await this.medicalHeaderRepository.findOne({
           where: { userId: identity?.id },
         });
-
         if (!(medicalHeader instanceof MedicalHeaderEntity)) {
           const user = await this.userRepository.findOne({
             where: { id: identity?.id },
@@ -173,7 +172,7 @@ export class DevisServices {
           .leftJoin('quote.attachments', 'attachments')
           .where('quote.id= :id', { id: id_devis })
           .getOne();
-        if (quote?.attachments.length > 0) {
+        if (quote && quote?.attachments && quote?.attachments.length > 0) {
           quote?.attachments.forEach(async (attachment, index) => {
             await this.dentalQuotationRepository.save({
               id: attachment?.id,
@@ -182,7 +181,7 @@ export class DevisServices {
             delete quote[index];
           });
         }
-        if (attachments.length > 0) {
+        if (attachments && attachments.length > 0) {
           attachments.map(async (id) => {
             const mail = await this.mailService.find(id);
             const context = await this.mailService.context({
