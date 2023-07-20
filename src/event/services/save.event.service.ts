@@ -6,7 +6,7 @@ import { UserEntity } from 'src/entities/user.entity';
 import { SaveAgendaDto } from '../dto/saveAgenda.event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ContactEntity } from 'src/entities/contact.entity';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import { EventStateEnum } from 'src/constants/event';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
