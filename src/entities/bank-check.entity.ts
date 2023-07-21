@@ -62,7 +62,7 @@ export class BankCheckEntity {
     name: 'fields',
     type: 'json',
   })
-  fields?: string;
+  fields?: any;
 
   /**
    * @ORM\Column(name="position", type="integer", options={"default": 0})
