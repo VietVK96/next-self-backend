@@ -48,6 +48,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { SecuritiesModule } from './securities/securities.module';
 import { LoggerModule } from 'nestjs-pino';
+import { StatisticsModule } from './statistics/statistics.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -150,6 +151,7 @@ const importsModules = [
   BankModule,
   PaymentSchedulesModule,
   SecuritiesModule,
+  StatisticsModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {
