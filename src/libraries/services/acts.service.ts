@@ -22,6 +22,7 @@ export class LibraryActsService {
         quantities: {
           ccam: {
             conditions: true,
+            family: {},
           },
         },
       },

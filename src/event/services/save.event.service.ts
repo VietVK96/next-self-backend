@@ -6,7 +6,7 @@ import { UserEntity } from 'src/entities/user.entity';
 import { SaveAgendaDto } from '../dto/saveAgenda.event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ContactEntity } from 'src/entities/contact.entity';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import { EventStateEnum } from 'src/constants/event';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
@@ -138,7 +138,7 @@ export class SaveEventService {
     const start = payload?.start || '';
     const end = payload?.end || '';
     const state = checkNumber(payload?.state);
-    const lateness = payload?.lateness || '';
+    const lateness = payload?.lateness ? 1 : 0;
     const msg = payload?.msg || '';
     const color = checkNumber(payload?.color) || -15;
     const rrule = payload?.rrule;
@@ -150,7 +150,7 @@ export class SaveEventService {
     const reminders = payload?.reminders;
 
     let eventId = payload.eventId;
-    const eventTypeId = checkId(payload.eventId);
+    const eventTypeId = checkId(payload.eventTypeId);
     const _private = payload.private;
     const dates = payload.dates ? payload.dates.split(',') : [];
     const exdates = payload.exdates ? payload.exdates.split(',') : [];
@@ -249,6 +249,8 @@ export class SaveEventService {
         eventLateness = eventStatement.lateness;
 
         if (!hasRecurrEvents) {
+          console.log(eventTypeId);
+
           await Promise.all([
             queryRunner.query(
               `
@@ -541,6 +543,11 @@ export class SaveEventService {
       }
       await queryRunner.commitTransaction();
     } catch (e) {
+      console.log(
+        '🚀 ~ file: save.event.service.ts:544 ~ SaveEventService ~ saveAgenda ~ e:',
+        e,
+      );
+
       await queryRunner.rollbackTransaction();
       return new CBadRequestException(ErrorCode.SAVE_FAILED);
     } finally {

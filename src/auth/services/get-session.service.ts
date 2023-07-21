@@ -11,9 +11,11 @@ import {
   UserPractitionersRes,
   UserResourceRes,
   UserUserRes,
+  UserUserSettingRes,
 } from '../reponse/session.res';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
+import { parseJson } from 'src/common/util/json';
 
 @Injectable()
 export class GetSessionService {
@@ -38,7 +40,7 @@ export class GetSessionService {
   async getUser(userId: number): Promise<UserUserRes> {
     const queryBuilder = this.dataSource.createQueryBuilder();
 
-    const user: UserUserRes = await queryBuilder
+    const userResult = await queryBuilder
       .select([
         'USR.USR_ID as id',
         'USR.USR_ADMIN as admin',
@@ -71,7 +73,12 @@ export class GetSessionService {
       .from(UserEntity, 'USR')
       .where('USR.USR_ID = :userId', { userId })
       .getRawOne();
-
+    const user: UserUserRes = {
+      ...userResult,
+      settings: userResult?.settings
+        ? parseJson<UserUserSettingRes>(userResult?.settings)
+        : ({} as UserUserSettingRes),
+    };
     const userPreferences = await queryBuilder
       .select([
         'USP.USR_ID as id',

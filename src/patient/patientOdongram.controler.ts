@@ -1,7 +1,10 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { TokenGuard } from 'src/common/decorator/auth.decorator';
-import { OdontogramCurrentDto } from './dto/patientBalance.dto';
+import {
+  OdontogramCurrentDto,
+  TreatmentPlanOdontogramDto,
+} from './dto/patientBalance.dto';
 import { PatientOdontogramService } from './service/patientOdontogram.service';
 @ApiBearerAuth()
 @Controller('patients')
@@ -16,5 +19,13 @@ export class PatientOdontogramController {
   @UseGuards(TokenGuard)
   async getCurrent(@Query() request: OdontogramCurrentDto) {
     return await this.service.getCurrent(request);
+  }
+
+  @Get('/odontogram/treatment_plan')
+  @UseGuards(TokenGuard)
+  async getTreatmentPlanOdontogram(
+    @Query() request: TreatmentPlanOdontogramDto,
+  ) {
+    return await this.service.getTreatmentPlanOdontogram(request);
   }
 }

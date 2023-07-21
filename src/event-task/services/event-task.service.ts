@@ -45,6 +45,7 @@ export class EventTaskService {
   async CheckMaximumPrice(request: CheckPriceStructDto) {
     try {
       const { id, amount } = request;
+      console.time('CheckMaximumPrice => eventTask');
       const eventTask: EventTaskEntity[] = await this.dataSource.manager.find(
         EventTaskEntity,
         {
@@ -59,11 +60,14 @@ export class EventTaskService {
           },
         },
       );
+      console.timeEnd('CheckMaximumPrice => eventTask');
       const creationDate = eventTask[0].date;
+      console.time('CheckMaximumPrice => ccamUnitPrice');
       const ccamUnitPrice = await this._getUnitPrice(
         eventTask[0].user.setting?.priceGrid,
         creationDate,
       );
+      console.timeEnd('CheckMaximumPrice => ccamUnitPrice');
       if (
         this._canPerformFreeFee(eventTask[0].user) &&
         ExceedingEnum.NON_REMBOURSABLE &&
