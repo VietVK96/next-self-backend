@@ -6,3 +6,10 @@ export class ActFamiliesDto {
   })
   used_only?: boolean;
 }
+
+export class ActFamiliesSearchDto {
+  @ApiProperty({
+    required: false,
+  })
+  search_term?: string;
+}

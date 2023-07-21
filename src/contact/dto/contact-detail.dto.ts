@@ -305,6 +305,12 @@ export class ContactDetailDto {
   lastCare?: string;
 
   @ApiProperty()
+  addressed_by_id?: number;
+
+  @ApiProperty()
+  doctor_id?: number;
+
+  @ApiProperty()
   addressed_by?: {
     id?: number;
   };

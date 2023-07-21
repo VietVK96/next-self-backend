@@ -24,6 +24,8 @@ export class SaveUpdateContactService {
   constructor(
     @InjectRepository(PatientMedicalEntity)
     private readonly patientMedicalRepository: Repository<PatientMedicalEntity>,
+    @InjectRepository(ContactEntity)
+    private readonly contactRepo: Repository<ContactEntity>,
     private dataSource: DataSource,
     private contactService: ContactService,
   ) {}
@@ -45,12 +47,12 @@ export class SaveUpdateContactService {
         countryAbbr: reqBody?.addressCountryAbbr,
       };
       if (
-        address.street ||
-        address.streetComp ||
-        address.zipCode ||
-        address.city ||
-        address.country ||
-        address.countryAbbr
+        address?.street ||
+        address?.streetComp ||
+        address?.zipCode ||
+        address?.city ||
+        address?.country ||
+        address?.countryAbbr
       ) {
         await queryRunner.manager
           .createQueryBuilder()
@@ -87,11 +89,11 @@ export class SaveUpdateContactService {
         genId: Number(reqBody?.genderId) || null,
         adrId: address.id,
         uplId: checkId(reqBody?.avatarId),
-        cpdId: checkId(reqBody?.addressed_by?.id),
+        cpdId: checkId(reqBody?.addressed_by_id),
         cofId: checkId(reqBody?.contactFamilyId),
         profession: reqBody?.profession || null,
         email: reqBody?.email || null,
-        birthDate: dayjs(reqBody.birthday).isValid() ? reqBody?.birthday : null,
+        birthday: dayjs(reqBody.birthday).isValid() ? reqBody?.birthday : null,
         quality: checkNumber(reqBody.quality),
         breastfeeding: checkNumber(reqBody?.breastfeeding) || 0,
         pregnancy: checkNumber(reqBody?.pregnancy) || 0,
@@ -99,7 +101,7 @@ export class SaveUpdateContactService {
         hepaticInsufficiency: reqBody?.hepaticInsufficiency || '',
         weight: checkNumber(reqBody?.weight) || 0,
         size: checkNumber(reqBody?.size) || 0,
-        conMedecinTraitantId: checkId(reqBody?.doctor.id),
+        conMedecinTraitantId: checkId(reqBody?.doctor_id),
         msg: reqBody?.msg || null,
         notificationMsg: reqBody?.notificationMsg || null,
         notificationEnable: checkNumber(reqBody?.notificationEnable) || 1,
@@ -137,7 +139,7 @@ export class SaveUpdateContactService {
       const policyHolderPatientId =
         reqBody?.medical?.policy_holder?.patient?.id || null;
 
-      const patientMedical = await this.patientMedicalRepository.findOneOrFail({
+      const patientMedical = await this.patientMedicalRepository.findOne({
         where: { patientId: patient?.id },
         relations: {
           policyHolder: true,
@@ -340,7 +342,12 @@ export class SaveUpdateContactService {
         .into(ContactEntity)
         .values(patient)
         .execute();
-
+      await queryRunner.manager
+        .createQueryBuilder()
+        .update(ContactEntity)
+        .set({ nbr: savePatient.raw.insertId })
+        .where('id = :id', { id: savePatient.raw.insertId })
+        .execute();
       const policyHolderName = reqBody?.medical.policy_holder?.name || '';
       const inseeNumber = reqBody?.medical?.policy_holder?.insee_number || null;
       const policyHolderPatientId = checkId(
@@ -415,6 +422,10 @@ export class SaveUpdateContactService {
         identity,
       );
     } catch (err) {
+      console.log(
+        '🚀 ~ file: saveUpdate.contact.service.ts:427 ~ SaveUpdateContactService ~ saveContact ~ err:',
+        err,
+      );
       queryRunner.rollbackTransaction();
       throw new CBadRequestException(ErrorCode.INSERT_FAILED);
     } finally {

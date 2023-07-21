@@ -19,7 +19,6 @@ import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { AddressEntity } from 'src/entities/address.entity';
 import { DevisHNController } from './devisHN.controller';
 import { DevisHNServices } from './services/devisRequestAjax.service';
-import { LettersEntity } from 'src/entities/letters.entity';
 import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
 import { MailService } from 'src/mail/services/mail.service';
 import { UserService } from 'src/user/services/user.service';
@@ -37,6 +36,11 @@ import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
 import { AmcEntity } from 'src/entities/amc.entity';
 import { AmoEntity } from 'src/entities/amo.entity';
 import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
+import { DevisServices } from './services/devis.services';
+import { LettersEntity } from 'src/entities/letters.entity';
+import { ConfigService } from '@nestjs/config';
+
+import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
 
 @Module({
   imports: [
@@ -45,12 +49,9 @@ import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
       MedicalOrderEntity,
       BillEntity,
       BillLineEntity,
-      MedicalHeaderEntity,
       EventTaskEntity,
       DentalEventTaskEntity,
       EventEntity,
-      EventEntity,
-      DentalEventTaskEntity,
       NgapKeyEntity,
       PrivilegeEntity,
       UserEntity,
@@ -68,6 +69,7 @@ import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
       ThirdPartyAmoEntity,
       AmoEntity,
       AmcEntity,
+      UserPreferenceQuotationEntity,
     ]),
   ],
   controllers: [DentalController, DevisHNController],
@@ -83,6 +85,7 @@ import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
     AddressService,
     PermissionService,
     ContactService,
+    DevisServices,
   ],
 })
 export class DentalModule {}

@@ -20,6 +20,7 @@ import {
   dateFormatter,
   inseeFormatter,
 } from '../../common/formatter/index';
+import { CorrespondentPhoneCppEntity } from 'src/entities/correspondent-phone-cpp.entity';
 
 @Injectable()
 export class CorrespondentService {
@@ -203,16 +204,18 @@ export class CorrespondentService {
         const phoneIds = await this.phoneRepo.save(mapPhone);
 
         const arr = [];
-        for (let i = 0; i < phoneIds.length; ++i) {
-          arr.push(
-            queryRunner.manager.query(
-              `INSERT INTO T_CORRESPONDENT_PHONE_CPP (PHO_ID, CPD_ID)
-                    VALUES (?, ?)`,
-              [phoneIds?.[i].id, newCorresponden.insertId],
-            ),
-          );
+        for (const phoId of phoneIds) {
+          arr.push({
+            phoId,
+            cdpId: newCorresponden.insertId,
+          });
         }
-        await Promise.all(arr);
+        await this.dataSource
+          .createQueryBuilder()
+          .insert()
+          .into(CorrespondentPhoneCppEntity)
+          .values(arr)
+          .execute();
         await queryRunner.commitTransaction();
         return {
           ...payload,
@@ -230,8 +233,9 @@ export class CorrespondentService {
           `SELECT * FROM T_CORRESPONDENT_CPD WHERE CPD_ID =?`,
           [payload?.id],
         );
-        if (checkCorresponden.length === 0)
+        if (checkCorresponden.length === 0) {
           throw new CBadRequestException(ErrorCode.NOT_FOUND);
+        }
 
         await queryRunner.manager.query(
           `UPDATE T_ADDRESS_ADR SET 

@@ -222,6 +222,12 @@ export class DevisRequestAjaxDto {
   id_devisHN?: number;
 
   @ApiProperty({
+    name: 'id_user',
+    required: false,
+  })
+  id_user?: number;
+
+  @ApiProperty({
     name: 'datedevisHN',
     required: false,
     // format: 'd/m/Y',\

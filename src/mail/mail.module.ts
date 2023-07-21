@@ -48,5 +48,6 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
     CorrespondentService,
     PaymentScheduleService,
   ],
+  exports: [MailService],
 })
 export class MailModule {}

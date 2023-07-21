@@ -68,7 +68,7 @@ export class EventService {
       throw new CForbiddenRequestException(ErrorCode.FORBIDDEN);
     }
     try {
-      if (!planId) {
+      if (planId) {
         await this.repoEvent.update(
           { id: eventId },
           { start: null, end: null },

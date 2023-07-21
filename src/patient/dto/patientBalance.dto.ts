@@ -29,3 +29,10 @@ export class OdontogramCurrentDto {
   })
   patientId: number;
 }
+
+export class TreatmentPlanOdontogramDto {
+  @ApiProperty({
+    required: true,
+  })
+  treatment_plan_id: number;
+}

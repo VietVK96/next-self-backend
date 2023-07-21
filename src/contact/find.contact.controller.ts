@@ -21,6 +21,7 @@ import { ContactService } from './services/contact.service';
 import { FindContactService } from './services/find.contact.service';
 import { createReadStream, existsSync } from 'fs';
 import { join } from 'path';
+import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
 @ApiBearerAuth()
 @Controller('/contact')
 @ApiTags('Contact')
@@ -111,7 +112,7 @@ export class FindContactController {
 
   // File : php/contact/avatar.php 100%
   @Get('avatar/:contactId')
-  @UseGuards(TokenGuard)
+  @UseGuards(TokenDownloadGuard)
   async getAvatar(
     @Param('contactId') contactId: number,
     @Res({ passthrough: true }) res: Response,
