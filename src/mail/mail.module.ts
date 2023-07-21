@@ -3,7 +3,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LettersEntity } from 'src/entities/letters.entity';
 import { MailController } from './mail.controller';
 import { MailService } from './services/mail.service';
-import { UserService } from 'src/user/services/user.service';
 import { PatientService } from 'src/patient/service/patient.service';
 import { AddressService } from 'src/address/service/address.service';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
@@ -16,7 +15,6 @@ import { AmcEntity } from 'src/entities/amc.entity';
 import { AmoEntity } from 'src/entities/amo.entity';
 import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
 import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
-import { CorrespondentService } from 'src/correspondent/services/correspondent.service';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { PhoneEntity } from 'src/entities/phone.entity';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
@@ -40,12 +38,10 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
   controllers: [MailController],
   providers: [
     MailService,
-    UserService,
     PatientService,
     AddressService,
     PermissionService,
     ContactService,
-    CorrespondentService,
     PaymentScheduleService,
   ],
   exports: [MailService],

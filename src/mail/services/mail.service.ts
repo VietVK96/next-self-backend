@@ -2,13 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import fs from 'fs';
 import sharp from 'sharp';
-import {
-  differenceInMinutes,
-  differenceInMonths,
-  differenceInYears,
-  format,
-  parse,
-} from 'date-fns';
+import { differenceInMonths, differenceInYears, format } from 'date-fns';
 import { DataSource, Repository } from 'typeorm';
 import { FindAllMailRes } from '../response/findAllMail.res';
 import { FindAllMailDto } from '../dto/findAllMail.dto';
@@ -18,11 +12,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUpdateMailDto } from '../dto/createUpdateMail.dto';
 import { CreateUpdateMailRes } from '../response/createUpdateMail.res';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
-import * as dayjs from 'dayjs';
-import { resizeAndConvertToBase64 } from 'src/common/util/file';
 import { UserService } from 'src/user/services/user.service';
 import { PatientService } from 'src/patient/service/patient.service';
-import { DEFAULT_LOCALE } from 'src/constants/locale';
 import { CorrespondentService } from 'src/correspondent/services/correspondent.service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ConfigService } from '@nestjs/config';
@@ -34,8 +25,6 @@ import { LettersEntity } from '../../entities/letters.entity';
 export class MailService {
   constructor(
     private configService: ConfigService,
-    private userService: UserService,
-    private correspondentService: CorrespondentService,
     private mailerService: MailerService,
     private patientService: PatientService,
     private paymentScheduleService: PaymentScheduleService,

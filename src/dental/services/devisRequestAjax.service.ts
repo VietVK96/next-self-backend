@@ -49,7 +49,6 @@ export class DevisHNServices {
   }
 
   // async update
-
   async requestAjax(payload: DevisRequestAjaxDto) {
     switch (payload.operation) {
       case 'enregistrer':
