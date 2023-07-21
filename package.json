@@ -72,6 +72,7 @@
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
     "pino-http": "^8.3.3",
+    "puppeteer": "^20.9.0",
     "recurr": "^0.1.0",
     "reflect-metadata": "^0.1.13",
     "rrule": "^2.7.2",

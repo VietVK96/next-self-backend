@@ -112,7 +112,6 @@ export class BankService {
         'templates/bank_check',
         'bank_check.hbs',
       );
-
       const options = {
         format: 'A4',
         displayHeaderFooter: true,

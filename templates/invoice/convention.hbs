@@ -121,51 +121,64 @@
     }
 
 </style>
-<page style="position: fixed; top:0; bottom:0; right:0; left:0">
-    <div>
-    <div id="header">
-        <h1>NOTE D'HONORAIRES</h1>
-        (Les soins &agrave; tarifs opposables ne sont pas compris)
-        {{#if duplicata}}
-        <div id="duplicata">DUPLICATA</div>
-        {{/if}}
-    </div>
-    <div id="informations">
-        <table cellspacing="4" border="0">
-            <col style="width: 50%;" />
-            <col style="width: 50%;" />
-            <tbody>
-                <tr>
-                    <td rowspan="2">
-                        <div style="margin-bottom: 2mm;">A remplir par le chirurgien-dentiste</div>
-                        <div style="margin-bottom: 2mm;">Identification du chirurgien-dentiste traitant</div>
-                        <div>Identification RPPS : {{userNumeroFacturant}}</div>
-                        <div style="height: 21mm; padding: 2mm 0; overflow: hidden;">{{{identPrat}}} </div>
-                        <div>Identification de la structure</div>
-                        <div>(Raison sociale et adresse du cabinet ou de l'établissement)</div>
-                        <div style="height: 21mm; padding: 2mm 0; overflow: hidden;">{{{adressePrat}}}</div>
-                        <div>N° de la structure (AM, FINESS ou SIRET) : ...................................</div>
-                    </td>
-                    <td>
-                        <div style="margin-bottom: 2mm;">A remplir par le chirurgien-dentiste</div>
-                        <div style="margin-bottom: 4mm;">Identification du patient</div>
-                        <div style="margin-bottom: 4mm;">Nom et prénom : {{contactFullname}}</div>
-                        <div style="margin-bottom: 4mm;">Date de naissance : {{contactBirthday}}</div>
-                        <div>N° de Sécurité sociale de l'assuré : {{contactInsee}}</div>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="background-color: #EEE;">
-                        <div style="margin-bottom: 2mm;">A remplir par l'assuré</div>
-                        <div style="margin-bottom: 4mm;">Identification de l'assurance complémentaire</div>
-                        <div style="margin-bottom: 4mm;">Nom de la complémentaire : ..............................................</div>
-                        <div style="margin-bottom: 4mm;">N° de contrat ou d'adhérent : .............................................</div>
-                        <div>Adresse électronique de l'assuré : .....................................</div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+<div>
+  <div id='header'>
+    <h1>NOTE D'HONORAIRES</h1>
+    (Les soins &agrave; tarifs opposables ne sont pas compris)
+    {{#if duplicata}}
+      <div id='duplicata'>DUPLICATA</div>
+    {{/if}}
+  </div>
+  <div id='informations'>
+    <table cellspacing='4' border='0'>
+      <col style='width: 50%;' />
+      <col style='width: 50%;' />
+      <tbody>
+        <tr>
+          <td rowspan='2'>
+            <div style='margin-bottom: 2mm;'>A remplir par le
+              chirurgien-dentiste</div>
+            <div style='margin-bottom: 2mm;'>Identification du
+              chirurgien-dentiste traitant</div>
+            <div>Identification RPPS : {{userNumeroFacturant}}</div>
+            <div
+              style='height: 21mm; padding: 2mm 0; overflow: hidden;'
+            >{{{identPrat}}} </div>
+            <div>Identification de la structure</div>
+            <div>(Raison sociale et adresse du cabinet ou de l'établissement)</div>
+            <div
+              style='height: 21mm; padding: 2mm 0; overflow: hidden;'
+            >{{{adressePrat}}}</div>
+            <div>N° de la structure (AM, FINESS ou SIRET) :
+              ...................................</div>
+          </td>
+          <td>
+            <div style='margin-bottom: 2mm;'>A remplir par le
+              chirurgien-dentiste</div>
+            <div style='margin-bottom: 4mm;'>Identification du patient</div>
+            <div style='margin-bottom: 4mm;'>Nom et prénom :
+              {{contactFullname}}</div>
+            <div style='margin-bottom: 4mm;'>Date de naissance :
+              {{contactBirthday}}</div>
+            <div>N° de Sécurité sociale de l'assuré : {{contactInsee}}</div>
+          </td>
+        </tr>
+        <tr>
+          <td style='background-color: #EEE;'>
+            <div style='margin-bottom: 2mm;'>A remplir par l'assuré</div>
+            <div style='margin-bottom: 4mm;'>Identification de l'assurance
+              complémentaire</div>
+            <div style='margin-bottom: 4mm;'>Nom de la complémentaire :
+              ..............................................</div>
+            <div style='margin-bottom: 4mm;'>N° de contrat ou d'adhérent :
+              .............................................</div>
+            <div>Adresse électronique de l'assuré :
+              .....................................</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 <div class="caption">Description détaillée des actes effectués</div>
 <table id="prestations">
@@ -216,8 +229,8 @@
     </tr>
   </tfoot>
 </table>
-<div style="position: absolute; bottom: 0 ;left:0">
-    <div id="materiaux">
+<div style="position: fixed; bottom:0;left:0">
+      <div id="materiaux">
     <table>
         <col style="width: 10%;" />
         <col style="width: 90%;" />
@@ -334,6 +347,4 @@
     </div>
     {{/if}}
 </div>
-
 </div>
-</page>
