@@ -17,6 +17,7 @@ import {
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
+import { FindVariableDto } from './dto/findVariable.dto';
 
 @ApiBearerAuth()
 @Controller('/mails')
@@ -61,5 +62,11 @@ export class MailController {
   @Delete('/delete/:id')
   async delete(@Param('id') id: number) {
     return await this.mailService.delete(id);
+  }
+
+  @Post('variable')
+  @UseGuards(TokenGuard)
+  async findVariable(@Body() payload: FindVariableDto) {
+    return this.mailService.findVariable(payload);
   }
 }
