@@ -11,6 +11,7 @@ import { PatientService } from './patient.service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { CashingEntity } from 'src/entities/cashing.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
+import { ContactUserEntity } from 'src/entities/contact-user.entity';
 @Injectable()
 export class PatientBalanceService {
   constructor(
@@ -22,6 +23,8 @@ export class PatientBalanceService {
     private readonly paymentRepo: Repository<CashingEntity>,
     @InjectRepository(CashingContactEntity)
     private readonly cashingContactRepo: Repository<CashingContactEntity>,
+    @InjectRepository(ContactUserEntity)
+    private readonly contactUserRepo: Repository<ContactUserEntity>,
     private patientService: PatientService,
     private dataSource: DataSource,
   ) {}
@@ -52,43 +55,37 @@ export class PatientBalanceService {
         newBalanceProsthesis = balance - newBalanceCare;
       }
 
-      const q = `
-      INSERT INTO T_CASHING_CSG (USR_ID, CON_ID, CSG_DEBTOR, CSG_PAYMENT, CSG_AMOUNT, amount_care, amount_prosthesis)
-					VALUES (?, ?, ?, ?, ?, ?, ?)
-      `;
-      const payment = await this.dataSource.manager.query(q, [
-        doctorId,
-        patientId,
-        'Mise à jour du montant dû',
-        null,
-        balance,
-        newBalanceCare,
-        newBalanceProsthesis,
-      ]);
+      const insertData: CashingEntity = {
+        usrId: doctorId,
+        conId: patientId,
+        debtor: 'Mise à jour du montant dû',
+        payment: null,
+        amount: balance,
+        amountCare: newBalanceCare,
+        amountProsthesis: newBalanceProsthesis,
+      };
+      const payment = await this.paymentRepo.save(insertData);
 
-      const payees = await this.cashingContactRepo.find({
-        where: {
-          csgId: payment.insertId,
-          conId: patientId,
-          amount: balance,
-          amountCare: newBalanceCare,
-          amountProsthesis: newBalanceProsthesis,
-        },
+      await this.cashingContactRepo.save({
+        csgId: payment?.id,
+        conId: patientId,
+        amount: balance,
+        amountCare: newBalanceCare,
+        amountProsthesis: newBalanceProsthesis,
       });
-      if (payees.length) {
-        await this.dataSource.manager.query(
-          `INSERT INTO T_CASHING_CONTACT_CSC (CSG_ID, CON_ID ,CSC_AMOUNT,	amount_care, amount_prosthesis)
-        VALUES (?, ?, ?, ?, ?)`,
-          [
-            payment.insertId,
-            patientId,
-            balance,
-            newBalanceCare,
-            newBalanceProsthesis,
-          ],
-        );
-      }
-      return;
+      const oldContactUser = await this.contactUserRepo.findOne({
+        where: { conId: patientId },
+      });
+      const contactUser: ContactUserEntity = {
+        ...oldContactUser,
+        amount: balance,
+        amountCare: newBalanceCare,
+        amountProsthesis: newBalanceProsthesis,
+        usrId: doctorId,
+        conId: patientId,
+      };
+      await this.contactUserRepo.save(contactUser);
+      if (patientUser) return;
     } catch (error) {
       throw new CBadRequestException('Update Error');
     }

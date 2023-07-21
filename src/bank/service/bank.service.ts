@@ -121,7 +121,7 @@ export class BankService {
           left: '10mm',
           top: '25mm',
           right: '10mm',
-          bottom: '15mm',
+          bottom: '10mm',
         },
         landscape: true,
       };

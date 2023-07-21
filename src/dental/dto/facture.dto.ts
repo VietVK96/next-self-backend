@@ -189,3 +189,11 @@ export class EnregistrerFactureDto {
   })
   displayOnlyProsthesis?: string;
 }
+
+@ApiExtraModels()
+export class PrintPDFDto {
+  @ApiProperty()
+  id?: string;
+  @ApiProperty()
+  duplicata?: boolean;
+}

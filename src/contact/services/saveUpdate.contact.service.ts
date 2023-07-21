@@ -19,6 +19,7 @@ import { ContactDetailRes } from '../response/contact-detail.res';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ContactPhoneCopEntity } from 'src/entities/contact-phone-cop.entity';
 import { checkId, checkNumber } from 'src/common/util/number';
+import { checkDay } from 'src/common/util/day';
 @Injectable()
 export class SaveUpdateContactService {
   constructor(
@@ -93,7 +94,7 @@ export class SaveUpdateContactService {
         cofId: checkId(reqBody?.contactFamilyId),
         profession: reqBody?.profession || null,
         email: reqBody?.email || null,
-        birthday: dayjs(reqBody.birthday).isValid() ? reqBody?.birthday : null,
+        birthday: checkDay(reqBody.birthday),
         quality: checkNumber(reqBody.quality),
         breastfeeding: checkNumber(reqBody?.breastfeeding) || 0,
         pregnancy: checkNumber(reqBody?.pregnancy) || 0,
@@ -303,7 +304,7 @@ export class SaveUpdateContactService {
         cofId: checkId(reqBody?.contactFamilyId),
         profession: reqBody?.profession || null,
         email: reqBody?.email || null,
-        birthDate: dayjs(reqBody.birthday).isValid() ? reqBody?.birthday : null,
+        birthDate: checkDay(reqBody.birthday),
         quality: checkNumber(reqBody.quality),
         breastfeeding: checkNumber(reqBody?.breastfeeding) || 0,
         pregnancy: checkNumber(reqBody?.pregnancy) || 0,

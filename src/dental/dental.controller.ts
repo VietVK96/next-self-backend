@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -8,9 +17,11 @@ import {
 import { OrdonnancesServices } from './services/ordonnances.services';
 import { OrdonnancesDto } from './dto/ordonnances.dto';
 import { FactureServices } from './services/facture.services';
-import { EnregistrerFactureDto } from './dto/facture.dto';
+import { EnregistrerFactureDto, PrintPDFDto } from './dto/facture.dto';
 import { DevisRequestAjaxDto } from './dto/devis_request_ajax.dto';
 import { DevisServices } from './services/devis.services';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -48,6 +59,29 @@ export class DentalController {
   @UseGuards(TokenGuard)
   async update(@Body() payload: EnregistrerFactureDto) {
     return this.factureServices.update(payload);
+  }
+
+  /// dental/facture/facture_pdf.php
+  @Get('/facture')
+  @UseGuards(TokenGuard)
+  async getPdf(@Res() res, @Query() payload: PrintPDFDto) {
+    try {
+      const buffer = await this.factureServices.generatePdf(payload);
+
+      res.set({
+        // pdf
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Length': buffer.length,
+        // prevent cache
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    }
   }
 
   @Get('/ordonnances/medical/:id_user/:id_contact')

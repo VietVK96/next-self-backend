@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, In, Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EnregistrerFactureDto } from '../dto/facture.dto';
+import { EnregistrerFactureDto, PrintPDFDto } from '../dto/facture.dto';
 import { BillEntity } from 'src/entities/bill.entity';
 import { BillLineEntity } from 'src/entities/bill-line.entity';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
@@ -22,6 +22,11 @@ import { StringHelper } from 'src/common/util/string-helper';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { AddressEntity } from 'src/entities/address.entity';
+import { createPdf } from '@saemhco/nestjs-html-pdf';
+import * as path from 'path';
+import { checkDay } from 'src/common/util/day';
+import { checkId } from 'src/common/util/number';
+import { DetailsRes, InitFactureRes } from '../res/facture.res';
 
 @Injectable()
 export class FactureServices {
@@ -564,116 +569,119 @@ export class FactureServices {
     }
   }
 
-  async initFacture({
-    object_connexion,
-    id_user,
-    id_societe,
-    id_facture,
-    noFacture,
-    dateFacture,
-    titreFacture,
-    identPrat,
-    adressePrat,
-    identPat,
-    modePaiement,
-    infosCompl,
-    details,
-    pdf,
-
-    billSignatureDoctor,
-    billAmount,
-    billSecuAmount,
-    billTemplate,
-    userNumeroFacturant,
-    contactFullname,
-    contactBirthday,
-    contactInsee,
-
-    groupId,
-  }: {
-    object_connexion: string;
-    id_user: number;
-    id_societe: number;
-    id_facture: number;
-    noFacture: string;
-    dateFacture: string;
-    titreFacture: string;
-    identPrat: string;
-    adressePrat: string;
-    identPat: string;
-    modePaiement: string;
-    infosCompl: string;
-    details: string;
-    pdf: string;
-
-    billSignatureDoctor: string;
-    billAmount: number;
-    billSecuAmount: number;
-    billTemplate: number;
-    userNumeroFacturant: string;
-    contactFullname: string;
-    contactBirthday: string;
-    contactInsee: string;
-
-    groupId: number;
-  }) {
-    let lock: number;
+  async initFacture(id: number): Promise<InitFactureRes> {
+    id = checkId(id);
     try {
       const bill = await this.billRepository.findOne({
-        where: { id: id_facture, delete: 0 },
+        where: { id, delete: 0 },
         relations: ['user', 'patient'],
       });
       if (bill) {
-        (noFacture = bill?.nbr), (dateFacture = bill?.date);
-        titreFacture = bill?.name;
-        identPrat = bill?.identPrat;
-        adressePrat = bill?.addrPrat;
-        identPat = bill?.identContact;
-        modePaiement = bill?.payment;
-        infosCompl = bill?.info;
-        lock = bill?.lock;
-        billSignatureDoctor = bill?.signature_doctor;
-        billAmount = bill?.amount;
-        billSecuAmount = bill?.secuAmount;
-        billTemplate = bill?.template;
-        userNumeroFacturant = bill?.user?.numeroFacturant;
+        const res: InitFactureRes = {
+          noFacture: bill?.nbr || '',
+          dateFacture: checkDay(bill?.date),
+          titreFacture: bill?.name || '',
+          identPrat: bill?.identPrat || '',
+          adressePrat: bill?.addrPrat || '',
+          identPat: bill?.identContact || '',
+          modePaiement: bill?.payment || 'Non Payee',
+          infosCompl: bill?.info || '',
+          billSignatureDoctor: bill?.signature_doctor || '',
+          billAmount: bill?.amount || 0,
+          billSecuAmount: bill?.secuAmount || 0,
+          billTemplate: bill?.template || 1,
+          userNumeroFacturant: bill?.user?.numeroFacturant || '',
+          contactFullname:
+            bill?.contact?.lastname + ' ' + bill?.contact?.firstname,
+          contactBirthday: checkDay(bill?.contact?.birthday),
+          contactInsee: bill?.contact?.insee + '' + bill?.contact?.inseeKey,
+        };
 
-        contactFullname = bill?.contact?.lastname + bill?.contact?.firstname;
-        contactBirthday = bill?.contact?.birthDate;
-        contactInsee = bill?.contact?.insee + bill?.contact?.inseeKey;
-
-        if (!pdf && lock) {
-          window.location.href = 'facture_pdf.php?id_facture=' + id_facture;
-          return;
-        }
+        // if (!pdf && bill.lock) {
+        //   window.location.href = 'facture_pdf.php?id_facture=' + id_facture;
+        //   return;
+        // }
         const billLines = await this.billLineRepository.find({
-          where: { id: id_facture },
+          where: { id },
           order: { pos: 'ASC' },
         });
-        const res = [];
         for (const billLine of billLines) {
-          const dentals = {
+          const dentails: DetailsRes = {
             id_facture_line: billLine?.bilId,
             typeLigne: billLine?.type,
             dateLigne: billLine?.date || '',
             dentsLigne: billLine?.teeth || '',
             descriptionLigne: billLine?.msg,
-            prixLigne: billLine?.amount || '',
+            prixLigne: billLine?.amount || 0,
             name: billLine?.msg.replace(/^[^-]*-\s?/, ''),
             cotation: billLine?.cotation,
             secuAmount: billLine?.secuAmount,
             materials: billLine?.materials,
           };
-          res.push(dentals);
+          res.details = dentails;
         }
         return res;
       } else {
-        throw new Error(
+        throw new CBadRequestException(
           '-3003 : Problème durant le rapatriement des informations de la facture ...',
         );
       }
     } catch {
-      return new Error('404');
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
+  }
+
+  // dental/facture/facture_pdf.php
+  async generatePdf(req: PrintPDFDto) {
+    const id = checkId(req?.id);
+    const duplicata = req?.duplicata;
+    const invoice = await this.billRepository.findOne({ where: { id } });
+    const modesPaiements = {
+      non_payee: 'Non Payée',
+      carte: 'Carte',
+      espece: 'Espèce',
+      cheque: 'Chèque',
+      virement: 'Virement',
+      prelevement: 'Prélèvement',
+      autre: 'Autre',
+    };
+    if (checkId) {
+      await this.billRepository.update(id, { lock: 1 } as BillEntity);
+    }
+
+    const facture = await this.initFacture(id);
+    const checkModePaiement =
+      ['virement', 'prelevement', 'autre']?.findIndex(
+        (e) => e === facture?.modePaiement,
+      ) != -1;
+    const data = {
+      duplicata,
+      date: facture?.dateFacture,
+      nbr: facture?.noFacture,
+      identPrat: facture?.identPrat,
+      adressePrat: facture?.adressePrat,
+      identPat: facture?.identPat,
+      billAmount: facture?.billAmount,
+      billSecuAmount: facture?.billSecuAmount,
+      userNumeroFacturant: facture?.userNumeroFacturant,
+      contactFullname: facture?.contactFullname,
+      contactBirthday: facture?.contactBirthday,
+      contactInsee: facture?.contactInsee,
+      prestations: facture.details,
+      modePaiement: facture.modePaiement,
+      signature: facture.billSignatureDoctor,
+      checkModePaiement,
+    };
+    const filePath = path.join(
+      process.cwd(),
+      'templates/invoice',
+      'convention.hbs',
+    );
+
+    const options = {
+      format: 'A4',
+    };
+    const pdf = await createPdf(filePath, options, data);
+    return pdf;
   }
 }
