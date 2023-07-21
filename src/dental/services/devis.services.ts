@@ -11,15 +11,8 @@ import { DevisRequestAjaxDto } from '../dto/devis_request_ajax.dto';
 import { LettersEntity } from 'src/entities/letters.entity';
 import { MailService } from 'src/mail/services/mail.service';
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
+import * as fs from 'fs-extra';
 import { PrintPDFDto } from '../dto/facture.dto';
-import { BillEntity } from 'src/entities/bill.entity';
-import { checkId } from 'src/common/util/number';
-import * as dayjs from 'dayjs';
-import { checkDay } from 'src/common/util/day';
-import { BillLineEntity } from 'src/entities/bill-line.entity';
-import * as path from 'path';
-import { createPdf } from '@saemhco/nestjs-html-pdf';
-
 @Injectable()
 export class DevisServices {
   constructor(
@@ -310,4 +303,6 @@ export class DevisServices {
   async sendMail(identity: UserIdentity) {
     await this.mailService.sendTest();
   }
+
+  // async generatePdf(req: PrintPDFDto) {}
 }

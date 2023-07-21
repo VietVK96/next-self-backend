@@ -1,6 +1,8 @@
 <style type="text/css">
     @page{
         size: A4;
+        height: 100%;
+        width: 100%;
     }
 
     * {
@@ -119,7 +121,8 @@
     }
 
 </style>
-<page_header>
+<page style="position: fixed; top:0; bottom:0; right:0; left:0">
+    <div>
     <div id="header">
         <h1>NOTE D'HONORAIRES</h1>
         (Les soins &agrave; tarifs opposables ne sont pas compris)
@@ -163,8 +166,57 @@
             </tbody>
         </table>
     </div>
-</page_header>
-<page_footer>
+</div>
+<div class="caption">Description détaillée des actes effectués</div>
+<table id="prestations">
+  <col style="width: 10%;" />
+  <col style="width: 11%;" />
+  <col style="width: 30%;" />
+  <col style="width: 10%;" />
+  <col style="width: 12%;" />
+  <col style="width: 12%;" />
+  <col style="width: 15%;" />
+  <thead>
+    <tr>
+      <th>Date de réalisation des actes</th>
+      <th>N° dent ou Localisation</th>
+      <th>Libellé de l'acte ou libellé Orthodontique</th>
+      <th>Matériaux utilisés</th>
+      <th>Code CCAM ou pour l'orthodontie cotation NGAP</th>
+      <th>Montant des honoraires</th>
+      <th>Montant de<br />remboursement<br />Assurance<br />Maladie<br />obligatoire ou<br />NR</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each prestations}}
+      {{#if (eq typeLigne "operation")}}
+        <tr>
+          <td class="align-center">{{ dateLigne }}</td>
+          <td class="align-center">{{ dentsLigne }}</td>
+          <td>{{ name }}</td>
+          <td class="align-center">{{ materials }}</td>
+          <td class="align-center">{{ cotation }}</td>
+          <td class="align-right">{{ prixLigne }}</td>
+          <td class="align-right">
+            {{#if (or (eq secuAmount 0) (eq (typeof secuAmount) "undefined"))}}
+              NR
+            {{else}}
+              {{ secuAmount }}
+            {{/if}}
+          </td>
+        </tr>
+      {{/if}}
+    {{/each}}
+  </tbody>
+  <tfoot>
+    <tr>
+      <td colspan="5" class="align-right">Total &euro;</td>
+      <td class="align-right">{{ billAmount }}</td>
+      <td class="align-right">{{ billSecuAmount }}</td>
+    </tr>
+  </tfoot>
+</table>
+<div style="position: absolute; bottom: 0 ;left:0">
     <div id="materiaux">
     <table>
         <col style="width: 10%;" />
@@ -222,56 +274,6 @@
         </tbody>
     </table>
 </div>
-<div class="caption">Description détaillée des actes effectués</div>
-<table id="prestations">
-  <col style="width: 10%;" />
-  <col style="width: 11%;" />
-  <col style="width: 30%;" />
-  <col style="width: 10%;" />
-  <col style="width: 12%;" />
-  <col style="width: 12%;" />
-  <col style="width: 15%;" />
-  <thead>
-    <tr>
-      <th>Date de réalisation des actes</th>
-      <th>N° dent ou Localisation</th>
-      <th>Libellé de l'acte ou libellé Orthodontique</th>
-      <th>Matériaux utilisés</th>
-      <th>Code CCAM ou pour l'orthodontie cotation NGAP</th>
-      <th>Montant des honoraires</th>
-      <th>Montant de<br />remboursement<br />Assurance<br />Maladie<br />obligatoire ou<br />NR</th>
-    </tr>
-  </thead>
-  <tbody>
-    {{#each prestations}}
-      {{#if (eq typeLigne "operation")}}
-        <tr>
-          <td class="align-center">{{ dateLigne }}</td>
-          <td class="align-center">{{ dentsLigne }}</td>
-          <td>{{ name }}</td>
-          <td class="align-center">{{ materials }}</td>
-          <td class="align-center">{{ cotation }}</td>
-          <td class="align-right">{{ prixLigne }}</td>
-          <td class="align-right">
-            {{#if (or (eq secuAmount 0) (eq (typeof secuAmount) "undefined"))}}
-              NR
-            {{else}}
-              {{ secuAmount }}
-            {{/if}}
-          </td>
-        </tr>
-      {{/if}}
-    {{/each}}
-  </tbody>
-  <tfoot>
-    <tr>
-      <td colspan="5" class="align-right">Total &euro;</td>
-      <td class="align-right">{{ billAmount }}</td>
-      <td class="align-right">{{ billSecuAmount }}</td>
-    </tr>
-  </tfoot>
-</table>
-
 <div id="footer">
     <div style="margin-bottom: 4mm;">Règlement :</div>
     <div>Montant réglé par le patient : {{ billAmount }} &euro;</div>
@@ -333,4 +335,5 @@
     {{/if}}
 </div>
 
-</page_footer>
+</div>
+</page>

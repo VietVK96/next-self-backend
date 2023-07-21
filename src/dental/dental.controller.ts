@@ -62,7 +62,7 @@ export class DentalController {
   }
 
   /// dental/facture/facture_pdf.php
-  @Get('/facture')
+  @Get('/facture/facture_pdf')
   @UseGuards(TokenGuard)
   async getPdf(@Res() res, @Query() payload: PrintPDFDto) {
     try {
