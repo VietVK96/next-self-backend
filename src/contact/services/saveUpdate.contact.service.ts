@@ -13,7 +13,6 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { ContactDetailDto } from '../dto/contact-detail.dto';
 import { isNumber } from 'class-validator';
 import { PolicyHolderEntity } from 'src/entities/policy-holder.entity';
-import * as dayjs from 'dayjs';
 import { ContactService } from './contact.service';
 import { ContactDetailRes } from '../response/contact-detail.res';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -423,10 +422,6 @@ export class SaveUpdateContactService {
         identity,
       );
     } catch (err) {
-      console.log(
-        '🚀 ~ file: saveUpdate.contact.service.ts:427 ~ SaveUpdateContactService ~ saveContact ~ err:',
-        err,
-      );
       queryRunner.rollbackTransaction();
       throw new CBadRequestException(ErrorCode.INSERT_FAILED);
     } finally {

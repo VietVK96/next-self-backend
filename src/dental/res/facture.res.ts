@@ -11,7 +11,7 @@ export class InitFactureRes {
   identPat?: string;
   modePaiement?: string;
   infosCompl?: string;
-  details?: DetailsRes;
+  details?: DetailsRes[];
   pdf?: string;
 
   billSignatureDoctor?: string;

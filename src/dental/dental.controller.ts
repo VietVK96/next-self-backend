@@ -22,7 +22,6 @@ import { DevisRequestAjaxDto } from './dto/devis_request_ajax.dto';
 import { DevisServices } from './services/devis.services';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
-
 @ApiBearerAuth()
 @Controller('/dental')
 @ApiTags('Dental')
@@ -64,9 +63,13 @@ export class DentalController {
   /// dental/facture/facture_pdf.php
   @Get('/facture')
   @UseGuards(TokenGuard)
-  async getPdf(@Res() res, @Query() payload: PrintPDFDto) {
+  async getPdf(
+    @Res() res,
+    @Query() payload: PrintPDFDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
     try {
-      const buffer = await this.factureServices.generatePdf(payload);
+      const buffer = await this.factureServices.generatePdf(payload, identity);
 
       res.set({
         // pdf

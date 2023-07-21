@@ -27,6 +27,9 @@ import * as path from 'path';
 import { checkDay } from 'src/common/util/day';
 import { checkId } from 'src/common/util/number';
 import { DetailsRes, InitFactureRes } from '../res/facture.res';
+import { customCreatePdf } from 'src/common/util/pdf';
+import { facturePdfFooter } from '../constant/htmlTemplate';
+import { br2nl } from 'src/common/util/string';
 
 @Injectable()
 export class FactureServices {
@@ -605,8 +608,9 @@ export class FactureServices {
           where: { id },
           order: { pos: 'ASC' },
         });
+
         for (const billLine of billLines) {
-          const dentails: DetailsRes = {
+          const dentail: DetailsRes = {
             id_facture_line: billLine?.bilId,
             typeLigne: billLine?.type,
             dateLigne: billLine?.date || '',
@@ -618,7 +622,7 @@ export class FactureServices {
             secuAmount: billLine?.secuAmount,
             materials: billLine?.materials,
           };
-          res.details = dentails;
+          res.details.push(dentail);
         }
         return res;
       } else {
@@ -632,56 +636,148 @@ export class FactureServices {
   }
 
   // dental/facture/facture_pdf.php
-  async generatePdf(req: PrintPDFDto) {
-    const id = checkId(req?.id);
-    const duplicata = req?.duplicata;
-    const invoice = await this.billRepository.findOne({ where: { id } });
-    const modesPaiements = {
-      non_payee: 'Non Payée',
-      carte: 'Carte',
-      espece: 'Espèce',
-      cheque: 'Chèque',
-      virement: 'Virement',
-      prelevement: 'Prélèvement',
-      autre: 'Autre',
-    };
-    if (checkId) {
-      await this.billRepository.update(id, { lock: 1 } as BillEntity);
+  async generatePdf(req: PrintPDFDto, identity: UserIdentity) {
+    try {
+      const id = checkId(req?.id);
+      const duplicata = Boolean(req?.duplicate);
+      const invoice = await this.billRepository.findOne({
+        where: { id },
+        relations: {
+          user: true,
+        },
+      });
+      const disableColumnByGroup = [158, 181];
+      const modesPaiements = {
+        non_payee: 'Non Payée',
+        carte: 'Carte',
+        espece: 'Espèce',
+        cheque: 'Chèque',
+        virement: 'Virement',
+        prelevement: 'Prélèvement',
+        autre: 'Autre',
+      };
+      if (checkId) {
+        await this.billRepository.update(id, { lock: 1 } as BillEntity);
+      }
+
+      const facture = await this.initFacture(id);
+      if (facture.billTemplate === 1) {
+        const checkModePaiement =
+          ['virement', 'prelevement', 'autre']?.findIndex(
+            (e) => e === facture?.modePaiement,
+          ) != -1;
+        const data = {
+          duplicata,
+          date: facture?.dateFacture,
+          nbr: facture?.noFacture,
+          identPrat: facture?.identPrat,
+          adressePrat: facture?.adressePrat,
+          identPat: facture?.identPat,
+          billAmount: facture?.billAmount,
+          billSecuAmount: facture?.billSecuAmount,
+          userNumeroFacturant: facture?.userNumeroFacturant,
+          contactFullname: facture?.contactFullname,
+          contactBirthday: facture?.contactBirthday,
+          contactInsee: facture?.contactInsee,
+          prestations: facture.details,
+          modePaiement: facture.modePaiement,
+          signature: facture.billSignatureDoctor,
+          checkModePaiement,
+        };
+        const filePath = path.join(
+          process.cwd(),
+          'templates/invoice',
+          'convention.hbs',
+        );
+        const options = {
+          format: 'A4',
+          displayHeaderFooter: true,
+          margin: {
+            left: '5mm',
+            top: '5mm',
+            right: '5mm',
+            bottom: '5mm',
+          },
+        };
+        const pdf = await createPdf(filePath, options, data);
+        return pdf;
+      } else {
+        const helpers = {
+          toUpperCase: function (str: string) {
+            return str.toUpperCase();
+          },
+          nl2br: br2nl,
+          formatDentsLigne: function formatDentsLigne(
+            dentsLigne: string | number,
+          ) {
+            if (typeof dentsLigne !== 'string') {
+              return '';
+            }
+            const dentsLigneSplit = dentsLigne.split(/[^0-9]+/);
+            const dentsLigneChunk = [];
+            for (let i = 0; i < dentsLigneSplit.length; i += 3) {
+              dentsLigneChunk.push(dentsLigneSplit.slice(i, i + 3).join(','));
+            }
+            return dentsLigneChunk.join('\n');
+          },
+          formatNumber: (n: number) => n.toFixed(2),
+        };
+
+        const filePath = path.join(
+          process.cwd(),
+          'templates/invoice',
+          'conventionDuplicate.hbs',
+        );
+        const detailsAmount = facture?.details
+          ? facture?.details.reduce(
+              (accumulator, item) => accumulator + item?.secuAmount,
+              0,
+            )
+          : 0;
+        const detailsPrixLigne = facture?.details
+          ? facture?.details.reduce(
+              (prixLigne, item) => prixLigne + item?.prixLigne,
+              0,
+            )
+          : 0;
+        const data = {
+          isGroup: disableColumnByGroup.some((e) => e === identity.org),
+          duplicata,
+          date: facture?.dateFacture,
+          nbr: facture?.noFacture,
+          identPrat: facture?.identPrat,
+          adressePrat: facture?.adressePrat,
+          identPat: facture?.identPat,
+          contactInsee: facture?.contactInsee,
+          details: facture?.details,
+          infosCompl: facture?.infosCompl,
+          detailsLength: facture.details?.length - 1,
+          detailsAmount: detailsAmount.toFixed(2),
+          detailsPrixLigne: detailsPrixLigne.toFixed(2),
+          billSignatureDoctor: facture.billSignatureDoctor,
+          modesPaiements,
+        };
+        const options = {
+          format: 'A4',
+          displayHeaderFooter: true,
+          footerTemplate: facturePdfFooter(Boolean(invoice.user.agaMember)),
+          margin: {
+            left: '5mm',
+            top: '5mm',
+            right: '5mm',
+            bottom: '5mm',
+          },
+        };
+        const pdfBuffer = await customCreatePdf(
+          filePath,
+          options,
+          data,
+          helpers,
+        );
+        return pdfBuffer;
+      }
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
-
-    const facture = await this.initFacture(id);
-    const checkModePaiement =
-      ['virement', 'prelevement', 'autre']?.findIndex(
-        (e) => e === facture?.modePaiement,
-      ) != -1;
-    const data = {
-      duplicata,
-      date: facture?.dateFacture,
-      nbr: facture?.noFacture,
-      identPrat: facture?.identPrat,
-      adressePrat: facture?.adressePrat,
-      identPat: facture?.identPat,
-      billAmount: facture?.billAmount,
-      billSecuAmount: facture?.billSecuAmount,
-      userNumeroFacturant: facture?.userNumeroFacturant,
-      contactFullname: facture?.contactFullname,
-      contactBirthday: facture?.contactBirthday,
-      contactInsee: facture?.contactInsee,
-      prestations: facture.details,
-      modePaiement: facture.modePaiement,
-      signature: facture.billSignatureDoctor,
-      checkModePaiement,
-    };
-    const filePath = path.join(
-      process.cwd(),
-      'templates/invoice',
-      'convention.hbs',
-    );
-
-    const options = {
-      format: 'A4',
-    };
-    const pdf = await createPdf(filePath, options, data);
-    return pdf;
   }
 }

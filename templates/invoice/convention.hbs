@@ -119,53 +119,116 @@
     }
 
 </style>
-<page_header>
-    <div id="header">
-        <h1>NOTE D'HONORAIRES</h1>
-        (Les soins &agrave; tarifs opposables ne sont pas compris)
-        {{#if duplicata}}
-        <div id="duplicata">DUPLICATA</div>
-        {{/if}}
-    </div>
-    <div id="informations">
-        <table cellspacing="4" border="0">
-            <col style="width: 50%;" />
-            <col style="width: 50%;" />
-            <tbody>
-                <tr>
-                    <td rowspan="2">
-                        <div style="margin-bottom: 2mm;">A remplir par le chirurgien-dentiste</div>
-                        <div style="margin-bottom: 2mm;">Identification du chirurgien-dentiste traitant</div>
-                        <div>Identification RPPS : {{userNumeroFacturant}}</div>
-                        <div style="height: 21mm; padding: 2mm 0; overflow: hidden;">{{{identPrat}}} </div>
-                        <div>Identification de la structure</div>
-                        <div>(Raison sociale et adresse du cabinet ou de l'établissement)</div>
-                        <div style="height: 21mm; padding: 2mm 0; overflow: hidden;">{{{adressePrat}}}</div>
-                        <div>N° de la structure (AM, FINESS ou SIRET) : ...................................</div>
-                    </td>
-                    <td>
-                        <div style="margin-bottom: 2mm;">A remplir par le chirurgien-dentiste</div>
-                        <div style="margin-bottom: 4mm;">Identification du patient</div>
-                        <div style="margin-bottom: 4mm;">Nom et prénom : {{contactFullname}}</div>
-                        <div style="margin-bottom: 4mm;">Date de naissance : {{contactBirthday}}</div>
-                        <div>N° de Sécurité sociale de l'assuré : {{contactInsee}}</div>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="background-color: #EEE;">
-                        <div style="margin-bottom: 2mm;">A remplir par l'assuré</div>
-                        <div style="margin-bottom: 4mm;">Identification de l'assurance complémentaire</div>
-                        <div style="margin-bottom: 4mm;">Nom de la complémentaire : ..............................................</div>
-                        <div style="margin-bottom: 4mm;">N° de contrat ou d'adhérent : .............................................</div>
-                        <div>Adresse électronique de l'assuré : .....................................</div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</page_header>
-<page_footer>
-    <div id="materiaux">
+<div>
+  <div id='header'>
+    <h1>NOTE D'HONORAIRES</h1>
+    (Les soins &agrave; tarifs opposables ne sont pas compris)
+    {{#if duplicata}}
+      <div id='duplicata'>DUPLICATA</div>
+    {{/if}}
+  </div>
+  <div id='informations'>
+    <table cellspacing='4' border='0'>
+      <col style='width: 50%;' />
+      <col style='width: 50%;' />
+      <tbody>
+        <tr>
+          <td rowspan='2'>
+            <div style='margin-bottom: 2mm;'>A remplir par le
+              chirurgien-dentiste</div>
+            <div style='margin-bottom: 2mm;'>Identification du
+              chirurgien-dentiste traitant</div>
+            <div>Identification RPPS : {{userNumeroFacturant}}</div>
+            <div
+              style='height: 21mm; padding: 2mm 0; overflow: hidden;'
+            >{{{identPrat}}} </div>
+            <div>Identification de la structure</div>
+            <div>(Raison sociale et adresse du cabinet ou de l'établissement)</div>
+            <div
+              style='height: 21mm; padding: 2mm 0; overflow: hidden;'
+            >{{{adressePrat}}}</div>
+            <div>N° de la structure (AM, FINESS ou SIRET) :
+              ...................................</div>
+          </td>
+          <td>
+            <div style='margin-bottom: 2mm;'>A remplir par le
+              chirurgien-dentiste</div>
+            <div style='margin-bottom: 4mm;'>Identification du patient</div>
+            <div style='margin-bottom: 4mm;'>Nom et prénom :
+              {{contactFullname}}</div>
+            <div style='margin-bottom: 4mm;'>Date de naissance :
+              {{contactBirthday}}</div>
+            <div>N° de Sécurité sociale de l'assuré : {{contactInsee}}</div>
+          </td>
+        </tr>
+        <tr>
+          <td style='background-color: #EEE;'>
+            <div style='margin-bottom: 2mm;'>A remplir par l'assuré</div>
+            <div style='margin-bottom: 4mm;'>Identification de l'assurance
+              complémentaire</div>
+            <div style='margin-bottom: 4mm;'>Nom de la complémentaire :
+              ..............................................</div>
+            <div style='margin-bottom: 4mm;'>N° de contrat ou d'adhérent :
+              .............................................</div>
+            <div>Adresse électronique de l'assuré :
+              .....................................</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="caption">Description détaillée des actes effectués</div>
+<table id="prestations">
+  <col style="width: 10%;" />
+  <col style="width: 11%;" />
+  <col style="width: 30%;" />
+  <col style="width: 10%;" />
+  <col style="width: 12%;" />
+  <col style="width: 12%;" />
+  <col style="width: 15%;" />
+  <thead>
+    <tr>
+      <th>Date de réalisation des actes</th>
+      <th>N° dent ou Localisation</th>
+      <th>Libellé de l'acte ou libellé Orthodontique</th>
+      <th>Matériaux utilisés</th>
+      <th>Code CCAM ou pour l'orthodontie cotation NGAP</th>
+      <th>Montant des honoraires</th>
+      <th>Montant de<br />remboursement<br />Assurance<br />Maladie<br />obligatoire ou<br />NR</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each prestations}}
+      {{#if (eq typeLigne "operation")}}
+        <tr>
+          <td class="align-center">{{ dateLigne }}</td>
+          <td class="align-center">{{ dentsLigne }}</td>
+          <td>{{ name }}</td>
+          <td class="align-center">{{ materials }}</td>
+          <td class="align-center">{{ cotation }}</td>
+          <td class="align-right">{{ prixLigne }}</td>
+          <td class="align-right">
+            {{#if (or (eq secuAmount 0) (eq (typeof secuAmount) "undefined"))}}
+              NR
+            {{else}}
+              {{ secuAmount }}
+            {{/if}}
+          </td>
+        </tr>
+      {{/if}}
+    {{/each}}
+  </tbody>
+  <tfoot>
+    <tr>
+      <td colspan="5" class="align-right">Total &euro;</td>
+      <td class="align-right">{{ billAmount }}</td>
+      <td class="align-right">{{ billSecuAmount }}</td>
+    </tr>
+  </tfoot>
+</table>
+<div style="position: fixed; bottom:0;left:0">
+      <div id="materiaux">
     <table>
         <col style="width: 10%;" />
         <col style="width: 90%;" />
@@ -222,55 +285,6 @@
         </tbody>
     </table>
 </div>
-<div class="caption">Description détaillée des actes effectués</div>
-<table id="prestations">
-  <col style="width: 10%;" />
-  <col style="width: 11%;" />
-  <col style="width: 30%;" />
-  <col style="width: 10%;" />
-  <col style="width: 12%;" />
-  <col style="width: 12%;" />
-  <col style="width: 15%;" />
-  <thead>
-    <tr>
-      <th>Date de réalisation des actes</th>
-      <th>N° dent ou Localisation</th>
-      <th>Libellé de l'acte ou libellé Orthodontique</th>
-      <th>Matériaux utilisés</th>
-      <th>Code CCAM ou pour l'orthodontie cotation NGAP</th>
-      <th>Montant des honoraires</th>
-      <th>Montant de<br />remboursement<br />Assurance<br />Maladie<br />obligatoire ou<br />NR</th>
-    </tr>
-  </thead>
-  <tbody>
-    {{#each prestations}}
-      {{#if (eq typeLigne "operation")}}
-        <tr>
-          <td class="align-center">{{ dateLigne }}</td>
-          <td class="align-center">{{ dentsLigne }}</td>
-          <td>{{ name }}</td>
-          <td class="align-center">{{ materials }}</td>
-          <td class="align-center">{{ cotation }}</td>
-          <td class="align-right">{{ prixLigne }}</td>
-          <td class="align-right">
-            {{#if (or (eq secuAmount 0) (eq (typeof secuAmount) "undefined"))}}
-              NR
-            {{else}}
-              {{ secuAmount }}
-            {{/if}}
-          </td>
-        </tr>
-      {{/if}}
-    {{/each}}
-  </tbody>
-  <tfoot>
-    <tr>
-      <td colspan="5" class="align-right">Total &euro;</td>
-      <td class="align-right">{{ billAmount }}</td>
-      <td class="align-right">{{ billSecuAmount }}</td>
-    </tr>
-  </tfoot>
-</table>
 
 <div id="footer">
     <div style="margin-bottom: 4mm;">Règlement :</div>
@@ -332,5 +346,4 @@
     </div>
     {{/if}}
 </div>
-
-</page_footer>
+</div>

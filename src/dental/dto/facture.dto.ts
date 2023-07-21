@@ -195,5 +195,5 @@ export class PrintPDFDto {
   @ApiProperty()
   id?: string;
   @ApiProperty()
-  duplicata?: boolean;
+  duplicate?: boolean;
 }
