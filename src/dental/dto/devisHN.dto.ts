@@ -95,7 +95,7 @@ export class PrestationsRequestAjaxDto {
     name: 'secuRepayment',
     required: false,
   })
-  secuRepayment?: string;
+  secuRepayment?: number;
 
   @ApiProperty({
     name: 'mutualRepaymentType',
@@ -293,7 +293,7 @@ export class DevisRequestAjaxDto {
     name: 'personRepayment',
     required: false,
   })
-  personRepayment?: string;
+  personRepayment?: number;
 
   @ApiProperty({
     name: 'signaturePatient',
@@ -311,7 +311,7 @@ export class DevisRequestAjaxDto {
     name: 'prestations',
     required: false,
   })
-  prestations?: PrestationsRequestAjaxDto;
+  prestations?: PrestationsRequestAjaxDto[];
 
   @ApiProperty({
     name: 'attachments',

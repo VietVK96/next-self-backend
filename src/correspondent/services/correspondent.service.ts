@@ -34,11 +34,17 @@ export class CorrespondentService {
 
   async lookUp(groupId: number, term: string): Promise<LookUpRes[]> {
     const results = await this.dataSource.query(
-      `SELECT CPD_ID as id, CPD_LASTNAME as lastname, CPD_FIRSTNAME as 
-      firstname,CPD_MAIL as email,CPD_MSG as msg,created_at as createdAt,updated_at as updatedAt,
-      correspondent_type.id as correspondentTypeId , correspondent_type.name as correspondentTypeName 
-FROM T_CORRESPONDENT_CPD CPD LEFT JOIN correspondent_type ON CPD.correspondent_type_id = correspondent_type.id
-WHERE CPD.organization_id = ? AND ( CPD.CPD_LASTNAME LIKE ? or CPD.CPD_FIRSTNAME LIKE ?)`,
+      `SELECT 
+      CPD_ID as id, CPD_LASTNAME as lastname,
+      CPD_FIRSTNAME as firstname,
+      CPD_MAIL as email,
+      CPD_MSG as msg,
+      created_at as createdAt,
+      updated_at as updatedAt,
+      correspondent_type.id as correspondentTypeId,
+      correspondent_type.name as correspondentTypeName 
+      FROM T_CORRESPONDENT_CPD CPD LEFT JOIN correspondent_type ON CPD.correspondent_type_id = correspondent_type.id
+      WHERE CPD.organization_id = ? AND ( CPD.CPD_LASTNAME LIKE ? or CPD.CPD_FIRSTNAME LIKE ?)`,
       [groupId, term + '%', term + '%'],
     );
     for (const iterator of results) {
@@ -57,18 +63,41 @@ WHERE CPD.organization_id = ? AND ( CPD.CPD_LASTNAME LIKE ? or CPD.CPD_FIRSTNAME
 
   async find(id: number): Promise<CorrespondentRes> {
     const correspondents = await this.dataSource.query(
-      `SELECT CPD_ID as id, CPD_LASTNAME as lastname, CPD_FIRSTNAME as firstname, 
-      CPD_MAIL as email, CPD_MSG as description,GEN.GEN_ID, GEN.GEN_NAME, GEN.long_name, GEN.GEN_TYPE,
-      ADR.ADR_ID, ADR.ADR_STREET, ADR.ADR_STREET_COMP, ADR.ADR_ZIP_CODE, ADR.ADR_CITY, ADR.ADR_COUNTRY, 
-      ADR.ADR_COUNTRY_ABBR,correspondent_type.id as typeId,correspondent_type.name as typeName FROM T_CORRESPONDENT_CPD CPD LEFT JOIN T_GENDER_GEN GEN ON CPD.GEN_ID = GEN.GEN_ID
+      `SELECT 
+        CPD_ID as id, CPD_LASTNAME as lastname,
+        CPD_FIRSTNAME as firstname, 
+        CPD_MAIL as email,
+        CPD_MSG as description,
+        GEN.GEN_ID, GEN.GEN_NAME,
+        GEN.long_name, GEN.GEN_TYPE,
+        ADR.ADR_ID,
+        ADR.ADR_STREET,
+        ADR.ADR_STREET_COMP,
+        ADR.ADR_ZIP_CODE,
+        ADR.ADR_CITY,
+        ADR.ADR_COUNTRY, 
+        ADR.ADR_COUNTRY_ABBR,
+        correspondent_type.id as typeId,
+        correspondent_type.name as typeName
+      FROM T_CORRESPONDENT_CPD CPD 
+      LEFT JOIN T_GENDER_GEN GEN ON CPD.GEN_ID = GEN.GEN_ID
       LEFT JOIN T_ADDRESS_ADR ADR ON CPD.ADR_ID = ADR.ADR_ID 
-      LEFT JOIN correspondent_type ON CPD.correspondent_type_id = correspondent_type.id WHERE CPD_ID = ?`,
+      LEFT JOIN correspondent_type ON CPD.correspondent_type_id = correspondent_type.id
+      WHERE CPD_ID = ?`,
       [id],
     );
 
     const phone = await this.dataSource.query(
-      `SELECT T_PHONE_PHO.PHO_ID as id,T_PHONE_PHO.PHO_NBR as number,T_PHONE_PHO.PHO_NBR as nbr, T_PHONE_TYPE_PTY.PTY_ID as phoneTypeId, T_PHONE_TYPE_PTY.PTY_NAME as phoneTypeName  FROM T_CORRESPONDENT_PHONE_CPP LEFT JOIN T_PHONE_PHO ON T_CORRESPONDENT_PHONE_CPP.PHO_ID = T_PHONE_PHO.PHO_ID LEFT JOIN T_PHONE_TYPE_PTY ON T_PHONE_PHO.PTY_ID = T_PHONE_TYPE_PTY.PTY_ID
-WHERE CPD_ID = ?`,
+      `SELECT 
+        T_PHONE_PHO.PHO_ID as id,
+        T_PHONE_PHO.PHO_NBR as number,
+        T_PHONE_PHO.PHO_NBR as nbr,
+        T_PHONE_TYPE_PTY.PTY_ID as phoneTypeId,
+        T_PHONE_TYPE_PTY.PTY_NAME as phoneTypeName 
+      FROM T_CORRESPONDENT_PHONE_CPP 
+      LEFT JOIN T_PHONE_PHO ON T_CORRESPONDENT_PHONE_CPP.PHO_ID = T_PHONE_PHO.PHO_ID 
+      LEFT JOIN T_PHONE_TYPE_PTY ON T_PHONE_PHO.PTY_ID = T_PHONE_TYPE_PTY.PTY_ID
+      WHERE CPD_ID = ?`,
       [id],
     );
     const results = correspondents.length > 0 ? correspondents[0] : null;
