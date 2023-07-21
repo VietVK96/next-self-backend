@@ -8,14 +8,13 @@ import { DataSource, FindOptionsWhere, In, Repository } from 'typeorm';
 import { DevisRequestAjaxDto } from '../dto/devisHN.dto';
 import * as dayjs from 'dayjs';
 import { DEFAULT_LOCALE } from 'src/constants/locale';
-import { id } from 'date-fns/locale';
+
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import {
   DentalQuotationActEntity,
   EnumDentalQuotationActType,
 } from 'src/entities/dental-quotation-act.entity';
 import { LettersEntity } from 'src/entities/letters.entity';
-import { ConfigService } from '@nestjs/config';
 import { MailService } from 'src/mail/services/mail.service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
@@ -23,7 +22,6 @@ import { UserEntity } from 'src/entities/user.entity';
 @Injectable()
 export class DevisHNServices {
   constructor(
-    private configService: ConfigService,
     private mailService: MailService,
     private readonly dataSource: DataSource,
     @InjectRepository(DentalQuotationEntity)
@@ -78,42 +76,41 @@ export class DevisHNServices {
           const acceptedAt = dayjs(payload.date_acceptation)
             .locale(DEFAULT_LOCALE)
             .format('DD/MM/YYYY');
-          const dentalQuotation = await this.dentalQuotationRepository.find({
+          const dentalQuotation = await this.dentalQuotationRepository.findOne({
             where: {
               id: id_devisHN,
             },
           });
-          if (!dentalQuotation || dentalQuotation.length < 1) {
+          if (!dentalQuotation) {
             throw new CNotFoundRequestException('not found quotation');
           }
           if (acceptedAt) {
             await this.updateTimePlan(acceptedAt, id_devisHN);
           }
-          const dentalQ: DentalQuotationEntity = {
-            date: date,
-            dateAccept: acceptedAt ? acceptedAt : null,
-            duration: duration,
-            identContact: identPat,
-            msg: infosCompl,
-            identPrat: identPrat,
-            addrPrat: addrPrat,
-            title: name,
-            type: 1,
-            color: couleur,
-            schemes:
-              EnumDentalQuotationSchemes[
-                schemas as keyof typeof EnumDentalQuotationSchemes
-              ],
-            amount: amount,
-            personRepayment: personRepayment,
-            signaturePatient: signaturePatient,
-            signaturePraticien: signaturePraticien,
-          };
+          dentalQuotation.date = date;
+          (dentalQuotation.dateAccept = acceptedAt ? acceptedAt : null),
+            (dentalQuotation.duration = duration);
+          dentalQuotation.identContact = identPat;
+          dentalQuotation.msg = infosCompl;
+          dentalQuotation.identPrat = identPrat;
+          dentalQuotation.addrPrat = addrPrat;
+          dentalQuotation.title = name;
+          dentalQuotation.type = 1;
+          dentalQuotation.color = couleur;
+          dentalQuotation.schemes =
+            EnumDentalQuotationSchemes[
+              schemas as keyof typeof EnumDentalQuotationSchemes
+            ];
+          dentalQuotation.amount = amount;
+          dentalQuotation.personRepayment = personRepayment;
+          dentalQuotation.signaturePatient = signaturePatient;
+          dentalQuotation.signaturePraticien = signaturePraticien;
           // update dentalQuotation
-          const detalQResutl = await this.dentalQuotationRepository.save(
-            dentalQ,
+          await this.dentalQuotationRepository.update(
+            { id: dentalQuotation.id },
+            dentalQuotation,
           );
-          let prestationIds: string[];
+          const prestationIds: string[] = [];
           if (prestations && prestations.length > 0) {
             for (let i = 0; i < prestations.length; i++) {
               let prestationId = prestations[i].id_devisHN_ligne;
@@ -132,7 +129,7 @@ export class DevisHNServices {
                 : null;
               if (!prestationId) {
                 const dentalQAct: DentalQuotationActEntity = {
-                  DQOId: detalQResutl.id,
+                  DQOId: dentalQuotation.id,
                   type: EnumDentalQuotationActType[
                     prestationTypeLine as keyof typeof EnumDentalQuotationActType
                   ],
@@ -152,13 +149,13 @@ export class DevisHNServices {
                   .createQueryBuilder()
                   .update(DentalQuotationActEntity)
                   .set({
-                    pos: id,
+                    pos: i,
                     name: prestationName,
                     descriptiveText: descriptiveText,
                     estimatedMonthTreatment: estimatedMonthTreatment,
                   })
                   .where('DQO_ID = :DQOId AND DQA_ID = :id', {
-                    DQOId: detalQResutl.id,
+                    DQOId: dentalQuotation.id,
                     id: prestationId,
                   })
                   .execute();
@@ -168,19 +165,19 @@ export class DevisHNServices {
 
             if (prestationIds.length < 1) {
               const conditions: FindOptionsWhere<DentalQuotationActEntity> = {
-                DQOId: detalQResutl.id,
+                DQOId: dentalQuotation.id,
                 id: In(prestationIds),
               };
               this.dentalQuotationActRepository.delete(conditions);
             }
 
             const quote = await this.dentalQuotationRepository.findOne({
-              where: { id: detalQResutl.id },
+              where: { id: dentalQuotation.id },
             });
             quote.treatmentTimeline = Number(payload.treatment_timeline);
 
             // Save quote attachments.
-            if (quote.attachments.length > 1) {
+            if (quote.attachments && quote.attachments.length > 1) {
               for (let i = quote.attachments.length - 1; i >= 0; i--) {
                 await this.lettersRepository.update(
                   { id: quote.attachments[i].id },
@@ -191,7 +188,6 @@ export class DevisHNServices {
                 quote.attachments.splice(i, 1);
               }
             }
-
             if (payload.attachments && payload.attachments.length > 0) {
               for (let i = 0; i < payload.attachments.length; i++) {
                 const mail = await this.lettersRepository.findOne({
@@ -226,24 +222,20 @@ export class DevisHNServices {
                 const newMail = await this.lettersRepository.findOne({
                   where: { id: mailResult?.id },
                 });
-                const promises = [];
-                for (const attachment of payload.attachments) {
-                  if (attachment === newMail?.id) {
-                    promises.push(
-                      this.lettersRepository.save({
-                        id: attachment,
-                        quoteId: quote?.id,
-                      }),
-                    );
-                  }
-                }
-                await Promise.all(promises);
+                this.lettersRepository.save({
+                  id: newMail?.id,
+                  quoteId: quote?.id,
+                });
               }
             }
+            await this.dentalQuotationRepository.update(
+              { id: quote.id },
+              quote,
+            );
           }
         } catch (err) {
           throw new CBadRequestException(
-            `Erreur -3 : Problème durant la sauvegarde du devis ... ${err?.message}`,
+            `error with type enregistrer ... ${err?.message}`,
           );
         }
       case 'enregistrerEnteteParDefaut':
@@ -275,7 +267,7 @@ export class DevisHNServices {
           }
         } catch (err) {
           throw new CBadRequestException(
-            `Erreur -3 : Problème durant la sauvegarde du devis ... ${err?.message}`,
+            `error with type enregistrerEnteteParDefaut ... ${err?.message}`,
           );
         }
     }
