@@ -85,7 +85,7 @@ export class PatientBalanceService {
         conId: patientId,
       };
       await this.contactUserRepo.save(contactUser);
-      if (patientUser) return;
+      return payment;
     } catch (error) {
       throw new CBadRequestException('Update Error');
     }
