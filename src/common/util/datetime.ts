@@ -53,7 +53,7 @@ export function minutesToTime(minutes: number): string {
  * @param datetime Date l'objet Date gốc
  * @param unit string unité de temps
  */
-export function startOf(datetime: Date, unit: string = 'month'): void {
+export function startOf(datetime: Date, unit: string): void {
   switch (unit) {
     // 1er janvier de l'année, minuit
     case 'year':

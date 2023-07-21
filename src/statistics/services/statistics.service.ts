@@ -111,7 +111,7 @@ export class StatisticsService {
     datas: any[],
     defaults: string[] | number[],
     param: FilterValuesStatisticDto,
-    group: boolean = false,
+    group?: boolean,
   ): any {
     const defaultsObj = Object.fromEntries(defaults.map((key) => [key, 0]));
     const aggregate = param?.aggregate;
