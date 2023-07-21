@@ -26,8 +26,8 @@ const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
 const PAV_MINIMUM_AMOUNT = 120;
 
 @Injectable()
-export class CaresheetsService {
-  private readonly logger: Logger = new Logger(CaresheetsService.name);
+export class ActsService {
+  private readonly logger: Logger = new Logger(ActsService.name);
 
   constructor(
     private configService: ConfigService,
