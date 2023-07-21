@@ -46,6 +46,7 @@ import { BankModule } from './bank/bank.module';
 import { SecuritiesModule } from './securities/securities.module';
 import { HttpModule } from '@nestjs/axios';
 import { LoggerMiddleware } from './common/util/logrequest';
+import { RecipeModule } from './recipe/recipe.module';
 
 @Module({
   imports: [
@@ -124,6 +125,7 @@ import { LoggerMiddleware } from './common/util/logrequest';
     BankModule,
     PaymentSchedulesModule,
     SecuritiesModule,
+    RecipeModule,
   ],
 })
 export class AppModule {
