@@ -21,12 +21,14 @@ import { TokenGuard, UserIdentity } from 'src/common/decorator/auth.decorator';
 export class SettingsController {
   constructor(private tariffTypesSerivce: TariffTypesService) {}
 
+  // https://ecoo.ltsgroup.tech/settings/tariff-types/index.php
   @Get('/tariff-types')
   @UseGuards(TokenGuard)
   async getAllTariffTypes(@CurrentUser() identity: UserIdentity) {
     return await this.tariffTypesSerivce.getAllTariffTypes(identity);
   }
 
+  // https://ecoo.ltsgroup.tech/settings/tariff-types/create.php
   @Post('/tariff-types')
   @ApiBody({
     schema: {
@@ -47,6 +49,7 @@ export class SettingsController {
     return await this.tariffTypesSerivce.createTariffType(identity, body.name);
   }
 
+  // https://ecoo.ltsgroup.tech/settings/tariff-types/edit.php?id=:id
   @Patch('/tariff-types/:id')
   @UseGuards(TokenGuard)
   @ApiBody({
@@ -72,6 +75,7 @@ export class SettingsController {
     );
   }
 
+  // https://ecoo.ltsgroup.tech/settings/tariff-types/delete.php?id=:id
   @Delete('/tariff-types/:id')
   @UseGuards(TokenGuard)
   async deleteTariffType(
