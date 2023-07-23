@@ -1,3 +1,4 @@
+import { SettingsModule } from './settings/settings.module';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import configuration from './common/config';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -150,6 +151,7 @@ const importsModules = [
   BankModule,
   PaymentSchedulesModule,
   SecuritiesModule,
+  SettingsModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {
