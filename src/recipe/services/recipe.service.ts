@@ -143,7 +143,6 @@ export class RecipeService {
     response.page = queryParams.page;
     response.total = extra.total;
     response.customs.amount = extra.amount;
-    console.log('extra', extra);
 
     return response;
   }
@@ -360,7 +359,6 @@ FROM (
 
     response.total = statement[0]['total'];
     response.amount = statement[0]['amount'];
-    console.log(statement, response);
 
     return response;
   }
