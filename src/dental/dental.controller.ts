@@ -9,8 +9,12 @@ import { OrdonnancesServices } from './services/ordonnances.services';
 import { OrdonnancesDto } from './dto/ordonnances.dto';
 import { FactureServices } from './services/facture.services';
 import { EnregistrerFactureDto } from './dto/facture.dto';
-import { DevisRequestAjaxDto } from './dto/devis_request_ajax.dto';
+import {
+  DevisRequestAjaxDto,
+  QuotationDevisRequestAjaxDto,
+} from './dto/devis_request_ajax.dto';
 import { DevisServices } from './services/devis.services';
+import { QuotationServices } from './services/quotation.service';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -20,6 +24,7 @@ export class DentalController {
     private ordonnancesServices: OrdonnancesServices,
     private factureServices: FactureServices,
     private devisServices: DevisServices,
+    private quotationServices: QuotationServices,
   ) {}
 
   /**
@@ -89,5 +94,14 @@ export class DentalController {
   @UseGuards(TokenGuard)
   async sendMail(@CurrentUser() identity: UserIdentity) {
     return this.devisServices.sendMail(identity);
+  }
+
+  @Post('/quotation/devis_requetes_ajax')
+  @UseGuards(TokenGuard)
+  async quotationMutualRequestsAjax(
+    @Body() req: QuotationDevisRequestAjaxDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.quotationServices.quotationDevisRequestsAjax(req, identity);
   }
 }

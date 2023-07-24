@@ -32,6 +32,7 @@ import { AmoEntity } from 'src/entities/amo.entity';
 import { AmcEntity } from 'src/entities/amc.entity';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
+import { QuotationServices } from './services/quotation.service';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quot
     PermissionService,
     AddressService,
     PaymentScheduleService,
+    QuotationServices,
   ],
 })
 export class DentalModule {}
