@@ -1,18 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import { StatisticsPaymentDto } from '../dto/statistics.payment.dto';
+import { DataSource } from 'typeorm';
 import { StatisticSqlFormat } from 'src/constants/statistics';
-import {
-  add,
-  addDays,
-  format,
-  startOfDay,
-  startOfMonth,
-  startOfWeek,
-  startOfYear,
-} from 'date-fns';
-import { StatisticsService } from './statistic.service';
+import { FilterValuesStatisticDto } from '../dto';
+import { StatisticsService } from './statistics.service';
 
 @Injectable()
 export class StatisticsPaymentService {
@@ -26,7 +16,7 @@ export class StatisticsPaymentService {
    * Line 9 -> 36
    */
 
-  async paymentSalesRevenues(param: StatisticsPaymentDto) {
+  async paymentSalesRevenues(param: FilterValuesStatisticDto) {
     const label = "Chiffre d'Affaires";
     const description = 'Montant des actes réalisés';
     const sql = `
@@ -63,7 +53,7 @@ export class StatisticsPaymentService {
    * File php/statistics/payments/receipts-by-types.php
    * Line 9 -> 37
    */
-  async paymentReceiptsByType(param: StatisticsPaymentDto) {
+  async paymentReceiptsByType(param: FilterValuesStatisticDto) {
     const label = 'Par soins / prothèses';
     const description = 'Montant des honoraires payés, par soins ou prothèses';
     const sql = `
@@ -100,7 +90,7 @@ export class StatisticsPaymentService {
    * File php/statistics/payments/receipts-by-choices.php
    * Line 9 -> 50
    */
-  async paymentReceiptsByChoices(param: StatisticsPaymentDto) {
+  async paymentReceiptsByChoices(param: FilterValuesStatisticDto) {
     const label = 'Par modes de paiement';
     const description = 'Montant des honoraires payés, par modes de paiement';
     const choicesSql = ` 

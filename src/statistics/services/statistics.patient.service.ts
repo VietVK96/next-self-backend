@@ -1,22 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Not, Repository } from 'typeorm';
-import { StatisticsPaymentDto } from '../dto/statistics.payment.dto';
 import { StatisticSqlFormat } from 'src/constants/statistics';
-import {
-  add,
-  addDays,
-  format,
-  startOfDay,
-  startOfMonth,
-  startOfWeek,
-  startOfYear,
-} from 'date-fns';
-import { StatisticsService } from './statistic.service';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { UserEntity } from 'src/entities/user.entity';
 import { AccountStatusEnum } from 'src/enum/account-status.enum';
+import { FilterValuesStatisticDto } from '../dto';
+import { StatisticsService } from './statistics.service';
 
 @Injectable()
 export class StatisticsPatientService {
@@ -32,7 +23,7 @@ export class StatisticsPatientService {
    * Line 15 -> 71
    */
 
-  async patientIndex(param: StatisticsPaymentDto, identity: UserIdentity) {
+  async patientIndex(param: FilterValuesStatisticDto, identity: UserIdentity) {
     const label = 'Nombre de patients';
     const description = 'Nombre de patients par praticien';
     if (['day', 'week'].includes(param?.aggregate)) {
@@ -91,7 +82,7 @@ export class StatisticsPatientService {
    * File php/statistics/patients/new.php
    * Line 15 -> 35
    */
-  async patientNew(param: StatisticsPaymentDto) {
+  async patientNew(param: FilterValuesStatisticDto) {
     const label = 'Nouveaux patients';
     const description = 'Nombre de nouveaux patients';
     const sql = `
@@ -127,7 +118,7 @@ export class StatisticsPatientService {
    * File /php/statistics/patients/children.php
    * Line 9 -> 47
    */
-  async patientChildren(param: StatisticsPaymentDto) {
+  async patientChildren(param: FilterValuesStatisticDto) {
     const label = 'Enfants / Adultes';
     const description = "Nombre d'enfants et d'adultes soignés";
     const sql = `SELECT
@@ -173,7 +164,7 @@ export class StatisticsPatientService {
    * File php/statistics/patients/average.php
    * Line 9 -> 45
    */
-  async patientAverage(param: StatisticsPaymentDto) {
+  async patientAverage(param: FilterValuesStatisticDto) {
     const label = 'Age moyen';
     const description = 'Age moyen des patients soignés';
     const sql = `

@@ -1,23 +1,68 @@
-import { Controller, Body, Post, UseGuards, Get, Query } from '@nestjs/common';
-
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
+import { StatisticsActsService } from './services/statistics.acts.service';
+import { StatisticsEventsService } from './services/statistics.events.service';
+import { FilterValuesStatisticDto } from './dto';
 import { StatisticsPaymentService } from './services/statistics.payment.service';
-import { StatisticsPaymentDto } from './dto/statistics.payment.dto';
 import { StatisticsPatientService } from './services/statistics.patient.service';
 
 @ApiBearerAuth()
-@ApiTags('Statistics') // Thêm nhãn API nếu cần thiết
-@Controller('statistics') // Đặt lại đường dẫn tùy ý tương ứng với tên controller của bạn
+@ApiTags('Statistics')
+@Controller('/statistics')
 export class StatisticsController {
   constructor(
+    private statisticsActsService: StatisticsActsService,
+    private statisticsEventsService: StatisticsEventsService,
     private statisticsPaymentService: StatisticsPaymentService,
     private statisticsPatientService: StatisticsPatientService,
   ) {}
+
+  @Get('/acts/caresheets')
+  @UseGuards(TokenGuard)
+  async getCareSheets(@Query() request: FilterValuesStatisticDto) {
+    return this.statisticsActsService.getCareSheets(request);
+  }
+
+  @Get('/acts/ccam-families')
+  @UseGuards(TokenGuard)
+  async getCCamFamilies(@Query() request: FilterValuesStatisticDto) {
+    return this.statisticsActsService.getCCamFamilies(request);
+  }
+
+  @Get('/events/obtaining-delay')
+  @UseGuards(TokenGuard)
+  async getEventsObtainingDelay(@Query() request: FilterValuesStatisticDto) {
+    return this.statisticsEventsService.getEventsObtainingDelay(request);
+  }
+
+  @Get('/events/productivity')
+  @UseGuards(TokenGuard)
+  async getProductivity(@Query() request: FilterValuesStatisticDto) {
+    return this.statisticsEventsService.getProductivity(request);
+  }
+
+  @Get('/events/emergencies')
+  @UseGuards(TokenGuard)
+  async getEmergencies(@Query() request: FilterValuesStatisticDto) {
+    return this.statisticsEventsService.getEmergencies(request);
+  }
+
+  @Get('/events/reliability')
+  @UseGuards(TokenGuard)
+  async getReliability(@Query() request: FilterValuesStatisticDto) {
+    return this.statisticsEventsService.getReliability(request);
+  }
+
+  @Get('/events/occupancy-rate')
+  @UseGuards(TokenGuard)
+  async getOccupancyRate(@Query() request: FilterValuesStatisticDto) {
+    return this.statisticsEventsService.getOccupancyRate(request);
+  }
 
   /**
    * File php/statistics/payments/sales-revenues.php
@@ -25,10 +70,7 @@ export class StatisticsController {
    */
   @Get('payment/sales-revenues')
   @UseGuards(TokenGuard)
-  async paymentSalesRevenues(
-    @CurrentUser() user: UserIdentity,
-    @Query() param: StatisticsPaymentDto,
-  ) {
+  async paymentSalesRevenues(@Query() param: FilterValuesStatisticDto) {
     return this.statisticsPaymentService.paymentSalesRevenues(param);
   }
 
@@ -38,10 +80,7 @@ export class StatisticsController {
    */
   @Get('payment/receipts-by-types')
   @UseGuards(TokenGuard)
-  async paymentReceiptsByType(
-    @CurrentUser() user: UserIdentity,
-    @Query() param: StatisticsPaymentDto,
-  ) {
+  async paymentReceiptsByType(@Query() param: FilterValuesStatisticDto) {
     return this.statisticsPaymentService.paymentReceiptsByType(param);
   }
 
@@ -51,10 +90,7 @@ export class StatisticsController {
    */
   @Get('payment/receipts-by-choices')
   @UseGuards(TokenGuard)
-  async paymentReceiptsByChoices(
-    @CurrentUser() user: UserIdentity,
-    @Query() param: StatisticsPaymentDto,
-  ) {
+  async paymentReceiptsByChoices(@Query() param: FilterValuesStatisticDto) {
     return this.statisticsPaymentService.paymentReceiptsByChoices(param);
   }
 
@@ -66,7 +102,7 @@ export class StatisticsController {
   @UseGuards(TokenGuard)
   async patientIndex(
     @CurrentUser() user: UserIdentity,
-    @Query() param: StatisticsPaymentDto,
+    @Query() param: FilterValuesStatisticDto,
   ) {
     return this.statisticsPatientService.patientIndex(param, user);
   }
@@ -77,7 +113,7 @@ export class StatisticsController {
    */
   @Get('patient/new')
   @UseGuards(TokenGuard)
-  async patientNew(@Query() param: StatisticsPaymentDto) {
+  async patientNew(@Query() param: FilterValuesStatisticDto) {
     return this.statisticsPatientService.patientNew(param);
   }
 
@@ -87,7 +123,7 @@ export class StatisticsController {
    */
   @Get('patient/children')
   @UseGuards(TokenGuard)
-  async patientChildren(@Query() param: StatisticsPaymentDto) {
+  async patientChildren(@Query() param: FilterValuesStatisticDto) {
     return this.statisticsPatientService.patientChildren(param);
   }
 
@@ -97,7 +133,7 @@ export class StatisticsController {
    */
   @Get('patient/average')
   @UseGuards(TokenGuard)
-  async patientAverage(@Query() param: StatisticsPaymentDto) {
+  async patientAverage(@Query() param: FilterValuesStatisticDto) {
     return this.statisticsPatientService.patientAverage(param);
   }
 }
