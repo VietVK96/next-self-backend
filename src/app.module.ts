@@ -49,6 +49,7 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { SecuritiesModule } from './securities/securities.module';
 import { LoggerModule } from 'nestjs-pino';
 import { RecipeModule } from './recipe/recipe.module';
+import { EventTypeModule } from './event-type/event-type.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -152,6 +153,7 @@ const importsModules = [
   PaymentSchedulesModule,
   SecuritiesModule,
   RecipeModule,
+  EventTypeModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {

@@ -32,6 +32,7 @@ export enum ErrorCode {
   STATUS_NOT_FOUND = '404',
   USER_NOT_ACTIVE = 'USER_NOT_ACTIVE', //Une erreur est survenue : votre compte n'a pas été activé. Veuillez contacter le service commercial.
   YOU_NOT_HAVE_DOCTOR = 'YOU_NOT_HAVE_DOCTOR', // Custome
+  EVENT_TYPE_PRATITIONERS_EMPTY = 'EVENT_TYPE_PRATITIONERS_EMPTY',
 }
 
 export enum HttpStatus {
