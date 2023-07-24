@@ -18,11 +18,15 @@ export class MailService {
   constructor(private dataSource: DataSource) {}
 
   async findAll(payload: FindAllMailDto): Promise<FindAllMailRes> {
-    const hasLeadingDash = payload.order_by.indexOf('-') === 0;
-    const direction = hasLeadingDash ? 'DESC' : 'ASC';
-    const usableOrderBy = hasLeadingDash
-      ? payload.order_by.substring(1)
-      : payload.order_by;
+    let direction = '';
+    let usableOrderBy = '';
+    if (payload.order_by) {
+      const hasLeadingDash = payload.order_by.indexOf('-') === 0;
+      direction = hasLeadingDash ? 'DESC' : 'ASC';
+      usableOrderBy = hasLeadingDash
+        ? payload.order_by.substring(1)
+        : payload.order_by;
+    }
 
     const statements: LetterI[] = await this.dataSource.query(
       `
@@ -36,7 +40,9 @@ export class MailService {
         T_LETTERS_LET.updated_at
     FROM T_LETTERS_LET
     WHERE T_LETTERS_LET.CON_ID = ?
-    ORDER BY favorite DESC, ${usableOrderBy} ${direction}
+    ORDER BY favorite DESC, ${
+      payload.order_by ? `${usableOrderBy} ${direction}` : null
+    } 
     LIMIT ?
     OFFSET ?`,
       [payload.id, payload.length, payload.start],

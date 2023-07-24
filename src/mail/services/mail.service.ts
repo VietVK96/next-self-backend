@@ -24,7 +24,7 @@ import { ConfigService } from '@nestjs/config';
 import { fr } from 'date-fns/locale';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { LettersEntity } from '../../entities/letters.entity';
-import { FindVariableDto } from '../dto/findVariable.dto';
+import { ContextMailDto, FindVariableDto } from '../dto/findVariable.dto';
 import { mailVariable } from 'src/constants/mailVariable';
 import { UserEntity } from 'src/entities/user.entity';
 import { OrganizationEntity } from 'src/entities/organization.entity';
@@ -557,13 +557,25 @@ export class MailService {
   }
 
   // application/Services/Mail.php => 429 -> 445
-  async transform(inputs: any, context: any, signature: any) {
-    inputs.body = this.render(inputs?.body, context, signature);
+  async transform(inputs: any, context: any, signature?: any) {
+    inputs.body = await this.render(
+      inputs?.body.replace(/\|.*?\}/, '}'),
+      context,
+      signature,
+    );
     if (inputs?.header) {
-      inputs.header.body = this.render(inputs?.header.body, context, signature);
+      inputs.header.body = this.render(
+        inputs?.header.body.replace(/\|.*?\}/, '}'),
+        context,
+        signature,
+      );
     }
     if (inputs?.footer) {
-      inputs.footer.body = this.render(inputs?.footer?.body, context, {});
+      inputs.footer.body = this.render(
+        inputs?.footer?.body.replace(/\|.*?\}/, '}'),
+        context,
+        {},
+      );
       inputs.footer_content = inputs?.footer?.body;
       inputs.footer_height = inputs?.footer?.height;
     }
@@ -745,16 +757,16 @@ export class MailService {
   }
 
   // php/mail/variable.php
-  async findVariable(payload: FindVariableDto) {
+  async findVariable(payload: FindVariableDto, doctorId: number) {
     let respon = JSON.stringify(mailVariable);
     if (payload.patient_id) {
-      const context = await this.contextMail(payload);
+      const context = await this.contextMail(payload, doctorId);
       respon = await this.render(respon, context);
     }
-    return JSON.parse(respon);
+    return respon;
   }
 
-  async contextMail(payload: FindVariableDto) {
+  async contextMail(payload: ContextMailDto, doctorId: number) {
     const context: any = {};
     const today = new Date();
     context['today'] = this.formatDatetime(today, { dateStyle: 'short' });
@@ -771,19 +783,20 @@ export class MailService {
           'group.GRP_ID = user.organization_id',
         )
         .leftJoin(UploadEntity, 'upload', 'upload.UPL_ID = group.UPL_ID')
-        .where('user.USR_ID = :doctor_id', { doctor_id: payload.doctor_id })
+        .where('user.USR_ID = :doctor_id', { doctor_id: doctorId })
         .andWhere('user.organization_id = group.GRP_ID')
         .getRawOne();
 
     const logoFilename = statement.filename;
-    const groupId = statement.group_id;
+    // const groupId = statement.group_id;
 
     if (logoFilename) {
+      context['logo'] = await this.getLogoAsBase64(logoFilename);
     }
 
     const doctor = await this.dataSource.getRepository(UserEntity).findOne({
       relations: { preference: true, medical: true, address: true },
-      where: { id: payload.doctor_id },
+      where: { id: doctorId },
     });
     context['praticien'] = {
       ...JSON.parse(JSON.stringify(doctor)),
@@ -832,7 +845,7 @@ export class MailService {
         },
         dateOfNextReminder: await this.getNextReminderByDoctor(
           patient.id,
-          payload.doctor_id,
+          doctorId,
         ),
         nextAppointmentDate: '',
         nextAppointmentTime: '',
@@ -923,7 +936,7 @@ export class MailService {
       }
 
       for (const doctor of patient.contactUsers) {
-        if (doctor.id === payload.doctor_id) {
+        if (doctor.id === doctorId) {
           context['contact'] = {
             ...context['contact'],
             amountDue: doctor.amount,
@@ -956,6 +969,16 @@ export class MailService {
         };
       }
     }
+
+    // @TODO
+    // Récupération de l'échéancier
+    // if (!empty($inputs['payment_schedule_id'])) {
+    // 	$paymentSchedule = PaymentSchedule::find($inputs['payment_schedule_id'], $groupId);
+    // 	$context['payment_schedule'] = Registry::get('twig')->render('mails/payment_schedule.twig', [
+    // 		'payment_schedule' => $paymentSchedule
+    // 	]);
+    // }
+
     return context;
   }
 

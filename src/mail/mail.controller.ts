@@ -17,7 +17,8 @@ import {
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
-import { FindVariableDto } from './dto/findVariable.dto';
+import { ContextMailDto, FindVariableDto } from './dto/findVariable.dto';
+import { TranformDto } from './dto/transform.dto';
 
 @ApiBearerAuth()
 @Controller('/mails')
@@ -64,9 +65,36 @@ export class MailController {
     return await this.mailService.delete(id);
   }
 
-  @Post('variable')
+  @Post('/variable')
+  @ApiHeader({
+    name: 'X-DoctorId',
+    description: 'DoctorId',
+  })
   @UseGuards(TokenGuard)
-  async findVariable(@Body() payload: FindVariableDto) {
-    return this.mailService.findVariable(payload);
+  async findVariable(
+    @Body() payload: FindVariableDto,
+    @CurrentDoctor() docId: number,
+  ) {
+    return this.mailService.findVariable(payload, docId);
+  }
+
+  // php/mail/transform.php 100%
+  @Post('/transform')
+  @ApiHeader({
+    name: 'X-DoctorId',
+    description: 'DoctorId',
+  })
+  @UseGuards(TokenGuard)
+  async transform(
+    @Body() payload: TranformDto,
+    @CurrentDoctor() docId: number,
+  ) {
+    const contextParam: ContextMailDto = {};
+    if (payload?.patient?.id)
+      contextParam.patient_id = Number(payload.patient.id);
+    if (payload?.correspondent?.id)
+      contextParam.patient_id = Number(payload.correspondent.id);
+    const context = await this.mailService.contextMail(contextParam, docId);
+    return await this.mailService.transform(payload, context);
   }
 }

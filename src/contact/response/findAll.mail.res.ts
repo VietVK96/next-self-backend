@@ -11,7 +11,18 @@ export class FindAllMailRes {
   recordsFiltered: number;
 
   @ApiProperty()
-  data: DoctorRes[];
+  data: DataRes[];
+}
+
+export class DataRes {
+  id: number;
+  doctor_id: number;
+  title: string;
+  type: string;
+  favorite: number;
+  created_at: string;
+  updated_at: string;
+  doctor: DoctorRes;
 }
 
 export class DoctorRes {
