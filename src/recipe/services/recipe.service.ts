@@ -2,17 +2,21 @@ import { Injectable } from '@nestjs/common';
 import { QueryParamsDto } from '../dto/query-recipe.dto';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-// import { ErrorCode } from 'src/constants/error';
+import { ErrorCode } from 'src/constants/error';
 import { DataSource } from 'typeorm';
 import { CashingEntity } from 'src/entities/cashing.entity';
-import { FlexigridRow } from 'src/common/formatter/flexigrid-row';
-import { Condition, Extras, Options } from '../interface/interface';
+import {
+  Condition,
+  Extras,
+  ItemResponse,
+  Options,
+} from '../interface/interface';
 
 @Injectable()
 export class RecipeService {
   constructor(private dataSource: DataSource) {}
 
-  private slipCheckIds: any[] = [];
+  private slipCheckIds: number[] = [];
 
   async findAll(queryParams: QueryParamsDto, user: UserIdentity) {
     const response = {
@@ -57,10 +61,10 @@ export class RecipeService {
         const amountCare = payment['amount_care'];
         const amountProsthesis = payment['amount_prosthesis'];
         let classNames = '';
-        let beneficiaries = '';
-        let checkbox = '';
+        const beneficiaries: { fullName: string; amount: string }[] = [];
+        let checkbox = 0;
 
-        if (new Date(date)?.getTime() > new Date().getTime()) {
+        if (new Date(date).getTime() > new Date().getTime()) {
           classNames = 'planned';
         }
 
@@ -73,23 +77,17 @@ export class RecipeService {
         }
 
         payment['beneficiaries'].forEach((beneficiary) => {
-          beneficiaries += `<dt style="text-align: left;">${
-            beneficiary['lastname']
-          } ${beneficiary['firstname']}</dt><dd>${numberFormatter.format(
-            beneficiary['amount'],
-          )}</dd>`;
+          const obSub = { fullName: '', amount: '' };
+          obSub.fullName = `${beneficiary['lastname']} ${beneficiary['firstname']}`;
+          obSub.amount = numberFormatter.format(beneficiary['amount']);
+          return beneficiaries.push(obSub);
         });
-
-        let label = debtor;
-        if (beneficiaries.length > 0) {
-          label = `<details><summary>${debtor}</summary><div style="padding-left: 12px;"><dl class="dl-horizontal">${beneficiaries}</dl></div></details>`;
-        }
 
         if (payment['slip_check'] && payment['slip_check'].length > 0) {
           const slipCheckId = payment['slip_check'][0].id;
           let slipCheckDate = payment['slip_check'][0]['date'];
           const slipCheckNumber = payment['slip_check'][0]['number'];
-          const slipCheckName = `<a href="javascript:void(0);" class="showBordereau">${payment['slip_check'][0]['label']} - #${slipCheckNumber} - ${payment['slip_check'][0]['bank_name']}</a>`;
+          const slipCheckName = `${payment['slip_check'][0]['label']} - #${slipCheckNumber} - ${payment['slip_check'][0]['bank_name']}`;
 
           // Vérification si le bordereau de remise de chèque n'a pas déjà été affiché
           if (!this.slipCheckIds.includes(slipCheckId)) {
@@ -99,45 +97,81 @@ export class RecipeService {
               // Xử lý lỗi (nếu cần thiết)
             }
 
-            const row = new FlexigridRow();
-            row.addCell('');
-            row.addCell(slipCheckDate);
-            row.addCell('');
-            row.addCell(slipCheckName);
-            row.addCell('');
-            row.addCell('');
-            row.addCell(payment['slip_check'][0]['amount']);
-            row.addCell('');
-            row.addCell('');
-            row.addCell('<i class="fas fa-print printBordereau"></i>');
-            row.addCell('');
-            row.setId(`:depositslip:${slipCheckId}`);
+            const row: ItemResponse = {
+              id: undefined,
+              cell: {
+                checkbox: 0,
+                entryDate: '',
+                date: '',
+                mode: '',
+                type: '',
+                amount: 0,
+                amountCare: 0,
+                amountProsthesis: 0,
+                i1: '',
+                i2: '',
+                label: {
+                  debtor: '',
+                  beneficiaries: [],
+                },
+                slipCheckName: '',
+              },
+              className: '',
+            };
+            row.cell.entryDate = slipCheckDate;
+            row.cell.slipCheckName = slipCheckName;
+            row.cell.amount = payment['slip_check'][0]['amount'];
+            row.id = `:depositslip:${slipCheckId}`;
+            row.cell.i1 = 'printBordereau';
             response.rows.push(row);
           }
           this.slipCheckIds.push(slipCheckId);
-          checkbox = `<i class="fas fa-check-circle" title="${'Bordereau de remise de chèque'} n°${slipCheckNumber}"></i>`;
+          checkbox = slipCheckNumber;
         } else if (mode === 'cheque' && type !== 'remboursement') {
-          checkbox = '';
+          checkbox = 0;
         }
-        const row = new FlexigridRow();
-        row.addClassName(classNames);
-        row.addCell(checkbox);
-        row.addCell(entryDate);
-        row.addCell(date);
-        row.addCell(label);
-        row.addCell(mode);
-        row.addCell(type);
-        row.addCell(amount);
-        row.addCell(amountCare);
-        row.addCell(amountProsthesis);
-        row.addCell('<i class="fas fa-pen" title="Modifier"></i>');
-        row.addCell('<i class="fas fa-trash" title="Supprimer"></i>');
-        row.setId(`:recipe:${id}`);
+        const row: ItemResponse = {
+          id: undefined,
+          cell: {
+            checkbox: 0,
+            entryDate: '',
+            date: '',
+            mode: '',
+            type: '',
+            amount: 0,
+            amountCare: 0,
+            amountProsthesis: 0,
+            i1: '',
+            i2: '',
+
+            slipCheckName: '',
+            label: {
+              debtor: '',
+              beneficiaries: [],
+            },
+          },
+          className: '',
+        };
+        row.className = classNames;
+        row.id = `:recipe:${id}`;
+        row.cell.checkbox = checkbox;
+        row.cell.entryDate = entryDate;
+        row.cell.date = date;
+        //
+        row.cell.label.debtor = debtor;
+        row.cell.label.beneficiaries = beneficiaries;
+        row.cell.mode = mode;
+        row.cell.type = type;
+        row.cell.amount = amount;
+        row.cell.amountCare = amountCare;
+        row.cell.amountProsthesis = amountProsthesis;
+        row.cell.i1 = 'Modifier';
+        row.cell.i2 = 'Supprimer';
 
         response.rows.push(row);
       });
     } catch (e) {
-      throw new CBadRequestException(e);
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
 
     response.page = queryParams.page;
