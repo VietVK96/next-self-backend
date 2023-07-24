@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import {
+  NestApplicationOptions,
   UnprocessableEntityException,
   ValidationError,
   ValidationPipe,
@@ -20,7 +21,11 @@ import { HttpExceptionFilter } from './common/exceptions/http-exception.filter';
  */
 //Some thing
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const options: NestApplicationOptions = {};
+  if (process.env.LOGSTACK_ENABLE === 'true') {
+    options.logger = false;
+  }
+  const app = await NestFactory.create(AppModule, options);
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   app.enableCors({
     origin: function (_origin, callback) {

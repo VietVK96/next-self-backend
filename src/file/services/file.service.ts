@@ -43,6 +43,7 @@ export class FileService {
     if (!fs.existsSync(fullPath)) {
       throw new CBadRequestException(ErrorCode.FILE_NOT_FOUND);
     }
+
     return {
       mimeType: file.type,
       path: fullPath,

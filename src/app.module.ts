@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import configuration from './common/config';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
@@ -47,123 +47,138 @@ import { join } from 'path';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { SecuritiesModule } from './securities/securities.module';
-import { LoggerMiddleware } from './common/util/logrequest';
+import { LoggerModule } from 'nestjs-pino';
 import { StatisticsModule } from './statistics/statistics.module';
 
-console.log(
-  `join(
-  process.cwd(),
-  'templates/mail'
-)`,
-  join(process.cwd(), 'templates/mail'),
-);
-@Module({
-  imports: [
-    ConfigModule.forRoot({
-      load: configuration,
-      isGlobal: true,
-    }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (c: ConfigService) => {
-        const configDatabase = c.get<TypeOrmModuleOptions>('database');
-        return configDatabase;
+const importsModules = [
+  ConfigModule.forRoot({
+    load: configuration,
+    isGlobal: true,
+  }),
+  TypeOrmModule.forRootAsync({
+    imports: [ConfigModule],
+    inject: [ConfigService],
+    useFactory: (c: ConfigService) => {
+      const configDatabase = c.get<TypeOrmModuleOptions>('database');
+      return configDatabase;
+    },
+  }),
+  CacheModule.registerAsync<any>({
+    imports: [ConfigModule],
+    inject: [ConfigService],
+    useFactory: async (c: ConfigService) => {
+      const cacheConfig = c.get<IRedisConfig>('redis');
+      const storeConfig: any = {
+        socket: {
+          host: cacheConfig.host,
+          port: cacheConfig.port,
+        },
+        database: cacheConfig.db,
+        username: cacheConfig.username,
+        password: cacheConfig.password,
+      };
+      const store = await redisStore(storeConfig);
+      return {
+        store,
+      };
+    },
+    isGlobal: true,
+  }),
+  MailerModule.forRootAsync({
+    imports: [ConfigModule],
+    useFactory: async (config: ConfigService) => ({
+      transport: {
+        host: config.get('EMAIL_HOST'),
+        secure: false,
+        auth: {
+          pass: config.get('EMAIL_PASSWORD'),
+          user: config.get('EMAIL_USER'),
+          port: config.get('EMAIL_PORT'),
+        },
+      },
+      defaults: {
+        from: config.get('EMAIL_FROM_USER'),
+      },
+      template: {
+        dir: join(process.cwd(), 'templates/mail'),
+        adapter: new HandlebarsAdapter(),
+        options: {
+          strict: true,
+        },
       },
     }),
-    CacheModule.registerAsync<any>({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (c: ConfigService) => {
-        const cacheConfig = c.get<IRedisConfig>('redis');
-        const storeConfig: any = {
-          socket: {
-            host: cacheConfig.host,
-            port: cacheConfig.port,
-          },
-          database: cacheConfig.db,
-          username: cacheConfig.username,
-          password: cacheConfig.password,
-        };
-        const store = await redisStore(storeConfig);
-        return {
-          store,
-        };
+    inject: [ConfigService],
+  }),
+  EntityModule,
+  ContactModule,
+  AuthModule,
+  StickyNoteModule,
+  WaitingRoomModule,
+  AntecedentPrestationModule,
+  PatientModule,
+  MedicalDevicesModule,
+  EventModule,
+  PrestationModule,
+  EventModule,
+  MemoModule,
+  UserModule,
+  AddressModule,
+  PlanModule,
+  MailModule,
+  LibrariesModule,
+  EventTaskModule,
+  UploadModule,
+  FusionPatientModule,
+  FileModule,
+  NgapKeysModule,
+  TimeslotsModule,
+  DentalModule,
+  TagModule,
+  ContraindicationsModule,
+  OrganizationModule,
+  PlanPlfModule,
+  BcbModule,
+  DentalModule,
+  ContraindicationsModule,
+  TrashContactModule,
+  TrashEventModule,
+  CorrespondentModule,
+  TagModule,
+  GlossariesModule,
+  MedicalModule,
+  InterfacageModule,
+  CaresheetsModule,
+  BankModule,
+  PaymentSchedulesModule,
+  SecuritiesModule,
+  StatisticsModule,
+];
+
+if (process.env.LOGSTACK_ENABLE === 'true') {
+  importsModules.push(
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env.NODE_ENV !== 'production' ? 'trace' : 'info',
       },
-      isGlobal: true,
+      exclude: [
+        {
+          method: RequestMethod.ALL,
+          path: '/auth/refresh',
+        },
+        {
+          method: RequestMethod.ALL,
+          path: '/auth/login',
+        },
+        {
+          method: RequestMethod.ALL,
+          path: '/user/create-token-download',
+        },
+      ],
     }),
-    MailerModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (config: ConfigService) => ({
-        transport: {
-          host: config.get('EMAIL_HOST'),
-          secure: false,
-          auth: {
-            pass: config.get('EMAIL_PASSWORD'),
-            user: config.get('EMAIL_USER'),
-            port: config.get('EMAIL_PORT'),
-          },
-        },
-        defaults: {
-          from: config.get('EMAIL_FROM_USER'),
-        },
-        template: {
-          dir: join(process.cwd(), 'templates/mail'),
-          adapter: new HandlebarsAdapter(),
-          options: {
-            strict: true,
-          },
-        },
-      }),
-      inject: [ConfigService],
-    }),
-    EntityModule,
-    ContactModule,
-    AuthModule,
-    StickyNoteModule,
-    WaitingRoomModule,
-    AntecedentPrestationModule,
-    PatientModule,
-    MedicalDevicesModule,
-    EventModule,
-    PrestationModule,
-    EventModule,
-    MemoModule,
-    UserModule,
-    AddressModule,
-    PlanModule,
-    MailModule,
-    LibrariesModule,
-    EventTaskModule,
-    UploadModule,
-    FusionPatientModule,
-    FileModule,
-    NgapKeysModule,
-    TimeslotsModule,
-    DentalModule,
-    TagModule,
-    ContraindicationsModule,
-    OrganizationModule,
-    PlanPlfModule,
-    BcbModule,
-    DentalModule,
-    ContraindicationsModule,
-    TrashContactModule,
-    TrashEventModule,
-    CorrespondentModule,
-    TagModule,
-    GlossariesModule,
-    MedicalModule,
-    InterfacageModule,
-    CaresheetsModule,
-    BankModule,
-    PaymentSchedulesModule,
-    SecuritiesModule,
-    StatisticsModule,
-  ],
-})
-export class AppModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
-  }
+  );
 }
+
+@Module({
+  imports: importsModules,
+})
+export class AppModule {}

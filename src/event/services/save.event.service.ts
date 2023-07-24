@@ -6,7 +6,7 @@ import { UserEntity } from 'src/entities/user.entity';
 import { SaveAgendaDto } from '../dto/saveAgenda.event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ContactEntity } from 'src/entities/contact.entity';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import { EventStateEnum } from 'src/constants/event';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
@@ -150,7 +150,7 @@ export class SaveEventService {
     const reminders = payload?.reminders;
 
     let eventId = payload.eventId;
-    const eventTypeId = checkId(payload.eventId);
+    const eventTypeId = checkId(payload.eventTypeId);
     const _private = payload.private;
     const dates = payload.dates ? payload.dates.split(',') : [];
     const exdates = payload.exdates ? payload.exdates.split(',') : [];
@@ -249,6 +249,8 @@ export class SaveEventService {
         eventLateness = eventStatement.lateness;
 
         if (!hasRecurrEvents) {
+          console.log(eventTypeId);
+
           await Promise.all([
             queryRunner.query(
               `

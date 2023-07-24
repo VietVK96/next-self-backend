@@ -1,6 +1,10 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { TokenGuard } from 'src/common/decorator/auth.decorator';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
 import { UserService } from './services/user.service';
 import {
   UpdatePreferenceDto,
@@ -9,6 +13,7 @@ import {
 } from './dto/therapeutic.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { PreferenceService } from './services/preference.sevece';
+import { TokenDownloadService } from './services/token-download.service';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -17,6 +22,7 @@ export class UserController {
   constructor(
     private userService: UserService,
     private preferenceService: PreferenceService,
+    private tokenDownloadService: TokenDownloadService,
   ) {}
 
   /**
@@ -53,5 +59,15 @@ export class UserController {
   @UseGuards(TokenGuard)
   async getPrestation(@Query() param: UpdateTherapeuticParamDto) {
     return await this.userService.getTherapeutic(param.user_id);
+  }
+
+  // None file php. Improve
+  @Post('create-token-download')
+  @UseGuards(TokenGuard)
+  async createTokenDownload(@CurrentUser() identity: UserIdentity) {
+    const token = await this.tokenDownloadService.createTokenDownload(identity);
+    return {
+      token,
+    };
   }
 }

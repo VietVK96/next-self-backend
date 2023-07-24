@@ -47,12 +47,12 @@ export class SaveUpdateContactService {
         countryAbbr: reqBody?.addressCountryAbbr,
       };
       if (
-        address.street ||
-        address.streetComp ||
-        address.zipCode ||
-        address.city ||
-        address.country ||
-        address.countryAbbr
+        address?.street ||
+        address?.streetComp ||
+        address?.zipCode ||
+        address?.city ||
+        address?.country ||
+        address?.countryAbbr
       ) {
         await queryRunner.manager
           .createQueryBuilder()
