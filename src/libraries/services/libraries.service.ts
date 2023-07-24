@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { LibraryActFamilyEntity } from 'src/entities/library-act-family.entity';
 import { LibraryActEntity } from 'src/entities/library-act.entity';
-import { FindOptionsWhere, Repository } from 'typeorm';
-import { ActFamiliesDto } from '../dto/act-families.dto';
+import { FindOptionsWhere, Like, Repository } from 'typeorm';
+import { ActFamiliesDto, ActFamiliesSearchDto } from '../dto/act-families.dto';
 
 @Injectable()
 export class LibrariesService {
@@ -64,5 +64,17 @@ export class LibrariesService {
     });
 
     return data;
+  }
+
+  async searchActFamilies(
+    identity: UserIdentity,
+    params: ActFamiliesSearchDto,
+  ) {
+    return await this.libraryActRepo?.find({
+      where: {
+        organizationId: identity?.org,
+        label: Like(`${params?.search_term}%`),
+      },
+    });
   }
 }

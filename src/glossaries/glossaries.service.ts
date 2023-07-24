@@ -9,6 +9,8 @@ import { saveGlossaryEntryPayload } from './dto/saveEntry.glossaries.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { SaveGlossaryDto } from './dto/save.glossaries.dto';
 import { MAX_ENTRIES, MAX_GLOSSARY } from 'src/constants/glassary';
+import { UpdateGlossaryDto } from './dto/update.glossary.dto';
+import { UpdateGlossaryEntryDto } from './dto/update.glossaryEntry.dto';
 
 @Injectable()
 export class GlossariesService {
@@ -40,7 +42,7 @@ export class GlossariesService {
     return res;
   }
 
-  async deleteGlossary(id: number): Promise<GlossaryEntryRes> {
+  async deleteGlossaryEntry(id: number): Promise<GlossaryEntryRes> {
     const glossaryEntry = await this.glossaryEntryRepo.findOneBy({ id });
     await this.glossaryEntryRepo.delete({ id });
     return {
@@ -119,5 +121,29 @@ export class GlossariesService {
       position: e.position,
       entry_count: e.entryCount,
     };
+  }
+
+  async deleteGlossary(id: number) {
+    const glossary = await this.glossaryRepo.findOne({ where: { id } });
+    if (glossary) this.glossaryRepo.remove(glossary);
+    return;
+  }
+
+  async updateGlossary(id: number, payload: UpdateGlossaryDto) {
+    const glossary = await this.glossaryRepo.findOne({ where: { id } });
+    if (glossary) this.glossaryRepo.save({ ...glossary, name: payload?.name });
+    return;
+  }
+
+  async updateGlossaryEntry(payload: UpdateGlossaryEntryDto, id: number) {
+    const glossaryEntry = await this.glossaryEntryRepo.findOne({
+      where: { id },
+    });
+    if (glossaryEntry)
+      this.glossaryEntryRepo.save({
+        ...glossaryEntry,
+        content: payload?.content,
+      });
+    return;
   }
 }

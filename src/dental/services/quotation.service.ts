@@ -4,29 +4,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
-
 import { UserEntity } from 'src/entities/user.entity';
-import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
-import {
-  DevisRequestAjaxDto,
-  QuotationDevisRequestAjaxDto,
-} from '../dto/devis_request_ajax.dto';
-import { LettersEntity } from 'src/entities/letters.entity';
-import { MailService } from 'src/mail/services/mail.service';
+import { QuotationDevisRequestAjaxDto } from '../dto/devis_request_ajax.dto';
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
 
 @Injectable()
 export class QuotationServices {
   constructor(
-    private mailService: MailService,
     @InjectRepository(MedicalHeaderEntity)
     private medicalHeaderRepository: Repository<MedicalHeaderEntity>,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-    @InjectRepository(DentalQuotationEntity)
-    private dentalQuotationRepository: Repository<DentalQuotationEntity>,
-    @InjectRepository(LettersEntity)
-    private lettersRepository: Repository<LettersEntity>,
     @InjectRepository(UserPreferenceQuotationEntity)
     private userPreferenceQuotationRepository: Repository<UserPreferenceQuotationEntity>,
 

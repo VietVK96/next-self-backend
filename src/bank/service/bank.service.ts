@@ -5,7 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { DataSource, Repository } from 'typeorm';
-import { BankCheckPrintDto } from '../dto/bank.dto';
+import { BankCheckPrintDto, UpdateBankCheckDto } from '../dto/bank.dto';
 import { UserEntity } from 'src/entities/user.entity';
 import { BankCheckEntity } from 'src/entities/bank-check.entity';
 import { StringHelper } from 'src/common/util/string-helper';
@@ -71,10 +71,11 @@ export class BankService {
       },
     });
 
-    return organization.bankChecks.map(({ id, name, position }) => ({
+    return organization.bankChecks.map(({ id, name, position, fields }) => ({
       id,
       name,
       position,
+      fields,
     }));
   }
 
@@ -142,5 +143,35 @@ export class BankService {
     } catch (error) {
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
+  }
+
+  async updateBankChecks(id: number, payload: UpdateBankCheckDto) {
+    const currentBankCheck = await this.bankCheckRepo.findOneOrFail({
+      where: { id },
+    });
+
+    //@TODO Not understand validator
+    // $violations = $container -> get('validator') -> validate($bankCheck);
+    // if ($violations -> count()) {
+    //   throw new BadRequestHttpException((string) $violations);
+    // }
+
+    const newBankCheck = {
+      ...currentBankCheck,
+      ...payload,
+    };
+    return await this.bankCheckRepo.save(newBankCheck);
+  }
+
+  async duplicateBankChecks(id: number) {
+    const currentBankCheck = await this.bankCheckRepo.findOneOrFail({
+      where: { id },
+    });
+
+    return await this.bankCheckRepo.save({
+      ...currentBankCheck,
+      id: null,
+      internalReferenceId: null,
+    });
   }
 }

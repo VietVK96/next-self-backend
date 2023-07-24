@@ -17,62 +17,77 @@ import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { AddressEntity } from 'src/entities/address.entity';
-import { DevisServices } from './services/devis.services';
+import { DevisHNController } from './devisHN.controller';
+import { DevisHNServices } from './services/devisRequestAjax.service';
+import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
 import { MailService } from 'src/mail/services/mail.service';
-import { LettersEntity } from 'src/entities/letters.entity';
-import { ContactService } from 'src/contact/services/contact.service';
-import { ConfigService } from '@nestjs/config';
+import { UserService } from 'src/user/services/user.service';
+import { CorrespondentService } from 'src/correspondent/services/correspondent.service';
 import { PatientService } from 'src/patient/service/patient.service';
-import { PermissionService } from 'src/user/services/permission.service';
+import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { AddressService } from 'src/address/service/address.service';
+import { UserMedicalEntity } from 'src/entities/user-medical.entity';
+import { PhoneEntity } from 'src/entities/phone.entity';
+import { CorrespondentEntity } from 'src/entities/correspondent.entity';
+import { PermissionService } from 'src/user/services/permission.service';
+import { ContactService } from 'src/contact/services/contact.service';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
-import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
-import { AmoEntity } from 'src/entities/amo.entity';
 import { AmcEntity } from 'src/entities/amc.entity';
-import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
+import { AmoEntity } from 'src/entities/amo.entity';
+import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
+import { DevisServices } from './services/devis.services';
+import { LettersEntity } from 'src/entities/letters.entity';
+import { ConfigService } from '@nestjs/config';
+
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
 import { QuotationServices } from './services/quotation.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      MedicalHeaderEntity,
-      MedicalOrderEntity,
+      AmcEntity,
+      AmoEntity,
       BillEntity,
-      BillLineEntity,
-      EventTaskEntity,
-      DentalEventTaskEntity,
-      EventEntity,
-      NgapKeyEntity,
-      PrivilegeEntity,
       UserEntity,
-      UserPreferenceEntity,
+      EventEntity,
+      PhoneEntity,
+      NgapKeyEntity,
       ContactEntity,
-      DentalQuotationEntity,
       AddressEntity,
       LettersEntity,
+      BillLineEntity,
+      EventTaskEntity,
+      PrivilegeEntity,
+      UserMedicalEntity,
       ContactUserEntity,
+      MedicalOrderEntity,
+      MedicalHeaderEntity,
+      CorrespondentEntity,
       ThirdPartyAmcEntity,
       ThirdPartyAmoEntity,
-      AmoEntity,
-      AmcEntity,
+      UserPreferenceEntity,
+      DentalQuotationEntity,
+      DentalEventTaskEntity,
+      DentalQuotationActEntity,
       UserPreferenceQuotationEntity,
     ]),
   ],
-  controllers: [DentalController],
+  controllers: [DentalController, DevisHNController],
   providers: [
-    OrdonnancesServices,
-    FactureServices,
-    DevisServices,
     MailService,
-    ContactService,
-    ConfigService,
+    UserService,
+    DevisServices,
     PatientService,
-    PermissionService,
     AddressService,
-    PaymentScheduleService,
+    ContactService,
+    FactureServices,
+    DevisHNServices,
+    PermissionService,
     QuotationServices,
+    OrdonnancesServices,
+    CorrespondentService,
+    PaymentScheduleService,
   ],
 })
 export class DentalModule {}

@@ -72,7 +72,7 @@ export class TagEntity {
     name: 'color',
     type: 'json',
   })
-  color?: string;
+  color?: any;
 
   /**
    * @ORM\Column(name="internal_reference", type="string", length=4, nullable=true, options={"fixed": true})
