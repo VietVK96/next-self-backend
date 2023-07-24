@@ -16,12 +16,10 @@ export class QuotationService {
     private permissionService: PermissionService,
     @InjectRepository(DentalQuotationEntity)
     private readonly repo: Repository<DentalQuotationEntity>,
-    @InjectRepository(DentalQuotationEntity)
-    private readonly detailQuotationRepo: Repository<DentalQuotationEntity>,
   ) {}
 
   async findQuotationByID(id: number) {
-    return await this.detailQuotationRepo.find({
+    return await this.repo.find({
       where: { id: id },
       relations: {
         logo: true,

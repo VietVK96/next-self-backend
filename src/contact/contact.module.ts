@@ -63,6 +63,8 @@ import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { CashingService } from './services/cashing.service';
 import { CashingController } from './cashing.controller';
 import { LibraryBankEntity } from 'src/entities/library-bank.entity';
+import { MailController } from './mail.controller';
+import { MailService } from './services/mail.service';
 
 @Module({
   controllers: [
@@ -82,6 +84,7 @@ import { LibraryBankEntity } from 'src/entities/library-bank.entity';
     ContactController,
     ContraindicationContactController,
     CashingController,
+    MailController,
   ],
   providers: [
     UploadService,
@@ -110,6 +113,7 @@ import { LibraryBankEntity } from 'src/entities/library-bank.entity';
     SaveUpdateContactService,
     ContraindicationContactService,
     CashingService,
+    MailService,
   ],
   imports: [
     TypeOrmModule.forFeature([

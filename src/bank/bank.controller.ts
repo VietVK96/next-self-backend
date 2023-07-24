@@ -1,4 +1,14 @@
-import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { BankService } from './service/bank.service';
 import {
@@ -8,7 +18,7 @@ import {
 } from 'src/common/decorator/auth.decorator';
 
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { BankCheckPrintDto } from './dto/bank.dto';
+import { BankCheckPrintDto, UpdateBankCheckDto } from './dto/bank.dto';
 import { ErrorCode } from 'src/constants/error';
 
 @ApiTags('Bank')
@@ -67,5 +77,20 @@ export class BankController {
     } catch (error) {
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
     }
+  }
+
+  @Put('/bank-checks/:id')
+  @UseGuards(TokenGuard)
+  async updateBankChecks(
+    @Param('id') id: number,
+    @Body() payload: UpdateBankCheckDto,
+  ) {
+    return await this.bankService.updateBankChecks(id, payload);
+  }
+
+  @Post('/bank-checks/copy/:id')
+  @UseGuards(TokenGuard)
+  async duplicateBankChecks(@Param('id') id: number) {
+    return await this.bankService.duplicateBankChecks(id);
   }
 }
