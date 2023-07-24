@@ -13,8 +13,13 @@ import { MailService } from 'src/mail/services/mail.service';
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
 import * as fs from 'fs-extra';
 import { PrintPDFDto } from '../dto/facture.dto';
+import { ErrorCode } from 'src/constants/error';
+import { checkId } from 'src/common/util/number';
+import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
+import * as path from 'path';
+import { customCreatePdf } from 'src/common/util/pdf';
 @Injectable()
-export class DevisServices {
+export class QuotationMutualServices {
   constructor(
     private mailService: MailService,
     @InjectRepository(MedicalHeaderEntity)
@@ -27,6 +32,7 @@ export class DevisServices {
     private lettersRepository: Repository<LettersEntity>,
     @InjectRepository(UserPreferenceQuotationEntity)
     private userPreferenceQuotationRepository: Repository<UserPreferenceQuotationEntity>,
+    private paymentScheduleService: PaymentScheduleService,
     private dataSource: DataSource,
   ) {}
 
@@ -189,11 +195,11 @@ export class DevisServices {
               patient_id: quote?.patient?.id,
             });
             const signature: any = {};
-            if (quote?.practitionerSignature) {
-              signature.practitioner = quote?.practitionerSignature;
+            if (quote?.signaturePraticien) {
+              signature.practitioner = quote?.signaturePraticien;
             }
-            if (quote?.practitionerSignature) {
-              signature.patient = quote?.patientSignature;
+            if (quote?.signaturePraticien) {
+              signature.patient = quote?.signaturePatient;
             }
             const mailConverted = await this.mailService.transform(
               mail,
@@ -304,5 +310,73 @@ export class DevisServices {
     await this.mailService.sendTest();
   }
 
-  // async generatePdf(req: PrintPDFDto) {}
+  // dental/quotation-mutual/devis_pdf.php 45-121
+  async generatePdf(req: PrintPDFDto) {
+    const id = checkId(req?.id);
+    try {
+      // const mail =
+      //   await this.mailService.findOnePaymentScheduleTemplateByDoctor(id);
+      // const mailConverted = this.mailService.transform(
+      //   mail,
+      //   this.mailService.context({
+      //     doctor_id: id_user,
+      //     patient_id: id_contact,
+      //     payment_schedule_id: paymentScheduleId,
+      //   }),
+      // );
+
+      // const paymentSchedule = this.paymentScheduleService.find(paymentScheduleId,groupId)
+
+      const quote = await this.dentalQuotationRepository.findOne({
+        where: { id },
+        relations: {
+          attachments: true,
+        },
+      });
+      console.log(
+        '🚀 ~ file: devis.services.ts:336 ~ DevisServices ~ generatePdf ~ quote:',
+        quote,
+      );
+      // Insertion des pièces jointes au PDF du devis.
+      let content = '';
+      if (quote && quote?.attachments) {
+        quote?.attachments.map(async (attachment) => {
+          const mail = await this.mailService.find(attachment?.id);
+          content += await this.mailService.pdf(mail, { preview: true });
+        });
+      }
+      console.log(
+        '🚀 ~ file: devis.services.ts:345 ~ DevisServices ~ generatePdf ~ content:',
+        content,
+      );
+
+      // const filePath = path.join(
+      //   process.cwd(),
+      //   'templates/bank_check',
+      //   'bank_check.hbs',
+      // );
+      const options = {
+        format: 'A4',
+        displayHeaderFooter: true,
+        headerTemplate: '<div></div>',
+        footerTemplate: '<div></div>',
+        margin: {
+          left: '10mm',
+          top: '25mm',
+          right: '10mm',
+          bottom: '10mm',
+        },
+        landscape: true,
+      };
+      const data = {};
+
+      return await customCreatePdf({ htmlContent: content, options, data });
+    } catch (error) {
+      console.log(
+        '🚀 ~ file: devis.services.ts:313 ~ DevisServices ~ generatePdf ~ error:',
+        error,
+      );
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
+    }
+  }
 }

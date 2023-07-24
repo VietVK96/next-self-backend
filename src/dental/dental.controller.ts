@@ -19,9 +19,9 @@ import { OrdonnancesDto } from './dto/ordonnances.dto';
 import { FactureServices } from './services/facture.services';
 import { EnregistrerFactureDto, PrintPDFDto } from './dto/facture.dto';
 import { DevisRequestAjaxDto } from './dto/devis_request_ajax.dto';
-import { DevisServices } from './services/devis.services';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
+import { QuotationMutualServices } from './services/quotaion-mutual.services';
 @ApiBearerAuth()
 @Controller('/dental')
 @ApiTags('Dental')
@@ -29,7 +29,7 @@ export class DentalController {
   constructor(
     private ordonnancesServices: OrdonnancesServices,
     private factureServices: FactureServices,
-    private devisServices: DevisServices,
+    private devisServices: QuotationMutualServices,
   ) {}
 
   /**
@@ -111,6 +111,29 @@ export class DentalController {
   @UseGuards(TokenGuard)
   async devisEmail(@Body() payload: EnregistrerFactureDto) {
     return this.ordonnancesServices.getMail(payload);
+  }
+
+  // dental/quotation-mutual/devis_pdf.php
+  @Get('/quotation-mutual/devis_pdf')
+  @UseGuards(TokenGuard)
+  async devisPdf(@Res() res, @Query() req: PrintPDFDto) {
+    try {
+      const buffer = await this.devisServices.generatePdf(req);
+
+      res.set({
+        // pdf
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Length': buffer.length,
+        // prevent cache
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    }
   }
 
   @Post('/quotation-mutual/devis_requetes_ajax')

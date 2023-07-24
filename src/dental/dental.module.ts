@@ -17,7 +17,7 @@ import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { AddressEntity } from 'src/entities/address.entity';
-import { DevisServices } from './services/devis.services';
+import { QuotationMutualServices } from './services/quotaion-mutual.services';
 import { MailService } from 'src/mail/services/mail.service';
 import { LettersEntity } from 'src/entities/letters.entity';
 import { ContactService } from 'src/contact/services/contact.service';
@@ -63,7 +63,7 @@ import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quot
   providers: [
     OrdonnancesServices,
     FactureServices,
-    DevisServices,
+    QuotationMutualServices,
     MailService,
     ContactService,
     ConfigService,

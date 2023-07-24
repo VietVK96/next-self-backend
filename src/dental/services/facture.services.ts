@@ -661,7 +661,7 @@ export class FactureServices {
       }
 
       const facture = await this.initFacture(id);
-      if (facture.billTemplate === 1) {
+      if (facture.billTemplate === 2) {
         const checkModePaiement =
           ['virement', 'prelevement', 'autre']?.findIndex(
             (e) => e === facture?.modePaiement,
@@ -768,12 +768,12 @@ export class FactureServices {
             bottom: '5mm',
           },
         };
-        const pdfBuffer = await customCreatePdf(
+        const pdfBuffer = await customCreatePdf({
           filePath,
           options,
           data,
           helpers,
-        );
+        });
         return pdfBuffer;
       }
     } catch (error) {

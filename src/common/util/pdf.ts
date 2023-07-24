@@ -5,12 +5,22 @@ import * as fs from 'fs';
 type HandlebarsHelpers = {
   [key: string]: hbs.HelperDelegate;
 };
-export const customCreatePdf = async (
-  filePath: string,
-  options = {},
-  data = {},
-  helpers?: HandlebarsHelpers,
-) => {
+
+type CustomCreatePdfProps = {
+  filePath?: string;
+  options: any;
+  data: any;
+  htmlContent?: string;
+  helpers?: HandlebarsHelpers;
+};
+
+export const customCreatePdf = async ({
+  filePath,
+  options,
+  data,
+  htmlContent,
+  helpers,
+}: CustomCreatePdfProps) => {
   try {
     const browser = await puppeteer.launch({ headless: 'new' });
     const page = await browser.newPage();
@@ -65,7 +75,7 @@ export const customCreatePdf = async (
       }
     }
 
-    const html = fs.readFileSync(filePath, 'utf8');
+    const html = filePath ? fs.readFileSync(filePath, 'utf8') : htmlContent;
     const content = hbs.compile(html)(data);
     await page.setContent(content);
 
