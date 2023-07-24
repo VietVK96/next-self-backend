@@ -4,12 +4,13 @@ import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { DataSource } from 'typeorm';
-import { CashingEntity } from 'src/entities/cashing.entity';
+import * as dayjs from 'dayjs';
 import {
   Condition,
   Extras,
   ItemResponse,
   Options,
+  PaymentInterface,
 } from '../interface/interface';
 
 @Injectable()
@@ -51,15 +52,15 @@ export class RecipeService {
 
       // procces payment to return response
       payments.forEach((payment) => {
-        const id = payment['id'];
-        let debtor = payment['debtor'];
-        const entryDate = payment.date;
-        const date = payment['paymentDate'];
-        const mode = payment['payment'];
-        const type = payment['type'];
-        const amount = payment['amount'];
-        const amountCare = payment['amount_care'];
-        const amountProsthesis = payment['amount_prosthesis'];
+        const id = payment.id;
+        let debtor = payment?.debtor;
+        const entryDate = payment?.date;
+        const date = payment?.paymentDate;
+        const mode = payment?.payment;
+        const type = payment?.type;
+        const amount = payment?.amount;
+        const amountCare = payment?.amountCare;
+        const amountProsthesis = payment?.amountProsthesis;
         let classNames = '';
         const beneficiaries: { fullName: string; amount: string }[] = [];
         let checkbox = 0;
@@ -69,30 +70,30 @@ export class RecipeService {
         }
 
         if (
-          payment['patient'] &&
-          payment['patient'] != null &&
-          payment['patient'].length !== 0
+          payment.patient &&
+          payment.patient != null &&
+          payment.patient.length > 0
         ) {
-          debtor = `${payment['patient'][0]['lastname']} ${payment['patient'][0]['firstname']}`;
+          debtor = `${payment?.patient[0]?.lastname} ${payment.patient[0]?.firstname}`;
         }
 
         payment['beneficiaries'].forEach((beneficiary) => {
           const obSub = { fullName: '', amount: '' };
           obSub.fullName = `${beneficiary['lastname']} ${beneficiary['firstname']}`;
-          obSub.amount = numberFormatter.format(beneficiary['amount']);
+          obSub.amount = numberFormatter.format(beneficiary.amount);
           return beneficiaries.push(obSub);
         });
 
-        if (payment['slip_check'] && payment['slip_check'].length > 0) {
-          const slipCheckId = payment['slip_check'][0].id;
-          let slipCheckDate = payment['slip_check'][0]['date'];
-          const slipCheckNumber = payment['slip_check'][0]['number'];
-          const slipCheckName = `${payment['slip_check'][0]['label']} - #${slipCheckNumber} - ${payment['slip_check'][0]['bank_name']}`;
-
+        if (payment.slip_check && payment.slip_check.length > 0) {
+          const slipCheckId = payment.slip_check[0]?.id;
+          const slipCheckDateRoot = payment.slip_check[0]?.date;
+          const slipCheckNumber = payment.slip_check[0]?.number;
+          const slipCheckName = `${payment.slip_check[0]?.label} - #${slipCheckNumber} - ${payment['slip_check'][0]?.bank_name}`;
+          let slipCheckDate;
           // Vérification si le bordereau de remise de chèque n'a pas déjà été affiché
           if (!this.slipCheckIds.includes(slipCheckId)) {
             try {
-              slipCheckDate = new Date(slipCheckDate);
+              slipCheckDate = dayjs(slipCheckDateRoot).format('DD/MM/YYYY');
             } catch (error) {
               // Xử lý lỗi (nếu cần thiết)
             }
@@ -101,13 +102,13 @@ export class RecipeService {
               id: undefined,
               cell: {
                 checkbox: 0,
-                entryDate: '',
+                entryDate: undefined,
                 date: '',
                 mode: '',
                 type: '',
-                amount: 0,
-                amountCare: 0,
-                amountProsthesis: 0,
+                amount: '',
+                amountCare: '',
+                amountProsthesis: '',
                 i1: '',
                 i2: '',
                 label: {
@@ -120,7 +121,7 @@ export class RecipeService {
             };
             row.cell.entryDate = slipCheckDate;
             row.cell.slipCheckName = slipCheckName;
-            row.cell.amount = payment['slip_check'][0]['amount'];
+            row.cell.amount = payment.slip_check[0]?.amount;
             row.id = `:depositslip:${slipCheckId}`;
             row.cell.i1 = 'printBordereau';
             response.rows.push(row);
@@ -134,13 +135,13 @@ export class RecipeService {
           id: undefined,
           cell: {
             checkbox: 0,
-            entryDate: '',
+            entryDate: undefined,
             date: '',
             mode: '',
             type: '',
-            amount: 0,
-            amountCare: 0,
-            amountProsthesis: 0,
+            amount: '',
+            amountCare: '',
+            amountProsthesis: '',
             i1: '',
             i2: '',
 
@@ -155,9 +156,8 @@ export class RecipeService {
         row.className = classNames;
         row.id = `:recipe:${id}`;
         row.cell.checkbox = checkbox;
-        row.cell.entryDate = entryDate;
-        row.cell.date = date;
-        //
+        row.cell.entryDate = dayjs(entryDate).format('DD/MM/YYYY');
+        row.cell.date = dayjs(date).format('DD/MM/YYYY');
         row.cell.label.debtor = debtor;
         row.cell.label.beneficiaries = beneficiaries;
         row.cell.mode = mode;
@@ -191,8 +191,8 @@ export class RecipeService {
       order_by: '',
       order: '',
     },
-  ): Promise<CashingEntity[]> {
-    const payments: CashingEntity[] = [];
+  ): Promise<PaymentInterface[]> {
+    const payments: PaymentInterface[] = [];
 
     const orderBy = options.order_by || 'paymentDate';
 
@@ -224,8 +224,8 @@ export class RecipeService {
       T_CASHING_CSG.CSG_PAYMENT AS payment,
       T_CASHING_CSG.CSG_TYPE AS type,
       T_CASHING_CSG.CSG_AMOUNT AS amount,
-      T_CASHING_CSG.amount_care,
-      T_CASHING_CSG.amount_prosthesis,
+      T_CASHING_CSG.amount_care as amountCare,
+      T_CASHING_CSG.amount_prosthesis as amountProsthesis,
       T_CASHING_CSG.CSG_DEBTOR AS debtor
   FROM T_CASHING_CSG
   LEFT OUTER JOIN T_CASHING_CONTACT_CSC ON T_CASHING_CONTACT_CSC.CSG_ID = T_CASHING_CSG.CSG_ID
