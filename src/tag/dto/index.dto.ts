@@ -9,3 +9,14 @@ export class TagDto {
   @ApiProperty()
   query?: string;
 }
+
+export class CreateUpdateTagDto {
+  @ApiProperty()
+  id?: number;
+
+  @ApiProperty()
+  title?: string;
+
+  @ApiProperty()
+  color?: string;
+}

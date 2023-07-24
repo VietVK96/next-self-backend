@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { TagService } from './services/tag.service';
 import {
@@ -8,7 +18,7 @@ import {
 } from 'src/common/decorator/auth.decorator';
 
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { TagDto } from './dto/index.dto';
+import { CreateUpdateTagDto, TagDto } from './dto/index.dto';
 
 @ApiTags('Tags')
 @Controller('tags')
@@ -40,5 +50,26 @@ export class TagController {
     @Body() payload: { title: string },
   ) {
     return this.tagService.store(identity.org, payload.title);
+  }
+
+  @Get('/all')
+  @UseGuards(TokenGuard)
+  async getAllTagsByOrganization(@CurrentUser() identity: UserIdentity) {
+    return await this.tagService.getAllTagsByOrganization(identity.org);
+  }
+
+  @Put('/create')
+  @UseGuards(TokenGuard)
+  async createUpdateTag(
+    @CurrentUser() identity: UserIdentity,
+    @Body() payload: CreateUpdateTagDto,
+  ) {
+    return this.tagService.createUpdateTag(identity.org, payload);
+  }
+
+  @Delete('/:id')
+  @UseGuards(TokenGuard)
+  async createTag(@Param('id') id: number) {
+    return this.tagService.deleteTag(id);
   }
 }
