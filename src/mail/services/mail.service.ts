@@ -2,13 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import fs from 'fs';
 import sharp from 'sharp';
-import {
-  differenceInMinutes,
-  differenceInMonths,
-  differenceInYears,
-  format,
-  parse,
-} from 'date-fns';
+import { differenceInMonths, differenceInYears, format } from 'date-fns';
 import { DataSource, Repository } from 'typeorm';
 import { FindAllMailRes } from '../response/findAllMail.res';
 import { FindAllMailDto } from '../dto/findAllMail.dto';
@@ -18,8 +12,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUpdateMailDto } from '../dto/createUpdateMail.dto';
 import { CreateUpdateMailRes } from '../response/createUpdateMail.res';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
-import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { UserService } from 'src/user/services/user.service';
 import { PatientService } from 'src/patient/service/patient.service';
+import { CorrespondentService } from 'src/correspondent/services/correspondent.service';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ConfigService } from '@nestjs/config';
 import { fr } from 'date-fns/locale';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
