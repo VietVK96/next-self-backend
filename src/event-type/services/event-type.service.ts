@@ -1,4 +1,3 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventTypeEntity } from 'src/entities/event-type.entity';
 import { UserEntity } from 'src/entities/user.entity';
