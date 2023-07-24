@@ -42,8 +42,8 @@ export class StatisticsPaymentService {
     );
     return {
       aggregate: param?.aggregate,
-      data: dataRes.data,
-      extra: dataRes.extra,
+      data: dataRes?.data,
+      extra: dataRes?.extra,
       description,
       label,
     };
@@ -79,8 +79,8 @@ export class StatisticsPaymentService {
     );
     return {
       aggregate: param?.aggregate,
-      data: dataRes.data,
-      extra: dataRes.extra,
+      data: dataRes?.data,
+      extra: dataRes?.extra,
       description,
       label,
     };
@@ -132,8 +132,8 @@ export class StatisticsPaymentService {
     );
     return {
       aggregate: param?.aggregate,
-      data: dataRes.data,
-      extra: dataRes.extra,
+      data: dataRes?.data,
+      extra: dataRes?.extra,
       description,
       label,
     };

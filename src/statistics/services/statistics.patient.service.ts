@@ -36,9 +36,13 @@ export class StatisticsPatientService {
       relations: ['medical'],
       order: { lastname: 'ASC', firstname: 'ASC' },
     });
-    const defaults = users.map((user) => {
-      return `${user?.lastname ?? ''} ${user?.firstname ?? ''}`;
-    });
+    const defaults = users.reduce((list, user) => {
+      const fullName = `${user?.lastname ?? ''} ${user?.firstname ?? ''}`;
+      if (user?.medical && !list.includes(fullName)) {
+        return [...list, fullName];
+      }
+      return list;
+    }, []);
     const sql = `
     SELECT
     t1.date,
@@ -71,8 +75,8 @@ export class StatisticsPatientService {
     );
     return {
       aggregate: param?.aggregate,
-      data: dataRes.data,
-      extra: dataRes.extra,
+      data: dataRes?.data,
+      extra: dataRes?.extra,
       description,
       label,
     };
@@ -107,8 +111,8 @@ export class StatisticsPatientService {
     );
     return {
       aggregate: param?.aggregate,
-      data: dataRes.data,
-      extra: dataRes.extra,
+      data: dataRes?.data,
+      extra: dataRes?.extra,
       description,
       label,
     };
@@ -153,8 +157,8 @@ export class StatisticsPatientService {
     );
     return {
       aggregate: param?.aggregate,
-      data: dataRes.data,
-      extra: dataRes.extra,
+      data: dataRes?.data,
+      extra: dataRes?.extra,
       description,
       label,
     };
@@ -199,8 +203,8 @@ export class StatisticsPatientService {
     );
     return {
       aggregate: param?.aggregate,
-      data: dataRes.data,
-      extra: dataRes.extra,
+      data: dataRes?.data,
+      extra: dataRes?.extra,
       description,
       label,
     };
