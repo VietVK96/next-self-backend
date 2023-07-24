@@ -35,12 +35,12 @@ export class PhoneTypeEntity {
    * @Expose
    * @var string
    */
-  @Column({
-    name: 'display_name',
-    type: 'varchar',
-    length: 255,
-  })
-  displayName?: string;
+  // @Column({
+  //   name: 'display_name',
+  //   type: 'varchar',
+  //   length: 255,
+  // })
+  // displayName?: string;
 
   /**
    * @ORM\Column(name="PTY_POS", type="integer")
@@ -60,13 +60,13 @@ export class PhoneTypeEntity {
    * @Expose
    * @var integer
    */
-  @Column({
-    name: 'PTY_POS',
-    type: 'int',
-    width: 11,
-    default: 0,
-  })
-  position?: number;
+  // @Column({
+  //   name: 'PTY_POS',
+  //   type: 'int',
+  //   width: 11,
+  //   default: 0,
+  // })
+  // position?: number;
 
   /**
    * @ORM\OneToMany(targetEntity="PhoneNumber", mappedBy="category")
