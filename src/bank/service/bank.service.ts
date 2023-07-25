@@ -112,7 +112,6 @@ export class BankService {
         'templates/bank_check',
         'bank_check.hbs',
       );
-
       const options = {
         format: 'A4',
         displayHeaderFooter: true,
@@ -122,7 +121,7 @@ export class BankService {
           left: '10mm',
           top: '25mm',
           right: '10mm',
-          bottom: '15mm',
+          bottom: '10mm',
         },
         landscape: true,
       };
