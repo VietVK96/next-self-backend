@@ -3,12 +3,20 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { Repository } from 'typeorm';
+import { CreateContraindicationsDto } from '../dto/contraindications.dto';
+import { PermissionService } from 'src/user/services/permission.service';
+import { ErrorCode } from 'src/constants/error';
+import { ContraindicationEntity } from 'src/entities/contraindication.entity';
+import { SuccessCode } from 'src/constants/success';
 
 @Injectable()
 export class ContraindicationsService {
   constructor(
     @InjectRepository(OrganizationEntity)
     private organizationRepo: Repository<OrganizationEntity>,
+    private readonly permissionService: PermissionService,
+    @InjectRepository(ContraindicationEntity)
+    private contraindicationRepo: Repository<ContraindicationEntity>,
   ) {}
 
   async findAll(identity: UserIdentity) {
@@ -25,5 +33,62 @@ export class ContraindicationsService {
     return organization?.contraindications.sort(
       (a, b) => a.position - b.position,
     );
+  }
+
+  async create(
+    userId: number,
+    body: CreateContraindicationsDto,
+    organizationId: number,
+  ) {
+    const hasPermission = await this.permissionService.hasPermission(
+      'PERMISSION_LIBRARY',
+      2,
+      userId,
+    );
+    if (!hasPermission) {
+      return ErrorCode.PERMISSION_DENIED;
+    }
+    return await this.contraindicationRepo.save({
+      ...body,
+      organizationId,
+    });
+  }
+
+  async update(userId: number, body: CreateContraindicationsDto, id: number) {
+    const hasPermission = await this.permissionService.hasPermission(
+      'PERMISSION_LIBRARY',
+      4,
+      userId,
+    );
+    if (!hasPermission) {
+      return ErrorCode.PERMISSION_DENIED;
+    }
+    if (id) {
+      const currentContraindication =
+        await this.contraindicationRepo.findOneOrFail({ where: { id } });
+      return await this.contraindicationRepo.save({
+        ...currentContraindication,
+        ...body,
+      });
+    }
+    return ErrorCode.FORBIDDEN;
+  }
+
+  async delete(userId: number, id: number) {
+    const hasPermission = await this.permissionService.hasPermission(
+      'PERMISSION_LIBRARY',
+      8,
+      userId,
+    );
+    if (!hasPermission) {
+      return ErrorCode.PERMISSION_DENIED;
+    }
+    if (id) {
+      const currentContraindication =
+        await this.contraindicationRepo.findOneOrFail({ where: { id } });
+      await this.contraindicationRepo.remove(currentContraindication);
+      return SuccessCode.DELETE_SUCCESS;
+    }
+    return ErrorCode.FORBIDDEN;
   }
 }
