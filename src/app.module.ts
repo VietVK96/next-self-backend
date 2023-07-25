@@ -49,6 +49,8 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { SecuritiesModule } from './securities/securities.module';
 import { LoggerModule } from 'nestjs-pino';
 import { EventTypeModule } from './event-type/event-type.module';
+import { PrescriptionTemplateModule } from './prescription-template/prescription-template.module';
+import { MedicamentModule } from './medicament/medicament.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -152,6 +154,8 @@ const importsModules = [
   PaymentSchedulesModule,
   SecuritiesModule,
   EventTypeModule,
+  PrescriptionTemplateModule,
+  MedicamentModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {
