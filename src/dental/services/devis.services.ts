@@ -173,7 +173,7 @@ export class DevisServices {
         }
         medicalHeader.identPratQuot = ident_prat;
         medicalHeader.quotationMutualTitle = title;
-        this.medicalHeaderRepository.save(medicalHeader);
+        await this.medicalHeaderRepository.save(medicalHeader);
         const quote = await this.dentalQuotationRepository
           .createQueryBuilder('quote')
           .leftJoin('quote.attachments', 'attachments')
@@ -232,7 +232,7 @@ export class DevisServices {
             await Promise.all(promises);
           });
           await this.dentalQuotationRepository.save(quote);
-          return { message: `Devis enregistré correctement` };
+          return `Devis enregistré correctement`;
         }
       } catch (err) {
         throw new CBadRequestException(
@@ -249,7 +249,7 @@ export class DevisServices {
           WHERE DQA_ID = ?`,
           [dentalQuotationActId, dentalQuotationActMateriaux],
         );
-        return { message: `Acte de devis enregistré correctement` };
+        return `Acte de devis enregistré correctement`;
       } catch (err) {
         throw new CBadRequestException(
           `Erreur -4 : Problème durant la sauvegarde d'un acte du devis ... ${err?.message}`,

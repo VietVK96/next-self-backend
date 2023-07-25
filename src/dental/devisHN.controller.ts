@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Get, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { TokenGuard } from 'src/common/decorator/auth.decorator';
 import { DevisRequestAjaxDto } from './dto/devisHN.dto';
@@ -18,5 +18,11 @@ export class DevisHNController {
   @UseGuards(TokenGuard)
   async devisRequetAjax(@Body() payload: DevisRequestAjaxDto) {
     return this.devisHNService.requestAjax(payload);
+  }
+
+  @Get('/quotes/convention/devis-request-ajax')
+  @UseGuards(TokenGuard)
+  async devisHNEmail() {
+    // return this.devisHNService.email();
   }
 }

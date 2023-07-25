@@ -17,11 +17,20 @@ import {
 import { OrdonnancesServices } from './services/ordonnances.services';
 import { OrdonnancesDto } from './dto/ordonnances.dto';
 import { FactureServices } from './services/facture.services';
-import { EnregistrerFactureDto, PrintPDFDto } from './dto/facture.dto';
-import { DevisRequestAjaxDto } from './dto/devis_request_ajax.dto';
+import {
+  EnregistrerFactureDto,
+  PrintPDFDto,
+  FactureEmailDto,
+} from './dto/facture.dto';
+import {
+  DevisRequestAjaxDto,
+  QuotationDevisRequestAjaxDto,
+} from './dto/devis_request_ajax.dto';
 import { DevisServices } from './services/devis.services';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
+import { QuotationServices } from './services/quotation.service';
+
 @ApiBearerAuth()
 @Controller('/dental')
 @ApiTags('Dental')
@@ -30,6 +39,7 @@ export class DentalController {
     private ordonnancesServices: OrdonnancesServices,
     private factureServices: FactureServices,
     private devisServices: DevisServices,
+    private quotationServices: QuotationServices,
   ) {}
 
   /**
@@ -126,5 +136,23 @@ export class DentalController {
   @UseGuards(TokenGuard)
   async sendMail(@CurrentUser() identity: UserIdentity) {
     return this.devisServices.sendMail(identity);
+  }
+
+  @Post('/quotation/devis_requetes_ajax')
+  @UseGuards(TokenGuard)
+  async quotationMutualRequestsAjax(
+    @Body() req: QuotationDevisRequestAjaxDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.quotationServices.quotationDevisRequestsAjax(req, identity);
+  }
+
+  @Get('/facture/facture-email')
+  @UseGuards(TokenGuard)
+  async factureEmail(
+    @Query() req: FactureEmailDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return await this.factureServices.factureEmail(req, identity);
   }
 }

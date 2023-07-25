@@ -101,7 +101,7 @@ const importsModules = [
         from: config.get('EMAIL_FROM_USER'),
       },
       template: {
-        dir: join(process.cwd(), 'templates/mail'),
+        dir: join(process.cwd(), 'templates/'),
         adapter: new HandlebarsAdapter(),
         options: {
           strict: true,

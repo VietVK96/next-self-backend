@@ -1,91 +1,95 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
-import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
-import { DentalController } from './dental.controller';
-import { OrdonnancesServices } from './services/ordonnances.services';
-import { FactureServices } from './services/facture.services';
-import { BillEntity } from 'src/entities/bill.entity';
-import { BillLineEntity } from 'src/entities/bill-line.entity';
-import { EventTaskEntity } from 'src/entities/event-task.entity';
-import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
-import { EventEntity } from 'src/entities/event.entity';
-import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
-import { PrivilegeEntity } from 'src/entities/privilege.entity';
-import { UserEntity } from 'src/entities/user.entity';
-import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
-import { ContactEntity } from 'src/entities/contact.entity';
-import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
-import { AddressEntity } from 'src/entities/address.entity';
-import { DevisHNController } from './devisHN.controller';
-import { DevisHNServices } from './services/devisRequestAjax.service';
 import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
-import { MailService } from 'src/mail/services/mail.service';
-import { UserService } from 'src/user/services/user.service';
-import { CorrespondentService } from 'src/correspondent/services/correspondent.service';
-import { PatientService } from 'src/patient/service/patient.service';
-import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
-import { AddressService } from 'src/address/service/address.service';
-import { UserMedicalEntity } from 'src/entities/user-medical.entity';
-import { PhoneEntity } from 'src/entities/phone.entity';
-import { CorrespondentEntity } from 'src/entities/correspondent.entity';
-import { PermissionService } from 'src/user/services/permission.service';
-import { ContactService } from 'src/contact/services/contact.service';
-import { ContactUserEntity } from 'src/entities/contact-user.entity';
+import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
+import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
+import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
+import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
+import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
+import { CorrespondentEntity } from 'src/entities/correspondent.entity';
+import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
+import { UserMedicalEntity } from 'src/entities/user-medical.entity';
+import { ContactUserEntity } from 'src/entities/contact-user.entity';
+import { EventTaskEntity } from 'src/entities/event-task.entity';
+import { PrivilegeEntity } from 'src/entities/privilege.entity';
+import { BillLineEntity } from 'src/entities/bill-line.entity';
+import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
+import { ContactEntity } from 'src/entities/contact.entity';
+import { LettersEntity } from 'src/entities/letters.entity';
+import { AddressEntity } from 'src/entities/address.entity';
+import { EventEntity } from 'src/entities/event.entity';
+import { PhoneEntity } from 'src/entities/phone.entity';
+import { BillEntity } from 'src/entities/bill.entity';
+import { UserEntity } from 'src/entities/user.entity';
 import { AmcEntity } from 'src/entities/amc.entity';
 import { AmoEntity } from 'src/entities/amo.entity';
-import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
+import { DevisHNController } from './devisHN.controller';
+import { DentalController } from './dental.controller';
+import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
+import { CorrespondentService } from 'src/correspondent/services/correspondent.service';
+import { OrdonnancesServices } from './services/ordonnances.services';
+import { DevisHNServices } from './services/devisRequestAjax.service';
+import { PermissionService } from 'src/user/services/permission.service';
+import { ContactService } from 'src/contact/services/contact.service';
+import { PatientService } from 'src/patient/service/patient.service';
+import { AddressService } from 'src/address/service/address.service';
+import { FactureServices } from './services/facture.services';
+import { MailService } from 'src/mail/services/mail.service';
+import { UserService } from 'src/user/services/user.service';
 import { DevisServices } from './services/devis.services';
-import { LettersEntity } from 'src/entities/letters.entity';
 import { ConfigService } from '@nestjs/config';
 
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
+import { QuotationServices } from './services/quotation.service';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      MedicalHeaderEntity,
-      MedicalOrderEntity,
+      AmcEntity,
+      AmoEntity,
       BillEntity,
-      BillLineEntity,
-      EventTaskEntity,
-      DentalEventTaskEntity,
-      EventEntity,
-      NgapKeyEntity,
-      PrivilegeEntity,
       UserEntity,
-      UserPreferenceEntity,
+      EventEntity,
+      PhoneEntity,
+      NgapKeyEntity,
       ContactEntity,
-      DentalQuotationEntity,
       AddressEntity,
       LettersEntity,
-      DentalQuotationActEntity,
+      BillLineEntity,
+      EventTaskEntity,
+      PrivilegeEntity,
       UserMedicalEntity,
-      PhoneEntity,
-      CorrespondentEntity,
       ContactUserEntity,
+      ContactNoteEntity,
+      MedicalOrderEntity,
+      MedicalHeaderEntity,
+      CorrespondentEntity,
       ThirdPartyAmcEntity,
       ThirdPartyAmoEntity,
-      AmoEntity,
-      AmcEntity,
+      UserPreferenceEntity,
+      DentalQuotationEntity,
+      DentalEventTaskEntity,
+      DentalQuotationActEntity,
       UserPreferenceQuotationEntity,
     ]),
   ],
   controllers: [DentalController, DevisHNController],
   providers: [
-    OrdonnancesServices,
-    FactureServices,
-    DevisHNServices,
     MailService,
     UserService,
-    CorrespondentService,
-    PatientService,
-    PaymentScheduleService,
-    AddressService,
-    PermissionService,
-    ContactService,
     DevisServices,
+    PatientService,
+    AddressService,
+    ContactService,
+    FactureServices,
+    DevisHNServices,
+    PermissionService,
+    QuotationServices,
+    OrdonnancesServices,
+    CorrespondentService,
+    PaymentScheduleService,
   ],
 })
 export class DentalModule {}
