@@ -5,7 +5,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { DataSource, Repository } from 'typeorm';
-import { BankCheckPrintDto, UpdateBankCheckDto } from '../dto/bank.dto';
+import {
+  BankCheckPrintDto,
+  CreateUpdateBankDto,
+  UpdateBankCheckDto,
+} from '../dto/bank.dto';
 import { UserEntity } from 'src/entities/user.entity';
 import { BankCheckEntity } from 'src/entities/bank-check.entity';
 import { StringHelper } from 'src/common/util/string-helper';
@@ -16,6 +20,11 @@ import * as dayjs from 'dayjs';
 import { checkId, checkNumber } from 'src/common/util/number';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
+import { PermissionService } from 'src/user/services/permission.service';
+import { LibraryBankEntity } from 'src/entities/library-bank.entity';
+import { AddressEntity } from 'src/entities/address.entity';
+import axios from 'axios';
+import { SuccessCode } from 'src/constants/success';
 
 @Injectable()
 export class BankService {
@@ -27,6 +36,11 @@ export class BankService {
     private userRepo: Repository<UserEntity>,
     @InjectRepository(BankCheckEntity)
     private bankCheckRepo: Repository<BankCheckEntity>,
+    private readonly permissionService: PermissionService,
+    @InjectRepository(LibraryBankEntity)
+    private libraryBankRepo: Repository<LibraryBankEntity>,
+    @InjectRepository(AddressEntity)
+    private addressRepo: Repository<AddressEntity>,
   ) {}
 
   async findAllBank(groupId: number, practitionerId: number) {
@@ -172,5 +186,179 @@ export class BankService {
       id: null,
       internalReferenceId: null,
     });
+  }
+
+  async findAllByUser(userId: number) {
+    const query = `
+    SELECT
+      T_LIBRARY_BANK_LBK.LBK_ID AS id,
+      T_LIBRARY_BANK_LBK.LBK_NAME AS name,
+      T_LIBRARY_BANK_LBK.LBK_ABBR AS short_name,
+      CONCAT_WS(' ', LBK_BANK_CODE, LBK_BRANCH_CODE, LBK_ACCOUNT_NBR, LBK_BANK_DETAILS) AS rib
+    FROM T_LIBRARY_BANK_LBK
+    JOIN T_USER_USR
+    WHERE T_USER_USR.USR_ID = ?
+      AND T_USER_USR.organization_id = T_LIBRARY_BANK_LBK.organization_id
+      AND (
+      T_LIBRARY_BANK_LBK.USR_ID IS NULL OR
+      T_LIBRARY_BANK_LBK.USR_ID = T_USER_USR.USR_ID
+      )
+      AND T_LIBRARY_BANK_LBK.deleted_at IS NULL
+    ORDER BY T_LIBRARY_BANK_LBK.LBK_POS`;
+
+    return await this.dataSource.query(query, [userId]);
+  }
+
+  async createUpdateBank(
+    userId: number,
+    organizationId: number,
+    payload: CreateUpdateBankDto,
+  ) {
+    if (!payload.id) {
+      const hasPermissionCreate = await this.permissionService.hasPermission(
+        'PERMISSION_LIBRARY',
+        2,
+        userId,
+      );
+      const hasPermissionUpdate = await this.permissionService.hasPermission(
+        'PERMISSION_LIBRARY',
+        4,
+        userId,
+      );
+      if (!hasPermissionCreate && !hasPermissionUpdate) {
+        return ErrorCode.PERMISSION_DENIED;
+      }
+    }
+    try {
+      let libraryBankEntity = new LibraryBankEntity();
+      let addressEntity;
+
+      const countries = (await axios.get('https://restcountries.com/v3.1/all'))
+        .data;
+
+      const {
+        bankOfGroup,
+        id,
+        abbr,
+        name,
+        bankCode,
+        branchCode,
+        accountNbr,
+        bankDetails,
+        accountingCode,
+        third_party_account,
+        product_account,
+        currency,
+        slipCheckNbr,
+        transfertDefault,
+      } = payload;
+
+      if (name && name !== '') {
+        if (!id) {
+          libraryBankEntity.organizationId = organizationId;
+          if (!bankOfGroup) libraryBankEntity.usrId = userId;
+        } else {
+          libraryBankEntity = await this.libraryBankRepo.findOneOrFail({
+            where: { id: id, usrId: userId },
+            relations: { address: true, user: true },
+          });
+          if (!libraryBankEntity.user && !libraryBankEntity.user.admin) {
+            return ErrorCode.PERMISSION_DENIED;
+          }
+          addressEntity = libraryBankEntity.address;
+        }
+
+        if (
+          (transfertDefault === 0 || transfertDefault === 1) &&
+          libraryBankEntity.isDefault !== transfertDefault
+        ) {
+          await this.dataSource.query(
+            `
+          UPDATE T_LIBRARY_BANK_LBK
+          SET LBK_TRANSFERT_DEFAULT = 0
+          WHERE USR_ID = ?
+            AND LBK_TRANSFERT_DEFAULT = 1`,
+            [userId],
+          );
+        }
+
+        libraryBankEntity.abbr = abbr;
+        libraryBankEntity.name = name;
+        libraryBankEntity.bankCode = bankCode;
+        libraryBankEntity.branchCode = branchCode;
+        libraryBankEntity.accountNumber = accountNbr;
+        libraryBankEntity.bankDetails = bankDetails;
+        libraryBankEntity.accountingCode = accountingCode;
+        libraryBankEntity.thirdPartyAccount = third_party_account;
+        libraryBankEntity.product_account = product_account;
+        libraryBankEntity.currency = currency;
+        libraryBankEntity.slipCheckNbr = slipCheckNbr;
+        libraryBankEntity.isDefault = transfertDefault;
+
+        const address = payload.address;
+        const { street, zipCode, city, countryAbbr } = address;
+        if (address || street || zipCode || city || countryAbbr) {
+          let country;
+          if (countryAbbr) {
+            country = countries.find((x) => x.cca2 === countryAbbr);
+          }
+          if (!addressEntity) addressEntity = new AddressEntity();
+          if (street) addressEntity.street = street;
+          if (city) addressEntity.city = city;
+          if (zipCode) addressEntity.zipCode = zipCode;
+          if (country) addressEntity.country = country.translations.fra.common;
+          if (countryAbbr) addressEntity.countryAbbr = countryAbbr;
+
+          const newAddress = await this.addressRepo.save(addressEntity);
+          libraryBankEntity.adrId = newAddress.id;
+        } else if (addressEntity) {
+          await this.addressRepo.remove(addressEntity);
+        }
+
+        const newLibraryBankEntity = await this.libraryBankRepo.save(
+          libraryBankEntity,
+        );
+
+        return newLibraryBankEntity;
+      }
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async deleteBank(id: number, userId: number, organizationId: number) {
+    try {
+      if (id) {
+        const libraryBankEntity = await this.libraryBankRepo.findOneOrFail({
+          where: { id, usrId: userId },
+          relations: { user: true },
+        });
+        if (!libraryBankEntity.user && !libraryBankEntity.user.admin) {
+          return ErrorCode.PERMISSION_DENIED;
+        }
+        const hasPermissionDelete = await this.permissionService.hasPermission(
+          'PERMISSION_DELETE',
+          8,
+          userId,
+        );
+        if (!hasPermissionDelete) {
+          return ErrorCode.PERMISSION_DENIED;
+        }
+        const listLibraryBank = await this.libraryBankRepo.find({
+          where: {
+            organizationId,
+            usrId: userId,
+            deletedAt: null,
+          },
+        });
+        if (listLibraryBank.length <= 1)
+          return ErrorCode.AT_LEAST_ONE_BANK_IS_REQUIRED;
+        libraryBankEntity.deletedAt = new Date();
+        await this.libraryBankRepo.save(libraryBankEntity);
+        return SuccessCode.DELETE_SUCCESS;
+      }
+    } catch (error) {
+      return error;
+    }
   }
 }
