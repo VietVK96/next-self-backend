@@ -51,6 +51,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { RecipeModule } from './recipe/recipe.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { EventTypeModule } from './event-type/event-type.module';
+import { PaymentModule } from './payment/payment.module';
 
 const importsModules = [
   ConfigModule.forRoot({
