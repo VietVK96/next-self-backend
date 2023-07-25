@@ -13,12 +13,12 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { ContactDetailDto } from '../dto/contact-detail.dto';
 import { isNumber } from 'class-validator';
 import { PolicyHolderEntity } from 'src/entities/policy-holder.entity';
-import * as dayjs from 'dayjs';
 import { ContactService } from './contact.service';
 import { ContactDetailRes } from '../response/contact-detail.res';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ContactPhoneCopEntity } from 'src/entities/contact-phone-cop.entity';
 import { checkId, checkNumber } from 'src/common/util/number';
+import { checkDay } from 'src/common/util/day';
 @Injectable()
 export class SaveUpdateContactService {
   constructor(
@@ -93,7 +93,7 @@ export class SaveUpdateContactService {
         cofId: checkId(reqBody?.contactFamilyId),
         profession: reqBody?.profession || null,
         email: reqBody?.email || null,
-        birthday: dayjs(reqBody.birthday).isValid() ? reqBody?.birthday : null,
+        birthday: checkDay(reqBody.birthday),
         quality: checkNumber(reqBody.quality),
         breastfeeding: checkNumber(reqBody?.breastfeeding) || 0,
         pregnancy: checkNumber(reqBody?.pregnancy) || 0,
@@ -303,7 +303,7 @@ export class SaveUpdateContactService {
         cofId: checkId(reqBody?.contactFamilyId),
         profession: reqBody?.profession || null,
         email: reqBody?.email || null,
-        birthDate: dayjs(reqBody.birthday).isValid() ? reqBody?.birthday : null,
+        birthDate: checkDay(reqBody.birthday),
         quality: checkNumber(reqBody.quality),
         breastfeeding: checkNumber(reqBody?.breastfeeding) || 0,
         pregnancy: checkNumber(reqBody?.pregnancy) || 0,
@@ -422,10 +422,6 @@ export class SaveUpdateContactService {
         identity,
       );
     } catch (err) {
-      console.log(
-        '🚀 ~ file: saveUpdate.contact.service.ts:427 ~ SaveUpdateContactService ~ saveContact ~ err:',
-        err,
-      );
       queryRunner.rollbackTransaction();
       throw new CBadRequestException(ErrorCode.INSERT_FAILED);
     } finally {
