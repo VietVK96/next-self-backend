@@ -77,9 +77,9 @@ export class RecipeService {
           debtor = `${payment?.patient[0]?.lastname} ${payment.patient[0]?.firstname}`;
         }
 
-        payment['beneficiaries'].forEach((beneficiary) => {
+        payment.beneficiaries.forEach((beneficiary) => {
           const obSub = { fullName: '', amount: '' };
-          obSub.fullName = `${beneficiary['lastname']} ${beneficiary['firstname']}`;
+          obSub.fullName = `${beneficiary.lastname} ${beneficiary.firstname}`;
           obSub.amount = numberFormatter.format(beneficiary.amount);
           return beneficiaries.push(obSub);
         });
@@ -88,7 +88,7 @@ export class RecipeService {
           const slipCheckId = payment.slip_check[0]?.id;
           const slipCheckDateRoot = payment.slip_check[0]?.date;
           const slipCheckNumber = payment.slip_check[0]?.number;
-          const slipCheckName = `${payment.slip_check[0]?.label} - #${slipCheckNumber} - ${payment['slip_check'][0]?.bank_name}`;
+          const slipCheckName = `${payment.slip_check[0]?.label} - #${slipCheckNumber} - ${payment.slip_check[0]?.bank_name}`;
           let slipCheckDate;
           // Vérification si le bordereau de remise de chèque n'a pas déjà été affiché
           if (!this.slipCheckIds.includes(slipCheckId)) {
@@ -177,6 +177,8 @@ export class RecipeService {
     response.page = queryParams.page;
     response.total = extra.total;
     response.customs.amount = extra.amount;
+
+    console.log(queryParams);
 
     return response;
   }
@@ -391,8 +393,8 @@ FROM (
       [doctorId],
     );
 
-    response.total = statement[0]['total'];
-    response.amount = statement[0]['amount'];
+    response.total = statement?.[0].total ?? 0;
+    response.amount = statement?.[0].amount ?? 0;
 
     return response;
   }

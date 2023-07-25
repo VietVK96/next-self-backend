@@ -14,6 +14,9 @@ import {
 export class RecipeController {
   constructor(private readonly recipeService: RecipeService) {}
 
+  /**
+   * File: php/recipe/findAll.php 100%.
+   */
   @Get()
   @UseGuards(TokenGuard)
   findAll(
