@@ -29,6 +29,7 @@ import { ContactEntity } from 'src/entities/contact.entity';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import Handlebars from 'handlebars';
+import { FactureEmailDataDto } from 'src/dental/dto/facture.dto';
 
 @Injectable()
 export class MailService {
@@ -1051,5 +1052,15 @@ export class MailService {
                 T_EVENT_EVT.EVT_START
             LIMIT 1`);
     return event.lenght !== 0 ? event[0] : null;
+  }
+
+  async sendFactureEmail(data: FactureEmailDataDto) {
+    await this.mailerService.sendMail({
+      from: data?.from,
+      to: data?.to,
+      subject: data?.subject,
+      template: data?.template,
+      attachments: data?.attachments,
+    });
   }
 }
