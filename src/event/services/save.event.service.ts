@@ -249,8 +249,6 @@ export class SaveEventService {
         eventLateness = eventStatement.lateness;
 
         if (!hasRecurrEvents) {
-          console.log(eventTypeId);
-
           await Promise.all([
             queryRunner.query(
               `
@@ -543,11 +541,6 @@ export class SaveEventService {
       }
       await queryRunner.commitTransaction();
     } catch (e) {
-      console.log(
-        '🚀 ~ file: save.event.service.ts:544 ~ SaveEventService ~ saveAgenda ~ e:',
-        e,
-      );
-
       await queryRunner.rollbackTransaction();
       return new CBadRequestException(ErrorCode.SAVE_FAILED);
     } finally {

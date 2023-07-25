@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -8,9 +17,19 @@ import {
 import { OrdonnancesServices } from './services/ordonnances.services';
 import { OrdonnancesDto } from './dto/ordonnances.dto';
 import { FactureServices } from './services/facture.services';
-import { EnregistrerFactureDto } from './dto/facture.dto';
-import { DevisRequestAjaxDto } from './dto/devis_request_ajax.dto';
+import {
+  EnregistrerFactureDto,
+  PrintPDFDto,
+  FactureEmailDto,
+} from './dto/facture.dto';
+import {
+  DevisRequestAjaxDto,
+  QuotationDevisRequestAjaxDto,
+} from './dto/devis_request_ajax.dto';
 import { DevisServices } from './services/devis.services';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
+import { QuotationServices } from './services/quotation.service';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -20,6 +39,7 @@ export class DentalController {
     private ordonnancesServices: OrdonnancesServices,
     private factureServices: FactureServices,
     private devisServices: DevisServices,
+    private quotationServices: QuotationServices,
   ) {}
 
   /**
@@ -48,6 +68,33 @@ export class DentalController {
   @UseGuards(TokenGuard)
   async update(@Body() payload: EnregistrerFactureDto) {
     return this.factureServices.update(payload);
+  }
+
+  /// dental/facture/facture_pdf.php
+  @Get('/facture')
+  @UseGuards(TokenGuard)
+  async getPdf(
+    @Res() res,
+    @Query() payload: PrintPDFDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    try {
+      const buffer = await this.factureServices.generatePdf(payload, identity);
+
+      res.set({
+        // pdf
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Length': buffer.length,
+        // prevent cache
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    }
   }
 
   @Get('/ordonnances/medical/:id_user/:id_contact')
@@ -89,5 +136,23 @@ export class DentalController {
   @UseGuards(TokenGuard)
   async sendMail(@CurrentUser() identity: UserIdentity) {
     return this.devisServices.sendMail(identity);
+  }
+
+  @Post('/quotation/devis_requetes_ajax')
+  @UseGuards(TokenGuard)
+  async quotationMutualRequestsAjax(
+    @Body() req: QuotationDevisRequestAjaxDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.quotationServices.quotationDevisRequestsAjax(req, identity);
+  }
+
+  @Get('/facture/facture-email')
+  @UseGuards(TokenGuard)
+  async factureEmail(
+    @Query() req: FactureEmailDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return await this.factureServices.factureEmail(req, identity);
   }
 }
