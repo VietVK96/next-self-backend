@@ -25,6 +25,7 @@ import { AddressEntity } from 'src/entities/address.entity';
 import { validateEmail } from 'src/common/util/string';
 import { MailService } from 'src/mail/services/mail.service';
 import { format } from 'date-fns';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 
 @Injectable()
 export class FactureServices {
@@ -56,6 +57,8 @@ export class FactureServices {
     private dentalQuotationRepository: Repository<DentalQuotationEntity>,
     @InjectRepository(AddressEntity)
     private addressRepository: Repository<AddressEntity>,
+    @InjectRepository(ContactNoteEntity)
+    private contactNoteRepository: Repository<ContactNoteEntity>,
     private dataSource: DataSource,
   ) {}
   async update(payload: EnregistrerFactureDto) {
@@ -374,7 +377,7 @@ export class FactureServices {
     const user = await this.userRepository.findOne({
       where: { id: In(userIds) },
     });
-    if (user === null) {
+    if (!user) {
       console.error(
         "Vous n'avez pas assez de privilège pour accéder aux factures",
       );
@@ -735,7 +738,7 @@ export class FactureServices {
           invoice?.patient?.lastname,
           invoice?.patient?.firstname,
         ].join(' ')}`,
-        template: 'facture/invoice.hbs',
+        template: 'mail/facture/invoice.hbs',
         context: {
           ...invoice,
           creationDate: format(new Date(invoice?.date), 'MMMM dd, yyyy'),
@@ -750,13 +753,18 @@ export class FactureServices {
         attachments: [
           {
             filename: filename,
+            context: null,
           },
         ],
       });
 
-      return null;
-    } catch {
-      return new Error('404');
+      await this.contactNoteRepository.save({
+        conId: contactId,
+        message: `Envoi par email de la facture du ${billDateAsString} de ${userLastname} ${userFirstname}`,
+      });
+      return { message: true };
+    } catch (err) {
+      throw new CBadRequestException(`${err?.message}`);
     }
   }
 }
