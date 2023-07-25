@@ -48,6 +48,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { SecuritiesModule } from './securities/securities.module';
 import { LoggerModule } from 'nestjs-pino';
+import { RecipeModule } from './recipe/recipe.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { EventTypeModule } from './event-type/event-type.module';
 
@@ -152,6 +153,7 @@ const importsModules = [
   BankModule,
   PaymentSchedulesModule,
   SecuritiesModule,
+  RecipeModule,
   StatisticsModule,
   EventTypeModule,
 ];
