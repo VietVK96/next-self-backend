@@ -36,6 +36,7 @@ export class MailController {
     @Query('draw') draw?: string,
     @Query('search') search?: string,
     @Query('pageIndex') pageIndex?: number,
+    @Query('practitionerId') practitionerId?: string,
   ) {
     return await this.mailService.findAll(
       draw,
@@ -43,6 +44,7 @@ export class MailController {
       docId,
       identity.org,
       search,
+      practitionerId,
     );
   }
   @UseGuards(TokenGuard)

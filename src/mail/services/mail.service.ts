@@ -44,6 +44,7 @@ export class MailService {
     docId: number,
     groupId: number,
     search: string,
+    practitionerId: string,
   ): Promise<FindAllMailRes> {
     if (!search) search = '';
     const pageSize = 100;
@@ -56,7 +57,7 @@ export class MailService {
     FROM T_USER_USR`);
 
     let mails: FindAllMailDto[];
-    if (docId) {
+    if (!practitionerId) {
       mails = await this.dataSource.query(
         ` SELECT SQL_CALC_FOUND_ROWS
             T_LETTERS_LET.LET_ID AS id,
@@ -130,16 +131,29 @@ export class MailService {
       }
     }
 
-    const offSet = (pageIndex - 1) * pageSize;
-    const dataPaging = mails.slice(offSet, offSet + pageSize);
+    let result: FindAllMailRes;
 
-    const result: FindAllMailRes = {
-      draw,
-      recordsTotal: dataPaging.length,
-      recordsFiltered: dataPaging.length,
-      totalData: mails.length,
-      data: dataPaging,
-    };
+    if (pageIndex === -1) {
+      result = {
+        draw,
+        recordsTotal: mails.length,
+        recordsFiltered: mails.length,
+        totalData: mails.length,
+        data: mails,
+      };
+    } else {
+      const offSet = (pageIndex - 1) * pageSize;
+      const dataPaging = mails.slice(offSet, offSet + pageSize);
+
+      result = {
+        draw,
+        recordsTotal: dataPaging.length,
+        recordsFiltered: dataPaging.length,
+        totalData: mails.length,
+        data: dataPaging,
+      };
+    }
+
     return result;
   }
 
