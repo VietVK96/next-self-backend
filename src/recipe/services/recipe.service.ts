@@ -178,8 +178,6 @@ export class RecipeService {
     response.total = extra.total;
     response.customs.amount = extra.amount;
 
-    console.log(queryParams);
-
     return response;
   }
 
