@@ -109,7 +109,7 @@ export class BankService {
 
       const filePath = path.join(
         process.cwd(),
-        'templates/bank_check',
+        'templates/pdf/bank_check',
         'bank_check.hbs',
       );
       const options = {

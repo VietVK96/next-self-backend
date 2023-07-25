@@ -686,7 +686,7 @@ export class FactureServices {
         };
         const filePath = path.join(
           process.cwd(),
-          'templates/invoice',
+          'templates/pdf/invoice',
           'convention.hbs',
         );
         const options = {
@@ -725,7 +725,7 @@ export class FactureServices {
 
         const filePath = path.join(
           process.cwd(),
-          'templates/invoice',
+          'templates/pdf/invoice',
           'conventionDuplicate.hbs',
         );
         const detailsAmount = facture?.details

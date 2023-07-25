@@ -41,3 +41,11 @@ export function br2nl(str: string, replaceMode?: string) {
   // Includes <br>, <BR>, <br />, </br>
   return str.replace(/<\s*\/?br\s*[\/]?>/gi, replaceStr);
 }
+
+export function htmlEntities(str: string | number) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}

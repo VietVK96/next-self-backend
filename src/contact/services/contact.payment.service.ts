@@ -760,7 +760,7 @@ export class ContactPaymentService {
 
       const filePath = path.join(
         process.cwd(),
-        'templates/bank_check',
+        'templates/pdf/bank_check',
         'receipt.hbs',
       );
 

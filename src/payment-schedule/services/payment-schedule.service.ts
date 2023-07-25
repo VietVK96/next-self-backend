@@ -1,12 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { PaymentItemRes } from '../response/payment.res';
 import { PaymentSchedulesDto } from '../dto/payment.dto';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { InjectRepository } from '@nestjs/typeorm';
+import { PaymentPlanEntity } from 'src/entities/payment-plan.entity';
 
 @Injectable()
 export class PaymentScheduleService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private dataSource: DataSource,
+    @InjectRepository(PaymentPlanEntity)
+    private paymentPlanRepo: Repository<PaymentPlanEntity>,
+  ) {}
 
   /**
    * File: application/Services/PaymentSchedule.php, Line 82-124
@@ -91,11 +97,11 @@ export class PaymentScheduleService {
 
       const paymentSchedule = await queryRunner.query(q, [
         identity.org,
-        payload.doctor_id,
-        payload.patient_id,
-        payload.label,
-        payload.amount,
-        payload.observation || null,
+        payload?.doctor_id,
+        payload?.patient_id,
+        payload?.label || '',
+        payload?.amount || 0,
+        payload?.observation || null,
       ]);
 
       const q2 = `INSERT INTO payment_schedule_line (payment_schedule_id, date, amount)
@@ -111,11 +117,16 @@ export class PaymentScheduleService {
         }),
       );
       await queryRunner.commitTransaction();
-      return paymentSchedule;
+      return this.find(paymentSchedule.insertId, identity.org);
     } catch (err) {
       await queryRunner.rollbackTransaction();
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async duplicate(id: number, identity: UserIdentity) {
+    const paymentSchedule = await this.find(id, identity.org);
+    return await this.store(paymentSchedule as PaymentSchedulesDto, identity);
   }
 }
