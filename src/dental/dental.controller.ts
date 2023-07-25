@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -8,7 +16,7 @@ import {
 import { OrdonnancesServices } from './services/ordonnances.services';
 import { OrdonnancesDto } from './dto/ordonnances.dto';
 import { FactureServices } from './services/facture.services';
-import { EnregistrerFactureDto } from './dto/facture.dto';
+import { EnregistrerFactureDto, FactureEmailDto } from './dto/facture.dto';
 import {
   DevisRequestAjaxDto,
   QuotationDevisRequestAjaxDto,
@@ -103,5 +111,14 @@ export class DentalController {
     @CurrentUser() identity: UserIdentity,
   ) {
     return this.quotationServices.quotationDevisRequestsAjax(req, identity);
+  }
+
+  @Get('/facture/facture-email')
+  @UseGuards(TokenGuard)
+  async factureEmail(
+    @Query() req: FactureEmailDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return await this.factureServices.factureEmail(req, identity);
   }
 }

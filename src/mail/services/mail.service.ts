@@ -20,6 +20,7 @@ import { ConfigService } from '@nestjs/config';
 import { fr } from 'date-fns/locale';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { LettersEntity } from '../../entities/letters.entity';
+import { FactureEmailDataDto } from 'src/dental/dto/facture.dto';
 
 @Injectable()
 export class MailService {
@@ -726,6 +727,16 @@ export class MailService {
       subject: 'Greeting from NestJS NodeMailer',
       template: 'test.hbs',
       context: {},
+    });
+  }
+
+  async sendFactureEmail(data: FactureEmailDataDto) {
+    await this.mailerService.sendMail({
+      from: data?.from,
+      to: data?.to,
+      subject: data?.subject,
+      template: data?.template,
+      attachments: data?.attachments,
     });
   }
 }

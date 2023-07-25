@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, In, Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EnregistrerFactureDto } from '../dto/facture.dto';
+import { EnregistrerFactureDto, FactureEmailDto } from '../dto/facture.dto';
 import { BillEntity } from 'src/entities/bill.entity';
 import { BillLineEntity } from 'src/entities/bill-line.entity';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
@@ -22,10 +22,14 @@ import { StringHelper } from 'src/common/util/string-helper';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { AddressEntity } from 'src/entities/address.entity';
+import { validateEmail } from 'src/common/util/string';
+import { MailService } from 'src/mail/services/mail.service';
+import { format } from 'date-fns';
 
 @Injectable()
 export class FactureServices {
   constructor(
+    private mailService: MailService,
     @InjectRepository(BillEntity)
     private billRepository: Repository<BillEntity>,
     @InjectRepository(BillLineEntity)
@@ -672,6 +676,85 @@ export class FactureServices {
           '-3003 : Problème durant le rapatriement des informations de la facture ...',
         );
       }
+    } catch {
+      return new Error('404');
+    }
+  }
+
+  async factureEmail({ id_facture }: FactureEmailDto, identity: UserIdentity) {
+    try {
+      const qb = this.dataSource
+        .getRepository(BillEntity)
+        .createQueryBuilder('bill');
+      const result = await qb
+        .select('bill.date', 'billDate')
+        .addSelect('usr.email', 'userEmail')
+        .addSelect('usr.lastnamne', 'userLastname')
+        .addSelect('usr.firstname', 'userFirstname')
+        .addSelect('con.id', 'contactId')
+        .addSelect('con.email', 'contactEmail')
+        .addSelect('con.lastname', 'contactLastname')
+        .addSelect('con.firstname', 'contactFirstname')
+        .innerJoin('bill.user', 'usr')
+        .innerJoin('bill.contact', 'con')
+        .where('bill.id = :id', { id: id_facture })
+        .getRawOne();
+      const billDate = result?.billDate;
+      const billDateAsString = format(billDate, 'dd/MM/yyyy');
+      const userEmail = result?.userEmail;
+      const userLastname = result?.userLastname;
+      const userFirstname = result?.userFirstname;
+      const contactId = result?.contactId;
+      const contactEmail = result?.contactEmail;
+
+      if (!validateEmail(userEmail) || !validateEmail(contactEmail)) {
+        throw new CBadRequestException(
+          'Veuillez renseigner une adresse email valide dans la fiche patient',
+        );
+      }
+
+      const filename = `Facture_${format(
+        new Date(billDate),
+        'dd_MM_yyyy',
+      )}.pdf`;
+      const invoice = await this.billRepository.findOneOrFail({
+        relations: ['user', 'user.address', 'user.setting', 'patient'],
+        where: { id: id_facture },
+      });
+
+      const homePhoneNumber = invoice?.user?.phoneNumber ?? null;
+      await this.mailService.sendFactureEmail({
+        from: invoice?.user?.email,
+        to: invoice?.patient?.email,
+        subject: `Facture du ${format(
+          new Date(invoice?.date),
+          'dd/MM/yyyy',
+        )} de Dr ${[invoice?.user?.lastname, invoice?.user?.firstname].join(
+          ' ',
+        )} pour ${[
+          invoice?.patient?.lastname,
+          invoice?.patient?.firstname,
+        ].join(' ')}`,
+        template: 'facture/invoice.hbs',
+        context: {
+          ...invoice,
+          creationDate: format(new Date(invoice?.date), 'MMMM dd, yyyy'),
+          homePhoneNumber: `(${homePhoneNumber.slice(
+            0,
+            2,
+          )}) ${homePhoneNumber.slice(2, 4)} ${homePhoneNumber.slice(
+            4,
+            6,
+          )} ${homePhoneNumber.slice(6, 8)} ${homePhoneNumber.slice(8)}`,
+        },
+        attachments: [
+          {
+            filename: filename,
+          },
+        ],
+      });
+
+      return null;
     } catch {
       return new Error('404');
     }
