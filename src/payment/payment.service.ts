@@ -7,6 +7,7 @@ import { CashingEntity } from 'src/entities/cashing.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
+import { PerCode } from 'src/constants/permissions';
 
 @Injectable()
 export class PaymentService {
@@ -35,12 +36,12 @@ export class PaymentService {
 
     // check quyền
     const hasPermissionDelete = await this.permissionService.hasPermission(
-      'PERMISSION_DELETE',
+      PerCode.PERMISSION_DELETE,
       8,
       userId,
     );
     const hasPermissionPaiement = await this.permissionService.hasPermission(
-      'PERMISSION_PAIEMENT',
+      PerCode.PERMISSION_PAIEMENT,
       8,
       userId,
       payment.usrId,
