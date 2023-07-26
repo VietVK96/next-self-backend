@@ -7,7 +7,7 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { LibraryActFamilyEntity } from 'src/entities/library-act-family.entity';
 import { LibraryActEntity } from 'src/entities/library-act.entity';
-import { ActFamiliesDto } from './dto/act-families.dto';
+import { ActFamiliesDto, ActFamiliesSearchDto } from './dto/act-families.dto';
 import { LibraryActsService } from './services/acts.service';
 import { LibrariesService } from './services/libraries.service';
 
@@ -55,5 +55,14 @@ export class LibrariesController {
     @CurrentUser() identity: UserIdentity,
   ): Promise<LibraryActEntity> {
     return await this.actService.getActs(id, identity);
+  }
+
+  @Get('act-families-search')
+  @UseGuards(TokenGuard)
+  async searchActFamilies(
+    @Query() request: ActFamiliesSearchDto,
+    @CurrentUser() user,
+  ) {
+    return await this.librariesService.searchActFamilies(user, request);
   }
 }

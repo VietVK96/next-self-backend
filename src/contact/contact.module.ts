@@ -59,6 +59,12 @@ import { PatientMedicalEntity } from 'src/entities/patient-medical.entity';
 import { ContraindicationEntity } from 'src/entities/contraindication.entity';
 import { ContraindicationContactController } from './contraindication.contact.controller';
 import { ContraindicationContactService } from './services/contraindication.contact.service';
+import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
+import { CashingService } from './services/cashing.service';
+import { CashingController } from './cashing.controller';
+import { LibraryBankEntity } from 'src/entities/library-bank.entity';
+import { MailController } from './mail.controller';
+import { MailService } from './services/mail.service';
 
 @Module({
   controllers: [
@@ -77,6 +83,8 @@ import { ContraindicationContactService } from './services/contraindication.cont
     BillController,
     ContactController,
     ContraindicationContactController,
+    CashingController,
+    MailController,
   ],
   providers: [
     UploadService,
@@ -104,6 +112,8 @@ import { ContraindicationContactService } from './services/contraindication.cont
     BillService,
     SaveUpdateContactService,
     ContraindicationContactService,
+    CashingService,
+    MailService,
   ],
   imports: [
     TypeOrmModule.forFeature([
@@ -132,6 +142,8 @@ import { ContraindicationContactService } from './services/contraindication.cont
       BillEntity,
       PatientMedicalEntity,
       ContraindicationEntity,
+      MedicalHeaderEntity,
+      LibraryBankEntity,
     ]),
     UserModule,
     PatientModule,

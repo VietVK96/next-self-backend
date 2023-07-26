@@ -7,6 +7,8 @@ import { SuccessResponse } from 'src/common/response/success.res';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { PermissionService } from 'src/user/services/permission.service';
+import { PerCode } from 'src/constants/permissions';
+import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-request.exception';
 
 @Injectable()
 export class QuotationService {
@@ -14,12 +16,10 @@ export class QuotationService {
     private permissionService: PermissionService,
     @InjectRepository(DentalQuotationEntity)
     private readonly repo: Repository<DentalQuotationEntity>,
-    @InjectRepository(DentalQuotationEntity)
-    private readonly detailQuotationRepo: Repository<DentalQuotationEntity>,
   ) {}
 
   async findQuotationByID(id: number) {
-    return await this.detailQuotationRepo.find({
+    return await this.repo.find({
       where: { id: id },
       relations: {
         logo: true,
@@ -40,9 +40,13 @@ export class QuotationService {
     id: number,
   ): Promise<SuccessResponse> {
     if (
-      !this.permissionService.hasPermission('PERMISSION_DELETE', 8, identity.id)
+      !this.permissionService.hasPermission(
+        PerCode.PERMISSION_DELETE,
+        8,
+        identity.id,
+      )
     ) {
-      throw new NotAcceptableException();
+      throw new CForbiddenRequestException(ErrorCode.FORBIDDEN);
     }
     const quotation = await this.findQuotationByID(id);
 

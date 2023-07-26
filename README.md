@@ -71,3 +71,32 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
   Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+##Fix SSL error unsafe legacy renegotiation disabled
+- Create file openssl.conf in home . Example /home/ducdev/openssl.conf. With content
+```
+openssl_conf = openssl_init
+
+[openssl_init]
+ssl_conf = ssl_sect
+
+[ssl_sect]
+system_default = system_default_sect
+
+[system_default_sect]
+Options = UnsafeLegacyRenegotiation
+```
+Then run 
+```
+export OPENSSL_CONF=/home/ducdev/openssl.conf
+```
+Then run again project
+- Fix sharp
+```
+apt-get install libvips
+npm rebuild --platform=linux --arch=x64 sharp
+```
+Install pack for puppeteer 
+```
+$ sudo apt-get install chromium-browser -y
+$ sudo apt-get install libx11-xcb1 libxcomposite1 libasound2 libatk1.0-0 libatk-bridge2.0-0 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6  -y
+```

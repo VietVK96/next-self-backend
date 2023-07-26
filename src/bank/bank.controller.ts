@@ -1,4 +1,15 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { BankService } from './service/bank.service';
 import {
@@ -8,6 +19,12 @@ import {
 } from 'src/common/decorator/auth.decorator';
 
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import {
+  BankCheckPrintDto,
+  CreateUpdateBankDto,
+  UpdateBankCheckDto,
+} from './dto/bank.dto';
+import { ErrorCode } from 'src/constants/error';
 
 @ApiTags('Bank')
 @Controller('')
@@ -25,7 +42,7 @@ export class BankController {
     try {
       return await this.bankService.findAllBank(identity.org, identity.id);
     } catch (error) {
-      throw new CBadRequestException('error get banks', error);
+      throw new CBadRequestException(ErrorCode.ERROR_GET_BANKS, error);
     }
   }
   /**
@@ -38,7 +55,79 @@ export class BankController {
     try {
       return await this.bankService.bankChecks(identity.org);
     } catch (error) {
-      throw new CBadRequestException('error get bank check', error);
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
     }
+  }
+  /**
+   * php/bank-checks/print.php -> full
+   *
+   */
+  @Get('/bank-checks/print')
+  @UseGuards(TokenGuard)
+  async print(@Res() res, @Query() params: BankCheckPrintDto) {
+    try {
+      const buffer = await this.bankService.print(params);
+
+      res.set({
+        // pdf
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Length': buffer.length,
+        // prevent cache
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    }
+  }
+
+  @Put('/bank-checks/:id')
+  @UseGuards(TokenGuard)
+  async updateBankChecks(
+    @Param('id') id: number,
+    @Body() payload: UpdateBankCheckDto,
+  ) {
+    return await this.bankService.updateBankChecks(id, payload);
+  }
+
+  @Post('/bank-checks/copy/:id')
+  @UseGuards(TokenGuard)
+  async duplicateBankChecks(@Param('id') id: number) {
+    return await this.bankService.duplicateBankChecks(id);
+  }
+
+  @Get('/banks/all')
+  @UseGuards(TokenGuard)
+  async findAllBankByUser(@CurrentUser() identity: UserIdentity) {
+    try {
+      return await this.bankService.findAllByUser(identity.id);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_BANKS, error);
+    }
+  }
+
+  @Post('/banks')
+  @UseGuards(TokenGuard)
+  async createUpdateBank(
+    @CurrentUser() identity: UserIdentity,
+    @Body() payload: CreateUpdateBankDto,
+  ) {
+    return await this.bankService.createUpdateBank(
+      identity.id,
+      identity.org,
+      payload,
+    );
+  }
+
+  @Delete('/banks/:id')
+  @UseGuards(TokenGuard)
+  async deleteBank(
+    @CurrentUser() identity: UserIdentity,
+    @Param('id') id: number,
+  ) {
+    return await this.bankService.deleteBank(id, identity.id, identity.org);
   }
 }

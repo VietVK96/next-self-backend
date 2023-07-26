@@ -1,0 +1,67 @@
+<style>
+
+@page{
+    size: A4;
+}
+
+page {
+    font-family: courier new;
+    font-size: 14px;
+}
+
+.field {
+    position: absolute;
+}
+
+.sum-words-line-1 {
+    top: {{ fields.sum_words_line_1.position.top }}mm;
+    left: {{ fields.sum_words_line_1.position.left }}mm;
+    width: {{ fields.sum_words_line_1.width }}mm;
+}
+
+.sum-words-line-2 {
+    top: {{ fields.sum_words_line_2.position.top }}mm;
+    left: {{ fields.sum_words_line_2.position.left }}mm;
+}
+
+.sum-digit {
+    top: {{ fields.sum_digit.position.top }}mm;
+    left: {{ fields.sum_digit.position.left }}mm;
+}
+
+.place {
+    top: {{ fields.place.position.top }}mm;
+    left: {{ fields.place.position.left }}mm;
+}
+
+.payee {
+    top: {{ fields.payee.position.top }}mm;
+    left: {{ fields.payee.position.left }}mm;
+}
+
+.date {
+    top: {{ fields.date.position.top }}mm;
+    left: {{ fields.date.position.left }}mm;
+}
+
+</style>
+<page backtop="0" backbottom="0" backright="0" backleft="0">
+    <div class="field sum-words-line-1">
+        {{ sum_words_line_1 }}
+    </div>
+    <div class="field sum-words-line-2">
+        {{ sum_words_line_2 }}
+    </div>
+    <div class="field sum-digit">
+        ***{{ sum_digit }}***
+    </div>
+    <div class="field place">
+        {{ place }}
+    </div>
+    <div class="field payee">
+        {{ payee }}
+    </div>
+    <div class="field date">
+        {{ date }}
+    </div>
+</page>

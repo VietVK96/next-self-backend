@@ -51,45 +51,49 @@ export class TaskService {
    * @param identity
    */
   async realizeEventTask(payload: EventTaskDto, identity: UserIdentity) {
-    // Récupération du fuseau horaire
-    const userPreference: UserPreferenceEntity =
-      await this.userPreferenceRepo.findOne({
-        select: {
-          timezone: true,
-        },
-        where: {
-          usrId: payload.user,
-        },
+    try {
+      // Récupération du fuseau horaire
+      const userPreference: UserPreferenceEntity =
+        await this.userPreferenceRepo.findOne({
+          select: {
+            timezone: true,
+          },
+          where: {
+            usrId: payload.user,
+          },
+        });
+
+      dayjs.extend(utc);
+      dayjs.extend(timezone);
+      const datetime: string = dayjs()
+        .tz(userPreference.timezone)
+        .format('YYYY-MM-DD');
+
+      // Récupération de l'identifiant du patient
+      const eventTask: EventTaskEntity = await this.eventTaskRepository
+        .createQueryBuilder('event')
+        .select('event.conId')
+        .innerJoin('event.patient', 'patient')
+        .where('event.id = :id', { id: payload.id })
+        .andWhere('event.conId = patient.id')
+        .andWhere('patient.organizationId = :orgId', { orgId: identity.org })
+        .getOne();
+
+      if (!eventTask) {
+        throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_PATIENT);
+      }
+
+      // Modification des informations de l'acte
+      await this.eventTaskRepository.update(payload.id, {
+        status: 1,
+        date: datetime,
       });
 
-    dayjs.extend(utc);
-    dayjs.extend(timezone);
-    const datetime: string = dayjs()
-      .tz(userPreference.timezone)
-      .format('YYYY-MM-DD');
-
-    // Récupération de l'identifiant du patient
-    const eventTask: EventTaskEntity = await this.eventTaskRepository
-      .createQueryBuilder('event')
-      .select('event.conId')
-      .innerJoin('event.patient', 'patient')
-      .where('event.id = :id', { id: payload.id })
-      .andWhere('event.conId = patient.id')
-      .andWhere('patient.organizationId = :orgId', { orgId: identity.org })
-      .getOne();
-
-    if (!eventTask) {
-      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_PATIENT);
+      // Traçabilité IDS
+      // @TODO Ids\Log::write('Acte', $patientId, 2);
+    } catch (error) {
+      throw new CNotFoundRequestException(ErrorCode.CANNOT_UPDATE_EVENT);
     }
-
-    // Modification des informations de l'acte
-    await this.eventTaskRepository.update(payload.id, {
-      status: 1,
-      date: datetime,
-    });
-
-    // Traçabilité IDS
-    // @TODO Ids\Log::write('Acte', $patientId, 2);
   }
 
   async updateEventTaskPatch(payload: EventTaskPatchDto) {

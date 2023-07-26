@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, In, Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EnregistrerFactureDto } from '../dto/facture.dto';
+import {
+  EnregistrerFactureDto,
+  FactureEmailDto,
+  PrintPDFDto,
+} from '../dto/facture.dto';
 import { BillEntity } from 'src/entities/bill.entity';
 import { BillLineEntity } from 'src/entities/bill-line.entity';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
@@ -22,10 +26,23 @@ import { StringHelper } from 'src/common/util/string-helper';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { AddressEntity } from 'src/entities/address.entity';
+import { createPdf } from '@saemhco/nestjs-html-pdf';
+import * as path from 'path';
+import { checkDay } from 'src/common/util/day';
+import { checkId } from 'src/common/util/number';
+import { DetailsRes, InitFactureRes } from '../res/facture.res';
+import { customCreatePdf } from 'src/common/util/pdf';
+import { facturePdfFooter } from '../constant/htmlTemplate';
+import { br2nl } from 'src/common/util/string';
+import { validateEmail } from 'src/common/util/string';
+import { MailService } from 'src/mail/services/mail.service';
+import { format } from 'date-fns';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 
 @Injectable()
 export class FactureServices {
   constructor(
+    private mailService: MailService,
     @InjectRepository(BillEntity)
     private billRepository: Repository<BillEntity>,
     @InjectRepository(BillLineEntity)
@@ -52,6 +69,8 @@ export class FactureServices {
     private dentalQuotationRepository: Repository<DentalQuotationEntity>,
     @InjectRepository(AddressEntity)
     private addressRepository: Repository<AddressEntity>,
+    @InjectRepository(ContactNoteEntity)
+    private contactNoteRepository: Repository<ContactNoteEntity>,
     private dataSource: DataSource,
   ) {}
   async update(payload: EnregistrerFactureDto) {
@@ -370,7 +389,7 @@ export class FactureServices {
     const user = await this.userRepository.findOne({
       where: { id: In(userIds) },
     });
-    if (user === null) {
+    if (!user) {
       console.error(
         "Vous n'avez pas assez de privilège pour accéder aux factures",
       );
@@ -529,7 +548,7 @@ export class FactureServices {
       );
 
       noFacture = stm[0].noFacture;
-      if (!noFacture) {
+      if (noFacture) {
         noFacture = id_user + '-' + formattedDate + '-00001';
       } else {
         noFacture =
@@ -564,116 +583,296 @@ export class FactureServices {
     }
   }
 
-  async initFacture({
-    object_connexion,
-    id_user,
-    id_societe,
-    id_facture,
-    noFacture,
-    dateFacture,
-    titreFacture,
-    identPrat,
-    adressePrat,
-    identPat,
-    modePaiement,
-    infosCompl,
-    details,
-    pdf,
-
-    billSignatureDoctor,
-    billAmount,
-    billSecuAmount,
-    billTemplate,
-    userNumeroFacturant,
-    contactFullname,
-    contactBirthday,
-    contactInsee,
-
-    groupId,
-  }: {
-    object_connexion: string;
-    id_user: number;
-    id_societe: number;
-    id_facture: number;
-    noFacture: string;
-    dateFacture: string;
-    titreFacture: string;
-    identPrat: string;
-    adressePrat: string;
-    identPat: string;
-    modePaiement: string;
-    infosCompl: string;
-    details: string;
-    pdf: string;
-
-    billSignatureDoctor: string;
-    billAmount: number;
-    billSecuAmount: number;
-    billTemplate: number;
-    userNumeroFacturant: string;
-    contactFullname: string;
-    contactBirthday: string;
-    contactInsee: string;
-
-    groupId: number;
-  }) {
-    let lock: number;
+  async initFacture(id: number): Promise<InitFactureRes> {
+    id = checkId(id);
     try {
       const bill = await this.billRepository.findOne({
-        where: { id: id_facture, delete: 0 },
+        where: { id, delete: 0 },
         relations: ['user', 'patient'],
       });
       if (bill) {
-        (noFacture = bill?.nbr), (dateFacture = bill?.date);
-        titreFacture = bill?.name;
-        identPrat = bill?.identPrat;
-        adressePrat = bill?.addrPrat;
-        identPat = bill?.identContact;
-        modePaiement = bill?.payment;
-        infosCompl = bill?.info;
-        lock = bill?.lock;
-        billSignatureDoctor = bill?.signature_doctor;
-        billAmount = bill?.amount;
-        billSecuAmount = bill?.secuAmount;
-        billTemplate = bill?.template;
-        userNumeroFacturant = bill?.user?.numeroFacturant;
+        const res: InitFactureRes = {
+          noFacture: bill?.nbr || '',
+          dateFacture: checkDay(bill?.date),
+          titreFacture: bill?.name || '',
+          identPrat: bill?.identPrat || '',
+          adressePrat: bill?.addrPrat || '',
+          identPat: bill?.identContact || '',
+          modePaiement: bill?.payment || 'Non Payee',
+          infosCompl: bill?.info || '',
+          billSignatureDoctor: bill?.signature_doctor || '',
+          billAmount: bill?.amount || 0,
+          billSecuAmount: bill?.secuAmount || 0,
+          billTemplate: bill?.template || 1,
+          userNumeroFacturant: bill?.user?.numeroFacturant || '',
+          contactFullname:
+            bill?.contact?.lastname + ' ' + bill?.contact?.firstname,
+          contactBirthday: checkDay(bill?.contact?.birthday),
+          contactInsee: bill?.contact?.insee + '' + bill?.contact?.inseeKey,
+        };
 
-        contactFullname = bill?.contact?.lastname + bill?.contact?.firstname;
-        contactBirthday = bill?.contact?.birthDate;
-        contactInsee = bill?.contact?.insee + bill?.contact?.inseeKey;
-
-        if (!pdf && lock) {
-          window.location.href = 'facture_pdf.php?id_facture=' + id_facture;
-          return;
-        }
+        // if (!pdf && bill.lock) {
+        //   window.location.href = 'facture_pdf.php?id_facture=' + id_facture;
+        //   return;
+        // }
         const billLines = await this.billLineRepository.find({
-          where: { id: id_facture },
+          where: { id },
           order: { pos: 'ASC' },
         });
-        const res = [];
+
         for (const billLine of billLines) {
-          const dentals = {
+          const dentail: DetailsRes = {
             id_facture_line: billLine?.bilId,
             typeLigne: billLine?.type,
             dateLigne: billLine?.date || '',
             dentsLigne: billLine?.teeth || '',
             descriptionLigne: billLine?.msg,
-            prixLigne: billLine?.amount || '',
+            prixLigne: billLine?.amount || 0,
             name: billLine?.msg.replace(/^[^-]*-\s?/, ''),
             cotation: billLine?.cotation,
             secuAmount: billLine?.secuAmount,
             materials: billLine?.materials,
           };
-          res.push(dentals);
+          res.details.push(dentail);
         }
         return res;
       } else {
-        throw new Error(
+        throw new CBadRequestException(
           '-3003 : Problème durant le rapatriement des informations de la facture ...',
         );
       }
     } catch {
-      return new Error('404');
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
+  }
+
+  // dental/facture/facture_pdf.php
+  async generatePdf(req: PrintPDFDto, identity: UserIdentity) {
+    try {
+      const id = checkId(req?.id);
+      const duplicata = Boolean(req?.duplicate);
+      const invoice = await this.billRepository.findOne({
+        where: { id },
+        relations: {
+          user: true,
+        },
+      });
+      const disableColumnByGroup = [158, 181];
+      const modesPaiements = {
+        non_payee: 'Non Payée',
+        carte: 'Carte',
+        espece: 'Espèce',
+        cheque: 'Chèque',
+        virement: 'Virement',
+        prelevement: 'Prélèvement',
+        autre: 'Autre',
+      };
+      if (checkId) {
+        await this.billRepository.update(id, { lock: 1 } as BillEntity);
+      }
+
+      const facture = await this.initFacture(id);
+      if (facture.billTemplate === 1) {
+        const checkModePaiement =
+          ['virement', 'prelevement', 'autre']?.findIndex(
+            (e) => e === facture?.modePaiement,
+          ) != -1;
+        const data = {
+          duplicata,
+          date: facture?.dateFacture,
+          nbr: facture?.noFacture,
+          identPrat: facture?.identPrat,
+          adressePrat: facture?.adressePrat,
+          identPat: facture?.identPat,
+          billAmount: facture?.billAmount,
+          billSecuAmount: facture?.billSecuAmount,
+          userNumeroFacturant: facture?.userNumeroFacturant,
+          contactFullname: facture?.contactFullname,
+          contactBirthday: facture?.contactBirthday,
+          contactInsee: facture?.contactInsee,
+          prestations: facture.details,
+          modePaiement: facture.modePaiement,
+          signature: facture.billSignatureDoctor,
+          checkModePaiement,
+        };
+        const filePath = path.join(
+          process.cwd(),
+          'templates/invoice',
+          'convention.hbs',
+        );
+        const options = {
+          format: 'A4',
+          displayHeaderFooter: true,
+          margin: {
+            left: '5mm',
+            top: '5mm',
+            right: '5mm',
+            bottom: '5mm',
+          },
+        };
+        const pdf = await createPdf(filePath, options, data);
+        return pdf;
+      } else {
+        const helpers = {
+          toUpperCase: function (str: string) {
+            return str.toUpperCase();
+          },
+          nl2br: br2nl,
+          formatDentsLigne: function formatDentsLigne(
+            dentsLigne: string | number,
+          ) {
+            if (typeof dentsLigne !== 'string') {
+              return '';
+            }
+            const dentsLigneSplit = dentsLigne.split(/[^0-9]+/);
+            const dentsLigneChunk = [];
+            for (let i = 0; i < dentsLigneSplit.length; i += 3) {
+              dentsLigneChunk.push(dentsLigneSplit.slice(i, i + 3).join(','));
+            }
+            return dentsLigneChunk.join('\n');
+          },
+          formatNumber: (n: number) => n.toFixed(2),
+        };
+
+        const filePath = path.join(
+          process.cwd(),
+          'templates/invoice',
+          'conventionDuplicate.hbs',
+        );
+        const detailsAmount = facture?.details
+          ? facture?.details.reduce(
+              (accumulator, item) => accumulator + item?.secuAmount,
+              0,
+            )
+          : 0;
+        const detailsPrixLigne = facture?.details
+          ? facture?.details.reduce(
+              (prixLigne, item) => prixLigne + item?.prixLigne,
+              0,
+            )
+          : 0;
+        const data = {
+          isGroup: disableColumnByGroup.some((e) => e === identity.org),
+          duplicata,
+          date: facture?.dateFacture,
+          nbr: facture?.noFacture,
+          identPrat: facture?.identPrat,
+          adressePrat: facture?.adressePrat,
+          identPat: facture?.identPat,
+          contactInsee: facture?.contactInsee,
+          details: facture?.details,
+          infosCompl: facture?.infosCompl,
+          detailsLength: facture.details?.length - 1,
+          detailsAmount: detailsAmount.toFixed(2),
+          detailsPrixLigne: detailsPrixLigne.toFixed(2),
+          billSignatureDoctor: facture.billSignatureDoctor,
+          modesPaiements,
+        };
+        const options = {
+          format: 'A4',
+          displayHeaderFooter: true,
+          footerTemplate: facturePdfFooter(Boolean(invoice.user.agaMember)),
+          margin: {
+            left: '5mm',
+            top: '5mm',
+            right: '5mm',
+            bottom: '5mm',
+          },
+        };
+        const pdfBuffer = await customCreatePdf(
+          filePath,
+          options,
+          data,
+          helpers,
+        );
+        return pdfBuffer;
+      }
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
+    }
+  }
+
+  async factureEmail({ id_facture }: FactureEmailDto, identity: UserIdentity) {
+    try {
+      const qb = this.dataSource
+        .getRepository(BillEntity)
+        .createQueryBuilder('bill');
+      const result = await qb
+        .select('bill.date', 'billDate')
+        .addSelect('usr.email', 'userEmail')
+        .addSelect('usr.lastnamne', 'userLastname')
+        .addSelect('usr.firstname', 'userFirstname')
+        .addSelect('con.id', 'contactId')
+        .addSelect('con.email', 'contactEmail')
+        .addSelect('con.lastname', 'contactLastname')
+        .addSelect('con.firstname', 'contactFirstname')
+        .innerJoin('bill.user', 'usr')
+        .innerJoin('bill.contact', 'con')
+        .where('bill.id = :id', { id: id_facture })
+        .getRawOne();
+      const billDate = result?.billDate;
+      const billDateAsString = format(billDate, 'dd/MM/yyyy');
+      const userEmail = result?.userEmail;
+      const userLastname = result?.userLastname;
+      const userFirstname = result?.userFirstname;
+      const contactId = result?.contactId;
+      const contactEmail = result?.contactEmail;
+
+      if (!validateEmail(userEmail) || !validateEmail(contactEmail)) {
+        throw new CBadRequestException(
+          'Veuillez renseigner une adresse email valide dans la fiche patient',
+        );
+      }
+
+      const filename = `Facture_${format(
+        new Date(billDate),
+        'dd_MM_yyyy',
+      )}.pdf`;
+      const invoice = await this.billRepository.findOneOrFail({
+        relations: ['user', 'user.address', 'user.setting', 'patient'],
+        where: { id: id_facture },
+      });
+
+      const homePhoneNumber = invoice?.user?.phoneNumber ?? null;
+      await this.mailService.sendFactureEmail({
+        from: invoice?.user?.email,
+        to: invoice?.patient?.email,
+        subject: `Facture du ${format(
+          new Date(invoice?.date),
+          'dd/MM/yyyy',
+        )} de Dr ${[invoice?.user?.lastname, invoice?.user?.firstname].join(
+          ' ',
+        )} pour ${[
+          invoice?.patient?.lastname,
+          invoice?.patient?.firstname,
+        ].join(' ')}`,
+        template: 'mail/facture/invoice.hbs',
+        context: {
+          ...invoice,
+          creationDate: format(new Date(invoice?.date), 'MMMM dd, yyyy'),
+          homePhoneNumber: `(${homePhoneNumber.slice(
+            0,
+            2,
+          )}) ${homePhoneNumber.slice(2, 4)} ${homePhoneNumber.slice(
+            4,
+            6,
+          )} ${homePhoneNumber.slice(6, 8)} ${homePhoneNumber.slice(8)}`,
+        },
+        attachments: [
+          {
+            filename: filename,
+            context: null,
+          },
+        ],
+      });
+
+      await this.contactNoteRepository.save({
+        conId: contactId,
+        message: `Envoi par email de la facture du ${billDateAsString} de ${userLastname} ${userFirstname}`,
+      });
+      return { message: true };
+    } catch (err) {
+      throw new CBadRequestException(`${err?.message}`);
     }
   }
 }

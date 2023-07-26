@@ -119,6 +119,13 @@ export class DentalEventTaskEntity {
   })
   type?: EnumDentalEventTaskType;
 
+  /** File: application\Entity\ActMedical.php
+   * @ORM\Column(name="DET_TYPE", type="enum_nomenclature", nullable=true, options={"default": "CCAM"})
+   * @Serializer\Expose
+   * @Assert\Choice(callback={"App\Enum\NomenclatureEnum", "getValues"})
+   */
+  nomenclature?: EnumDentalEventTaskType;
+
   /**
    * @ORM\Column(name="DET_COEF", type="decimal", precision=10, scale=2, nullable=true)
    */
@@ -130,6 +137,16 @@ export class DentalEventTaskEntity {
     default: 1,
   })
   coef?: number;
+
+  /** File: application\Entity\ActMedical.php
+   * @ORM\Column(name="DET_COEF", type="decimal", precision=10, scale=2, options={"default": 1})
+   * @Serializer\Expose
+   * @Serializer\Type("float")
+   * @Assert\Type("float")
+   * @Assert\NotNull
+   * @Assert\GreaterThan(0)
+   */
+  coefficient?: number;
 
   /**
    * @ORM\Column(name="DET_EXCEEDING", type="string", nullable=false)
@@ -165,6 +182,13 @@ export class DentalEventTaskEntity {
   })
   comp?: EnumDentalEventTaskComp;
 
+  /** File: application\Entity\ActMedical.php
+   * @ORM\Column(name="DET_COMP", type="string", length=1, nullable=true)
+   * @Serializer\Expose
+   * @Assert\Choice({"F", "N", "U"})
+   */
+  complement?: EnumDentalEventTaskComp;
+
   /**
    * @ORM\Column(name="DET_PURCHASE_PRICE", type="float", nullable=false)
    */
@@ -177,6 +201,15 @@ export class DentalEventTaskEntity {
   })
   purchasePrice?: number;
 
+  /** File: application\Entity\ActMedical.php
+   * @ORM\Column(name="DET_PURCHASE_PRICE", type="decimal", precision=10, scale=2, options={"default": 0})
+   * @Serializer\Expose
+   * @Serializer\Type("float")
+   * @Assert\Type("float")
+   * @Assert\NotNull
+   */
+  buyingPrice?: number;
+
   /**
    * @ORM\Column(name="DET_CCAM_CODE", type="string", length=7, nullable=true)
    * @var string Code CCAM
@@ -188,6 +221,12 @@ export class DentalEventTaskEntity {
     nullable: true,
   })
   ccamCode?: string;
+  /** File: application\Entity\ActMedical.php
+   * @ORM\Column(name="DET_CCAM_CODE", type="string", length=255, nullable=true)
+   * @Serializer\Expose
+   * @Assert\Type("string")
+   */
+  cotation?: string;
 
   /**
    * @ORM\Column(name="DET_CCAM_OPPOSABLE", type="integer")
@@ -237,6 +276,15 @@ export class DentalEventTaskEntity {
   })
   ccamTelem?: number;
 
+  /** File: application\Entity\ActMedical.php
+   * @ORM\Column(name="DET_CCAM_TELEM", type="boolean", options={"default": true})
+   * @Serializer\Expose
+   * @Serializer\Type("bool")
+   * @Assert\Type("bool")
+   * @Assert\NotNull
+   */
+  transmitted?: number;
+
   /**
    * @ORM\Column(name="DET_CCAM_MODIFIER", type="string", length=45, nullable=true)
    */
@@ -247,6 +295,13 @@ export class DentalEventTaskEntity {
     nullable: true,
   })
   ccamModifier?: string;
+
+  /** File: application\Entity\ActMedical.php
+   * @ORM\Column(name="DET_CCAM_MODIFIER", type="simple_array", nullable=true)
+   * @Serializer\Expose
+   * @Assert\Type("array")
+   */
+  modifiers?: string;
 
   /**
    * @ORM\Column(name="exceptional_refund", type="boolean", options={"default": false})
@@ -272,6 +327,15 @@ export class DentalEventTaskEntity {
   })
   secuAmount?: number;
 
+  /** File: application\Entity\ActMedical.php
+   * @ORM\Column(name="DET_SECU_AMOUNT", type="decimal", precision=10, scale=2, options={"default": 0})
+   * @Serializer\Expose
+   * @Serializer\Type("float")
+   * @Assert\Type("float")
+   * @Assert\NotNull
+   */
+  amoAmount?: number;
+
   /**
    * @ORM\Column(name="DET_SECU_REPAYMENT", type="float")
    * @var float Montant remboursé par la sécurité sociale
@@ -285,6 +349,15 @@ export class DentalEventTaskEntity {
   })
   secuRepayment?: number;
 
+  /** File: application\Entity\ActMedical.php
+   * @ORM\Column(name="DET_SECU_REPAYMENT", type="decimal", precision=10, scale=2, options={"default": 0})
+   * @Serializer\Expose
+   * @Serializer\Type("float")
+   * @Assert\Type("float")
+   * @Assert\NotNull
+   */
+  amoRefund?: number;
+
   /**
    * @ORM\Column(name="DET_MUTUAL_REPAYMENT_TYPE", type="float")
    * @var integer Type de calcul pour le remboursement de la mutuelle
@@ -296,6 +369,16 @@ export class DentalEventTaskEntity {
     default: 1,
   })
   mutualRepaymentType?: number;
+
+  /** File: application\Entity\ActMedical.php
+   * @ORM\Column(name="DET_MUTUAL_REPAYMENT_TYPE", type="integer", options={"default": 1})
+   * @Serializer\Expose
+   * @Serializer\Type("int")
+   * @Assert\Type("int")
+   * @Assert\NotNull
+   * @Assert\GreaterThanOrEqual(1)
+   */
+  amcRefundType?: number;
 
   /**
    * @ORM\Column(name="DET_MUTUAL_REPAYMENT_RATE", type="float")
@@ -310,6 +393,15 @@ export class DentalEventTaskEntity {
   })
   mutualRepaymentRate?: number;
 
+  /** File: application\Entity\ActMedical.php
+   * @ORM\Column(name="DET_MUTUAL_REPAYMENT_RATE", type="decimal", precision=10, scale=2, options={"default": 0})
+   * @Serializer\Expose
+   * @Serializer\Type("float")
+   * @Assert\Type("float")
+   * @Assert\NotNull
+   */
+  amcRefundRate?: number;
+
   /**
    * @ORM\Column(name="DET_MUTUAL_REPAYMENT", type="float")
    * @var float Montant remboursé par le mutuelle
@@ -322,6 +414,15 @@ export class DentalEventTaskEntity {
     default: 0,
   })
   mutualRepayment?: number;
+
+  /** File: application\Entity\ActMedical.php
+   * @ORM\Column(name="DET_MUTUAL_REPAYMENT", type="decimal", precision=10, scale=2, options={"default": 0})
+   * @Serializer\Expose
+   * @Serializer\Type("float")
+   * @Assert\Type("float")
+   * @Assert\NotNull
+   */
+  amcRefund?: number;
 
   /**
    * @ORM\Column(name="DET_MUTUAL_COMPLEMENT", type="float")
@@ -336,6 +437,15 @@ export class DentalEventTaskEntity {
   })
   mutualComplement?: number;
 
+  /** File: application\Entity\ActMedical.php
+   * @ORM\Column(name="DET_MUTUAL_COMPLEMENT", type="decimal", precision=10, scale=2, options={"default": 0})
+   * @Serializer\Expose
+   * @Serializer\Type("float")
+   * @Assert\Type("float")
+   * @Assert\NotNull
+   */
+  amcComplement?: number;
+
   /**
    * @ORM\Column(name="DET_PERSON_REPAYMENT", type="float")
    * @var float Montant remboursé pour le patient
@@ -348,6 +458,14 @@ export class DentalEventTaskEntity {
     default: 0,
   })
   personRepayment?: number;
+  /** File: application\Entity\ActMedical.php
+   * @ORM\Column(name="DET_PERSON_REPAYMENT", type="decimal", precision=10, scale=2, options={"default": 0})
+   * @Serializer\Expose
+   * @Serializer\Type("float")
+   * @Assert\Type("float")
+   * @Assert\NotNull
+   */
+  patientRefund?: number;
 
   /**
    * @ORM\Column(name="DET_PERSON_AMOUNT", type="float")
@@ -361,6 +479,15 @@ export class DentalEventTaskEntity {
     default: 0,
   })
   personAmount?: number;
+
+  /** File: application\Entity\ActMedical.php
+   * @ORM\Column(name="DET_PERSON_AMOUNT", type="decimal", precision=10, scale=2, options={"default": 0})
+   * @Serializer\Expose
+   * @Serializer\Type("float")
+   * @Assert\Type("float")
+   * @Assert\NotNull
+   */
+  patientAmount?: number;
 
   @Column({
     name: 'DLK_ID',
@@ -423,76 +550,6 @@ export class DentalEventTaskEntity {
   material?: DentalMaterialEntity;
 
   /** File: application\Entity\ActMedical.php
-   * @ORM\Column(name="DET_TYPE", type="enum_nomenclature", nullable=true, options={"default": "CCAM"})
-   * @Serializer\Expose
-   * @Assert\Choice(callback={"App\Enum\NomenclatureEnum", "getValues"})
-   */
-  @Column({
-    name: 'DET_TYPE',
-    type: 'enum',
-    enum: EnumDentalEventTaskType,
-    nullable: true,
-    default: EnumDentalEventTaskType.NGAP,
-  })
-  nomenclature?: EnumDentalEventTaskType;
-
-  /** File: application\Entity\ActMedical.php
-   * @ORM\Column(name="DET_CCAM_CODE", type="string", length=255, nullable=true)
-   * @Serializer\Expose
-   * @Assert\Type("string")
-   */
-  @Column({
-    name: 'DET_CCAM_CODE',
-    type: 'varchar',
-    length: 7,
-    nullable: true,
-  })
-  cotation?: string;
-
-  /** File: application\Entity\ActMedical.php
-   * @ORM\Column(name="DET_COEF", type="decimal", precision=10, scale=2, options={"default": 1})
-   * @Serializer\Expose
-   * @Serializer\Type("float")
-   * @Assert\Type("float")
-   * @Assert\NotNull
-   * @Assert\GreaterThan(0)
-   */
-  @Column({
-    name: 'DET_COEF',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 1,
-  })
-  coefficient?: number;
-
-  /** File: application\Entity\ActMedical.php
-   * @ORM\Column(name="DET_COMP", type="string", length=1, nullable=true)
-   * @Serializer\Expose
-   * @Assert\Choice({"F", "N", "U"})
-   */
-  @Column({
-    name: 'DET_COMP',
-    type: 'enum',
-    enum: EnumDentalEventTaskComp,
-    nullable: true,
-  })
-  complement?: EnumDentalEventTaskComp;
-
-  /** File: application\Entity\ActMedical.php
-   * @ORM\Column(name="DET_CCAM_MODIFIER", type="simple_array", nullable=true)
-   * @Serializer\Expose
-   * @Assert\Type("array")
-   */
-  @Column({
-    name: 'DET_CCAM_MODIFIER',
-    type: 'varchar',
-    length: 45,
-    nullable: true,
-  })
-  modifiers?: string;
-
-  /** File: application\Entity\ActMedical.php
    * @ORM\Column(type="string", length=2, options={"fixed": true, "default": 10})
    * @Serializer\Expose
    */
@@ -529,165 +586,6 @@ export class DentalEventTaskEntity {
     nullable: true,
   })
   associationCode?: number;
-
-  /** File: application\Entity\ActMedical.php
-   * @ORM\Column(name="DET_CCAM_TELEM", type="boolean", options={"default": true})
-   * @Serializer\Expose
-   * @Serializer\Type("bool")
-   * @Assert\Type("bool")
-   * @Assert\NotNull
-   */
-  @Column({
-    name: 'DET_CCAM_TELEM',
-    type: 'tinyint',
-    width: 1,
-    default: 1,
-  })
-  transmitted?: number;
-
-  /** File: application\Entity\ActMedical.php
-   * @ORM\Column(name="DET_PURCHASE_PRICE", type="decimal", precision=10, scale=2, options={"default": 0})
-   * @Serializer\Expose
-   * @Serializer\Type("float")
-   * @Assert\Type("float")
-   * @Assert\NotNull
-   */
-  @Column({
-    name: 'DET_PURCHASE_PRICE',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
-  })
-  buyingPrice?: number;
-
-  /** File: application\Entity\ActMedical.php
-   * @ORM\Column(name="DET_SECU_AMOUNT", type="decimal", precision=10, scale=2, options={"default": 0})
-   * @Serializer\Expose
-   * @Serializer\Type("float")
-   * @Assert\Type("float")
-   * @Assert\NotNull
-   */
-  @Column({
-    name: 'DET_SECU_AMOUNT',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
-  })
-  amoAmount?: number;
-
-  /** File: application\Entity\ActMedical.php
-   * @ORM\Column(name="DET_SECU_REPAYMENT", type="decimal", precision=10, scale=2, options={"default": 0})
-   * @Serializer\Expose
-   * @Serializer\Type("float")
-   * @Assert\Type("float")
-   * @Assert\NotNull
-   */
-  @Column({
-    name: 'DET_SECU_REPAYMENT',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
-  })
-  amoRefund?: number;
-
-  /** File: application\Entity\ActMedical.php
-   * @ORM\Column(name="DET_MUTUAL_REPAYMENT_TYPE", type="integer", options={"default": 1})
-   * @Serializer\Expose
-   * @Serializer\Type("int")
-   * @Assert\Type("int")
-   * @Assert\NotNull
-   * @Assert\GreaterThanOrEqual(1)
-   */
-  @Column({
-    name: 'DET_MUTUAL_REPAYMENT_TYPE',
-    type: 'int',
-    width: 11,
-    default: 1,
-  })
-  amcRefundType?: number;
-
-  /** File: application\Entity\ActMedical.php
-   * @ORM\Column(name="DET_MUTUAL_REPAYMENT_RATE", type="decimal", precision=10, scale=2, options={"default": 0})
-   * @Serializer\Expose
-   * @Serializer\Type("float")
-   * @Assert\Type("float")
-   * @Assert\NotNull
-   */
-  @Column({
-    name: 'DET_MUTUAL_REPAYMENT_RATE',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
-  })
-  amcRefundRate?: number;
-
-  /** File: application\Entity\ActMedical.php
-   * @ORM\Column(name="DET_MUTUAL_REPAYMENT", type="decimal", precision=10, scale=2, options={"default": 0})
-   * @Serializer\Expose
-   * @Serializer\Type("float")
-   * @Assert\Type("float")
-   * @Assert\NotNull
-   */
-  @Column({
-    name: 'DET_MUTUAL_REPAYMENT',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
-  })
-  amcRefund?: number;
-
-  /** File: application\Entity\ActMedical.php
-   * @ORM\Column(name="DET_MUTUAL_COMPLEMENT", type="decimal", precision=10, scale=2, options={"default": 0})
-   * @Serializer\Expose
-   * @Serializer\Type("float")
-   * @Assert\Type("float")
-   * @Assert\NotNull
-   */
-  @Column({
-    name: 'DET_MUTUAL_COMPLEMENT',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
-  })
-  amcComplement?: number;
-
-  /** File: application\Entity\ActMedical.php
-   * @ORM\Column(name="DET_PERSON_AMOUNT", type="decimal", precision=10, scale=2, options={"default": 0})
-   * @Serializer\Expose
-   * @Serializer\Type("float")
-   * @Assert\Type("float")
-   * @Assert\NotNull
-   */
-  @Column({
-    name: 'DET_PERSON_AMOUNT',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
-  })
-  patientAmount?: number;
-
-  /** File: application\Entity\ActMedical.php
-   * @ORM\Column(name="DET_PERSON_REPAYMENT", type="decimal", precision=10, scale=2, options={"default": 0})
-   * @Serializer\Expose
-   * @Serializer\Type("float")
-   * @Assert\Type("float")
-   * @Assert\NotNull
-   */
-  @Column({
-    name: 'DET_PERSON_REPAYMENT',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
-  })
-  patientRefund?: number;
 }
 
 // application/Entities/Dental/Event/Task.php

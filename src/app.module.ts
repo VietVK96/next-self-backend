@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import configuration from './common/config';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
@@ -43,83 +43,150 @@ import { MedicalModule } from './medical/medical.module';
 import { CaresheetsModule } from './caresheets/caresheets.module';
 import { PaymentSchedulesModule } from './payment-schedule/payment-schedule.module';
 import { BankModule } from './bank/bank.module';
+import { join } from 'path';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { SecuritiesModule } from './securities/securities.module';
+import { LoggerModule } from 'nestjs-pino';
+import { RecipeModule } from './recipe/recipe.module';
+import { StatisticsModule } from './statistics/statistics.module';
+import { EventTypeModule } from './event-type/event-type.module';
+import { PrescriptionTemplateModule } from './prescription-template/prescription-template.module';
+import { MedicamentModule } from './medicament/medicament.module';
+
+const importsModules = [
+  ConfigModule.forRoot({
+    load: configuration,
+    isGlobal: true,
+  }),
+  TypeOrmModule.forRootAsync({
+    imports: [ConfigModule],
+    inject: [ConfigService],
+    useFactory: (c: ConfigService) => {
+      const configDatabase = c.get<TypeOrmModuleOptions>('database');
+      return configDatabase;
+    },
+  }),
+  CacheModule.registerAsync<any>({
+    imports: [ConfigModule],
+    inject: [ConfigService],
+    useFactory: async (c: ConfigService) => {
+      const cacheConfig = c.get<IRedisConfig>('redis');
+      const storeConfig: any = {
+        socket: {
+          host: cacheConfig.host,
+          port: cacheConfig.port,
+        },
+        database: cacheConfig.db,
+        username: cacheConfig.username,
+        password: cacheConfig.password,
+      };
+      const store = await redisStore(storeConfig);
+      return {
+        store,
+      };
+    },
+    isGlobal: true,
+  }),
+  MailerModule.forRootAsync({
+    imports: [ConfigModule],
+    useFactory: async (config: ConfigService) => ({
+      transport: {
+        host: config.get('EMAIL_HOST'),
+        secure: false,
+        auth: {
+          pass: config.get('EMAIL_PASSWORD'),
+          user: config.get('EMAIL_USER'),
+          port: config.get('EMAIL_PORT'),
+        },
+      },
+      defaults: {
+        from: config.get('EMAIL_FROM_USER'),
+      },
+      template: {
+        dir: join(process.cwd(), 'templates/'),
+        adapter: new HandlebarsAdapter(),
+        options: {
+          strict: true,
+        },
+      },
+    }),
+    inject: [ConfigService],
+  }),
+  EntityModule,
+  ContactModule,
+  AuthModule,
+  StickyNoteModule,
+  WaitingRoomModule,
+  AntecedentPrestationModule,
+  PatientModule,
+  MedicalDevicesModule,
+  EventModule,
+  PrestationModule,
+  EventModule,
+  MemoModule,
+  UserModule,
+  AddressModule,
+  PlanModule,
+  MailModule,
+  LibrariesModule,
+  EventTaskModule,
+  UploadModule,
+  FusionPatientModule,
+  FileModule,
+  NgapKeysModule,
+  TimeslotsModule,
+  DentalModule,
+  TagModule,
+  ContraindicationsModule,
+  OrganizationModule,
+  PlanPlfModule,
+  BcbModule,
+  DentalModule,
+  ContraindicationsModule,
+  TrashContactModule,
+  TrashEventModule,
+  CorrespondentModule,
+  TagModule,
+  GlossariesModule,
+  MedicalModule,
+  InterfacageModule,
+  CaresheetsModule,
+  BankModule,
+  PaymentSchedulesModule,
+  SecuritiesModule,
+  RecipeModule,
+  StatisticsModule,
+  EventTypeModule,
+  PrescriptionTemplateModule,
+  MedicamentModule,
+];
+
+if (process.env.LOGSTACK_ENABLE === 'true') {
+  importsModules.push(
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: process.env.NODE_ENV !== 'production' ? 'trace' : 'info',
+      },
+      exclude: [
+        {
+          method: RequestMethod.ALL,
+          path: '/auth/refresh',
+        },
+        {
+          method: RequestMethod.ALL,
+          path: '/auth/login',
+        },
+        {
+          method: RequestMethod.ALL,
+          path: '/user/create-token-download',
+        },
+      ],
+    }),
+  );
+}
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      load: configuration,
-      isGlobal: true,
-    }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (c: ConfigService) => {
-        const configDatabase = c.get<TypeOrmModuleOptions>('database');
-        return configDatabase;
-      },
-    }),
-    CacheModule.registerAsync<any>({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (c: ConfigService) => {
-        const cacheConfig = c.get<IRedisConfig>('redis');
-        const storeConfig: any = {
-          socket: {
-            host: cacheConfig.host,
-            port: cacheConfig.port,
-          },
-          database: cacheConfig.db,
-          username: cacheConfig.username,
-          password: cacheConfig.password,
-        };
-        const store = await redisStore(storeConfig);
-        return {
-          store,
-        };
-      },
-      isGlobal: true,
-    }),
-    EntityModule,
-    ContactModule,
-    AuthModule,
-    StickyNoteModule,
-    WaitingRoomModule,
-    AntecedentPrestationModule,
-    PatientModule,
-    MedicalDevicesModule,
-    EventModule,
-    PrestationModule,
-    EventModule,
-    MemoModule,
-    UserModule,
-    AddressModule,
-    PlanModule,
-    MailModule,
-    LibrariesModule,
-    EventTaskModule,
-    UploadModule,
-    FusionPatientModule,
-    FileModule,
-    NgapKeysModule,
-    TimeslotsModule,
-    DentalModule,
-    TagModule,
-    ContraindicationsModule,
-    OrganizationModule,
-    PlanPlfModule,
-    BcbModule,
-    DentalModule,
-    ContraindicationsModule,
-    TrashContactModule,
-    TrashEventModule,
-    CorrespondentModule,
-    TagModule,
-    GlossariesModule,
-    MedicalModule,
-    InterfacageModule,
-    CaresheetsModule,
-    BankModule,
-    PaymentSchedulesModule,
-  ],
+  imports: importsModules,
 })
 export class AppModule {}
