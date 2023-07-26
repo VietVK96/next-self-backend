@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { PaymentItemRes } from '../response/payment.res';
 import { PaymentSchedulesDto } from '../dto/payment.dto';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';

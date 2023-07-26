@@ -31,8 +31,8 @@ export function nl2br(str: string, replaceMode?: string, isXhtml?: boolean) {
 
 /**
  * This function inverses text from PHP's nl2br() with default parameters.
- *
  * @param {string} str Input text
+ *
  * @param {boolean} replaceMode Use replace instead of insert
  * @return {string} Filtered text
  */
@@ -48,4 +48,9 @@ export function htmlEntities(str: string | number) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+export function validateEmail(email: string) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }

@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, In, Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EnregistrerFactureDto, PrintPDFDto } from '../dto/facture.dto';
+import {
+  EnregistrerFactureDto,
+  FactureEmailDto,
+  PrintPDFDto,
+} from '../dto/facture.dto';
 import { BillEntity } from 'src/entities/bill.entity';
 import { BillLineEntity } from 'src/entities/bill-line.entity';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
@@ -30,10 +34,15 @@ import { DetailsRes, InitFactureRes } from '../res/facture.res';
 import { customCreatePdf } from 'src/common/util/pdf';
 import { facturePdfFooter } from '../constant/htmlTemplate';
 import { br2nl } from 'src/common/util/string';
+import { validateEmail } from 'src/common/util/string';
+import { MailService } from 'src/mail/services/mail.service';
+import { format } from 'date-fns';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 
 @Injectable()
 export class FactureServices {
   constructor(
+    private mailService: MailService,
     @InjectRepository(BillEntity)
     private billRepository: Repository<BillEntity>,
     @InjectRepository(BillLineEntity)
@@ -60,6 +69,8 @@ export class FactureServices {
     private dentalQuotationRepository: Repository<DentalQuotationEntity>,
     @InjectRepository(AddressEntity)
     private addressRepository: Repository<AddressEntity>,
+    @InjectRepository(ContactNoteEntity)
+    private contactNoteRepository: Repository<ContactNoteEntity>,
     private dataSource: DataSource,
   ) {}
   async update(payload: EnregistrerFactureDto) {
@@ -378,7 +389,7 @@ export class FactureServices {
     const user = await this.userRepository.findOne({
       where: { id: In(userIds) },
     });
-    if (user === null) {
+    if (!user) {
       console.error(
         "Vous n'avez pas assez de privilège pour accéder aux factures",
       );
@@ -769,15 +780,98 @@ export class FactureServices {
           },
         };
         const pdfBuffer = await customCreatePdf({
-          filePath,
+          files: [{ path: filePath, data }],
           options,
-          data,
           helpers,
         });
         return pdfBuffer;
       }
     } catch (error) {
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
+    }
+  }
+
+  async factureEmail({ id_facture }: FactureEmailDto, identity: UserIdentity) {
+    try {
+      const qb = this.dataSource
+        .getRepository(BillEntity)
+        .createQueryBuilder('bill');
+      const result = await qb
+        .select('bill.date', 'billDate')
+        .addSelect('usr.email', 'userEmail')
+        .addSelect('usr.lastnamne', 'userLastname')
+        .addSelect('usr.firstname', 'userFirstname')
+        .addSelect('con.id', 'contactId')
+        .addSelect('con.email', 'contactEmail')
+        .addSelect('con.lastname', 'contactLastname')
+        .addSelect('con.firstname', 'contactFirstname')
+        .innerJoin('bill.user', 'usr')
+        .innerJoin('bill.contact', 'con')
+        .where('bill.id = :id', { id: id_facture })
+        .getRawOne();
+      const billDate = result?.billDate;
+      const billDateAsString = format(billDate, 'dd/MM/yyyy');
+      const userEmail = result?.userEmail;
+      const userLastname = result?.userLastname;
+      const userFirstname = result?.userFirstname;
+      const contactId = result?.contactId;
+      const contactEmail = result?.contactEmail;
+
+      if (!validateEmail(userEmail) || !validateEmail(contactEmail)) {
+        throw new CBadRequestException(
+          'Veuillez renseigner une adresse email valide dans la fiche patient',
+        );
+      }
+
+      const filename = `Facture_${format(
+        new Date(billDate),
+        'dd_MM_yyyy',
+      )}.pdf`;
+      const invoice = await this.billRepository.findOneOrFail({
+        relations: ['user', 'user.address', 'user.setting', 'patient'],
+        where: { id: id_facture },
+      });
+
+      const homePhoneNumber = invoice?.user?.phoneNumber ?? null;
+      await this.mailService.sendFactureEmail({
+        from: invoice?.user?.email,
+        to: invoice?.patient?.email,
+        subject: `Facture du ${format(
+          new Date(invoice?.date),
+          'dd/MM/yyyy',
+        )} de Dr ${[invoice?.user?.lastname, invoice?.user?.firstname].join(
+          ' ',
+        )} pour ${[
+          invoice?.patient?.lastname,
+          invoice?.patient?.firstname,
+        ].join(' ')}`,
+        template: 'mail/facture/invoice.hbs',
+        context: {
+          ...invoice,
+          creationDate: format(new Date(invoice?.date), 'MMMM dd, yyyy'),
+          homePhoneNumber: `(${homePhoneNumber.slice(
+            0,
+            2,
+          )}) ${homePhoneNumber.slice(2, 4)} ${homePhoneNumber.slice(
+            4,
+            6,
+          )} ${homePhoneNumber.slice(6, 8)} ${homePhoneNumber.slice(8)}`,
+        },
+        attachments: [
+          {
+            filename: filename,
+            context: null,
+          },
+        ],
+      });
+
+      await this.contactNoteRepository.save({
+        conId: contactId,
+        message: `Envoi par email de la facture du ${billDateAsString} de ${userLastname} ${userFirstname}`,
+      });
+      return { message: true };
+    } catch (err) {
+      throw new CBadRequestException(`${err?.message}`);
     }
   }
 }

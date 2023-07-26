@@ -12,8 +12,8 @@ import { CcamEntity } from 'src/entities/ccam.entity';
 import { CaresheetStatusEntity } from 'src/entities/caresheet-status.entity';
 import { InterfacageService } from 'src/interfacage/services/interfacage.service';
 import { PermissionService } from 'src/user/services/permission.service';
-import { CaresheetsService } from './service/caresheets.service';
 import { HttpModule } from '@nestjs/axios';
+import { ActsService } from './service/caresheets.service';
 
 @Module({
   imports: [
@@ -31,7 +31,7 @@ import { HttpModule } from '@nestjs/axios';
     HttpModule,
   ],
   controllers: [CaresheetsController],
-  providers: [PermissionService, CaresheetsService, InterfacageService],
-  exports: [CaresheetsService],
+  providers: [PermissionService, ActsService, InterfacageService],
+  exports: [ActsService],
 })
 export class CaresheetsModule {}

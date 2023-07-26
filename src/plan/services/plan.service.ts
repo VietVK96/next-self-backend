@@ -4,7 +4,6 @@ import {
   NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
@@ -14,7 +13,7 @@ import { EnumPlanPlfType, PlanPlfEntity } from 'src/entities/plan-plf.entity';
 import { TraceabilityStatusEnum } from 'src/enum/traceability-status-enum';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { PermissionService } from 'src/user/services/permission.service';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import {
   ActionSaveStructDto,
   BodySaveStructDto,

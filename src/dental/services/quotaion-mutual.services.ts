@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository, getRepository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
-
 import { UserEntity } from 'src/entities/user.entity';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { DevisRequestAjaxDto } from '../dto/devis_request_ajax.dto';
@@ -13,17 +12,15 @@ import { MailService } from 'src/mail/services/mail.service';
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
 import { PrintPDFDto } from '../dto/facture.dto';
 import { ErrorCode } from 'src/constants/error';
-import { checkId } from 'src/common/util/number';
+import { checkId, toFixed } from 'src/common/util/number';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { customCreatePdf } from 'src/common/util/pdf';
 import { QuotationMutualInitChampsDto } from '../dto/quotatio-mutual.dto';
 import * as dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
 import { EventEntity } from 'src/entities/event.entity';
-import { br2nl } from 'src/common/util/string';
-import dayOfYear from 'dayjs/plugin/dayOfYear';
+import { nl2br } from 'src/common/util/string';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { AddressEntity } from 'src/entities/address.entity';
 import { GenderEntity } from 'src/entities/gender.entity';
@@ -31,11 +28,13 @@ import { StringHelper } from 'src/common/util/string-helper';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
-import { checkDay } from 'src/common/util/day';
+import { checkDay, customDayOfYear } from 'src/common/util/day';
 import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
 import { BillEntity } from 'src/entities/bill.entity';
 import { QuotationMutualInitByRes } from '../res/quotatio-mutual.res';
 import { LibraryActQuantityEntity } from 'src/entities/library-act-quantity.entity';
+import { QuotationMutualPdfFooter } from '../constant/htmlTemplate';
+import * as path from 'path';
 @Injectable()
 export class QuotationMutualServices {
   constructor(
@@ -343,71 +342,117 @@ export class QuotationMutualServices {
   }
 
   // dental/quotation-mutual/devis_pdf.php 45-121
-  async generatePdf(req: PrintPDFDto) {
+  async generatePdf(req: PrintPDFDto, identity: UserIdentity) {
     const id = checkId(req?.id);
+    const initChamp = await this.initChamps({ no_devis: id }, identity, true);
+    let content = '';
+    let dataTemp: any;
     try {
-      // const mail =
-      //   await this.mailService.findOnePaymentScheduleTemplateByDoctor(id);
-      // const mailConverted = this.mailService.transform(
-      //   mail,
-      //   this.mailService.context({
-      //     doctor_id: id_user,
-      //     patient_id: id_contact,
-      //     payment_schedule_id: paymentScheduleId,
-      //   }),
-      // );
+      if (initChamp?.paymentScheduleId) {
+        try {
+          const mail =
+            await this.mailService.findOnePaymentScheduleTemplateByDoctor(id);
+          const mailConverted = await this.mailService.transform(
+            mail,
+            this.mailService.context({
+              doctor_id: initChamp.id_user,
+              patient_id: initChamp.ident_pat,
+              payment_schedule_id: initChamp?.paymentScheduleId,
+            }),
+          );
+          content = await this.mailService.pdf(mailConverted, {
+            preview: true,
+          });
+        } catch (error) {
+          const paymentSchedule = this.paymentScheduleService.find(
+            initChamp?.paymentScheduleId,
+            identity.org,
+          );
 
-      // const paymentSchedule = this.paymentScheduleService.find(paymentScheduleId,groupId)
-
+          dataTemp = {
+            landscape: true,
+            date: initChamp?.date_devis,
+            duration: initChamp?.duree_devis,
+            reference: initChamp?.reference,
+            doctor: {
+              details: initChamp?.ident_prat,
+            },
+            patient: {
+              number: initChamp?.patientNumber,
+              lastname: initChamp?.patientLastname,
+              firstname: initChamp?.patientFirstname,
+              birthday: initChamp?.patientBirthday,
+              insee: initChamp?.patientInsee,
+              civility: {
+                long_name: initChamp?.patientCivilityLongName,
+              },
+            },
+            payment_schedule: paymentSchedule,
+          };
+        }
+      }
       const quote = await this.dentalQuotationRepository.findOne({
         where: { id },
         relations: {
           attachments: true,
         },
       });
-      console.log(
-        '🚀 ~ file: devis.services.ts:336 ~ DevisServices ~ generatePdf ~ quote:',
-        quote,
-      );
       // Insertion des pièces jointes au PDF du devis.
-      let content = '';
       if (quote && quote?.attachments) {
         quote?.attachments.map(async (attachment) => {
           const mail = await this.mailService.find(attachment?.id);
           content += await this.mailService.pdf(mail, { preview: true });
         });
       }
-      console.log(
-        '🚀 ~ file: devis.services.ts:345 ~ DevisServices ~ generatePdf ~ content:',
-        content,
-      );
 
-      // const filePath = path.join(
-      //   process.cwd(),
-      //   'templates/bank_check',
-      //   'bank_check.hbs',
-      // );
+      const filePath = path.join(
+        process.cwd(),
+        'templates/pdf/quotation-mutal',
+        'devis_corps_2_pdf.hbs',
+      );
       const options = {
         format: 'A4',
         displayHeaderFooter: true,
-        headerTemplate: '<div></div>',
-        footerTemplate: '<div></div>',
+        headerTemplate: `<div></div>`,
+        footerTemplate: QuotationMutualPdfFooter(initChamp.reference),
         margin: {
-          left: '10mm',
-          top: '25mm',
-          right: '10mm',
-          bottom: '10mm',
+          left: '5mm',
+          top: '5mm',
+          right: '5mm',
+          bottom: '5mm',
         },
         landscape: true,
       };
-      const data = {};
-
-      return await customCreatePdf({ htmlContent: content, options, data });
+      const data = {
+        duplicata: req?.duplicate,
+        ...initChamp,
+      };
+      const helpers = {
+        isOdd: (i: number) => i % 2 === 1,
+        splitString: (str: string) => {
+          if (!str) return [];
+          const localizations: string[] = [];
+          for (let i = 0; i < str.length; i += 9) {
+            localizations.push(str.substring(i, i + 9));
+          }
+          return localizations;
+        },
+      };
+      const files = [{ path: filePath, data }];
+      if (dataTemp?.date) {
+        const filePath = path.join(
+          process.cwd(),
+          'templates/pdf/quotation-mutal',
+          'payment-schedule.hbs',
+        );
+        files.push({ path: filePath, data: dataTemp });
+      }
+      return await customCreatePdf({
+        files,
+        options,
+        helpers,
+      });
     } catch (error) {
-      console.log(
-        '🚀 ~ file: devis.services.ts:313 ~ DevisServices ~ generatePdf ~ error:',
-        error,
-      );
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
@@ -426,11 +471,7 @@ export class QuotationMutualServices {
     }
     let txch = 0;
     const tauxRemboursementSecu = 100; // 2013-09-06 Sébastien BORDAT Remplacement 70 par 100
-    // let details = 'none';
-    // let quotationSignaturePatient = null;
-    // let quotationSignaturePraticien = null;
-    // let userSignature = null;
-    const parameters = { groupId: identity?.org };
+
     const group = await this.organizationRepo.findOne({
       where: { id: identity?.org },
       select: {
@@ -458,10 +499,7 @@ export class QuotationMutualServices {
       id_facture = bill?.id;
       noFacture = bill?.nbr;
     }
-    // let ident_pat = initData.ident_pat.toString();
-    // let max_long_libelle = pdf ? 44 : 36;
-    // let max_long_localisation = 5;
-    // let ar_details = [];
+    const ar_details = [];
     let total_prixvente = 0;
     let total_prestation = 0;
     let total_charges = 0;
@@ -472,12 +510,8 @@ export class QuotationMutualServices {
     let total_mutualRepayment = 0;
     let total_mutualComplement = 0;
     let total_personAmount = 0;
-
-    // let total_remboursement = 0;
-    // let total_charges_patient = 0;
     let total_rss = 0;
     let total_nrss = 0;
-    // let total_roc = '';
 
     if (!txch) {
       const query = await this.dataSource
@@ -490,60 +524,93 @@ export class QuotationMutualServices {
         .getRawOne();
       if (query) txch = Number(query);
     }
-    // let materials: string[] = [];
-    initData?.actes?.map(async (ar_acte) => {
-      const libraryActId = ar_acte?.library_act_id;
-      const libraryActQuantityId = ar_acte?.library_act_quantity_id;
 
-      if (libraryActQuantityId) {
-        const libraryActQuantity = await this.libraryActQuantityRepo.findOne({
-          where: { id: libraryActQuantityId },
-        });
-        if (libraryActQuantity?.materials)
-          ar_acte.materiau = libraryActQuantity?.materials;
-      }
-      ar_acte.nouveau = true;
-      ar_acte.prixvente = parseFloat(
-        (ar_acte?.prixachat / (1 - txch)).toFixed(2),
-      );
-      ar_acte.prestation = parseFloat(
-        (ar_acte?.honoraires * (1 - txch) - ar_acte?.prixachat).toFixed(2),
-      );
+    if (initData?.actes) {
+      initData?.actes?.map(async (ar_acte) => {
+        const libraryActQuantityId = ar_acte?.library_act_quantity_id;
 
-      ar_acte.charges =
-        ar_acte.honoraires - ar_acte.prestation - ar_acte.prixvente;
-      ar_acte.honoraires =
-        ar_acte.prixvente + ar_acte.prestation + ar_acte.charges;
-
-      if (hasCcamEnabled) {
-        ar_acte.rss = ar_acte.secuAmount;
-      } else {
-        if (ar_acte.remboursable == 'oui') {
-          ar_acte.rss = (ar_acte.rss * tauxRemboursementSecu) / 100;
+        if (libraryActQuantityId) {
+          const libraryActQuantity = await this.libraryActQuantityRepo.findOne({
+            where: { id: libraryActQuantityId },
+          });
+          if (libraryActQuantity?.materials)
+            ar_acte.materiau = libraryActQuantity?.materials;
         }
-      }
+        ar_acte.nouveau = true;
+        ar_acte.prixvente = parseFloat(
+          (ar_acte?.prixachat / (1 - txch)).toFixed(2),
+        );
+        ar_acte.prestation = parseFloat(
+          (+ar_acte?.honoraires * (1 - txch) - +ar_acte?.prixachat).toFixed(2),
+        );
 
-      ar_acte.nrss = ar_acte.honoraires - ar_acte.rss;
-      if (Math.abs(ar_acte.nrss) < 0.01) {
-        ar_acte.nrss = 0;
-      }
-      ar_acte.roc = '';
+        ar_acte.charges =
+          +ar_acte.honoraires - ar_acte.prestation - ar_acte.prixvente;
+        ar_acte.honoraires =
+          +ar_acte.prixvente + ar_acte.prestation + ar_acte.charges;
 
-      total_prixvente += ar_acte.prixvente;
-      total_prestation += ar_acte.prestation;
-      total_charges += ar_acte.charges;
-      total_honoraires += ar_acte.honoraires;
-      total_rss += ar_acte.rss;
-      total_nrss += ar_acte.nrss;
+        if (hasCcamEnabled) {
+          ar_acte.rss = +ar_acte.secuAmount;
+        } else {
+          if (ar_acte.remboursable == 'oui') {
+            ar_acte.rss = (+ar_acte.rss * tauxRemboursementSecu) / 100;
+          }
+        }
 
-      total_secuAmount += ar_acte.secuAmount;
-      total_secuRepayment += ar_acte.secuRepayment;
-      total_mutualRepayment += ar_acte.mutualRepayment;
-      total_mutualComplement += ar_acte.mutualComplement;
-      total_personAmount += ar_acte.personAmount;
-    });
+        ar_acte.nrss = +ar_acte.honoraires - ar_acte.rss;
+        if (Math.abs(+ar_acte.nrss) < 0.01) {
+          ar_acte.nrss = 0;
+        }
+        ar_acte.roc = '';
+
+        total_prixvente += toFixed(ar_acte.prixvente);
+        total_prestation += toFixed(ar_acte.prestation);
+        total_charges += toFixed(ar_acte.charges);
+        total_nrss += toFixed(ar_acte.nrss);
+
+        total_secuAmount += toFixed(ar_acte.secuAmount);
+        total_secuRepayment += toFixed(ar_acte.secuRepayment);
+        total_mutualRepayment += toFixed(ar_acte.mutualRepayment);
+        total_mutualComplement += toFixed(ar_acte.mutualComplement);
+        total_personAmount += toFixed(ar_acte.personAmount);
+
+        ar_acte.prixvente = toFixed(ar_acte.prixvente);
+        ar_acte.prestation = toFixed(ar_acte.prestation);
+        ar_acte.charges = toFixed(ar_acte.charges);
+        ar_acte.honoraires = toFixed(ar_acte.honoraires);
+        ar_acte.rss = toFixed(ar_acte.rss);
+        ar_acte.nrss = toFixed(ar_acte.nrss);
+        ar_details.push(ar_acte);
+      });
+    }
+
+    total_honoraires = +total_honoraires.toFixed(2);
+    total_prixvente = +total_prixvente.toFixed(2);
+    total_prestation = +total_prestation.toFixed(2);
+    total_charges = +total_charges.toFixed(2);
+    total_rss = +total_rss.toFixed(2);
+    total_nrss = +total_nrss.toFixed(2);
+
+    total_secuAmount = +total_secuAmount.toFixed(2);
+    total_secuRepayment = +total_secuRepayment.toFixed(2);
+    total_mutualRepayment = +total_mutualRepayment.toFixed(2);
+    total_mutualComplement = +total_mutualComplement.toFixed(2);
+    total_personAmount = +total_personAmount.toFixed(2);
+
+    const date_signature = dayjs().format('DD/MM/YYYY');
+    return {
+      ...initData,
+      ar_details,
+      total_secuAmount,
+      total_honoraires,
+      total_secuRepayment,
+      total_mutualRepayment,
+      total_mutualComplement,
+      total_personAmount,
+      date_signature,
+    };
   }
-
+  // dental/quotation-mutual/devis_init_champs.php 52 - 542
   async initByPdtId(
     req: QuotationMutualInitChampsDto,
     identity: UserIdentity,
@@ -644,7 +711,7 @@ export class QuotationMutualServices {
       <div style="text-align: center;"><span style="font-size: 11pt;"><strong>pour traitements et actes bucco-dentaires pouvant faire l\'objet d\'une entente directe</strong></span></div>
       <div style="text-align: center;"><span style="font-size: 11pt;">Les soins &agrave; tarifs opposables ne sont pas compris dans ce devis</span></div>
       <div style="text-align: center;"><span style="font-size: 11pt;">Ce devis est la propri&eacute;t&eacute; du patient, sa communication &agrave; un tiers se fait sous sa seule reponsabilit&eacute;.</span></div>
-      </div>
+      </div>dayOfYear
       `;
       const medicalHeader = await this.medicalHeaderRepository.findOne({
         where: { userId: id_user },
@@ -653,14 +720,14 @@ export class QuotationMutualServices {
         const medicalHeaderIdentPratQuot = medicalHeader.identPratQuot;
         title = medicalHeader?.quotationMutualTitle || title;
         if (medicalHeaderIdentPratQuot) {
-          ident_prat = br2nl(medicalHeaderIdentPratQuot);
+          ident_prat = nl2br(medicalHeaderIdentPratQuot);
           adressePrat = '';
         } else {
           ident_prat = medicalHeader?.identPrat
-            ? br2nl(medicalHeader?.identPrat)
+            ? nl2br(medicalHeader?.identPrat)
             : ident_prat;
           adressePrat = medicalHeader?.address
-            ? br2nl(medicalHeader.address)
+            ? nl2br(medicalHeader.address)
             : adressePrat;
         }
       }
@@ -700,7 +767,7 @@ export class QuotationMutualServices {
       }
       const today = dayjs();
       const year = today.year();
-      const dayOfYear = today.dayOfYear().toString().padStart(3, '0');
+      const dayOfYear = customDayOfYear();
       const randomQuery = await this.dataSource
         .createQueryBuilder()
         .select('IFNULL(SUBSTRING(MAX(reference), -5), 0) reference')
@@ -1023,7 +1090,15 @@ export class QuotationMutualServices {
           quotationPersonRepayment,
           userSignature,
           id_user,
+          title,
+          reference,
           actes,
+          paymentScheduleId,
+          quotationPlaceOfManufacture,
+          quotationPlaceOfManufactureLabel,
+          quotationWithSubcontracting,
+          quotationPlaceOfSubcontracting,
+          quotationPlaceOfSubcontractingLabel,
         };
       } catch (err) {
         await queryRunner.rollbackTransaction();
@@ -1033,6 +1108,7 @@ export class QuotationMutualServices {
     } catch (error) {}
   }
 
+  // dental/quotation-mutual/devis_init_champs.php 542 - 679
   async initByDevisId(
     req: QuotationMutualInitChampsDto,
     identity: UserIdentity,
@@ -1077,8 +1153,8 @@ export class QuotationMutualServices {
       CON.CON_FIRSTNAME AS patient_firstname,
       CON.CON_BIRTHDAY AS patient_birthday,
       CONCAT(CON.CON_INSEE, CON.CON_INSEE_KEY) AS patient_insee,
-      T_GENDER_GEN.GEN_NAME AS patient_civility_name,
-      T_GENDER_GEN.long_name AS patient_civility_long_name
+      GEN.GEN_NAME AS patient_civility_name,
+      GEN.long_name AS patient_civility_long_name
       `;
       const dentalQuotation = await this.dataSource
         .createQueryBuilder()
@@ -1096,11 +1172,9 @@ export class QuotationMutualServices {
         throw new CBadRequestException("Ce devis n'existe pas ...");
       }
       const id_user = dentalQuotation?.id_user;
-      const id_pdt = dentalQuotation?.id_pdt;
       const date_acceptation = checkDay(dentalQuotation?.date_acceptation);
-      const ident_prat = br2nl(dentalQuotation?.ident_prat?.trim());
+      const ident_prat = nl2br(dentalQuotation?.ident_prat?.trim());
       const ident_pat = dentalQuotation?.ident_pat;
-      const id_contact = dentalQuotation?.ident_pat;
       const nom_prenom_patient = dentalQuotation?.nom_prenom_patient;
       const date_de_naissance_patient = checkDay(
         dentalQuotation?.date_de_naissance_patient,
@@ -1171,7 +1245,7 @@ export class QuotationMutualServices {
         .select(select2)
         .from(DentalQuotationActEntity, 'DQA')
         .where('DQA.DQO_ID = :id', { id: req?.no_devis })
-        .orderBy('DQA.DQA_ID ASC')
+        .orderBy('DQA.DQA_ID')
         .getRawMany();
       if (query2Result) {
         query2Result.forEach((e) => [actes.push(e)]);
@@ -1192,6 +1266,7 @@ export class QuotationMutualServices {
         dispo_desc,
         organisme,
         ref,
+        paymentScheduleId,
         paymentSchedule: null,
         dispo,
         description,
@@ -1205,7 +1280,20 @@ export class QuotationMutualServices {
         quotationPersonRepayment,
         userSignature: '',
         id_user,
+        title,
+        reference,
         actes,
+        quotationPlaceOfManufacture,
+        quotationPlaceOfManufactureLabel,
+        quotationWithSubcontracting,
+        quotationPlaceOfSubcontracting,
+        quotationPlaceOfSubcontractingLabel,
+        quotationSignaturePatient,
+        quotationSignaturePraticien,
+        patientBirthday,
+        patientInsee,
+        patientCivilityLongName,
+        patientNumber,
       };
     } catch (error) {}
   }

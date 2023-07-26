@@ -15,6 +15,7 @@ export class QuotationMutualInitByRes {
   contrat: string;
   ref: string;
   dispo_desc: string;
+  paymentScheduleId?: number | null;
   paymentSchedule: PaymentItemRes | null;
   dispo: boolean;
   description: string;
@@ -28,7 +29,20 @@ export class QuotationMutualInitByRes {
   quotationPersonAmount: number;
   userSignature: string;
   id_user: number;
+  title: string;
+  reference: string;
   actes: QuotationMutualInitActeRes[];
+  quotationPlaceOfManufacture?: string | number;
+  quotationPlaceOfManufactureLabel?: string | number;
+  quotationWithSubcontracting?: string | number;
+  quotationPlaceOfSubcontracting?: string | number;
+  quotationPlaceOfSubcontractingLabel?: string | number;
+  quotationSignaturePatient?: string | number;
+  quotationSignaturePraticien?: string | number;
+  patientBirthday?: string | number;
+  patientInsee?: string | number;
+  patientCivilityLongName?: string | number;
+  patientNumber?: string;
 }
 
 export class QuotationMutualInitActeRes {

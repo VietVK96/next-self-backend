@@ -17,11 +17,21 @@ import {
 import { OrdonnancesServices } from './services/ordonnances.services';
 import { OrdonnancesDto } from './dto/ordonnances.dto';
 import { FactureServices } from './services/facture.services';
-import { EnregistrerFactureDto, PrintPDFDto } from './dto/facture.dto';
-import { DevisRequestAjaxDto } from './dto/devis_request_ajax.dto';
+import {
+  EnregistrerFactureDto,
+  PrintPDFDto,
+  FactureEmailDto,
+} from './dto/facture.dto';
+import {
+  DevisRequestAjaxDto,
+  QuotationDevisRequestAjaxDto,
+} from './dto/devis_request_ajax.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
+import { QuotationServices } from './services/quotation.service';
 import { QuotationMutualServices } from './services/quotaion-mutual.services';
+import { identity } from 'rxjs';
+
 @ApiBearerAuth()
 @Controller('/dental')
 @ApiTags('Dental')
@@ -29,7 +39,8 @@ export class DentalController {
   constructor(
     private ordonnancesServices: OrdonnancesServices,
     private factureServices: FactureServices,
-    private devisServices: QuotationMutualServices,
+    private quotationServices: QuotationServices,
+    private quotationMutualServices: QuotationMutualServices,
   ) {}
 
   /**
@@ -107,6 +118,7 @@ export class DentalController {
     return this.ordonnancesServices.getMail(payload);
   }
 
+  // dental/quotation-mutual/devis_email.php
   @Post('/quotation-mutual/devis_email')
   @UseGuards(TokenGuard)
   async devisEmail(@Body() payload: EnregistrerFactureDto) {
@@ -116,9 +128,16 @@ export class DentalController {
   // dental/quotation-mutual/devis_pdf.php
   @Get('/quotation-mutual/devis_pdf')
   @UseGuards(TokenGuard)
-  async devisPdf(@Res() res, @Query() req: PrintPDFDto) {
+  async devisPdf(
+    @Res() res,
+    @Query() req: PrintPDFDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
     try {
-      const buffer = await this.devisServices.generatePdf(req);
+      const buffer = await this.quotationMutualServices.generatePdf(
+        req,
+        identity,
+      );
 
       res.set({
         // pdf
@@ -142,12 +161,30 @@ export class DentalController {
     @Body() payload: DevisRequestAjaxDto,
     @CurrentUser() identity: UserIdentity,
   ) {
-    return this.devisServices.devisRequestAjax(payload, identity);
+    return this.quotationMutualServices.devisRequestAjax(payload, identity);
   }
 
   @Get('/quotation-mutual/send-email')
   @UseGuards(TokenGuard)
   async sendMail(@CurrentUser() identity: UserIdentity) {
-    return this.devisServices.sendMail(identity);
+    return this.quotationMutualServices.sendMail(identity);
+  }
+
+  @Post('/quotation/devis_requetes_ajax')
+  @UseGuards(TokenGuard)
+  async quotationMutualRequestsAjax(
+    @Body() req: QuotationDevisRequestAjaxDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.quotationServices.quotationDevisRequestsAjax(req, identity);
+  }
+
+  @Get('/facture/facture-email')
+  @UseGuards(TokenGuard)
+  async factureEmail(
+    @Query() req: FactureEmailDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return await this.factureServices.factureEmail(req, identity);
   }
 }
