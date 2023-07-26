@@ -36,8 +36,6 @@ import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.enti
 import { BillEntity } from 'src/entities/bill.entity';
 import { QuotationMutualInitByRes } from '../res/quotatio-mutual.res';
 import { LibraryActQuantityEntity } from 'src/entities/library-act-quantity.entity';
-dayjs.extend(utc);
-dayjs.extend(dayOfYear);
 @Injectable()
 export class QuotationMutualServices {
   constructor(

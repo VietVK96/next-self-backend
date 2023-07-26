@@ -3,16 +3,10 @@ import { DataSource, Repository } from 'typeorm';
 import { PaymentItemRes } from '../response/payment.res';
 import { PaymentSchedulesDto } from '../dto/payment.dto';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
-import { InjectRepository } from '@nestjs/typeorm';
-import { PaymentPlanEntity } from 'src/entities/payment-plan.entity';
 
 @Injectable()
 export class PaymentScheduleService {
-  constructor(
-    private dataSource: DataSource,
-    @InjectRepository(PaymentPlanEntity)
-    private paymentPlanRepo: Repository<PaymentPlanEntity>,
-  ) {}
+  constructor(private dataSource: DataSource) {}
 
   /**
    * File: application/Services/PaymentSchedule.php, Line 82-124

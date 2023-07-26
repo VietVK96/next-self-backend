@@ -36,8 +36,6 @@ export class PlanService {
     private permissionService: PermissionService,
     private paymentPlanService: PaymentScheduleService,
     private dataSource: DataSource,
-    @InjectRepository(PlanPlfEntity)
-    private planPlfRepository: Repository<PlanPlfEntity>,
   ) {}
 
   private _empty(value: any) {

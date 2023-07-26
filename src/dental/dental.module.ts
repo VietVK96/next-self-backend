@@ -32,6 +32,10 @@ import { AmoEntity } from 'src/entities/amo.entity';
 import { AmcEntity } from 'src/entities/amc.entity';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
+import { OrganizationEntity } from 'src/entities/organization.entity';
+import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
+import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
+import { LibraryActQuantityEntity } from 'src/entities/library-act-quantity.entity';
 
 @Module({
   imports: [
@@ -57,6 +61,10 @@ import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quot
       AmoEntity,
       AmcEntity,
       UserPreferenceQuotationEntity,
+      OrganizationEntity,
+      PlanPlfEntity,
+      DentalQuotationActEntity,
+      LibraryActQuantityEntity,
     ]),
   ],
   controllers: [DentalController],
