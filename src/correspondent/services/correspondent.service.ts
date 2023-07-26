@@ -204,18 +204,17 @@ export class CorrespondentService {
         const phoneIds = await this.phoneRepo.save(mapPhone);
 
         const arr = [];
-        for (const phoId of phoneIds) {
-          arr.push({
-            phoId,
-            cdpId: newCorresponden.insertId,
-          });
+        for (const pho of phoneIds) {
+          arr.push(
+            queryRunner.query(
+              ` INSERT INTO T_CORRESPONDENT_PHONE_CPP (PHO_ID, CPD_ID)
+          VALUES (?, ?)`,
+              [pho.id, newCorresponden.insertId],
+            ),
+          );
         }
-        await this.dataSource
-          .createQueryBuilder()
-          .insert()
-          .into(CorrespondentPhoneCppEntity)
-          .values(arr)
-          .execute();
+        await Promise.all(arr);
+
         await queryRunner.commitTransaction();
         return {
           ...payload,

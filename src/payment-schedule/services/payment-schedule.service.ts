@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { PaymentItemRes } from '../response/payment.res';
 import { PaymentSchedulesDto } from '../dto/payment.dto';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { PaymentPlanEntity } from 'src/entities/payment-plan.entity';
 
 @Injectable()
 export class PaymentScheduleService {
@@ -98,6 +99,8 @@ export class PaymentScheduleService {
         payload.observation || null,
       ]);
 
+      const lastId = paymentSchedule.insertId;
+
       const q2 = `INSERT INTO payment_schedule_line (payment_schedule_id, date, amount)
       VALUES (?, ?, ?)`;
 
@@ -111,7 +114,17 @@ export class PaymentScheduleService {
         }),
       );
       await queryRunner.commitTransaction();
-      return paymentSchedule;
+      const result = await this.dataSource
+        .getRepository(PaymentPlanEntity)
+        .findOneOrFail({
+          where: { id: lastId },
+          relations: { deadlines: true },
+        });
+      return {
+        ...result,
+        insertId: lastId,
+        lines: result.deadlines,
+      };
     } catch (err) {
       await queryRunner.rollbackTransaction();
     } finally {
