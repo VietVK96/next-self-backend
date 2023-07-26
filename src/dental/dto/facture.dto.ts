@@ -189,3 +189,64 @@ export class EnregistrerFactureDto {
   })
   displayOnlyProsthesis?: string;
 }
+
+@ApiExtraModels()
+export class PrintPDFDto {
+  @ApiProperty()
+  id?: string;
+  @ApiProperty()
+  duplicate?: boolean;
+}
+
+@ApiExtraModels()
+export class FactureEmailDto {
+  @ApiProperty({
+    name: 'id_facture',
+    required: true,
+  })
+  id_facture?: number;
+}
+
+@ApiExtraModels()
+export class FactureEmailDataDto {
+  @ApiProperty({
+    name: 'from',
+    required: true,
+  })
+  from?: string;
+  @ApiProperty({
+    name: 'to',
+    required: true,
+  })
+  to?: string;
+
+  @ApiProperty({
+    name: 'subject',
+    required: true,
+  })
+  subject?: string;
+
+  @ApiProperty({
+    name: 'filename',
+    required: false,
+  })
+  filename?: string;
+
+  @ApiProperty({
+    name: 'template',
+    required: false,
+  })
+  template?: string;
+
+  @ApiProperty({
+    name: 'from',
+    required: false,
+  })
+  context?: any;
+
+  @ApiProperty({
+    name: 'from',
+    required: false,
+  })
+  attachments?: any;
+}
