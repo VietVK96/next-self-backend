@@ -92,14 +92,12 @@ export class PaymentScheduleService {
 
       const paymentSchedule = await queryRunner.query(q, [
         identity.org,
-        payload.doctor_id,
-        payload.patient_id,
-        payload.label,
-        payload.amount,
-        payload.observation || null,
+        payload?.doctor_id,
+        payload?.patient_id,
+        payload?.label || '',
+        payload?.amount || 0,
+        payload?.observation || null,
       ]);
-
-      const lastId = paymentSchedule.insertId;
 
       const q2 = `INSERT INTO payment_schedule_line (payment_schedule_id, date, amount)
       VALUES (?, ?, ?)`;
@@ -114,21 +112,16 @@ export class PaymentScheduleService {
         }),
       );
       await queryRunner.commitTransaction();
-      const result = await this.dataSource
-        .getRepository(PaymentPlanEntity)
-        .findOneOrFail({
-          where: { id: lastId },
-          relations: { deadlines: true },
-        });
-      return {
-        ...result,
-        insertId: lastId,
-        lines: result.deadlines,
-      };
+      return this.find(paymentSchedule.insertId, identity.org);
     } catch (err) {
       await queryRunner.rollbackTransaction();
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async duplicate(id: number, identity: UserIdentity) {
+    const paymentSchedule = await this.find(id, identity.org);
+    return await this.store(paymentSchedule as PaymentSchedulesDto, identity);
   }
 }
