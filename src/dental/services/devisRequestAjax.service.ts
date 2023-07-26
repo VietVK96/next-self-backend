@@ -198,11 +198,11 @@ export class DevisHNServices {
                 });
                 const signature: { practitioner?: string; patient?: string } =
                   {};
-                if (quote.practitionerSignature) {
-                  signature.practitioner = quote.practitionerSignature;
+                if (quote.signaturePraticien) {
+                  signature.practitioner = quote.signaturePraticien;
                 }
-                if (quote.patientSignature) {
-                  signature.patient = quote.patientSignature;
+                if (quote.signaturePatient) {
+                  signature.patient = quote.signaturePatient;
                 }
 
                 const mailConverted = await this.mailService.transform(
