@@ -53,6 +53,7 @@ import { StatisticsModule } from './statistics/statistics.module';
 import { EventTypeModule } from './event-type/event-type.module';
 import { PrescriptionTemplateModule } from './prescription-template/prescription-template.module';
 import { MedicamentModule } from './medicament/medicament.module';
+import { SettingOrganizationModule } from './settings/organizations/setting-organization.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -160,6 +161,7 @@ const importsModules = [
   EventTypeModule,
   PrescriptionTemplateModule,
   MedicamentModule,
+  SettingOrganizationModule
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {
