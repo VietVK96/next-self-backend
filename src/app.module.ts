@@ -48,7 +48,11 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { SecuritiesModule } from './securities/securities.module';
 import { LoggerModule } from 'nestjs-pino';
+import { RecipeModule } from './recipe/recipe.module';
+import { StatisticsModule } from './statistics/statistics.module';
 import { EventTypeModule } from './event-type/event-type.module';
+import { PrescriptionTemplateModule } from './prescription-template/prescription-template.module';
+import { MedicamentModule } from './medicament/medicament.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -100,7 +104,7 @@ const importsModules = [
         from: config.get('EMAIL_FROM_USER'),
       },
       template: {
-        dir: join(process.cwd(), 'templates/mail'),
+        dir: join(process.cwd(), 'templates/'),
         adapter: new HandlebarsAdapter(),
         options: {
           strict: true,
@@ -151,7 +155,11 @@ const importsModules = [
   BankModule,
   PaymentSchedulesModule,
   SecuritiesModule,
+  RecipeModule,
+  StatisticsModule,
   EventTypeModule,
+  PrescriptionTemplateModule,
+  MedicamentModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {

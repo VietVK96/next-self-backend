@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votre facture</title>
+</head>
+<body>
+    <p>Madame, Monsieur,</p>
+    <p>Veuillez trouver ci-joint votre facture du {{ creationDate }}.</p>
+    <p>
+        Cordialement,<br />
+        Dr {{ [invoice?.user?.lastname, invoice?.user?.firstname].join(' ') }}<br />
+        {{#if invoice?.user?.address}}
+            {{ invoice?.user?.address?.street }}<br />
+            {{ invoice?.user?.address?.zipCode }} {{ invoice?.user?.address?.city }}<br />
+        {{/if}}
+        {{#if homePhoneNumber }}
+            {{ homePhoneNumber }}
+        {{/if}}
+    </p>
+</body>
+</html>
