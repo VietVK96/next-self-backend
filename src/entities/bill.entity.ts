@@ -91,12 +91,12 @@ export class BillEntity {
    * @Assert\Date
    * @Assert\NotNull
    */
-  @Column({
-    name: 'BIL_DATE',
-    type: 'date',
-    nullable: true,
-  })
-  creationDate?: string;
+  // @Column({
+  //   name: 'BIL_DATE',
+  //   type: 'date',
+  //   nullable: true,
+  // })
+  // creationDate?: string;
 
   /**
    * @ORM\Column(name="BIL_NAME", type="text", nullable=false)

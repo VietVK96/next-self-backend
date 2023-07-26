@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -10,6 +18,7 @@ import { OrdonnancesDto } from './dto/ordonnances.dto';
 import { FactureServices } from './services/facture.services';
 import { EnregistrerFactureDto } from './dto/facture.dto';
 import { DevisStd2Services } from './services/devisStd2.services';
+import { DevisStd2Dto } from './dto/devisStd2.dto';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -49,26 +58,38 @@ export class DentalController {
     return this.factureServices.update(payload);
   }
 
+  @Get('/facture/medical/:id_user/:id_contact')
+  @UseGuards(TokenGuard)
+  async getInitChamps(
+    @Param('id_user') userId: number[],
+    @Param('id_contact') contactId: number,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return await this.factureServices.getInitChamps(
+      userId,
+      contactId,
+      identity,
+    );
+  }
+
   @Post('/ordonnances/ordo_email')
   @UseGuards(TokenGuard)
   async mail(@Body() payload: EnregistrerFactureDto) {
     return this.ordonnancesServices.getMail(payload);
   }
 
-  @Get('/devisStd2/index')
+  @Get('/devisStd2/index/')
   @UseGuards(TokenGuard)
   async getInitChampsDevisStd2(
-    @Param('id_user') userId: number[],
-    @Param('id_contact') contactId: number,
-    @Param('no_pdt') noPdt: number,
-    @Param('no_devis') noDevis: number,
     @CurrentUser() identity: UserIdentity,
+    @Query() params: DevisStd2Dto,
   ) {
+    const { id_user, id_contact, no_devis, no_pdt } = params;
     return await this.devisStd2Services.getInitChamps(
-      userId,
-      contactId,
-      noPdt,
-      noDevis,
+      id_user,
+      id_contact,
+      no_pdt,
+      no_devis,
       identity,
     );
   }
