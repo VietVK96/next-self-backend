@@ -54,6 +54,7 @@ import { EventTypeModule } from './event-type/event-type.module';
 import { PrescriptionTemplateModule } from './prescription-template/prescription-template.module';
 import { MedicamentModule } from './medicament/medicament.module';
 import { MedicamentFamilyModule } from './medicament-family/medicament-family.module';
+import { PeriodontalChartsModule } from './periodontal-charts/periodontal-charts.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -162,6 +163,7 @@ const importsModules = [
   PrescriptionTemplateModule,
   MedicamentModule,
   MedicamentFamilyModule,
+  PeriodontalChartsModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {

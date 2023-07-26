@@ -47,4 +47,18 @@ export class SecuritiesService {
       throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
     }
   }
+
+  /**
+   * File php: php/securities/password-accounting/index.php line 10 -> 28
+   */
+  async hasPasswordAccounting(id: number) {
+    try {
+      const userFind = await this.userRepository.findOneOrFail({
+        where: { id: id },
+      });
+      if (userFind) return { confirm_password: !!userFind?.passwordAccounting };
+    } catch (err) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
+  }
 }
