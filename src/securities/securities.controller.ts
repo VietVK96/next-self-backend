@@ -1,4 +1,4 @@
-import { Controller, Body, Post, UseGuards } from '@nestjs/common';
+import { Controller, Body, Post, UseGuards, Get, Query } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SecuritiesService } from './securities.service';
@@ -28,5 +28,14 @@ export class SecuritiesController {
     @CurrentUser() user: UserIdentity,
   ) {
     return this.securituesService.verifyPassword(verifyPassWordDto, user);
+  }
+
+  /**
+   * File php: php/securities/password-accounting/index.php line 10 -> 28
+   */
+  @UseGuards(TokenGuard)
+  @Get('password-accounting')
+  hasPasswordAccounting(@Query('id') id: number) {
+    return this.securituesService.hasPasswordAccounting(id);
   }
 }
