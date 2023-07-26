@@ -152,12 +152,12 @@ export class LibraryBankEntity {
   /**
    * @ORM\Column(name="LBK_ACCOUNT_NBR", type="string", length=11, nullable=true)
    */
-  @Column({
-    name: 'LBK_ACCOUNT_NBR',
-    type: 'varchar',
-    length: 11,
-    nullable: true,
-  })
+  // @Column({
+  //   name: 'LBK_ACCOUNT_NBR',
+  //   type: 'varchar',
+  //   length: 11,
+  //   nullable: true,
+  // })
   accountNbr?: string;
 
   /**
@@ -279,12 +279,6 @@ export class LibraryBankEntity {
    * @ORM\Column(name="LBK_TRANSFERT_DEFAULT", type="integer")
    * @var boolean
    */
-  @Column({
-    name: 'LBK_TRANSFERT_DEFAULT',
-    type: 'tinyint',
-    width: 1,
-    default: 0,
-  })
   transfertDefault?: number;
 
   /**
@@ -294,12 +288,12 @@ export class LibraryBankEntity {
    * @Expose
    * @var boolean
    */
-  @Column({
-    name: 'LBK_TRANSFERT_DEFAULT',
-    type: 'tinyint',
-    width: 1,
-    default: 0,
-  })
+  // @Column({
+  //   name: 'LBK_TRANSFERT_DEFAULT',
+  //   type: 'tinyint',
+  //   width: 1,
+  //   default: 0,
+  // })
   default?: number;
 
   /**
@@ -400,6 +394,7 @@ export class LibraryBankEntity {
     createForeignKeyConstraints: false,
   })
   cashings?: CashingEntity[];
+  libraryBankEntity: any;
 }
 
 //application\Entities\BankEntity.php
