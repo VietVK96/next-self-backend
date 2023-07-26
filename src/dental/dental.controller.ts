@@ -17,6 +17,8 @@ import {
 import { OrdonnancesServices } from './services/ordonnances.services';
 import { OrdonnancesDto } from './dto/ordonnances.dto';
 import { FactureServices } from './services/facture.services';
+import { DevisStd2Services } from './services/devisStd2.services';
+import { DevisStd2Dto } from './dto/devisStd2.dto';
 import {
   EnregistrerFactureDto,
   PrintPDFDto,
@@ -30,7 +32,6 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { ErrorCode } from 'src/constants/error';
 import { QuotationServices } from './services/quotation.service';
 import { QuotationMutualServices } from './services/quotaion-mutual.services';
-import { identity } from 'rxjs';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -39,6 +40,7 @@ export class DentalController {
   constructor(
     private ordonnancesServices: OrdonnancesServices,
     private factureServices: FactureServices,
+    private devisStd2Services: DevisStd2Services,
     private quotationServices: QuotationServices,
     private quotationMutualServices: QuotationMutualServices,
   ) {}
@@ -98,20 +100,6 @@ export class DentalController {
     }
   }
 
-  @Get('/ordonnances/medical/:id_user/:id_contact')
-  @UseGuards(TokenGuard)
-  async getInitChamps(
-    @Param('id_user') userId: number[],
-    @Param('id_contact') contactId: number,
-    @CurrentUser() identity: UserIdentity,
-  ) {
-    return await this.factureServices.getInitChamps(
-      userId,
-      contactId,
-      identity,
-    );
-  }
-
   @Post('/ordonnances/ordo_email')
   @UseGuards(TokenGuard)
   async mail(@Body() payload: EnregistrerFactureDto) {
@@ -119,6 +107,22 @@ export class DentalController {
   }
 
   // dental/quotation-mutual/devis_email.php
+  @Get('/devisStd2/index/')
+  @UseGuards(TokenGuard)
+  async getInitChampsDevisStd2(
+    @CurrentUser() identity: UserIdentity,
+    @Query() params: DevisStd2Dto,
+  ) {
+    const { id_user, id_contact, no_devis, no_pdt } = params;
+    return await this.devisStd2Services.getInitChamps(
+      id_user,
+      id_contact,
+      no_pdt,
+      no_devis,
+      identity,
+    );
+  }
+
   @Post('/quotation-mutual/devis_email')
   @UseGuards(TokenGuard)
   async devisEmail(@Body() payload: EnregistrerFactureDto) {
@@ -186,5 +190,20 @@ export class DentalController {
     @CurrentUser() identity: UserIdentity,
   ) {
     return await this.factureServices.factureEmail(req, identity);
+  }
+
+  /// dental/facture/index.php?id_contact=1&id_user=1
+  @Get('/facture/index')
+  @UseGuards(TokenGuard)
+  async getInitChampsFacture(
+    @CurrentUser() identity: UserIdentity,
+    @Query() params: DevisStd2Dto,
+  ) {
+    const { id_user, id_contact } = params;
+    return await this.factureServices.getInitChamps(
+      id_user,
+      id_contact,
+      identity,
+    );
   }
 }

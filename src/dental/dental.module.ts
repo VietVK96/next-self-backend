@@ -20,9 +20,10 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
+import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
+import { DevisStd2Services } from './services/devisStd2.services';
 import { PrivilegeEntity } from 'src/entities/privilege.entity';
 import { BillLineEntity } from 'src/entities/bill-line.entity';
-import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { EventEntity } from 'src/entities/event.entity';
 import { PhoneEntity } from 'src/entities/phone.entity';
@@ -42,24 +43,26 @@ import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quot
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
 import { LibraryActQuantityEntity } from 'src/entities/library-act-quantity.entity';
+import { ConfigService } from '@nestjs/config';
 import { QuotationServices } from './services/quotation.service';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { PlanEventEntity } from 'src/entities/plan-event.entity';
+import { PaymentPlanDeadlineEntity } from 'src/entities/payment-plan-deadline.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      AmcEntity,
-      AmoEntity,
+      MedicalHeaderEntity,
+      MedicalOrderEntity,
       BillEntity,
-      UserEntity,
-      EventEntity,
-      PhoneEntity,
-      NgapKeyEntity,
-      ContactEntity,
-      AddressEntity,
-      LettersEntity,
       BillLineEntity,
+      MedicalHeaderEntity,
       EventTaskEntity,
+      DentalEventTaskEntity,
+      EventEntity,
+      EventEntity,
+      DentalEventTaskEntity,
+      NgapKeyEntity,
       PrivilegeEntity,
       UserMedicalEntity,
       ContactUserEntity,
@@ -70,14 +73,23 @@ import { ContactNoteEntity } from 'src/entities/contact-note.entity';
       ThirdPartyAmcEntity,
       ThirdPartyAmoEntity,
       UserPreferenceEntity,
+      ContactEntity,
       DentalQuotationEntity,
-      DentalEventTaskEntity,
-      DentalQuotationActEntity,
+      AddressEntity,
+      PlanPlfEntity,
+      DentalQuotationEntity,
       UserPreferenceQuotationEntity,
       OrganizationEntity,
       PlanPlfEntity,
       DentalQuotationActEntity,
       LibraryActQuantityEntity,
+      PlanEventEntity,
+      PaymentPlanDeadlineEntity,
+      LettersEntity,
+      PhoneEntity,
+      UserEntity,
+      AmoEntity,
+      AmcEntity,
     ]),
   ],
   controllers: [DentalController, DevisHNController],
@@ -92,9 +104,11 @@ import { ContactNoteEntity } from 'src/entities/contact-note.entity';
     ContactService,
     DevisHNServices,
     PermissionService,
-    QuotationServices,
-    CorrespondentService,
     PaymentScheduleService,
+    CorrespondentService,
+    DevisStd2Services,
+    QuotationServices,
+    ConfigService,
   ],
 })
 export class DentalModule {}
