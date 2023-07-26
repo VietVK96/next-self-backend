@@ -23,7 +23,7 @@ import { UpdateGlossaryEntryDto } from './dto/update.glossaryEntry.dto';
 
 @ApiBearerAuth()
 @ApiTags('Glossaries')
-@Controller('glossaries')
+@Controller('settings/glossaries')
 export class GlossriesController {
   constructor(private glossariesService: GlossariesService) {}
 
@@ -69,11 +69,11 @@ export class GlossriesController {
     return this.glossariesService.deleteGlossary(id);
   }
 
-  @Put('/:id')
+  @Post('/:id')
   @UseGuards(TokenGuard)
   async updateGlossary(
     @Param('id') id: number,
-    @Query() payload: UpdateGlossaryDto,
+    @Body() payload: UpdateGlossaryDto,
   ) {
     return this.glossariesService.updateGlossary(id, payload);
   }
@@ -81,7 +81,7 @@ export class GlossriesController {
   @Put('entries/:id')
   @UseGuards(TokenGuard)
   async updateGlossaryEntry(
-    @Query() payload: UpdateGlossaryEntryDto,
+    @Body() payload: UpdateGlossaryEntryDto,
     @Param('id') id: number,
   ) {
     return this.glossariesService.updateGlossaryEntry(payload, id);
