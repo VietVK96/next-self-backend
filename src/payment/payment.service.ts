@@ -1,26 +1,77 @@
 import { Injectable } from '@nestjs/common';
-import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { PermissionService } from 'src/user/services/permission.service';
+import { CashingEntity } from 'src/entities/cashing.entity';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
+import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
 
 @Injectable()
 export class PaymentService {
-  create(createPaymentDto: CreatePaymentDto) {
-    return 'This action adds a new payment';
-  }
+  constructor(
+    @InjectRepository(CashingContactEntity)
+    private cashingContactRepository: Repository<CashingContactEntity>,
+    @InjectRepository(CashingEntity)
+    private readonly cashingRepository: Repository<CashingEntity>,
+    private readonly permissionService: PermissionService,
+  ) {}
 
-  findAll() {
-    return `This action returns all payment`;
-  }
+  // delete payment in table 'T_CASHING_CSG' and table 'T_CASHING_CONTACT_CSC'
+  async remove(id: number, user: UserIdentity) {
+    const userId = user.id;
+    let payment: CashingEntity;
+    try {
+      payment = await this.cashingRepository.findOne({
+        where: { id: id },
+      });
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.QUERY_REPOSITORY_ERROR);
+    }
+    if (!payment) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
 
-  findOne(id: number) {
-    return `This action returns a #${id} payment`;
-  }
+    // check quyền
+    const hasPermissionDelete = await this.permissionService.hasPermission(
+      'PERMISSION_DELETE',
+      8,
+      userId,
+    );
+    const hasPermissionPaiement = await this.permissionService.hasPermission(
+      'PERMISSION_PAIEMENT',
+      8,
+      userId,
+      payment.usrId,
+    );
+    if (!hasPermissionDelete || !hasPermissionPaiement) {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
+    }
 
-  update(id: number, updatePaymentDto: UpdatePaymentDto) {
-    return `This action updates a #${id} payment`;
-  }
+    const queryRunner =
+      this.cashingRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-  remove(id: number) {
-    return `This action removes a #${id} payment`;
+    // delete in database
+    try {
+      const contacts = await this.cashingContactRepository.find({
+        where: {
+          cashing: { id: id },
+        },
+      });
+
+      await this.cashingContactRepository.remove(contacts);
+
+      await this.cashingRepository.remove(payment);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new CBadRequestException(ErrorCode.QUERY_REPOSITORY_ERROR);
+    } finally {
+      await queryRunner.release();
+    }
+    return { message: 'Payment deleted successfully' };
   }
 }

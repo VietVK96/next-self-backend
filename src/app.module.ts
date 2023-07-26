@@ -157,6 +157,7 @@ const importsModules = [
   RecipeModule,
   StatisticsModule,
   EventTypeModule,
+  PaymentModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {
