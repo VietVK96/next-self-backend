@@ -12,6 +12,7 @@ import { MAX_ENTRIES, MAX_GLOSSARY } from 'src/constants/glassary';
 import { UpdateGlossaryDto } from './dto/update.glossary.dto';
 import { UpdateGlossaryEntryDto } from './dto/update.glossaryEntry.dto';
 import { ErrorCode } from 'src/constants/error';
+import { SuccessResponse } from 'src/common/response/success.res';
 
 @Injectable()
 export class GlossariesService {
@@ -124,7 +125,7 @@ export class GlossariesService {
     };
   }
 
-  async deleteGlossary(id: number) {
+  async deleteGlossary(id: number): Promise<SuccessResponse> {
     const glossary = await this.glossaryRepo.findOne({ where: { id } });
     if (!glossary) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);

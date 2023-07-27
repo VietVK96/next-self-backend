@@ -7,6 +7,7 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { ErrorCode } from 'src/constants/error';
+import { SuccessResponse } from 'src/common/response/success.res';
 
 export interface PaginatedResponse<T> {
   items: T[];
@@ -120,7 +121,7 @@ export class TagService {
     return await this.tagRepository.save(newTag);
   }
 
-  async deleteTag(id: number) {
+  async deleteTag(id: number): Promise<SuccessResponse> {
     const currentTag = await this.tagRepository.findOne({
       where: { id },
     });

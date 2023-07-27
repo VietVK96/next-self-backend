@@ -12,6 +12,7 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { ErrorCode } from 'src/constants/error';
 import { AccountStatusEnum } from 'src/enum/account-status.enum';
 import { SuccessCode } from 'src/constants/success';
+import { SuccessResponse } from 'src/common/response/success.res';
 
 @Injectable()
 export class EventTypeService {
@@ -153,7 +154,7 @@ export class EventTypeService {
     return await this.eventTypeRepository.save(newEventType);
   }
 
-  async delete(id: number) {
+  async delete(id: number): Promise<SuccessResponse> {
     const currentEventType = await this.eventTypeRepository.findOne({
       where: { id },
     });

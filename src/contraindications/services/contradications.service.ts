@@ -8,6 +8,7 @@ import { PermissionService } from 'src/user/services/permission.service';
 import { ErrorCode } from 'src/constants/error';
 import { ContraindicationEntity } from 'src/entities/contraindication.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { SuccessResponse } from 'src/common/response/success.res';
 
 @Injectable()
 export class ContraindicationsService {
@@ -78,7 +79,7 @@ export class ContraindicationsService {
     });
   }
 
-  async delete(userId: number, id: number) {
+  async delete(userId: number, id: number): Promise<SuccessResponse> {
     const hasPermission = await this.permissionService.hasPermission(
       'PERMISSION_LIBRARY',
       8,

@@ -24,6 +24,7 @@ import { PermissionService } from 'src/user/services/permission.service';
 import { LibraryBankEntity } from 'src/entities/library-bank.entity';
 import { AddressEntity } from 'src/entities/address.entity';
 import axios from 'axios';
+import { SuccessResponse } from 'src/common/response/success.res';
 
 @Injectable()
 export class BankService {
@@ -333,7 +334,11 @@ export class BankService {
     }
   }
 
-  async deleteBank(id: number, userId: number, organizationId: number) {
+  async deleteBank(
+    id: number,
+    userId: number,
+    organizationId: number,
+  ): Promise<SuccessResponse> {
     try {
       if (id) {
         const libraryBankEntity = await this.libraryBankRepo.findOne({

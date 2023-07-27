@@ -7,6 +7,7 @@ import { CreatePrescriptionTemplateDto } from '../dto/prescription-template.dto'
 import { MedicamentEntity } from 'src/entities/medicament.entity';
 import { ErrorCode } from 'src/constants/error';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { SuccessResponse } from 'src/common/response/success.res';
 
 @Injectable()
 export class PrescriptionTemplateService {
@@ -87,7 +88,7 @@ export class PrescriptionTemplateService {
     });
   }
 
-  async delete(id: number) {
+  async delete(id: number): Promise<SuccessResponse> {
     if (!id) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
