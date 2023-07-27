@@ -37,10 +37,13 @@ export class TariffTypesService {
       );
     }
 
-    const count = await this.tariffTypesRepo.count();
+    const listTariff = await this.tariffTypesRepo.find({
+      where: { organizationId: identity.org },
+    });
+
     //TODO: RESEARCH HOW TO EXTRACT MAX_ENTRIES FROM ENTITIES
     const MAX_ENTRIES = 5;
-    if (count >= MAX_ENTRIES) {
+    if (listTariff.length >= MAX_ENTRIES) {
       throw new BadRequestException(
         `The maximum of entries ${MAX_ENTRIES} has been exceeded`,
       );
