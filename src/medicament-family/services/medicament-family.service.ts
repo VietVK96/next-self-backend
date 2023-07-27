@@ -22,17 +22,16 @@ export class MedicamentFamilyService {
 
   async findAll(organizationId: number) {
     if (organizationId) {
-      const organization = await this.organizationRepo.findOne({
-        where: { id: organizationId },
-        relations: { medicamentFamilies: { medicaments: true } },
-      });
-      if (!organization) {
-        throw new CBadRequestException(ErrorCode.NOT_FOUND);
-      }
-      return organization.medicamentFamilies;
-    } else {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
+    const organization = await this.organizationRepo.findOne({
+      where: { id: organizationId },
+      relations: { medicamentFamilies: { medicaments: true } },
+    });
+    if (!organization) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
+    return organization.medicamentFamilies;
   }
 
   async create(

@@ -127,10 +127,11 @@ export class MedicamentService {
       contraindications,
     } = body;
     let listContraindications = [];
-    if (contraindications)
+    if (contraindications) {
       listContraindications = await this.contraindicationRepo.find({
         where: { id: In(contraindications) },
       });
+    }
     return await this.medicamentRepo.save({
       ...currentMedicament,
       mdtId: family,
