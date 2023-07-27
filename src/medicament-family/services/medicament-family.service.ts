@@ -8,6 +8,7 @@ import { CreateMedicamentFamilyDto } from '../dto/medicament-family.dto';
 import { PermissionService } from 'src/user/services/permission.service';
 import { SuccessCode } from 'src/constants/success';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { SuccessResponse } from 'src/common/response/success.res';
 
 @Injectable()
 export class MedicamentFamilyService {
@@ -22,10 +23,13 @@ export class MedicamentFamilyService {
 
   async findAll(organizationId: number) {
     if (organizationId) {
-      const organization = await this.organizationRepo.findOneOrFail({
+      const organization = await this.organizationRepo.findOne({
         where: { id: organizationId },
         relations: { medicamentFamilies: { medicaments: true } },
       });
+      if (!organization) {
+        throw new CBadRequestException(ErrorCode.NOT_FOUND);
+      }
       return organization.medicamentFamilies;
     } else {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
@@ -63,8 +67,9 @@ export class MedicamentFamilyService {
     if (!id) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    const currentMedicamentFamily =
-      await this.medicamentFamilyRepo.findOneOrFail({ where: { id } });
+    const currentMedicamentFamily = await this.medicamentFamilyRepo.findOne({
+      where: { id },
+    });
     if (!currentMedicamentFamily) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
@@ -74,7 +79,7 @@ export class MedicamentFamilyService {
     });
   }
 
-  async delete(userId: number, id: number) {
+  async delete(userId: number, id: number): Promise<SuccessResponse> {
     const hasPermissionDelete = await this.permissionService.hasPermission(
       'PERMISSION_LIBRARY',
       8,
@@ -86,12 +91,15 @@ export class MedicamentFamilyService {
     if (!id) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    const currentMedicamentFamily =
-      await this.medicamentFamilyRepo.findOneOrFail({ where: { id } });
+    const currentMedicamentFamily = await this.medicamentFamilyRepo.findOne({
+      where: { id },
+    });
     if (!currentMedicamentFamily) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
     await this.medicamentFamilyRepo.remove(currentMedicamentFamily);
-    return SuccessCode.DELETE_SUCCESS;
+    return {
+      success: true,
+    };
   }
 }

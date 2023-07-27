@@ -61,7 +61,7 @@ export class MedicamentService {
       posologie,
       contraindications,
     } = body;
-    let listContraindications;
+    let listContraindications = [];
     if (contraindications)
       listContraindications = await this.contraindicationRepo.find({
         where: { id: In(contraindications) },
@@ -127,7 +127,7 @@ export class MedicamentService {
       posologie,
       contraindications,
     } = body;
-    let listContraindications;
+    let listContraindications = [];
     if (contraindications)
       listContraindications = await this.contraindicationRepo.find({
         where: { id: In(contraindications) },
@@ -164,6 +164,8 @@ export class MedicamentService {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
     await this.medicamentRepo.remove(currentMedicament);
-    return SuccessCode.DELETE_SUCCESS;
+    return {
+      success: true,
+    };
   }
 }
