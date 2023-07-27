@@ -6,7 +6,6 @@ import { OrganizationEntity } from 'src/entities/organization.entity';
 import { ErrorCode } from 'src/constants/error';
 import { CreateMedicamentFamilyDto } from '../dto/medicament-family.dto';
 import { PermissionService } from 'src/user/services/permission.service';
-import { SuccessCode } from 'src/constants/success';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { SuccessResponse } from 'src/common/response/success.res';
 

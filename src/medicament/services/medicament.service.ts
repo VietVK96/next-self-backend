@@ -6,7 +6,6 @@ import { CreateMedicamentDto } from '../dto/medicament.dto';
 import { PermissionService } from 'src/user/services/permission.service';
 import { ErrorCode } from 'src/constants/error';
 import { ContraindicationEntity } from 'src/entities/contraindication.entity';
-import { SuccessCode } from 'src/constants/success';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 
 @Injectable()
