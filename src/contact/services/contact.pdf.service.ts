@@ -79,7 +79,7 @@ export class ContactPdfService {
       );
       const filePath = path.join(
         process.cwd(),
-        'templates/contact',
+        'templates/pdf/contact',
         'appointment.hbs',
       );
       const options = {
@@ -142,7 +142,7 @@ export class ContactPdfService {
       const policyHolderNumberKey = person?.inseeKey ?? '';
       const filePath = path.join(
         process.cwd(),
-        'templates/contact',
+        'templates/pdf/contact',
         'fs_verso_pdf.hbs',
       );
       const options = {
@@ -297,7 +297,7 @@ export class ContactPdfService {
         });
         const filePath = path.join(
           process.cwd(),
-          'templates/contact',
+          'templates/pdf/contact',
           'contact_pdf.hbs',
         );
         const data = {

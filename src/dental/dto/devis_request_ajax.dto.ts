@@ -1,4 +1,4 @@
-import { ApiProperty, ApiExtraModels } from '@nestjs/swagger';
+import { ApiProperty, ApiExtraModels, IntersectionType } from '@nestjs/swagger';
 import { EnumMedicalHeaderFormatType } from 'src/entities/medical-header.entity';
 
 @ApiExtraModels()
@@ -117,13 +117,13 @@ export class DevisRequestAjaxDto {
     name: 'withSubcontracting',
     required: false,
   })
-  withSubcontracting?: string;
+  withSubcontracting?: number;
 
   @ApiProperty({
     name: 'placeOfSubcontracting',
     required: false,
   })
-  placeOfSubcontracting?: string;
+  placeOfSubcontracting?: number;
 
   @ApiProperty({
     name: 'placeOfSubcontractingLabel',
@@ -194,7 +194,7 @@ export class DevisRequestAjaxDto {
     name: 'quotationPlaceOfManufacture',
     required: false,
   })
-  quotationPlaceOfManufacture?: string;
+  quotationPlaceOfManufacture?: number;
 
   @ApiProperty({
     name: 'quotationPlaceOfManufactureLabel',
@@ -219,4 +219,20 @@ export class DevisRequestAjaxDto {
     required: false,
   })
   quotationPlaceOfSubcontractingLabel?: string;
+}
+
+export class QuotationDevisRequestAjaxDto extends IntersectionType(
+  DevisRequestAjaxDto,
+) {
+  @ApiProperty({
+    name: 'schemes',
+    required: false,
+  })
+  schemes?: string;
+
+  @ApiProperty({
+    name: 'displayNotice',
+    required: false,
+  })
+  displayNotice?: string;
 }

@@ -64,3 +64,65 @@ export class UpdateBankCheckDto {
   @ApiProperty()
   fields?: BankCheckFieldDto;
 }
+
+export class CreateUpdateBankStreet {
+  @ApiProperty()
+  street?: string;
+
+  @ApiProperty()
+  zipCode?: string;
+
+  @ApiProperty()
+  city?: string;
+
+  @ApiProperty()
+  countryAbbr?: string;
+}
+export class CreateUpdateBankDto {
+  @ApiProperty()
+  id?: number;
+
+  @ApiProperty()
+  bankOfGroup?: number;
+
+  @ApiProperty()
+  abbr?: string;
+
+  @ApiProperty({
+    nullable: false,
+  })
+  name?: string;
+
+  @ApiProperty()
+  bankCode?: string;
+
+  @ApiProperty()
+  branchCode?: string;
+
+  @ApiProperty()
+  accountNbr?: string;
+
+  @ApiProperty()
+  bankDetails?: string;
+
+  @ApiProperty()
+  slipCheckNbr?: number;
+
+  @ApiProperty()
+  currency?: string;
+
+  @ApiProperty()
+  accountingCode?: string;
+
+  @ApiProperty()
+  third_party_account?: string;
+
+  @ApiProperty()
+  product_account?: string;
+
+  @ApiProperty()
+  transfertDefault?: number;
+
+  @ApiProperty()
+  address?: CreateUpdateBankStreet;
+}
