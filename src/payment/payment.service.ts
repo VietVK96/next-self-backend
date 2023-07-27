@@ -8,6 +8,7 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { ErrorCode } from 'src/constants/error';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
 import { PerCode } from 'src/constants/permissions';
+import { SuccessResponse } from 'src/common/response/success.res';
 
 @Injectable()
 export class PaymentService {
@@ -20,7 +21,7 @@ export class PaymentService {
   ) {}
 
   // delete payment in table 'T_CASHING_CSG' and table 'T_CASHING_CONTACT_CSC'
-  async remove(id: number, user: UserIdentity) {
+  async remove(id: number, user: UserIdentity): Promise<SuccessResponse> {
     const userId = user.id;
     let payment: CashingEntity;
     try {
@@ -73,6 +74,6 @@ export class PaymentService {
     } finally {
       await queryRunner.release();
     }
-    return { message: 'Payment deleted successfully' };
+    return { success: true };
   }
 }
