@@ -60,16 +60,15 @@ export class MedicamentFamilyService {
     if (!hasPermissionUpdate) {
       throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
-    if (id) {
-      const currentMedicamentFamily =
-        await this.medicamentFamilyRepo.findOneOrFail({ where: { id } });
-      return await this.medicamentFamilyRepo.save({
-        ...currentMedicamentFamily,
-        ...body,
-      });
-    } else {
+    if (!id) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
+    const currentMedicamentFamily =
+      await this.medicamentFamilyRepo.findOneOrFail({ where: { id } });
+    return await this.medicamentFamilyRepo.save({
+      ...currentMedicamentFamily,
+      ...body,
+    });
   }
 
   async delete(userId: number, id: number) {
@@ -81,13 +80,12 @@ export class MedicamentFamilyService {
     if (!hasPermissionDelete) {
       throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
-    if (id) {
-      const currentMedicamentFamily =
-        await this.medicamentFamilyRepo.findOneOrFail({ where: { id } });
-      await this.medicamentFamilyRepo.remove(currentMedicamentFamily);
-      return SuccessCode.DELETE_SUCCESS;
-    } else {
+    if (!id) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
+    const currentMedicamentFamily =
+      await this.medicamentFamilyRepo.findOneOrFail({ where: { id } });
+    await this.medicamentFamilyRepo.remove(currentMedicamentFamily);
+    return SuccessCode.DELETE_SUCCESS;
   }
 }

@@ -80,18 +80,17 @@ export class MedicamentService {
   }
 
   async duplicate(id: number) {
-    if (id) {
-      const currentMedicament = await this.medicamentRepo.findOneOrFail({
-        where: { id },
-        relations: { contraindications: true },
-      });
-      return await this.medicamentRepo.save({
-        ...currentMedicament,
-        id: null,
-      });
-    } else {
+    if (!id) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
+    const currentMedicament = await this.medicamentRepo.findOneOrFail({
+      where: { id },
+      relations: { contraindications: true },
+    });
+    return await this.medicamentRepo.save({
+      ...currentMedicament,
+      id: null,
+    });
   }
 
   async update(id: number, body: CreateMedicamentDto, userId: number) {
@@ -104,39 +103,40 @@ export class MedicamentService {
       throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
 
-    if (id) {
-      const currentMedicament = await this.medicamentRepo.findOneOrFail({
-        where: { id },
-        relations: { contraindications: true },
-      });
-
-      const {
-        bcbdextherId,
-        family,
-        abbreviation,
-        name,
-        format,
-        dosage,
-        posologie,
-        contraindications,
-      } = body;
-      let listContraindications;
-      if (contraindications)
-        listContraindications = await this.contraindicationRepo.find({
-          where: { id: In(contraindications) },
-        });
-      return await this.medicamentRepo.save({
-        ...currentMedicament,
-        mdtId: family,
-        name,
-        abbreviation,
-        format,
-        dosage,
-        posologie,
-        bcbdextherId,
-        contraindications: listContraindications,
-      });
+    if (!id) {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
+    const currentMedicament = await this.medicamentRepo.findOneOrFail({
+      where: { id },
+      relations: { contraindications: true },
+    });
+
+    const {
+      bcbdextherId,
+      family,
+      abbreviation,
+      name,
+      format,
+      dosage,
+      posologie,
+      contraindications,
+    } = body;
+    let listContraindications;
+    if (contraindications)
+      listContraindications = await this.contraindicationRepo.find({
+        where: { id: In(contraindications) },
+      });
+    return await this.medicamentRepo.save({
+      ...currentMedicament,
+      mdtId: family,
+      name,
+      abbreviation,
+      format,
+      dosage,
+      posologie,
+      bcbdextherId,
+      contraindications: listContraindications,
+    });
   }
 
   async delete(id: number, userId: number) {
@@ -148,14 +148,13 @@ export class MedicamentService {
     if (!hasPermission) {
       throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
-    if (id) {
-      const currentMedicament = await this.medicamentRepo.findOneOrFail({
-        where: { id },
-      });
-      await this.medicamentRepo.remove(currentMedicament);
-      return SuccessCode.DELETE_SUCCESS;
-    } else {
+    if (!id) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
+    const currentMedicament = await this.medicamentRepo.findOneOrFail({
+      where: { id },
+    });
+    await this.medicamentRepo.remove(currentMedicament);
+    return SuccessCode.DELETE_SUCCESS;
   }
 }
