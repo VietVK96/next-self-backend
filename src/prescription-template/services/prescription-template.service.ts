@@ -36,25 +36,24 @@ export class PrescriptionTemplateService {
   }
 
   async create(organizationId: number, payload: CreatePrescriptionTemplateDto) {
-    if (organizationId) {
-      const { name, observation, medicaments } = payload;
-      let listMedicaments;
-      if (medicaments) {
-        listMedicaments = await this.medicamentRepo.find({
-          where: { id: In(medicaments) },
-        });
-      }
-      const newPrescriptionTemplate = await this.prescriptionTemplateRepo.save({
-        name,
-        observation,
-        organizationId,
-        medicaments: listMedicaments,
-      });
-
-      return newPrescriptionTemplate;
-    } else {
+    if (!organizationId) {
       throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
+    const { name, observation, medicaments } = payload;
+    let listMedicaments;
+    if (medicaments) {
+      listMedicaments = await this.medicamentRepo.find({
+        where: { id: In(medicaments) },
+      });
+    }
+    const newPrescriptionTemplate = await this.prescriptionTemplateRepo.save({
+      name,
+      observation,
+      organizationId,
+      medicaments: listMedicaments,
+    });
+
+    return newPrescriptionTemplate;
   }
 
   async upadte(
@@ -69,31 +68,31 @@ export class PrescriptionTemplateService {
         where: { id: In(medicaments) },
       });
     }
-    if (id && organizationId) {
-      const currentPrescriptionTemplate =
-        await this.prescriptionTemplateRepo.findOneOrFail({
-          where: { id },
-          relations: { medicaments: true },
-        });
-
-      return await this.prescriptionTemplateRepo.save({
-        ...currentPrescriptionTemplate,
-        name,
-        observation,
-        medicaments: listMedicaments,
-      });
-    } else {
+    if (!(id && organizationId)) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
+    const currentPrescriptionTemplate =
+      await this.prescriptionTemplateRepo.findOneOrFail({
+        where: { id },
+        relations: { medicaments: true },
+      });
+
+    return await this.prescriptionTemplateRepo.save({
+      ...currentPrescriptionTemplate,
+      name,
+      observation,
+      medicaments: listMedicaments,
+    });
   }
 
   async delete(id: number) {
-    if (id) {
-      const currentPrescriptionTemplate =
-        await this.prescriptionTemplateRepo.findOneOrFail({ where: { id } });
-
-      await this.prescriptionTemplateRepo.remove(currentPrescriptionTemplate);
-      return SuccessCode.DELETE_SUCCESS;
+    if (!id) {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
+    const currentPrescriptionTemplate =
+      await this.prescriptionTemplateRepo.findOneOrFail({ where: { id } });
+
+    await this.prescriptionTemplateRepo.remove(currentPrescriptionTemplate);
+    return SuccessCode.DELETE_SUCCESS;
   }
 }

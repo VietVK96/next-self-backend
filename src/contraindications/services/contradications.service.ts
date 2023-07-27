@@ -64,16 +64,15 @@ export class ContraindicationsService {
     if (!hasPermission) {
       throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
-    if (id) {
-      const currentContraindication =
-        await this.contraindicationRepo.findOneOrFail({ where: { id } });
-      return await this.contraindicationRepo.save({
-        ...currentContraindication,
-        ...body,
-      });
-    } else {
+    if (!id) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
+    const currentContraindication =
+      await this.contraindicationRepo.findOneOrFail({ where: { id } });
+    return await this.contraindicationRepo.save({
+      ...currentContraindication,
+      ...body,
+    });
   }
 
   async delete(userId: number, id: number) {
@@ -85,13 +84,12 @@ export class ContraindicationsService {
     if (!hasPermission) {
       throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
-    if (id) {
-      const currentContraindication =
-        await this.contraindicationRepo.findOneOrFail({ where: { id } });
-      await this.contraindicationRepo.remove(currentContraindication);
-      return SuccessCode.DELETE_SUCCESS;
-    } else {
+    if (!id) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
+    const currentContraindication =
+      await this.contraindicationRepo.findOneOrFail({ where: { id } });
+    await this.contraindicationRepo.remove(currentContraindication);
+    return SuccessCode.DELETE_SUCCESS;
   }
 }

@@ -126,33 +126,30 @@ export class GlossariesService {
 
   async deleteGlossary(id: number) {
     const glossary = await this.glossaryRepo.findOne({ where: { id } });
-    if (glossary) {
-      return await this.glossaryRepo.remove(glossary);
-    } else {
+    if (!glossary) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
+    return await this.glossaryRepo.remove(glossary);
   }
 
   async updateGlossary(id: number, payload: UpdateGlossaryDto) {
     const glossary = await this.glossaryRepo.findOne({ where: { id } });
-    if (glossary) {
-      return await this.glossaryRepo.save({ ...glossary, name: payload?.name });
-    } else {
+    if (!glossary) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
+    return await this.glossaryRepo.save({ ...glossary, name: payload?.name });
   }
 
   async updateGlossaryEntry(payload: UpdateGlossaryEntryDto, id: number) {
     const glossaryEntry = await this.glossaryEntryRepo.findOne({
       where: { id },
     });
-    if (glossaryEntry) {
-      return await this.glossaryEntryRepo.save({
-        ...glossaryEntry,
-        content: payload?.content,
-      });
-    } else {
+    if (!glossaryEntry) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
+    return await this.glossaryEntryRepo.save({
+      ...glossaryEntry,
+      content: payload?.content,
+    });
   }
 }
