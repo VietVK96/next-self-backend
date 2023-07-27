@@ -53,6 +53,9 @@ export interface PaymentInterface {
   amountCare: string;
   amountProsthesis: string;
   debtor: string;
+  checkNbr?: string;
+  checkBank?: string;
+  msg: string;
   patient: [
     { id: number; number: number; lastname: string; firstname: string },
   ];
@@ -72,6 +75,7 @@ export interface PaymentInterface {
       accounting_code: string;
       third_party_account: string;
       product_account: string;
+      bank_name: string;
     },
   ];
   slip_check: [
