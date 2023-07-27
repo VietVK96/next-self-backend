@@ -51,6 +51,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { RecipeModule } from './recipe/recipe.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { EventTypeModule } from './event-type/event-type.module';
+import { PaymentModule } from './payment/payment.module';
 import { PrescriptionTemplateModule } from './prescription-template/prescription-template.module';
 import { MedicamentModule } from './medicament/medicament.module';
 import { PeriodontalChartsModule } from './periodontal-charts/periodontal-charts.module';
@@ -159,6 +160,7 @@ const importsModules = [
   RecipeModule,
   StatisticsModule,
   EventTypeModule,
+  PaymentModule,
   PrescriptionTemplateModule,
   MedicamentModule,
   PeriodontalChartsModule,
