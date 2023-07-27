@@ -11,3 +11,9 @@ export const toFixed = (
 ): number => {
   return Number(num) ? +Number(num).toFixed(fixed) : 0.0;
 };
+
+export function checkBoolean(
+  value: string | number | null | undefined,
+): boolean {
+  return value ? true : false;
+}

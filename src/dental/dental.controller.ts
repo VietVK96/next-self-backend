@@ -106,6 +106,35 @@ export class DentalController {
     return this.ordonnancesServices.getMail(payload);
   }
 
+  @Get('/ordonnances/ordo_pdf')
+  @UseGuards(TokenGuard)
+  async getOrdoPdf(
+    @Res() res,
+    @Query() payload: PrintPDFDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    try {
+      const buffer = await this.ordonnancesServices.generatePdf(
+        payload,
+        identity,
+      );
+
+      res.set({
+        // pdf
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Length': buffer.length,
+        // prevent cache
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    }
+  }
+
   // dental/quotation-mutual/devis_email.php
   @Get('/devisStd2/index/')
   @UseGuards(TokenGuard)
