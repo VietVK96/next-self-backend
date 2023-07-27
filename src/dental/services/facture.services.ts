@@ -487,7 +487,7 @@ export class FactureServices {
           id_facture,
           id_user,
           id_societe,
-          id_contact,
+          contactId,
           id_devis,
           dateFacture,
           titreFacture,
@@ -505,7 +505,7 @@ export class FactureServices {
     id_facture,
     id_user,
     id_societe,
-    id_contact,
+    contactId,
     id_devis,
     dateFacture,
     titreFacture,
@@ -518,7 +518,7 @@ export class FactureServices {
     id_facture: number;
     id_user: number;
     id_societe: number;
-    id_contact: number;
+    contactId: number;
     id_devis: number;
     dateFacture: string;
     titreFacture: string;
@@ -549,7 +549,7 @@ export class FactureServices {
 
       noFacture = stm[0].noFacture;
       if (noFacture) {
-        noFacture = id_user + '-' + formattedDate + '-00005';
+        noFacture = id_user + '-' + formattedDate + '-00001';
       } else {
         noFacture =
           'u' +
@@ -572,7 +572,7 @@ export class FactureServices {
         payload: modePaiement,
         infosCompl: infosCompl,
         id_user: id_user,
-        conId: id_contact,
+        conId: contactId,
         id_devis: id_devis,
       });
       return bill;
@@ -672,7 +672,7 @@ export class FactureServices {
       }
 
       const facture = await this.initFacture(id);
-      if (facture.billTemplate === 1) {
+      if (facture.billTemplate === 2) {
         const checkModePaiement =
           ['virement', 'prelevement', 'autre']?.findIndex(
             (e) => e === facture?.modePaiement,
@@ -697,7 +697,7 @@ export class FactureServices {
         };
         const filePath = path.join(
           process.cwd(),
-          'templates/invoice',
+          'templates/pdf/invoice',
           'convention.hbs',
         );
         const options = {
@@ -736,7 +736,7 @@ export class FactureServices {
 
         const filePath = path.join(
           process.cwd(),
-          'templates/invoice',
+          'templates/pdf/invoice',
           'conventionDuplicate.hbs',
         );
         const detailsAmount = facture?.details
@@ -779,12 +779,11 @@ export class FactureServices {
             bottom: '5mm',
           },
         };
-        const pdfBuffer = await customCreatePdf(
-          filePath,
+        const pdfBuffer = await customCreatePdf({
+          files: [{ path: filePath, data }],
           options,
-          data,
           helpers,
-        );
+        });
         return pdfBuffer;
       }
     } catch (error) {

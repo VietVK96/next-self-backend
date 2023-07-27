@@ -62,7 +62,7 @@ export class CashingService {
 
       const filePath = path.join(
         process.cwd(),
-        'templates/cashing',
+        'templates/pdf/cashing',
         'cashing.hbs',
       );
       const options = {

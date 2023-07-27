@@ -316,7 +316,7 @@ export class FindEventService {
         [groupId, id],
       );
 
-      if (!events)
+      if (events.length === 0)
         throw new CNotFoundRequestException("Le rendez-vous n'existe pas.");
 
       let result: FindEventByIdRes = events.length > 0 ? events[0] : null;
