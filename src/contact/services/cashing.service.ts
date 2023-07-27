@@ -26,6 +26,7 @@ import * as dayjs from 'dayjs';
 import { DEFAULT_LOCALE } from 'src/constants/locale';
 import * as path from 'path';
 import { createPdf } from '@saemhco/nestjs-html-pdf';
+import { checkDay } from 'src/common/util/day';
 
 dayjs.locale(DEFAULT_LOCALE);
 @Injectable()
@@ -61,7 +62,7 @@ export class CashingService {
 
       const filePath = path.join(
         process.cwd(),
-        'templates/cashing',
+        'templates/pdf/cashing',
         'cashing.hbs',
       );
       const options = {
@@ -354,12 +355,8 @@ export class CashingService {
         .where('SLC.SLC_ID = :id', { id: payment.slip_check_id })
         .andWhere('SLC.LBK_ID = LBK.LBK_ID')
         .getRawOne();
-      const paymentDate = dayjs(payment.paymentDate).isValid()
-        ? dayjs(payment.paymentDate).format('YYYY-MM-DD')
-        : null;
-      const date = dayjs(payment.date).isValid()
-        ? dayjs(payment.date).format('YYYY-MM-DD')
-        : null;
+      const paymentDate = checkDay(payment?.paymentDate);
+      const date = checkDay(payment?.date);
       result.push({
         ...payment,
         paymentDate,
@@ -424,12 +421,8 @@ export class CashingService {
         .where('CSC.CSG_ID = :id', { id: payment.id })
         .andWhere('CSC.CON_ID = CON.CON_ID')
         .getRawMany();
-      const paymentDate = dayjs(payment.paymentDate).isValid()
-        ? dayjs(payment.paymentDate).format('YYYY-MM-DD')
-        : null;
-      const date = dayjs(payment.date).isValid()
-        ? dayjs(payment.date).format('YYYY-MM-DD')
-        : null;
+      const paymentDate = checkDay(payment?.paymentDate);
+      const date = checkDay(payment?.date);
       results.push({
         ...payment,
         paymentDate,

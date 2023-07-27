@@ -70,21 +70,21 @@ export class LettersEntity {
    * @Assert\Type("string")
    * @Assert\NotBlank
    */
-  @Column({
-    name: 'LET_MSG',
-    type: 'mediumtext',
-  })
-  content?: string;
+  // @Column({
+  //   name: 'LET_MSG',
+  //   type: 'mediumtext',
+  // })
+  // content?: string;
 
   /** File: application\Entities\Mail.php
    * @ORM\Column(name="LET_MSG", type="text")
    * @var string Corps du courrier.
    */
-  @Column({
-    name: 'LET_MSG',
-    type: 'mediumtext',
-  })
-  body?: string;
+  // @Column({
+  //   name: 'LET_MSG',
+  //   type: 'mediumtext',
+  // })
+  // body?: string;
 
   /** File: application\Entities\Letters.php and application\Entities\Mail.php
    * @ORM\Column(name="LET_TYPE", type="string")
@@ -104,14 +104,14 @@ export class LettersEntity {
    * @Assert\Type("string")
    * @Assert\NotBlank
    */
-  @Column({
-    name: 'LET_TYPE',
-    type: 'enum',
-    enum: EnumLettersType,
-    nullable: true,
-    default: EnumLettersType.CONTACT,
-  })
-  category?: EnumLettersType;
+  // @Column({
+  //   name: 'LET_TYPE',
+  //   type: 'enum',
+  //   enum: EnumLettersType,
+  //   nullable: true,
+  //   default: EnumLettersType.CONTACT,
+  // })
+  // category?: EnumLettersType;
 
   /** File: application\Entities\Letters.php and application\Entity\Mail.php
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Line } from '../dto/payment.dto';
 
 export class PaymentItemRes {
   @ApiProperty()
@@ -20,14 +21,5 @@ export class PaymentItemRes {
   observation?: string;
 
   @ApiProperty()
-  lines?: PaymentLines[];
-}
-
-export class PaymentLines {
-  @ApiProperty()
-  id?: number;
-  @ApiProperty()
-  date?: string;
-  @ApiProperty()
-  amount?: number;
+  lines?: Line[];
 }
