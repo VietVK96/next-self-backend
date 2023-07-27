@@ -1,4 +1,4 @@
-export class CaresheetModeEnum {
+export class ThirdPartyStatusEnum {
   public static WAITING = 'WTN';
   public static INCOMPLETE = 'INK';
   public static PAID = 'PYD';

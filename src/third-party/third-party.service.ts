@@ -12,6 +12,10 @@ import { AmcEntity } from 'src/entities/amc.entity';
 import { FseEntity } from 'src/entities/fse.entity';
 import { UserThirdPartyRes } from './response/index.res';
 import { format } from 'date-fns';
+import { thirdPartySort } from 'src/constants/third-party';
+import { Parser } from 'json2csv';
+import { Response } from 'express';
+import { ThirdPartyStatusEnum } from 'src/enum/third-party-status.enum';
 
 @Injectable()
 export class ThirdPartyService {
@@ -30,12 +34,9 @@ export class ThirdPartyService {
     @InjectRepository(AmcEntity)
     private amcRepository: Repository<AmcEntity>,
   ) {}
-  /**
-   * File: php/third-party/index.php
-   * Line: 18 -> 108
-   */
-  async getPatientThirdParty(payload: ThirdPartyDto) {
-    const { user_id, direction, page, per_page, sort } = payload;
+
+  async getCaresheet(payload: ThirdPartyDto) {
+    const { user_id, direction } = payload;
     const filterParam: string[] = Array.isArray(payload?.filterParam)
       ? payload?.filterParam
       : [payload?.filterParam] || [];
@@ -46,23 +47,6 @@ export class ThirdPartyService {
     if (!user) {
       throw new CNotFoundRequestException('User Not Found');
     }
-    const sortParam =
-      sort === 'caresheet.creationDate' ? 'caresheet.date' : 'caresheet.nbr';
-    const patients = await this.patientRepository.find({
-      select: ['id', 'lastname', 'firstname'],
-    });
-    const thirdPartyAmcs = await this.thirdPartyAmcRepository.find({
-      select: ['id', 'status', 'caresheetId', 'amcId'],
-    });
-    const amcs = await this.amcRepository.find({
-      select: ['id', 'libelle', 'numero'],
-    });
-    const thirdPartyAmos = await this.thirdPartyAmoRepository.find({
-      select: ['id', 'status', 'caresheetId', 'amoId'],
-    });
-    const amos = await this.amoRepository.find({
-      select: ['id', 'libelle', 'codeNational'],
-    });
     const queryBuilder = this.dataSource
       .createQueryBuilder()
       .select(
@@ -133,13 +117,46 @@ export class ThirdPartyService {
           break;
       }
     });
-    const queryResult: FseEntity[] = await queryBuilder
-      .orderBy(
-        sortParam,
+    const sortList = payload?.sort?.split('+') ?? [];
+    for (const sortItem of sortList) {
+      const sort = thirdPartySort[sortItem];
+      queryBuilder.addOrderBy(
+        sort,
         direction?.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
-      )
-      .getRawMany();
-    const patientThirdParties = queryResult.map((item: FseEntity) => {
+      );
+    }
+    const queryResult: FseEntity[] = await queryBuilder.getRawMany();
+    return queryResult;
+  }
+
+  /**
+   * File: php/third-party/index.php
+   * Line: 18 -> 108
+   */
+  async getPatientThirdParty(payload: ThirdPartyDto) {
+    const { user_id, page, per_page } = payload;
+    const user = await this.userRepository.findOne({ where: { id: user_id } });
+    if (!user) {
+      throw new CNotFoundRequestException('User Not Found');
+    }
+    const patients = await this.patientRepository.find({
+      select: ['id', 'lastname', 'firstname'],
+    });
+    const thirdPartyAmcs = await this.thirdPartyAmcRepository.find({
+      select: ['id', 'status', 'caresheetId', 'amcId'],
+    });
+    const amcs = await this.amcRepository.find({
+      select: ['id', 'libelle', 'numero'],
+    });
+    const thirdPartyAmos = await this.thirdPartyAmoRepository.find({
+      select: ['id', 'status', 'caresheetId', 'amoId'],
+    });
+    const amos = await this.amoRepository.find({
+      select: ['id', 'libelle', 'codeNational'],
+    });
+
+    const caresheets: FseEntity[] = await this.getCaresheet(payload);
+    const patientThirdParties = caresheets.map((item: FseEntity) => {
       const res: UserThirdPartyRes = {
         id: item?.id,
         amount: item?.amount,
@@ -207,5 +224,73 @@ export class ThirdPartyService {
       total_count: dataPaging?.length,
     };
     return data;
+  }
+
+  /**
+   * File: php/third-party/export.php
+   * Line: 18 -> 125
+   */
+  async getExportQuery(res: Response, payload: ThirdPartyDto) {
+    const caresheets: FseEntity[] = await this.getCaresheet(payload);
+    const user = await this.userRepository.findOne({
+      where: { id: payload?.user_id },
+    });
+    if (!user) {
+      throw new CNotFoundRequestException('User Not Found');
+    }
+    const patients = await this.patientRepository.find({
+      select: ['id', 'lastname', 'firstname'],
+    });
+    const thirdPartyAmcs = await this.thirdPartyAmcRepository.find({
+      select: ['id', 'status', 'caresheetId', 'amcId'],
+      relations: ['amc'],
+    });
+    const thirdPartyAmos = await this.thirdPartyAmoRepository.find({
+      select: ['id', 'status', 'caresheetId', 'amoId'],
+      relations: ['amo'],
+    });
+    const rows = [];
+    for (const caresheet of caresheets) {
+      const thirdPartyAmo = thirdPartyAmos.find(
+        (tpamo) => tpamo?.caresheetId === caresheet?.id,
+      );
+      const thirdPartyAmc = thirdPartyAmcs.find(
+        (tpamc) => tpamc?.caresheetId === caresheet?.id,
+      );
+      const patient = patients.find((p) => p?.id === caresheet?.conId);
+      rows.push({
+        amoStatus: ThirdPartyStatusEnum.choices[thirdPartyAmo?.status] ?? null,
+        amcStatus: ThirdPartyStatusEnum.choices[thirdPartyAmc?.status] ?? null,
+        date: caresheet?.date
+          ? format(new Date(caresheet?.date), 'dd/MM/yyyy')
+          : '',
+        number: caresheet?.nbr ?? '',
+        patient: `${patient?.lastname ?? ''} ${patient?.firstname ?? ''}`,
+        amo: thirdPartyAmo?.amo?.libelle ?? null,
+        amc: thirdPartyAmc?.amc?.libelle ?? null,
+        amount: caresheet?.thirdPartyAmount ?? null,
+        amountPaid: caresheet?.thirdPartyAmountPaid ?? null,
+        amountRemaining:
+          caresheet?.thirdPartyAmount - caresheet?.thirdPartyAmountPaid ?? null,
+      });
+    }
+
+    const fields = [
+      { label: 'État AMO', value: 'amoStatus' },
+      { label: 'État AMC', value: 'amcStatus' },
+      { label: 'Date', value: 'date' },
+      { label: 'Numéro', value: 'number' },
+      { label: 'Patient', value: 'patient' },
+      { label: 'Amo', value: 'amo' },
+      { label: 'Amc', value: 'amc' },
+      { label: 'Montant', value: 'amount' },
+      { label: 'Montant payé', value: 'amountPaid' },
+      { label: 'Montant restant', value: 'amountRemaining' },
+    ];
+    const parser = new Parser({ fields });
+    const data = parser.parse(rows);
+    res.header('Content-Type', 'text/csv');
+    res.attachment('suivi_tiers_payants.csv');
+    res.status(200).send(data);
   }
 }
