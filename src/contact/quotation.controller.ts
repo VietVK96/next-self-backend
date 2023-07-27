@@ -36,8 +36,10 @@ export class QuotationController {
   async patchPreferenceQuotation(
     @CurrentUser() identity: UserIdentity,
     @Param('payload') payload: PreferenceQuotationDto,
+    @Param('id') id: number,
   ): Promise<any> {
     return await this.quotationService.patchPreferenceQuotation(
+      id,
       identity,
       payload,
     );
