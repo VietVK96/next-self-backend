@@ -8,5 +8,22 @@ export class CreatePrescriptionTemplateDto {
   observation?: string;
 
   @ApiProperty()
-  medicaments?: number[];
+  medicaments?: Medicament[];
+}
+
+class Medicament {
+  position?: number;
+  id?: number;
+  mdtId?: number;
+  name?: string;
+  abbreviation?: string;
+  format?: number | string | null;
+  dosage?: number | string | null;
+  posologie?: string;
+  bcbdextherId?: number;
+  internalReference?: string;
+  organizationId?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string;
 }
