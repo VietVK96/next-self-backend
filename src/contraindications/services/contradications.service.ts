@@ -67,8 +67,12 @@ export class ContraindicationsService {
     if (!id) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    const currentContraindication =
-      await this.contraindicationRepo.findOneOrFail({ where: { id } });
+    const currentContraindication = await this.contraindicationRepo.findOne({
+      where: { id },
+    });
+    if (!currentContraindication) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
     return await this.contraindicationRepo.save({
       ...currentContraindication,
       ...body,
@@ -87,8 +91,12 @@ export class ContraindicationsService {
     if (!id) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    const currentContraindication =
-      await this.contraindicationRepo.findOneOrFail({ where: { id } });
+    const currentContraindication = await this.contraindicationRepo.findOne({
+      where: { id },
+    });
+    if (!currentContraindication) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
     await this.contraindicationRepo.remove(currentContraindication);
     return SuccessCode.DELETE_SUCCESS;
   }

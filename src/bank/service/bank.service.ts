@@ -162,6 +162,7 @@ export class BankService {
     const currentBankCheck = await this.bankCheckRepo.findOneOrFail({
       where: { id },
     });
+    if (!currentBankCheck) throw new CBadRequestException(ErrorCode.NOT_FOUND);
 
     //@TODO Not understand validator
     // $violations = $container -> get('validator') -> validate($bankCheck);
@@ -177,10 +178,10 @@ export class BankService {
   }
 
   async duplicateBankChecks(id: number) {
-    const currentBankCheck = await this.bankCheckRepo.findOneOrFail({
+    const currentBankCheck = await this.bankCheckRepo.findOne({
       where: { id },
     });
-
+    if (!currentBankCheck) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     return await this.bankCheckRepo.save({
       ...currentBankCheck,
       id: null,

@@ -6,6 +6,8 @@ import { TagEntity } from 'src/entities/tag.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { OrganizationEntity } from 'src/entities/organization.entity';
+import { ErrorCode } from 'src/constants/error';
+import { SuccessCode } from 'src/constants/success';
 
 export interface PaginatedResponse<T> {
   items: T[];
@@ -105,7 +107,10 @@ export class TagService {
         where: { id: payload?.id },
       });
     }
-    const color = { background: payload.color, foreground: '#000000' };
+    const color = {
+      background: payload.color.background,
+      foreground: '#000000',
+    };
     const newTag: TagEntity = {
       ...currentTag,
       title: payload.title,
@@ -119,9 +124,10 @@ export class TagService {
     const currentTag = await this.tagRepository.findOneOrFail({
       where: { id },
     });
-    if (currentTag) {
-      await this.tagRepository.remove(currentTag);
+    if (!currentTag) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
-    return;
+    await this.tagRepository.remove(currentTag);
+    return SuccessCode.DELETE_SUCCESS;
   }
 }

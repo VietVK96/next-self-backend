@@ -132,9 +132,10 @@ export class EventTypeService {
   }
 
   async update(id: number, payload: UpdateEventTypeDto) {
-    const currentEventType = await this.eventTypeRepository.findOneOrFail({
+    const currentEventType = await this.eventTypeRepository.findOne({
       where: { id },
     });
+    if (!currentEventType) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     const newEventType = {
       ...currentEventType,
       ...payload,
@@ -151,11 +152,11 @@ export class EventTypeService {
   }
 
   async delete(id: number) {
-    const currentEventType = await this.eventTypeRepository.findOneOrFail({
+    const currentEventType = await this.eventTypeRepository.findOne({
       where: { id },
     });
-    if (currentEventType)
-      await this.eventTypeRepository.remove(currentEventType);
+    if (!currentEventType) throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    await this.eventTypeRepository.remove(currentEventType);
     return SuccessCode.DELETE_SUCCESS;
   }
 }

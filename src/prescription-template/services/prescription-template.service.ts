@@ -72,11 +72,12 @@ export class PrescriptionTemplateService {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
     const currentPrescriptionTemplate =
-      await this.prescriptionTemplateRepo.findOneOrFail({
+      await this.prescriptionTemplateRepo.findOne({
         where: { id },
         relations: { medicaments: true },
       });
-
+    if (!currentPrescriptionTemplate)
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
     return await this.prescriptionTemplateRepo.save({
       ...currentPrescriptionTemplate,
       name,
@@ -90,8 +91,9 @@ export class PrescriptionTemplateService {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
     const currentPrescriptionTemplate =
-      await this.prescriptionTemplateRepo.findOneOrFail({ where: { id } });
-
+      await this.prescriptionTemplateRepo.findOne({ where: { id } });
+    if (!currentPrescriptionTemplate)
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
     await this.prescriptionTemplateRepo.remove(currentPrescriptionTemplate);
     return SuccessCode.DELETE_SUCCESS;
   }
