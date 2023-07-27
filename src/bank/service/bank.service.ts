@@ -329,7 +329,7 @@ export class BankService {
         return newLibraryBankEntity;
       }
     } catch (error) {
-      throw new CBadRequestException(error.message);
+      throw new CBadRequestException(error?.message);
     }
   }
 
@@ -372,7 +372,7 @@ export class BankService {
         };
       }
     } catch (error) {
-      throw new CBadRequestException(error.message);
+      throw new CBadRequestException(error?.message);
     }
   }
 }
