@@ -8,7 +8,7 @@ import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { UserSmsEntity } from 'src/entities/user-sms.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { UserService } from 'src/user/services/user.service';
-import { DataSource, Not, Repository } from 'typeorm';
+import { DataSource, IsNull, Not, Repository } from 'typeorm';
 import * as fs from 'fs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AccountStatusEnum } from 'src/enum/account-status.enum';
@@ -39,7 +39,8 @@ export class OrganizationService {
         firstname: 'ASC',
       },
     });
-    return user;
+
+    return user.filter((x) => x.medical);
   }
 
   async hasStorageSpace(groupId: number, size?: number): Promise<boolean> {
@@ -142,7 +143,7 @@ export class OrganizationService {
     if (organizationId) {
       const currentOrganization = await this.organizationRepo.findOneOrFail({
         where: { id: organizationId },
-        relations: { address: true },
+        relations: { address: true, logo: true },
       });
       const practitioners = await this._getPractitioners();
       const modeDesynchronise = practitioners.every(

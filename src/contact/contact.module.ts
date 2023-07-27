@@ -65,6 +65,7 @@ import { CashingController } from './cashing.controller';
 import { LibraryBankEntity } from 'src/entities/library-bank.entity';
 import { MailController } from './mail.controller';
 import { MailService } from './services/mail.service';
+import { OrganizationEntity } from 'src/entities/organization.entity';
 
 @Module({
   controllers: [
@@ -144,6 +145,7 @@ import { MailService } from './services/mail.service';
       ContraindicationEntity,
       MedicalHeaderEntity,
       LibraryBankEntity,
+      OrganizationEntity,
     ]),
     UserModule,
     PatientModule,
