@@ -11,6 +11,14 @@ import { DevisRequestAjaxDto } from '../dto/devis_request_ajax.dto';
 import { LettersEntity } from 'src/entities/letters.entity';
 import { MailService } from 'src/mail/services/mail.service';
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
+import { PrintPDFDto } from '../dto/facture.dto';
+import { BillEntity } from 'src/entities/bill.entity';
+import { checkId } from 'src/common/util/number';
+import * as dayjs from 'dayjs';
+import { checkDay } from 'src/common/util/day';
+import { BillLineEntity } from 'src/entities/bill-line.entity';
+import * as path from 'path';
+import { createPdf } from '@saemhco/nestjs-html-pdf';
 
 @Injectable()
 export class DevisServices {
@@ -26,7 +34,6 @@ export class DevisServices {
     private lettersRepository: Repository<LettersEntity>,
     @InjectRepository(UserPreferenceQuotationEntity)
     private userPreferenceQuotationRepository: Repository<UserPreferenceQuotationEntity>,
-
     private dataSource: DataSource,
   ) {}
 
@@ -166,7 +173,7 @@ export class DevisServices {
         }
         medicalHeader.identPratQuot = ident_prat;
         medicalHeader.quotationMutualTitle = title;
-        this.medicalHeaderRepository.save(medicalHeader);
+        await this.medicalHeaderRepository.save(medicalHeader);
         const quote = await this.dentalQuotationRepository
           .createQueryBuilder('quote')
           .leftJoin('quote.attachments', 'attachments')
@@ -225,7 +232,7 @@ export class DevisServices {
             await Promise.all(promises);
           });
           await this.dentalQuotationRepository.save(quote);
-          return { message: `Devis enregistré correctement` };
+          return `Devis enregistré correctement`;
         }
       } catch (err) {
         throw new CBadRequestException(
@@ -242,7 +249,7 @@ export class DevisServices {
           WHERE DQA_ID = ?`,
           [dentalQuotationActId, dentalQuotationActMateriaux],
         );
-        return { message: `Acte de devis enregistré correctement` };
+        return `Acte de devis enregistré correctement`;
       } catch (err) {
         throw new CBadRequestException(
           `Erreur -4 : Problème durant la sauvegarde d'un acte du devis ... ${err?.message}`,
