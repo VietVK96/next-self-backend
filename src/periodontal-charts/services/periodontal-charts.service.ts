@@ -42,4 +42,33 @@ export class PeriodontalChartsService {
       return new CNotFoundRequestException('ID Not Found');
     }
   }
+
+  async delete(id: number) {
+    try {
+      await this.periodontalChartRepository.delete(id);
+    } catch (err) {
+      throw new CNotFoundRequestException(err);
+    }
+  }
+
+  async update(payload, identity) {
+    try {
+      const matrix = JSON.stringify(payload?.matrix);
+      return await this.periodontalChartRepository.save({
+        id: payload?.id,
+        userId: payload?.user_id,
+        patientId: payload?.patient_id,
+        creationDate: payload?.creation_date,
+        status: payload?.status,
+        probingDepth: payload?.probing_depth,
+        gingivalMargin: payload?.gingival_margin,
+        plaque: payload?.plaque,
+        bleedingOnProbing: payload?.bleeding_on_probing,
+        matrix: matrix,
+        organizationId: identity?.org,
+      } as PeriodontalChartEntity);
+    } catch (err) {
+      throw new CNotFoundRequestException(err);
+    }
+  }
 }
