@@ -11,6 +11,7 @@ import { SaveGlossaryDto } from './dto/save.glossaries.dto';
 import { MAX_ENTRIES, MAX_GLOSSARY } from 'src/constants/glassary';
 import { UpdateGlossaryDto } from './dto/update.glossary.dto';
 import { UpdateGlossaryEntryDto } from './dto/update.glossaryEntry.dto';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class GlossariesService {
@@ -125,25 +126,33 @@ export class GlossariesService {
 
   async deleteGlossary(id: number) {
     const glossary = await this.glossaryRepo.findOne({ where: { id } });
-    if (glossary) this.glossaryRepo.remove(glossary);
-    return;
+    if (glossary) {
+      return await this.glossaryRepo.remove(glossary);
+    } else {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
   }
 
   async updateGlossary(id: number, payload: UpdateGlossaryDto) {
     const glossary = await this.glossaryRepo.findOne({ where: { id } });
-    if (glossary) this.glossaryRepo.save({ ...glossary, name: payload?.name });
-    return;
+    if (glossary) {
+      return await this.glossaryRepo.save({ ...glossary, name: payload?.name });
+    } else {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
   }
 
   async updateGlossaryEntry(payload: UpdateGlossaryEntryDto, id: number) {
     const glossaryEntry = await this.glossaryEntryRepo.findOne({
       where: { id },
     });
-    if (glossaryEntry)
-      this.glossaryEntryRepo.save({
+    if (glossaryEntry) {
+      return await this.glossaryEntryRepo.save({
         ...glossaryEntry,
         content: payload?.content,
       });
-    return;
+    } else {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
   }
 }

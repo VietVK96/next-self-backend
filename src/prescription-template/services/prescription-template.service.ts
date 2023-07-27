@@ -7,6 +7,7 @@ import { CreatePrescriptionTemplateDto } from '../dto/prescription-template.dto'
 import { MedicamentEntity } from 'src/entities/medicament.entity';
 import { ErrorCode } from 'src/constants/error';
 import { SuccessCode } from 'src/constants/success';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 
 @Injectable()
 export class PrescriptionTemplateService {
@@ -51,8 +52,9 @@ export class PrescriptionTemplateService {
       });
 
       return newPrescriptionTemplate;
+    } else {
+      throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
-    return ErrorCode.PERMISSION_DENIED;
   }
 
   async upadte(
@@ -80,8 +82,9 @@ export class PrescriptionTemplateService {
         observation,
         medicaments: listMedicaments,
       });
+    } else {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    return ErrorCode.FORBIDDEN;
   }
 
   async delete(id: number) {

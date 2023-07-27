@@ -8,6 +8,7 @@ import { PermissionService } from 'src/user/services/permission.service';
 import { ErrorCode } from 'src/constants/error';
 import { ContraindicationEntity } from 'src/entities/contraindication.entity';
 import { SuccessCode } from 'src/constants/success';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 
 @Injectable()
 export class ContraindicationsService {
@@ -46,7 +47,7 @@ export class ContraindicationsService {
       userId,
     );
     if (!hasPermission) {
-      return ErrorCode.PERMISSION_DENIED;
+      throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
     return await this.contraindicationRepo.save({
       ...body,
@@ -61,7 +62,7 @@ export class ContraindicationsService {
       userId,
     );
     if (!hasPermission) {
-      return ErrorCode.PERMISSION_DENIED;
+      throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
     if (id) {
       const currentContraindication =
@@ -70,8 +71,9 @@ export class ContraindicationsService {
         ...currentContraindication,
         ...body,
       });
+    } else {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    return ErrorCode.FORBIDDEN;
   }
 
   async delete(userId: number, id: number) {
@@ -81,14 +83,15 @@ export class ContraindicationsService {
       userId,
     );
     if (!hasPermission) {
-      return ErrorCode.PERMISSION_DENIED;
+      throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
     if (id) {
       const currentContraindication =
         await this.contraindicationRepo.findOneOrFail({ where: { id } });
       await this.contraindicationRepo.remove(currentContraindication);
       return SuccessCode.DELETE_SUCCESS;
+    } else {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    return ErrorCode.FORBIDDEN;
   }
 }

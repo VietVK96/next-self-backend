@@ -226,7 +226,7 @@ export class BankService {
         userId,
       );
       if (!hasPermissionCreate && !hasPermissionUpdate) {
-        return ErrorCode.PERMISSION_DENIED;
+        throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
       }
     }
     try {
@@ -263,7 +263,7 @@ export class BankService {
             relations: { address: true, user: true },
           });
           if (!libraryBankEntity.user && !libraryBankEntity.user.admin) {
-            return ErrorCode.PERMISSION_DENIED;
+            throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
           }
           addressEntity = libraryBankEntity.address;
         }
@@ -334,7 +334,7 @@ export class BankService {
           relations: { user: true },
         });
         if (!libraryBankEntity.user && !libraryBankEntity.user.admin) {
-          return ErrorCode.PERMISSION_DENIED;
+          throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
         }
         const hasPermissionDelete = await this.permissionService.hasPermission(
           'PERMISSION_DELETE',
@@ -342,7 +342,7 @@ export class BankService {
           userId,
         );
         if (!hasPermissionDelete) {
-          return ErrorCode.PERMISSION_DENIED;
+          throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
         }
         const listLibraryBank = await this.libraryBankRepo.find({
           where: {
