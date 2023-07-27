@@ -83,10 +83,13 @@ export class MedicamentService {
     if (!id) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    const currentMedicament = await this.medicamentRepo.findOneOrFail({
+    const currentMedicament = await this.medicamentRepo.findOne({
       where: { id },
       relations: { contraindications: true },
     });
+    if (!currentMedicament) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
     return await this.medicamentRepo.save({
       ...currentMedicament,
       id: null,
@@ -106,10 +109,13 @@ export class MedicamentService {
     if (!id) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    const currentMedicament = await this.medicamentRepo.findOneOrFail({
+    const currentMedicament = await this.medicamentRepo.findOne({
       where: { id },
       relations: { contraindications: true },
     });
+    if (!currentMedicament) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
 
     const {
       bcbdextherId,
@@ -151,9 +157,12 @@ export class MedicamentService {
     if (!id) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    const currentMedicament = await this.medicamentRepo.findOneOrFail({
+    const currentMedicament = await this.medicamentRepo.findOne({
       where: { id },
     });
+    if (!currentMedicament) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
     await this.medicamentRepo.remove(currentMedicament);
     return SuccessCode.DELETE_SUCCESS;
   }

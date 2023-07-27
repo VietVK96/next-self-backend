@@ -65,6 +65,9 @@ export class MedicamentFamilyService {
     }
     const currentMedicamentFamily =
       await this.medicamentFamilyRepo.findOneOrFail({ where: { id } });
+    if (!currentMedicamentFamily) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
     return await this.medicamentFamilyRepo.save({
       ...currentMedicamentFamily,
       ...body,
@@ -85,6 +88,9 @@ export class MedicamentFamilyService {
     }
     const currentMedicamentFamily =
       await this.medicamentFamilyRepo.findOneOrFail({ where: { id } });
+    if (!currentMedicamentFamily) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
     await this.medicamentFamilyRepo.remove(currentMedicamentFamily);
     return SuccessCode.DELETE_SUCCESS;
   }
