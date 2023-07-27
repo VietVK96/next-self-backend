@@ -81,6 +81,7 @@ export class QuotationService {
   }
 
   async patchPreferenceQuotation(
+    id: number,
     identity: UserIdentity,
     payload: PreferenceQuotationDto,
   ): Promise<SuccessResponse> {
@@ -90,18 +91,18 @@ export class QuotationService {
         .createQueryBuilder('usr');
       const user: UserEntity = await queryBuilder
         .leftJoinAndSelect('usr.userPreferenceQuotation', 'upq')
-        .where('usr.id = :id', { id: identity.id })
+        .where('usr.id = :id', { id: id })
         .andWhere('usr.group = :groupId', { groupId: identity.org })
         .getRawOne();
       let userPreferenceQuotation = await this.userPreferenceQuotation.findOne({
         where: {
-          usrId: user.id,
+          usrId: id,
         },
       });
 
       if (!userPreferenceQuotation) {
         const userPreferenceQuotationNew: UserPreferenceQuotationEntity = {
-          usrId: identity.id,
+          usrId: user.id,
         };
         userPreferenceQuotation = await this.userPreferenceQuotation.save(
           userPreferenceQuotationNew,
