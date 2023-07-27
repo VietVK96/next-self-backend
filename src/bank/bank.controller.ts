@@ -130,4 +130,13 @@ export class BankController {
   ) {
     return await this.bankService.deleteBank(id, identity.id, identity.org);
   }
+
+  @Get('/banks/:id')
+  @UseGuards(TokenGuard)
+  async getOneBank(
+    @CurrentUser() identity: UserIdentity,
+    @Param('id') id: number,
+  ) {
+    return await this.bankService.getOne(id);
+  }
 }
