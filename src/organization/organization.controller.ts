@@ -28,4 +28,18 @@ export class OrganizationController {
       throw new CBadRequestException('error get about organization', error);
     }
   }
+
+  //settings/organizations/edit.php
+  //all line
+  @Get()
+  @UseGuards(TokenGuard)
+  async getCurrentOrganization(@CurrentUser() identity: UserIdentity) {
+    try {
+      return await this.organizationService.getCurrentOrganization(
+        identity.org,
+      );
+    } catch (error) {
+      throw new CBadRequestException('error get about organization', error);
+    }
+  }
 }
