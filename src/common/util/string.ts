@@ -42,6 +42,14 @@ export function br2nl(str: string, replaceMode?: string) {
   return str.replace(/<\s*\/?br\s*[\/]?>/gi, replaceStr);
 }
 
+export function htmlEntities(str: string | number) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 export function validateEmail(email: string) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
