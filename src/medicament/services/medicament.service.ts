@@ -7,6 +7,7 @@ import { PermissionService } from 'src/user/services/permission.service';
 import { ErrorCode } from 'src/constants/error';
 import { ContraindicationEntity } from 'src/entities/contraindication.entity';
 import { SuccessCode } from 'src/constants/success';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 
 @Injectable()
 export class MedicamentService {
@@ -47,7 +48,7 @@ export class MedicamentService {
       userId,
     );
     if (!hasPermissionCreate) {
-      return ErrorCode.PERMISSION_DENIED;
+      throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
 
     const {
@@ -88,8 +89,9 @@ export class MedicamentService {
         ...currentMedicament,
         id: null,
       });
+    } else {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    return ErrorCode.FORBIDDEN;
   }
 
   async update(id: number, body: CreateMedicamentDto, userId: number) {
@@ -99,7 +101,7 @@ export class MedicamentService {
       userId,
     );
     if (!hasPermission) {
-      return ErrorCode.PERMISSION_DENIED;
+      throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
 
     if (id) {
@@ -144,7 +146,7 @@ export class MedicamentService {
       userId,
     );
     if (!hasPermission) {
-      return ErrorCode.PERMISSION_DENIED;
+      throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
     if (id) {
       const currentMedicament = await this.medicamentRepo.findOneOrFail({
@@ -152,7 +154,8 @@ export class MedicamentService {
       });
       await this.medicamentRepo.remove(currentMedicament);
       return SuccessCode.DELETE_SUCCESS;
+    } else {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    return ErrorCode.FORBIDDEN;
   }
 }

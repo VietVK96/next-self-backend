@@ -7,6 +7,7 @@ import { ErrorCode } from 'src/constants/error';
 import { CreateMedicamentFamilyDto } from '../dto/medicament-family.dto';
 import { PermissionService } from 'src/user/services/permission.service';
 import { SuccessCode } from 'src/constants/success';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 
 @Injectable()
 export class MedicamentFamilyService {
@@ -26,8 +27,9 @@ export class MedicamentFamilyService {
         relations: { medicamentFamilies: { medicaments: true } },
       });
       return organization.medicamentFamilies;
+    } else {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    return ErrorCode.FORBIDDEN;
   }
 
   async create(
@@ -41,7 +43,7 @@ export class MedicamentFamilyService {
       userId,
     );
     if (!hasPermissionCreate) {
-      return ErrorCode.PERMISSION_DENIED;
+      throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
     return await this.medicamentFamilyRepo.save({
       ...body,
@@ -56,7 +58,7 @@ export class MedicamentFamilyService {
       userId,
     );
     if (!hasPermissionUpdate) {
-      return ErrorCode.PERMISSION_DENIED;
+      throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
     if (id) {
       const currentMedicamentFamily =
@@ -65,8 +67,9 @@ export class MedicamentFamilyService {
         ...currentMedicamentFamily,
         ...body,
       });
+    } else {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    return ErrorCode.FORBIDDEN;
   }
 
   async delete(userId: number, id: number) {
@@ -76,14 +79,15 @@ export class MedicamentFamilyService {
       userId,
     );
     if (!hasPermissionDelete) {
-      return ErrorCode.PERMISSION_DENIED;
+      throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
     if (id) {
       const currentMedicamentFamily =
         await this.medicamentFamilyRepo.findOneOrFail({ where: { id } });
       await this.medicamentFamilyRepo.remove(currentMedicamentFamily);
       return SuccessCode.DELETE_SUCCESS;
+    } else {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    return ErrorCode.FORBIDDEN;
   }
 }
