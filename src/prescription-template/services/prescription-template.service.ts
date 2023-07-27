@@ -6,7 +6,6 @@ import { DataSource, In, Repository } from 'typeorm';
 import { CreatePrescriptionTemplateDto } from '../dto/prescription-template.dto';
 import { MedicamentEntity } from 'src/entities/medicament.entity';
 import { ErrorCode } from 'src/constants/error';
-import { SuccessCode } from 'src/constants/success';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 
 @Injectable()
@@ -22,17 +21,19 @@ export class PrescriptionTemplateService {
   ) {}
 
   async findAll(organizationId: number) {
-    if (organizationId) {
-      const organization = await this.organizationRepo.findOneOrFail({
-        where: { id: organizationId },
-        relations: {
-          prescriptionTemplates: {
-            medicaments: true,
-          },
-        },
-      });
-      return organization.prescriptionTemplates;
+    if (!organizationId) {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
+    const organization = await this.organizationRepo.findOne({
+      where: { id: organizationId },
+      relations: {
+        prescriptionTemplates: {
+          medicaments: true,
+        },
+      },
+    });
+    if (!organization) throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    return organization.prescriptionTemplates;
   }
 
   async create(organizationId: number, payload: CreatePrescriptionTemplateDto) {
@@ -40,7 +41,7 @@ export class PrescriptionTemplateService {
       throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
     const { name, observation, medicaments } = payload;
-    let listMedicaments;
+    let listMedicaments = [];
     if (medicaments) {
       listMedicaments = await this.medicamentRepo.find({
         where: { id: In(medicaments) },
@@ -62,7 +63,7 @@ export class PrescriptionTemplateService {
     id: number,
   ) {
     const { name, observation, medicaments } = payload;
-    let listMedicaments;
+    let listMedicaments = [];
     if (medicaments) {
       listMedicaments = await this.medicamentRepo.find({
         where: { id: In(medicaments) },
@@ -95,6 +96,8 @@ export class PrescriptionTemplateService {
     if (!currentPrescriptionTemplate)
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     await this.prescriptionTemplateRepo.remove(currentPrescriptionTemplate);
-    return SuccessCode.DELETE_SUCCESS;
+    return {
+      success: true,
+    };
   }
 }

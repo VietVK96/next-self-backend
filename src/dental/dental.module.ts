@@ -38,7 +38,6 @@ import { FactureServices } from './services/facture.services';
 import { MailService } from 'src/mail/services/mail.service';
 import { UserService } from 'src/user/services/user.service';
 import { DevisServices } from './services/devis.services';
-import { ConfigService } from '@nestjs/config';
 
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
 import { QuotationServices } from './services/quotation.service';

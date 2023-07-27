@@ -41,10 +41,11 @@ export class EventTypeService {
   }
 
   async findAll(id: number) {
-    const user = await this.userRepository.findOneOrFail({
+    const user = await this.userRepository.findOne({
       where: { id },
       relations: { eventTypes: true },
     });
+    if (!user) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     return user.eventTypes.map(
       ({
         id,
@@ -89,10 +90,11 @@ export class EventTypeService {
 
   async duplicate(userId: number, payload: DuplicateEventTypeDto) {
     const practitionerIds = payload.practitioners;
-    const user = await this.userRepository.findOneOrFail({
+    const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: { eventTypes: true },
     });
+    if (!user) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     const userPractitioners = await this._getPractitioners();
     const practitioners = userPractitioners.filter(
       (item) => item.id !== user.id,
@@ -157,6 +159,8 @@ export class EventTypeService {
     });
     if (!currentEventType) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     await this.eventTypeRepository.remove(currentEventType);
-    return SuccessCode.DELETE_SUCCESS;
+    return {
+      success: true,
+    };
   }
 }

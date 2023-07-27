@@ -7,7 +7,6 @@ import { CreateContraindicationsDto } from '../dto/contraindications.dto';
 import { PermissionService } from 'src/user/services/permission.service';
 import { ErrorCode } from 'src/constants/error';
 import { ContraindicationEntity } from 'src/entities/contraindication.entity';
-import { SuccessCode } from 'src/constants/success';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 
 @Injectable()
@@ -98,6 +97,8 @@ export class ContraindicationsService {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
     await this.contraindicationRepo.remove(currentContraindication);
-    return SuccessCode.DELETE_SUCCESS;
+    return {
+      success: true,
+    };
   }
 }

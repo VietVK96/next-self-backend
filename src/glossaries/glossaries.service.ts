@@ -129,7 +129,10 @@ export class GlossariesService {
     if (!glossary) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
-    return await this.glossaryRepo.remove(glossary);
+    await this.glossaryRepo.remove(glossary);
+    return {
+      success: true,
+    };
   }
 
   async updateGlossary(id: number, payload: UpdateGlossaryDto) {
