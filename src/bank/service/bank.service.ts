@@ -329,7 +329,7 @@ export class BankService {
         return newLibraryBankEntity;
       }
     } catch (error) {
-      return error;
+      throw new CBadRequestException(error.message);
     }
   }
 
@@ -362,7 +362,9 @@ export class BankService {
           },
         });
         if (listLibraryBank.length <= 1)
-          return ErrorCode.AT_LEAST_ONE_BANK_IS_REQUIRED;
+          throw new CBadRequestException(
+            ErrorCode.AT_LEAST_ONE_BANK_IS_REQUIRED,
+          );
         libraryBankEntity.deletedAt = new Date();
         await this.libraryBankRepo.save(libraryBankEntity);
         return {
@@ -370,7 +372,7 @@ export class BankService {
         };
       }
     } catch (error) {
-      return error;
+      throw new CBadRequestException(error.message);
     }
   }
 }
