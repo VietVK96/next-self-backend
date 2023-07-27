@@ -1,6 +1,6 @@
 import { Body, Controller, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { SaveTeletranmistionDto } from './dto/save-teletranmistion.dto';
 import { TeletranmistionService } from './services/teletranmistion.service';
 import {
@@ -9,8 +9,8 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 
-@Controller('/user')
-@ApiTags('User')
+@Controller('/teletransmission')
+@ApiTags('Teletransmission')
 @ApiBearerAuth()
 export class UserTeletranmistionController {
   constructor(private userTeletranmistionService: TeletranmistionService) {}
@@ -22,8 +22,11 @@ external_reference_id
 : 
 "5584"
   */
-  @Post('/teletransmission/:id')
+  @Post('/:id')
   @UseGuards(TokenGuard)
+  @ApiProperty({
+    description: 'Create teletransmission',
+  })
   async saveTeletranmission(
     @CurrentUser() identity: UserIdentity,
     @Param('id') doctorId: number,

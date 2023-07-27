@@ -19,6 +19,8 @@ import { DentalEventTaskEntity } from './dental-event-task.entity';
 import { CaresheetRejectionEntity } from './caresheet-rejection.entity';
 import { LotEntity } from './lot.entity';
 import { NoemieEntity } from './noemie.entity';
+import { ThirdPartyAmoEntity } from './third-party-amo.entity';
+import { ThirdPartyAmcEntity } from './third-party-amc.entity';
 
 /**
  * @ORM\Entity
@@ -305,6 +307,20 @@ export class FseEntity {
     default: 0,
   })
   thirdPartyAmount?: number;
+
+  /**
+   * @ORM\OneToOne(targetEntity="ThirdPartyAmo", mappedBy="caresheet", cascade={"persist", "remove"})
+   * @Serializer\Expose
+   * @Serializer\Groups({"caresheet:index", "caresheet:read", "tiersPayant:index"})
+   */
+
+  thirdPartyAmo?: ThirdPartyAmoEntity;
+  /**
+   * @ORM\OneToOne(targetEntity="ThirdPartyAmc", mappedBy="caresheet", cascade={"persist", "remove"})
+   * @Serializer\Expose
+   * @Serializer\Groups({"caresheet:read", "tiersPayant:index"})
+   */
+  thirdPartyAmc?: ThirdPartyAmcEntity;
 
   /**
    * @ORM\Column(name="third_party_amount_paid", type="decimal", precision=10, scale=2, options={"default": 0})

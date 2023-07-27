@@ -42,10 +42,16 @@ export class PrescriptionTemplateService {
       throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
     const { name, observation, medicaments } = payload;
+    const medicamentIds =
+      medicaments && medicaments.length > 0
+        ? medicaments.map((medicament) => {
+            return medicament.id;
+          })
+        : [];
     let listMedicaments = [];
     if (medicaments) {
       listMedicaments = await this.medicamentRepo.find({
-        where: { id: In(medicaments) },
+        where: { id: In(medicamentIds) },
       });
     }
     const newPrescriptionTemplate = await this.prescriptionTemplateRepo.save({
@@ -65,9 +71,15 @@ export class PrescriptionTemplateService {
   ) {
     const { name, observation, medicaments } = payload;
     let listMedicaments = [];
+    const medicamentIds =
+      medicaments && medicaments.length > 0
+        ? medicaments.map((medicament) => {
+            return medicament.id;
+          })
+        : [];
     if (medicaments) {
       listMedicaments = await this.medicamentRepo.find({
-        where: { id: In(medicaments) },
+        where: { id: In(medicamentIds) },
       });
     }
     if (!(id && organizationId)) {
