@@ -137,18 +137,20 @@ export class GlossariesService {
   }
 
   async updateGlossaryEntry(payload: UpdateGlossaryEntryDto, id: number) {
-    try {
-      const glossaryEntry = await this.glossaryEntryRepo.findOne({
-        where: { id },
-      });
-      if (glossaryEntry)
-        this.glossaryEntryRepo.save({
-          ...glossaryEntry,
-          content: payload?.content,
-        });
-      return;
-    } catch {
+    const glossaryEntry = await this.glossaryEntryRepo.findOne({
+      where: { id },
+    });
+    if (!glossaryEntry) {
       throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
+    }
+
+    try {
+      await this.glossaryEntryRepo.save({
+        ...glossaryEntry,
+        content: payload?.content,
+      });
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.SAVE_FAILED);
     }
   }
 }
