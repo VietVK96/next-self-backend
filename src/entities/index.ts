@@ -133,6 +133,7 @@ import { ContactPhoneCopEntity } from './contact-phone-cop.entity';
 import { FileTagEntity } from './file-tag.entity';
 import { LotCareSheetEntity } from './lot-caresheet.entity';
 import { CorrespondentPhoneCppEntity } from './correspondent-phone-cpp.entity';
+import { NoemioCaresheetEntity } from './noemie-caresheet.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -269,6 +270,7 @@ import { CorrespondentPhoneCppEntity } from './correspondent-phone-cpp.entity';
       FileTagEntity,
       LotCareSheetEntity,
       CorrespondentPhoneCppEntity,
+      NoemioCaresheetEntity,
     ]),
   ],
   controllers: [],

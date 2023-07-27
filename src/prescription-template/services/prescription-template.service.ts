@@ -37,10 +37,17 @@ export class PrescriptionTemplateService {
   async create(organizationId: number, payload: CreatePrescriptionTemplateDto) {
     if (organizationId) {
       const { name, observation, medicaments } = payload;
+      const medicamentIds =
+        medicaments && medicaments.length > 0
+          ? medicaments.map((medicament) => {
+              return medicament.id;
+            })
+          : [];
+      console.log(medicamentIds);
       let listMedicaments;
       if (medicaments) {
         listMedicaments = await this.medicamentRepo.find({
-          where: { id: In(medicaments) },
+          where: { id: In(medicamentIds) },
         });
       }
       const newPrescriptionTemplate = await this.prescriptionTemplateRepo.save({
@@ -61,10 +68,16 @@ export class PrescriptionTemplateService {
     id: number,
   ) {
     const { name, observation, medicaments } = payload;
+    const medicamentIds =
+      medicaments && medicaments.length > 0
+        ? medicaments.map((medicament) => {
+            return medicament.id;
+          })
+        : [];
     let listMedicaments;
     if (medicaments) {
       listMedicaments = await this.medicamentRepo.find({
-        where: { id: In(medicaments) },
+        where: { id: In(medicamentIds) },
       });
     }
     if (id && organizationId) {
