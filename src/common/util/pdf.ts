@@ -2,16 +2,17 @@ import puppeteer from 'puppeteer';
 import * as hbs from 'handlebars';
 import * as fs from 'fs';
 
-type HandlebarsHelpers = {
+export type HandlebarsHelpers = {
   [key: string]: hbs.HelperDelegate;
 };
 
+export type PdfTemplateFile = {
+  path: string;
+  data: any;
+  type?: string;
+};
 type CustomCreatePdfProps = {
-  files: {
-    path: string;
-    data: any;
-    type?: string;
-  }[];
+  files: PdfTemplateFile[];
   options: any;
   helpers?: HandlebarsHelpers;
 };
