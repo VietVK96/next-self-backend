@@ -265,7 +265,9 @@ export class UserService {
     organizationId: number,
     body: GetOneActiveRes,
   ): Promise<SuccessResponse> {
-    if (!queryId) throw new CBadRequestException(ErrorCode.FORBIDDEN);
+    if (!queryId || !loginUserId || organizationId) {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
+    }
     const user = await this.userRepository.findOne({ where: { id: queryId } });
     if (!user) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     const transaction = this.dataSource.createQueryRunner();
@@ -285,6 +287,11 @@ export class UserService {
       const userEntity = await this.userRepository.findOne({
         where: { id: loginUserId },
       });
+
+      if (!userEntity) {
+        throw new CBadRequestException(ErrorCode.NOT_FOUND);
+      }
+
       const userAdmin = userEntity?.admin;
 
       const targetUserEntity: UserEntity = await this.dataSource
@@ -299,16 +306,23 @@ export class UserService {
         .where('usr.id = :userId', { userId: user?.id })
         .andWhere('usr.organizationId = :groupId', { groupId: organizationId })
         .getOne();
+
+      if (!targetUserEntity) {
+        throw new CBadRequestException(ErrorCode.NOT_FOUND);
+      }
       const targetUserTypeEntity = targetUserEntity.type;
 
-      let privilegeTargetEntity = await this.dataSource
-        .getRepository(PrivilegeEntity)
-        .findOne({
-          where: {
-            usrId: userEntity?.id,
-            usrWithId: targetUserEntity?.id,
-          },
-        });
+      let privilegeTargetEntity: PrivilegeEntity;
+      if (userEntity?.id && targetUserEntity?.id) {
+        privilegeTargetEntity = await this.dataSource
+          .getRepository(PrivilegeEntity)
+          .findOne({
+            where: {
+              usrId: userEntity?.id,
+              usrWithId: targetUserEntity?.id,
+            },
+          });
+      }
 
       if (targetUserTypeEntity.professional) {
         if (!privilegeTargetEntity) {
@@ -343,20 +357,24 @@ export class UserService {
             const permissionBilling = permission?.invoice;
             const permissionPaiement = permission?.payment;
             const permissionAccounting = permission?.accountancy;
-
-            let privilegeProfessionalEntity = await this.dataSource
-              .getRepository(PrivilegeEntity)
-              .findOne({
-                where: {
-                  usrId: userEntity?.id,
-                  usrWithId: practitionerId,
-                },
-              });
+            let privilegeProfessionalEntity: PrivilegeEntity;
+            if (userEntity?.id && practitionerId) {
+              privilegeProfessionalEntity = await this.dataSource
+                .getRepository(PrivilegeEntity)
+                .findOne({
+                  where: {
+                    usrId: userEntity?.id,
+                    usrWithId: practitionerId,
+                  },
+                });
+            }
 
             if (!privilegeProfessionalEntity) {
               const practitionerEntity = await this.userRepository.findOne({
                 where: { id: practitionerId },
               });
+              if (!practitionerEntity)
+                throw new CBadRequestException(ErrorCode.NOT_FOUND);
               privilegeProfessionalEntity = new PrivilegeEntity();
               privilegeProfessionalEntity.user = targetUserEntity;
               privilegeProfessionalEntity.userWith = practitionerEntity;
