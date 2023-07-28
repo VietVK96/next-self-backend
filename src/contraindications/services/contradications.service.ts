@@ -97,7 +97,7 @@ export class ContraindicationsService {
     if (!currentContraindication) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
-    await this.contraindicationRepo.remove(currentContraindication);
+    await this.contraindicationRepo.softRemove(currentContraindication);
     return {
       success: true,
     };
