@@ -1,10 +1,5 @@
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
-import {
-  Injectable,
-  BadRequestException,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TariffTypeEntity } from 'src/entities/tariff-type.entity';
 import { Repository } from 'typeorm';
