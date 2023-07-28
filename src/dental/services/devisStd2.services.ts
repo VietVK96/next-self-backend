@@ -12,20 +12,35 @@ import {
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
 import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
 import { ContactEntity } from 'src/entities/contact.entity';
-import { format } from 'date-fns';
-import { PaymentPlanDeadlineEntity } from 'src/entities/payment-plan-deadline.entity';
 import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
 import { LettersEntity } from 'src/entities/letters.entity';
+import { PrintPDFDto } from '../dto/facture.dto';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { ErrorCode } from 'src/constants/error';
+import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
+import * as path from 'path';
+import { DevisStd2ActesRes, DevisStd2InitRes } from '../res/devisStd2.res';
+import { checkDay, customDayOfYear } from 'src/common/util/day';
+import dayjs from 'dayjs';
+import { toFixed } from 'src/common/util/number';
+import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
+import { DevisStd2Dto } from '../dto/devisStd2.dto';
+import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
+import { BillEntity } from 'src/entities/bill.entity';
+import { br2nl } from 'src/common/util/string';
+import { StringHelper } from 'src/common/util/string-helper';
 
 @Injectable()
 export class DevisStd2Services {
   constructor(
+    @InjectRepository(BillEntity)
+    private billRepository: Repository<BillEntity>,
     @InjectRepository(PlanPlfEntity)
     private planPlfRepository: Repository<PlanPlfEntity>,
-    @InjectRepository(BillLineEntity)
-    private paymentPlanDeadlineRepository: Repository<PaymentPlanDeadlineEntity>,
     @InjectRepository(DentalQuotationActEntity)
     private dentalQuotationActRepository: Repository<DentalQuotationActEntity>, //dental
+    @InjectRepository(DentalQuotationEntity)
+    private dentalQuotationRepository: Repository<DentalQuotationEntity>,
     @InjectRepository(EventEntity)
     private eventRepository: Repository<EventEntity>, //event
     @InjectRepository(UserEntity)
@@ -37,22 +52,27 @@ export class DevisStd2Services {
     @InjectRepository(ContactEntity)
     private contactRepository: Repository<ContactEntity>, //event
     private dataSource: DataSource,
+    private paymentScheduleService: PaymentScheduleService,
   ) {}
 
-  async getInitChamps(userId, contactId, noPdt, noDevis, identity) {
+  async getInitChamps(
+    req: DevisStd2Dto,
+    identity?: UserIdentity,
+  ): Promise<DevisStd2InitRes> {
+    let result: DevisStd2InitRes = {} as DevisStd2InitRes;
     let idUser = identity?.id; //user id get to session
-    let withs = userId; // id user to payload
-
+    const withs = req?.id_user; // id user to payload
+    const id_pdt = req?.no_pdt;
     const type = EnumPrivilegeTypeType.NONE;
-    if (withs !== null) {
+    if (withs) {
       const privilege = await this.privilegeRepository.find({
         where: {
           usrId: idUser,
-          usrWithId: In(withs),
+          usrWithId: In([withs]),
           type: Not(type),
         },
       });
-      if (privilege === null) {
+      if (!privilege) {
         console.error(
           "Vous n'avez pas assez de privilège pour accéder aux factures",
         );
@@ -60,99 +80,98 @@ export class DevisStd2Services {
         idUser = withs;
       }
     }
-    let userPreferenceQuotationColor: string;
     let reference: string;
 
     let userSocialSecurityReimbursementRate: number;
+    let userQuery: UserEntity;
     try {
-      const userQuery = await this.userRepository.findOne({
+      userQuery = await this.userRepository.findOne({
         where: { id: idUser },
         relations: ['type', 'userPreferenceQuotation', 'address'],
       });
       const userType = userQuery?.type;
       const userPreferenceQuotationEntity = userQuery?.userPreferenceQuotation;
       if (userPreferenceQuotationEntity) {
-        userPreferenceQuotationColor = userPreferenceQuotationEntity?.color;
+        result.userPreferenceQuotationColor =
+          userPreferenceQuotationEntity?.color;
       } else {
-        userPreferenceQuotationColor = 'blue';
+        result.userPreferenceQuotationColor = 'blue';
       }
 
-      userSocialSecurityReimbursementRate =
+      result.userSocialSecurityReimbursementRate =
         userQuery?.socialSecurityReimbursementRate;
-      const userRateCharges = userQuery?.rateCharges;
-      const userSignature = userQuery?.signature;
-      const addressEntity = userQuery?.address;
+      result.userRateCharges = toFixed(userQuery?.rateCharges);
+      result.userSignature = userQuery?.signature;
+      result.addressEntity = userQuery?.address;
 
       if (userType === null) {
-        console.error(
+        throw new CBadRequestException(
           "Vous n'avez pas assez de privilège pour accéder aux factures",
         );
       }
-
-      if (!noPdt) {
-        console.error(
-          "Vous n'avez pas assez de privilège pour accéder aux factures",
-        );
-      }
-
-      // const medical_entete_id: number = 0;
-      const formatter = new Intl.DateTimeFormat(undefined, {
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
-      });
-      const currentDate = new Date();
-      const datedevisStd2 = formatter.format(currentDate);
-      const titredevisStd2 = 'Devis pour traitement bucco-dentaire';
-
-      let txch = 0;
-      const couleur = 'blue';
-      const schemas = 'both';
-      const quotationSignaturePatient = null;
-      const quotationSignaturePraticien = null;
-
-      if (userRateCharges) {
-        txch = userRateCharges >= 1 ? userRateCharges / 100 : userRateCharges;
-      }
-      const userConnectedPreferenceQuotationEntity =
-        await this.userPreferenceQuotationRepository.findOneBy({
-          usrId: identity?.id,
-        });
-      let userPreferenceQuotationDisplayTooltip: number;
-      if (userConnectedPreferenceQuotationEntity) {
-        userPreferenceQuotationDisplayTooltip =
-          userConnectedPreferenceQuotationEntity?.displayTooltip;
-      } else {
-        userPreferenceQuotationDisplayTooltip = 1;
-      }
-
-      const year = currentDate.getFullYear();
-      const dayOfYear = String(currentDate.getDate()).padStart(3, '0');
-
-      // Assuming you have an asynchronous function named 'executeQuery' that performs the query
-      let random = await this.dataSource.query(
-        `
-        SELECT COALESCE(SUBSTRING(MAX(reference), -5), 0) AS reference
-         FROM T_DENTAL_QUOTATION_DQO
-         WHERE USR_ID = ?
-        AND reference LIKE CONCAT(?, ?, '%')`,
-        [userQuery?.id, year, dayOfYear],
-      );
-      if (random === null || random === '') {
-        random = 1;
-      } else {
-        random = parseInt(random) + 1;
-      }
-      reference = year + dayOfYear + '-' + String(random).padStart(5, '0');
     } catch {
-      console.error(
+      throw new CBadRequestException(
         "Vous n'avez pas assez de privilège pour accéder aux factures",
       );
     }
 
-    if (noPdt !== undefined) {
+    if (!id_pdt) {
+      throw new CBadRequestException(
+        'Pas de plan de traitement ni de devis s&eacute;lectionn&eacute;',
+      );
+    }
+
+    result.medical_entete_id = 0;
+
+    result.datedevisStd2 = dayjs().format('MM/DD/YY');
+    result.titredevisStd2 = 'Devis pour traitement bucco-dentaire';
+
+    result.txch = 0;
+    result.couleur = 'blue';
+    result.schemas = 'both';
+    result.quotationSignaturePatient = null;
+    result.quotationSignaturePraticien = null;
+
+    if (result?.userRateCharges) {
+      result.txch =
+        result?.userRateCharges >= 1
+          ? result?.userRateCharges / 100
+          : result?.userRateCharges;
+    }
+
+    const userConnectedPreferenceQuotationEntity =
+      await this.userPreferenceQuotationRepository.findOneBy({
+        usrId: identity?.id,
+      });
+    if (userConnectedPreferenceQuotationEntity) {
+      result.userPreferenceQuotationDisplayTooltip =
+        userConnectedPreferenceQuotationEntity?.displayTooltip;
+    } else {
+      result.userPreferenceQuotationDisplayTooltip = 1;
+    }
+    const today = dayjs();
+    const year = today.year();
+    const dayOfYear = customDayOfYear();
+
+    // Assuming you have an asynchronous function named 'executeQuery' that performs the query
+    let random = await this.dataSource.query(
+      `
+      SELECT COALESCE(SUBSTRING(MAX(reference), -5), 0) AS reference
+       FROM T_DENTAL_QUOTATION_DQO
+       WHERE USR_ID = ?
+      AND reference LIKE CONCAT(?, ?, '%')`,
+      [userQuery?.id, year, dayOfYear],
+    );
+    if (!random) {
+      random = 1;
+    } else {
+      random = parseInt(random) + 1;
+    }
+    result.reference = year + dayOfYear + '-' + String(random).padStart(5, '0');
+
+    if (id_pdt) {
       const plans = await this.planPlfRepository.findOne({
-        where: { id: noPdt },
+        where: { id: id_pdt },
         relations: ['events'],
       });
 
@@ -171,7 +190,7 @@ export class DevisStd2Services {
         });
         const contact = await this.contactRepository?.findOne({
           where: {
-            group: identity?.org,
+            organizationId: identity?.org,
             id: event?.conId,
           },
         });
@@ -195,11 +214,11 @@ export class DevisStd2Services {
           'Probl&egrave;me durant le rapatriement des informations du rendez-vous ...',
         );
       }
-      const idContact = sql?.conId;
-
-      if (withs === null || withs === undefined) {
-        withs = sql?.usrId;
-        if (withs === null || withs === undefined) {
+      result.id_contact = sql?.conId;
+      result.id_user = req?.id_user;
+      if (!result.id_user) {
+        result.id_user = sql?.usrId;
+        if (!result.id_user) {
           throw new CBadRequestException(
             'Un identifiant de praticien est requis',
           );
@@ -207,12 +226,12 @@ export class DevisStd2Services {
       }
 
       const dataUser = await this.userRepository.findOne({
-        where: { id: idUser },
+        where: { id: result.id_user },
         relations: ['address'],
       });
 
-      const identPrat = 'Dr' + dataUser?.lastname + dataUser?.firstname;
-      const adresse_prat = dataUser?.address?.city;
+      result.identPrat = 'Dr' + dataUser?.lastname + dataUser?.firstname;
+      result.adresse_prat = dataUser?.address?.city;
 
       const dataContact = await this.dataSource.query(
         `
@@ -241,23 +260,25 @@ export class DevisStd2Services {
                     LEFT OUTER JOIN T_GENDER_GEN GEN ON GEN.GEN_ID = CON.GEN_ID
                     WHERE CON.CON_ID = ?
         `,
-        [idContact],
+        [result?.id_contact],
       );
       if (!dataContact) {
         throw new CBadRequestException(
           'Probl&egrave;me durant le rapatriement des nom et pr&eacute;nom du patient ...',
         );
       }
-      const civilite = dataContact[0]?.civilite;
-      const patientLastname = dataContact[0]?.patient_lastname;
-      const patientFirstname = dataContact[0]?.patient_firstname;
-      const patientCivilityName = dataContact[0]?.civilite;
-      let nom_prenom_patient = dataContact[0]?.nom_prenom_patient;
+      result.civilite = dataContact[0]?.civilite;
+      result.patientLastname = dataContact[0]?.patient_lastname;
+      result.patientFirstname = dataContact[0]?.patient_firstname;
+      result.patientCivilityName = dataContact[0]?.civilite;
+      result.nom_prenom_patient = dataContact[0]?.nom_prenom_patient;
 
       if (dataContact?.civilite) {
-        nom_prenom_patient = dataContact[0]?.civilite + '' + nom_prenom_patient;
-        const adresse_pat = nom_prenom_patient + '\n' + dataContact[0]?.address;
-        const tel = dataContact[0]?.phone;
+        result.nom_prenom_patient =
+          dataContact[0]?.civilite + '' + result?.nom_prenom_patient;
+        result.adresse_pat =
+          result?.nom_prenom_patient + '\n' + dataContact[0]?.address;
+        result.tel = dataContact[0]?.phone;
       }
       const dataActes = await this.dataSource.query(
         `
@@ -300,7 +321,7 @@ export class DevisStd2Services {
         [ids_events],
       );
 
-      const actes = [];
+      const actes: DevisStd2ActesRes[] = [];
 
       dataActes.forEach((row) => {
         row.rss = 0;
@@ -324,33 +345,28 @@ export class DevisStd2Services {
         const acte = { ...row };
         actes.push(acte);
       });
-
-      const date_devis = format(plans?.createdAt, 'dd/MM/yyyy');
-      const duree_devis = '';
-      const organisme = ''; //"Nom de l'organisme complémentaire";
-      const contrat = ''; //"N° de contrat ou d'adhérent";
-      const ref = ''; //"Référence dossier";
-      const dispo = 'FALSE';
-      const dispo_desc = '';
-      const infosCompl = 'Les soins ne sont pas compris dans ce devis.';
-      const date_acceptation = '';
-      const dateSql = format(plans?.createdAt, 'yyyy/MM/dd');
+      result.actes = actes;
+      result.date_devis = checkDay(plans?.createdAt, 'DD/MM/YYYY');
+      result.duree_devis = '';
+      result.organisme = ''; //"Nom de l'organisme complémentaire";
+      result.contrat = ''; //"N° de contrat ou d'adhérent";
+      result.ref = ''; //"Référence dossier";
+      result.dispo = 'FALSE';
+      result.dispo_desc = '';
+      result.infosCompl = 'Les soins ne sont pas compris dans ce devis.';
+      result.date_acceptation = '';
+      result.dateSql = checkDay(plans?.createdAt, 'DD/MM/YYYY');
 
       const dataPlan = await this.planPlfRepository.findOne({
-        where: { id: noPdt },
+        where: { id: id_pdt },
       });
-      const paymentScheduleStatement = dataPlan?.paymentScheduleId;
-      let paymentScheduleId = dataPlan?.paymentScheduleId;
-      if (
-        paymentScheduleStatement !== undefined &&
-        paymentScheduleStatement !== null
-      ) {
-        const paymentSchedule = await this.find(
-          paymentScheduleId,
-          identity?.org,
+      result.paymentScheduleId = dataPlan?.paymentScheduleId;
+      if (result?.paymentScheduleId) {
+        result.paymentSchedule = await this.paymentScheduleService.duplicate(
+          result.paymentScheduleId,
+          identity,
         );
-        await this.store(identity?.org, paymentSchedule);
-        paymentScheduleId = paymentSchedule?.id;
+        result.paymentScheduleId = result.paymentSchedule?.id;
       }
 
       this.dataSource.transaction(async (manager) => {
@@ -361,17 +377,17 @@ export class DevisStd2Services {
               VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?)
               `,
             [
-              userId,
-              noPdt,
-              paymentScheduleId || null,
+              req?.id_user,
+              id_pdt,
+              result?.paymentScheduleId || null,
               reference,
-              userPreferenceQuotationColor,
-              identPrat,
-              identPrat,
-              idContact,
-              nom_prenom_patient,
-              dateSql,
-              adresse_prat,
+              result?.userPreferenceQuotationColor,
+              result?.identPrat,
+              result?.identPrat,
+              result?.id_contact,
+              result?.nom_prenom_patient,
+              result?.dateSql,
+              result?.adresse_prat,
               dataContact[0]?.phone,
             ],
           );
@@ -402,8 +418,11 @@ export class DevisStd2Services {
               inputParameters,
             );
             if (!stmt) {
+              throw new CBadRequestException(
+                'Probl&egrave;me durant la cr&eacute;ation des actes du devis ... ',
+              );
             } else {
-              const id_devisStd2_ligne = stmt?.insertId;
+              result.id_devisStd2_ligne = stmt?.insertId;
             }
           }
           const quote = await this.dentalQuotationActRepository.find({
@@ -419,11 +438,12 @@ export class DevisStd2Services {
               }
             }
           }
+          // result.attachments = attachments;
         } catch {
           throw new CBadRequestException('dsa');
         }
       });
-    } else if (noDevis !== null) {
+    } else if (req?.no_devis) {
       try {
         const dataDENTALQUOTATION = await this.dataSource.query(
           `
@@ -462,13 +482,18 @@ export class DevisStd2Services {
               AND USR.USR_ID = user_medical.user_id
               AND DQO.CON_ID = T_CONTACT_CON.CON_ID
           `,
-          [noDevis, identity?.org],
+          [req?.no_devis, identity?.org],
         );
         if (dataDENTALQUOTATION === null && dataDENTALQUOTATION === undefined) {
-          console.error("Ce devis n'existe pas ...");
+          throw new CBadRequestException("Ce devis n'existe pas ...");
         }
-        // return dataDENTALQUOTATION
 
+        const couleur = dataDENTALQUOTATION?.couleur
+          ? dataDENTALQUOTATION?.couleur
+          : 'blue';
+        const descriptions = dataDENTALQUOTATION?.description.split(
+          '[-----------------------------------------]',
+        );
         const dataActes = await this.dataSource.query(
           `
           SELECT DQA.DQA_ID as id_devisStd2_ligne,
@@ -487,9 +512,9 @@ export class DevisStd2Services {
                WHERE DQA.DQO_ID = " . ? . "
                ORDER BY DQA.DQA_POS ASC, DQA.DQA_ID ASC
           `,
-          [noDevis],
+          [req?.no_devis],
         );
-        let actes: string[];
+        const actes: DevisStd2ActesRes[] = [];
         for (const dataActe of dataActes) {
           if (
             dataActe?.typeLigne === null &&
@@ -497,75 +522,237 @@ export class DevisStd2Services {
           ) {
             dataActe.typeLigne = 'operation';
           }
-          actes.push(dataActes);
+          actes.push({ ...dataActes });
         }
+        result = {
+          ...result,
+          id_user: dataDENTALQUOTATION?.id_user,
+          id_pdt: dataDENTALQUOTATION?.id_pdt,
+          schemas: dataDENTALQUOTATION?.schemas
+            ? dataDENTALQUOTATION?.schemas
+            : 'both',
+          couleur,
+          userPreferenceQuotationColor: couleur,
+          identPrat: dataDENTALQUOTATION?.ident_prat,
+          adressePrat: dataDENTALQUOTATION?.DQO_ADDR_PRAT,
+          id_contact: dataDENTALQUOTATION?.ident_pat,
+          nom_prenom_patient: dataDENTALQUOTATION?.nom_prenom_patient,
+          adresse_pat: dataDENTALQUOTATION?.adresse_pat,
+          date_devis: checkDay(dataDENTALQUOTATION?.date_devis),
+          date_acceptation: checkDay(dataDENTALQUOTATION?.date_acceptation),
+          descriptions,
+          infosCompl: descriptions[1],
+          etatBucco: descriptions[0],
+          quotationSignaturePatient: dataDENTALQUOTATION?.signaturePatient,
+          quotationSignaturePraticien: dataDENTALQUOTATION?.signaturePraticien,
+          paymentScheduleId: dataDENTALQUOTATION?.payment_schedule_id,
+          reference: dataDENTALQUOTATION?.reference,
+          doctorRpps: dataDENTALQUOTATION?.doctor_rpps,
+          patientNumber: dataDENTALQUOTATION?.patient_number,
+          patientLastname: dataDENTALQUOTATION?.patient_lastname,
+          patientFirstname: dataDENTALQUOTATION?.patient_firstname,
+          patientBirthday: dataDENTALQUOTATION?.patient_birthday,
+          patientInsee: dataDENTALQUOTATION?.patient_insee,
+          patientCivilityName: dataDENTALQUOTATION?.patient_civility_name,
+          patientCivilityLongName:
+            dataDENTALQUOTATION?.patient_civility_long_name,
+          actes,
+        };
       } catch (err) {
         throw new CBadRequestException(err);
       }
     }
-
-    //Todo : line 600->800 dental/devisStd2/devisStd2_init_champs.php
-  }
-
-  async find(id: number, groupId: number) {
-    const paymentSchedule = await this.dataSource.query(
-      `
-      SELECT
-                id,
-                doctor_id,
-                patient_id,
-                label,
-                amount,
-                observation
-            FROM payment_schedule
-            WHERE id = ?
-              AND group_id = ?
-      `,
-      [id, groupId],
-    );
-    if (!paymentSchedule) {
-      throw new CBadRequestException('validation.in');
-    }
-    const lineStatement = await this.dataSource.query(
-      `
-      SELECT
-      id,
-      date,
-      amount
-      FROM payment_schedule_line
-      WHERE payment_schedule_id = ?
-      `,
-      [id],
-    );
-    paymentSchedule.lines = lineStatement;
-    return paymentSchedule;
-  }
-
-  async store(groupId: number, inputs) {
-    const doctorId = inputs[0]?.doctor_id;
-    const patientId = inputs[0]?.patient_id;
-    const label = inputs[0]?.label;
-    const amount = inputs[0]?.amount;
-    const observation = inputs[0]?.observation;
-    const lines = inputs?.lines;
+    const user = this.userRepository.findOne({
+      where: { id: result?.id_user },
+    });
     try {
-      const lineStatement = await this.dataSource.query(
-        `
-        INSERT INTO payment_schedule (group_id, doctor_id, patient_id, label, amount, observation)
-                VALUES (?, ?, ?, ?, ?, ?)
-        `,
-        [groupId, doctorId, patientId, label, amount, observation],
+      result.id_facture = 0;
+      result.noFacture = '';
+      // bug#254 2013-09-11 Sébastien BORDAT
+      //  Récupération du taux de remboursement sécu
+      // bug#337 2014-02-28 Sébastien BORDAT
+      //  Taux de remboursement sécu par défaut si le taux de remboursement sécu
+      //  du patient est vide
+      const contactEntity = await this.contactRepository.findOne({
+        where: { id: req?.id_contact },
+      });
+      result.socialSecurityReimbursementRate =
+        contactEntity?.socialSecurityReimbursementRate ||
+        result?.userSocialSecurityReimbursementRate;
+      const billEntity = await this.billRepository.findOne({
+        where: { dqoId: req?.no_devis, delete: 0 },
+        select: { id: true, nbr: true },
+      });
+      if (billEntity) {
+        result.id_facture = billEntity?.id;
+        result.noFacture = billEntity?.nbr;
+      }
+
+      if (req?.pdf) {
+        /* En version PDF on doit transformer les chaines de caractères */
+        result.identPrat = br2nl(result.identPrat);
+        // result.id_contact = br2nl(result.id_contact);
+        // result.nom_prenom_patient = br2nl(result.nom_prenom_patient);
+        result.date_devis = br2nl(result.date_devis);
+        result.adresse_pat = br2nl(result.adresse_pat);
+        result.infosCompl = br2nl(result.infosCompl);
+      }
+
+      const max_long_descriptionLigne = req?.pdf ? 36 : 65;
+      const max_long_dentsLigne = req?.pdf ? 7 : 8;
+
+      result.details = [];
+      result.total_prixvente = 0;
+      result.total_prestation = 0;
+      result.total_charges = 0;
+      result.total_prixLigne = 0;
+      result.total_rss = 0;
+      result.total_nrss = 0;
+      result.total_roc = 0;
+
+      result?.actes.map((ar_acte) => {
+        let ar_dents: string[] = [];
+        let ar_descriptionLigne: string[] = [];
+        if (req?.pdf) {
+          ar_dents = StringHelper.trunkLine(
+            ar_acte?.dentsLigne,
+            max_long_dentsLigne,
+            ',',
+          );
+          ar_descriptionLigne = StringHelper.trunkLine(
+            ar_acte?.descriptionLigne,
+            max_long_descriptionLigne,
+          );
+          ar_acte.dentsLigne = ar_dents[0];
+          ar_acte.descriptionLigne = ar_descriptionLigne[0];
+        }
+
+        ar_acte.nouveau = true;
+        ar_acte.prixvente = toFixed(ar_acte.prixachat / (1 - result?.txch));
+        ar_acte.prestation = toFixed(
+          ar_acte.prixLigne * (1 - result?.txch) - ar_acte.prixachat,
+        );
+        ar_acte.charges =
+          ar_acte.prixLigne - ar_acte.prestation - ar_acte.prixvente;
+        ar_acte.prixLigne =
+          ar_acte.prixvente + ar_acte.prestation + ar_acte.charges;
+        ar_acte.nrss = ar_acte.prixLigne - ar_acte.rss;
+        if (Math.abs(ar_acte?.nrss) < 0.01) ar_acte.nrss = 0;
+        ar_acte.roc = 0;
+
+        result.total_prixvente += ar_acte.prixvente;
+        result.total_prestation += ar_acte.prestation;
+        result.total_charges += ar_acte.charges;
+        result.total_prixLigne += ar_acte.prixLigne;
+        result.total_rss += ar_acte.rss;
+        result.total_nrss += ar_acte.nrss;
+        result.details.push(ar_acte);
+
+        if (req?.pdf) {
+          const pushToDetails = (
+            dentsLigne: string,
+            descriptionLigne: string,
+          ) => {
+            result.details.push({
+              id_devisStd2_ligne: 0,
+              typeLigne: 'operation',
+              dateLigne: '00/00/0000',
+              dentsLigne,
+              descriptionLigne,
+              materiau: '',
+              cotation: '',
+              prixvente: 0,
+              prestation: 0,
+              charges: 0,
+              prixLigne: 0,
+              rss: 0,
+              nrss: 0,
+              roc: 0,
+              nouveau: false,
+            });
+          };
+
+          ar_dents.forEach((dent, index) => {
+            if (index > 0) {
+              const descriptionLigne =
+                ar_descriptionLigne.length > index
+                  ? ar_descriptionLigne[index]
+                  : '';
+              pushToDetails(dent, descriptionLigne);
+            }
+          });
+
+          const startIndex = ar_dents.length;
+          ar_descriptionLigne.forEach((des, index) => {
+            if (index >= startIndex) {
+              pushToDetails('', des);
+            }
+          });
+        }
+      });
+
+      result.odontogramType = 'adult';
+    } catch (error) {
+      throw new CBadRequestException(error.message);
+    }
+
+    return result;
+  }
+
+  async generatePdf(req: PrintPDFDto, identity: UserIdentity) {
+    try {
+      const initData = await this.getInitChamps(
+        { no_devis: req?.id },
+        identity,
       );
-      await this.paymentPlanDeadlineRepository.save(
-        lines?.map(
-          (line) =>
-            ({
-              paymentScheduleId: line?.id,
-              dueDate: line?.date,
-              amount: line?.amount,
-            } as PaymentPlanDeadlineEntity),
-        ),
+      const colonneDate = false;
+      let color =
+        initData?.couleur && initData?.couleur === 'blue' ? '#DDDDFF' : 'white';
+      color =
+        initData?.couleur && initData?.couleur === 'blue' ? '#EEEEEE' : color;
+      const devisStd2 = this.dentalQuotationRepository.findOne({
+        where: { id: req?.id },
+      });
+      const data = {
+        ...initData,
+        borderBottomColor: color == 'white' ? '1px' : '0px',
+        borderBottomWidth: color == 'white' ? 'black' : 'white',
+      };
+      const helpers = {};
+      const filePath = path.join(
+        process.cwd(),
+        'templates/pdf/devisStd2',
+        'devisStd2.hbs',
       );
-    } catch {}
+      const files: PdfTemplateFile[] = [
+        {
+          data,
+          path: filePath,
+        },
+      ];
+
+      const options = {
+        format: 'A4',
+        displayHeaderFooter: true,
+        footerTemplate: '',
+        margin: {
+          left: '5mm',
+          top: '5mm',
+          right: '5mm',
+          bottom: '5mm',
+        },
+      };
+
+      return customCreatePdf({ files, options, helpers });
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
+    }
+  }
+
+  async corps1(data: DevisStd2InitRes, pdf: boolean) {
+    data.etatBucco =
+      !data?.etatBucco && !pdf
+        ? 'Les dents : <br/>Le parodonte : '
+        : data.etatBucco;
   }
 }

@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { LibraryOdontogramEntity } from 'src/entities/library-odontogram.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ShowOdontogramDto } from '../dto/odontogram.dto';
 
 @Injectable()
 export class PatientOdontogramService {
@@ -22,6 +23,9 @@ export class PatientOdontogramService {
     @InjectRepository(DentalEventTaskEntity)
     private dentalEvenTaskRepository: Repository<DentalEventTaskEntity>,
   ) {}
+
+  #names = ['adult', 'adult_occlusale', 'child', 'child_occlusale', 'charting'];
+  #status = ['initial', 'current', 'planned'];
 
   async getCurrent(request: OdontogramCurrentDto) {
     try {
@@ -192,5 +196,34 @@ export class PatientOdontogramService {
       applyZoneInvisibleStyle,
       applyZoneVisibleStyle,
     };
+  }
+
+  /**
+   * ecoophp/application/Services/Contact/Odontogram.php 77 - 105
+   *
+   * Retourne le xml du schéma dentaire en fonction
+   * du nom et du status, avec tous les styles appliqués.
+   *
+   * @param  string $name Nom du schéma dentaire.
+   * @param  string $status Status d'affichage.
+   * @param boolean $imageToURL Transformation du chemin de l'image en URL.
+   * @return string
+   */
+  async show(req: ShowOdontogramDto, evenTasks: EventTaskEntity[]) {
+    this.checkOdontogramName(req?.name);
+    this.checkStatus(req?.status);
+    const style = this.odontogramRunStatus(evenTasks);
+  }
+
+  checkOdontogramName(name: string) {
+    if (this.#names.findIndex((e) => name === e) === -1) {
+      throw new CBadRequestException(`Le schéma ${name} n'existe pas.`);
+    }
+  }
+
+  checkStatus(status: string) {
+    if (this.#status.findIndex((e) => e === status)) {
+      throw new CBadRequestException(`L'état ${status} n'existe pas.`);
+    }
   }
 }

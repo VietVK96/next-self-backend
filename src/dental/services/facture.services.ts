@@ -337,7 +337,7 @@ export class FactureServices {
   }
 
   async getInitChamps(
-    userId: number[],
+    userId: number,
     contactId: number,
     identity: UserIdentity,
   ) {
@@ -373,7 +373,7 @@ export class FactureServices {
       const privilege = await this.privilegeRepository.find({
         where: {
           usrId: userID,
-          usrWithId: In(withs),
+          usrWithId: In([withs]),
           type: Not(type),
         },
       });
@@ -382,7 +382,7 @@ export class FactureServices {
           "Vous n'avez pas assez de privilège pour accéder aux factures",
         );
       } else {
-        userIds = withs;
+        userIds = [withs];
       }
     }
 
