@@ -3,6 +3,8 @@ import { DataSource } from 'typeorm';
 import { PaymentItemRes } from '../response/payment.res';
 import { PaymentSchedulesDto } from '../dto/payment.dto';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class PaymentScheduleService {
@@ -63,20 +65,16 @@ export class PaymentScheduleService {
     const queryBuiler = this.dataSource.createQueryBuilder();
     const paymentSchedule = this.find(id, groupId);
 
-    queryBuiler
+    const q = await queryBuiler
       .delete()
       .from('payment_schedule')
       .where('id = :id', { id })
       .andWhere('group_id = :groupId', { groupId })
       .execute();
 
-    //@TODO
-    // if (!$statement -> rowCount()) {
-    //   throw new InvalidArgumentException(trans("validation.in", [
-    //     '%attribute%' => 'id'
-    //   ]));
-    // }
-
+    if (!q?.affected) {
+      throw new CBadRequestException(ErrorCode.DELETE_UNSUCCESSFUL);
+    }
     return paymentSchedule;
   }
 

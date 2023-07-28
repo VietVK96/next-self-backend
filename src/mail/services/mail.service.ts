@@ -13,7 +13,6 @@ import { CreateUpdateMailDto } from '../dto/createUpdateMail.dto';
 import { CreateUpdateMailRes } from '../response/createUpdateMail.res';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { PatientService } from 'src/patient/service/patient.service';
-import { CorrespondentService } from 'src/correspondent/services/correspondent.service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ConfigService } from '@nestjs/config';
 import { fr } from 'date-fns/locale';

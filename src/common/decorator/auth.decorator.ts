@@ -1,5 +1,4 @@
 import {
-  CACHE_MANAGER,
   ExecutionContext,
   Inject,
   Injectable,
@@ -10,6 +9,7 @@ import { createParamDecorator } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { JWT_LOG_OUT } from 'src/constants/jwt';
 import { JwtPayload } from 'jsonwebtoken';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 export interface UserIdentity extends JwtPayload {
   id: number;
