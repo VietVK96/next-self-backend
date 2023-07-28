@@ -32,9 +32,7 @@ export class TariffTypesService {
     });
 
     if (tariffType.length > 0) {
-      throw new ConflictException(
-        'A Tariff Type with this name already in use',
-      );
+      throw new ConflictException('duplicate');
     }
 
     const listTariff = await this.tariffTypesRepo.find({
@@ -44,9 +42,7 @@ export class TariffTypesService {
     //TODO: RESEARCH HOW TO EXTRACT MAX_ENTRIES FROM ENTITIES
     const MAX_ENTRIES = 5;
     if (listTariff.length >= MAX_ENTRIES) {
-      throw new BadRequestException(
-        `The maximum of entries ${MAX_ENTRIES} has been exceeded`,
-      );
+      throw new BadRequestException('maximum');
     }
 
     const newTariffType = this.tariffTypesRepo.create({
@@ -67,7 +63,7 @@ export class TariffTypesService {
       id,
     });
     if (!tariffType) {
-      throw new NotFoundException(`Tariff Type with id ${id} not found`);
+      throw new NotFoundException('notfound');
     }
 
     Object.assign(tariffType, attrs);
@@ -83,7 +79,7 @@ export class TariffTypesService {
       id,
     });
     if (!tariffType) {
-      throw new NotFoundException(`Tariff Type with id ${id} not found`);
+      throw new NotFoundException('notfound');
     }
 
     return await this.tariffTypesRepo.remove(tariffType);
