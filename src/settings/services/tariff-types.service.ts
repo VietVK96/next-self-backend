@@ -8,6 +8,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { TariffTypeEntity } from 'src/entities/tariff-type.entity';
 import { Repository } from 'typeorm';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class TariffTypesService {
@@ -32,7 +34,7 @@ export class TariffTypesService {
     });
 
     if (tariffType.length > 0) {
-      throw new ConflictException('duplicate');
+      throw new CBadRequestException(ErrorCode.DUPLICATE);
     }
 
     const listTariff = await this.tariffTypesRepo.find({
@@ -42,7 +44,7 @@ export class TariffTypesService {
     //TODO: RESEARCH HOW TO EXTRACT MAX_ENTRIES FROM ENTITIES
     const MAX_ENTRIES = 5;
     if (listTariff.length >= MAX_ENTRIES) {
-      throw new BadRequestException('maximum');
+      throw new CBadRequestException(ErrorCode.MAXIMUM);
     }
 
     const newTariffType = this.tariffTypesRepo.create({
@@ -63,7 +65,7 @@ export class TariffTypesService {
       id,
     });
     if (!tariffType) {
-      throw new NotFoundException('notfound');
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
 
     Object.assign(tariffType, attrs);
@@ -79,7 +81,7 @@ export class TariffTypesService {
       id,
     });
     if (!tariffType) {
-      throw new NotFoundException('notfound');
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
 
     return await this.tariffTypesRepo.remove(tariffType);
