@@ -42,6 +42,7 @@
 
     .barcode .barcode-text {
         text-align: center;
+        width: 100%;
     }
 
     h1 {
@@ -97,12 +98,12 @@
   </table>
   {{#if rppsNumber}}
   <div style="margin-top: 5mm;">
-    <div class="barcode">
+    <div class="barcode" style="display: flex; flex-wrap: wrap; justify-content: space-between;">
       <div class="barcode-text">
         N° RPPS
       </div>
       <!-- Assuming there's a helper 'generateHtml' to generate the barcode -->
-      <img src="{{generateBarcode rppsNumber}}">
+      <img src="{{imgRppsNumber}}" style="padding: 5px 10px; width:150px"/>
       <div class="barcode-text">
         {{rppsNumber}}
       </div>
@@ -112,14 +113,14 @@
 </header>
 <footer>
   {{#if finessNumber}}
-  <div class="barcode">
-    <div class="barcode-text">
+  <div class="barcode" style="display: flex; flex-wrap: wrap; justify-content: space-between;">
+    <div class="barcode-text" style="width: 100%;">
       N° FINESS/AM
     </div>
     <!-- Assuming there's a helper 'generateHtml' to generate the barcode -->
-    <img src="{{generateBarcode finessNumber}}">
+    <img src="{{imgFinessNumber}}" style="padding: 5px 0px; width:150px">
     
-    <div class="barcode-text">
+    <div class="barcode-text" style="width: 100%">
       {{finessNumber}}
     </div>
   </div>

@@ -135,21 +135,44 @@ export class DentalController {
     }
   }
 
-  // dental/quotation-mutual/devis_email.php
+  //ecoophp/dental/devisStd2/devisStd2_pdf.php
+  @Get('/devisStd2/devisStd2_pdf')
+  @UseGuards(TokenGuard)
+  async getDevisStd2Pdf(
+    @Res() res,
+    @Query() payload: PrintPDFDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    try {
+      const buffer = await this.devisStd2Services.generatePdf(
+        payload,
+        identity,
+      );
+
+      res.set({
+        // pdf
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Length': buffer.length,
+        // prevent cache
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    }
+  }
+
+  // dental/devisStd2/devis_email.php
   @Get('/devisStd2/index/')
   @UseGuards(TokenGuard)
   async getInitChampsDevisStd2(
     @CurrentUser() identity: UserIdentity,
     @Query() params: DevisStd2Dto,
   ) {
-    const { id_user, id_contact, no_devis, no_pdt } = params;
-    return await this.devisStd2Services.getInitChamps(
-      id_user,
-      id_contact,
-      no_pdt,
-      no_devis,
-      identity,
-    );
+    return await this.devisStd2Services.getInitChamps(params, identity);
   }
 
   @Post('/quotation-mutual/devis_email')
