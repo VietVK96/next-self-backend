@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -14,6 +22,9 @@ import {
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { PreferenceService } from './services/preference.sevece';
 import { TokenDownloadService } from './services/token-download.service';
+import { UnpaidService } from './services/unpaid.service';
+import { UnpaidDto } from './dto/unpaid.dto';
+import { Response } from 'express';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -23,6 +34,7 @@ export class UserController {
     private userService: UserService,
     private preferenceService: PreferenceService,
     private tokenDownloadService: TokenDownloadService,
+    private unpaidService: UnpaidService,
   ) {}
 
   /**
@@ -69,5 +81,20 @@ export class UserController {
     return {
       token,
     };
+  }
+
+  // File php/user/unpaid/index.php
+  @Get('unpaid/index')
+  @UseGuards(TokenGuard)
+  async getUserUnpaidPatient(@Query() payload: UnpaidDto) {
+    return await this.unpaidService.getUserUnpaidPatient(payload);
+  }
+
+  /**
+   * File: php/third-party/export.php
+   */
+  @Get('unpaid/export')
+  async export(@Res() res: Response, @Query() payload: UnpaidDto) {
+    return await this.unpaidService.getExportQuery(res, payload);
   }
 }
