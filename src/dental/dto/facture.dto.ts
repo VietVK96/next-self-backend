@@ -196,6 +196,10 @@ export class PrintPDFDto {
   id?: string;
   @ApiProperty()
   duplicate?: boolean;
+  @ApiProperty()
+  group?: number;
+  @ApiProperty()
+  original?: string;
 }
 
 @ApiExtraModels()

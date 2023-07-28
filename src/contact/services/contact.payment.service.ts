@@ -738,7 +738,7 @@ export class ContactPaymentService {
       }
 
       const amount = Number(payload?.amount)
-        ? payload?.amount?.toFixed(2)
+        ? (+payload?.amount)?.toFixed(2)
         : '0';
       const amountParts = amount.split('.');
       currencyName += +amountParts[0] >= 2 ? 's' : '';
@@ -760,7 +760,7 @@ export class ContactPaymentService {
 
       const filePath = path.join(
         process.cwd(),
-        'templates/bank_check',
+        'templates/pdf/bank_check',
         'receipt.hbs',
       );
 
@@ -806,6 +806,7 @@ export class ContactPaymentService {
         size: fileSizeInKB,
         type: 'application/pdf',
         name: fileName,
+        path: savePath,
       };
       const fileData = await this.uploadRepo.save(file);
 

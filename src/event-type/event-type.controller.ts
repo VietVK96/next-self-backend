@@ -48,6 +48,8 @@ export class EventTypeController {
     );
   }
 
+  //settings/library/event-types/copy.php
+  //all line
   @Post('/copy')
   @UseGuards(TokenGuard)
   async duplicate(
@@ -57,12 +59,16 @@ export class EventTypeController {
     return await this.eventTypeService.duplicate(identity.id, payload);
   }
 
+  //settings/library/event-types/update.php
+  //all line
   @Put('/:id')
   @UseGuards(TokenGuard)
   async update(@Param('id') id: number, @Body() payload: UpdateEventTypeDto) {
     return await this.eventTypeService.update(id, payload);
   }
 
+  //settings/library/event-types/delete.php
+  //all line
   @Delete('/:id')
   @UseGuards(TokenGuard)
   async delete(@Param('id') id: number) {
