@@ -173,7 +173,6 @@ export class SaveEventService {
       }
 
       if (!id) {
-        console.log('no id');
         const result = await queryRunner.query(
           `INSERT INTO T_EVENT_EVT (resource_id, USR_ID, CON_ID, event_type_id, EVT_NAME, EVT_START, EVT_END, EVT_MSG, EVT_PRIVATE, EVT_COLOR, EVT_STATE, lateness, evt_rrule)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -248,8 +247,6 @@ export class SaveEventService {
         });
         eventStatus = eventStatement.state;
         eventLateness = eventStatement.lateness;
-
-        console.log('hasRecurrEvents', !hasRecurrEvents);
 
         if (!hasRecurrEvents) {
           await Promise.all([
