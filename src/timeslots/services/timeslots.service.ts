@@ -114,8 +114,8 @@ export class TimeslotsService {
           use_default_color: timeslot.use_default_color,
         },
         recurring_pattern: recurringPattern,
-        start_date: timeslot.start_date,
-        end_date: timeslot.end_date,
+        start_date: dayjs(timeslot.start_date).format('YYYY-MM-DD HH:mm:ss'),
+        end_date: dayjs(timeslot.end_date).format('YYYY-MM-DD HH:mm:ss'),
         color: timeslot.color,
         title: timeslot.title,
       };
