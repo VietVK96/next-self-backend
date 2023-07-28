@@ -1,5 +1,4 @@
 import { ApiProperty, ApiExtraModels, IntersectionType } from '@nestjs/swagger';
-import { EnumMedicalHeaderFormatType } from 'src/entities/medical-header.entity';
 
 @ApiExtraModels()
 export class DevisRequestAjaxDto {
