@@ -163,7 +163,7 @@ export class MedicamentService {
     if (!currentMedicament) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
-    await this.medicamentRepo.remove(currentMedicament);
+    await this.medicamentRepo.softRemove(currentMedicament);
     return {
       success: true,
     };

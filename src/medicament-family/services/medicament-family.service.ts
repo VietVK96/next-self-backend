@@ -95,7 +95,7 @@ export class MedicamentFamilyService {
     if (!currentMedicamentFamily) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
-    await this.medicamentFamilyRepo.remove(currentMedicamentFamily);
+    await this.medicamentFamilyRepo.softRemove(currentMedicamentFamily);
     return {
       success: true,
     };

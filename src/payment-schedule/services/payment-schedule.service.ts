@@ -3,7 +3,6 @@ import { DataSource } from 'typeorm';
 import { PaymentItemRes } from '../response/payment.res';
 import { PaymentSchedulesDto } from '../dto/payment.dto';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
-import { PaymentPlanEntity } from 'src/entities/payment-plan.entity';
 
 @Injectable()
 export class PaymentScheduleService {

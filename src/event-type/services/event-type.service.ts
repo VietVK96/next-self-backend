@@ -155,7 +155,7 @@ export class EventTypeService {
       where: { id },
     });
     if (currentEventType)
-      await this.eventTypeRepository.remove(currentEventType);
+      await this.eventTypeRepository.softRemove(currentEventType);
     return SuccessCode.DELETE_SUCCESS;
   }
 }
