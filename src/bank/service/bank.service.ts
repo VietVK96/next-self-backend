@@ -295,24 +295,27 @@ export class BankService {
         libraryBankEntity.slipCheckNbr = slipCheckNbr;
         libraryBankEntity.isDefault = transfertDefault;
 
-        const address = payload.address;
-        const { street, zipCode, city, countryAbbr } = address;
-        if (address || street || zipCode || city || countryAbbr) {
-          let country;
-          if (countryAbbr) {
-            country = countries.find((x) => x.cca2 === countryAbbr);
-          }
-          if (!addressEntity) addressEntity = new AddressEntity();
-          if (street) addressEntity.street = street;
-          if (city) addressEntity.city = city;
-          if (zipCode) addressEntity.zipCode = zipCode;
-          if (country) addressEntity.country = country.translations.fra.common;
-          if (countryAbbr) addressEntity.countryAbbr = countryAbbr;
+        const address = payload?.address;
+        if (address) {
+          const { street, zipCode, city, countryAbbr } = address;
+          if (address || street || zipCode || city || countryAbbr) {
+            let country;
+            if (countryAbbr) {
+              country = countries.find((x) => x.cca2 === countryAbbr);
+            }
+            if (!addressEntity) addressEntity = new AddressEntity();
+            if (street) addressEntity.street = street;
+            if (city) addressEntity.city = city;
+            if (zipCode) addressEntity.zipCode = zipCode;
+            if (country)
+              addressEntity.country = country.translations.fra.common;
+            if (countryAbbr) addressEntity.countryAbbr = countryAbbr;
 
-          const newAddress = await this.addressRepo.save(addressEntity);
-          libraryBankEntity.adrId = newAddress.id;
-        } else if (addressEntity) {
-          await this.addressRepo.remove(addressEntity);
+            const newAddress = await this.addressRepo.save(addressEntity);
+            libraryBankEntity.adrId = newAddress.id;
+          } else if (addressEntity) {
+            await this.addressRepo.remove(addressEntity);
+          }
         }
 
         const newLibraryBankEntity = await this.libraryBankRepo.save(
