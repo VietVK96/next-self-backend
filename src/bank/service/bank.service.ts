@@ -361,4 +361,14 @@ export class BankService {
       return error;
     }
   }
+
+  async getOne(id: number) {
+    if (!id) throw new CBadRequestException(ErrorCode.FORBIDDEN);
+    const currentBank = await this.libraryBankRepo.findOne({
+      where: { id },
+      relations: { address: true },
+    });
+    if (!currentBank) throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    return currentBank;
+  }
 }
