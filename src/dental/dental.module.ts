@@ -48,6 +48,9 @@ import { QuotationServices } from './services/quotation.service';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { PlanEventEntity } from 'src/entities/plan-event.entity';
 import { PaymentPlanDeadlineEntity } from 'src/entities/payment-plan-deadline.entity';
+import { QuotesServices } from './services/quotes.service';
+import { PaymentSchedulesModule } from 'src/payment-schedule/payment-schedule.module';
+import { LibraryActEntity } from 'src/entities/library-act.entity';
 
 @Module({
   imports: [
@@ -90,7 +93,9 @@ import { PaymentPlanDeadlineEntity } from 'src/entities/payment-plan-deadline.en
       UserEntity,
       AmoEntity,
       AmcEntity,
+      LibraryActEntity,
     ]),
+    PaymentSchedulesModule,
   ],
   controllers: [DentalController, DevisHNController],
   providers: [
@@ -109,6 +114,7 @@ import { PaymentPlanDeadlineEntity } from 'src/entities/payment-plan-deadline.en
     DevisStd2Services,
     QuotationServices,
     ConfigService,
+    QuotesServices,
   ],
 })
 export class DentalModule {}

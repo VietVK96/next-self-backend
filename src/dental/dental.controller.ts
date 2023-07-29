@@ -17,6 +17,8 @@ import {
 import { OrdonnancesServices } from './services/ordonnances.services';
 import { OrdonnancesDto } from './dto/ordonnances.dto';
 import { FactureServices } from './services/facture.services';
+import { QuotesConventionDto } from './dto/quotes.dto';
+import { QuotesServices } from './services/quotes.service';
 import { DevisStd2Services } from './services/devisStd2.services';
 import { DevisStd2Dto } from './dto/devisStd2.dto';
 import {
@@ -40,6 +42,7 @@ export class DentalController {
   constructor(
     private ordonnancesServices: OrdonnancesServices,
     private factureServices: FactureServices,
+    private quotesServices: QuotesServices,
     private devisStd2Services: DevisStd2Services,
     private quotationServices: QuotationServices,
     private quotationMutualServices: QuotationMutualServices,
@@ -104,6 +107,15 @@ export class DentalController {
   @UseGuards(TokenGuard)
   async mail(@Body() payload: EnregistrerFactureDto) {
     return this.ordonnancesServices.getMail(payload);
+  }
+
+  @Post('quotes/devis/init')
+  @UseGuards(TokenGuard)
+  async devisInitChamp(
+    @CurrentUser() identity: UserIdentity,
+    @Body() payload: QuotesConventionDto,
+  ) {
+    return this.quotesServices.init(payload, identity);
   }
 
   @Get('/ordonnances/ordo_pdf')
