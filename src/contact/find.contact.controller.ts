@@ -19,9 +19,9 @@ import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
 import { FindAllContactDto } from './dto/findAll.contact.dto';
 import { ContactService } from './services/contact.service';
 import { FindContactService } from './services/find.contact.service';
-import { createReadStream } from 'fs';
+import { createReadStream, existsSync } from 'fs';
 import { join } from 'path';
-
+import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
 @ApiBearerAuth()
 @Controller('/contact')
 @ApiTags('Contact')
@@ -32,7 +32,7 @@ export class FindContactController {
     private contactService: ContactService,
   ) {}
 
-  // File php\contact\findAll.php 1->8
+  // File php/contact/findAll.php 1->8
   @Get()
   @ApiQuery({
     name: 'conditions',
@@ -69,7 +69,7 @@ export class FindContactController {
     return this.contactService.findOne(id, doctorId, identity);
   }
 
-  // File php\contact\recentlyTreated\findAll.php 1->8
+  // File php/contact/recentlyTreated/findAll.php 1->8
   @Get('/recentlyTreated')
   @UseGuards(TokenGuard)
   async findAllRecentlyTreated(@Query('practitioner') practitioner?: number) {
@@ -112,16 +112,23 @@ export class FindContactController {
 
   // File : php/contact/avatar.php 100%
   @Get('avatar/:contactId')
-  // @UseGuards(TokenGuard)
+  @UseGuards(TokenDownloadGuard)
   async getAvatar(
     @Param('contactId') contactId: number,
     @Res({ passthrough: true }) res: Response,
   ) {
     try {
       const fileRes = await this.contactService.getAvatar(contactId);
-      const file = createReadStream(fileRes.file);
-      file.on('error', (e) => {
-        this.logger.error(e);
+      if (!fileRes || !existsSync(fileRes?.file)) {
+        res.set({
+          'Content-Type': 'image/jpeg',
+        });
+        return new StreamableFile(
+          createReadStream(join(process.cwd(), 'front/no_image.png')),
+        );
+      }
+      const file = createReadStream(fileRes?.file);
+      file.on('error', (_e) => {
         res.set({
           'Content-Type': 'image/jpeg',
         });
@@ -135,11 +142,5 @@ export class FindContactController {
     } catch (e) {
       this.logger.error(e);
     }
-    res.set({
-      'Content-Type': 'image/jpeg',
-    });
-    return new StreamableFile(
-      createReadStream(join(process.cwd(), 'front/no_image.png')),
-    );
   }
 }

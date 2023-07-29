@@ -1,4 +1,4 @@
-import { Controller, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { TokenGuard } from 'src/common/decorator/auth.decorator';
 import { FsDto } from './dto/index.dto';
@@ -9,10 +9,12 @@ import { InterfacageService } from './services/interfacage.service';
 @ApiTags('Interfacage')
 export class InterfacageController {
   constructor(private service: InterfacageService) {}
-
+  /**
+   * file: php/service/interfacage/fs.php
+   */
   @Post('/fs')
   @UseGuards(TokenGuard)
-  async CheckMaximumPrice(@Query() request: FsDto) {
+  async CheckMaximumPrice(@Body() request: FsDto) {
     return this.service.fs(request);
   }
 }

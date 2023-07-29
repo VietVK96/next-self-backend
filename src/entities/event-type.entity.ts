@@ -138,7 +138,7 @@ export class EventTypeEntity {
     type: 'json',
     nullable: true,
   })
-  color?: string;
+  color?: any;
 
   /**
    * @ORM\Column(name="is_visible", type="boolean", options={"default": true})

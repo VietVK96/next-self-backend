@@ -7,6 +7,7 @@ import {
   Patch,
   Res,
   UseGuards,
+  Logger,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FileService } from './services/file.service';
@@ -20,11 +21,14 @@ import { join } from 'path';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { resizeThumbnail } from 'src/common/util/file';
 import { UpdateFileDto } from './dto/index.dto';
+import { ErrorCode } from 'src/constants/error';
+import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
 
 @ApiTags('File')
 @Controller('files')
 @ApiBearerAuth()
 export class FileController {
+  private logger: Logger = new Logger(FileController.name);
   constructor(private fileService: FileService) {}
 
   /**
@@ -56,7 +60,7 @@ export class FileController {
    *
    */
   @Get('/inline/:id')
-  @UseGuards(TokenGuard)
+  @UseGuards(TokenDownloadGuard)
   async openInline(
     @CurrentUser() user: UserIdentity,
     @Param('id') id: number,
@@ -70,9 +74,10 @@ export class FileController {
 
       res.setHeader('Content-Type', mimeType);
       res.setHeader('Content-Disposition', disposition);
-      res.sendFile(join(__dirname, '..', '..', path));
+      res.sendFile(path);
     } catch (error) {
-      throw new CBadRequestException('file not found', error);
+      this.logger.error(error);
+      throw new CBadRequestException(ErrorCode.FILE_NOT_FOUND, error);
     }
   }
 
@@ -81,7 +86,7 @@ export class FileController {
    *
    */
   @Get('/thumbnail/:id')
-  @UseGuards(TokenGuard)
+  @UseGuards(TokenDownloadGuard)
   async fileThubmnail(
     @CurrentUser() user: UserIdentity,
     @Param('id') id: number,
@@ -89,14 +94,14 @@ export class FileController {
   ) {
     try {
       const { mimeType, path } = await this.fileService.getPathFile(id);
-
       const streamFile = resizeThumbnail(path, mimeType.split('/')[1]);
 
       streamFile.pipe(res);
     } catch (error) {
-      const notFoundPath = '/front/notfound.jpg';
-      const fullPath = join(__dirname, '..', '..', notFoundPath);
-      const streamFile = resizeThumbnail(fullPath, 'jpg');
+      const streamFile = resizeThumbnail(
+        join(process.cwd(), 'front/no_image.png'),
+        'jpg',
+      );
 
       res.setHeader('Content-Type', 'image/png');
       streamFile.pipe(res);
@@ -117,7 +122,7 @@ export class FileController {
     try {
       return await this.fileService.updateFile(id, payload);
     } catch (error) {
-      throw new CBadRequestException('cannot update file', error);
+      throw new CBadRequestException(ErrorCode.CANNOT_UPDATE_FILE, error);
     }
   }
 

@@ -6,9 +6,12 @@ import { UserEntity } from 'src/entities/user.entity';
 import { SaveAgendaDto } from '../dto/saveAgenda.event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ContactEntity } from 'src/entities/contact.entity';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import { EventStateEnum } from 'src/constants/event';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
+import { checkId, checkNumber } from 'src/common/util/number';
+import { EventEntity } from 'src/entities/event.entity';
 
 @Injectable()
 export class SaveEventService {
@@ -17,6 +20,8 @@ export class SaveEventService {
     private dataSource: DataSource,
     @InjectRepository(ContactEntity)
     private contactRepo: Repository<ContactEntity>,
+    @InjectRepository(EventEntity)
+    private eventRepo: Repository<EventEntity>,
   ) {}
 
   convertArrayToInteger(array: number[]): number {
@@ -104,7 +109,7 @@ export class SaveEventService {
           themeAsideBgcolor: userPreferencePayload.themeAsideBgcolor,
           reminderVisitDuration: userPreferencePayload.reminderVisitDuration,
           ccamBridgeQuickentry: userPreferencePayload.ccamBridgeQuickentry,
-          ccamPriceList: userPreferencePayload.ccam_price_list,
+          priceGrid: userPreferencePayload.ccam_price_list,
           patientCareTime: userPreferencePayload.patient_care_time,
           calendarBorderColored: userPreferencePayload.calendar_border_colored,
         })
@@ -128,25 +133,24 @@ export class SaveEventService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
-    const {
-      id,
-      name,
-      start,
-      end,
-      state,
-      lateness,
-      msg,
-      color,
-      rrule,
-      hasRecurrEvents,
-      scp,
-      practitionerId,
-      resourceId,
-      contactId,
-      reminders,
-    } = payload;
+    const id = checkId(payload?.id);
+    const name = payload?.name || '';
+    const start = payload?.start || '';
+    const end = payload?.end || '';
+    const state = checkNumber(payload?.state);
+    const lateness = payload?.lateness ? 1 : 0;
+    const msg = payload?.msg || '';
+    const color = checkNumber(payload?.color) || -15;
+    const rrule = payload?.rrule;
+    const hasRecurrEvents = checkNumber(payload?.hasRecurrEvents);
+    const scp = payload?.scp;
+    const practitionerId = checkId(payload?.practitionerId);
+    const resourceId = checkId(payload?.resourceId);
+    const contactId = checkId(payload?.contactId);
+    const reminders = payload?.reminders;
+
     let eventId = payload.eventId;
-    const eventTypeId = payload.eventTypeId === '' ? null : payload.eventTypeId;
+    const eventTypeId = checkId(payload.eventTypeId);
     const _private = payload.private;
     const dates = payload.dates ? payload.dates.split(',') : [];
     const exdates = payload.exdates ? payload.exdates.split(',') : [];
@@ -162,14 +166,14 @@ export class SaveEventService {
           AND deleted_at IS NOT NULL`,
         [contactId],
       );
-      if (countStatement.count === 0) {
+      if (countStatement.count) {
         throw new CBadRequestException(
           `Le patient a été supprimé. Veuillez restaurer le patient avant de créer / modifier un rendez-vous.`,
         );
       }
 
       if (!id) {
-        await queryRunner.query(
+        const result = await queryRunner.query(
           `INSERT INTO T_EVENT_EVT (resource_id, USR_ID, CON_ID, event_type_id, EVT_NAME, EVT_START, EVT_END, EVT_MSG, EVT_PRIVATE, EVT_COLOR, EVT_STATE, lateness, evt_rrule)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
@@ -185,21 +189,19 @@ export class SaveEventService {
             color,
             state,
             lateness,
-            rrule,
+            rrule === '' ? null : rrule,
           ],
         );
-        const result = await queryRunner.query(
-          'SELECT LAST_INSERT_ID() AS lastInsertId',
-        );
-        eventId = result[0].lastInsertId;
-        if (!Number(hasRecurrEvents)) {
+
+        eventId = result.insertId;
+        if (!hasRecurrEvents) {
           // Nouvelle occurrence pour DATE(start)
           await queryRunner.query(
             `INSERT INTO event_occurrence_evo (evt_id, resource_id, evo_date)
           VALUES (?, ?, DATE(?))`,
             [eventId, resourceId, start],
           );
-        } else if (dates.length === 0) {
+        } else if (!dates.length) {
           throw new Error(`Une récurrence doit posséder au moins une date.`);
         } else {
           const promiseArr = [];
@@ -220,8 +222,8 @@ export class SaveEventService {
               promiseArr.push(
                 queryRunner.query(
                   `
-              INSERT INTO event_occurrence_evo (evt_id, resource_id, evo_date)
-              VALUES (?, ?, ?)`,
+              INSERT INTO event_occurrence_evo (evt_id, resource_id, evo_date, evo_exception)
+              VALUES (?, ?, ?, 1)`,
                   [eventId, resourceId, exdate],
                 ),
               );
@@ -234,17 +236,17 @@ export class SaveEventService {
           }
         }
       } else {
-        const eventStatement = await queryRunner.query(
-          `
-        SELECT
-                EVT_STATE AS status,
-                lateness
-            FROM T_EVENT_EVT
-            WHERE EVT_ID = ?`,
-          [eventId],
-        );
-        eventStatus = eventStatement[0].status;
-        eventLateness = eventStatement[0].lateness;
+        const eventStatement = await this.eventRepo.findOne({
+          select: {
+            lateness: true,
+            state: true,
+          },
+          where: {
+            id: checkId(eventId),
+          },
+        });
+        eventStatus = eventStatement.state;
+        eventLateness = eventStatement.lateness;
 
         if (!hasRecurrEvents) {
           await Promise.all([
@@ -344,7 +346,7 @@ export class SaveEventService {
               );
             const dates = occurrenceStatement.map((date) => date.evo_date);
 
-            await Promise.all([
+            const [_eventOccurrence, eventResult] = await Promise.all([
               queryRunner.query(
                 `
               UPDATE event_occurrence_evo
@@ -376,10 +378,7 @@ export class SaveEventService {
               ),
             ]);
 
-            const result = await queryRunner.query(
-              'SELECT LAST_INSERT_ID() AS lastInsertId',
-            );
-            eventId = result[0].lastInsertId;
+            eventId = eventResult.insertId;
             const promiseArr = [];
             for (const date of dates) {
               promiseArr.push(
@@ -397,7 +396,7 @@ export class SaveEventService {
               await Promise.all(batch);
             }
           } else {
-            await Promise.all([
+            const [_eventOccurrence, eventResult] = await Promise.all([
               queryRunner.query(
                 `UPDATE event_occurrence_evo
               SET evo_exception = 1
@@ -424,10 +423,8 @@ export class SaveEventService {
                 ],
               ),
             ]);
-            const result = await queryRunner.query(
-              'SELECT LAST_INSERT_ID() AS lastInsertId',
-            );
-            eventId = result[0].lastInsertId;
+
+            eventId = eventResult.insertId;
             await queryRunner.query(
               `
             INSERT INTO event_occurrence_evo (evt_id, resource_id, evo_date)
@@ -481,7 +478,7 @@ export class SaveEventService {
        */
 
       // Suppression de tous les rappels
-      if (Object.keys(reminders).length === 0) {
+      if (!reminders.length) {
         await queryRunner.query(
           `
         DELETE FROM T_REMINDER_RMD
@@ -493,7 +490,6 @@ export class SaveEventService {
         const reminderIds: number[] = reminders.map((reminder) =>
           Number(reminder.id),
         );
-        reminderIds.push(0);
         const inQuery: string = Array(reminderIds.length).fill('?').join(',');
 
         await queryRunner.query(
@@ -506,16 +502,14 @@ export class SaveEventService {
 
         const promiseArr = [];
         for (const reminder of reminders) {
-          const reminderId =
-            reminder['id'] !== undefined ? reminder['id'] : null;
+          const reminderId = checkId(reminder?.id);
           const reminderNbr = reminder['nbr'];
-          const reminderTypeId = reminder['reminderTypeId'];
-          const reminderReceiverId = reminder['reminderReceiverId'];
-          const reminderUnitId = reminder['reminderUnitId'];
-          const appointmentReminderLibraryId =
-            reminder['appointment_reminder_library_id'] !== undefined
-              ? reminder['appointment_reminder_library_id']
-              : null;
+          const reminderTypeId = checkId(reminder?.reminderTypeId);
+          const reminderReceiverId = checkId(reminder?.reminderReceiverId);
+          const reminderUnitId = checkId(reminder?.reminderUnitId);
+          const appointmentReminderLibraryId = checkId(
+            reminder?.appointment_reminder_library_id,
+          );
 
           promiseArr.push(
             queryRunner.query(
@@ -542,11 +536,12 @@ export class SaveEventService {
             ),
           );
         }
+        await Promise.all(promiseArr);
       }
       await queryRunner.commitTransaction();
     } catch (e) {
       await queryRunner.rollbackTransaction();
-      return { message: e.message, code: 0 };
+      return new CBadRequestException(ErrorCode.SAVE_FAILED);
     } finally {
       await queryRunner.release();
     }

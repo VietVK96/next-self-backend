@@ -1,21 +1,19 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { TokenGuard } from 'src/common/decorator/auth.decorator';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
 import { UserService } from './services/user.service';
 import {
   UpdatePreferenceDto,
   UpdateTherapeuticDto,
+  UpdateTherapeuticParamDto,
 } from './dto/therapeutic.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { PreferenceService } from './services/preference.sevece';
+import { TokenDownloadService } from './services/token-download.service';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -24,22 +22,23 @@ export class UserController {
   constructor(
     private userService: UserService,
     private preferenceService: PreferenceService,
+    private tokenDownloadService: TokenDownloadService,
   ) {}
 
   /**
-   * php\contact\prestation\findAll.php 1->14
+   * php/contact/prestation/findAll.php 1->14
    * @param payload
    * @param identity
    * @returns
    */
 
-  @Post('/therapeutic-alternatives/update/:id')
+  @Post('/therapeutic-alternatives/update')
   @UseGuards(TokenGuard)
   async updatePrestation(
-    @Param('id') id: number,
+    @Query() param: UpdateTherapeuticParamDto,
     @Body() payload: UpdateTherapeuticDto,
   ) {
-    return await this.userService.updateUserMedical(id, payload);
+    return await this.userService.updateUserMedical(param.user_id, payload);
   }
 
   @Get('/find')
@@ -53,5 +52,22 @@ export class UserController {
   @UseGuards(TokenGuard)
   async updatePreference(@Body() payload: UpdatePreferenceDto) {
     return await this.preferenceService.pacth(payload);
+  }
+
+  // File php/user/therapeutic-alternatives/index.php
+  @Get('/therapeutic-alternatives')
+  @UseGuards(TokenGuard)
+  async getPrestation(@Query() param: UpdateTherapeuticParamDto) {
+    return await this.userService.getTherapeutic(param.user_id);
+  }
+
+  // None file php. Improve
+  @Post('create-token-download')
+  @UseGuards(TokenGuard)
+  async createTokenDownload(@CurrentUser() identity: UserIdentity) {
+    const token = await this.tokenDownloadService.createTokenDownload(identity);
+    return {
+      token,
+    };
   }
 }

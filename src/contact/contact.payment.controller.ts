@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
@@ -20,6 +21,7 @@ import {
   ContactPaymentFindAllDto,
   ContactPaymentStoreDto,
   ContactPaymentUpdateDto,
+  ReceiptDto,
 } from './dto/contact.payment.dto';
 import { ContactPaymentService } from './services/contact.payment.service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
@@ -34,7 +36,7 @@ export class ContactPaymentController {
     private contactService: ContactService,
   ) {}
 
-  // File php\contact\payment\findAll.php 13->62
+  // File php/contact/payment/findAll.php 13->62
   @Get('/payment/findAll')
   @ApiQuery({
     name: 'id',
@@ -45,7 +47,7 @@ export class ContactPaymentController {
     return this.contactPaymentService.findAll(request);
   }
 
-  // File php\contact\payment\findAll.php 13->62
+  // File php/contact/payment/findAll.php 13->62
   @Get('/payment/find')
   @UseGuards(TokenGuard)
   async find(@Query('id') id: number) {
@@ -53,7 +55,7 @@ export class ContactPaymentController {
     return this.contactPaymentService.show(+id);
   }
 
-  // File php\contact\payment\delete.php 21->53
+  // File php/contact/payment/delete.php 21->53
   @Delete('/payment/delete')
   @ApiQuery({
     name: 'id',
@@ -67,24 +69,49 @@ export class ContactPaymentController {
     return this.contactPaymentService.deleteById(request.id, identity);
   }
 
-  // File php\contact\payment\store.php 12->22
+  // File php/contact/payment/store.php 12->22
   @Post('/payment/store')
   @UseGuards(TokenGuard)
   async store(@Body() payload: ContactPaymentStoreDto) {
     return this.contactPaymentService.store(payload);
   }
 
-  // File php\contact\payment\update.php 13->62
+  // File php/contact/payment/update.php 13->62
   @Patch('/payment/update')
   @UseGuards(TokenGuard)
   async update(@Body() payload: ContactPaymentUpdateDto) {
     return this.contactPaymentService.update(payload);
   }
 
-  // File php\contact\patch.php
+  // File php/contact/patch.php
   @Patch('/patch')
   @UseGuards(TokenGuard)
   async patch(@Body() payload: ContactPatchDto) {
     return this.contactService.patch(payload);
+  }
+  // php/payment/receipt.php
+  @Get('/payment/receipt')
+  @UseGuards(TokenGuard)
+  async receipt(
+    @Res() res,
+    @Query() payload: ReceiptDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    const buffer = await this.contactPaymentService.getReceipt(
+      payload,
+      identity,
+    );
+
+    res.set({
+      // pdf
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=print.pdf`,
+      'Content-Length': buffer.length,
+      // prevent cache
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: 0,
+    });
+    res.end(buffer);
   }
 }

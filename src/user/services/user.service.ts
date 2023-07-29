@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { AddressService } from 'src/address/service/address.service';
 import { LicenseEntity } from 'src/entities/license.entity';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
@@ -18,6 +18,8 @@ export class UserService {
     @InjectRepository(UserMedicalEntity)
     private userMedicalRepository: Repository<UserMedicalEntity>,
   ) {}
+
+  // application/Services/User.php 153 -> 207
   async find(id: number) {
     const queryBuiler = this.dataSource.createQueryBuilder();
     const select = `
@@ -107,5 +109,20 @@ export class UserService {
       )
       .innerJoin(UserSmsEntity, 'sms', 'sms.USR_ID = user.id')
       .getRawOne();
+  }
+
+  async getTherapeutic(id: number) {
+    try {
+      const datas = await this.userMedicalRepository.findOne({
+        where: { userId: id },
+      });
+
+      const therapeutic = datas.therapeuticAlternative;
+      return {
+        therapeutic_alternative: therapeutic,
+      };
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
   }
 }

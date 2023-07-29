@@ -6,6 +6,7 @@ import {
   ContactPaymentUpdateDto,
   IBeneficiary,
   IDeadline,
+  ReceiptDto,
 } from '../dto/contact.payment.dto';
 import {
   CashingEntity,
@@ -28,20 +29,48 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { FseEntity } from 'src/entities/fse.entity';
 import { ErrorCode } from 'src/constants/error';
+import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
+import * as numberToWords from 'number-to-words';
+import * as path from 'path';
+import { createPdf } from '@saemhco/nestjs-html-pdf';
+import * as dayjs from 'dayjs';
+import { br2nl } from 'src/common/util/string';
+import * as fs from 'fs';
+import { ConfigService } from '@nestjs/config';
+import { v4 as uuidv4 } from 'uuid';
+import { UploadEntity } from 'src/entities/upload.entity';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import {
+  ContactDocumentEntity,
+  EnumContactDocumentType,
+} from 'src/entities/contact-document.entity';
 
 @Injectable()
 export class ContactPaymentService {
   constructor(
+    private configService: ConfigService,
     private dataSource: DataSource,
     @InjectRepository(CashingEntity)
     private readonly repo: Repository<CashingEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepo: Repository<UserEntity>,
+    @InjectRepository(ContactEntity)
+    private readonly contactRepo: Repository<ContactEntity>,
+    @InjectRepository(MedicalHeaderEntity)
+    private readonly medicalHeaderRepo: Repository<MedicalHeaderEntity>,
+    private permissionService: PermissionService,
     @InjectRepository(CashingContactEntity)
     private readonly cashingContactRepo: Repository<CashingContactEntity>,
-    private permissionService: PermissionService,
+    @InjectRepository(UploadEntity)
+    private readonly uploadRepo: Repository<UploadEntity>,
+    @InjectRepository(ContactNoteEntity)
+    private readonly contactNote: Repository<ContactNoteEntity>,
+    @InjectRepository(ContactDocumentEntity)
+    private readonly contactDocumentRepo: Repository<ContactDocumentEntity>,
   ) {}
 
   /**
-   * File: php\contact\payment\findAll.php 13->62
+   * File: php/contact/payment/findAll.php 13->62
    */
   async findAll(
     request?: ContactPaymentFindAllDto,
@@ -384,70 +413,72 @@ export class ContactPaymentService {
   // application/Services/Payment.php
   // 553 -> 624
   async update(payload: ContactPaymentUpdateDto) {
-    const data = this.refundAmount(payload) as ContactPaymentUpdateDto;
+    try {
+      const data = this.refundAmount(payload) as ContactPaymentUpdateDto;
 
-    const date = data?.date || null;
-    const paymentDate = data?.payment_date || null;
-    const method = data?.payment.toUpperCase() || 'CHEQUE';
-    const type = data?.type.toUpperCase() || 'HONORAIRE';
-    const checkNumber = data?.check_number || null;
-    const checkBank = data?.check_bank || null;
-    const description = data?.description || null;
-    const amount = data?.amount || 0;
-    const amountCare = data?.amount_care || 0;
-    const amountProsthesis = data?.amount_prosthesis || 0;
-    const practitionerId = data?.practitioner?.id || null;
-    const bankId = data?.bank?.id || null;
-    const debtorId = data?.debtor?.id || null;
-    const debtorName = data?.debtor?.name || null;
+      const date = data?.date || null;
+      const paymentDate = data?.payment_date || null;
+      const method = data?.payment.toUpperCase() || 'CHEQUE';
+      const type = data?.type.toUpperCase() || 'HONORAIRE';
+      const checkNumber = data?.check_number || null;
+      const checkBank = data?.check_bank || null;
+      const description = data?.description || null;
+      const amount = data?.amount || 0;
+      const amountCare = data?.amount_care || 0;
+      const amountProsthesis = data?.amount_prosthesis || 0;
+      const practitionerId = data?.practitioner?.id || null;
+      const bankId = data?.bank?.id || null;
+      const debtorId = data?.debtor?.id || null;
+      const debtorName = data?.debtor?.name || null;
 
-    // Champ practitioner.id requis
-    if (!practitionerId) {
-      throw new CBadRequestException('Invalid practitioner');
+      // Champ practitioner.id requis
+      if (!practitionerId) {
+        throw new CBadRequestException('Invalid practitioner');
+      }
+
+      // Bénéficiaires du règlement, uniquement ceux ayant un montant.
+      let beneficiaries: IBeneficiary[];
+      if (data.beneficiaries && Array.isArray(data.beneficiaries)) {
+        beneficiaries = data.beneficiaries.filter((e) => e.pivot.amount);
+      }
+      const payment = await this.repo.findOneByOrFail({ id: data?.id });
+      if (payment) {
+        const paymentTemp: CashingEntity = {
+          id: payment.id,
+          conId: debtorId,
+          lbkId: bankId,
+          debtor: debtorName,
+          msg: description,
+          date: date || null,
+          paymentDate: paymentDate || null,
+          payment: EnumCashingPayment[method],
+          type: EnumCashingType[type],
+          amount,
+          amountCare,
+          amountProsthesis,
+          checkNumber: checkNumber,
+          checkBank: checkBank,
+        };
+
+        const insertPayment = await this.repo.save(paymentTemp);
+        const paymentPayees: CashingContactEntity[] = beneficiaries.map(
+          (beneficiary) => {
+            return {
+              id: beneficiary?.pivot?.id,
+              csgId: insertPayment.id,
+              conId: beneficiary.id,
+              amount: beneficiary.pivot.amount,
+              amountCare: beneficiary.pivot.amount_care,
+              amountProsthesis: beneficiary.pivot.amount_prosthesis,
+            };
+          },
+        );
+        await this.cashingContactRepo.save(paymentPayees);
+        return await this.show(insertPayment.id);
+      }
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
-
-    // Bénéficiaires du règlement, uniquement ceux ayant un montant.
-    let beneficiaries: IBeneficiary[];
-    if (data.beneficiaries && Array.isArray(data.beneficiaries)) {
-      beneficiaries = data.beneficiaries.filter((e) => e.pivot.amount);
-    }
-    const payment = await this.repo.findOneByOrFail({ id: data?.id });
-    if (payment) {
-      const paymentTemp: CashingEntity = {
-        id: payment.id,
-        conId: debtorId,
-        lbkId: bankId,
-        debtor: debtorName,
-        msg: description,
-        date: date || null,
-        paymentDate: paymentDate || null,
-        payment: EnumCashingPayment[method],
-        type: EnumCashingType[type],
-        amount,
-        amountCare,
-        amountProsthesis,
-        checkNumber: checkNumber,
-        checkBank: checkBank,
-      };
-
-      const insertPayment = await this.repo.save(paymentTemp);
-      const paymentPayees: CashingContactEntity[] = beneficiaries.map(
-        (beneficiary) => {
-          return {
-            id: beneficiary?.pivot?.id,
-            csgId: insertPayment.id,
-            conId: beneficiary.id,
-            amount: beneficiary.pivot.amount,
-            amountCare: beneficiary.pivot.amount_care,
-            amountProsthesis: beneficiary.pivot.amount_prosthesis,
-          };
-        },
-      );
-      await this.cashingContactRepo.save(paymentPayees);
-      return await this.show(insertPayment.id);
-    }
-
-    throw new CBadRequestException('Invalid payment');
   }
   /**
    * application/Services/Payment.php 426 -> 544
@@ -498,174 +529,303 @@ export class ContactPaymentService {
    * @return array Informations du règlement.
    */
   async show(id: number): Promise<ContactPaymentUpdateRes> {
-    const select = `
-    CSG.CSG_ID AS id,
-    CSG.CSG_DATE AS date,
-    CSG.CSG_MSG AS description,
-    CSG.CSG_PAYMENT_DATE AS payment_date,
-    CSG.CSG_PAYMENT AS payment,
-    CSG.CSG_TYPE AS type,
-    CSG.CSG_CHECK_NBR AS check_number,
-    CSG.CSG_CHECK_BANK AS check_bank,
-    CSG.CSG_AMOUNT AS amount,
-    CSG.amount_care AS amount_care,
-    CSG.amount_prosthesis AS amount_prosthesis,
-    USR.USR_ID AS practitioner_id,
-    USR.USR_LASTNAME AS practitioner_lastname,
-    USR.USR_FIRSTNAME AS practitioner_firstname,
-    CPD.CPD_ID AS correspondent_id,
-    CPD.CPD_LASTNAME AS correspondent_lastname,
-    CPD.CPD_FIRSTNAME AS correspondent_firstname,
-    CSG.CON_ID AS debtor_id,
-    IF (CSG.CON_ID IS NULL, CSG.CSG_DEBTOR, CONCAT_WS(' ', CON.CON_LASTNAME, CON.CON_FIRSTNAME)) AS debtor_name,
-    CSG.LBK_ID AS bank_id,
-    CSG.FSE_ID AS caresheet_id
-    `;
-    const results = await this.dataSource
-      .createQueryBuilder()
-      .select(select)
-      .from(CashingEntity, 'CSG')
-      .innerJoin(UserEntity, 'USR')
-      .leftJoin(ContactEntity, 'CON', 'CON.CON_ID = CSG.CON_ID')
-      .leftJoin(CorrespondentEntity, 'CPD', 'CPD.CPD_ID = CSG.correspondent_id')
-      .leftJoin(
-        ContactUserEntity,
-        'cou',
-        'cou.con_id = CON.CON_ID AND cou.usr_id = CSG.USR_ID',
-      )
-      .where('CSG.CSG_ID = :id', { id })
-      .andWhere('CSG.USR_ID = USR.USR_ID')
-      .getRawOne();
+    try {
+      {
+        const select = `
+        CSG.CSG_ID AS id,
+        CSG.CSG_DATE AS date,
+        CSG.CSG_MSG AS description,
+        CSG.CSG_PAYMENT_DATE AS payment_date,
+        CSG.CSG_PAYMENT AS payment,
+        CSG.CSG_TYPE AS type,
+        CSG.CSG_CHECK_NBR AS check_number,
+        CSG.CSG_CHECK_BANK AS check_bank,
+        CSG.CSG_AMOUNT AS amount,
+        CSG.amount_care AS amount_care,
+        CSG.amount_prosthesis AS amount_prosthesis,
+        USR.USR_ID AS practitioner_id,
+        USR.USR_LASTNAME AS practitioner_lastname,
+        USR.USR_FIRSTNAME AS practitioner_firstname,
+        CPD.CPD_ID AS correspondent_id,
+        CPD.CPD_LASTNAME AS correspondent_lastname,
+        CPD.CPD_FIRSTNAME AS correspondent_firstname,
+        CSG.CON_ID AS debtor_id,
+        IF (CSG.CON_ID IS NULL, CSG.CSG_DEBTOR, CONCAT_WS(' ', CON.CON_LASTNAME, CON.CON_FIRSTNAME)) AS debtor_name,
+        CSG.LBK_ID AS bank_id,
+        CSG.FSE_ID AS caresheet_id
+        `;
+        const results = await this.dataSource
+          .createQueryBuilder()
+          .select(select)
+          .from(CashingEntity, 'CSG')
+          .innerJoin(UserEntity, 'USR')
+          .leftJoin(ContactEntity, 'CON', 'CON.CON_ID = CSG.CON_ID')
+          .leftJoin(
+            CorrespondentEntity,
+            'CPD',
+            'CPD.CPD_ID = CSG.correspondent_id',
+          )
+          .leftJoin(
+            ContactUserEntity,
+            'cou',
+            'cou.con_id = CON.CON_ID AND cou.usr_id = CSG.USR_ID',
+          )
+          .where('CSG.CSG_ID = :id', { id })
+          .andWhere('CSG.USR_ID = USR.USR_ID')
+          .getRawOne();
 
-    const selectCaresheet = `
-    FSE.FSE_ID AS id,
-    FSE.FSE_DATE AS date,
-    FSE.FSE_NBR AS number,
-    FSE.FSE_AMOUNT AS amount,
-    FSE.FSE_AMOUNT_AMO AS amount_amo,
-    FSE.FSE_AMOUNT_AMC AS amount_amc,
-    FSE.FSE_AMOUNT_ASSURE AS amount_patient
-    `;
-    const caresheetPR = this.dataSource
-      .createQueryBuilder()
-      .select(selectCaresheet)
-      .from(FseEntity, 'FSE')
-      .where('FSE.FSE_ID = :id', { id: results.caresheet_id })
-      .getRawOne();
+        const selectCaresheet = `
+        FSE.FSE_ID AS id,
+        FSE.FSE_DATE AS date,
+        FSE.FSE_NBR AS number,
+        FSE.FSE_AMOUNT AS amount,
+        FSE.FSE_AMOUNT_AMO AS amount_amo,
+        FSE.FSE_AMOUNT_AMC AS amount_amc,
+        FSE.FSE_AMOUNT_ASSURE AS amount_patient
+        `;
+        const caresheetPR = this.dataSource
+          .createQueryBuilder()
+          .select(selectCaresheet)
+          .from(FseEntity, 'FSE')
+          .where('FSE.FSE_ID = :id', { id: results.caresheet_id })
+          .getRawOne();
 
-    const selectBeneficiaries = `
-    CON.CON_ID AS id,
-    CONCAT_WS(' ', CON.CON_LASTNAME, CON.CON_FIRSTNAME) AS full_name,
-    cou.cou_amount_due AS amount_due,
-    cou.amount_due_care AS amount_due_care,
-    cou.amount_due_prosthesis AS amount_due_prosthesis,
-    CSC.CSC_ID AS pivot_id,
-    CSC.CSC_AMOUNT AS pivot_amount,
-    CSC.amount_care AS pivot_amount_care,
-    CSC.amount_prosthesis AS pivot_amount_prosthesis
-    `;
-    const beneficiariesPR = this.dataSource
-      .createQueryBuilder()
-      .select(selectBeneficiaries)
-      .from(CashingContactEntity, 'CSC')
-      .innerJoin(ContactEntity, 'CON')
-      .leftJoin(
-        ContactUserEntity,
-        'cou',
-        `cou.con_id = CON.CON_ID AND cou.usr_id = :usrId`,
-        {
-          usrId: results.practitioner_id,
-        },
-      )
-      .where('CSC.CSG_ID = :id', { id })
-      .andWhere('CSC.CON_ID = CON.CON_ID')
-      .getRawMany();
-    let [caresheet, beneficiaries] = await Promise.all([
-      caresheetPR,
-      beneficiariesPR,
-    ]);
-
-    caresheet = caresheet
-      ? {
-          id: caresheet.id,
-          date: caresheet.date,
-          number: caresheet.number,
-          amount: parseFloat(caresheet.amount),
-          amount_amo: parseFloat(caresheet.amount_amo),
-          amount_amc: parseFloat(caresheet.amount_amc),
-          amount_patient: parseFloat(caresheet.amount_patient),
-        }
-      : null;
-
-    /** remake beneficiaries follow
-     * * {
-     * *  id
-     * *  full_name
-     * *  amount_due
-     * *  amount_due_care
-     * *  amount_due_prosthesis
-     * *  pivot: {
-     * **  id
-     * **  amount
-     * **  amount_care
-     * **  amount_prosthesis
-     * *  }
-     ** }
-     *
-     *  */
-    beneficiaries = beneficiaries
-      ? beneficiaries.map((beneficiary) => {
-          return {
-            id: beneficiary.id,
-            full_name: beneficiary.full_name,
-            amount_due: beneficiary.amount_due,
-            amount_due_care: beneficiary.amount_due_care,
-            amount_due_prosthesis: beneficiary.amount_due_prosthesis,
-            pivot: {
-              id: beneficiary.pivot_id,
-              amount: beneficiary.pivot_amount,
-              amount_care: beneficiary.pivot_amount_care,
-              amount_prosthesis: beneficiary.pivot_amount_prosthesis,
+        const selectBeneficiaries = `
+        CON.CON_ID AS id,
+        CONCAT_WS(' ', CON.CON_LASTNAME, CON.CON_FIRSTNAME) AS full_name,
+        cou.cou_amount_due AS amount_due,
+        cou.amount_due_care AS amount_due_care,
+        cou.amount_due_prosthesis AS amount_due_prosthesis,
+        CSC.CSC_ID AS pivot_id,
+        CSC.CSC_AMOUNT AS pivot_amount,
+        CSC.amount_care AS pivot_amount_care,
+        CSC.amount_prosthesis AS pivot_amount_prosthesis
+        `;
+        const beneficiariesPR = this.dataSource
+          .createQueryBuilder()
+          .select(selectBeneficiaries)
+          .from(CashingContactEntity, 'CSC')
+          .innerJoin(ContactEntity, 'CON')
+          .leftJoin(
+            ContactUserEntity,
+            'cou',
+            `cou.con_id = CON.CON_ID AND cou.usr_id = :usrId`,
+            {
+              usrId: results.practitioner_id,
             },
-          };
-        })
-      : null;
+          )
+          .where('CSC.CSG_ID = :id', { id })
+          .andWhere('CSC.CON_ID = CON.CON_ID')
+          .getRawMany();
+        let [caresheet, beneficiaries] = await Promise.all([
+          caresheetPR,
+          beneficiariesPR,
+        ]);
 
-    // remake result
-    const newResults: ContactPaymentUpdateRes = {
-      id: results.id,
-      date: results.date,
-      description: results.description,
-      payment_date: results.payment_date,
-      payment: results.payment,
-      type: results.type,
-      amount: results.amount,
-      amount_care: results.amount_care,
-      amount_prosthesis: results.amount_prosthesis,
-      check_number: results.check_number,
-      check_bank: results.check_bank,
-      practitioner: {
-        id: results.practitioner_id,
-        lastname: results.practitioner_lastname,
-        firstname: results.practitioner_firstname,
-      },
-      correspondent: {
-        id: results.correspondent_id,
-        lastname: results.correspondent_lastname,
-        firstname: results.correspondent_firstname,
-      },
-      bank: {
-        id: results.bank_id,
-      },
-      debtor: {
-        id: results.debtor_id,
-        name: results.debtor_name,
-      },
-      beneficiaries,
-      caresheet,
-    };
+        caresheet = caresheet
+          ? {
+              id: caresheet.id,
+              date: caresheet.date,
+              number: caresheet.number,
+              amount: parseFloat(caresheet.amount),
+              amount_amo: parseFloat(caresheet.amount_amo),
+              amount_amc: parseFloat(caresheet.amount_amc),
+              amount_patient: parseFloat(caresheet.amount_patient),
+            }
+          : null;
 
-    return newResults;
+        /** remake beneficiaries follow
+         * * {
+         * *  id
+         * *  full_name
+         * *  amount_due
+         * *  amount_due_care
+         * *  amount_due_prosthesis
+         * *  pivot: {
+         * **  id
+         * **  amount
+         * **  amount_care
+         * **  amount_prosthesis
+         * *  }
+         ** }
+         *
+         *  */
+        beneficiaries = beneficiaries
+          ? beneficiaries.map((beneficiary) => {
+              return {
+                id: beneficiary.id,
+                full_name: beneficiary.full_name,
+                amount_due: beneficiary.amount_due,
+                amount_due_care: beneficiary.amount_due_care,
+                amount_due_prosthesis: beneficiary.amount_due_prosthesis,
+                pivot: {
+                  id: beneficiary.pivot_id,
+                  amount: beneficiary.pivot_amount,
+                  amount_care: beneficiary.pivot_amount_care,
+                  amount_prosthesis: beneficiary.pivot_amount_prosthesis,
+                },
+              };
+            })
+          : null;
+
+        // remake result
+        const newResults: ContactPaymentUpdateRes = {
+          id: results.id,
+          date: results.date,
+          description: results.description,
+          payment_date: results.payment_date,
+          payment: results.payment,
+          type: results.type,
+          amount: results.amount,
+          amount_care: results.amount_care,
+          amount_prosthesis: results.amount_prosthesis,
+          check_number: results.check_number,
+          check_bank: results.check_bank,
+          practitioner: {
+            id: results.practitioner_id,
+            lastname: results.practitioner_lastname,
+            firstname: results.practitioner_firstname,
+          },
+          correspondent: {
+            id: results.correspondent_id,
+            lastname: results.correspondent_lastname,
+            firstname: results.correspondent_firstname,
+          },
+          bank: {
+            id: results.bank_id,
+          },
+          debtor: {
+            id: results.debtor_id,
+            name: results.debtor_name,
+          },
+          beneficiaries,
+          caresheet,
+        };
+
+        return newResults;
+      }
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
+  }
+
+  // php/payment/receipt.php 31 - 127
+  async getReceipt(payload: ReceiptDto, identity: UserIdentity) {
+    let currencyName = 'Euro';
+    let header = '';
+
+    const dirname = String(identity.org).padStart(5, '0');
+    const fileName = `${uuidv4()}.pdf`;
+
+    try {
+      const user = await this.userRepo.findOneOrFail({
+        where: { id: payload?.practitioner_id },
+        relations: {
+          address: true,
+          medical: true,
+        },
+      });
+      const patient = await this.contactRepo.findOneOrFail({
+        where: {
+          id: payload?.payer_id,
+        },
+      });
+      const medicalHeader = await this.medicalHeaderRepo.findOneOrFail({
+        where: { userId: user?.id },
+      });
+      if (medicalHeader) {
+        header = `${medicalHeader.identPrat} \n ${medicalHeader.address}`;
+      }
+
+      const amount = Number(payload?.amount)
+        ? (+payload?.amount)?.toFixed(2)
+        : '0';
+      const amountParts = amount.split('.');
+      currencyName += +amountParts[0] >= 2 ? 's' : '';
+      const amountSpellouts: string[] = [numberToWords.toWords(amountParts[0])];
+      amountSpellouts.push(currencyName);
+      if (amountParts[1]) {
+        amountSpellouts.push(numberToWords.toWords(amountParts[1]));
+      }
+      const amountSpellout = amountSpellouts.join(' ').toUpperCase();
+      if (payload.payment_choice) {
+        payload.payment_choice =
+          EnumCashingPayment[payload.payment_choice.toUpperCase()];
+      }
+      const isRefund = EnumCashingType.REMBOURSEMENT === payload.payment_type;
+      if (payload.payment_type) {
+        payload.payment_type =
+          EnumCashingType[payload?.payment_type?.toUpperCase()];
+      }
+
+      const filePath = path.join(
+        process.cwd(),
+        'templates/pdf/bank_check',
+        'receipt.hbs',
+      );
+
+      const options = {
+        format: 'A4',
+        displayHeaderFooter: true,
+        headerTemplate: '<div></div>',
+        footerTemplate: '<div></div>',
+        margin: {
+          left: '10mm',
+          top: '25mm',
+          right: '10mm',
+          bottom: '15mm',
+        },
+        landscape: true,
+      };
+
+      const data = {
+        user,
+        patient,
+        header: br2nl(header),
+        amount,
+        amountSpellout,
+        paymentChoice: payload?.payment_choice,
+        paymentType: payload?.payment_type,
+        isRefund,
+        time: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+      };
+
+      const pdf = await createPdf(filePath, options, data);
+      const dir = await this.configService.get('app.uploadDir');
+
+      const savePath = `${dir}/${dirname}/${fileName}`;
+      if (!fs.existsSync(`${dir}/${dirname}`)) {
+        fs.mkdirSync(`${dir}/${dirname}`, { recursive: true });
+      }
+      fs.writeFileSync(savePath, pdf);
+      const stats = fs.statSync(savePath);
+      const fileSizeInKB = stats.size / 1024;
+      const file: UploadEntity = {
+        userId: payload?.practitioner_id || 1,
+        fileName: `${dirname}/${fileName}`,
+        size: fileSizeInKB,
+        type: 'application/pdf',
+        name: fileName,
+        path: savePath,
+      };
+      const fileData = await this.uploadRepo.save(file);
+
+      const patientNote: ContactNoteEntity = {
+        userId: payload?.practitioner_id,
+        conId: payload?.payer_id,
+        date: dayjs().format('YYYY-MM-DD'),
+        message: `Impression d'un reçu d'un montant de ${amount} ${currencyName}`,
+      };
+      await this.contactNote.save(patientNote);
+      await this.contactDocumentRepo.save({
+        conId: payload?.payer_id,
+        uplId: fileData.id,
+        type: EnumContactDocumentType.FILE,
+      });
+      return pdf;
+    } catch (error) {
+      return new CBadRequestException(ErrorCode.ERROR_GET_PDF);
+    }
   }
 
   protected refundAmount(

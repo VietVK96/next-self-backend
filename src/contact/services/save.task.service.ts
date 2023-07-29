@@ -29,26 +29,27 @@ export class SaveTaskService {
   ) {}
 
   async save(payload: EventTaskSaveDto) {
-    const patient = await this.contactRepo.findOneBy({ id: payload.contact });
+    const patient = await this.contactRepo.findOneBy({ id: payload?.contact });
     const amosOfPatient = await this.patientAmoRepo.findBy({
-      patientId: patient.id,
+      patientId: patient?.id,
     });
-    const creationDate = Date.parse(payload.date);
+    const creationDate = Date.parse(payload?.date);
     let codeNatureAssurance = CodeNatureAssuranceEnum.ASSURANCE_MALADIE;
     const amos: PatientAmoEntity[] = amosOfPatient.filter(
       (amo) =>
-        (amo.startDate === null || Date.parse(amo.startDate) <= creationDate) &&
-        (amo.endDate === null || Date.parse(amo.endDate) >= creationDate),
+        (amo?.startDate === null ||
+          Date.parse(amo?.startDate) <= creationDate) &&
+        (amo?.endDate === null || Date.parse(amo?.endDate) >= creationDate),
     );
     if (amos.length > 0) {
       codeNatureAssurance = amos[0]
         .codeNatureAssurance as CodeNatureAssuranceEnum;
     }
 
-    const doctorId = payload.user;
-    let amount = payload.amount ? parseFloat(payload.amount.toString()) : 0;
-    const socialSecurityAmount = payload.secuAmount
-      ? parseFloat(payload.secuAmount.toString())
+    const doctorId = payload?.user;
+    let amount = payload?.amount ? parseFloat(payload?.amount.toString()) : 0;
+    const socialSecurityAmount = payload?.secuAmount
+      ? parseFloat(payload?.secuAmount?.toString())
       : 0;
     let coefficient = payload.coef ? parseFloat(payload.coef.toString()) : 1;
     let teeth = payload.teeth ? payload.teeth : null;
@@ -58,7 +59,7 @@ export class SaveTaskService {
       const ccam = await this.ccamRepo.findOneBy({ id: ccamId });
       if (ccam !== null) {
         const code = ccam.code;
-        if (code === 'HBQK002' && teeth === null) {
+        if (code === 'HBQK002' && !teeth) {
           teeth = 0;
         }
         if (code === 'HBJD001') {
@@ -130,7 +131,7 @@ export class SaveTaskService {
           DET_PURCHASE_PRICE, 
           DET_CCAM_CODE, 
           DET_CCAM_OPPOSABLE, 
-          DET_CCAM_TELEM, 
+          DET_CCAM_TELEM,  
           DET_CCAM_MODIFIER,
           code_nature_assurance,
           exemption_code,
@@ -160,7 +161,7 @@ export class SaveTaskService {
           socialSecurityAmount,
         ],
       );
-      // await queryRunner.commitTransaction();
+      await queryRunner.commitTransaction();
     } catch (e) {
       await queryRunner.rollbackTransaction();
     } finally {

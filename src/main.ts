@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import {
+  NestApplicationOptions,
   UnprocessableEntityException,
   ValidationError,
   ValidationPipe,
@@ -11,6 +12,7 @@ import {
 import { useContainer } from 'class-validator';
 import { errFormat, filterError } from './common/util/filter-error';
 import { HttpExceptionFilter } from './common/exceptions/http-exception.filter';
+import { LoggerErrorInterceptor } from 'nestjs-pino';
 
 /**
  * Project convert PHP to nodejs
@@ -20,7 +22,11 @@ import { HttpExceptionFilter } from './common/exceptions/http-exception.filter';
  */
 //Some thing
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const options: NestApplicationOptions = {};
+  if (process.env.LOGSTACK_ENABLE === 'true') {
+    options.logger = false;
+  }
+  const app = await NestFactory.create(AppModule, options);
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   app.enableCors({
     origin: function (_origin, callback) {
@@ -28,6 +34,9 @@ async function bootstrap() {
     },
   });
   const configService = app.get(ConfigService);
+  if (process.env.LOGSTACK_ENABLE === 'true') {
+    app.useGlobalInterceptors(new LoggerErrorInterceptor());
+  }
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

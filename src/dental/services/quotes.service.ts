@@ -1,19 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, MoreThanOrEqual, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EnregistrerFactureDto } from '../dto/facture.dto';
 import { BillEntity } from 'src/entities/bill.entity';
 import { BillLineEntity } from 'src/entities/bill-line.entity';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { ErrorCode } from 'src/constants/error';
-import { EventTaskEntity } from 'src/entities/event-task.entity';
-import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { EventEntity } from 'src/entities/event.entity';
-import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
-import { PlanEventEntity } from 'src/entities/plan-event.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { checkEmpty } from 'src/common/util/string';
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
@@ -24,30 +18,19 @@ import { inseeFormatter } from 'src/common/formatter';
 import { dentalFormat } from 'src/common/util/dental-format';
 import { QuotesConventionDto } from '../dto/quotes.dto';
 import { CmuCodificationEnum } from 'src/enum/cmu-codification-enum';
-import { PaymentPlanService } from 'src/payment-plan/services/payment-plan.service';
 import { LibraryActEntity } from 'src/entities/library-act.entity';
-import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
 import { CcamEntity } from 'src/entities/ccam.entity';
 import { PatientMedicalEntity } from 'src/entities/patient-medical.entity';
+import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 
 @Injectable()
 export class QuotesServices {
   constructor(
     private dataSource: DataSource,
-    @InjectRepository(BillEntity)
-    private billRepository: Repository<BillEntity>,
-    @InjectRepository(BillLineEntity)
-    private billLineRepository: Repository<BillLineEntity>,
     @InjectRepository(MedicalHeaderEntity)
     private medicalHeaderRepository: Repository<MedicalHeaderEntity>,
-    @InjectRepository(EventTaskEntity)
-    private eventTaskRepository: Repository<EventTaskEntity>,
-    @InjectRepository(DentalEventTaskEntity)
-    private dentalEventTaskRepository: Repository<DentalEventTaskEntity>, //dental
     @InjectRepository(EventEntity)
     private eventRepository: Repository<EventEntity>, //event
-    @InjectRepository(NgapKeyEntity)
-    private ngapKeyRepository: Repository<NgapKeyEntity>, //ngap_key
     @InjectRepository(PlanPlfEntity)
     private planPlfRepository: Repository<PlanPlfEntity>,
     @InjectRepository(UserEntity)
@@ -60,7 +43,7 @@ export class QuotesServices {
     private dentalQuotationRepository: Repository<DentalQuotationEntity>,
     @InjectRepository(LibraryActEntity)
     private libraryActRepository: Repository<LibraryActEntity>,
-    private paymentPlanService: PaymentPlanService,
+    private paymentPlanService: PaymentScheduleService,
   ) {}
 
   /**
@@ -78,12 +61,19 @@ export class QuotesServices {
     await queryRunner.startTransaction();
 
     try {
+      const t = await this.planPlfRepository.findOne({
+        where: { id: payload?.no_pdt },
+      });
       const plan = await this.planPlfRepository
         .createQueryBuilder('plf')
         .leftJoinAndSelect('plf.events', 'plv')
         .leftJoinAndSelect('plv.event', 'evt')
-        .leftJoinAndSelect('evt.contact', 'con')
-        .where('con.group = :group', { group: identity.org })
+        .leftJoinAndSelect(
+          'evt.contact',
+          'con',
+          'con.organizationId = :organizationId',
+          { organizationId: identity.org },
+        )
         .andWhere('plf.id = :id', { id: payload?.no_pdt })
         .getOne();
       if (!plan) {
@@ -115,7 +105,6 @@ export class QuotesServices {
         );
       }
       const ident_pat = row[0]?.conId;
-      const id_contact = ident_pat;
       let idUser = payload?.id_user;
       if (checkEmpty(idUser)) {
         idUser = row[0]?.usrId;
@@ -209,27 +198,32 @@ export class QuotesServices {
         '0',
       )}`;
 
-      const patientInfo: any = await this.dataSource
-        .createQueryBuilder(ContactEntity, 'CON')
-        .leftJoin('CON.address', 'ADR')
-        .select([
-          'CONCAT(CON.CON_LASTNAME, " ", CON.CON_FIRSTNAME) as nom_prenom_patient', // nom_prenom_patient
-          'CONCAT(CON.CON_INSEE, " ", CON.CON_INSEE_KEY) as INSEE', // INSEE
-          'CON.CON_BIRTHDAY as birthday', // birthday
-          'CON.ADR_ID',
-          'CON.CON_MAIL as email',
-          'CONCAT(ADR.ADR_STREET, "\\n", ADR.ADR_ZIP_CODE, " ", ADR.ADR_CITY) as address', // address
-          `(SELECT CONCAT(PHO.PHO_NBR, ' (', PTY.PTY_NAME, ')')
-            FROM T_CONTACT_PHONE_COP COP
-            INNER JOIN T_PHONE_PHO PHO ON COP.PHO_ID = PHO.PHO_ID
-            INNER JOIN T_PHONE_TYPE_PTY PTY ON PHO.PTY_ID = PTY.PTY_ID
-            WHERE COP.CON_ID = CON.CON_ID
-            ORDER BY PTY.PTY_ID
-            LIMIT 1) AS phone`,
-        ])
-        .where('CON.CON_ID = :id', { id: ident_pat })
-        .getRawOne();
-      const nom_prenom_patient = patientInfo?.nom_prenom_patient;
+      const sql = `
+      SELECT CONCAT(CON.CON_LASTNAME, ' ', CON.CON_FIRSTNAME) as 'nom_prenom_patient',
+              CONCAT(CON.CON_INSEE,' ',CON.CON_INSEE_KEY) as 'INSEE',
+              CON.CON_BIRTHDAY as 'birthday',
+              CON.ADR_ID,
+              CON.CON_MAIL as 'email',
+              CONCAT(ADR.ADR_STREET, '\n', ADR.ADR_ZIP_CODE, ' ', ADR.ADR_CITY) as 'address',
+              (
+                  SELECT CONCAT(PHO.PHO_NBR, ' (', PTY.PTY_NAME, ')') 
+                  FROM T_CONTACT_PHONE_COP COP, T_PHONE_PHO PHO, T_PHONE_TYPE_PTY PTY
+                  WHERE COP.CON_ID = CON.CON_ID
+                      AND COP.PHO_ID = PHO.PHO_ID
+                      AND PHO.PTY_ID = PTY.PTY_ID
+                  ORDER BY PTY.PTY_ID
+                  LIMIT 1
+              ) as "phone"
+      FROM T_CONTACT_CON CON
+      LEFT OUTER JOIN T_ADDRESS_ADR ADR ON ADR.ADR_ID = CON.ADR_ID
+      WHERE CON.CON_ID = ?`;
+      const patientInfo: any = await this.dataSource.query(sql, [ident_pat]);
+      if (!patientInfo) {
+        throw new CBadRequestException(
+          'Probl&egrave;me durant le rapatriement des nom et pr&eacute;nom du patient ... ',
+        );
+      }
+      const nom_prenom_patient = patientInfo?.[0]?.nom_prenom_patient;
       const INSEE = patientInfo?.INSEE
         ? inseeFormatter(patientInfo?.INSEE)
         : '';
@@ -401,10 +395,9 @@ export class QuotesServices {
       if (!checkEmpty(paymentScheduleStatement?.paymentScheduleId)) {
         const paymentSchedule = await this.paymentPlanService.duplicate(
           paymentScheduleStatement?.paymentScheduleId,
-          identity.org,
           identity,
         );
-        paymentScheduleId = paymentSchedule?.paymentScheduleId;
+        paymentScheduleId = paymentSchedule?.id;
       }
       await queryRunner.query('SET FOREIGN_KEY_CHECKS = 0');
       await queryRunner.query(
@@ -593,7 +586,6 @@ export class QuotesServices {
       const quoteUser = users.find((u) => u?.id === quote?.userId);
       quote.user = quoteUser;
 
-      //Test fronend
       let amountTotal = 0;
       let amoAmountTotal = 0;
       let amoRefundTotal = 0;
@@ -656,8 +648,6 @@ export class QuotesServices {
       if (queryRunner?.isTransactionActive) {
         await queryRunner.rollbackTransaction();
       }
-    } finally {
-      await queryRunner.release();
     }
   }
 

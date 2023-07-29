@@ -6,6 +6,8 @@ import {
   Get,
   Param,
   Post,
+  Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -16,6 +18,8 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { saveGlossaryEntryPayload } from './dto/saveEntry.glossaries.dto';
 import { SaveGlossaryDto } from './dto/save.glossaries.dto';
+import { UpdateGlossaryDto } from './dto/update.glossary.dto';
+import { UpdateGlossaryEntryDto } from './dto/update.glossaryEntry.dto';
 
 @ApiBearerAuth()
 @ApiTags('Glossaries')
@@ -23,7 +27,7 @@ import { SaveGlossaryDto } from './dto/save.glossaries.dto';
 export class GlossriesController {
   constructor(private glossariesService: GlossariesService) {}
 
-  @Get('')
+  @Get()
   @UseGuards(TokenGuard)
   async findGlossaries() {
     return this.glossariesService.findGlossaries();
@@ -37,8 +41,8 @@ export class GlossriesController {
 
   @Delete('entries/:id')
   @UseGuards(TokenGuard)
-  async deleteGlossary(@Param('id') id: number) {
-    return this.glossariesService.deleteGlossary(Number(id));
+  async deleteGlossaryEntry(@Param('id') id: number) {
+    return this.glossariesService.deleteGlossaryEntry(Number(id));
   }
 
   @Post('entries')
@@ -50,12 +54,42 @@ export class GlossriesController {
     return this.glossariesService.saveGlossaryEntry(payload, identity.org);
   }
 
-  @Post('')
+  @Post()
   @UseGuards(TokenGuard)
   async saveGlossary(
     @Body() payload: SaveGlossaryDto,
     @CurrentUser() identity: UserIdentity,
   ) {
     return this.glossariesService.saveGlossary(payload, identity.org);
+  }
+
+  //settings/glossaries/delete.php
+  //all line
+  @Delete('/:id')
+  @UseGuards(TokenGuard)
+  async deleteGlossary(@Param('id') id: number) {
+    return this.glossariesService.deleteGlossary(id);
+  }
+
+  //settings/glossaries/edit.php
+  //all line
+  @Put('/:id')
+  @UseGuards(TokenGuard)
+  async updateGlossary(
+    @Param('id') id: number,
+    @Query() payload: UpdateGlossaryDto,
+  ) {
+    return this.glossariesService.updateGlossary(id, payload);
+  }
+
+  //settings/glossaries/entries/edit.php
+  //all line
+  @Put('entries/:id')
+  @UseGuards(TokenGuard)
+  async updateGlossaryEntry(
+    @Query() payload: UpdateGlossaryEntryDto,
+    @Param('id') id: number,
+  ) {
+    return this.glossariesService.updateGlossaryEntry(payload, id);
   }
 }

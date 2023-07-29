@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateTimeslotPayloadDto } from '../dto/create.timeslots.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { RRule } from 'rrule';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class TimeslotsService {
@@ -49,15 +50,28 @@ export class TimeslotsService {
   ): Promise<TimeslotsAllRes[]> {
     try {
       const formattedResources = resources.map((item) => `'${item}'`).join(',');
-      const timeslots: TimeslotsAllRes[] = await this.dataSource.query(
+      const timeslots = await this.dataSource.query(
         `SELECT timeslot.id, resource_id as resourceId, resource.name as resourceName, start_date, 
       end_date, timeslot.color, title FROM timeslot JOIN resource ON timeslot.resource_id = resource.id 
       WHERE resource_id IN (${formattedResources}) and start_date >= ? AND end_date < ?
        ORDER BY start_date ASC, end_date ASC`,
         [this.getStartDay(startDate), this.getEndDay(endDate)],
       );
-
-      return timeslots;
+      return timeslots.map((timeslot) => {
+        const color: {
+          background: string;
+          foreground: string;
+        } = JSON.parse(timeslot.color);
+        return {
+          ...timeslot,
+          color: {
+            background: color.background,
+            foreground: color.foreground,
+          },
+          start_date: dayjs(timeslot.start_date).format('YYYY-MM-DD HH:mm:ss'),
+          end_date: dayjs(timeslot.end_date).format('YYYY-MM-DD HH:mm:ss'),
+        };
+      });
     } catch {
       throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
     }
@@ -108,8 +122,8 @@ export class TimeslotsService {
           use_default_color: timeslot.use_default_color,
         },
         recurring_pattern: recurringPattern,
-        start_date: timeslot.start_date,
-        end_date: timeslot.end_date,
+        start_date: dayjs(timeslot.start_date).format('YYYY-MM-DD HH:mm:ss'),
+        end_date: dayjs(timeslot.end_date).format('YYYY-MM-DD HH:mm:ss'),
         color: timeslot.color,
         title: timeslot.title,
       };
@@ -127,7 +141,7 @@ export class TimeslotsService {
       await queryRunner.connect();
       await queryRunner.startTransaction();
 
-      if (payload.recurring_pattern !== null) {
+      if (payload.recurring) {
         const createRecurringPattern = await queryRunner.manager.query(
           `INSERT INTO recurring_pattern(week_frequency,week_days,until) VALUES (?,?,?)`,
           [
@@ -141,7 +155,9 @@ export class TimeslotsService {
         const endDateTime = new Date(payload.end_date);
         const weekFrequency = payload.recurring_pattern.week_frequency;
         const weekDays = payload.recurring_pattern.week_days;
-        const untilDate = '2024-01-01';
+        const untilDate = dayjs(startDateTime)
+          .add(1, 'year')
+          .format('YYYY-MM-DD');
 
         const byWeekdays = weekDays.map((weekday) => RRule[weekday]);
 
@@ -203,7 +219,7 @@ export class TimeslotsService {
       return 1;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
+      throw new CBadRequestException(error);
     } finally {
       await queryRunner.release();
     }

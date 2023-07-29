@@ -24,7 +24,7 @@ export class InterfacageService {
     private patientRepository: Repository<ContactEntity>,
     @InjectRepository(FseEntity)
     private fseRepository: Repository<FseEntity>,
-    @InjectRepository(FseEntity)
+    @InjectRepository(EventTaskEntity)
     private eventTaskRepository: Repository<EventTaskEntity>,
     @InjectRepository(EventTaskEntity)
     private dentalEventTaskRepository: Repository<DentalEventTaskEntity>,
@@ -45,26 +45,28 @@ export class InterfacageService {
       ]);
       const dataActs: EventTaskEntity[] = await this.eventTaskRepository.find({
         relations: ['medical'],
-        where: { id: In(act_id) },
+        where: { id: In(act_id), conId: patient_id },
       });
-      const acts = dataActs.filter((act) => act.conId === patient.id);
-      if (!!acts) {
+
+      if (!dataActs.length) {
         throw new CBadRequestException(ErrorCode.ERROR_CARESHEET_ACTS_IS_EMPTY);
       }
-      const caresheet: FseEntity = null;
+      const caresheet: FseEntity = {};
       caresheet.usrId = user?.id;
       caresheet.conId = patient?.id;
       caresheet.date = format(new Date(), 'yyyy-MM-dd');
       caresheet.mode = CaresheetModeEnum.PAPIER;
       caresheet.amountAssure = 0;
-      acts.forEach((act) => {
+      caresheet.electronicCaresheet = 0;
+      caresheet.tasks = [];
+
+      dataActs.forEach((act) => {
         act.status = 2;
-        const actMedical = this.dentalEventTaskRepository.find({
-          where: { fseId: caresheet?.id },
-        });
+        const actMedical = act.medical;
         if (!actMedical) {
           this.dentalEventTaskRepository.save(act);
         }
+        caresheet?.tasks?.push(actMedical);
         caresheet.amount = act?.amount + caresheet?.amount;
         caresheet.amountAssure = caresheet?.amountAssure + act?.amount;
       });
@@ -88,8 +90,8 @@ export class InterfacageService {
       }
       groupByDates[dateKey].push(actMedical);
     });
-
-    for (const [_key, groupByDate] of Object.entries(groupByDates)) {
+    for (const key in groupByDates) {
+      const groupByDate = groupByDates?.[key];
       if (groupByDate.length <= 1) continue;
       let associationCode = 4;
       const actMedicalCcams = groupByDate.filter((v) => v?.ccam);

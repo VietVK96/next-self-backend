@@ -37,6 +37,32 @@ export function resize(path, format, width, height) {
   }
   return readStream.pipe(transform);
 }
+interface ImageData {
+  base64Data: string;
+  width: number;
+  height: number;
+}
+export async function resizeAndConvertToBase64(
+  imagePath: string,
+  width: number,
+  height: number,
+): Promise<ImageData> {
+  try {
+    const image = sharp(imagePath);
+    const metadata = await image.metadata();
+    const resizedImageBuffer = await image
+      .resize(width, height, { fit: 'contain', position: 'center' })
+      .toBuffer();
+
+    const base64Data = resizedImageBuffer.toString('base64');
+    const { width: resizedWidth, height: resizedHeight } = metadata;
+
+    return { base64Data, width: resizedWidth, height: resizedHeight };
+  } catch (error) {
+    console.error('Error resizing and converting image:', error);
+    throw error;
+  }
+}
 
 // resize thumbnail with detault height and width
 export function resizeThumbnail(path: string, format: string) {

@@ -102,7 +102,13 @@ export class DentalQuotationEntity {
    * @Assert\Type("string")
    * @Assert\Length(max=13)
    */
-  referenceNumber?: string;
+  // @Column({
+  //   name: 'reference',
+  //   type: 'varchar',
+  //   length: 13,
+  //   nullable: true,
+  // })
+  // referenceNumber?: string;
 
   /**
    * @ORM\Column(name="DQO_COLOR", type="text", nullable=true)
@@ -164,7 +170,12 @@ export class DentalQuotationEntity {
    * @Serializer\Type("DateTime<'Y-m-d'>")
    * @Assert\Date
    */
-  acceptedOn?: string;
+  // @Column({
+  //   name: 'DQO_DATE_ACCEPT',
+  //   type: 'date',
+  //   nullable: true,
+  // })
+  // acceptedOn?: string;
 
   /**
    * @ORM\Column(name="DQO_DATE", type="date", nullable=true)
@@ -212,7 +223,12 @@ export class DentalQuotationEntity {
    * @Serializer\Groups({"detail"})
    * @Assert\Type("string")
    */
-  description?: string;
+  // @Column({
+  //   name: 'DQO_MSG',
+  //   type: 'text',
+  //   nullable: true,
+  // })
+  // description?: string;
 
   /**
    * @ORM\Column(name="DQO_IDENT_PRAT", type="text", nullable=false)
@@ -462,7 +478,13 @@ export class DentalQuotationEntity {
    * @Assert\Type("bool")
    * @Assert\NotNull
    */
-  printExplanatoryNote?: number;
+  // @Column({
+  //   name: 'DQO_DISPLAY_NOTICE',
+  //   type: 'tinyint',
+  //   width: 1,
+  //   default: 1,
+  // })
+  // printExplanatoryNote?: number;
 
   /**
    * @ORM\Column(name="DQO_SIGNATURE_PATIENT", type="text", nullable=true)
@@ -481,7 +503,12 @@ export class DentalQuotationEntity {
    * @Serializer\Groups({"detail"})
    * @Assert\Type("string")
    */
-  patientSignature?: string;
+  // @Column({
+  //   name: 'DQO_SIGNATURE_PATIENT',
+  //   type: 'mediumtext',
+  //   nullable: true,
+  // })
+  // patientSignature?: string;
 
   /**
    * @ORM\Column(name="DQO_SIGNATURE_PRATICIEN", type="text", nullable=true)
@@ -500,7 +527,12 @@ export class DentalQuotationEntity {
    * @Serializer\Groups({"detail"})
    * @Assert\Type("string")
    */
-  practitionerSignature?: string;
+  // @Column({
+  //   name: 'DQO_SIGNATURE_PRATICIEN',
+  //   type: 'mediumtext',
+  //   nullable: true,
+  // })
+  // practitionerSignature?: string;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")

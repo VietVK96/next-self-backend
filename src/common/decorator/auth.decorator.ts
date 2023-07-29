@@ -1,5 +1,4 @@
 import {
-  CACHE_MANAGER,
   ExecutionContext,
   Inject,
   Injectable,
@@ -10,10 +9,11 @@ import { createParamDecorator } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { JWT_LOG_OUT } from 'src/constants/jwt';
 import { JwtPayload } from 'jsonwebtoken';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 export interface UserIdentity extends JwtPayload {
   id: number;
-  org: number; // $groupId = $session->get("group");
+  org: number; // $groupId = $session->get("group"); $session->get('organization_id');
   un?: string;
   type?: string;
   dis?: number[]; // list doctor id

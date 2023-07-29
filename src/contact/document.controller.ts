@@ -53,11 +53,19 @@ export class DocumentController {
     const contactId = request.body['contact'];
     const files: Express.Multer.File = request['file'];
     const type: string = request.body['type'];
-    return await this.documentService.upload(user.org, contactId, files, type);
+    const page: string = request.body['page'];
+
+    return await this.documentService.upload(
+      user.org,
+      contactId,
+      files,
+      type,
+      page,
+    );
   }
 
   /**
-   * php/contact/document/findAll.php -> full
+   * php/contact/document/findAll.php -> ful
    *
    */
   @Get('/document/:id')

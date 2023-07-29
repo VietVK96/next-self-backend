@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { DEFAULT_LOCALE } from 'src/constants/locale';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
 import { DataSource, Repository } from 'typeorm';
@@ -147,7 +148,7 @@ export class MedicalService {
 
       // Suppression des balises TEXTAREAs.
       medicalOrderCollection[key]['date'] = dayjs(medicalOrderEntity['date'])
-        .locale('fr-FR')
+        .locale(DEFAULT_LOCALE)
         .format('d/m/Y');
       medicalOrderCollection[key]['prescription'] = medicalOrderEntity[
         'prescription'

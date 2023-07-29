@@ -15,8 +15,8 @@ export class MemoService {
   ) {}
 
   async create(payload: CreateUpdateMemoDto): Promise<MemoRes> {
-    if (payload.message === null) {
-      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    if (payload.message === null || payload.message === undefined) {
+      throw new CBadRequestException(ErrorCode.MESSAGE_SHOULD_NOT_BE_BLANK);
     }
     const queryRunner = this.connection.createQueryRunner();
     try {
@@ -33,17 +33,16 @@ export class MemoService {
         .from(ResourceEntity, 'RES')
         .where('id = :resource_id', { resource_id: payload.resourceId })
         .getRawOne();
-      const { ...restPayload } = payload;
       const result: MemoRes = {
+        ...payload,
         id: createMemo.insertId,
-        ...restPayload,
         resource,
       };
       await queryRunner.commitTransaction();
       return result;
     } catch (err) {
       await queryRunner.rollbackTransaction();
-      throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
+      throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
     } finally {
       await queryRunner.release();
     }
@@ -61,7 +60,7 @@ export class MemoService {
         .getRawOne();
 
       if (!memo) {
-        throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
+        throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
       }
 
       const resource = await this.dataSource
@@ -79,7 +78,7 @@ export class MemoService {
 
       return result;
     } catch (error) {
-      throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
+      throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
     }
   }
 
@@ -90,16 +89,17 @@ export class MemoService {
         [id],
       );
       if (result.affectedRows === 0)
-        throw new Error(
-          'No result was found for query although at least one row was expected.',
-        );
+        throw new CBadRequestException(ErrorCode.NOT_FOUND);
       return {};
     } catch (error) {
-      throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
+      throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
     }
   }
 
   async update(id: number, payload: MemoRes) {
+    if (payload.message === null || payload.message === undefined) {
+      throw new CBadRequestException(ErrorCode.MESSAGE_SHOULD_NOT_BE_BLANK);
+    }
     const queryRunner = this.connection.createQueryRunner();
     try {
       await queryRunner.connect();
@@ -113,7 +113,7 @@ export class MemoService {
         .execute();
 
       if (memo.affected === 0)
-        throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
+        throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
 
       await queryRunner.commitTransaction();
       const result = {
@@ -123,7 +123,7 @@ export class MemoService {
       return result;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
+      throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
     } finally {
       await queryRunner.release();
     }

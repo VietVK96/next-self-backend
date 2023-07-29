@@ -58,14 +58,14 @@ export class UserPreferenceEntity {
    * @Expose
    * @var string
    */
-  @Column({
-    name: 'USP_COUNTRY',
-    type: 'varchar',
-    length: 3,
-    nullable: false,
-    default: 'FR',
-  })
-  countryCode?: string;
+  // @Column({
+  //   name: 'USP_COUNTRY',
+  //   type: 'varchar',
+  //   length: 3,
+  //   nullable: false,
+  //   default: 'FR',
+  // })
+  // countryCode?: string;
 
   /**
    * @ORM\Column(name="USP_TIMEZONE", type="string", length=45, nullable=false)
@@ -514,14 +514,14 @@ export class UserPreferenceEntity {
    * @ORM\Column(name="ccam_price_list", type="integer")
    * @var integer Grille tarifaire utilisée en CCAM.
    */
-  @Column({
-    name: 'ccam_price_list',
-    type: 'tinyint',
-    width: 4,
-    nullable: false,
-    default: 13,
-  })
-  ccamPriceList?: number;
+  // @Column({
+  //   name: 'ccam_price_list',
+  //   type: 'tinyint',
+  //   width: 4,
+  //   nullable: false,
+  //   default: 13,
+  // })
+  // ccamPriceList?: number;
 
   /**
    * @ORM\Column(name="ccam_price_list", type="integer", options={"default": 13})

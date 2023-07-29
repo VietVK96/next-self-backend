@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBasicAuth, ApiTags } from '@nestjs/swagger';
@@ -14,6 +16,7 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { CorrespondentService } from './services/correspondent.service';
+import { Response } from 'express';
 
 @Controller('correspondent')
 @ApiTags('Correspondent')
@@ -51,9 +54,40 @@ export class CorrespondentController {
     return await this.correspondentService.save(identity.org, payload);
   }
 
+  /**?
+   * php/correspondent/type/findAll.php full
+   *
+   */
   @Get('/type')
   @UseGuards(TokenGuard)
   async findAllType(@Query('search') search?: string) {
     return await this.correspondentService.findAllType(search);
+  }
+
+  @Get()
+  @UseGuards(TokenGuard)
+  async findAllCorrespondents(
+    @CurrentUser() identity: UserIdentity,
+    @Query('search') search?: string,
+    @Query('page') page?: number,
+    @Query('sort') sort?: string,
+  ) {
+    return await this.correspondentService.findAllCorrespondents(
+      identity.org,
+      search,
+      page,
+      sort,
+    );
+  }
+  @Delete('/:id')
+  @UseGuards(TokenGuard)
+  async delete(@CurrentUser() identity: UserIdentity, @Param('id') id: number) {
+    return await this.correspondentService.delete(identity.id, id);
+  }
+
+  @Get('export/:id')
+  @UseGuards(TokenGuard)
+  async export(@Param('id') id: number, @Res() res: Response) {
+    return await this.correspondentService.getExportQuery(res, id);
   }
 }

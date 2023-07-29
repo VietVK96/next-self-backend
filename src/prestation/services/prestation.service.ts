@@ -25,7 +25,7 @@ export class PrestationService {
   ) {}
 
   /**
-   * php\contact\prestation\findAll.php 16 -> 78
+   * php/contact/prestation/findAll.php 16 -> 78
    * @param payload
    * @param orgId
    */
@@ -83,7 +83,7 @@ export class PrestationService {
         .andWhere('CON.organization_id = :orgId')
         .andWhere('(EVT.EVT_ID IS NULL OR EVT.EVT_DELETE = 0)')
         .andWhere(
-          "(PLF.PLF_ID IS NULL OR (PLF.PLF_ACCEPTED_ON IS NOT NULL AND PLF.PLF_ACCEPTED_ON != '0000-00-00'))",
+          '(PLF.PLF_ID IS NULL OR (PLF.PLF_ACCEPTED_ON IS NOT NULL AND PLF.PLF_ACCEPTED_ON IS NOT NULL))',
         )
         .orderBy('ETK.ETK_DATE IS NULL', 'DESC')
         .addOrderBy('ETK.ETK_DATE', 'DESC')
@@ -121,7 +121,7 @@ export class PrestationService {
   }
 
   /**
-   * php\prestation\find.php line 9->15
+   * php/prestation/find.php line 9->15
    * @param payload
    */
   async find(payload: FindPrestationStructDto): Promise<any> {
@@ -187,7 +187,7 @@ export class PrestationService {
   }
 
   /**
-   * php\prestation\delete.php line 15->113
+   * php/prestation/delete.php line 15->113
    * @param id
    * @param identity
    */

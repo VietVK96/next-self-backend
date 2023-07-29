@@ -11,9 +11,11 @@ import {
   UserPractitionersRes,
   UserResourceRes,
   UserUserRes,
+  UserUserSettingRes,
 } from '../reponse/session.res';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
+import { parseJson } from 'src/common/util/json';
 
 @Injectable()
 export class GetSessionService {
@@ -34,11 +36,11 @@ export class GetSessionService {
     return data;
   }
 
-  //ecoodentist-1.31.0\php\session.php(line 32 - 120)
+  // php/session.php(line 32 - 120)
   async getUser(userId: number): Promise<UserUserRes> {
     const queryBuilder = this.dataSource.createQueryBuilder();
 
-    const user: UserUserRes = await queryBuilder
+    const userResult = await queryBuilder
       .select([
         'USR.USR_ID as id',
         'USR.USR_ADMIN as admin',
@@ -72,6 +74,18 @@ export class GetSessionService {
       .where('USR.USR_ID = :userId', { userId })
       .getRawOne();
 
+    let userSettings = userResult?.settings as UserUserSettingRes | string;
+    if (
+      userSettings &&
+      userSettings !== '' &&
+      typeof userSettings === 'string'
+    ) {
+      userSettings = parseJson<UserUserSettingRes>(userResult?.settings);
+    }
+    const user: UserUserRes = {
+      ...userResult,
+      settings: userSettings,
+    };
     const userPreferences = await queryBuilder
       .select([
         'USP.USR_ID as id',
@@ -142,6 +156,7 @@ export class GetSessionService {
       where: { userId },
     });
     user.rppsNumber = userMedical?.rppsNumber;
+    user.national_identifier_number = userMedical?.nationalIdentifierNumber;
     return user;
   }
 
@@ -218,7 +233,11 @@ export class GetSessionService {
       USR.color,
       resource.id as resourceId,
       resource.name as resourceName,
-      USR.organization_id as groupId
+      USR.organization_id as groupId,
+      medical.id as medical_id,
+      medical.finess_number as medical_finess_number,
+      medical.national_identifier_number as medical_national_identifier_number,
+      medical.rpps_number as medical_rpps_number
     `;
 
     const qr = queryBuiler
@@ -227,6 +246,7 @@ export class GetSessionService {
       .innerJoin(LicenseEntity, 'LIC', 'USR.USR_ID = LIC.USR_ID')
       .innerJoin(PrivilegeEntity, 'PVG', 'USR.USR_ID = PVG.USR_WITH_ID')
       .leftJoin(ResourceEntity, 'resource', 'resource.id = USR.resource_id')
+      .leftJoin(UserMedicalEntity, 'medical', 'USR.USR_ID = medical.user_id')
       .where(
         'USR.organization_id = :orgId AND LIC.LIC_END >= CURDATE() AND PVG.USR_ID = :userId AND PVG.PVG_ENABLE = 1',
         {

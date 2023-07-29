@@ -22,7 +22,6 @@ import {
   contactPhoneRes,
   FindAllRecentlyTreatedRes,
 } from '../response/findall.recentlyTreated.res';
-import { ColorHelper } from 'src/common/util/color-helper';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { FindRetrieveRes } from '../response/find.retrieve.contact.res';
@@ -86,7 +85,7 @@ export class FindContactService {
   }
 
   /**
-   * File: php\contact\findAll.php 21-91
+   * File: php/contact/findAll.php 21-91
    * @function main function
    *
    */
@@ -136,8 +135,8 @@ export class FindContactService {
         'T_GENDER_GEN.GEN_ID = CON.GEN_ID',
       );
     // Start $searchCriteria = new \App\Services\SearchCriteria($connection, $fields, $conditions);
-    if (request.conditions && request.conditions.length > 0) {
-      qr = this.addWhere(qr, request.conditions);
+    if (request?.conditions && request?.conditions.length > 0) {
+      qr = this.addWhere(qr, request?.conditions);
     }
     qr.andWhere('CON.CON_ID <> :id', {
       id: organizationId,
@@ -149,7 +148,7 @@ export class FindContactService {
     const conIds = contacts.map((a) => a.id);
 
     /**
-     * Logic in php\contact\findAll.php line 34 and line 79->82
+     * Logic in php/contact/findAll.php line 34 and line 79->82
      */
     if (conIds && conIds.length > 0) {
       const reliabilityQr = this.dataSource
@@ -174,7 +173,7 @@ export class FindContactService {
       }[] = await reliabilityQr.getRawMany();
 
       const allContacts = contacts.map((contact) => {
-        const reliability = reliabilities.find((r) => r.conId === contact.id);
+        const reliability = reliabilities.find((r) => r?.conId === contact?.id);
         contact.reliability = 0;
         if (reliability) {
           contact.reliability = reliability.reliability;
@@ -187,7 +186,7 @@ export class FindContactService {
   }
 
   /**
-   * File: php\contact\recentlyTreated\findAll.php 14->77
+   * File: php/contact/recentlyTreated/findAll.php 14->77
    */
   async findAllRecentlyTreated(
     practitioner?: number,
@@ -246,7 +245,7 @@ export class FindContactService {
     const results = await qr.getRawMany();
 
     /**
-     * Logic in php\contact\recentlyTreated\findAll.php line 18->23, line 65->75
+     * Logic in php/contact/recentlyTreated/findAll.php line 18->23, line 65->75
      */
     const conIds = results.map((a) => a.id);
     if (conIds && conIds.length > 0) {
@@ -274,7 +273,7 @@ export class FindContactService {
 
       // convert phones
       const pArr: Array<contactPhoneRes[]> = results.map((contact) => {
-        return String(contact.phones)
+        return String(contact?.phones)
           .split(',')
           .map((item) => {
             return {
@@ -285,21 +284,14 @@ export class FindContactService {
 
       const recentlyTreatedArr = results.map((contact, index) => {
         // get reliability
-        const reliability = reliabilities.find((r) => r.conId === contact.id);
+        const reliability = reliabilities.find((r) => r?.conId === contact?.id);
         contact.reliability = 0;
         if (reliability) {
-          contact.reliability = reliability.reliability;
+          contact.reliability = reliability?.reliability;
         }
-
-        // convert color
-        const colorArr = ColorHelper.inthex(Number(contact.color));
 
         const tmp: FindAllRecentlyTreatedRes = {
           ...contact,
-          color: {
-            background: colorArr[0],
-            foreground: colorArr[1],
-          },
           phones: pArr[index],
         };
         return tmp;
@@ -330,86 +322,86 @@ export class FindContactService {
     });
 
     const res: FindRetrieveRes = {
-      id: result.id,
-      nbr: result.nbr,
-      lastname: result.lastname,
-      lastNamePhonetic: result.lastNamePhonetic,
-      firstname: result.firstname,
-      firstNamePhonetic: result.firstNamePhonetic,
-      profession: result.profession,
-      email: result.email,
-      birthday: result.birthDate,
-      birthDateLunar: result.birthDateLunar,
-      birthOrder: result.birthOrder,
-      quality: result.quality,
-      breastfeeding: result.breastfeeding,
-      pregnancy: result.pregnancy,
-      clearanceCreatinine: result.clearanceCreatinine,
-      hepaticInsufficiency: result.hepaticInsufficiency,
-      weight: result.weight,
-      size: result.size,
-      conMedecinTraitantId: result.conMedecinTraitantId,
-      msg: result.msg,
-      odontogramObservation: result.odontogramObservation,
-      notificationMsg: result.notificationMsg,
-      notificationEnable: result.notificationEnable,
-      notificationEveryTime: result.notificationEveryTime,
-      color: result.color,
-      colorMedical: result.colorMedical,
-      insee: result.insee,
-      inseeKey: result.inseeKey,
-      socialSecurityReimbursementRate: result.socialSecurityReimbursementRate,
-      mutualRepaymentType: result.mutualRepaymentType,
-      mutualRepaymentRate: result.mutualRepaymentRate,
-      mutualComplement: result.mutualComplement,
-      mutualCeiling: result.mutualCeiling,
-      agenesie: result.agenesie,
-      maladieRare: result.maladieRare,
-      rxSidexisLoaded: result.rxSidexisLoaded,
-      externalReferenceId: result.externalReferenceId,
-      reminderVisitType: result.reminderVisitType,
-      reminderVisitDuration: result.reminderVisitDuration,
-      reminderVisitDate: result.reminderVisitDate,
-      reminderVisitLastDate: result.reminderVisitLastDate,
-      delete: result.delete,
-      organizationId: result.organizationId,
-      genId: result.genId,
-      adrId: result.adrId,
-      uplId: result.uplId,
-      cpdId: result.cpdId,
-      cofId: result.cofId,
-      ursId: result.ursId,
+      id: result?.id || null,
+      nbr: result?.nbr,
+      lastname: result?.lastname,
+      lastNamePhonetic: result?.lastNamePhonetic,
+      firstname: result?.firstname,
+      firstNamePhonetic: result?.firstNamePhonetic,
+      profession: result?.profession,
+      email: result?.email,
+      birthday: result?.birthDate,
+      birthDateLunar: result?.birthDateLunar,
+      birthOrder: result?.birthOrder,
+      quality: result?.quality,
+      breastfeeding: result?.breastfeeding,
+      pregnancy: result?.pregnancy,
+      clearanceCreatinine: result?.clearanceCreatinine,
+      hepaticInsufficiency: result?.hepaticInsufficiency,
+      weight: result?.weight,
+      size: result?.size,
+      conMedecinTraitantId: result?.conMedecinTraitantId,
+      msg: result?.msg,
+      odontogramObservation: result?.odontogramObservation,
+      notificationMsg: result?.notificationMsg,
+      notificationEnable: result?.notificationEnable,
+      notificationEveryTime: result?.notificationEveryTime,
+      color: result?.color,
+      colorMedical: result?.colorMedical,
+      insee: result?.insee,
+      inseeKey: result?.inseeKey,
+      socialSecurityReimbursementRate: result?.socialSecurityReimbursementRate,
+      mutualRepaymentType: result?.mutualRepaymentType,
+      mutualRepaymentRate: result?.mutualRepaymentRate,
+      mutualComplement: result?.mutualComplement,
+      mutualCeiling: result?.mutualCeiling,
+      agenesie: result?.agenesie,
+      maladieRare: result?.maladieRare,
+      rxSidexisLoaded: result?.rxSidexisLoaded,
+      externalReferenceId: result?.externalReferenceId,
+      reminderVisitType: result?.reminderVisitType,
+      reminderVisitDuration: result?.reminderVisitDuration,
+      reminderVisitDate: result?.reminderVisitDate,
+      reminderVisitLastDate: result?.reminderVisitLastDate,
+      delete: result?.delete,
+      organizationId: result?.organizationId,
+      genId: result?.genId,
+      adrId: result?.adrId,
+      uplId: result?.uplId,
+      cpdId: result?.cpdId,
+      cofId: result?.cofId,
+      ursId: result?.ursId,
       createdAt: null,
       updatedAt: null,
       deletedAt: null,
       gender: {
-        id: result.gender.id,
-        name: result.gender.name,
-        longName: result.gender.longName,
-        type: result.gender.type,
+        id: result?.gender?.id,
+        name: result?.gender?.name,
+        longName: result?.gender?.longName,
+        type: result?.gender?.type,
       },
-      user: result.user,
-      address: result.address,
-      phones: result.phones,
-      family: result.family,
+      user: result?.user,
+      address: result?.address,
+      phones: result?.phones,
+      family: result?.family,
       addressed_by: null,
       doctor: null,
       amountDue: null,
       reliability: null,
     };
-    if (result.cpdId) {
+    if (result?.cpdId) {
       res.addressed_by = {
-        id: result.correspondent.id,
-        last_name: result.correspondent.lastName,
-        first_name: result.correspondent.firstName,
+        id: result?.correspondent?.id,
+        last_name: result?.correspondent?.lastName,
+        first_name: result?.correspondent?.firstName,
       };
     }
 
-    if (result.medecinTraitant) {
+    if (result?.medecinTraitant) {
       res['doctor'] = {
-        id: result.medecinTraitant.id,
-        last_name: result.medecinTraitant.lastName,
-        first_name: result.medecinTraitant.firstName,
+        id: result?.medecinTraitant?.id,
+        last_name: result?.medecinTraitant?.lastName,
+        first_name: result?.medecinTraitant?.firstName,
       };
     }
 
@@ -455,14 +447,14 @@ export class FindContactService {
       };
     };
 
-    if (result.createdAt) {
-      res.createdAt = convertDate(result.createdAt);
+    if (result?.createdAt) {
+      res.createdAt = convertDate(result?.createdAt);
     }
-    if (result.updatedAt) {
-      res.updatedAt = convertDate(result.updatedAt);
+    if (result?.updatedAt) {
+      res.updatedAt = convertDate(result?.updatedAt);
     }
-    if (result.deletedAt) {
-      res.deletedAt = convertDate(result.deletedAt);
+    if (result?.deletedAt) {
+      res.deletedAt = convertDate(result?.deletedAt);
     }
 
     return res;

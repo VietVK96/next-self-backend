@@ -8,19 +8,29 @@ import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { UserController } from './user.controller';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { PreferenceService } from './services/preference.sevece';
+import { JwtModule } from '@nestjs/jwt';
+import { TokenDownloadService } from './services/token-download.service';
+import { JWT_SECRET_DOWNLOAD } from 'src/constants/jwt';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       UserEntity,
-      UserMedicalEntity,
       UserPreferenceEntity,
       UserMedicalEntity,
     ]),
     AddressModule,
+    JwtModule.register({
+      secret: JWT_SECRET_DOWNLOAD,
+    }),
   ],
 
-  providers: [PermissionService, UserService, PreferenceService],
+  providers: [
+    PermissionService,
+    UserService,
+    PreferenceService,
+    TokenDownloadService,
+  ],
   exports: [PermissionService, UserService, PreferenceService],
   controllers: [UserController],
 })

@@ -13,7 +13,7 @@ export class StickyNoteService {
     private dataSource: DataSource,
   ) {}
 
-  // File: php\stickyNote\delete.php 23-38
+  // File: php/stickyNote/delete.php 23-38
   async delete(stickyNoteId: number, userId: number) {
     const patient = await this.stickyNoteRepo.findOneBy({ id: stickyNoteId });
     if (patient['CON_ID']) {
@@ -28,7 +28,7 @@ export class StickyNoteService {
     return {};
   }
 
-  // File: php\stickyNote\findAll.php 26-49
+  // File: php/stickyNote/findAll.php 26-49
   async findAll(contactId: number, userId: number): Promise<StickyNoteRes[]> {
     const qr = `SELECT PTT.PTT_ID id,
                     PTT.PTT_MSG msg,
@@ -53,7 +53,7 @@ export class StickyNoteService {
     });
   }
 
-  // File: php\stickyNote\save.php 23-166
+  // File: php/stickyNote/save.php 23-166
   async save(
     reqBody: SaveStickNoteDto,
     userId: number,

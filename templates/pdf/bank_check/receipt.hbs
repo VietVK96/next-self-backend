@@ -1,0 +1,94 @@
+
+    <style>
+
+    @page {
+      size: A4;
+        margin: 15mm;
+        padding: 0;
+    }
+
+
+    h1 {
+        text-align: center;
+        font-size: 16px;
+        margin: 50px 0;
+    }
+
+    img {
+        margin-top: 5mm;
+    }
+
+    </style>
+
+<Page>
+    <div>
+        {{#if header}}
+        {{ header}}
+        {{else}}
+        <p style="width: 100%;">
+            Docteur  {{user.fullName}} 
+        </p>
+        {{#if user.address}} 
+        <div style="width: 100%;">
+            <p style="width: 100%;">
+                {{ user.address.street }} 
+            </p>
+             {{#if user.address.streetComp}} 
+            <p style="width: 100%;">
+                {{ user.address.streetComp }} 
+            </p>
+            {{/if}}
+            <p style="width: 100%;">
+                {{ user.address.zipCode }} {{ user.address.city }} 
+            </p>
+        </div>
+        {{/if}}
+        {{#if user.medical.finessNumber}} 
+        <div>
+            Numéro ADELI: {{ user.medical.finessNumber }} 
+        </div>
+        {{/if}}
+        {{/if}}
+    </div>
+    <h1>
+        Reçu
+    </h1>
+    <p>
+        {{#if isRefund }}
+        <strong>Reçu par : </strong>{{ patient.firstname }} {{ patient.lastname }}
+        {{else}}
+        <strong>Reçu par : </strong>{{ user.firstname }}  {{ user.lastname }}    
+        {{/if}}
+    </p>
+    <p>
+        {{#if isRefund}}
+        <strong>De : </strong>{{ user.firstname }} {{ user.lastname }} 
+        {{else}}
+        <strong>De : </strong>{{ patient.firstname }} {{ patient.lastname }}
+        {{/if}}
+    </p>
+    <p>
+        <strong>La somme totale de : </strong>{{ amount}} ({{ amountSpellout }})
+    </p>
+    <p>
+        Remis le {{time}}
+    </p>
+    {{#if paymentChoice}}
+    <p>
+        {{#if isRefund}}
+        Le remboursement a été fait en : {{paymentChoice}}
+        {{else}}
+        Le paiement a été fait en : {{paymentChoice}}
+        {{/if}}
+    </p>
+    {{/if}}
+    <div>
+        Signature
+        <div>
+            {{#if user.signature}}
+            <img src="{{ user.signature }}" />
+            {{/if}}
+        </div>
+    </div>
+</Page>
+</html>

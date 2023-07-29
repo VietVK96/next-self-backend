@@ -18,7 +18,7 @@ export class FindWaitingService {
   ) {}
 
   /**
-   * File: php\waitingRoom\findAll.php 21-99
+   * File: php/waitingRoom/findAll.php 21-99
    * @function main function
    *
    */
@@ -28,7 +28,7 @@ export class FindWaitingService {
     practitionerID: number,
   ) {
     const queryBuilder = this.dataSource.createQueryBuilder();
-    const user = await this.userRepo.findOneBy({ id: organizationID });
+    const user = await this.userRepo.findOneBy({ id: userID });
     let query = '';
     if (
       user &&

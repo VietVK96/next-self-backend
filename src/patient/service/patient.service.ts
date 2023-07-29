@@ -63,85 +63,94 @@ export class PatientService {
   ) {}
 
   async getExportQuery(res: Response, request: PatientExportDto): Promise<any> {
-    const patients = await this.dataSource
-      .createQueryBuilder()
-      .select(
-        'DISTINCT `patient`.*, `address`.*, GROUP_CONCAT(phoneNumber.number) AS phoneNumber_numbers',
-      )
-      .from(ContactEntity, 'patient')
-      .leftJoin(AddressEntity, 'address', 'address.id = patient.id')
-      .leftJoin(PhoneEntity, 'phoneNumber', 'phoneNumber.id = patient.id')
-      .orderBy('patient.lastname')
-      .groupBy('patient.id')
-      .getRawMany();
-    const rows = [];
-    for (const patient of patients) {
-      rows.push({
-        lastname: patient?.CON_LASTNAME,
-        firstname: patient?.CON_FIRSTNAME,
-        number: patient?.CON_NBR,
-        insee: inseeFormatter(`${patient?.CON_INSEE}${patient.CON_INSEE_KEY}`),
-        birth: patient?.CON_BIRTHDAY
-          ? dateFormatter(patient?.CON_BIRTHDAY)
-          : null,
-        email: patient?.CON_MAIL,
-        phoneNumber_numbers: patient?.phoneNumber_numbers,
-        address: addressFormatter({
-          street: patient?.ADR_STREET || '',
-          street2: patient?.ADR_STREET_COMP || '',
-          zipCode: patient?.ADR_ZIP_CODE || '',
-          city: patient?.ADR_CITY || '',
-          country: patient?.ADR_COUNTRY || '',
-        }),
-      });
-    }
-    if (request.format === TypeFile.CSV) {
-      const fields = [
-        { label: 'Nom', value: 'lastname' },
-        { label: 'Prénom', value: 'firstname' },
-        { label: 'Numéro de dossier', value: 'number' },
-        { label: 'Numéro de sécurité sociale', value: 'insee' },
-        { label: 'Date de naissance', value: 'birth' },
-        { label: 'E-mail', value: 'email' },
-        { label: 'Téléphone', value: 'phone' },
-        { label: 'Adresse', value: 'address' },
-      ];
-      const parser = new Parser({ fields });
-      const data = parser.parse(rows);
-      res.header('Content-Type', 'text/csv');
-      res.attachment('patient.csv');
-      res.status(200).send(data);
-    } else {
-      const book = new Workbook();
-      const sheet = book.addWorksheet('Sheet1');
-      sheet.columns = [
-        { header: 'Nom', key: 'lastname' },
-        { header: 'Prénom', key: 'firstname' },
-        { header: 'Numéro de dossier', key: 'number' },
-        { header: 'Numéro de sécurité sociale', key: 'insee' },
-        { header: 'Date de naissance', key: 'birth' },
-        { header: 'E-mail', key: 'email' },
-        { header: 'Téléphone', key: 'phoneNumber_numbers' },
-        { header: 'Adresse', key: 'address' },
-      ];
-      sheet.getColumn(1).width = 15;
-      sheet.getColumn(2).width = 20;
-      sheet.getColumn(3).width = 15;
-      sheet.getColumn(4).width = 15;
-      sheet.getColumn(5).width = 15;
-      sheet.getColumn(6).width = 15;
-      sheet.getColumn(7).width = 15;
-      sheet.getColumn(8).width = 15;
+    try {
+      {
+        const patients = await this.dataSource
+          .createQueryBuilder()
+          .select(
+            'DISTINCT `patient`.*, `address`.*, GROUP_CONCAT(phoneNumber.PHO_NBR) AS phoneNumber_numbers',
+          )
+          .from(ContactEntity, 'patient')
+          .leftJoin(AddressEntity, 'address', 'address.id = patient.id')
+          .leftJoin(PhoneEntity, 'phoneNumber', 'phoneNumber.id = patient.id')
+          .orderBy('patient.lastname')
+          .groupBy('patient.id')
+          .getRawMany();
 
-      sheet.addRows(rows);
-      const filename = `patient.xlsx`;
-      res.set({
-        'Content-Type':
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': 'attachment; filename=' + filename,
-      });
-      await book.xlsx.write(res);
-      res.end();
+        const rows = [];
+        for (const patient of patients) {
+          rows.push({
+            lastname: patient?.CON_LASTNAME,
+            firstname: patient?.CON_FIRSTNAME,
+            number: patient?.CON_NBR,
+            insee: inseeFormatter(
+              `${patient?.CON_INSEE}${patient.CON_INSEE_KEY}`,
+            ),
+            birth: patient?.CON_BIRTHDAY
+              ? dateFormatter(patient?.CON_BIRTHDAY)
+              : null,
+            email: patient?.CON_MAIL,
+            phoneNumber_numbers: patient?.phoneNumber_numbers,
+            address: addressFormatter({
+              street: patient?.ADR_STREET || '',
+              street2: patient?.ADR_STREET_COMP || '',
+              zipCode: patient?.ADR_ZIP_CODE || '',
+              city: patient?.ADR_CITY || '',
+              country: patient?.ADR_COUNTRY || '',
+            }),
+          });
+        }
+        if (request.format === TypeFile.CSV) {
+          const fields = [
+            { label: 'Nom', value: 'lastname' },
+            { label: 'Prénom', value: 'firstname' },
+            { label: 'Numéro de dossier', value: 'number' },
+            { label: 'Numéro de sécurité sociale', value: 'insee' },
+            { label: 'Date de naissance', value: 'birth' },
+            { label: 'E-mail', value: 'email' },
+            { label: 'Téléphone', value: 'phone' },
+            { label: 'Adresse', value: 'address' },
+          ];
+          const parser = new Parser({ fields });
+          const data = parser.parse(rows);
+          res.header('Content-Type', 'text/csv');
+          res.attachment('patient.csv');
+          res.status(200).send(data);
+        } else {
+          const book = new Workbook();
+          const sheet = book.addWorksheet('Sheet1');
+          sheet.columns = [
+            { header: 'Nom', key: 'lastname' },
+            { header: 'Prénom', key: 'firstname' },
+            { header: 'Numéro de dossier', key: 'number' },
+            { header: 'Numéro de sécurité sociale', key: 'insee' },
+            { header: 'Date de naissance', key: 'birth' },
+            { header: 'E-mail', key: 'email' },
+            { header: 'Téléphone', key: 'phoneNumber_numbers' },
+            { header: 'Adresse', key: 'address' },
+          ];
+          sheet.getColumn(1).width = 15;
+          sheet.getColumn(2).width = 20;
+          sheet.getColumn(3).width = 15;
+          sheet.getColumn(4).width = 15;
+          sheet.getColumn(5).width = 15;
+          sheet.getColumn(6).width = 15;
+          sheet.getColumn(7).width = 15;
+          sheet.getColumn(8).width = 15;
+
+          sheet.addRows(rows);
+          const filename = `patient.xlsx`;
+          res.set({
+            'Content-Type':
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition': 'attachment; filename=' + filename,
+          });
+          await book.xlsx.write(res);
+          res.end();
+        }
+      }
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
   }
 
@@ -163,7 +172,7 @@ export class PatientService {
       return await this.dataSource
         .getRepository(ContactEntity)
         .createQueryBuilder()
-        .delete()
+        .softDelete()
         .where('id = :id', { id: patient?.id })
         .execute();
     } catch (error) {
@@ -515,5 +524,91 @@ export class PatientService {
     });
 
     return patient?.contraindications.sort((a, b) => a.position - b.position);
+  }
+
+  /**
+   * application/Services/Patient.php => 180 -> 264
+   */
+  async getNextReminderByDoctor(id: number, doctorId: number) {
+    const patient = await this.dataSource.query(
+      `
+      SELECT
+        CON_REMINDER_VISIT_TYPE AS type,
+        CON_REMINDER_VISIT_DATE AS date
+      FROM T_CONTACT_CON
+      WHERE CON_ID = ?`,
+      [id],
+    );
+    const type = patient?.type;
+    if (type === 'date') return patient?.date;
+    if (type === 'duration') {
+      const duration = await this.dataSource.query(
+        `
+        SELECT
+          USP_REMINDER_VISIT_DURATION
+        FROM T_USER_PREFERENCE_USP
+        WHERE USR_ID = ?
+      `,
+        [doctorId],
+      );
+      return await this.dataSource.query(
+        `
+        SELECT
+            MAX(t1.max_date) + INTERVAL IF(
+                CON_REMINDER_VISIT_DURATION IS NULL OR CON_REMINDER_VISIT_DURATION = 0,
+                ?,
+                CON_REMINDER_VISIT_DURATION
+            ) MONTH
+        FROM T_CONTACT_CON
+        JOIN (
+            (
+                SELECT
+                    MAX(T_EVENT_TASK_ETK.ETK_DATE) AS max_date
+                FROM T_CONTACT_CON
+                JOIN T_EVENT_TASK_ETK
+                WHERE T_CONTACT_CON.CON_ID = ?
+                  AND T_CONTACT_CON.CON_ID = T_EVENT_TASK_ETK.CON_ID
+                  AND T_EVENT_TASK_ETK.USR_ID = ?
+                GROUP BY T_CONTACT_CON.CON_ID
+            )
+            UNION
+            (
+                SELECT
+                    MAX(event_occurrence_evo.evo_date) AS max_date
+                FROM T_CONTACT_CON
+                JOIN T_EVENT_EVT
+                JOIN event_occurrence_evo
+                WHERE T_CONTACT_CON.CON_ID = ?
+                  AND T_CONTACT_CON.CON_ID = T_EVENT_EVT.CON_ID
+                  AND T_EVENT_EVT.USR_ID = ?
+                  AND T_EVENT_EVT.EVT_ID = event_occurrence_evo.evt_id
+                GROUP BY T_CONTACT_CON.CON_ID
+            )
+        ) AS t1
+        WHERE T_CONTACT_CON.CON_ID = ?
+      `,
+        [duration, id, doctorId, id, doctorId, id],
+      );
+      return duration ?? null;
+    }
+  }
+
+  /**
+   * application/Services/Patient.php => 180 -> 264
+   */
+  async getNextAppointment(patientId: number) {
+    return await this.dataSource.query(`
+      SELECT
+        T_EVENT_EVT.EVT_NAME,
+        T_EVENT_EVT.EVT_START,
+        T_EVENT_EVT.EVT_END
+      FROM T_EVENT_EVT
+      WHERE
+        T_EVENT_EVT.CON_ID = ${patientId} AND
+        T_EVENT_EVT.EVT_START > CURRENT_TIMESTAMP() AND
+        T_EVENT_EVT.deleted_at IS NULL
+      ORDER BY
+        T_EVENT_EVT.EVT_START
+      LIMIT 1`);
   }
 }

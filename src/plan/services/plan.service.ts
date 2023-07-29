@@ -4,7 +4,6 @@ import {
   NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
@@ -12,9 +11,9 @@ import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { EventEntity } from 'src/entities/event.entity';
 import { EnumPlanPlfType, PlanPlfEntity } from 'src/entities/plan-plf.entity';
 import { TraceabilityStatusEnum } from 'src/enum/traceability-status-enum';
-import { PaymentPlanService } from 'src/payment-plan/services/payment-plan.service';
+import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { PermissionService } from 'src/user/services/permission.service';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import {
   ActionSaveStructDto,
   BodySaveStructDto,
@@ -28,15 +27,14 @@ import {
   TaskData,
   findOnePlanRes,
 } from '../response/plan.res';
+import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 
 @Injectable()
 export class PlanService {
   constructor(
     private permissionService: PermissionService,
-    private paymentPlanService: PaymentPlanService,
+    private paymentPlanService: PaymentScheduleService,
     private dataSource: DataSource,
-    @InjectRepository(PlanPlfEntity)
-    private planPlfRepository: Repository<PlanPlfEntity>,
   ) {}
 
   private _empty(value: any) {
@@ -44,7 +42,6 @@ export class PlanService {
       case 0:
       case '0':
       case '':
-      case []:
       case null:
       case undefined:
       case false:
@@ -369,7 +366,7 @@ export class PlanService {
         groupId,
         options?.user_id,
         options?.patient_id,
-        options?.payment_schedule.id ?? null,
+        options?.payment_schedule?.id ?? null,
         options?.name,
         options?.type,
         options?.acceptedOn,
@@ -416,7 +413,7 @@ export class PlanService {
           ...event,
         };
 
-        const color = event?.color?.background;
+        const color = event?.color?.background ?? event?.color;
 
         const insertEvents = await queryRunner.query(
           `
@@ -515,7 +512,7 @@ export class PlanService {
             [
               task?.id,
               event?.user?.id,
-              options?.parent_id,
+              options?.patient_id,
               event?.id,
               task?.library_act_id ?? null,
               task?.library_act_quantity_id ?? null,
@@ -660,7 +657,7 @@ export class PlanService {
             }
 
             teeth = teeth.trim() === '' ? teeth.trim() : null;
-            if (dental?.code === 'HBQK002' && this._empty(teeth)) {
+            if (dental?.code === 'HBQK002' && teeth.length === 0) {
               teeth = '00';
             }
 
@@ -669,7 +666,7 @@ export class PlanService {
               dental?.ccam_id ?? null,
               dental?.ngap_key_id ?? null,
               dental?.dental_material_id ?? null,
-              this._empty(teeth) ? null : teeth,
+              teeth.length === 0 ? null : teeth,
               dental?.type,
               dental?.coef,
               this._empty(dental?.exceeding) ? null : dental?.exceeding,
@@ -698,7 +695,7 @@ export class PlanService {
           tasks.push(task?.id);
         }
 
-        if (tasks.length === 0) {
+        if (tasks.length > 0) {
           const listTask = tasks.join();
           const sql = `
             DELETE ETK, DET
@@ -712,7 +709,7 @@ export class PlanService {
         events.push(event?.id);
       }
 
-      if (events.length === 0) {
+      if (events.length > 0) {
         const eventStatement = `
         SELECT
           EVT_ID
@@ -722,8 +719,8 @@ export class PlanService {
         const eventResult = await queryRunner.query(eventStatement, [
           options?.id,
         ]);
-        const eventId = eventResult[0];
-        if (eventId) {
+        const eventsId = eventResult.map((item) => item.EVT_ID);
+        for (const eventId of eventsId) {
           await queryRunner.query(`
           DELETE T_PLAN_EVENT_PLV
           FROM T_PLAN_EVENT_PLV
@@ -764,7 +761,7 @@ export class PlanService {
     }
   }
   /**
-   * File: php\contact\plans\findAll.php, line 23->94
+   * File: /contact/plans/findAll.php, line 23->94
    * @function main function
    *
    */
@@ -1036,7 +1033,7 @@ export class PlanService {
 
   async duplicate(payload: DuplicatePlanDto, organizationId: number) {
     // début de la transaction
-    return await this.dataSource.manager.transaction(
+    await this.dataSource.manager.transaction(
       async (transactionalEntityManager) => {
         try {
           // vérification si le plan de traitement appartient bien au groupe
@@ -1105,7 +1102,7 @@ export class PlanService {
             .andWhere('PLV.PLF_ID = :planificationId', { planificationId })
             .getMany();
 
-          for (const evenEVT of evenEVTs) {
+          for (let evenEVT of evenEVTs) {
             const appointmentId = evenEVT?.id;
             const {
               usrId,
@@ -1169,7 +1166,7 @@ export class PlanService {
             FROM T_PLAN_EVENT_PLV PLV
             WHERE PLV.EVT_ID = ?
               AND PLV.PLF_ID = ?
-          `,
+            `,
               [newEventEvt?.id, newPlanPlf?.id, appointmentId, planificationId],
             );
 
@@ -1183,8 +1180,33 @@ export class PlanService {
               .where('ETK.EVT_ID = EVT.EVT_ID')
               .andWhere('EVT.EVT_ID = :appointmentId', { appointmentId })
               .getMany();
-
-            evenEVT.tasks = tEventTaskETKs;
+            const newTasks = [];
+            for (const task of tEventTaskETKs) {
+              const newTask = await transactionalEntityManager.save(
+                EventTaskEntity,
+                {
+                  ...task,
+                  evtId: newEventEvt.id,
+                  id: null,
+                },
+              );
+              const currentDental = await this.dataSource.manager.findOneOrFail(
+                DentalEventTaskEntity,
+                {
+                  where: {
+                    id: task.id,
+                  },
+                },
+              );
+              const newDentalTask = await transactionalEntityManager.save(
+                DentalEventTaskEntity,
+                { ...currentDental, fse: null, id: newTask.id },
+              );
+              newTask.dental = newDentalTask;
+              newTasks.push(newTask);
+            }
+            newEventEvt.tasks = newTasks;
+            evenEVT = newEventEvt;
           }
           return { ...newPlanPlf, events: evenEVTs };
         } catch (err) {
