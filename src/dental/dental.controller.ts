@@ -27,6 +27,7 @@ import {
   FactureEmailDto,
 } from './dto/facture.dto';
 import {
+  Convention2020RequestAjaxDto,
   DevisRequestAjaxDto,
   QuotationDevisRequestAjaxDto,
 } from './dto/devis_request_ajax.dto';
@@ -269,5 +270,14 @@ export class DentalController {
       id_contact,
       identity,
     );
+  }
+
+  @Post('/quotes/convention-2020/devis_requetes_ajax/:id')
+  @UseGuards(TokenGuard)
+  async convention2020RequestAjax(
+    @Body() payload: Convention2020RequestAjaxDto,
+    @Param('id') id: number,
+  ) {
+    return this.quotesServices.devisRequestAjax(payload, id);
   }
 }

@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BillEntity } from 'src/entities/bill.entity';
-import { BillLineEntity } from 'src/entities/bill-line.entity';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { EventEntity } from 'src/entities/event.entity';
@@ -22,6 +20,11 @@ import { LibraryActEntity } from 'src/entities/library-act.entity';
 import { CcamEntity } from 'src/entities/ccam.entity';
 import { PatientMedicalEntity } from 'src/entities/patient-medical.entity';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
+import { Convention2020RequestAjaxDto } from '../dto/devis_request_ajax.dto';
+import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
+import { LettersEntity } from 'src/entities/letters.entity';
+import { MailService } from 'src/mail/services/mail.service';
+import { convertBooleanToNumber } from 'src/common/util/number';
 
 @Injectable()
 export class QuotesServices {
@@ -43,6 +46,11 @@ export class QuotesServices {
     private dentalQuotationRepository: Repository<DentalQuotationEntity>,
     @InjectRepository(LibraryActEntity)
     private libraryActRepository: Repository<LibraryActEntity>,
+    @InjectRepository(DentalQuotationActEntity)
+    private dentalQuotationActRepository: Repository<DentalQuotationActEntity>,
+    @InjectRepository(LettersEntity)
+    private lettersRepository: Repository<LettersEntity>,
+    private mailService: MailService,
     private paymentPlanService: PaymentScheduleService,
   ) {}
 
@@ -746,5 +754,108 @@ export class QuotesServices {
       (!medical?.serviceAmoEndDate ||
         now.getTime() <= new Date(medical?.serviceAmoEndDate).getTime())
     );
+  }
+
+  /**
+   * /dental/quotes/convention-2020/devis_requetes_ajax.php
+   * Line: 1 -> 452
+   */
+  async devisRequestAjax(params: Convention2020RequestAjaxDto, id: number) {
+    try {
+      const data = await this.dentalQuotationRepository.findOne({
+        where: { id: id },
+        relations: ['acts', 'attachments', 'contact', 'user', 'treatmentPlan'],
+      });
+      const dataIdActs = data?.acts.map((dataActs) => {
+        let material = null;
+        if (params?.acts.some((act) => act.id === dataActs.id)) {
+          material = dataActs?.material;
+        }
+        return {
+          id: dataActs?.id,
+          material,
+        };
+      });
+      for (const dataIdAct of dataIdActs) {
+        const dataActs = await this.dentalQuotationActRepository.update(
+          dataIdAct?.id,
+          { material: dataIdAct?.material },
+        );
+      }
+
+      if (data?.attachments.length > 0) {
+        const dataIdAc = data?.attachments.map(
+          (attachments) => (id = attachments?.id),
+        );
+        if (dataIdAc) {
+          await this.lettersRepository.delete(dataIdAc);
+        }
+      }
+
+      for (const attach of params?.attachments) {
+        const mail = attach?.id;
+        let context: number[];
+        let signature: string;
+        if (data) {
+          const doctor_id = data?.user?.id;
+          const patient_id = data?.contact?.id;
+          context.push(patient_id, doctor_id);
+        }
+        if (data?.signaturePraticien) {
+          signature = data?.signaturePraticien;
+        }
+        if (data?.signaturePatient) {
+          signature = data?.signaturePatient;
+        }
+
+        const mailConverted = await this.mailService.transform(
+          mail,
+          context,
+          signature,
+        );
+        mailConverted.doctor.id = data?.user?.id;
+        mailConverted.patient.id = data?.contact?.id;
+
+        if (mailConverted.header) {
+          mailConverted.Body =
+            '<div class="page_header">' +
+            mailConverted.header.Body +
+            '</div>' +
+            mailConverted.Body;
+        }
+        delete mailConverted.header;
+        delete mailConverted.footer;
+
+        const sendMail = await this.mailService.store(mailConverted);
+
+        await this.lettersRepository.update(sendMail?.id, {
+          quoteId: data?.id,
+        });
+      }
+      const print_explanatory_note = convertBooleanToNumber(
+        params?.print_explanatory_note,
+      );
+      await this.dentalQuotationRepository.update(id, {
+        date: params?.date,
+        validUntil: params?.valid_until,
+        dateAccept: params?.accepted_on || null,
+        msg: params?.description,
+        placeOfManufacture: params?.place_of_manufacture,
+        placeOfSubcontracting: params?.place_of_subcontracting,
+        displayNotice: print_explanatory_note,
+        signaturePatient: params?.patient_signature,
+        signaturePraticien: params?.user_signature,
+      } as DentalQuotationEntity);
+
+      if (data?.treatmentPlan && data?.dateAccept) {
+        const treatmentPlan = data?.treatmentPlan?.id;
+        await this.planPlfRepository.update(treatmentPlan, {
+          acceptedOn: data?.dateAccept,
+        });
+      }
+      return 'test';
+    } catch (err) {
+      return new CBadRequestException(err);
+    }
   }
 }
