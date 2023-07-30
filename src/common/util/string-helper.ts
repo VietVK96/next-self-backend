@@ -36,6 +36,7 @@ export class StringHelper {
   ): string[] {
     if (!length) length = 76;
     if (!character) character = ' ';
+    if (!string) return [];
     if (string.indexOf('\n') !== -1) {
       const ar_strings = string.split('\n');
       let array_reste: string[] = [];

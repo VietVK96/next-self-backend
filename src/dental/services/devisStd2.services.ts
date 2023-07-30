@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, In, Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BillLineEntity } from 'src/entities/bill-line.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { EventEntity } from 'src/entities/event.entity';
 import { UserEntity } from 'src/entities/user.entity';
@@ -21,7 +20,7 @@ import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
 import * as path from 'path';
 import { DevisStd2ActesRes, DevisStd2InitRes } from '../res/devisStd2.res';
 import { checkDay, customDayOfYear } from 'src/common/util/day';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import { toFixed } from 'src/common/util/number';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { DevisStd2Dto } from '../dto/devisStd2.dto';
@@ -29,6 +28,10 @@ import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { BillEntity } from 'src/entities/bill.entity';
 import { br2nl } from 'src/common/util/string';
 import { StringHelper } from 'src/common/util/string-helper';
+import { DOMParser, XMLSerializer } from 'xmldom';
+import { PatientOdontogramService } from 'src/patient/service/patientOdontogram.service';
+import * as fs from 'fs';
+import * as sharp from 'sharp';
 
 @Injectable()
 export class DevisStd2Services {
@@ -53,6 +56,7 @@ export class DevisStd2Services {
     private contactRepository: Repository<ContactEntity>, //event
     private dataSource: DataSource,
     private paymentScheduleService: PaymentScheduleService,
+    private patientOdontogramService: PatientOdontogramService,
   ) {}
 
   async getInitChamps(
@@ -80,8 +84,6 @@ export class DevisStd2Services {
         idUser = withs;
       }
     }
-    let reference: string;
-
     let userSocialSecurityReimbursementRate: number;
     let userQuery: UserEntity;
     try {
@@ -115,7 +117,7 @@ export class DevisStd2Services {
       );
     }
 
-    if (!id_pdt) {
+    if (!id_pdt && !req?.no_devis) {
       throw new CBadRequestException(
         'Pas de plan de traitement ni de devis s&eacute;lectionn&eacute;',
       );
@@ -380,7 +382,7 @@ export class DevisStd2Services {
               req?.id_user,
               id_pdt,
               result?.paymentScheduleId || null,
-              reference,
+              result.reference,
               result?.userPreferenceQuotationColor,
               result?.identPrat,
               result?.identPrat,
@@ -445,7 +447,7 @@ export class DevisStd2Services {
       });
     } else if (req?.no_devis) {
       try {
-        const dataDENTALQUOTATION = await this.dataSource.query(
+        const dataDENTALQUOTATIONS = await this.dataSource.query(
           `
           SELECT DQO.USR_ID as id_user,
                    DQO.PLF_ID as id_pdt,
@@ -484,16 +486,20 @@ export class DevisStd2Services {
           `,
           [req?.no_devis, identity?.org],
         );
-        if (dataDENTALQUOTATION === null && dataDENTALQUOTATION === undefined) {
+        const dataDENTALQUOTATION = dataDENTALQUOTATIONS[0];
+        if (!dataDENTALQUOTATION) {
           throw new CBadRequestException("Ce devis n'existe pas ...");
         }
 
         const couleur = dataDENTALQUOTATION?.couleur
           ? dataDENTALQUOTATION?.couleur
           : 'blue';
-        const descriptions = dataDENTALQUOTATION?.description.split(
-          '[-----------------------------------------]',
-        );
+
+        const descriptions = dataDENTALQUOTATION?.description
+          ? dataDENTALQUOTATION?.description.split(
+              '[-----------------------------------------]',
+            )
+          : [];
         const dataActes = await this.dataSource.query(
           `
           SELECT DQA.DQA_ID as id_devisStd2_ligne,
@@ -524,6 +530,7 @@ export class DevisStd2Services {
           }
           actes.push({ ...dataActes });
         }
+
         result = {
           ...result,
           id_user: dataDENTALQUOTATION?.id_user,
@@ -562,8 +569,13 @@ export class DevisStd2Services {
         throw new CBadRequestException(err);
       }
     }
-    const user = this.userRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { id: result?.id_user },
+      select: {
+        password: false,
+        passwordAccounting: false,
+        passwordHash: false,
+      },
     });
     try {
       result.id_facture = 0;
@@ -696,13 +708,90 @@ export class DevisStd2Services {
       throw new CBadRequestException(error.message);
     }
 
+    if (result?.schemas !== 'none') {
+      if (req?.pdf) {
+        function setImagePath(xml: string): string {
+          const parser = new DOMParser();
+          const domDocument = parser.parseFromString(xml, 'image/svg+xml');
+          const svg = domDocument.getElementsByTagName('svg')[0];
+          svg.setAttribute('height', '269');
+          svg.setAttribute('width', '643');
+          svg.setAttribute('viewBox', '0 0 643 269');
+          const node = domDocument.getElementsByTagName('image')[0];
+          const href =
+            process.env?.FRONTEND_URL + node.getAttribute('xlink:href');
+          node.setAttribute('xlink:href', href);
+          const serializer = new XMLSerializer();
+          return serializer.serializeToString(domDocument);
+        }
+
+        const tempdir = process.cwd();
+        const prefix = `${tempdir}/temp/${idUser}_${result?.reference}_`;
+        const fileNames: { [key: string]: string } = {};
+
+        // Schéma actuel.
+        result.schemaActuel = `${prefix}actuel`;
+        fileNames[result.schemaActuel] = setImagePath(
+          await this.patientOdontogramService.show({
+            conId: result?.id_contact,
+            name: result?.odontogramType,
+            status: 'current',
+          }),
+        );
+        result.schemaActuel = '<img src="' + result.schemaActuel + '.png" />';
+
+        // Schéma actuel.
+        result.schemaDevis = `${prefix}devis`;
+        fileNames[result.schemaDevis] = setImagePath(
+          await this.patientOdontogramService.show({
+            conId: result?.id_contact,
+            name: result?.odontogramType,
+            status: 'planned',
+          }),
+        );
+        result.schemaDevis = '<img src="' + result.schemaDevis + '.png" />';
+
+        for (const key in fileNames) {
+          fs.writeFileSync(key + '.svg', fileNames[key]);
+          const buffer = Buffer.from(fileNames[key]);
+          const img = sharp(buffer);
+          const pngBuffer = await img.toBuffer();
+          await sharp(pngBuffer).toFile(key + '.png');
+        }
+      } else {
+        result.schemaActuel =
+          '<div class="scheme-body" style="padding: 0mm; margin: 0mm">' +
+          this.patientOdontogramService.show({
+            conId: result?.id_contact,
+            name: result?.odontogramType,
+            status: 'current',
+            imageToURL: true,
+          }) +
+          '</div>';
+        result.schemaDevis =
+          '<div class="scheme-body" style="padding: 0mm; margin: 0mm">' +
+          this.patientOdontogramService.show({
+            conId: result?.id_contact,
+            name: result?.odontogramType,
+            status: 'current',
+            imageToURL: true,
+          }) +
+          '</div>';
+      }
+    }
+
+    result.total_rss = toFixed(
+      (result?.total_rss * result?.socialSecurityReimbursementRate) / 100,
+    );
+    result.total_roc = 0;
+    result.date_signature = dayjs().format('DD/MM/YYYY');
     return result;
   }
 
   async generatePdf(req: PrintPDFDto, identity: UserIdentity) {
     try {
       const initData = await this.getInitChamps(
-        { no_devis: req?.id },
+        { no_devis: req?.id, pdf: true },
         identity,
       );
       const colonneDate = false;
@@ -745,6 +834,10 @@ export class DevisStd2Services {
 
       return customCreatePdf({ files, options, helpers });
     } catch (error) {
+      console.log(
+        '🚀 ~ file: devisStd2.services.ts:827 ~ DevisStd2Services ~ generatePdf ~ error:',
+        error,
+      );
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
