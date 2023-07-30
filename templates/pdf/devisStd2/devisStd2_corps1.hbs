@@ -1,27 +1,45 @@
-<input type="hidden" name="id_user" value="{{id_user}}" />
-{{#if pdf}}
-    <div id="identPat">{{adresse_pat}}</div>
-{{else}}
-    <textarea id="identPat" name="identPat">{{adresse_pat}}</textarea>
-{{/if}}
-<H1>
+<page
+  backtop="{{#if duplicata}} 10mm {{else}} 0mm {{/if}}"
+  backright='0mm'
+  backbottom='0mm'
+  backleft='0mm'
+  style="page-break-before: always;"
+>
+  <div class="body">
+{{#if duplicata}} <header><span style="color: red; font-size: 14pt;">DUPLICATA</span></header> {{/if}}
+  <input type='hidden' name='id_user' value='{{id_user}}' />
+  {{#if pdf}}
+    <div id='identPat'>{{adresse_pat}}</div>
+  {{else}}
+    <textarea id='identPat' name='identPat'>{{adresse_pat}}</textarea>
+  {{/if}}
+  <H1>
     Bilan odontologique initial
-</H1>
-<div class="sousH1">
-    {{nom_prenom_patient}}<br>
+  </H1>
+  <div class='sousH1'>
+    {{nom_prenom_patient}}<br />
     {{date_devis}}
-</div>
-<H2>Votre etat bucco dentaire :</H2>
-{{#if pdf}}
-    <pre class="etatBucco">{{etatBucco}}</pre>
-{{else}}
-    <textarea class="etatBucco" name="etatBucco">{{etatBucco}}</textarea>
-{{/if}}
-<br>
-Voici le détail de votre état bucco-dentaire, tel que nous l’avons examiné lors de notre premier rendez-vous.<br>
-<div class="schema">
+  </div>
+  <H2>Votre etat bucco dentaire :</H2>
+  {{#if pdf}}
+    <pre class='etatBucco'>{{etatBucco}}</pre>
+  {{else}}
+    <textarea class='etatBucco' name='etatBucco'>{{etatBucco}}</textarea>
+  {{/if}}
+  <br />
+  Voici le détail de votre état bucco-dentaire, tel que nous l’avons examiné
+  lors de notre premier rendez-vous.<br />
+  <div class='schema'>
     {{{schemaActuel}}}
-</div>
-<p>Notre objectif est de faire avec vous un projet thérapeutique qui évite une aggravation et donc, vous permette de garder vos dents à long terme en évitant au maximum les mauvaises surprises qui vous amènent à consulter dans l’inconfort de l’urgence et de la douleur.</p>
-<p>Nous nous engageons à vous proposer des soins conformes aux données les plus récentes des évolutions techniques et médicales de l’Art Dentaire.</p>
-<p>Toute l’équipe du cabinet dentaire est à votre service pour vous donner les explications relatives à vos problèmes et à la solution thérapeutique la plus adaptée à votre santé bucco-dentaire.</p>
+  </div>
+  <p>Notre objectif est de faire avec vous un projet thérapeutique qui évite une
+    aggravation et donc, vous permette de garder vos dents à long terme en
+    évitant au maximum les mauvaises surprises qui vous amènent à consulter dans
+    l’inconfort de l’urgence et de la douleur.</p>
+  <p>Nous nous engageons à vous proposer des soins conformes aux données les
+    plus récentes des évolutions techniques et médicales de l’Art Dentaire.</p>
+  <p>Toute l’équipe du cabinet dentaire est à votre service pour vous donner les
+    explications relatives à vos problèmes et à la solution thérapeutique la
+    plus adaptée à votre santé bucco-dentaire.</p>
+    </div>
+</page>

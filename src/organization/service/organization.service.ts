@@ -8,7 +8,7 @@ import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { UserSmsEntity } from 'src/entities/user-sms.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { UserService } from 'src/user/services/user.service';
-import { DataSource, IsNull, Not, Repository } from 'typeorm';
+import { DataSource, Not, Repository } from 'typeorm';
 import * as fs from 'fs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AccountStatusEnum } from 'src/enum/account-status.enum';

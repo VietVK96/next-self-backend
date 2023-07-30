@@ -81,6 +81,8 @@ export class DevisStd2ActesRes {
   remboursable?: string;
   prixachat?: number;
   prixLigne?: number;
+  prixLigneStr?: string;
+  cotationLigne?: string;
   tarif_secu?: number;
   rss?: number;
   roc?: number;
