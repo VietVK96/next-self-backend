@@ -40,7 +40,7 @@ export class PatientOdontogramService {
   #status = ['initial', 'current', 'planned'];
 
   async getCurrentPrestation(conId: number) {
-    return this.eventTaskRepository.findOne({
+    return this.eventTaskRepository.find({
       where: {
         conId: conId,
         status: MoreThan(0),
@@ -55,7 +55,7 @@ export class PatientOdontogramService {
   }
 
   async getTreatmentPlanPrestation(conId: number) {
-    return this.eventTaskRepository.findOne({
+    return this.eventTaskRepository.find({
       where: {
         conId,
         status: 0,
@@ -85,7 +85,7 @@ export class PatientOdontogramService {
     });
   }
 
-  async getInitialPrestation(conId: number): Promise<EventTaskEntity | null> {
+  async getInitialPrestation(conId: number): Promise<EventTaskEntity[] | null> {
     const result = await this.antecedentPrestationRepository.findOne({
       where: {
         conId,
@@ -98,20 +98,22 @@ export class PatientOdontogramService {
       },
     });
     if (!result) return null;
-    return {
-      libraryActId: result.libraryActId,
-      libraryActQuantityId: result.libraryActQuantityId,
-      dental: {
-        teeth: result.teeth,
-        ccamCode: null,
+    return [
+      {
+        libraryActId: result.libraryActId,
+        libraryActQuantityId: result.libraryActQuantityId,
+        dental: {
+          teeth: result.teeth,
+          ccamCode: null,
+        },
       },
-    };
+    ];
   }
 
   async getCurrent(request: OdontogramCurrentDto) {
     try {
       const evenTasks = await this.getCurrentPrestation(request?.patientId);
-      return this.odontogramRunStatus([evenTasks]);
+      return this.odontogramRunStatus(evenTasks);
     } catch (err) {
       console.log('-----data-----', err);
     }
@@ -123,7 +125,7 @@ export class PatientOdontogramService {
         request?.treatment_plan_id,
       );
 
-      const ids = [eventTaskByTreatments]?.map((task) => task?.id);
+      const ids = eventTaskByTreatments?.map((task) => task?.id);
       const evenTasks = await this.eventTaskRepository.find({
         where: {
           id: In(ids),
@@ -260,81 +262,89 @@ export class PatientOdontogramService {
     conId: number,
   ): Promise<PatientOdontogramStyleRes | null> {
     let styles: PatientOdontogramStyleRes = {};
-    let eventTask: EventTaskEntity = {};
+    let eventTasks: EventTaskEntity[] = [];
     if (status === 'planned') {
-      eventTask = await this.getTreatmentPlanPrestation(conId);
+      eventTasks = await this.getTreatmentPlanPrestation(conId);
     }
     if (status === 'current') {
-      eventTask = await this.getCurrentPrestation(conId);
+      eventTasks = await this.getCurrentPrestation(conId);
     }
     if (status === 'initial') {
-      eventTask = await this.getInitialPrestation(conId);
+      eventTasks = await this.getInitialPrestation(conId);
     }
 
-    if (eventTask) {
-      const teethsNumber = changeSectorNumberToTooth(eventTask?.dental?.teeth);
-      const displayXray = /^HBQK(?!(002))/i.test(eventTask?.dental?.ccamCode); // radiographie autre qu'une panoramique
-
-      //* ecoophp/application/Services/Contact/Odontogram.php 148 - 182
-      const teethsNumbers = teethsNumber
-        .split(/[^\d]/)
-        .filter((num) => num !== '');
-      let odontograms: LibraryOdontogramEntity[] = [];
-      if (eventTask?.libraryActQuantityId) {
-        odontograms = await this.findByLibraryActQuantityId(
-          eventTask?.libraryActQuantityId,
+    if (eventTasks) {
+      eventTasks.forEach(async (eventTask) => {
+        const teethsNumber = changeSectorNumberToTooth(
+          eventTask?.dental?.teeth,
         );
-      }
+        const displayXray = /^HBQK(?!(002))/i.test(eventTask?.dental?.ccamCode); // radiographie autre qu'une panoramique
 
-      if (!odontograms.length) {
-        odontograms = await this.findByLibraryActId(eventTask?.libraryActId);
-      }
-
-      if (!odontograms.length) {
-        return null;
-      }
-
-      // La représentation graphique "Toutes les dents" est prioritaire
-      const nullables = odontograms.filter(
-        (odontogram) => !odontogram?.rankOfTooth,
-      );
-      if (nullables.length) {
-        odontograms = nullables;
-      }
-
-      odontograms.map((odontogram) => {
-        const color = parseJson<{ background: string }>(odontogram.color);
-        const background = color?.background;
-        const visibleCrown = checkBoolean(odontogram.visibleCrown);
-        const visibleRoot = checkBoolean(odontogram.visibleRoot);
-        const visibleImplant = checkBoolean(odontogram.visibleImplant);
-        const visibleAreas = parseJson<string[]>(odontogram.visibleAreas);
-        const invisibleAreas = parseJson<string[]>(odontogram.invisibleAreas);
-        const rankOfTooth = odontogram.rankOfTooth;
-
-        if (rankOfTooth && teethsNumbers[rankOfTooth - 1]) {
-          styles = this.applyStyles({
-            nums: teethsNumbers[rankOfTooth - 1],
-            backgroundColor: background,
-            displayCrown: visibleCrown,
-            displayRoot: visibleRoot,
-            displayImplant: visibleImplant,
-            displayXray: displayXray,
-            zoneVisibles: visibleAreas,
-            zoneInvisibles: invisibleAreas,
-          });
-        } else {
-          styles = this.applyStyles({
-            nums: teethsNumber,
-            backgroundColor: background,
-            displayCrown: visibleCrown,
-            displayRoot: visibleRoot,
-            displayImplant: visibleImplant,
-            displayXray: displayXray,
-            zoneVisibles: visibleAreas,
-            zoneInvisibles: invisibleAreas,
-          });
+        //* ecoophp/application/Services/Contact/Odontogram.php 148 - 182
+        const teethsNumbers = teethsNumber
+          .split(/[^\d]/)
+          .filter((num) => num !== '');
+        let odontograms: LibraryOdontogramEntity[] = [];
+        if (eventTask?.libraryActQuantityId) {
+          odontograms = await this.findByLibraryActQuantityId(
+            eventTask?.libraryActQuantityId,
+          );
         }
+
+        if (!odontograms.length) {
+          odontograms = await this.findByLibraryActId(eventTask?.libraryActId);
+        }
+
+        if (!odontograms.length) {
+          return null;
+        }
+
+        // La représentation graphique "Toutes les dents" est prioritaire
+        const nullables = odontograms.filter(
+          (odontogram) => !odontogram?.rankOfTooth,
+        );
+        if (nullables.length) {
+          odontograms = nullables;
+        }
+
+        odontograms.map((odontogram) => {
+          const color = parseJson<{ background: string }>(odontogram.color);
+          const background = color?.background;
+          const visibleCrown = checkBoolean(odontogram.visibleCrown);
+          const visibleRoot = checkBoolean(odontogram.visibleRoot);
+          const visibleImplant = checkBoolean(odontogram.visibleImplant);
+          const visibleAreas = odontogram?.visibleAreas
+            ? odontogram.visibleAreas.split(',')
+            : [];
+          const invisibleAreas = odontogram?.invisibleAreas
+            ? odontogram.invisibleAreas.split(',')
+            : [];
+          const rankOfTooth = odontogram.rankOfTooth;
+
+          if (rankOfTooth && teethsNumbers[rankOfTooth - 1]) {
+            styles = this.applyStyles({
+              nums: teethsNumbers[rankOfTooth - 1],
+              backgroundColor: background,
+              displayCrown: visibleCrown,
+              displayRoot: visibleRoot,
+              displayImplant: visibleImplant,
+              displayXray: displayXray,
+              zoneVisibles: visibleAreas,
+              zoneInvisibles: invisibleAreas,
+            });
+          } else {
+            styles = this.applyStyles({
+              nums: teethsNumber,
+              backgroundColor: background,
+              displayCrown: visibleCrown,
+              displayRoot: visibleRoot,
+              displayImplant: visibleImplant,
+              displayXray: displayXray,
+              zoneVisibles: visibleAreas,
+              zoneInvisibles: invisibleAreas,
+            });
+          }
+        });
       });
     }
     return Object.keys(styles).length ? styles : null;
