@@ -23,12 +23,14 @@ import { UploadEntity } from 'src/entities/upload.entity';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
+import { PatientOdontogramService } from 'src/patient/service/patientOdontogram.service';
 
 @Injectable()
 export class DevisServices {
   constructor(
     private mailService: MailService,
     private paymentScheduleService: PaymentScheduleService,
+    private odotogramService: PatientOdontogramService,
     private configService: ConfigService,
     @InjectRepository(DentalQuotationEntity)
     private dentalQuotationRepository: Repository<DentalQuotationEntity>,
@@ -139,7 +141,7 @@ export class DevisServices {
     }
 
     const year = new Date().getFullYear();
-    const dayOfYear = customDayOfYear(new Date());
+    const dayOfYear = customDayOfYear(dayjs());
     let random = await this.dataSource.query(
       `
     SELECT IFNULL(SUBSTRING(MAX(reference), -5), 0) reference FROM T_DENTAL_QUOTATION_DQO WHERE USR_ID = ? AND reference LIKE CONCAT(?, ?, '%')`,
@@ -815,14 +817,26 @@ export class DevisServices {
       const nb_lignes = 0;
       const nb_max_lignes_page = 24;
       const nb_max_lignes_page_annexe = 45;
-      const schemaInitial = '',
-        schemaActuel = '',
-        schemaDevis = '';
 
       /**
        * if (isset($pdf)) {... todo ...} svg
        */
 
+      const schemaInitial = await this.odotogramService?.show({
+        name: 'adult',
+        status: 'initial',
+        conId: no_devis,
+      });
+      const schemaActuel = await this.odotogramService?.show({
+        name: 'adult',
+        status: 'current',
+        conId: no_devis,
+      });
+      const schemaDevis = await this.odotogramService?.show({
+        name: 'adult',
+        status: 'planned',
+        conId: no_devis,
+      });
       total_rss =
         Math.round((total_rss / socialSecurityReimbursementRate) * 100) / 100;
       const date_signature = dayjs().format('DD/MM/YYYY');

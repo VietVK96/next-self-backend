@@ -5,8 +5,8 @@ export function checkDay(day: any, format = 'YYYY-MM-DD'): string {
   return a.isValid() ? a.format(format) : '';
 }
 
-export const customDayOfYear = (day?: string | Date): string => {
-  const today = day ? dayjs(day) : dayjs();
+export const customDayOfYear = (day?: string | dayjs.Dayjs): string => {
+  const today = day ? (typeof day === 'string' ? dayjs(day) : day) : dayjs();
   const dayOfYear = (today.diff(today.startOf('year'), 'day') + 1)
     .toString()
     .padStart(3, '0');

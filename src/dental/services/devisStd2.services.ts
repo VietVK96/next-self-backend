@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, In, Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { BillLineEntity } from 'src/entities/bill-line.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { EventEntity } from 'src/entities/event.entity';
 import { UserEntity } from 'src/entities/user.entity';
@@ -21,7 +20,7 @@ import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
 import * as path from 'path';
 import { DevisStd2ActesRes, DevisStd2InitRes } from '../res/devisStd2.res';
 import { checkDay, customDayOfYear } from 'src/common/util/day';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import { toFixed } from 'src/common/util/number';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { DevisStd2Dto } from '../dto/devisStd2.dto';
@@ -29,7 +28,9 @@ import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { BillEntity } from 'src/entities/bill.entity';
 import { br2nl } from 'src/common/util/string';
 import { StringHelper } from 'src/common/util/string-helper';
-
+import { DOMParser, XMLSerializer } from 'xmldom';
+import { PatientOdontogramService } from 'src/patient/service/patientOdontogram.service';
+import * as fs from 'fs';
 @Injectable()
 export class DevisStd2Services {
   constructor(
@@ -53,6 +54,7 @@ export class DevisStd2Services {
     private contactRepository: Repository<ContactEntity>, //event
     private dataSource: DataSource,
     private paymentScheduleService: PaymentScheduleService,
+    private patientOdontogramService: PatientOdontogramService,
   ) {}
 
   async getInitChamps(
@@ -80,9 +82,6 @@ export class DevisStd2Services {
         idUser = withs;
       }
     }
-    let reference: string;
-
-    let userSocialSecurityReimbursementRate: number;
     let userQuery: UserEntity;
     try {
       userQuery = await this.userRepository.findOne({
@@ -98,8 +97,9 @@ export class DevisStd2Services {
         result.userPreferenceQuotationColor = 'blue';
       }
 
-      result.userSocialSecurityReimbursementRate =
-        userQuery?.socialSecurityReimbursementRate;
+      result.userSocialSecurityReimbursementRate = toFixed(
+        userQuery?.socialSecurityReimbursementRate,
+      );
       result.userRateCharges = toFixed(userQuery?.rateCharges);
       result.userSignature = userQuery?.signature;
       result.addressEntity = userQuery?.address;
@@ -115,7 +115,7 @@ export class DevisStd2Services {
       );
     }
 
-    if (!id_pdt) {
+    if (!id_pdt && !req?.no_devis) {
       throw new CBadRequestException(
         'Pas de plan de traitement ni de devis s&eacute;lectionn&eacute;',
       );
@@ -380,7 +380,7 @@ export class DevisStd2Services {
               req?.id_user,
               id_pdt,
               result?.paymentScheduleId || null,
-              reference,
+              result.reference,
               result?.userPreferenceQuotationColor,
               result?.identPrat,
               result?.identPrat,
@@ -445,7 +445,7 @@ export class DevisStd2Services {
       });
     } else if (req?.no_devis) {
       try {
-        const dataDENTALQUOTATION = await this.dataSource.query(
+        const dataDENTALQUOTATIONS = await this.dataSource.query(
           `
           SELECT DQO.USR_ID as id_user,
                    DQO.PLF_ID as id_pdt,
@@ -484,16 +484,20 @@ export class DevisStd2Services {
           `,
           [req?.no_devis, identity?.org],
         );
-        if (dataDENTALQUOTATION === null && dataDENTALQUOTATION === undefined) {
+        const dataDENTALQUOTATION = dataDENTALQUOTATIONS[0];
+        if (!dataDENTALQUOTATION) {
           throw new CBadRequestException("Ce devis n'existe pas ...");
         }
 
         const couleur = dataDENTALQUOTATION?.couleur
           ? dataDENTALQUOTATION?.couleur
           : 'blue';
-        const descriptions = dataDENTALQUOTATION?.description.split(
-          '[-----------------------------------------]',
-        );
+
+        const descriptions = dataDENTALQUOTATION?.description
+          ? dataDENTALQUOTATION?.description.split(
+              '[-----------------------------------------]',
+            )
+          : [];
         const dataActes = await this.dataSource.query(
           `
           SELECT DQA.DQA_ID as id_devisStd2_ligne,
@@ -524,6 +528,7 @@ export class DevisStd2Services {
           }
           actes.push({ ...dataActes });
         }
+
         result = {
           ...result,
           id_user: dataDENTALQUOTATION?.id_user,
@@ -562,9 +567,14 @@ export class DevisStd2Services {
         throw new CBadRequestException(err);
       }
     }
-    const user = this.userRepository.findOne({
-      where: { id: result?.id_user },
-    });
+    // const user = await this.userRepository.findOne({
+    //   where: { id: result?.id_user },
+    //   select: {
+    //     password: false,
+    //     passwordAccounting: false,
+    //     passwordHash: false,
+    //   },
+    // });
     try {
       result.id_facture = 0;
       result.noFacture = '';
@@ -577,8 +587,9 @@ export class DevisStd2Services {
         where: { id: req?.id_contact },
       });
       result.socialSecurityReimbursementRate =
-        contactEntity?.socialSecurityReimbursementRate ||
-        result?.userSocialSecurityReimbursementRate;
+        contactEntity?.socialSecurityReimbursementRate
+          ? toFixed(contactEntity?.socialSecurityReimbursementRate)
+          : result?.userSocialSecurityReimbursementRate;
       const billEntity = await this.billRepository.findOne({
         where: { dqoId: req?.no_devis, delete: 0 },
         select: { id: true, nbr: true },
@@ -626,18 +637,21 @@ export class DevisStd2Services {
           ar_acte.dentsLigne = ar_dents[0];
           ar_acte.descriptionLigne = ar_descriptionLigne[0];
         }
-
+        const prixachat = toFixed(ar_acte?.prixachat);
+        const prixLigne = toFixed(ar_acte?.prixLigne);
+        const prestation = toFixed(ar_acte?.prestation);
+        const prixvente = toFixed(ar_acte?.prixvente);
+        const rss = toFixed(ar_acte?.rss);
+        const nrss = toFixed(ar_acte?.nrss);
         ar_acte.nouveau = true;
-        ar_acte.prixvente = toFixed(ar_acte.prixachat / (1 - result?.txch));
+        ar_acte.prixvente = toFixed(prixachat / (1 - result?.txch));
         ar_acte.prestation = toFixed(
-          ar_acte.prixLigne * (1 - result?.txch) - ar_acte.prixachat,
+          prixLigne * (1 - result?.txch) - prixachat,
         );
-        ar_acte.charges =
-          ar_acte.prixLigne - ar_acte.prestation - ar_acte.prixvente;
-        ar_acte.prixLigne =
-          ar_acte.prixvente + ar_acte.prestation + ar_acte.charges;
-        ar_acte.nrss = ar_acte.prixLigne - ar_acte.rss;
-        if (Math.abs(ar_acte?.nrss) < 0.01) ar_acte.nrss = 0;
+        ar_acte.charges = prixLigne - prestation - prixvente;
+        ar_acte.prixLigne = prixvente + prestation + ar_acte.charges;
+        ar_acte.nrss = prixLigne - rss;
+        if (Math.abs(nrss) < 0.01) ar_acte.nrss = 0;
         ar_acte.roc = 0;
 
         result.total_prixvente += ar_acte.prixvente;
@@ -696,29 +710,89 @@ export class DevisStd2Services {
       throw new CBadRequestException(error.message);
     }
 
+    if (result?.schemas !== 'none') {
+      if (req?.pdf) {
+        const imgPath = path.join(
+          process.cwd(),
+          'svg/odontogram',
+          'background_adult.png',
+        );
+        const img = fs.readFileSync(imgPath);
+        const imageBase = img.toString('base64');
+        function setImagePath(xml: string): string {
+          const parser = new DOMParser();
+          const domDocument = parser.parseFromString(xml, 'image/svg+xml');
+          const svg = domDocument.getElementsByTagName('svg')[0];
+          const node = domDocument.getElementsByTagName('image')[0];
+          svg.setAttribute('height', '269');
+          svg.setAttribute('width', '643');
+          node.setAttribute(
+            'xlink:href',
+            'data:image/jpeg;base64,' + imageBase,
+          );
+          const serializer = new XMLSerializer();
+          return serializer.serializeToString(domDocument);
+        }
+
+        result.schemaActuel = setImagePath(
+          await this.patientOdontogramService.show({
+            conId: result?.id_contact,
+            name: result?.odontogramType,
+            status: 'current',
+          }),
+        );
+        // Schéma actuel.
+        result.schemaDevis = setImagePath(
+          await this.patientOdontogramService.show({
+            conId: result?.id_contact,
+            name: result?.odontogramType,
+            status: 'planned',
+          }),
+        );
+      } else {
+        result.schemaActuel =
+          '<div class="scheme-body" style="padding: 0mm; margin: 0mm">' +
+          this.patientOdontogramService.show({
+            conId: result?.id_contact,
+            name: result?.odontogramType,
+            status: 'current',
+            imageToURL: true,
+          }) +
+          '</div>';
+        result.schemaDevis =
+          '<div class="scheme-body" style="padding: 0mm; margin: 0mm">' +
+          this.patientOdontogramService.show({
+            conId: result?.id_contact,
+            name: result?.odontogramType,
+            status: 'current',
+            imageToURL: true,
+          }) +
+          '</div>';
+      }
+    }
+
+    result.total_rss = toFixed(
+      (result?.total_rss * result?.socialSecurityReimbursementRate) / 100,
+    );
+    result.total_roc = 0;
+    result.date_signature = dayjs().format('DD/MM/YYYY');
     return result;
   }
 
   async generatePdf(req: PrintPDFDto, identity: UserIdentity) {
     try {
       const initData = await this.getInitChamps(
-        { no_devis: req?.id },
+        { no_devis: req?.id, pdf: true },
         identity,
       );
-      const colonneDate = false;
       let color =
         initData?.couleur && initData?.couleur === 'blue' ? '#DDDDFF' : 'white';
       color =
         initData?.couleur && initData?.couleur === 'blue' ? '#EEEEEE' : color;
-      const devisStd2 = this.dentalQuotationRepository.findOne({
-        where: { id: req?.id },
-      });
-      const data = {
-        ...initData,
-        borderBottomColor: color == 'white' ? '1px' : '0px',
-        borderBottomWidth: color == 'white' ? 'black' : 'white',
-      };
-      const helpers = {};
+      // const devisStd2 = this.dentalQuotationRepository.findOne({
+      //   where: { id: req?.id },
+      // });
+
       const filePath = path.join(
         process.cwd(),
         'templates/pdf/devisStd2',
@@ -726,9 +800,16 @@ export class DevisStd2Services {
       );
       const files: PdfTemplateFile[] = [
         {
-          data,
+          data: {
+            couleur: initData?.couleur,
+            borderBottomColor: color == 'white' ? '1px' : '0px',
+            borderBottomWidth: color == 'white' ? 'black' : 'white',
+          },
           path: filePath,
         },
+        this.corps1(initData, true),
+        this.corps2(initData, true),
+        this.corps3(initData, true),
       ];
 
       const options = {
@@ -743,16 +824,100 @@ export class DevisStd2Services {
         },
       };
 
-      return customCreatePdf({ files, options, helpers });
+      return customCreatePdf({ files, options });
     } catch (error) {
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
 
-  async corps1(data: DevisStd2InitRes, pdf: boolean) {
+  corps1(data: DevisStd2InitRes, pdf: boolean): PdfTemplateFile {
     data.etatBucco =
       !data?.etatBucco && !pdf
         ? 'Les dents : <br/>Le parodonte : '
         : data.etatBucco;
+    const filePath = path.join(
+      process.cwd(),
+      'templates/pdf/devisStd2',
+      'devisStd2_corps1.hbs',
+    );
+    return {
+      data: {
+        pdf,
+        etatBucco: data?.etatBucco,
+        id_user: data?.id_user,
+        adresse_pat: data?.adresse_pat,
+        nom_prenom_patient: data?.nom_prenom_patient,
+        date_devis: data?.date_devis,
+        schemaActuel: data?.schemaActuel,
+      },
+      path: filePath,
+    };
+  }
+  corps2(data: DevisStd2InitRes, pdf: boolean): PdfTemplateFile {
+    if (!data?.infosCompl && !pdf) {
+      data.infosCompl = '\n\n';
+    }
+    const filePath = path.join(
+      process.cwd(),
+      'templates/pdf/devisStd2',
+      'devisStd2_corps2.hbs',
+    );
+    return {
+      data: {
+        pdf,
+        infosCompl: data?.infosCompl,
+        nom_prenom_patient: data?.nom_prenom_patient,
+        schemaDevis: data?.schemaDevis,
+      },
+      path: filePath,
+    };
+  }
+  corps3(data: DevisStd2InitRes, pdf: boolean): PdfTemplateFile {
+    const filePath = path.join(
+      process.cwd(),
+      'templates/pdf/devisStd2',
+      'devisStd2_corps3.hbs',
+    );
+    if (pdf) {
+      data?.details.forEach((detail) => {
+        detail.dentsLigne = detail.dentsLigne ? detail.dentsLigne : ' ';
+        detail.descriptionLigne = detail?.descriptionLigne
+          ? detail.descriptionLigne
+          : ' ';
+        detail.prixLigneStr = !detail?.prixLigne
+          ? ' '
+          : detail?.prixLigne.toString();
+        detail.cotationLigne = detail.cotation;
+
+        if (detail?.typeLigne == 'ligneBlanche') {
+          detail.dentsLigne = `<!-- ${detail?.typeLigne} --> `;
+          detail.descriptionLigne = `<!-- ${detail?.typeLigne} --> `;
+          detail.cotationLigne = `<!-- ${detail?.typeLigne} --> `;
+          detail.prixLigneStr = `<!-- ${detail?.typeLigne} --> `;
+        } else if (detail.typeLigne == 'ligneSeparation') {
+          detail.dentsLigne = ' ';
+          detail.descriptionLigne = ' ';
+          detail.cotationLigne = ' ';
+          detail.prixLigneStr = ' ';
+        }
+      });
+    }
+    return {
+      data: {
+        pdf,
+        total_prixLigne: data?.total_prixLigne,
+        total_rss: data?.total_rss,
+        nom_prenom_patient: data?.nom_prenom_patient,
+        socialSecurityReimbursementRate: data?.socialSecurityReimbursementRate,
+        details: data?.details,
+        identPrat: data?.identPrat,
+        adresse_prat: data?.adresse_prat,
+        datedevisStd2: data?.datedevisStd2,
+        quotationSignaturePraticien: data?.quotationSignaturePraticien,
+        quotationSignaturePatient: data?.quotationSignaturePatient,
+        hasAdresse_prat: data?.adressePrat ? true : false,
+      },
+      path: filePath,
+    };
   }
 }
