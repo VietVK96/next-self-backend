@@ -147,17 +147,17 @@ export class OrdonnancesServices {
 
       // 'cleanedHTML' now contains the HTML content with the unwanted elements removed
       // Now let's convert the 'format_papier' to JavaScript equivalent
-      let format: string[];
-      let orientation: string;
-      const matches = format_papier.match(/^([0-9]+)x([0-9]+)$/);
+      // let format: string[];
+      // let orientation: string;
+      // const matches = format_papier.match(/^([0-9]+)x([0-9]+)$/);
 
-      if (matches) {
-        format = [matches[1], matches[2]];
-        orientation = 'P';
-      } else {
-        format = [format_papier.substring(0, 2)];
-        orientation = format_papier === 'A5p' ? 'L' : 'P';
-      }
+      // if (matches) {
+      //   format = [matches[1], matches[2]];
+      //   orientation = 'P';
+      // } else {
+      //   format = [format_papier.substring(0, 2)];
+      //   orientation = format_papier === 'A5p' ? 'L' : 'P';
+      // }
 
       /* versions à imprimer */
       const versions: string[] = [];

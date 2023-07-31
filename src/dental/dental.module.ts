@@ -48,6 +48,9 @@ import { QuotationServices } from './services/quotation.service';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { PlanEventEntity } from 'src/entities/plan-event.entity';
 import { PaymentPlanDeadlineEntity } from 'src/entities/payment-plan-deadline.entity';
+import { PatientOdontogramService } from 'src/patient/service/patientOdontogram.service';
+import { AntecedentPrestationEntity } from 'src/entities/antecedentprestation.entity';
+import { LibraryOdontogramEntity } from 'src/entities/library-odontogram.entity';
 import { QuotesServices } from './services/quotes.service';
 import { PaymentSchedulesModule } from 'src/payment-schedule/payment-schedule.module';
 import { LibraryActEntity } from 'src/entities/library-act.entity';
@@ -93,6 +96,8 @@ import { LibraryActEntity } from 'src/entities/library-act.entity';
       UserEntity,
       AmoEntity,
       AmcEntity,
+      AntecedentPrestationEntity,
+      LibraryOdontogramEntity,
       LibraryActEntity,
     ]),
     PaymentSchedulesModule,
@@ -114,6 +119,7 @@ import { LibraryActEntity } from 'src/entities/library-act.entity';
     DevisStd2Services,
     QuotationServices,
     ConfigService,
+    PatientOdontogramService,
     QuotesServices,
   ],
 })

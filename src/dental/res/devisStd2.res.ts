@@ -65,6 +65,9 @@ export class DevisStd2InitRes {
   total_nrss: number;
   total_roc: number;
   odontogramType: string;
+  schemaActuel: string;
+  schemaDevis: string;
+  date_signature: string;
 }
 
 export class DevisStd2ActesRes {
@@ -78,6 +81,8 @@ export class DevisStd2ActesRes {
   remboursable?: string;
   prixachat?: number;
   prixLigne?: number;
+  prixLigneStr?: string;
+  cotationLigne?: string;
   tarif_secu?: number;
   rss?: number;
   roc?: number;

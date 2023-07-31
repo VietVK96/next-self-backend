@@ -26,22 +26,3 @@ export const QuotationMutualPdfFooter = (reference: string) => {
   </div>
   `;
 };
-
-type ordoPdfFooterProps = {
-  headerEnable: boolean;
-  data: {
-    ident_prat?: string | number;
-    adresse?: string;
-    complement_entete: string;
-    rppsNumber: string;
-  };
-};
-
-export const ordoPdfFooter = ({ headerEnable, data }: ordoPdfFooterProps) => {
-  if (!headerEnable) {
-    return '<div></div>';
-  }
-
-  return `
-  `;
-};
