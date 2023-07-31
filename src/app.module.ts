@@ -55,6 +55,7 @@ import { EventTypeModule } from './event-type/event-type.module';
 import { PaymentModule } from './payment/payment.module';
 import { PrescriptionTemplateModule } from './prescription-template/prescription-template.module';
 import { MedicamentModule } from './medicament/medicament.module';
+import { ImportModule } from './import/import.module';
 import { MedicamentFamilyModule } from './medicament-family/medicament-family.module';
 import { PeriodontalChartsModule } from './periodontal-charts/periodontal-charts.module';
 
@@ -166,6 +167,7 @@ const importsModules = [
   PaymentModule,
   PrescriptionTemplateModule,
   MedicamentModule,
+  ImportModule,
   MedicamentFamilyModule,
   PeriodontalChartsModule,
 ];

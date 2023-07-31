@@ -280,4 +280,34 @@ export class DentalController {
   ) {
     return this.quotesServices.devisRequestAjax(payload, id);
   }
+
+  /**
+   * ecoophp/dental/quotes/convention-2020/devis_pdf.php
+   * Line: 23-92
+   */
+  @Get('/quotes/convention-2020/devis_pdf')
+  @UseGuards(TokenGuard)
+  async quotesDevisPdf(
+    @Res() res,
+    @Query() req: PrintPDFDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    try {
+      const buffer = await this.quotesServices.generatePdf(req, identity);
+
+      res.set({
+        // pdf
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Length': buffer.length,
+        // prevent cache
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    }
+  }
 }
