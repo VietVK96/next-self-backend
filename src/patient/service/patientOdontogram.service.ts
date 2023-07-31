@@ -274,7 +274,7 @@ export class PatientOdontogramService {
     }
 
     if (eventTasks) {
-      eventTasks.forEach(async (eventTask) => {
+      for await (const eventTask of eventTasks) {
         const teethsNumber = changeSectorNumberToTooth(
           eventTask?.dental?.teeth,
         );
@@ -294,15 +294,16 @@ export class PatientOdontogramService {
         if (!odontograms.length) {
           odontograms = await this.findByLibraryActId(eventTask?.libraryActId);
         }
-
+        odontograms;
         if (!odontograms.length) {
-          return null;
+          continue;
         }
 
         // La représentation graphique "Toutes les dents" est prioritaire
         const nullables = odontograms.filter(
           (odontogram) => !odontogram?.rankOfTooth,
         );
+
         if (nullables.length) {
           odontograms = nullables;
         }
@@ -322,7 +323,7 @@ export class PatientOdontogramService {
           const rankOfTooth = odontogram.rankOfTooth;
 
           if (rankOfTooth && teethsNumbers[rankOfTooth - 1]) {
-            styles = this.applyStyles({
+            const temp = this.applyStyles({
               nums: teethsNumbers[rankOfTooth - 1],
               backgroundColor: background,
               displayCrown: visibleCrown,
@@ -332,8 +333,12 @@ export class PatientOdontogramService {
               zoneVisibles: visibleAreas,
               zoneInvisibles: invisibleAreas,
             });
+            styles = {
+              ...styles,
+              ...temp,
+            };
           } else {
-            styles = this.applyStyles({
+            const temp = this.applyStyles({
               nums: teethsNumber,
               backgroundColor: background,
               displayCrown: visibleCrown,
@@ -343,10 +348,22 @@ export class PatientOdontogramService {
               zoneVisibles: visibleAreas,
               zoneInvisibles: invisibleAreas,
             });
+            styles = {
+              ...styles,
+              ...temp,
+            };
+            console.log(
+              '🚀 ~ file: patientOdontogram.service.ts:352 ~ PatientOdontogramService ~ odontograms.map ~ styles:',
+              styles,
+            );
           }
         });
-      });
+      }
     }
+    console.log(
+      '🚀 ~ file: patientOdontogram.service.ts:360 ~ PatientOdontogramService ~ styles:',
+      styles,
+    );
     return Object.keys(styles).length ? styles : null;
   }
 
@@ -423,7 +440,6 @@ export class PatientOdontogramService {
       }
       temp = num.shift();
     }
-
     return styles;
   }
 
