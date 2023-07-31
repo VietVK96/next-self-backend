@@ -5,7 +5,7 @@ import {
   EnumCashingPayment,
   EnumCashingType,
 } from 'src/entities/cashing.entity';
-import { Condition, DataSource, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import {
   ByDayRes,
   CashingPrintDto,

@@ -1,7 +1,7 @@
 import { extname, basename } from 'path';
 import * as fs from 'fs';
 import * as sharp from 'sharp';
-import { stream } from 'exceljs';
+
 const RESERVED_CHARACTERS_PATTERN =
   /[<>:"/\\|?*]|[\x00-\x1F]|[\x7F\xA0\xAD]|[#\[\]@!$&'()+,;=]|[{}^\~`]/g;
 

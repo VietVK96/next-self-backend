@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { PaymentItemRes } from '../response/payment.res';
-import { PaymentSchedulesDto } from '../dto/payment.dto';
+import { PaymentSchedulesDto, Line } from '../dto/payment.dto';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';

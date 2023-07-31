@@ -216,7 +216,7 @@ export class ActsService {
             : act?.medical?.ngapKey?.name, // nameToTransmit
           coefficient: coefficient,
           montantHonoraire: amount !== amoAmount ? amount : null,
-          libelle: act?.label,
+          libelle: act?.name,
           numeroDents: teeth.join(','),
           codeAssociation: act?.medical?.associationCode,
           codeAccordPrealable: code_accord_prealable,

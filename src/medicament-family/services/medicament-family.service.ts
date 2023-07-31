@@ -21,7 +21,7 @@ export class MedicamentFamilyService {
   ) {}
 
   async findAll(organizationId: number) {
-    if (organizationId) {
+    if (!organizationId) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
     const organization = await this.organizationRepo.findOne({
