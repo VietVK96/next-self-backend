@@ -491,7 +491,7 @@ export class CashingService {
     qrPayment
       .andWhere('CSG.USR_ID = :id', { id: doctorId })
       .groupBy('CSG.CSG_ID')
-      .orderBy(`${orderBy} ${order}, CSG.created_at DESC`)
+      .orderBy(`${orderBy} ${order}, CSG.created_at`)
       .limit(limit)
       .offset(offset);
     const payments = await qrPayment.getRawMany();

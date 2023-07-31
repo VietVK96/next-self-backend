@@ -9,6 +9,10 @@ import { ErrorCode } from 'src/constants/error';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
 import { PerCode } from 'src/constants/permissions';
 import { SuccessResponse } from 'src/common/response/success.res';
+import { RecipeService } from 'src/recipe/services/recipe.service';
+import * as dayjs from 'dayjs';
+import { Response } from 'express';
+import { ConditionDto } from 'src/recipe/dto/condition.dto';
 
 @Injectable()
 export class PaymentService {
@@ -18,7 +22,99 @@ export class PaymentService {
     @InjectRepository(CashingEntity)
     private readonly cashingRepository: Repository<CashingEntity>,
     private readonly permissionService: PermissionService,
+    private readonly recipeService: RecipeService,
   ) {}
+
+  /**
+   * File : php/payment/export-ciel-win.php 100%
+   */
+  async exportCielWin(user: number, conditions: ConditionDto[], res: Response) {
+    const postComptable = 706910;
+    // Lấy ngày hiện tại bằng dayjs
+    const currentDate = dayjs().format('YYYYMMDD');
+
+    // Tạo tên tệp mới
+    const fileName = `${currentDate}_ecooDentist.txt`;
+    try {
+      const payments = await this.recipeService.findByDoctor(user, conditions, {
+        limit: 0,
+        offset: 0,
+        order_by: '',
+        order: 'ASC',
+      });
+
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename=${fileName}.txt`,
+      );
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+
+      const modes = {
+        cheque: 'chq',
+        carte: 'cb',
+        espece: 'esp',
+        virement: 'vir',
+        prelevement: 'pre',
+      };
+
+      for (let i = 0; i < payments.length; i++) {
+        const payment = payments[i];
+        let debtor: number | string = payment.debtor;
+        const entryDate = payment.date;
+        const dateSub = payment.paymentDate || entryDate;
+        const mode = payment.payment;
+        const amount = payment.amount;
+
+        const date = dayjs(dateSub).format('DD/MM/YYYY');
+
+        if (payment?.patient?.length > 0) {
+          debtor = `${payment.patient[0]?.number} - ${payment.patient[0]?.lastname} ${payment.patient[0]?.firstname}`;
+        }
+
+        let bankName = '530000';
+        switch (mode) {
+          case 'cheque':
+            bankName = '512000';
+            break;
+          case 'carte':
+          case 'virement':
+          case 'prelevement':
+            bankName = '512000';
+            if (payment.bank && payment.bank[0]?.accounting_code) {
+              bankName = payment.bank[0]?.accounting_code;
+            }
+            break;
+          default:
+            break;
+        }
+
+        const line = [
+          i + 1,
+          'R',
+          date,
+          postComptable,
+          debtor,
+          '',
+          0,
+          amount,
+          0,
+          amount,
+          '',
+          '',
+          bankName,
+          modes[mode],
+          '',
+        ];
+
+        res.write(line.join('\x09') + '\x0A');
+      }
+      res.end();
+    } catch (error) {
+      console.log(error);
+
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
+  }
 
   // delete payment in table 'T_CASHING_CSG' and table 'T_CASHING_CONTACT_CSC'
   async remove(id: number, user: UserIdentity): Promise<SuccessResponse> {
