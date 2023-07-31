@@ -16,6 +16,7 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { Response } from 'express';
 import { ConditionsDto } from './dto/condition.dto';
+import * as dayjs from 'dayjs';
 
 @ApiBearerAuth()
 @ApiTags('Payment')
@@ -53,5 +54,34 @@ export class PaymentController {
       queryParams.conditions,
       response,
     );
+  }
+
+  @Get('export_ciel_mac')
+  @UseGuards(TokenGuard)
+  async exportCielMac(
+    @Query() queryParams: ConditionsDto,
+    @CurrentUser() user: UserIdentity,
+    @Res() response: Response,
+  ) {
+    // Xử lý và chuyển đổi các tham số từ URL sang định dạng phù hợp để sử dụng trong service
+    // Gọi service để lấy dữ liệu dựa trên các điều kiện và userId
+    const content = await this.paymentService.exportCielMac(
+      user.id,
+      queryParams.conditions,
+    );
+
+    // Xử lý dữ liệu và tạo tên file dựa trên ngày hiện tại
+    const currentDate = dayjs().format('YYYYMMDD');
+    const filename = `${currentDate}_ecooDentist.txt`;
+
+    // Thiết lập các thông số cho response để xuất dữ liệu dưới dạng file tệp
+    response.setHeader(
+      'Content-Disposition',
+      `attachment; filename=${filename}`,
+    );
+    response.setHeader('Content-Type', 'text/csv; charset=utf-8');
+
+    // Gửi phản hồi với nội dung dữ liệu đã lấy từ service
+    response.send(content);
   }
 }

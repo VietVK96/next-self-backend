@@ -25,6 +25,144 @@ export class PaymentService {
     private readonly recipeService: RecipeService,
   ) {}
 
+  async exportCielMac(
+    user: number,
+    conditions: ConditionDto[],
+  ): Promise<string> {
+    try {
+      const modes = {
+        espece: 'ESP',
+        cheque: 'CHQ',
+        carte: 'CCR',
+        virement: 'VIR',
+        prelevement: 'PRV',
+      };
+
+      const payments = await this.recipeService.findByDoctor(user, conditions, {
+        limit: 0,
+        offset: 0,
+        order_by: '',
+        order: 'ASC',
+      });
+
+      const content = [];
+
+      // Entête du fichier
+      content.push(
+        [0, '', '', '', '', '', '', '', '', '', '', '', '', '', ''].join(
+          '\x09',
+        ) + '\x0D',
+      );
+
+      // Xử lý từng giao dịch
+      for (const payment of payments) {
+        let debtor = payment?.debtor;
+        const entryDate = payment?.date;
+        let date: Date | string = payment?.paymentDate || entryDate;
+        const mode = payment?.payment;
+        const amount = payment?.amount?.toString()?.replace('.', ',');
+
+        date = dayjs(date)?.format('DD/MM/YY');
+
+        // Partie versante
+        if (payment.patient) {
+          debtor = `Patient n°${payment?.patient[0]?.number}`;
+        }
+
+        let financialAccount = '512'; // Compte Financiers
+        let productAccount = '700'; // Compte de Produit
+        let thirdPartyAccount = 'Patient'; // Compte Tiers
+
+        // Récupération du nom de la banque en fonction du mode de paiement
+        switch (mode) {
+          case 'espece':
+            financialAccount = '530';
+            break;
+          case 'carte':
+          case 'virement':
+          case 'prelevement':
+            if (payment.bank) {
+              thirdPartyAccount = payment.bank[0]?.third_party_account;
+              financialAccount = payment.bank[0]?.accounting_code;
+              productAccount = payment.bank[0]?.product_account;
+            }
+            break;
+        }
+
+        content.push(
+          [
+            2,
+            0,
+            date,
+            this.stripAccents(debtor),
+            modes[mode],
+            modes[mode],
+            financialAccount,
+            financialAccount,
+            amount,
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+          ].join('\x09') + '\x0D',
+        );
+
+        content.push(
+          [
+            2,
+            1,
+            '',
+            '',
+            '',
+            '',
+            productAccount,
+            productAccount,
+            amount,
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+          ].join('\x09') + '\x0D',
+        );
+
+        content.push(
+          [
+            2,
+            101,
+            '',
+            '',
+            '',
+            '',
+            thirdPartyAccount,
+            thirdPartyAccount,
+            amount,
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+          ].join('\x09') + '\x0D',
+        );
+
+        // Thêm dòng trắng phân cách giữa các giao dịch
+        content.push('\x0D');
+      }
+
+      return content.join('');
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
+  }
+
+  private stripAccents(str: string): string {
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
   /**
    * File : php/payment/export-ciel-win.php 100%
    */
@@ -57,18 +195,18 @@ export class PaymentService {
         prelevement: 'pre',
       };
 
-      for (let i = 0; i < payments.length; i++) {
+      for (let i = 0; i < payments?.length; i++) {
         const payment = payments[i];
-        let debtor: number | string = payment.debtor;
-        const entryDate = payment.date;
-        const dateSub = payment.paymentDate || entryDate;
-        const mode = payment.payment;
-        const amount = payment.amount;
+        let debtor: number | string = payment?.debtor;
+        const entryDate = payment?.date;
+        const dateSub = payment?.paymentDate || entryDate;
+        const mode = payment?.payment;
+        const amount = payment?.amount;
 
         const date = dayjs(dateSub).format('DD/MM/YYYY');
 
         if (payment?.patient?.length > 0) {
-          debtor = `${payment.patient[0]?.number} - ${payment.patient[0]?.lastname} ${payment.patient[0]?.firstname}`;
+          debtor = `${payment?.patient[0]?.number} - ${payment.patient[0]?.lastname} ${payment.patient[0]?.firstname}`;
         }
 
         let bankName = '530000';
@@ -80,8 +218,8 @@ export class PaymentService {
           case 'virement':
           case 'prelevement':
             bankName = '512000';
-            if (payment.bank && payment.bank[0]?.accounting_code) {
-              bankName = payment.bank[0]?.accounting_code;
+            if (payment.bank && payment?.bank[0]?.accounting_code) {
+              bankName = payment?.bank[0]?.accounting_code;
             }
             break;
           default:
@@ -110,8 +248,6 @@ export class PaymentService {
       }
       res.end();
     } catch (error) {
-      console.log(error);
-
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
   }

@@ -17,7 +17,7 @@ export class ConditionsDto {
       {
         name: 'Date de paiement',
         op: 'lte',
-        field: 'csg.date',
+        field: 'csg.paymentDate',
         value: '2023-07-31',
         label: 'est inférieur(e)',
       },

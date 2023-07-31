@@ -206,11 +206,12 @@ export class CashingService {
       const user = await this.userRepo.findOneOrFail({
         where: { id: payload?.user },
       });
-      let payments = payload?.contact
+      let payments = false
         ? await this.findByPatient(payload?.contact)
         : await this.findByDoctor(user?.id, payload?.conditions, {
             order: 'ASC',
           });
+
       payments = payments?.filter(
         (payment) => payment?.date || payment?.paymentDate,
       );
