@@ -352,18 +352,10 @@ export class PatientOdontogramService {
               ...styles,
               ...temp,
             };
-            console.log(
-              '🚀 ~ file: patientOdontogram.service.ts:352 ~ PatientOdontogramService ~ odontograms.map ~ styles:',
-              styles,
-            );
           }
         });
       }
     }
-    console.log(
-      '🚀 ~ file: patientOdontogram.service.ts:360 ~ PatientOdontogramService ~ styles:',
-      styles,
-    );
     return Object.keys(styles).length ? styles : null;
   }
 

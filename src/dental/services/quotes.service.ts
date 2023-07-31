@@ -25,6 +25,9 @@ import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.enti
 import { LettersEntity } from 'src/entities/letters.entity';
 import { MailService } from 'src/mail/services/mail.service';
 import { convertBooleanToNumber } from 'src/common/util/number';
+import { PrintPDFDto } from '../dto/facture.dto';
+import * as path from 'path';
+import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
 
 @Injectable()
 export class QuotesServices {
@@ -857,5 +860,38 @@ export class QuotesServices {
     } catch (err) {
       return new CBadRequestException(err);
     }
+  }
+
+  /**
+   * ecoophp/dental/quotes/convention-2020/devis_pdf.php
+   * Line: 23-92
+   */
+  async generatePdf(req: PrintPDFDto, identity: UserIdentity) {
+    const data = {};
+    const filePath = path.join(
+      process.cwd(),
+      'templates/pdf/devisStd2',
+      'devisStd2.hbs',
+    );
+    const files: PdfTemplateFile[] = [
+      {
+        data,
+        path: filePath,
+      },
+    ];
+
+    const options = {
+      format: 'A4',
+      displayHeaderFooter: true,
+      footerTemplate: '',
+      margin: {
+        left: '5mm',
+        top: '5mm',
+        right: '5mm',
+        bottom: '5mm',
+      },
+    };
+
+    return customCreatePdf({ files, options });
   }
 }
