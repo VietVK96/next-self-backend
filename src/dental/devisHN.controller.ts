@@ -1,14 +1,22 @@
-import { Body, Controller, Post, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Get, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { TokenGuard } from 'src/common/decorator/auth.decorator';
-import { DevisRequestAjaxDto } from './dto/devisHN.dto';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
+import { DevisHNGetInitChampDto, DevisRequestAjaxDto } from './dto/devisHN.dto';
 import { DevisHNServices } from './services/devisRequestAjax.service';
+import { DevisServices } from './services/devisHN.services';
 
 @ApiBearerAuth()
 @Controller('/dental')
 @ApiTags('Dental')
 export class DevisHNController {
-  constructor(private devisHNService: DevisHNServices) {}
+  constructor(
+    private devisHNService: DevisHNServices,
+    private devisService: DevisServices,
+  ) {}
 
   /**
    * /dental/devisHN/devisHN_requetes_ajax.php -> full file
@@ -24,5 +32,17 @@ export class DevisHNController {
   @UseGuards(TokenGuard)
   async devisHNEmail() {
     // return this.devisHNService.email();
+  }
+
+  /**
+   * dental/devisHN/devisHN_init_champs.php
+   */
+  @Get('/devisHN/init_champs')
+  @UseGuards(TokenGuard)
+  async devisHNGetInitChamp(
+    @CurrentUser() user: UserIdentity,
+    @Query() params: DevisHNGetInitChampDto,
+  ) {
+    return await this.devisService.getInitChamps(user, params);
   }
 }

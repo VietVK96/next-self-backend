@@ -51,6 +51,8 @@ import { PaymentPlanDeadlineEntity } from 'src/entities/payment-plan-deadline.en
 import { QuotesServices } from './services/quotes.service';
 import { PaymentSchedulesModule } from 'src/payment-schedule/payment-schedule.module';
 import { LibraryActEntity } from 'src/entities/library-act.entity';
+import { DevisServices } from './services/devisHN.services';
+import { UploadEntity } from 'src/entities/upload.entity';
 
 @Module({
   imports: [
@@ -94,6 +96,7 @@ import { LibraryActEntity } from 'src/entities/library-act.entity';
       AmoEntity,
       AmcEntity,
       LibraryActEntity,
+      UploadEntity,
     ]),
     PaymentSchedulesModule,
   ],
@@ -115,6 +118,7 @@ import { LibraryActEntity } from 'src/entities/library-act.entity';
     QuotationServices,
     ConfigService,
     QuotesServices,
+    DevisServices,
   ],
 })
 export class DentalModule {}
