@@ -82,7 +82,6 @@ export class MedicamentService {
     if (!id) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    console.log('idMEd', id);
 
     const currentMedicament = await this.medicamentRepo.findOne({
       where: { id },
