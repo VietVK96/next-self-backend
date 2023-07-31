@@ -87,12 +87,6 @@ export class DentalQuotationActEntity {
    * @Assert\NotNull
    * @Assert\GreaterThanOrEqual(0)
    */
-  @Column({
-    name: 'DQA_POS',
-    type: 'int',
-    width: 11,
-    nullable: true,
-  })
   position?: number;
 
   /**
@@ -122,11 +116,6 @@ export class DentalQuotationActEntity {
    * @Serializer\Groups({"detail"})
    * @Assert\Type("array")
    */
-  @Column({
-    name: 'DQA_LOCATION',
-    type: 'text',
-    nullable: true,
-  })
   teeth?: string;
 
   /**
@@ -146,11 +135,6 @@ export class DentalQuotationActEntity {
    * @Assert\Type("string")
    * @Assert\Length(max=255)
    */
-  @Column({
-    name: 'DQA_NAME',
-    type: 'text',
-    nullable: true,
-  })
   label?: string;
 
   /**
@@ -170,12 +154,6 @@ export class DentalQuotationActEntity {
    * @Serializer\Groups({"detail"})
    * @Assert\Type("array")
    */
-  @Column({
-    name: 'DQA_MATERIAL',
-    type: 'varchar',
-    length: 11,
-    nullable: true,
-  })
   materials?: string;
 
   /**
@@ -195,11 +173,6 @@ export class DentalQuotationActEntity {
    * @Assert\Type("string")
    * @Assert\Length(max=255)
    */
-  @Column({
-    name: 'DQA_NGAP_CODE',
-    type: 'text',
-    nullable: true,
-  })
   cotation?: string;
 
   @Column({
@@ -291,13 +264,6 @@ export class DentalQuotationActEntity {
    * @Assert\Type("float")
    * @Assert\NotNull
    */
-  @Column({
-    name: 'DQA_SECU_AMOUNT',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
-  })
   amoAmount?: number;
 
   /**
@@ -321,13 +287,6 @@ export class DentalQuotationActEntity {
    * @Assert\Type("float")
    * @Assert\NotNull
    */
-  @Column({
-    name: 'DQA_SECU_REPAYMENT',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
-  })
   amoRefund?: number;
 
   /**
@@ -363,13 +322,6 @@ export class DentalQuotationActEntity {
    * @Assert\Type("float")
    * @Assert\NotNull
    */
-  @Column({
-    name: 'DQA_MUTUAL_REPAYMENT_RATE',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
-  })
   amcRefundRate?: number;
 
   /**
@@ -419,13 +371,6 @@ export class DentalQuotationActEntity {
    * @Assert\Type("float")
    * @Assert\NotNull
    */
-  @Column({
-    name: 'DQA_PERSON_REPAYMENT',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
-  })
   patientRefund?: number;
 
   /**
@@ -449,13 +394,6 @@ export class DentalQuotationActEntity {
    * @Assert\Type("float")
    * @Assert\NotNull
    */
-  @Column({
-    name: 'DQA_PERSON_AMOUNT',
-    type: 'decimal',
-    precision: 10,
-    scale: 2,
-    default: 0,
-  })
   patientAmount?: number;
 
   /**

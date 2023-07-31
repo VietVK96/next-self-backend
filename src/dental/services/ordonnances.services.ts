@@ -14,9 +14,9 @@ import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
 import { UserEntity } from 'src/entities/user.entity';
 import * as cheerio from 'cheerio';
 import * as path from 'path';
-import { generateBarcode } from '../constant/hbrHelper';
 import { br2nl } from 'src/common/util/string';
 import { checkDay } from 'src/common/util/day';
+import { generateBarcode } from 'src/common/util/image';
 
 @Injectable()
 export class OrdonnancesServices {
@@ -147,17 +147,17 @@ export class OrdonnancesServices {
 
       // 'cleanedHTML' now contains the HTML content with the unwanted elements removed
       // Now let's convert the 'format_papier' to JavaScript equivalent
-      let format: string[];
-      let orientation: string;
-      const matches = format_papier.match(/^([0-9]+)x([0-9]+)$/);
+      // let format: string[];
+      // let orientation: string;
+      // const matches = format_papier.match(/^([0-9]+)x([0-9]+)$/);
 
-      if (matches) {
-        format = [matches[1], matches[2]];
-        orientation = 'P';
-      } else {
-        format = [format_papier.substring(0, 2)];
-        orientation = format_papier === 'A5p' ? 'L' : 'P';
-      }
+      // if (matches) {
+      //   format = [matches[1], matches[2]];
+      //   orientation = 'P';
+      // } else {
+      //   format = [format_papier.substring(0, 2)];
+      //   orientation = format_papier === 'A5p' ? 'L' : 'P';
+      // }
 
       /* versions à imprimer */
       const versions: string[] = [];
@@ -173,6 +173,8 @@ export class OrdonnancesServices {
         versions.push('duplicata');
       }
 
+      const imgFinessNumber = await generateBarcode({ text: finessNumber });
+      const imgRppsNumber = await generateBarcode({ text: rppsNumber });
       const data = {
         ident_prat: br2nl(ident_prat),
         adresse: br2nl(adresse),
@@ -193,10 +195,8 @@ export class OrdonnancesServices {
         hasComment: comment ? true : false,
         date_ordonnance: checkDay(date_ordonnance, 'DD/MM/YYYY'),
         bodyMargin: 50,
-      };
-      data;
-      const helpers = {
-        generateBarcode: generateBarcode,
+        imgFinessNumber,
+        imgRppsNumber,
       };
       const filePath = path.join(
         process.cwd(),
@@ -222,7 +222,7 @@ export class OrdonnancesServices {
         },
       };
 
-      return customCreatePdf({ files, options, helpers });
+      return customCreatePdf({ files, options });
     } catch (error) {
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }

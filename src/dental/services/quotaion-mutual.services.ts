@@ -344,7 +344,7 @@ export class QuotationMutualServices {
   // dental/quotation-mutual/devis_pdf.php 45-121
   async generatePdf(req: PrintPDFDto, identity: UserIdentity) {
     const id = checkId(req?.id);
-    const initChamp = await this.initChamps({ no_devis: id }, identity, true);
+    const initChamp = await this.initChamps({ no_devis: id }, identity);
     let content = '';
     let dataTemp: any;
     try {
@@ -398,12 +398,12 @@ export class QuotationMutualServices {
         },
       });
       // Insertion des pièces jointes au PDF du devis.
-      if (quote && quote?.attachments) {
-        quote?.attachments.map(async (attachment) => {
-          const mail = await this.mailService.find(attachment?.id);
-          content += await this.mailService.pdf(mail, { preview: true });
-        });
-      }
+      // if (quote && quote?.attachments) {
+      //   quote?.attachments.map(async (attachment) => {
+      //     const mail = await this.mailService.find(attachment?.id);
+      //     content += await this.mailService.pdf(mail, { preview: true });
+      //   });
+      // }
 
       const filePath = path.join(
         process.cwd(),
@@ -461,7 +461,7 @@ export class QuotationMutualServices {
   async initChamps(
     req: QuotationMutualInitChampsDto,
     identity: UserIdentity,
-    pdf = false,
+    // pdf = false,
   ) {
     // vérification si un numéro de plan de traitement ou de devis a été passé dans l'URL
     if (!req?.no_pdt && !req?.no_devis) {
@@ -486,19 +486,19 @@ export class QuotationMutualServices {
       ? await this.initByDevisId(req, identity)
       : initData;
 
-    let id_facture = 0;
-    let noFacture = '';
+    // let id_facture = 0;
+    // let noFacture = '';
 
-    const bill = await this.billRepo.findOne({
-      where: {
-        dqoId: req?.no_devis,
-        delete: 0,
-      },
-    });
-    if (bill) {
-      id_facture = bill?.id;
-      noFacture = bill?.nbr;
-    }
+    // const bill = await this.billRepo.findOne({
+    //   where: {
+    //     dqoId: req?.no_devis,
+    //     delete: 0,
+    //   },
+    // });
+    // if (bill) {
+    // id_facture = bill?.id;
+    // noFacture = bill?.nbr;
+    // }
     const ar_details = [];
     let total_prixvente = 0;
     let total_prestation = 0;
@@ -510,7 +510,7 @@ export class QuotationMutualServices {
     let total_mutualRepayment = 0;
     let total_mutualComplement = 0;
     let total_personAmount = 0;
-    let total_rss = 0;
+    // let total_rss = 0;
     let total_nrss = 0;
 
     if (!txch) {
@@ -585,11 +585,11 @@ export class QuotationMutualServices {
     }
 
     total_honoraires = +total_honoraires.toFixed(2);
-    total_prixvente = +total_prixvente.toFixed(2);
-    total_prestation = +total_prestation.toFixed(2);
-    total_charges = +total_charges.toFixed(2);
-    total_rss = +total_rss.toFixed(2);
-    total_nrss = +total_nrss.toFixed(2);
+    // total_prixvente = +total_prixvente.toFixed(2);
+    // total_prestation = +total_prestation.toFixed(2);
+    // total_charges = +total_charges.toFixed(2);
+    // total_rss = +total_rss.toFixed(2);
+    // total_nrss = +total_nrss.toFixed(2);
 
     total_secuAmount = +total_secuAmount.toFixed(2);
     total_secuRepayment = +total_secuRepayment.toFixed(2);
@@ -614,7 +614,7 @@ export class QuotationMutualServices {
   async initByPdtId(
     req: QuotationMutualInitChampsDto,
     identity: UserIdentity,
-    pdf = false,
+    // pdf = false,
   ): Promise<QuotationMutualInitByRes> {
     try {
       let txch = 0;
@@ -1112,7 +1112,7 @@ export class QuotationMutualServices {
   async initByDevisId(
     req: QuotationMutualInitChampsDto,
     identity: UserIdentity,
-    pdf = false,
+    // pdf = false,
   ): Promise<QuotationMutualInitByRes> {
     try {
       const txch = 0;
