@@ -793,7 +793,6 @@ export class DevisStd2Services {
       //   where: { id: req?.id },
       // });
 
-      const helpers = {};
       const filePath = path.join(
         process.cwd(),
         'templates/pdf/devisStd2',
@@ -825,7 +824,7 @@ export class DevisStd2Services {
         },
       };
 
-      return customCreatePdf({ files, options, helpers });
+      return customCreatePdf({ files, options });
     } catch (error) {
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
