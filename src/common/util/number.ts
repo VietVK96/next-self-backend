@@ -18,3 +18,9 @@ export function checkBoolean(
 ): boolean {
   return value ? true : false;
 }
+
+export function convertBooleanToNumber(
+  value: string | boolean | null | undefined,
+): number {
+  return value ? 1 : 0;
+}

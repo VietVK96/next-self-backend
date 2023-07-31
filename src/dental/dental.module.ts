@@ -51,6 +51,9 @@ import { PaymentPlanDeadlineEntity } from 'src/entities/payment-plan-deadline.en
 import { PatientOdontogramService } from 'src/patient/service/patientOdontogram.service';
 import { AntecedentPrestationEntity } from 'src/entities/antecedentprestation.entity';
 import { LibraryOdontogramEntity } from 'src/entities/library-odontogram.entity';
+import { QuotesServices } from './services/quotes.service';
+import { PaymentSchedulesModule } from 'src/payment-schedule/payment-schedule.module';
+import { LibraryActEntity } from 'src/entities/library-act.entity';
 
 @Module({
   imports: [
@@ -95,7 +98,9 @@ import { LibraryOdontogramEntity } from 'src/entities/library-odontogram.entity'
       AmcEntity,
       AntecedentPrestationEntity,
       LibraryOdontogramEntity,
+      LibraryActEntity,
     ]),
+    PaymentSchedulesModule,
   ],
   controllers: [DentalController, DevisHNController],
   providers: [
@@ -115,6 +120,7 @@ import { LibraryOdontogramEntity } from 'src/entities/library-odontogram.entity'
     QuotationServices,
     ConfigService,
     PatientOdontogramService,
+    QuotesServices,
   ],
 })
 export class DentalModule {}
