@@ -56,6 +56,9 @@ export class PaymentController {
     );
   }
 
+  /**
+   * File : php/payment/export-ciel-mac.php 100%
+   */
   @Get('export_ciel_mac')
   @UseGuards(TokenGuard)
   async exportCielMac(
