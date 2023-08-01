@@ -293,7 +293,7 @@ export class DentalController {
     @CurrentUser() identity: UserIdentity,
   ) {
     try {
-      const buffer = await this.quotesServices.generatePdf(req, identity);
+      const buffer = await this.quotesServices.generatePdf(req);
 
       res.set({
         // pdf

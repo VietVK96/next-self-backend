@@ -89,9 +89,9 @@ export class QuotesServices {
     await queryRunner.startTransaction();
 
     try {
-      const t = await this.planPlfRepository.findOne({
-        where: { id: payload?.no_pdt },
-      });
+      // const t = await this.planPlfRepository.findOne({
+      //   where: { id: payload?.no_pdt },
+      // });
       const plan = await this.planPlfRepository
         .createQueryBuilder('plf')
         .leftJoinAndSelect('plf.events', 'plv')
@@ -158,8 +158,8 @@ export class QuotesServices {
         adressePrat = `${adressePratUser?.street}\n${adressePratUser?.zipCode} ${adressePratUser?.city}\n\n`;
       }
       const userNumeroFacturant = user?.numeroFacturant;
-      const userRateCharges = user?.rateCharges;
-      const userSignature = user?.signature;
+      // const userRateCharges = user?.rateCharges;
+      // const userSignature = user?.signature;
       if (!checkEmpty(userNumeroFacturant)) {
         adressePrat += `N° ADELI : ${userNumeroFacturant}`;
       }
@@ -257,14 +257,14 @@ export class QuotesServices {
         : '';
       const date_de_naissance_patient = patientInfo?.birthday;
       const tel = patientInfo?.phone;
-      const email = patientInfo?.email;
+      // const email = patientInfo?.email;
       const adresse_pat = patientInfo?.address;
 
-      const quotationAmount = plan?.amount;
-      const quotationPersonRepayment = plan?.personRepayment;
-      const quotationPersonAmount = plan?.personAmount;
+      // const quotationAmount = plan?.amount;
+      // const quotationPersonRepayment = plan?.personRepayment;
+      // const quotationPersonAmount = plan?.personAmount;
 
-      const userAmoBaseRate = user?.socialSecurityReimbursementBaseRate;
+      // const userAmoBaseRate = user?.socialSecurityReimbursementBaseRate;
       const userAmoRate = user?.socialSecurityReimbursementRate;
       const patient = await this.contactRepository.findOne({
         where: { id: ident_pat },
@@ -403,13 +403,13 @@ export class QuotesServices {
         }
         return act1?.treatment_number - act2?.treatment_number;
       });
-      const organisme = ''; //"Nom de l'organisme complémentaire";
-      const contrat = ''; //"N° de contrat ou d'adhérent";
-      const ref = ''; //"Référence dossier";
-      const dispo = false;
-      const dispo_desc = '';
-      const description = '';
-      const date_acceptation = '';
+      // const organisme = ''; //"Nom de l'organisme complémentaire";
+      // const contrat = ''; //"N° de contrat ou d'adhérent";
+      // const ref = ''; //"Référence dossier";
+      // const dispo = false;
+      // const dispo_desc = '';
+      // const description = '';
+      // const date_acceptation = '';
 
       const date = new Date(plan?.createdAt);
       const validUntil = new Date(
@@ -786,22 +786,22 @@ export class QuotesServices {
         where: { id: id },
         relations: ['acts', 'attachments', 'contact', 'user', 'treatmentPlan'],
       });
-      const dataIdActs = data?.acts.map((dataActs) => {
-        let material = null;
-        if (params?.acts.some((act) => act.id === dataActs.id)) {
-          material = dataActs?.material;
-        }
-        return {
-          id: dataActs?.id,
-          material,
-        };
-      });
-      for (const dataIdAct of dataIdActs) {
-        const dataActs = await this.dentalQuotationActRepository.update(
-          dataIdAct?.id,
-          { material: dataIdAct?.material },
-        );
-      }
+      // const dataIdActs = data?.acts.map((dataActs) => {
+      //   let material = null;
+      //   if (params?.acts.some((act) => act.id === dataActs.id)) {
+      //     material = dataActs?.material;
+      //   }
+      //   return {
+      //     id: dataActs?.id,
+      //     material,
+      //   };
+      // });
+      // for (const dataIdAct of dataIdActs) {
+      //   const dataActs = await this.dentalQuotationActRepository.update(
+      //     dataIdAct?.id,
+      //     { material: dataIdAct?.material },
+      //   );
+      // }
 
       if (data?.attachments.length > 0) {
         const dataIdAc = data?.attachments.map(
@@ -883,7 +883,7 @@ export class QuotesServices {
    * ecoophp/dental/quotes/convention-2020/devis_pdf.php
    * Line: 23-92
    */
-  async generatePdf(req: PrintPDFDto, identity: UserIdentity) {
+  async generatePdf(req: PrintPDFDto) {
     /**
      * TODO this
      * $filter = $container->get('doctrine.orm.default_entity_manager')->getFilters()->enable('soft-deleteable');
@@ -924,10 +924,6 @@ export class QuotesServices {
         await this.therapeuticAlternativeService.getTherapeuticAlternative(
           quote,
         );
-      console.log(
-        '🚀 ~ file: quotes.service.ts:924 ~ QuotesServices ~ generatePdf ~ therapeuticAlternatives:',
-        therapeuticAlternatives,
-      );
 
       const insee = inseeFormatter(
         quote?.patient?.insee + ' ' + quote?.patient?.inseeKey,
@@ -999,10 +995,6 @@ export class QuotesServices {
 
       return customCreatePdf({ files, options });
     } catch (error) {
-      console.log(
-        '🚀 ~ file: quotes.service.ts:927 ~ QuotesServices ~ generatePdf ~ error:',
-        error,
-      );
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }

@@ -150,10 +150,6 @@ export class TherapeuticAlternativeService {
       const therapeuticAlternatives0Filtered = this.filterByActesDirecteurs(
         therapeuticAlternatives0,
       );
-      console.log(
-        '🚀 ~ file: therapeuticAlternative.service.ts:152 ~ TherapeuticAlternativeService ~ therapeuticAlternatives0Filtered:',
-        therapeuticAlternatives0Filtered,
-      );
       if (!therapeuticAlternatives0Filtered.length) {
         this.indicatesIfMadeByPractitioner(
           quote,
@@ -196,7 +192,7 @@ export class TherapeuticAlternativeService {
       );
     let materialCode: number | null = null;
     const result: OrderByMaterialsMadeByPratitionerRes[] = [];
-    for await (const [i, ccamCode] of colections.entries()) {
+    for await (const ccamCode of colections) {
       const ccam = await this.ccamRepository.findOne({
         where: {
           code: ccamCode,
@@ -268,7 +264,7 @@ export class TherapeuticAlternativeService {
   ) {
     const userMedical = quote?.user?.medical;
 
-    therapeuticAlternatives.forEach((therapeuticAlternative, i) => {
+    therapeuticAlternatives.forEach((therapeuticAlternative) => {
       const checkTherapeuticAlternative =
         this.getTherapeuticAlternativeFamilies(userMedical).includes(
           therapeuticAlternative?.ccam?.family?.code,
