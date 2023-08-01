@@ -714,7 +714,7 @@ export class DevisStd2Services {
       if (req?.pdf) {
         const imgPath = path.join(
           process.cwd(),
-          'svg/odontogram',
+          'resources/svg/odontogram',
           'background_adult.png',
         );
         const img = fs.readFileSync(imgPath);
@@ -793,7 +793,6 @@ export class DevisStd2Services {
       //   where: { id: req?.id },
       // });
 
-      const helpers = {};
       const filePath = path.join(
         process.cwd(),
         'templates/pdf/devisStd2',
@@ -825,7 +824,7 @@ export class DevisStd2Services {
         },
       };
 
-      return customCreatePdf({ files, options, helpers });
+      return customCreatePdf({ files, options });
     } catch (error) {
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
