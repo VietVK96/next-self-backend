@@ -26,6 +26,9 @@ import { TranformDto } from './dto/transform.dto';
 export class MailController {
   constructor(private readonly mailService: MailService) {}
 
+  /**
+   * php/mail/findAll.php 100%
+   */
   @Get()
   @ApiHeader({
     name: 'X-DoctorId',
@@ -49,12 +52,19 @@ export class MailController {
       practitionerId,
     );
   }
+
+  /**
+   * php/mail/find.php 100%
+   */
   @UseGuards(TokenGuard)
   @Get('/find')
   async findById(@Query('id') id?: number) {
     return await this.mailService.findById(id);
   }
 
+  /**
+   *  php/mail/store.php 100%
+   */
   @UseGuards(TokenGuard)
   @Post('/duplicate')
   async duplicate(@Body() payload: CreateUpdateMailDto) {
