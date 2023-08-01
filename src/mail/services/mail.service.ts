@@ -15,7 +15,6 @@ import { CNotFoundRequestException } from 'src/common/exceptions/notfound-reques
 import { PatientService } from 'src/patient/service/patient.service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ConfigService } from '@nestjs/config';
-import { fr } from 'date-fns/locale';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { LettersEntity } from '../../entities/letters.entity';
 import { UserEntity } from 'src/entities/user.entity';
@@ -488,9 +487,9 @@ export class MailService {
       context.dental.nextAppointmentDuration = '';
       context.dental.nextAppointmentTitle = '';
 
-      const nextAppointment = await this.patientService.getNextAppointment(
-        context?.contact?.id,
-      );
+      // const nextAppointment = await this.patientService.getNextAppointment(
+      //   context?.contact?.id,
+      // );
 
       // if(nextAppointment && nextAppointment?.EVT_START){
       // $datetime1 = new \DateTime($nextAppointment['EVT_START']);
@@ -509,11 +508,11 @@ export class MailService {
         const currentDate: Date = new Date(); // Replace this with the current date
         const ageInYears: number = differenceInYears(currentDate, birthday);
         const ageInMonths: number = differenceInMonths(currentDate, birthday);
-        const ageFormatted: string = format(
-          currentDate,
-          ageInYears < 1 ? 'PPPP' : 'P',
-          { locale: fr },
-        );
+        // const ageFormatted: string = format(
+        //   currentDate,
+        //   ageInYears < 1 ? 'PPPP' : 'P',
+        //   { locale: fr },
+        // );
         context.contact.age =
           ageInYears < 1
             ? `(${ageInMonths} mois)`
@@ -603,7 +602,7 @@ export class MailService {
     const footerHeight = !!inputs?.footer_height
       ? Number(inputs?.footer_height)
       : 0;
-    const body = inputs?.body;
+    // const body = inputs?.body;
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -644,7 +643,7 @@ export class MailService {
 
   // application/Services/Mail.php=> 454 -> 489
   async render(message: string, context: any, signature?: any) {
-    const uniqid = Date.now().toString(); // Generate a unique identifier
+    // const uniqid = Date.now().toString(); // Generate a unique identifier
 
     // Replace the default date format in Handlebars
     Handlebars.registerHelper('formatDate', function (dateString) {

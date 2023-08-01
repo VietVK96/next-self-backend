@@ -124,7 +124,9 @@ export class FindContactController {
           'Content-Type': 'image/jpeg',
         });
         return new StreamableFile(
-          createReadStream(join(process.cwd(), 'front/no_image.png')),
+          createReadStream(
+            join(process.cwd(), 'resources/front', 'no_image.png'),
+          ),
         );
       }
       const file = createReadStream(fileRes?.file);
@@ -132,7 +134,9 @@ export class FindContactController {
         res.set({
           'Content-Type': 'image/jpeg',
         });
-        createReadStream(join(process.cwd(), 'front/no_image.png')).pipe(res);
+        createReadStream(
+          join(process.cwd(), 'resources/front', 'no_image.png'),
+        ).pipe(res);
         return;
       });
       res.set({
