@@ -3,6 +3,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
+import { AddressEntity } from 'src/entities/address.entity';
+import { QuotationMutualServices } from './services/quotaion-mutual.services';
+import { MailService } from 'src/mail/services/mail.service';
+import { LettersEntity } from 'src/entities/letters.entity';
+import { ContactService } from 'src/contact/services/contact.service';
+import { PatientService } from 'src/patient/service/patient.service';
+import { PermissionService } from 'src/user/services/permission.service';
+import { AddressService } from 'src/address/service/address.service';
+import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
 import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
@@ -10,15 +19,12 @@ import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
-import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
 import { DevisStd2Services } from './services/devisStd2.services';
 import { PrivilegeEntity } from 'src/entities/privilege.entity';
 import { BillLineEntity } from 'src/entities/bill-line.entity';
 import { ContactEntity } from 'src/entities/contact.entity';
-import { LettersEntity } from 'src/entities/letters.entity';
-import { AddressEntity } from 'src/entities/address.entity';
 import { EventEntity } from 'src/entities/event.entity';
 import { PhoneEntity } from 'src/entities/phone.entity';
 import { BillEntity } from 'src/entities/bill.entity';
@@ -31,21 +37,23 @@ import { PaymentScheduleService } from 'src/payment-schedule/services/payment-sc
 import { CorrespondentService } from 'src/correspondent/services/correspondent.service';
 import { OrdonnancesServices } from './services/ordonnances.services';
 import { DevisHNServices } from './services/devisRequestAjax.service';
-import { PermissionService } from 'src/user/services/permission.service';
-import { ContactService } from 'src/contact/services/contact.service';
-import { PatientService } from 'src/patient/service/patient.service';
-import { AddressService } from 'src/address/service/address.service';
 import { FactureServices } from './services/facture.services';
-import { MailService } from 'src/mail/services/mail.service';
 import { UserService } from 'src/user/services/user.service';
-import { DevisServices } from './services/devis.services';
+import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
+import { OrganizationEntity } from 'src/entities/organization.entity';
+import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
+import { LibraryActQuantityEntity } from 'src/entities/library-act-quantity.entity';
 import { ConfigService } from '@nestjs/config';
 import { QuotationServices } from './services/quotation.service';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
-import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
-import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
 import { PlanEventEntity } from 'src/entities/plan-event.entity';
 import { PaymentPlanDeadlineEntity } from 'src/entities/payment-plan-deadline.entity';
+import { PatientOdontogramService } from 'src/patient/service/patientOdontogram.service';
+import { AntecedentPrestationEntity } from 'src/entities/antecedentprestation.entity';
+import { LibraryOdontogramEntity } from 'src/entities/library-odontogram.entity';
+import { QuotesServices } from './services/quotes.service';
+import { PaymentSchedulesModule } from 'src/payment-schedule/payment-schedule.module';
+import { LibraryActEntity } from 'src/entities/library-act.entity';
 
 @Module({
   imports: [
@@ -77,33 +85,42 @@ import { PaymentPlanDeadlineEntity } from 'src/entities/payment-plan-deadline.en
       PlanPlfEntity,
       DentalQuotationEntity,
       UserPreferenceQuotationEntity,
+      OrganizationEntity,
+      PlanPlfEntity,
+      DentalQuotationActEntity,
+      LibraryActQuantityEntity,
       PlanEventEntity,
       PaymentPlanDeadlineEntity,
-      DentalQuotationActEntity,
       LettersEntity,
       PhoneEntity,
       UserEntity,
       AmoEntity,
       AmcEntity,
+      AntecedentPrestationEntity,
+      LibraryOdontogramEntity,
+      LibraryActEntity,
     ]),
+    PaymentSchedulesModule,
   ],
   controllers: [DentalController, DevisHNController],
   providers: [
-    PaymentScheduleService,
-    CorrespondentService,
-    DevisHNServices,
-    UserService,
-    PermissionService,
-    ContactService,
-    PatientService,
-    AddressService,
     OrdonnancesServices,
     FactureServices,
-    DevisStd2Services,
+    QuotationMutualServices,
     MailService,
+    UserService,
+    PatientService,
+    AddressService,
+    ContactService,
+    DevisHNServices,
+    PermissionService,
+    PaymentScheduleService,
+    CorrespondentService,
+    DevisStd2Services,
     QuotationServices,
     ConfigService,
-    DevisServices,
+    PatientOdontogramService,
+    QuotesServices,
   ],
 })
 export class DentalModule {}

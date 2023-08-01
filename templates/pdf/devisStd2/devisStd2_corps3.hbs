@@ -1,0 +1,73 @@
+<div style="page-break-after: always;"></div>
+
+<page
+  backtop="{{#if duplicata}} 10mm {{else}} 0mm {{/if}}"
+  backright='0mm'
+  backbottom='0mm'
+  backleft='0mm'
+  style="page-break-before: always;"
+>
+ <div class="body" >
+{{#if duplicata}} <header><span style="color: red; font-size: 14pt;">DUPLICATA</span></header> {{/if}}
+    <H2>II. Montant des honoraires :</H2>
+    <P style="font-weight: bold;">Les honoraires correspondant à l'ensemble du traitement ci-dessus sont de 
+      <span id="totalHono">{{total_prixLigne}}</span> €. (hors soins et radios)
+    </P>
+    <P><SPAN style="font-weight: bold;">Répartition</SPAN> imposée par la Convention Nationale des Chirurgiens dentistes en application de la Nomenclature des Actes Professionnels codifiés par la Sécurité Sociale :</P>
+    <table class="details" id="sortable">
+      <thead>
+        <tr>
+          <th>Dents</th>
+          <th>Description</th>
+          <th>Cotation</th>
+          <th class="lastCol">Tarif</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {{#each details}}
+          <tr class="ligneActive {{this.typeLigne}}">
+            <td class="dents">{{this.dentsLigne}}</td>
+            <td class="description">{{this.descriptionLigne}}</td>
+            <td class="cotation">{{this.cotationLigne}}</td>
+            <td class="prix">{{this.prixLigne}}</td>
+          </tr>
+        {{/each}}
+      </tbody>
+
+      <tfoot>
+        <tr>
+          <td colspan="3">Total ( En euros ) -&gt;</td>
+          <th id="total_devisStd2">{{total_prixLigne}}</th>
+        </tr>
+        <tr>
+          <td colspan="3" style="border-top: 0px solid white;">Remboursement sécu {{socialSecurityReimbursementRate}}% -&gt;</td>
+          <td id="rss" style="border-top: 0px solid white;">{{total_rss}}</td><!-- bug#142 2013-07-15 09:23 Sébastien BORDAT -->
+        </tr>
+      </tfoot>
+    </table>
+    <P>
+      <SPAN style="font-weight: bold;">Montant</SPAN> de la participation de la Sécurité sociale :<BR>
+      La participation de votre régime d'assurance maladie calculée à 70% du tarif conventionnel est de {{total_rss}} €. <!-- bug#142 2013-07-15 09:23 Sébastien BORDAT -->
+      La différence qui résulte de cette limitation de la participation de la Sécurité Sociale est à la seule charge du patient ou de sa mutuelle.
+    </P>
+    <P>
+      <SPAN style="font-weight: bold;">Un examen annuel est conseillé pour assurer la pérennité optimale du traitement réalisé .</SPAN>
+      Un programme de suivi personnalisé vous sera remis en fin de traitement, et définira le rythme des séances de suivi selon le risque Un programme individuel de récidive carieux ou parodontal que vous présentez.
+    </P>
+    <P>
+      {{identPrat}} s'engage à prodiguer à {{nom_prenom_patient}} les meilleurs soins selon les règles de l'Art Dentaire.<BR>
+      {{nom_prenom_patient}} conserve un des exemplaires de cette proposition thérapeutique complétée de l’entente financière qui restent en sa possession.
+      L'autre exemplaire est archivé au Cabinet Dentaire.
+    </P>
+    <P>
+      Cette proposition thérapeutique est valable trois mois. Le traitement pourra être interrompu en cas de non respect du contrat de soins qu’elle constitue.
+    </P>
+    <P>
+      {{nom_prenom_patient}} pourra interrompre le traitement à n'importe quel moment après règlement des honoraires correspondants au traitement déjà réalisé.
+      A sa demande, son dossier lui sera remis.
+    </P>
+    <P>&nbsp;</P>
+    <P>Fait en double exemplaire à {{#if hasAdresse_prat}} {{adresse_prat}} {{/if}}, le {{datedevisStd2}}</P>
+  </div>
+</page>

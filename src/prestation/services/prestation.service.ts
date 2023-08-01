@@ -83,7 +83,7 @@ export class PrestationService {
         .andWhere('CON.organization_id = :orgId')
         .andWhere('(EVT.EVT_ID IS NULL OR EVT.EVT_DELETE = 0)')
         .andWhere(
-          "(PLF.PLF_ID IS NULL OR (PLF.PLF_ACCEPTED_ON IS NOT NULL AND PLF.PLF_ACCEPTED_ON != '0000-00-00'))",
+          '(PLF.PLF_ID IS NULL OR (PLF.PLF_ACCEPTED_ON IS NOT NULL AND PLF.PLF_ACCEPTED_ON IS NOT NULL))',
         )
         .orderBy('ETK.ETK_DATE IS NULL', 'DESC')
         .addOrderBy('ETK.ETK_DATE', 'DESC')

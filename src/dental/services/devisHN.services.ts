@@ -1,16 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { UserIdentity } from 'src/common/decorator/auth.decorator';
-
-import { UserEntity } from 'src/entities/user.entity';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
-import { DevisRequestAjaxDto } from '../dto/devis_request_ajax.dto';
-import { LettersEntity } from 'src/entities/letters.entity';
 import { MailService } from 'src/mail/services/mail.service';
-import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
 import { format } from 'date-fns';
 import { validateEmail } from 'src/common/util/string';
 
