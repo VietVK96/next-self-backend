@@ -1,3 +1,4 @@
+import { SettingsModule } from './settings/settings.module';
 import { Module, RequestMethod } from '@nestjs/common';
 import configuration from './common/config';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -162,6 +163,7 @@ const importsModules = [
   BankModule,
   PaymentSchedulesModule,
   SecuritiesModule,
+  SettingsModule,
   TeletranmistionModule,
   RecipeModule,
   StatisticsModule,
