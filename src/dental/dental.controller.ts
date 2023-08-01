@@ -35,6 +35,7 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { ErrorCode } from 'src/constants/error';
 import { QuotationServices } from './services/quotation.service';
 import { QuotationMutualServices } from './services/quotaion-mutual.services';
+import { QuotationMutualInitChampsDto } from './dto/quotatio-mutual.dto';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -188,6 +189,14 @@ export class DentalController {
     return await this.devisStd2Services.getInitChamps(params, identity);
   }
 
+  @Get('/quotation-mutual/init_champs')
+  @UseGuards(TokenGuard)
+  async quotationMutualInitChamps(
+    @Query() req: QuotationMutualInitChampsDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.quotationMutualServices.initChamps(req, identity);
+  }
   @Post('/quotation-mutual/devis_email')
   @UseGuards(TokenGuard)
   async devisEmail(@Body() payload: EnregistrerFactureDto) {
