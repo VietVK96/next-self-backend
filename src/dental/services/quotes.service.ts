@@ -786,22 +786,21 @@ export class QuotesServices {
         where: { id: id },
         relations: ['acts', 'attachments', 'contact', 'user', 'treatmentPlan'],
       });
-      // const dataIdActs = data?.acts.map((dataActs) => {
-      //   let material = null;
-      //   if (params?.acts.some((act) => act.id === dataActs.id)) {
-      //     material = dataActs?.material;
-      //   }
-      //   return {
-      //     id: dataActs?.id,
-      //     material,
-      //   };
-      // });
-      // for (const dataIdAct of dataIdActs) {
-      //   const dataActs = await this.dentalQuotationActRepository.update(
-      //     dataIdAct?.id,
-      //     { material: dataIdAct?.material },
-      //   );
-      // }
+      const dataIdActs = data?.acts.map((dataActs) => {
+        let material = null;
+        if (params?.acts.some((act) => act.id === dataActs.id)) {
+          material = dataActs?.material;
+        }
+        return {
+          id: dataActs?.id,
+          material,
+        };
+      });
+      for (const dataIdAct of dataIdActs) {
+        await this.dentalQuotationActRepository.update(dataIdAct?.id, {
+          material: dataIdAct?.material,
+        });
+      }
 
       if (data?.attachments.length > 0) {
         const dataIdAc = data?.attachments.map(
