@@ -30,11 +30,11 @@ export class AccounController {
 
   // settings/account/my-information.php
   @Post('my-information')
-  // @UseGuards(TokenGuard)
+  @UseGuards(TokenGuard)
   async updateMyInformation(
     @Body() payload: UpdateMyInformationDto,
-    // @CurrentUser() identity: UserIdentity,
+    @CurrentUser() identity: UserIdentity,
   ) {
-    return await this.accountService.updateMyInformation(3, payload);
+    return await this.accountService.updateMyInformation(identity.id, payload);
   }
 }

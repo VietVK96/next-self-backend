@@ -60,11 +60,14 @@ export class UpdateMyInformationDto {
   social_security_reimbursement_rate?: number;
 
   @ApiProperty()
-  freelance?: string;
+  freelance?: number;
 
   @ApiProperty()
   agaMember?: any;
 
   @ApiProperty()
   droit_permanent_depassement?: any;
+
+  @ApiProperty()
+  signature_automatic: number;
 }

@@ -1,12 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { FindAccountRes } from '../responsive/find.account.res';
+import { FindAccountRes } from '../response/find.account.res';
 import { UserEntity } from 'src/entities/user.entity';
 import { SpecialtyCodeEntity } from 'src/entities/specialty-code.entity';
 import { UpdateMyInformationDto } from '../dto/updateMyInformation.account.res';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { AddressEntity } from 'src/entities/address.entity';
 import axios from 'axios';
+import { ErrorCode } from 'src/constants/error';
+import sharp from 'sharp';
+import { SIGNATURE } from 'src/constants/users';
+import { PrivilegeEntity } from 'src/entities/privilege.entity';
+import { UserMedicalEntity } from 'src/entities/user-medical.entity';
+import { AmoEntity } from 'src/entities/amo.entity';
+import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
+import { de } from 'date-fns/locale';
 
 @Injectable()
 export class AccountService {
@@ -107,60 +115,169 @@ export class AccountService {
   }
 
   async updateMyInformation(userId: number, payload: UpdateMyInformationDto) {
-    const user = await this.dataSource.getRepository(UserEntity).findOneOrFail({
-      where: { id: userId },
-      relations: {
-        address: true,
-      },
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const street = payload.street;
-    const zipCode = payload.zip_code;
-    const city = payload.city;
-    const countryAbbr = payload.countryAbbr;
-    const userLogin = payload.log ? payload.log.trim() : '';
-    const userGsm = payload.gsm;
-    const userPhoneNumber = payload.phoneNumber;
-    const userFaxNumber = payload.faxNumber;
-    const userAgaMember = payload.agaMember;
-    const droitPermanentDepassement = payload.droit_permanent_depassement;
-    const userRateCharges = payload.rateCharges;
-    const signature = payload.signature;
-    const userFiness = payload.finess;
+    try {
+      const user = await this.dataSource
+        .getRepository(UserEntity)
+        .findOneOrFail({
+          where: { id: userId },
+          relations: {
+            address: true,
+            privileged: true,
+            medical: true,
+            amo: true,
+            preference: true,
+          },
+        });
 
-    if (!(await this.checkingLogin(userLogin, userId))) {
-      throw new CBadRequestException(
-        "Le nom d'utilisateur doit être unique et doit contenir au minimum 6 caractères de types alphanumériques, points (.), underscore (_), arobase (@) ou tiret (-).",
-      );
-    }
+      const street = payload.street;
+      const zipCode = payload.zip_code;
+      const city = payload.city;
+      const countryAbbr = payload.countryAbbr;
+      const userLogin = payload.log ? payload.log.trim() : null;
+      const userGsm = payload.gsm;
+      const userPhoneNumber = payload.phoneNumber;
+      const userFaxNumber = payload.faxNumber;
+      const userAgaMember = payload.agaMember;
+      const droitPermanentDepassement = payload.droit_permanent_depassement;
+      const userRateCharges = payload.rateCharges;
+      let signature = payload.signature;
+      const userFiness = payload.finess;
 
-    if (street || zipCode || city || countryAbbr) {
-      const address = user.address;
-      if (address) {
-        const countries = (
-          await axios.get('https://restcountries.com/v3.1/all')
-        ).data;
-
-        address.street = street;
-        address.zipCode = zipCode;
-        address.city = city;
-        address.country = countries[countryAbbr];
-        address.countryAbbr = countryAbbr;
+      if (!(await this.checkingLogin(userLogin, userId))) {
+        throw new CBadRequestException(
+          "Le nom d'utilisateur doit être unique et doit contenir au minimum 6 caractères de types alphanumériques, points (.), underscore (_), arobase (@) ou tiret (-).",
+        );
       }
-    } else {
-      await this.dataSource
-        .getRepository(AddressEntity)
-        .delete({ id: user.adrId });
+
+      if (street || zipCode || city || countryAbbr) {
+        const address = user.address;
+        if (address) {
+          const countries = (
+            await axios.get('https://restcountries.com/v3.1/all')
+          ).data;
+
+          address.street = street;
+          address.zipCode = zipCode;
+          address.city = city;
+          address.country = countries[countryAbbr];
+          address.countryAbbr = countryAbbr;
+
+          await queryRunner.manager.save(AddressEntity, address);
+          // await this.dataSource.getRepository(AddressEntity).save(address);
+        }
+      } else {
+        await queryRunner.manager.delete(AddressEntity, user.adrId);
+        // await this.dataSource
+        //   .getRepository(AddressEntity)
+        //   .delete({ id: user.adrId });
+        delete user.adrId;
+        delete user.address;
+        if (signature) {
+          const buffer = Buffer.from(signature, 'base64');
+          sharp(buffer)
+            .resize(SIGNATURE.HEIGHT, SIGNATURE.WIDTH)
+            .toBuffer()
+            .then((resizedBuffer) => {
+              const resizedBase64 = resizedBuffer.toString('base64');
+              signature = resizedBase64;
+            });
+        }
+      }
+      user.log = userLogin;
+      user.gsm = userGsm;
+      user.phoneNumber = userPhoneNumber;
+      user.faxNumber = userFaxNumber;
+      user.agaMember = !userAgaMember ? 1 : 0;
+      user.droitPermanentDepassement = !droitPermanentDepassement ? 1 : 0;
+      user.rateCharges = Number(userRateCharges);
+      user.socialSecurityReimbursementBaseRate =
+        payload.social_security_reimbursement_base_rate;
+      user.socialSecurityReimbursementRate =
+        payload.social_security_reimbursement_rate;
+      user.signature = signature;
+      user.finess = userFiness;
+
+      const promises = [];
+      if (user.privileged) {
+        const newName = user.lastname.concat(' ', user.firstname);
+        for (const privilegeModel of user.privileged) {
+          promises.push(
+            queryRunner.manager.update(
+              PrivilegeEntity,
+              { id: privilegeModel.id },
+              { name: newName },
+            ),
+          );
+        }
+      }
+      await Promise.all(promises);
+      delete user.privileged;
+
+      if (payload.short_name) user.abbr = payload.short_name;
+      if (payload.email) user.email = payload.email;
+      if (payload.company_name)
+        user.companyName =
+          payload.company_name.trim() !== ''
+            ? payload.company_name.trim()
+            : null;
+      if (payload.freelance) user.freelance = payload.freelance;
+
+      if (user.medical) {
+        const medical = user.medical;
+        medical.rppsNumber = payload?.medical?.rpps_number
+          ? payload.medical.rpps_number
+          : null;
+        // await this.dataSource.getRepository(UserMedicalEntity).save(medical);
+        // await queryRunner.manager.save(UserMedicalEntity, medical)
+        delete user.medical;
+      }
+
+      if (user.amo) {
+        const amo = user.amo;
+        amo.codeConvention = payload?.amo?.code_convention
+          ? payload.amo.code_convention
+          : null;
+        // await this.dataSource.getRepository(AmoEntity).save(amo);
+        await queryRunner.manager.save(AmoEntity, amo);
+        delete user.amo;
+      }
+
+      const preference = user.preference;
+      preference.signatureAutomatic = payload.signature_automatic;
+      await queryRunner.manager.save(UserPreferenceEntity, preference);
+      delete user.preference;
+
+      // @TODO validate
+      // $violations = $container->get('validator')->validate($user);
+
+      //   if ($violations->count()) {
+
+      //       $session->getFlashBag()->add('error', (string) $violations);
+
+      //       header('Location: ' . Request::server('PHP_SELF'));
+      //       exit;
+
+      //   }
+
+      await queryRunner.manager.save(UserEntity, user);
+      await queryRunner.commitTransaction();
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      return new CBadRequestException(ErrorCode.SAVE_FAILED);
+    } finally {
+      await queryRunner.release();
     }
   }
 
   public async checkingLogin(subject: string, userId = 0) {
     if (/^[a-zA-Z0-9._@-]{6,31}$/.test(subject)) {
-      const userEn = await this.dataSource
-        .getRepository(UserEntity)
-        .findOneOrFail({
-          where: { log: subject },
-        });
+      const userEn = await this.dataSource.getRepository(UserEntity).findOneBy({
+        log: subject,
+      });
       if (!userEn || userEn.id == userId) return true;
     }
     return false;
