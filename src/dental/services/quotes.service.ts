@@ -7,7 +7,7 @@ import { EventEntity } from 'src/entities/event.entity';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
 import { UserEntity } from 'src/entities/user.entity';
-import { checkEmpty } from 'src/common/util/string';
+import { br2nl, checkEmpty } from 'src/common/util/string';
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
 import { format, getDayOfYear, getYear } from 'date-fns';
 import { ContactEntity } from 'src/entities/contact.entity';
@@ -24,11 +24,24 @@ import { Convention2020RequestAjaxDto } from '../dto/devis_request_ajax.dto';
 import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
 import { LettersEntity } from 'src/entities/letters.entity';
 import { MailService } from 'src/mail/services/mail.service';
-import { convertBooleanToNumber } from 'src/common/util/number';
+import {
+  checkId,
+  checkNumber,
+  convertBooleanToNumber,
+} from 'src/common/util/number';
 import { PrintPDFDto } from '../dto/facture.dto';
 import * as path from 'path';
 import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
-
+import { TherapeuticAlternativeService } from './therapeuticAlternative.service';
+import { ErrorCode } from 'src/constants/error';
+import { checkDay } from 'src/common/util/day';
+import { ContactService } from 'src/contact/services/contact.service';
+import { CcamUnitPriceEntity } from 'src/entities/ccamunitprice.entity';
+import { ReduceActRes, ReduceRacRes } from '../res/quotes.res';
+import { TherapeuticAlternatives0Res } from '../res/therapeuticAlternative.res';
+import { CcamCmuCodificationEntity } from 'src/entities/ccam-cmu-codification.entity';
+import { parseJson } from 'src/common/util/json';
+import { UserUserSettingRes } from 'src/auth/reponse/session.res';
 @Injectable()
 export class QuotesServices {
   constructor(
@@ -53,8 +66,12 @@ export class QuotesServices {
     private dentalQuotationActRepository: Repository<DentalQuotationActEntity>,
     @InjectRepository(LettersEntity)
     private lettersRepository: Repository<LettersEntity>,
+    @InjectRepository(CcamUnitPriceEntity)
+    private ccamUnitPriceRepository: Repository<CcamUnitPriceEntity>,
     private mailService: MailService,
     private paymentPlanService: PaymentScheduleService,
+    private therapeuticAlternativeService: TherapeuticAlternativeService,
+    private contactService: ContactService,
   ) {}
 
   /**
@@ -608,7 +625,7 @@ export class QuotesServices {
           : null;
         let maximumPrice = null;
         let panier = null;
-        const listTeeth = act?.teeth?.split(' ') ?? [];
+        const listTeeth = act?.location?.split(' ') ?? [];
         if (ccam) {
           if (
             this.isCmuPatient(quote?.date, quote?.user) &&
@@ -620,7 +637,7 @@ export class QuotesServices {
                 ? ccam.cmuCodifications[0].maximumPrice
                 : null;
             panier = 4;
-          } else if (act?.amoAmount) {
+          } else if (act?.secuAmount) {
             const grid = quote?.user?.setting?.priceGrid ?? null;
             maximumPrice = this.getUnitPriceCcam(grid, quote?.date, ccam);
             if (ccam?.family?.panier) {
@@ -693,7 +710,7 @@ export class QuotesServices {
     const listPrice = ccam?.unitPrices ?? [];
     const unitPrices = listPrice?.filter(
       (price) =>
-        parseInt(price?.grid) === grid &&
+        checkNumber(price?.grid) === grid &&
         new Date(price?.createdOn).getTime() <= new Date(date).getTime(),
     );
     unitPrices.sort(
@@ -710,7 +727,7 @@ export class QuotesServices {
    * /application/Entity/Patient.php
    * Line 805-> 820
    */
-  async isCmuPatient(datetime: string, patient: ContactEntity) {
+  isCmuPatient(datetime: string, patient: ContactEntity) {
     const activeCmu = this.getActiveAmcPatient(datetime, patient);
     const medical = patient?.medical;
     if (activeCmu) {
@@ -867,31 +884,284 @@ export class QuotesServices {
    * Line: 23-92
    */
   async generatePdf(req: PrintPDFDto, identity: UserIdentity) {
-    const data = {};
-    const filePath = path.join(
-      process.cwd(),
-      'templates/pdf/devisStd2',
-      'devisStd2.hbs',
-    );
-    const files: PdfTemplateFile[] = [
-      {
-        data,
-        path: filePath,
-      },
-    ];
+    /**
+     * TODO this
+     * $filter = $container->get('doctrine.orm.default_entity_manager')->getFilters()->enable('soft-deleteable');
+     * $filter->disableForEntity(LibraryAct::class);
+     * $filter->disableForEntity(LibraryActQuantity::class);
+     */
+    try {
+      const id = checkId(req?.id);
+      const quote = await this.dentalQuotationRepository.findOne({
+        where: {
+          id,
+        },
+        relations: {
+          acts: {
+            libraryActQuantity: {
+              ccam: {
+                cmuCodifications: true,
+              },
+            },
+          },
+          user: {
+            medical: true,
+            setting: true,
+          },
+          patient: {
+            amcs: true,
+          },
+          paymentPlan: {
+            deadlines: true,
+          },
+        },
+      });
+      if (!quote) {
+        throw new CBadRequestException(ErrorCode.NOT_FOUND_QUOTE);
+      }
 
-    const options = {
-      format: 'A4',
-      displayHeaderFooter: true,
-      footerTemplate: '',
-      margin: {
-        left: '5mm',
-        top: '5mm',
-        right: '5mm',
-        bottom: '5mm',
-      },
+      const therapeuticAlternatives =
+        await this.therapeuticAlternativeService.getTherapeuticAlternative(
+          quote,
+        );
+      console.log(
+        '🚀 ~ file: quotes.service.ts:924 ~ QuotesServices ~ generatePdf ~ therapeuticAlternatives:',
+        therapeuticAlternatives,
+      );
+
+      const insee = inseeFormatter(
+        quote?.patient?.insee + ' ' + quote?.patient?.inseeKey,
+      );
+      const isInEuropean =
+        (quote.placeOfManufacture & 1) === 1 ||
+        (quote.placeOfManufacture & 2) === 2;
+      const notInEuropean = (quote.placeOfManufacture & 4) === 4;
+      const acts = await this._reduceAct(quote);
+      const rac0 = await this._reduceRac(therapeuticAlternatives?.rac0, quote);
+      const racm = await this._reduceRac(therapeuticAlternatives?.racm, quote);
+      const userSetting = parseJson<UserUserSettingRes>(quote?.user?.settings);
+      const isPrintAdditional =
+        userSetting?.printAdditionalPatientInformation &&
+        this.isCmuPatient(checkDay(quote?.date), quote?.patient);
+
+      const data = {
+        quote: {
+          ...quote,
+          date: checkDay(quote?.date),
+          validUntil: checkDay(quote?.validUntil),
+          acceptedOn: checkDay(quote?.dateAccept),
+          description: br2nl(quote?.msg),
+          patient: {
+            ...quote.patient,
+            birthDate: checkDay(quote?.patient?.birthDate),
+          },
+          user: {
+            ...quote?.user,
+            setting: {
+              currency: '€',
+            },
+          },
+        },
+        acts,
+        rac0,
+        racm,
+        insee,
+        isInEuropean,
+        notInEuropean,
+        therapeuticAlternatives,
+        isPrintAdditional,
+      };
+
+      const filePath = path.join(
+        process.cwd(),
+        'templates/pdf/2020',
+        'convention_2020.hbs',
+      );
+      const files: PdfTemplateFile[] = [
+        {
+          data,
+          path: filePath,
+        },
+      ];
+
+      const options = {
+        format: 'A4',
+        displayHeaderFooter: true,
+        footerTemplate: '<div></div>',
+        headerTemplate: '<div></div>',
+        margin: {
+          left: '5mm',
+          top: '5mm',
+          right: '5mm',
+          bottom: '5mm',
+        },
+      };
+
+      return customCreatePdf({ files, options });
+    } catch (error) {
+      console.log(
+        '🚀 ~ file: quotes.service.ts:927 ~ QuotesServices ~ generatePdf ~ error:',
+        error,
+      );
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
+    }
+  }
+
+  /**
+   *  ecoophp/resources/views/quotes/convention_2020/index.html.twig
+   *  @line 469 - 478
+   * @param rac0s : TherapeuticAlternatives0Res[]
+   * @param quote : DentalQuotationEntity
+   *
+   * @returns ReduceRacRes[]
+   */
+  async _reduceRac(
+    rac0s: TherapeuticAlternatives0Res[],
+    quote: DentalQuotationEntity,
+  ): Promise<ReduceRacRes[]> {
+    const result: ReduceRacRes[] = [];
+    for await (const rac0 of rac0s) {
+      let unitPrice: CcamCmuCodificationEntity;
+      if (
+        this.isCmuPatient(checkDay(quote?.date), quote?.patient) &&
+        this.isCmuCcam(
+          rac0?.act?.location?.split(','),
+          rac0?.act?.libraryActQuantity,
+        )
+      ) {
+        unitPrice = rac0?.ccam?.cmuCodifications[0];
+      } else {
+        unitPrice = await this._getUnitPrice(
+          quote?.user?.setting?.priceGrid,
+          checkDay(quote?.date),
+          rac0?.act?.libraryActQuantity?.ccam,
+        );
+      }
+      const maximumPrice = unitPrice?.maximumPrice;
+      const amoAmount = unitPrice?.unitPrice;
+      const amoRefund =
+        (checkNumber(unitPrice?.unitPrice) *
+          (100 - checkNumber(rac0.act.amcRefundRate))) /
+        100;
+      const amoAmountRefund =
+        (maximumPrice ? maximumPrice : amoAmount) - amoRefund;
+      result.push({
+        amoAmount,
+        amoAmountRefund,
+        amoRefund,
+        code: rac0?.ccam?.code,
+        dentalLocalization: rac0?.act?.dentalLocalization,
+        madeByPractitioner: rac0?.madeByPractitioner,
+        materialCode: rac0?.ccam?.material?.code,
+        maximumPrice,
+        shortName: rac0?.ccam?.shortName,
+        treatmentNumber: rac0?.act?.treatmentNumber,
+      });
+    }
+    return result;
+  }
+
+  /**
+   * ecoophp/resources/views/quotes/convention_2020/index.html.twig
+   * @Line: 341 - 362
+   * @param quote : DentalQuotationEntity
+   * @returns ReduceActRes
+   */
+  async _reduceAct(quote: DentalQuotationEntity): Promise<ReduceActRes> {
+    const result: ReduceActRes = {
+      amountTotal: 0,
+      amoAmountTotal: 0,
+      amoRefundTotal: 0,
+      patientAmountTotal: 0,
+      acts: [],
     };
+    for await (const act of quote?.acts) {
+      let maximumPrice: number | null = null;
+      let panier: string | null = null;
+      if (
+        this.contactService.isCmu(quote?.date, quote?.patient) &&
+        this.isCmuCcam(act?.location?.split(','), act?.libraryActQuantity)
+      ) {
+        maximumPrice = checkNumber(
+          act?.libraryActQuantity?.ccam?.cmuCodifications[0].maximumPrice,
+        );
+        panier = '4';
+      } else if (act?.secuAmount) {
+        const unitPrice = await this._getUnitPrice(
+          quote?.user?.setting?.priceGrid,
+          checkDay(quote?.date),
+          act?.libraryActQuantity?.ccam,
+        );
+        maximumPrice = checkNumber(unitPrice?.maximumPrice);
+        panier = act?.libraryActQuantity?.ccam?.family?.panier?.code;
+      }
+      const amount = checkNumber(act?.amount);
+      const amoAmount = checkNumber(act?.secuAmount);
+      const amoRefund = checkNumber(act?.secuRepayment);
+      const patientAmount = amount - amoRefund;
 
-    return customCreatePdf({ files, options });
+      result.amountTotal += amount;
+      result.amoAmountTotal += amoAmount;
+      result.amoRefundTotal += amoRefund;
+      result.patientAmountTotal += patientAmount;
+      result.acts.push({
+        amoAmount,
+        amoRefund,
+        amount,
+        cotation: act?.ngapCode,
+        dentalLocalization: act?.dentalLocalization,
+        materials: act?.materials,
+        maximumPrice,
+        panier,
+        patientAmount: amount - amoRefund,
+        treatmentNumber: act?.treatmentNumber,
+        label: act?.name,
+      });
+    }
+
+    return result;
+  }
+
+  /**
+   *
+   * @param grid ; number
+   * @param date : string
+   * @param ccam : CcamEntity
+   * @returns CcamUnitPriceEntity | null
+   */
+  async _getUnitPrice(
+    grid: number,
+    date: string,
+    ccam: CcamEntity,
+  ): Promise<CcamUnitPriceEntity | null> {
+    const temp = await this._createActiveCriteria(grid, date);
+    const unitPrices =
+      ccam?.unitPrices.filter((price) => price?.id === temp?.id) || [];
+    if (unitPrices.length) {
+      return unitPrices[0];
+    }
+    return null;
+  }
+
+  /**
+   * ecoophp/application/Repository/CcamUnitPriceRepository.php
+   * @line 24 - 31
+   * @param grid :number
+   * @param date : string
+   * @returns CcamUnitPriceEntity | null
+   */
+  async _createActiveCriteria(
+    grid: number,
+    date: string,
+  ): Promise<CcamUnitPriceEntity> {
+    return this.ccamUnitPriceRepository.findOne({
+      where: {
+        grid,
+        createdOn: date,
+      },
+      order: {
+        createdOn: 'DESC',
+      },
+    });
   }
 }
