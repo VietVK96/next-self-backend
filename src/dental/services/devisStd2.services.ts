@@ -714,7 +714,7 @@ export class DevisStd2Services {
       if (req?.pdf) {
         const imgPath = path.join(
           process.cwd(),
-          'svg/odontogram',
+          'resources/svg/odontogram',
           'background_adult.png',
         );
         const img = fs.readFileSync(imgPath);
