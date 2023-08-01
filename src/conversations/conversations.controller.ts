@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBasicAuth, ApiTags } from '@nestjs/swagger';
 import { ConversationsService } from './services/conversations.service';
 import {
@@ -7,6 +16,10 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { CreateMessageDTO } from './dto/createMessage.dto';
+import { ConversationEntity } from 'src/entities/conversation.entity';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 @Controller('conversations')
 @ApiTags('Conversations')
@@ -67,5 +80,26 @@ export class ConversationsController {
       conversationId,
       body,
     );
+  }
+
+  /**
+   * File php/conversations/delete.php
+   * Line 20 -> 39
+   */
+  @Delete('/:id')
+  @UseGuards(TokenGuard)
+  async deleteConversation(
+    @CurrentUser() user: UserIdentity,
+    @Param('id') id: number,
+  ) {
+    const conversation: ConversationEntity =
+      await this.conversationsService.getConversationById(id);
+    if (!conversation) {
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_CONVERSATION);
+    }
+    if (conversation.owner !== user.id) {
+      throw new CBadRequestException(ErrorCode.CAN_NOT_DELETE_CONVERSATION);
+    }
+    await this.conversationsService.deleteConversation(conversation?.id);
   }
 }
