@@ -30,4 +30,22 @@ export class ConversationsController {
       size,
     );
   }
+
+  /**
+   * File php/conversations/messages/findAll.php
+   * Line 10 -> 26
+   */
+  @Get('get-message-from-conversation')
+  @UseGuards(TokenGuard)
+  async getMessageFromConversation(
+    @Query('conversation_id') conversationId?: number,
+    @Query('page') page?: number,
+    @Query('page_size') size?: number,
+  ) {
+    return await this.conversationsService.getMessageFromConversation(
+      conversationId,
+      page,
+      size,
+    );
+  }
 }
