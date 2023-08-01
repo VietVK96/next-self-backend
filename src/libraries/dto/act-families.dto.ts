@@ -12,4 +12,9 @@ export class ActFamiliesSearchDto {
     required: false,
   })
   search_term?: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  serializer_groups?: string[];
 }

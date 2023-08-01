@@ -52,9 +52,11 @@ export class MailService {
     docId: number,
     groupId: number,
     search: string,
+    practitionerId: string,
   ): Promise<FindAllMailRes> {
     if (!search) search = '';
     const pageSize = 100;
+    console.log('practitionerId', practitionerId);
 
     const doctors: PersonInfoDto[] = await this.dataSource.query(`SELECT
         T_USER_USR.USR_ID AS id,
@@ -64,7 +66,8 @@ export class MailService {
     FROM T_USER_USR`);
 
     let mails: FindAllMailDto[];
-    if (docId) {
+
+    if (!practitionerId) {
       mails = await this.dataSource.query(
         ` SELECT SQL_CALC_FOUND_ROWS
             T_LETTERS_LET.LET_ID AS id,
@@ -83,9 +86,8 @@ export class MailService {
                 T_LETTERS_LET.USR_ID IS NULL OR
                 T_LETTERS_LET.USR_ID = ?
             )
-        ORDER BY favorite DESC
-        LIMIT ?`,
-        [search, docId, pageSize],
+        ORDER BY favorite DESC`,
+        [search, docId],
       );
       for (const iterator of mails) {
         if (iterator.doctor_id !== null && docId)
@@ -138,17 +140,17 @@ export class MailService {
       }
     }
 
-    const offSet = (pageIndex - 1) * pageSize;
-    const dataPaging = mails.slice(offSet, offSet + pageSize);
+    const startIndex = pageIndex === -1 ? 0 : (pageIndex - 1) * pageSize;
+    const endIndex = pageIndex === -1 ? mails.length : startIndex + pageSize;
+    const mailPaging = mails.slice(startIndex, endIndex);
 
-    const result: FindAllMailRes = {
+    return {
       draw,
-      recordsTotal: dataPaging.length,
-      recordsFiltered: dataPaging.length,
+      recordsTotal: pageIndex === -1 ? mails.length : mailPaging.length,
+      recordsFiltered: pageIndex === -1 ? mails.length : mailPaging.length,
       totalData: mails.length,
-      data: dataPaging,
+      data: mailPaging,
     };
-    return result;
   }
 
   // php/mail/find.php

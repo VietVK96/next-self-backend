@@ -18,4 +18,8 @@ export class EmailSettingController {
   async find(@CurrentUser() identity: UserIdentity) {
     return await this.emailSettingService.find(identity.id);
   }
+
+  // @Get('create')
+  // @UseGuards(TokenGuard)
+  // async create(@CurrentUser() identity: UserIdentity) {}
 }
