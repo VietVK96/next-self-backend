@@ -96,7 +96,7 @@ export class StorageService {
     const storageSpaceUsed = groupEntity?.storageSpaceUsed;
     const totalStorageSpace = groupEntity?.totalStorageSpace;
 
-    if (storageSpaceUsed > totalStorageSpace) {
+    if (Number(storageSpaceUsed) > Number(totalStorageSpace)) {
       await queryRunner.rollbackTransaction();
       throw new CBadRequestException(ErrorCode.FULLY_STORAGE_SPACE);
     } else {
