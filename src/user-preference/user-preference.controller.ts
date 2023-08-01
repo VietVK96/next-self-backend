@@ -14,6 +14,8 @@ import {
 export class UserPreferenceController {
   constructor(private userPreferenceService: UserPreferenceService) {}
 
+  //settings/account/preference.php
+  //all line
   @Get()
   @UseGuards(TokenGuard)
   async getByUser(@CurrentUser() identity: UserIdentity) {

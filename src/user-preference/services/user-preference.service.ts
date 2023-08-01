@@ -8,10 +8,7 @@ import { UserAmoEntity } from 'src/entities/user-amo.entity';
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { MobileSettingEntity } from 'src/entities/mobile-setting.entity';
-import duration from 'dayjs/plugin/duration';
-import * as dayjs from 'dayjs';
 import { DomtomEntity } from 'src/entities/domtom.entities';
-// dayjs.extend(duration)
 
 @Injectable()
 export class UserPreferenceService {
@@ -20,6 +17,11 @@ export class UserPreferenceService {
     private userPreferenceRepo: Repository<UserPreferenceEntity>,
     private readonly dataSource: DataSource,
   ) {}
+
+  private _convertH2M(timeInHour) {
+    const timeParts = timeInHour.split(':');
+    return Number(timeParts[0]) * 60 + Number(timeParts[1]);
+  }
 
   async find(userId: number) {
     const stm = `
@@ -52,12 +54,13 @@ export class UserPreferenceService {
     const amo = await this.dataSource
       .getRepository(UserAmoEntity)
       .findOne({ where: { userId } });
-    const quote = this.dataSource
+    const quote = await this.dataSource
       .getRepository(UserPreferenceQuotationEntity)
       .findOne({ where: { usrId: userId } });
-    const user = await this.dataSource
-      .getRepository(UserEntity)
-      .findOneOrFail({ where: { id: userId } });
+    const user = await this.dataSource.getRepository(UserEntity).findOneOrFail({
+      where: { id: userId },
+      relations: { medical: { domtom: true } },
+    });
     const setting = await this.userPreferenceRepo.findOneOrFail({
       where: { usrId: userId },
     });
@@ -66,15 +69,21 @@ export class UserPreferenceService {
       .findOne({ where: { userId } });
     const domtom = await this.dataSource.getRepository(DomtomEntity).find();
 
-    // preference.patient_care_time = dayjs.duration(preference?.patient_care_time).minutes()
-
+    preference.patient_care_time = this._convertH2M(
+      preference.patient_care_time,
+    );
     return {
       preference: preference,
-      amo: amo,
-      quote: quote,
-      user: user,
-      setting: setting,
-      mobileSetting: mobileSetting,
+      amo: { isTp: amo?.isTp },
+      quote: { periodOfValidity: quote?.periodOfValidity },
+      user: {
+        settings: user?.settings,
+        medical: { domtom: user?.medical?.domtom },
+      },
+      setting: {
+        sesamVitaleModeDesynchronise: setting?.sesamVitaleModeDesynchronise,
+      },
+      mobileSetting: { sessionDuration: mobileSetting?.sessionDuration },
       domtomDepartments: domtom,
     };
   }
