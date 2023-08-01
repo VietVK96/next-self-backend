@@ -11,10 +11,8 @@ import { ErrorCode } from 'src/constants/error';
 import sharp from 'sharp';
 import { SIGNATURE } from 'src/constants/users';
 import { PrivilegeEntity } from 'src/entities/privilege.entity';
-import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { AmoEntity } from 'src/entities/amo.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
-import { de } from 'date-fns/locale';
 
 @Injectable()
 export class AccountService {
@@ -167,13 +165,9 @@ export class AccountService {
           address.countryAbbr = countryAbbr;
 
           await queryRunner.manager.save(AddressEntity, address);
-          // await this.dataSource.getRepository(AddressEntity).save(address);
         }
       } else {
         await queryRunner.manager.delete(AddressEntity, user.adrId);
-        // await this.dataSource
-        //   .getRepository(AddressEntity)
-        //   .delete({ id: user.adrId });
         delete user.adrId;
         delete user.address;
         if (signature) {
@@ -231,8 +225,6 @@ export class AccountService {
         medical.rppsNumber = payload?.medical?.rpps_number
           ? payload.medical.rpps_number
           : null;
-        // await this.dataSource.getRepository(UserMedicalEntity).save(medical);
-        // await queryRunner.manager.save(UserMedicalEntity, medical)
         delete user.medical;
       }
 
@@ -241,7 +233,6 @@ export class AccountService {
         amo.codeConvention = payload?.amo?.code_convention
           ? payload.amo.code_convention
           : null;
-        // await this.dataSource.getRepository(AmoEntity).save(amo);
         await queryRunner.manager.save(AmoEntity, amo);
         delete user.amo;
       }

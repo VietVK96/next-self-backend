@@ -18,7 +18,7 @@ export class AccounController {
   @Get('')
   @UseGuards(TokenGuard)
   async find(@CurrentUser() identity: UserIdentity) {
-    return this.accountService.find(identity.id);
+    return await this.accountService.find(identity.id);
   }
 
   // settings/account/my-information.php
