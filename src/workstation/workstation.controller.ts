@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -17,6 +18,10 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { CreateWorkstationDto } from './dto/workstation.dto';
 import { ImagingSoftwareService } from './services/imaging-software.service';
+import {
+  CreateImageSoftwareDto,
+  CreateImageSoftwareQueryDto,
+} from './dto/image-software.dto';
 
 @ApiBearerAuth()
 @ApiTags('Workstation')
@@ -55,12 +60,33 @@ export class WorkstationController {
 
   //imagin-softwware
 
-  @Get('/imaging-softwares')
+  @Get('/imaging-softwares/:workstationId')
   @UseGuards(TokenGuard)
-  async findImagingSoftwares(
+  async findImagingSoftwares(@Param('workstationId') workstationId: number) {
+    return this.imagingSoftwareService.getImagingSoftwaresByWorkstation(
+      workstationId,
+    );
+  }
+
+  @Post('/imaging-softwares')
+  @UseGuards(TokenGuard)
+  async createImagingSoftwares(
     @CurrentUser() identity: UserIdentity,
-    @Param('workstation_id') id: number,
+    @Query() query: CreateImageSoftwareQueryDto,
+    @Body() body: CreateImageSoftwareDto,
   ) {
-    return this.imagingSoftwareService.getImagingSoftwaresByWorkstationId(id);
+    return this.imagingSoftwareService.createImagingSoftwaresByWorkstationId(
+      identity.org,
+      query,
+      body,
+    );
+  }
+
+  @Get('/imaging-softwares/:id')
+  @UseGuards(TokenGuard)
+  async findOneImagingSoftwares(@Param('id') id: number) {
+    return this.imagingSoftwareService.findOneImagingSoftwaresByWorkstationId(
+      id,
+    );
   }
 }
