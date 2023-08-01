@@ -56,6 +56,7 @@ export class MailService {
   ): Promise<FindAllMailRes> {
     if (!search) search = '';
     const pageSize = 100;
+    console.log('practitionerId', practitionerId);
 
     const doctors: PersonInfoDto[] = await this.dataSource.query(`SELECT
         T_USER_USR.USR_ID AS id,
@@ -65,6 +66,7 @@ export class MailService {
     FROM T_USER_USR`);
 
     let mails: FindAllMailDto[];
+
     if (!practitionerId) {
       mails = await this.dataSource.query(
         ` SELECT SQL_CALC_FOUND_ROWS
@@ -84,9 +86,8 @@ export class MailService {
                 T_LETTERS_LET.USR_ID IS NULL OR
                 T_LETTERS_LET.USR_ID = ?
             )
-        ORDER BY favorite DESC
-        LIMIT ?`,
-        [search, docId, pageSize],
+        ORDER BY favorite DESC`,
+        [search, docId],
       );
       for (const iterator of mails) {
         if (iterator.doctor_id !== null && docId)
@@ -139,30 +140,17 @@ export class MailService {
       }
     }
 
-    let result: FindAllMailRes;
+    const startIndex = pageIndex === -1 ? 0 : (pageIndex - 1) * pageSize;
+    const endIndex = pageIndex === -1 ? mails.length : startIndex + pageSize;
+    const mailPaging = mails.slice(startIndex, endIndex);
 
-    if (pageIndex === -1) {
-      result = {
-        draw,
-        recordsTotal: mails.length,
-        recordsFiltered: mails.length,
-        totalData: mails.length,
-        data: mails,
-      };
-    } else {
-      const offSet = (pageIndex - 1) * pageSize;
-      const dataPaging = mails.slice(offSet, offSet + pageSize);
-
-      result = {
-        draw,
-        recordsTotal: dataPaging.length,
-        recordsFiltered: dataPaging.length,
-        totalData: mails.length,
-        data: dataPaging,
-      };
-    }
-
-    return result;
+    return {
+      draw,
+      recordsTotal: pageIndex === -1 ? mails.length : mailPaging.length,
+      recordsFiltered: pageIndex === -1 ? mails.length : mailPaging.length,
+      totalData: mails.length,
+      data: mailPaging,
+    };
   }
 
   // php/mail/find.php
