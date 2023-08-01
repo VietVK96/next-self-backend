@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBasicAuth, ApiTags } from '@nestjs/swagger';
 import { ConversationsService } from './services/conversations.service';
 import {
@@ -6,6 +6,7 @@ import {
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
+import { CreateMessageDTO } from './dto/createMessage.dto';
 
 @Controller('conversations')
 @ApiTags('Conversations')
@@ -46,6 +47,25 @@ export class ConversationsController {
       conversationId,
       page,
       size,
+    );
+  }
+
+  /**
+   * File php/conversations/messages/store.php
+   * Line 23 -> 70
+   */
+  @Post('message')
+  @UseGuards(TokenGuard)
+  async createMessage(
+    @Body() data: CreateMessageDTO,
+    @CurrentUser() userIdentity: UserIdentity,
+  ) {
+    const { conversationId, body } = data;
+    return await this.conversationsService.createMessage(
+      userIdentity.id,
+      userIdentity.org,
+      conversationId,
+      body,
     );
   }
 }
