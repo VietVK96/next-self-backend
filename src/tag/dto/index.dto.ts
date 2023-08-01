@@ -18,5 +18,8 @@ export class CreateUpdateTagDto {
   title?: string;
 
   @ApiProperty()
-  color?: string;
+  color?: {
+    background?: string;
+    foreground?: string;
+  };
 }

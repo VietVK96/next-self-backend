@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import { Module, RequestMethod } from '@nestjs/common';
 import configuration from './common/config';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
@@ -48,12 +48,17 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { SecuritiesModule } from './securities/securities.module';
 import { LoggerModule } from 'nestjs-pino';
+import { TeletranmistionModule } from './teletranmistion/teletranmistion.module';
 import { RecipeModule } from './recipe/recipe.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { EventTypeModule } from './event-type/event-type.module';
 import { CcamModule } from './ccam/ccam.module';
+import { PaymentModule } from './payment/payment.module';
 import { PrescriptionTemplateModule } from './prescription-template/prescription-template.module';
 import { MedicamentModule } from './medicament/medicament.module';
+import { ImportModule } from './import/import.module';
+import { MedicamentFamilyModule } from './medicament-family/medicament-family.module';
+import { PeriodontalChartsModule } from './periodontal-charts/periodontal-charts.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -156,12 +161,17 @@ const importsModules = [
   BankModule,
   PaymentSchedulesModule,
   SecuritiesModule,
+  TeletranmistionModule,
   RecipeModule,
   StatisticsModule,
   EventTypeModule,
   CcamModule,
+  PaymentModule,
   PrescriptionTemplateModule,
   MedicamentModule,
+  ImportModule,
+  MedicamentFamilyModule,
+  PeriodontalChartsModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {

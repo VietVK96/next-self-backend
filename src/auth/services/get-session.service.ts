@@ -73,11 +73,18 @@ export class GetSessionService {
       .from(UserEntity, 'USR')
       .where('USR.USR_ID = :userId', { userId })
       .getRawOne();
+
+    let userSettings = userResult?.settings as UserUserSettingRes | string;
+    if (
+      userSettings &&
+      userSettings !== '' &&
+      typeof userSettings === 'string'
+    ) {
+      userSettings = parseJson<UserUserSettingRes>(userResult?.settings);
+    }
     const user: UserUserRes = {
       ...userResult,
-      settings: userResult?.settings
-        ? parseJson<UserUserSettingRes>(userResult?.settings)
-        : ({} as UserUserSettingRes),
+      settings: userSettings,
     };
     const userPreferences = await queryBuilder
       .select([

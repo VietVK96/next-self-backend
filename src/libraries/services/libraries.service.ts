@@ -70,21 +70,14 @@ export class LibrariesService {
     identity: UserIdentity,
     params: ActFamiliesSearchDto,
   ) {
-    if (!params?.serializer_groups) {
-      return await this.libraryActRepo?.find({
-        where: {
-          organizationId: identity?.org,
-          label: Like(`%${params?.search_term}%`),
-        },
-      });
-    } else {
-      return await this.libraryActRepo?.find({
-        where: {
-          organizationId: identity?.org,
-          label: Like(`%${params?.search_term}%`),
-        },
-        relations: ['family'],
-      });
-    }
+    if (!params?.serializer_groups) params.serializer_groups = [];
+
+    return await this.libraryActRepo?.find({
+      where: {
+        organizationId: identity?.org,
+        label: Like(`${params?.search_term}%`),
+      },
+      relations: params.serializer_groups,
+    });
   }
 }

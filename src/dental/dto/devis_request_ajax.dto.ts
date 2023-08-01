@@ -1,5 +1,4 @@
 import { ApiProperty, ApiExtraModels, IntersectionType } from '@nestjs/swagger';
-import { EnumMedicalHeaderFormatType } from 'src/entities/medical-header.entity';
 
 @ApiExtraModels()
 export class DevisRequestAjaxDto {
@@ -235,4 +234,100 @@ export class QuotationDevisRequestAjaxDto extends IntersectionType(
     required: false,
   })
   displayNotice?: string;
+}
+
+export class Convention2020RequestAjaxDto {
+  @ApiProperty({
+    name: 'accepted_on',
+    required: true,
+  })
+  accepted_on?: string;
+
+  @ApiProperty({
+    name: 'acts',
+    required: true,
+  })
+  acts?: ActDto[];
+
+  @ApiProperty({
+    name: 'attachments',
+    required: true,
+  })
+  attachments?: AttachmentDto[];
+
+  @ApiProperty({
+    name: 'date',
+    required: true,
+  })
+  date?: string;
+
+  @ApiProperty({
+    name: 'description',
+    required: true,
+  })
+  description?: string;
+
+  @ApiProperty({
+    name: 'operation',
+    required: true,
+  })
+  operation?: string;
+
+  @ApiProperty({
+    name: 'place_of_manufacture',
+    required: true,
+  })
+  place_of_manufacture?: number;
+
+  @ApiProperty({
+    name: 'place_of_subcontracting',
+    required: true,
+  })
+  place_of_subcontracting?: number;
+
+  @ApiProperty({
+    name: 'print_explanatory_note',
+    required: true,
+  })
+  print_explanatory_note?: boolean;
+
+  @ApiProperty({
+    name: 'valid_until',
+    required: true,
+  })
+  valid_until?: string;
+
+  @ApiProperty({
+    name: 'patient_signature',
+    required: true,
+  })
+  patient_signature?: string;
+
+  @ApiProperty({
+    name: 'user_signature',
+    required: true,
+  })
+  user_signature?: string;
+}
+
+export class ActDto {
+  @ApiProperty({
+    name: 'id',
+    required: true,
+  })
+  id?: number;
+
+  @ApiProperty({
+    name: 'materials',
+    required: true,
+  })
+  materials?: string;
+}
+
+export class AttachmentDto {
+  @ApiProperty({
+    name: 'id',
+    required: true,
+  })
+  id?: number;
 }

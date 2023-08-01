@@ -10,6 +10,7 @@ import { TagEntity } from 'src/entities/tag.entity';
 import { AddressService } from 'src/address/service/address.service';
 import { UserService } from 'src/user/services/user.service';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
+import { OrganizationEntity } from 'src/entities/organization.entity';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UserMedicalEntity } from 'src/entities/user-medical.entity';
       UserEntity,
       TagEntity,
       UserMedicalEntity,
+      OrganizationEntity,
     ]),
   ],
   controllers: [FileController],

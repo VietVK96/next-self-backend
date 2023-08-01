@@ -27,14 +27,14 @@ export class InitFactureRes {
 }
 
 export class DetailsRes {
-  id_facture_line: number;
-  typeLigne: string;
-  dateLigne: string;
-  dentsLigne: string;
-  descriptionLigne: string;
-  prixLigne: number;
-  name: string;
-  cotation: string;
-  secuAmount: number;
-  materials: string;
+  id_facture_line?: number;
+  typeLigne?: string;
+  dateLigne?: string;
+  dentsLigne?: string;
+  descriptionLigne?: string;
+  prixLigne?: number;
+  name?: string;
+  cotation?: string;
+  secuAmount?: number;
+  materials?: string;
 }
