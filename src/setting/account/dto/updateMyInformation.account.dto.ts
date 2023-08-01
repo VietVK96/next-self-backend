@@ -1,22 +1,31 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsNumber, IsString, MaxLength } from 'class-validator';
 
 export class UpdateMyInformationDto {
   @ApiProperty()
+  @IsString()
   log?: string;
 
   @ApiProperty()
+  @IsEmail()
   email?: string;
 
   @ApiProperty()
+  @IsString()
   short_name?: string;
 
   @ApiProperty()
+  @IsString()
   phoneNumber?: string;
 
   @ApiProperty()
+  @IsString()
+  @MaxLength(20)
   gsm?: string;
 
   @ApiProperty()
+  @IsString()
+  @MaxLength(45)
   faxNumber?: string;
 
   @ApiProperty()
@@ -25,9 +34,12 @@ export class UpdateMyInformationDto {
   };
 
   @ApiProperty()
+  @IsString()
+  @MaxLength(9)
   finess?: string;
 
   @ApiProperty()
+  @IsString()
   company_name?: string;
 
   @ApiProperty()
@@ -54,12 +66,15 @@ export class UpdateMyInformationDto {
   };
 
   @ApiProperty()
+  @IsNumber()
   social_security_reimbursement_base_rate?: number;
 
   @ApiProperty()
+  @IsNumber()
   social_security_reimbursement_rate?: number;
 
   @ApiProperty()
+  @IsNumber()
   freelance?: number;
 
   @ApiProperty()
@@ -69,5 +84,6 @@ export class UpdateMyInformationDto {
   droit_permanent_depassement?: any;
 
   @ApiProperty()
+  @IsNumber()
   signature_automatic: number;
 }

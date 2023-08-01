@@ -3,7 +3,7 @@ import { DataSource } from 'typeorm';
 import { FindAccountRes } from '../response/find.account.res';
 import { UserEntity } from 'src/entities/user.entity';
 import { SpecialtyCodeEntity } from 'src/entities/specialty-code.entity';
-import { UpdateMyInformationDto } from '../dto/updateMyInformation.account.res';
+import { UpdateMyInformationDto } from '../dto/updateMyInformation.account.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { AddressEntity } from 'src/entities/address.entity';
 import axios from 'axios';
@@ -100,9 +100,14 @@ export class AccountService {
     user: UserEntity;
     specialtyCodes: SpecialtyCodeEntity[];
   }> {
-    const user = await this.dataSource
-      .getRepository(UserEntity)
-      .findOneOrFail({ where: { id: userId } });
+    const user = await this.dataSource.getRepository(UserEntity).findOneOrFail({
+      where: { id: userId },
+      relations: { address: true, medical: true },
+    });
+    delete user.password;
+    delete user.passwordAccounting;
+    delete user.passwordHash;
+
     const specialtyCodes = await this.dataSource
       .getRepository(SpecialtyCodeEntity)
       .find();
@@ -241,18 +246,6 @@ export class AccountService {
       preference.signatureAutomatic = payload.signature_automatic;
       await queryRunner.manager.save(UserPreferenceEntity, preference);
       delete user.preference;
-
-      // @TODO validate
-      // $violations = $container->get('validator')->validate($user);
-
-      //   if ($violations->count()) {
-
-      //       $session->getFlashBag()->add('error', (string) $violations);
-
-      //       header('Location: ' . Request::server('PHP_SELF'));
-      //       exit;
-
-      //   }
 
       await queryRunner.manager.save(UserEntity, user);
       await queryRunner.commitTransaction();

@@ -6,7 +6,7 @@ import {
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
-import { UpdateMyInformationDto } from './dto/updateMyInformation.account.res';
+import { UpdateMyInformationDto } from './dto/updateMyInformation.account.dto';
 
 @ApiBearerAuth()
 @ApiTags('Setting')

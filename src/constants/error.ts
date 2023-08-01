@@ -40,6 +40,7 @@ export enum ErrorCode {
   QUERY_REPOSITORY_ERROR = 'QUERY_REPOSITORY_ERROR',
   DUPLICATE = 'DUPLICATE',
   MAXIMUM = 'MAXIMUM',
+  EXISTING_EMAIL = 'EXISTING_EMAIL',
 }
 
 export enum HttpStatus {
