@@ -178,4 +178,13 @@ export class ConversationsService {
 
     return conversationMessage;
   }
+
+  async getConversationById(id: number) {
+    const conversation = await this.conversationRepository.findOneBy({ id });
+    return conversation;
+  }
+
+  async deleteConversation(id: number) {
+    if (id) await this.conversationRepository.delete(id);
+  }
 }
