@@ -50,15 +50,28 @@ export class TimeslotsService {
   ): Promise<TimeslotsAllRes[]> {
     try {
       const formattedResources = resources.map((item) => `'${item}'`).join(',');
-      const timeslots: TimeslotsAllRes[] = await this.dataSource.query(
+      const timeslots = await this.dataSource.query(
         `SELECT timeslot.id, resource_id as resourceId, resource.name as resourceName, start_date, 
       end_date, timeslot.color, title FROM timeslot JOIN resource ON timeslot.resource_id = resource.id 
       WHERE resource_id IN (${formattedResources}) and start_date >= ? AND end_date < ?
        ORDER BY start_date ASC, end_date ASC`,
         [this.getStartDay(startDate), this.getEndDay(endDate)],
       );
-
-      return timeslots;
+      return timeslots.map((timeslot) => {
+        const color: {
+          background: string;
+          foreground: string;
+        } = JSON.parse(timeslot.color);
+        return {
+          ...timeslot,
+          color: {
+            background: color.background,
+            foreground: color.foreground,
+          },
+          start_date: dayjs(timeslot.start_date).format('YYYY-MM-DD HH:mm:ss'),
+          end_date: dayjs(timeslot.end_date).format('YYYY-MM-DD HH:mm:ss'),
+        };
+      });
     } catch {
       throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
     }
@@ -109,8 +122,8 @@ export class TimeslotsService {
           use_default_color: timeslot.use_default_color,
         },
         recurring_pattern: recurringPattern,
-        start_date: timeslot.start_date,
-        end_date: timeslot.end_date,
+        start_date: dayjs(timeslot.start_date).format('YYYY-MM-DD HH:mm:ss'),
+        end_date: dayjs(timeslot.end_date).format('YYYY-MM-DD HH:mm:ss'),
         color: timeslot.color,
         title: timeslot.title,
       };

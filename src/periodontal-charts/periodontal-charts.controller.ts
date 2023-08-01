@@ -1,8 +1,25 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { TokenGuard } from 'src/common/decorator/auth.decorator';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
 import { PeriodontalChartsService } from './services/periodontal-charts.service';
-import { IndexDto, ShowDto } from './dto/periodontal-charts.dto';
+import {
+  CreateChartsDto,
+  IndexDto,
+  ShowDto,
+} from './dto/periodontal-charts.dto';
 
 @ApiBearerAuth()
 @Controller('periodontal-charts')
@@ -13,10 +30,7 @@ export class PeriodontalChartsController {
   // File php/periodontal-charts/index.php
   @Get('/index')
   @UseGuards(TokenGuard)
-  async findAll(
-    // @Query() patient_id: number
-    @Query() payload: IndexDto,
-  ) {
+  async findAll(@Query() payload: IndexDto) {
     return this.periodontalChartsService.index(payload?.patient_id);
   }
 
@@ -24,5 +38,20 @@ export class PeriodontalChartsController {
   @UseGuards(TokenGuard)
   async show(@Query() payload: ShowDto) {
     return this.periodontalChartsService.show(payload?.id);
+  }
+
+  @Delete('/delete/:id')
+  @UseGuards(TokenGuard)
+  async delete(@Param('id') id: number) {
+    return this.periodontalChartsService.delete(id);
+  }
+
+  @Post('/update')
+  @UseGuards(TokenGuard)
+  async update(
+    @Body() payload: CreateChartsDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.periodontalChartsService.update(payload, identity);
   }
 }

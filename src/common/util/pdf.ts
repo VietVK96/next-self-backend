@@ -2,16 +2,17 @@ import puppeteer from 'puppeteer';
 import * as hbs from 'handlebars';
 import * as fs from 'fs';
 
-type HandlebarsHelpers = {
+export type HandlebarsHelpers = {
   [key: string]: hbs.HelperDelegate;
 };
 
+export type PdfTemplateFile = {
+  path: string;
+  data: any;
+  type?: string;
+};
 type CustomCreatePdfProps = {
-  files: {
-    path: string;
-    data: any;
-    type?: string;
-  }[];
+  files: PdfTemplateFile[];
   options: any;
   helpers?: HandlebarsHelpers;
 };
@@ -36,6 +37,33 @@ export const customCreatePdf = async ({
       or(...args) {
         const argsExceptLast = args.slice(0, -1);
         return argsExceptLast.some(Boolean);
+      },
+      isset: (v1: any) => {
+        if (Number(v1)) return true;
+        return v1 ? true : false;
+      },
+      notIsset: (v1: any) => {
+        return v1 ? false : true;
+      },
+      notEmpty: (v1: any) => {
+        if (Array?.isArray(v1) || typeof v1 === 'string') {
+          return v1.length !== 0;
+        }
+        if (typeof v1 === 'object') {
+          return Object.keys(v1).length !== 0;
+        }
+      },
+      isEmpty: (v1: any) => {
+        if (!v1) return true;
+        if (Array?.isArray(v1) || typeof v1 === 'string') {
+          return v1.length === 0;
+        }
+        if (typeof v1 === 'object') {
+          return Object.keys(v1).length === 0;
+        }
+      },
+      join: (v1: string[], v2: string) => {
+        return v1.join(v2);
       },
     });
 

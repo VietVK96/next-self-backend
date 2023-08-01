@@ -6,7 +6,8 @@ import { DataSource, In, Repository } from 'typeorm';
 import { CreatePrescriptionTemplateDto } from '../dto/prescription-template.dto';
 import { MedicamentEntity } from 'src/entities/medicament.entity';
 import { ErrorCode } from 'src/constants/error';
-import { SuccessCode } from 'src/constants/success';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { SuccessResponse } from 'src/common/response/success.res';
 
 @Injectable()
 export class PrescriptionTemplateService {
@@ -21,38 +22,46 @@ export class PrescriptionTemplateService {
   ) {}
 
   async findAll(organizationId: number) {
-    if (organizationId) {
-      const organization = await this.organizationRepo.findOneOrFail({
-        where: { id: organizationId },
-        relations: {
-          prescriptionTemplates: {
-            medicaments: true,
-          },
-        },
-      });
-      return organization.prescriptionTemplates;
+    if (!organizationId) {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
+    const organization = await this.organizationRepo.findOne({
+      where: { id: organizationId },
+      relations: {
+        prescriptionTemplates: {
+          medicaments: true,
+        },
+      },
+    });
+    if (!organization) throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    return organization.prescriptionTemplates;
   }
 
   async create(organizationId: number, payload: CreatePrescriptionTemplateDto) {
-    if (organizationId) {
-      const { name, observation, medicaments } = payload;
-      let listMedicaments;
-      if (medicaments) {
-        listMedicaments = await this.medicamentRepo.find({
-          where: { id: In(medicaments) },
-        });
-      }
-      const newPrescriptionTemplate = await this.prescriptionTemplateRepo.save({
-        name,
-        observation,
-        organizationId,
-        medicaments: listMedicaments,
-      });
-
-      return newPrescriptionTemplate;
+    if (!organizationId) {
+      throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
-    return ErrorCode.PERMISSION_DENIED;
+    const { name, observation, medicaments } = payload;
+    const medicamentIds =
+      medicaments && medicaments.length > 0
+        ? medicaments.map((medicament) => {
+            return medicament.id;
+          })
+        : [];
+    let listMedicaments = [];
+    if (medicaments) {
+      listMedicaments = await this.medicamentRepo.find({
+        where: { id: In(medicamentIds) },
+      });
+    }
+    const newPrescriptionTemplate = await this.prescriptionTemplateRepo.save({
+      name,
+      observation,
+      organizationId,
+      medicaments: listMedicaments,
+    });
+
+    return newPrescriptionTemplate;
   }
 
   async upadte(
@@ -61,36 +70,47 @@ export class PrescriptionTemplateService {
     id: number,
   ) {
     const { name, observation, medicaments } = payload;
-    let listMedicaments;
+    let listMedicaments = [];
+    const medicamentIds =
+      medicaments && medicaments.length > 0
+        ? medicaments.map((medicament) => {
+            return medicament.id;
+          })
+        : [];
     if (medicaments) {
       listMedicaments = await this.medicamentRepo.find({
-        where: { id: In(medicaments) },
+        where: { id: In(medicamentIds) },
       });
     }
-    if (id && organizationId) {
-      const currentPrescriptionTemplate =
-        await this.prescriptionTemplateRepo.findOneOrFail({
-          where: { id },
-          relations: { medicaments: true },
-        });
-
-      return await this.prescriptionTemplateRepo.save({
-        ...currentPrescriptionTemplate,
-        name,
-        observation,
-        medicaments: listMedicaments,
-      });
+    if (!(id && organizationId)) {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    return ErrorCode.FORBIDDEN;
+    const currentPrescriptionTemplate =
+      await this.prescriptionTemplateRepo.findOne({
+        where: { id },
+        relations: { medicaments: true },
+      });
+    if (!currentPrescriptionTemplate)
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    return await this.prescriptionTemplateRepo.save({
+      ...currentPrescriptionTemplate,
+      name,
+      observation,
+      medicaments: listMedicaments,
+    });
   }
 
-  async delete(id: number) {
-    if (id) {
-      const currentPrescriptionTemplate =
-        await this.prescriptionTemplateRepo.findOneOrFail({ where: { id } });
-
-      await this.prescriptionTemplateRepo.remove(currentPrescriptionTemplate);
-      return SuccessCode.DELETE_SUCCESS;
+  async delete(id: number): Promise<SuccessResponse> {
+    if (!id) {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
+    const currentPrescriptionTemplate =
+      await this.prescriptionTemplateRepo.findOne({ where: { id } });
+    if (!currentPrescriptionTemplate)
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    await this.prescriptionTemplateRepo.remove(currentPrescriptionTemplate);
+    return {
+      success: true,
+    };
   }
 }

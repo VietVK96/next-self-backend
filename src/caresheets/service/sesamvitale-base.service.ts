@@ -15,7 +15,11 @@ export class SesamvitaleBaseService {
     private readonly httpService: HttpService,
   ) {}
 
-  async sendRequest<T>(action: string, contents: string): Promise<T> {
+  async sendRequest<T>(
+    action: string,
+    contents: string,
+    mock?: string,
+  ): Promise<T> {
     const endpoint = this.config.get<string>('app.sesamVitale.endPoint');
     const url = `${endpoint}/webservices/Fsv_SesamVitale.asmx`;
 
@@ -28,13 +32,18 @@ export class SesamvitaleBaseService {
       secureOptions: constants.SSL_OP_LEGACY_SERVER_CONNECT,
     });
 
-    const { data } = await firstValueFrom(
+    let { data } = await firstValueFrom(
       this.httpService.post(url, contents, {
         headers,
         httpsAgent,
         httpAgent: httpsAgent,
       }),
     );
+
+    if (mock && mock !== '') {
+      data = mock;
+    }
+    data = data.replaceAll('xsi:nil="true"', '');
     const resJson = await parseStringPromise(data);
     if (
       !resJson ||
