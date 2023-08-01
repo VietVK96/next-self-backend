@@ -551,7 +551,6 @@ export class DevisServices {
           logoFilename,
           userPreferenceQuotation: currentUser?.userPreferenceQuotation,
           userType: currentUser?.type,
-          // practitionerRpps: dentalQuotations?.practitionerRpps,
           date_acceptation: date_acceptation,
           contrat,
           ref,
