@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { EmailSettingService } from './services/email.setting.service';
 import {
@@ -56,5 +64,12 @@ export class EmailSettingController {
       payload,
       id,
     );
+  }
+
+  // settings/email-accounts/delete.php
+  @Delete('/:id')
+  @UseGuards(TokenGuard)
+  async delete(@Param('id') id: number) {
+    return await this.emailSettingService.delete(id);
   }
 }

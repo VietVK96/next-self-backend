@@ -143,4 +143,18 @@ export class EmailSettingService {
       await queryRunner.release();
     }
   }
+
+  async delete(emailId: number) {
+    const email = await this.dataSource
+      .getRepository(EmailAccountEntity)
+      .findOne({
+        where: { id: emailId },
+      });
+    if (!email) throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    else {
+      delete email.MAX_ENTRIES;
+      await this.dataSource.getRepository(EmailAccountEntity).delete(email);
+    }
+    return;
+  }
 }
