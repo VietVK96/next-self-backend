@@ -57,7 +57,6 @@ import { PrescriptionTemplateModule } from './prescription-template/prescription
 import { MedicamentModule } from './medicament/medicament.module';
 import { MedicamentFamilyModule } from './medicament-family/medicament-family.module';
 import { PeriodontalChartsModule } from './periodontal-charts/periodontal-charts.module';
-import { WorkstationModule } from './workstation/workstation.module';
 import { AccountModule } from './account/account.module';
 
 const importsModules = [
@@ -170,7 +169,6 @@ const importsModules = [
   MedicamentModule,
   MedicamentFamilyModule,
   PeriodontalChartsModule,
-  WorkstationModule,
   AccountModule,
 ];
 
