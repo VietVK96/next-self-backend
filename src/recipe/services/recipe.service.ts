@@ -6,12 +6,16 @@ import { ErrorCode } from 'src/constants/error';
 import { DataSource } from 'typeorm';
 import * as dayjs from 'dayjs';
 import {
+  BankStatement,
+  Beneficiaries,
+  PatientStatement,
+  PaymentInterface,
+  SlipCheck,
   Condition,
   Extras,
   ItemResponse,
   Options,
-  PaymentInterface,
-} from '../interface/interface';
+} from '../../interfaces/interface';
 
 @Injectable()
 export class RecipeService {
@@ -51,7 +55,7 @@ export class RecipeService {
       );
 
       // procces payment to return response
-      payments.forEach((payment) => {
+      for (const payment of payments) {
         const id = payment.id;
         let debtor = payment?.debtor;
         const entryDate = payment?.date;
@@ -92,11 +96,7 @@ export class RecipeService {
           let slipCheckDate;
           // Vérification si le bordereau de remise de chèque n'a pas déjà été affiché
           if (!this.slipCheckIds.includes(slipCheckId)) {
-            try {
-              slipCheckDate = dayjs(slipCheckDateRoot).format('DD/MM/YYYY');
-            } catch (error) {
-              // Xử lý lỗi (nếu cần thiết)
-            }
+            slipCheckDate = dayjs(slipCheckDateRoot).format('DD/MM/YYYY');
 
             const row: ItemResponse = {
               id: undefined,
@@ -169,7 +169,7 @@ export class RecipeService {
         row.cell.i2 = 'Supprimer';
 
         response.rows.push(row);
-      });
+      }
     } catch (e) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
@@ -204,7 +204,7 @@ export class RecipeService {
       ? typeof options.limit === 'string'
         ? parseInt(options.limit, 10)
         : options.limit
-      : 50;
+      : 500;
     const offset = options.offset
       ? typeof options.offset === 'string'
         ? parseInt(options.offset, 10)
@@ -213,7 +213,7 @@ export class RecipeService {
 
     const where = this.conditionsToSQL(conditions);
     // query table T_CASHING_CSG join many table ....
-    const statement = await this.dataSource.query(
+    const statements: PaymentInterface[] = await this.dataSource.query(
       `SELECT
       T_CASHING_CSG.CSG_ID AS id,
       T_CASHING_CSG.CON_ID AS patient_id,
@@ -235,15 +235,14 @@ export class RecipeService {
       [doctorId, limit, offset],
     );
 
-    let counter = 0;
-    while (counter < statement.length) {
-      const payment = statement[counter];
-      const id = statement[counter]['id'];
-      const patientId = statement[counter]['patient_id'];
-      const bankId = statement[counter]['bank_id'];
-      const slipCheckId = statement[counter]['slip_check_id'];
+    for (const statement of statements) {
+      const payment = statement;
+      const id = statement?.id;
+      const patientId = statement?.patient_id;
+      const bankId = statement?.bank_id;
+      const slipCheckId = statement?.slip_check_id;
       // query table T_CONTACT_CON
-      const patientStatement = await this.dataSource.query(
+      const patientStatement: PatientStatement[] = await this.dataSource.query(
         `SELECT
       T_CONTACT_CON.CON_ID AS id,
       T_CONTACT_CON.CON_NBR AS number,
@@ -256,8 +255,9 @@ export class RecipeService {
       payment.patient = patientStatement;
 
       // query table T_CASHING_CONTACT_CSC Join T_CONTACT_CON
-      const beneficiariesStatement = await this.dataSource.query(
-        `SELECT
+      const beneficiariesStatement: Beneficiaries[] =
+        await this.dataSource.query(
+          `SELECT
       T_CONTACT_CON.CON_ID AS id,
       T_CONTACT_CON.CON_LASTNAME AS lastname,
       T_CONTACT_CON.CON_FIRSTNAME AS firstname,
@@ -268,12 +268,12 @@ export class RecipeService {
   JOIN T_CONTACT_CON
   WHERE T_CASHING_CONTACT_CSC.CSG_ID = ?
     AND T_CASHING_CONTACT_CSC.CON_ID = T_CONTACT_CON.CON_ID`,
-        [id],
-      );
+          [id],
+        );
       payment.beneficiaries = beneficiariesStatement;
 
       // query table T_LIBRARY_BANK_LBK
-      const bankStatement = await this.dataSource.query(
+      const bankStatement: BankStatement[] = await this.dataSource.query(
         `SELECT
       T_LIBRARY_BANK_LBK.LBK_ID AS id,
       T_LIBRARY_BANK_LBK.LBK_ACCOUNTING_CODE AS accounting_code,
@@ -286,7 +286,7 @@ export class RecipeService {
       payment.bank = bankStatement;
 
       // query table T_SLIP_CHECK_SLC join T_LIBRARY_BANK_LBK
-      const slipCheckStatement = await this.dataSource.query(
+      const slipCheckStatement: SlipCheck[] = await this.dataSource.query(
         `SELECT
       T_SLIP_CHECK_SLC.SLC_ID AS id,
       T_SLIP_CHECK_SLC.SLC_NBR AS number,
@@ -303,8 +303,8 @@ export class RecipeService {
       payment.slip_check = slipCheckStatement;
       // ruslt
       payments.push(payment);
-      counter++;
     }
+
     return payments;
   }
 
@@ -351,9 +351,9 @@ export class RecipeService {
       if (typeof condition === 'string') {
         conditionUse = JSON.parse(condition);
       }
-      const operator = conditionUse['op'];
-      const value = conditionUse['value'];
-      const field = conditionUse['field'];
+      const operator = conditionUse?.op;
+      const value = conditionUse?.value;
+      const field = conditionUse?.field;
 
       if (conditionFields[field] && conditionOperators[operator]) {
         wheres.push(

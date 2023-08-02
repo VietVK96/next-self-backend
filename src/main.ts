@@ -12,6 +12,7 @@ import {
 import { useContainer } from 'class-validator';
 import { errFormat, filterError } from './common/util/filter-error';
 import { HttpExceptionFilter } from './common/exceptions/http-exception.filter';
+import { LoggerErrorInterceptor } from 'nestjs-pino';
 
 /**
  * Project convert PHP to nodejs
@@ -33,6 +34,9 @@ async function bootstrap() {
     },
   });
   const configService = app.get(ConfigService);
+  if (process.env.LOGSTACK_ENABLE === 'true') {
+    app.useGlobalInterceptors(new LoggerErrorInterceptor());
+  }
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

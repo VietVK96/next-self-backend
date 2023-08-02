@@ -3,6 +3,8 @@ import {
   IChangementEta,
   IConsulterTeleTrans,
   IListeDateChangementEtat,
+  IRecevoirDetailListeRsp,
+  IRecevoirRsp,
 } from '../interface/caresheet.interface';
 import { SesamvitaleBaseService } from './sesamvitale-base.service';
 
@@ -45,13 +47,47 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
     finessNumber: string,
     startDate: string,
     endDate: string,
-  ): Promise<IListeDateChangementEtat[]> {
+  ): Promise<IListeDateChangementEtat> {
     const xml = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd"><soapenv:Body><jux:ListeDateChangementEtat><xsd:appelListeDateChangementEtat><xsd:numFiness>${finessNumber}</xsd:numFiness><xsd:dateDebut format="yyyyMMdd">${startDate}</xsd:dateDebut><xsd:dateFin format="yyyyMMdd">${endDate}</xsd:dateFin></xsd:appelListeDateChangementEtat></jux:ListeDateChangementEtat></soapenv:Body></soapenv:Envelope>`;
 
-    const data = await this.sendRequest<IListeDateChangementEtat[]>(
+    const data = await this.sendRequest<IListeDateChangementEtat>(
       'ListeDateChangementEtat',
       xml,
     );
     return data;
+  }
+
+  async recevoirDetailListeRsp(
+    finessNumber: string,
+    mock?: string,
+  ): Promise<IRecevoirDetailListeRsp> {
+    const xml = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd"><soapenv:Body><jux:RecevoirDetailListeRsp><xsd:appelRecevoirDetailListeRsp><xsd:numFiness>${finessNumber}</xsd:numFiness></xsd:appelRecevoirDetailListeRsp></jux:RecevoirDetailListeRsp></soapenv:Body></soapenv:Envelope>`;
+
+    const data = await this.sendRequest<IRecevoirDetailListeRsp>(
+      'RecevoirDetailListeRsp',
+      xml,
+      mock,
+    );
+    return data;
+  }
+
+  async recevoirRsp(
+    finessNumber: string,
+    mock?: string,
+  ): Promise<IRecevoirRsp> {
+    const xml = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd"><soapenv:Body><jux:RecevoirRsp><xsd:appelRecevoirRsp><xsd:numFiness>${finessNumber}</xsd:numFiness></xsd:appelRecevoirRsp></jux:RecevoirRsp></soapenv:Body></soapenv:Envelope>`;
+    const data = await this.sendRequest<IRecevoirRsp>('RecevoirRsp', xml, mock);
+    return data;
+  }
+
+  async marquerRsp(idtRsp: string[]) {
+    let idtRspXml = ``;
+    for (const id of idtRsp) {
+      idtRspXml += `<xsd:idRsp>${id}</xsd:idRsp>`;
+    }
+
+    const xml = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd"><soapenv:Body><jux:MarquerRsp><xsd:appelMarquerRsp><xsd:listeRsp>${idtRspXml}</xsd:listeRsp></xsd:appelMarquerRsp></jux:MarquerRsp></soapenv:Body></soapenv:Envelope>`;
+
+    await this.sendRequest('MarquerRsp', xml);
   }
 }
