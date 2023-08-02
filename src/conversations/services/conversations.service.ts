@@ -1,16 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { ConversationMessageEntity } from 'src/entities/conversation-message.entity';
 import { ConversationEntity } from 'src/entities/conversation.entity';
-import { Repository } from 'typeorm';
+import { UserEntity } from 'src/entities/user.entity';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 
 @Injectable()
 export class ConversationsService {
   constructor(
+    private dataSource: DataSource,
     @InjectRepository(ConversationEntity)
     private readonly conversationRepository: Repository<ConversationEntity>,
     @InjectRepository(ConversationMessageEntity)
     private readonly conversationMessageEntity: Repository<ConversationMessageEntity>,
+    @InjectEntityManager()
+    private readonly entityManager: EntityManager,
   ) {}
 
   paginate(page: number, size: number) {
@@ -92,5 +96,95 @@ export class ConversationsService {
       data: query[0],
       total: query[1],
     };
+  }
+
+  /**
+   * File php/conversations/messages/store.php
+   * Line 20 -> 75
+   */
+  async createMessage(
+    userId: number,
+    groupId: number,
+    conversationId: number,
+    body: string,
+  ) {
+    const conversationMessageEntity = new ConversationMessageEntity();
+    conversationMessageEntity.conversation = await this.entityManager.findOne(
+      ConversationEntity,
+      { where: { id: conversationId } },
+    );
+    conversationMessageEntity.user = await this.entityManager.findOne(
+      UserEntity,
+      { where: { id: userId } },
+    );
+    conversationMessageEntity.body = body;
+
+    const notificationQuery = `
+      INSERT INTO notification (user_id, notification_operation_id, item_id, title, body)
+      SELECT conversation_member.user_id, 1, conversation_member.conversation_id, conversation.title, ?
+      FROM conversation_member
+      JOIN conversation
+      WHERE conversation_member.conversation_id = ?
+        AND conversation_member.conversation_id = conversation.id
+        AND conversation_member.user_id != ?
+    `;
+    await this.entityManager.query(notificationQuery, [
+      body,
+      conversationId,
+      userId,
+    ]);
+
+    const pushNotificationQuery = `
+      INSERT INTO push_notification (group_id, item_id, title, body)
+      SELECT ?, conversation.id, conversation.title, ?
+      FROM conversation
+      WHERE conversation.id = ?
+    `;
+    await this.entityManager.query(pushNotificationQuery, [
+      groupId,
+      body,
+      conversationId,
+    ]);
+
+    let conversationMessage: ConversationMessageEntity;
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await queryRunner.manager.save(conversationMessageEntity);
+      await queryRunner.commitTransaction();
+      conversationMessage = await this.entityManager.findOne(
+        ConversationMessageEntity,
+        {
+          where: { id: conversationMessageEntity.id },
+          select: {
+            user: {
+              id: true,
+              lastname: true,
+              firstname: true,
+              color: true,
+            },
+          },
+          relations: { user: true },
+        },
+      );
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+
+    return conversationMessage;
+  }
+
+  async getConversationById(id: number) {
+    const conversation = await this.conversationRepository.findOneBy({ id });
+    return conversation;
+  }
+
+  async deleteConversation(id: number) {
+    if (id) await this.conversationRepository.delete(id);
   }
 }

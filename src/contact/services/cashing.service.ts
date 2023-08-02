@@ -211,6 +211,7 @@ export class CashingService {
         : await this.findByDoctor(user?.id, payload?.conditions, {
             order: 'ASC',
           });
+
       payments = payments?.filter(
         (payment) => payment?.date || payment?.paymentDate,
       );
