@@ -22,7 +22,7 @@ import {
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { PreferenceService } from './services/preference.sevece';
 import { TokenDownloadService } from './services/token-download.service';
-import { UpdatePassWordSettingDto } from './dto/userSetting.dto';
+import { UpdatePassWordSettingDto } from './dto/user-setting.dto';
 
 @ApiBearerAuth()
 @ApiTags('User')

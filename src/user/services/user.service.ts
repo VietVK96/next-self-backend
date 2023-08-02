@@ -15,7 +15,7 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import * as crypto from 'crypto';
 import * as phpPassword from 'node-php-password';
 import { SuccessResponse } from 'src/common/response/success.res';
-import { UpdatePassWordSettingDto } from '../dto/userSetting.dto';
+import { UpdatePassWordSettingDto } from '../dto/user-setting.dto';
 @Injectable()
 export class UserService {
   constructor(
