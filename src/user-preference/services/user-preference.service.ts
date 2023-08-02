@@ -170,7 +170,7 @@ export class UserPreferenceService {
 
     const user = await this.dataSource.getRepository(UserEntity).findOneOrFail({
       where: { id: userId },
-      relations: { medical: { domtom: true } },
+      relations: { medical: true },
     });
     const medical = user?.medical;
     if (medical) {
