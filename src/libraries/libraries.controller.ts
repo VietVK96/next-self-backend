@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -13,11 +14,13 @@ import {
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
+import { SuccessResponse } from 'src/common/response/success.res';
 import { LibraryActFamilyEntity } from 'src/entities/library-act-family.entity';
 import { LibraryActEntity } from 'src/entities/library-act.entity';
 import {
   ActFamiliesDto,
   ActFamiliesSearchDto,
+  ActFamiliesStoreDto,
   ActsShowDto,
   ActsStoreDto,
 } from './dto/act-families.dto';
@@ -45,8 +48,34 @@ export class LibrariesController {
     return await this.librariesService.getALl(request, identity);
   }
 
+  @Post('act-families/store')
+  @UseGuards(TokenGuard)
+  async store(
+    @Query() request: ActFamiliesStoreDto,
+    @CurrentUser() identity: UserIdentity,
+  ): Promise<LibraryActFamilyEntity[]> {
+    return await this.librariesService.storeActFamily(request, identity);
+  }
+
   /**
-   * php/libraries/act-families/acts/index.php 100%
+   * File: php/libraries/act-families/copy.php
+   */
+  @Get('act-families/copy')
+  @UseGuards(TokenGuard)
+  async copy(
+    @Query() request: ActFamiliesDto,
+    @CurrentUser() identity: UserIdentity,
+  ): Promise<LibraryActFamilyEntity[]> {
+    return await this.librariesService.getALl(request, identity);
+  }
+
+  @UseGuards(TokenGuard)
+  @Delete('act-families/delete/:id')
+  async delete(@Param('id') id: number): Promise<SuccessResponse> {
+    return await this.librariesService.deleteActFamilies(id);
+  }
+
+  /** php/libraries/act-families/acts/index.php 100%
    */
   @Get('act-families/:id')
   @UseGuards(TokenGuard)
@@ -102,5 +131,14 @@ export class LibrariesController {
     @CurrentUser() user: UserIdentity,
   ) {
     return await this.librariesService.actsUpdate(id, user, request);
+  }
+
+  /**
+   * File: php/libraries/acts/delete.php 100%
+   */
+  @Delete('acts/delete/:id')
+  @UseGuards(TokenGuard)
+  async actsDelete(@Param('id') id: number): Promise<SuccessResponse> {
+    return await this.librariesService.actsDelete(id);
   }
 }
