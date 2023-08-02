@@ -1,8 +1,5 @@
-import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import { SendingLogEntity } from 'src/entities/sending-log.entity';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class NotificationService {
