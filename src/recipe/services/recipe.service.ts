@@ -204,7 +204,7 @@ export class RecipeService {
       ? typeof options.limit === 'string'
         ? parseInt(options.limit, 10)
         : options.limit
-      : 50;
+      : 500;
     const offset = options.offset
       ? typeof options.offset === 'string'
         ? parseInt(options.offset, 10)
@@ -304,6 +304,7 @@ export class RecipeService {
       // ruslt
       payments.push(payment);
     }
+
     return payments;
   }
 

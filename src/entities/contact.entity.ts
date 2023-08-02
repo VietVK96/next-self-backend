@@ -433,7 +433,7 @@ export class ContactEntity {
   //   length: 13,
   //   nullable: true,
   // })
-  inseeNumber?: string;
+  // inseeNumber?: string;
 
   /**
    * @ORM\Column(name="CON_INSEE_KEY", type="string", length=2, nullable=true)
@@ -459,7 +459,7 @@ export class ContactEntity {
   //   length: 2,
   //   nullable: true,
   // })
-  inseeNumberKey?: string;
+  // inseeNumberKey?: string;
 
   /**
    * @ORM\Column(name="social_security_reimbursement_rate", type="decimal", precision=10, scale=2, nullable=true)
