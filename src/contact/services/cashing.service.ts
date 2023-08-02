@@ -206,7 +206,7 @@ export class CashingService {
       const user = await this.userRepo.findOneOrFail({
         where: { id: payload?.user },
       });
-      let payments = false
+      let payments = payload?.contact
         ? await this.findByPatient(payload?.contact)
         : await this.findByDoctor(user?.id, payload?.conditions, {
             order: 'ASC',
@@ -492,7 +492,7 @@ export class CashingService {
     qrPayment
       .andWhere('CSG.USR_ID = :id', { id: doctorId })
       .groupBy('CSG.CSG_ID')
-      .orderBy(`${orderBy} ${order}, CSG.created_at`)
+      .orderBy(`${orderBy} ${order}, CSG.created_at DESC`)
       .limit(limit)
       .offset(offset);
     const payments = await qrPayment.getRawMany();

@@ -204,7 +204,7 @@ export class RecipeService {
       ? typeof options.limit === 'string'
         ? parseInt(options.limit, 10)
         : options.limit
-      : Number.MAX_SAFE_INTEGER;
+      : 500;
     const offset = options.offset
       ? typeof options.offset === 'string'
         ? parseInt(options.offset, 10)
