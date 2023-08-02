@@ -78,10 +78,10 @@ export class UpdateMyInformationDto {
   freelance?: number;
 
   @ApiProperty()
-  agaMember?: any;
+  agaMember?: number;
 
   @ApiProperty()
-  droit_permanent_depassement?: any;
+  droit_permanent_depassement?: number;
 
   @ApiProperty()
   @IsNumber()
