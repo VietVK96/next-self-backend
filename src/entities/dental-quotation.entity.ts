@@ -12,10 +12,10 @@ import {
 import { UploadEntity } from './upload.entity';
 import { UserEntity } from './user.entity';
 import { ContactEntity } from './contact.entity';
-import { PlanEntity } from './plan.entity';
 import { DentalQuotationActEntity } from './dental-quotation-act.entity';
 import { PaymentPlanEntity } from './payment-plan.entity';
 import { LettersEntity } from './letters.entity';
+import { PlanPlfEntity } from './plan-plf.entity';
 
 export enum EnumDentalQuotationSchemes {
   NONE = 'none',
@@ -580,18 +580,18 @@ export class DentalQuotationEntity {
   @Column({ name: 'PLF_ID', type: 'int', width: 11, nullable: true })
   planificationId?: number;
 
-  @ManyToOne(() => PlanEntity, { createForeignKeyConstraints: false })
+  @ManyToOne(() => PlanPlfEntity, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'PLF_ID' })
-  planification?: PlanEntity;
+  planification?: PlanPlfEntity;
 
   /** File: application\Entity\Quote.php
    * @ORM\ManyToOne(targetEntity="TreatmentPlan")
    * @ORM\JoinColumn(name="PLF_ID", referencedColumnName="PLF_ID", nullable=true)
    */
   // protected $treatmentPlan = null;
-  @ManyToOne(() => PlanEntity, { createForeignKeyConstraints: false })
+  @ManyToOne(() => PlanPlfEntity, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'PLF_ID' })
-  treatmentPlan?: PlanEntity;
+  treatmentPlan?: PlanPlfEntity;
 
   /**
    * @ORM\OneToMany(targetEntity="\App\Entities\Dental\Quotation\Act", mappedBy="quotation")

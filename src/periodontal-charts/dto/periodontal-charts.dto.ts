@@ -1,6 +1,4 @@
 import { ApiProperty, ApiExtraModels } from '@nestjs/swagger';
-import { EnumPlanPlfType } from 'src/entities/plan-plf.entity';
-
 @ApiExtraModels()
 export class CreateChartsDto {
   @ApiProperty({
