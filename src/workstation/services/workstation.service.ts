@@ -1,19 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ImagingSoftwareEntity } from 'src/entities/imaging-software.entity';
 import { WorkstationEntity } from 'src/entities/workstation.entity';
-import { DataSource, Repository } from 'typeorm';
 import { CreateWorkstationDto } from '../dto/workstation.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class WorkstationService {
   constructor(
-    private dataSource: DataSource,
     @InjectRepository(WorkstationEntity)
     private workstaionRepository: Repository<WorkstationEntity>,
-    @InjectRepository(ImagingSoftwareEntity)
-    private imagingSoftwareRepository: Repository<ImagingSoftwareEntity>,
   ) {}
 
   async getWorkstations(organizationID: number) {

@@ -4,7 +4,7 @@ import { macosPlatform, windowPlatform } from 'src/constants/image-software';
 import { ImagingSoftwareEntity } from 'src/entities/imaging-software.entity';
 import { WorkstationEntity } from 'src/entities/workstation.entity';
 import { PlatformEnum } from 'src/enum/platform';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import {
   CreateImageSoftwareDto,
   CreateImageSoftwareQueryDto,
@@ -15,7 +15,6 @@ import { ErrorCode } from 'src/constants/error';
 @Injectable()
 export class ImagingSoftwareService {
   constructor(
-    private dataSource: DataSource,
     @InjectRepository(WorkstationEntity)
     private workstaionRepository: Repository<WorkstationEntity>,
     @InjectRepository(ImagingSoftwareEntity)
