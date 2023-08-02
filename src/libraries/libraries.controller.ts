@@ -1,4 +1,12 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -7,7 +15,12 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { LibraryActFamilyEntity } from 'src/entities/library-act-family.entity';
 import { LibraryActEntity } from 'src/entities/library-act.entity';
-import { ActFamiliesDto, ActFamiliesSearchDto } from './dto/act-families.dto';
+import {
+  ActFamiliesDto,
+  ActFamiliesSearchDto,
+  ActsShowDto,
+  ActsStoreDto,
+} from './dto/act-families.dto';
 import { LibraryActsService } from './services/acts.service';
 import { LibrariesService } from './services/libraries.service';
 
@@ -64,5 +77,30 @@ export class LibrariesController {
     @CurrentUser() user,
   ) {
     return await this.librariesService.searchActFamilies(user, request);
+  }
+
+  /**
+   * File: php/libraries/acts/store.php 100%
+   */
+  @Post('acts/store')
+  @UseGuards(TokenGuard)
+  async actsStore(
+    @Body() request: ActsStoreDto,
+    @CurrentUser() user: UserIdentity,
+  ) {
+    return await this.librariesService.actsStore(user, request);
+  }
+
+  /**
+   * File: php/libraries/acts/update.php 100%
+   */
+  @Post('acts/update/:id')
+  @UseGuards(TokenGuard)
+  async actsUpdate(
+    @Param('id') id: number,
+    @Body() request: ActsStoreDto,
+    @CurrentUser() user: UserIdentity,
+  ) {
+    return await this.librariesService.actsUpdate(id, user, request);
   }
 }
