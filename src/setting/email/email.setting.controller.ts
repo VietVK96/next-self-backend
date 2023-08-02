@@ -21,6 +21,7 @@ export class EmailSettingController {
     return await this.emailSettingService.find(identity.id);
   }
 
+  // settings/email-accounts/edit.php?id
   @Get('/:id')
   @UseGuards(TokenGuard)
   async findById(@Param('id') id: number) {
@@ -34,7 +35,7 @@ export class EmailSettingController {
     @CurrentUser() identity: UserIdentity,
     @Body() payload: SaveEmailDto,
   ) {
-    return await this.emailSettingService.create(
+    return await this.emailSettingService.save(
       identity.id,
       identity.org,
       payload,
@@ -44,7 +45,16 @@ export class EmailSettingController {
   // settings/email-accounts/edit.php
   @Post('edit/:id')
   @UseGuards(TokenGuard)
-  async edit(@CurrentUser() identity: UserIdentity) {
-    //  return await this.emailSettingService.edit(identity.id, identity.org);
+  async edit(
+    @Param('id') id: number,
+    @CurrentUser() identity: UserIdentity,
+    @Body() payload: SaveEmailDto,
+  ) {
+    return await this.emailSettingService.save(
+      identity.id,
+      identity.org,
+      payload,
+      id,
+    );
   }
 }

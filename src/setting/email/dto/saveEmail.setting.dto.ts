@@ -2,28 +2,31 @@ import { ApiProperty } from '@nestjs/swagger';
 
 class OutgoingServerDto {
   @ApiProperty()
-  username: string;
+  username?: string;
 
   @ApiProperty()
-  password: string;
+  password?: string;
 
   @ApiProperty()
-  hostname: string;
+  hostname?: string;
 
   @ApiProperty()
-  port: number;
+  port?: number;
 }
 
 export class SaveEmailDto {
   @ApiProperty()
-  emailAddress: string;
+  emailAddress?: string;
 
   @ApiProperty()
-  displayName: string;
+  displayName?: string;
 
   @ApiProperty()
-  replyToAddress: string;
+  replyToAddress?: string;
 
   @ApiProperty()
-  outgoingServer: OutgoingServerDto;
+  subscribers?: number[];
+
+  @ApiProperty()
+  outgoingServer?: OutgoingServerDto;
 }
