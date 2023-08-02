@@ -14,12 +14,16 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { TokenGuard, UserIdentity } from 'src/common/decorator/auth.decorator';
+import { NotificationService } from './services/notification.service';
 
 @ApiBearerAuth()
 @ApiTags('Settings')
 @Controller('/settings')
 export class SettingsController {
-  constructor(private tariffTypesSerivce: TariffTypesService) {}
+  constructor(
+    private tariffTypesSerivce: TariffTypesService,
+    private notificationService: NotificationService,
+  ) {}
 
   // https://ecoo.ltsgroup.tech/settings/tariff-types/index.php
   @Get('/tariff-types')
@@ -85,6 +89,14 @@ export class SettingsController {
     return await this.tariffTypesSerivce.deleteTariffType(
       identity,
       parseInt(id),
+    );
+  }
+
+  @Get('/notification/historical')
+  @UseGuards(TokenGuard)
+  async getNotificationHistorical(@CurrentUser() identity: UserIdentity) {
+    return await this.notificationService.getNotificationHistorical(
+      identity.id,
     );
   }
 }
