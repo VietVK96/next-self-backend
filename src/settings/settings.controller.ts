@@ -14,12 +14,17 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { TokenGuard, UserIdentity } from 'src/common/decorator/auth.decorator';
+import { AccountSecurityService } from './services/account-security.service';
+import { UpdatePassWordDto } from './dtos/user-setting.dto';
 
 @ApiBearerAuth()
 @ApiTags('Settings')
 @Controller('/settings')
 export class SettingsController {
-  constructor(private tariffTypesSerivce: TariffTypesService) {}
+  constructor(
+    private tariffTypesSerivce: TariffTypesService,
+    private accountSecurityService: AccountSecurityService,
+  ) {}
 
   // https://ecoo.ltsgroup.tech/settings/tariff-types/index.php
   @Get('/tariff-types')
@@ -85,6 +90,19 @@ export class SettingsController {
     return await this.tariffTypesSerivce.deleteTariffType(
       identity,
       parseInt(id),
+    );
+  }
+
+  // File php/user/therapeutic-alternatives/index.php
+  @Post('/account/security')
+  @UseGuards(TokenGuard)
+  async updatePasswordAccount(
+    @CurrentUser() identity: UserIdentity,
+    @Body() updatePassAccountDto: UpdatePassWordDto,
+  ) {
+    return await this.accountSecurityService.updatePasswordAccount(
+      identity.id,
+      updatePassAccountDto,
     );
   }
 }
