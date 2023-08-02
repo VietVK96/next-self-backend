@@ -153,7 +153,6 @@ export class ImagingSoftwareService {
       imagingSoftware.imageBasenamePrefix = payload?.imageBasenamePrefix;
       imagingSoftware.imageBasenameLength = payload?.imageBasenameLength;
       imagingSoftware.computerName = payload?.computerName;
-      console.log(imagingSoftware);
 
       return await this.imagingSoftwareRepository.save({
         ...currentImagingSoftware,
