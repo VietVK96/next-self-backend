@@ -59,12 +59,25 @@ export class WorkstationController {
   }
 
   //imagin-softwware
-
-  @Get('/imaging-softwares/:workstationId')
+  // /workstations/imaging-softwares/index.php?workstation_id=
+  @Get('/imaging-softwares')
   @UseGuards(TokenGuard)
-  async findImagingSoftwares(@Param('workstationId') workstationId: number) {
-    return this.imagingSoftwareService.getImagingSoftwaresByWorkstation(
-      workstationId,
+  async findImagingSoftwaresByWorkstationId(
+    @Query('workstationId') id: number,
+  ) {
+    return this.imagingSoftwareService.getImagingSoftwaresByWorkstationId(id);
+  }
+
+  //create
+  // /workstations/imaging-softwares/imaging-softwares.php?workstation_id=
+  // /workstations/imaging-softwares/create.php?workstation_id=&imaging_software=
+  @Get('/imaging-softwares/imaging-softwares')
+  @UseGuards(TokenGuard)
+  async findImagingSoftwaresTemplateOfWorkstationPlatform(
+    @Query() query: CreateImageSoftwareQueryDto,
+  ) {
+    return this.imagingSoftwareService.getImagingSoftwaresTemplateOfWorkstationPlatform(
+      query,
     );
   }
 
@@ -82,11 +95,37 @@ export class WorkstationController {
     );
   }
 
+  //update
+  // /workstations/imaging-softwares/edit.php?workstation_id=&id=
   @Get('/imaging-softwares/:id')
   @UseGuards(TokenGuard)
-  async findOneImagingSoftwares(@Param('id') id: number) {
-    return this.imagingSoftwareService.findOneImagingSoftwaresByWorkstationId(
+  async findImagingSoftwaresById(
+    @Query('workstationId') workstationId: number,
+    @Param('id') id: number,
+  ) {
+    return this.imagingSoftwareService.getImagingSoftwaresById(
+      workstationId,
       id,
     );
+  }
+
+  @Put('/imaging-softwares/:id')
+  @UseGuards(TokenGuard)
+  async updateImagingSoftwares(
+    @Query('workstationId') workstationId: number,
+    @Body() payload: CreateImageSoftwareDto,
+    @Param('id') id: number,
+  ) {
+    return this.imagingSoftwareService.updateImagingSoftwaresByWorkstationId(
+      id,
+      workstationId,
+      payload,
+    );
+  }
+
+  @Delete('/imaging-softwares/:id')
+  @UseGuards(TokenGuard)
+  async deleteImagingSoftwares(@Param('id') id: number) {
+    return this.imagingSoftwareService.deleteImagingSoftwaresById(id);
   }
 }

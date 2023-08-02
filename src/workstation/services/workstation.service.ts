@@ -4,6 +4,7 @@ import { ImagingSoftwareEntity } from 'src/entities/imaging-software.entity';
 import { WorkstationEntity } from 'src/entities/workstation.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateWorkstationDto } from '../dto/workstation.dto';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 
 @Injectable()
 export class WorkstationService {
@@ -16,42 +17,58 @@ export class WorkstationService {
   ) {}
 
   async getWorkstations(organizationID: number) {
-    return await this.workstaionRepository.find({
-      where: {
-        organizationId: organizationID,
-      },
-      order: {
-        name: 'DESC',
-      },
-    });
+    try {
+      return await this.workstaionRepository.find({
+        where: {
+          organizationId: organizationID,
+        },
+        order: {
+          name: 'DESC',
+        },
+      });
+    } catch (error) {
+      throw new CBadRequestException(error?.message);
+    }
   }
 
   async createWorkstations(
     organizationId: number,
     payload: CreateWorkstationDto,
   ) {
-    if (organizationId)
-      return await this.workstaionRepository.save({
-        ...payload,
-        organizationId,
-      });
+    try {
+      if (organizationId)
+        return await this.workstaionRepository.save({
+          ...payload,
+          organizationId,
+        });
+    } catch (error) {
+      throw new CBadRequestException(error?.message);
+    }
   }
 
   async updateWorkstations(id: number, payload: CreateWorkstationDto) {
-    const currentWorkstaion = await this.workstaionRepository.findOneOrFail({
-      where: { id },
-    });
-    return await this.workstaionRepository.save({
-      ...currentWorkstaion,
-      ...payload,
-    });
+    try {
+      const currentWorkstaion = await this.workstaionRepository.findOneOrFail({
+        where: { id },
+      });
+      return await this.workstaionRepository.save({
+        ...currentWorkstaion,
+        ...payload,
+      });
+    } catch (error) {
+      throw new CBadRequestException(error?.message);
+    }
   }
 
   async deleteWorkstations(id: number) {
-    const currentWorkstaion = await this.workstaionRepository.findOneOrFail({
-      where: { id },
-    });
-    await this.workstaionRepository.remove(currentWorkstaion);
-    return;
+    try {
+      const currentWorkstaion = await this.workstaionRepository.findOneOrFail({
+        where: { id },
+      });
+      await this.workstaionRepository.remove(currentWorkstaion);
+      return;
+    } catch (error) {
+      throw new CBadRequestException(error?.message);
+    }
   }
 }
