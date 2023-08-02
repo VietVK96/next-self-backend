@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -14,6 +22,7 @@ import {
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { PreferenceService } from './services/preference.sevece';
 import { TokenDownloadService } from './services/token-download.service';
+import { UpdatePassWordSettingDto } from './dto/userSetting.dto';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -69,5 +78,51 @@ export class UserController {
     return {
       token,
     };
+  }
+
+  // file settings/securities/password-accounting/index.php
+  @Get('/settings/securities/password-accounting')
+  @UseGuards(TokenGuard)
+  async getPassword(@CurrentUser() userIdentity: UserIdentity) {
+    return await this.userService.getPasswordAccounting(userIdentity.id);
+  }
+
+  // file settings/securities/password-accounting/store.php
+  @UseGuards(TokenGuard)
+  @Post('/settings/securities/password-accounting/create')
+  createPasswordSettings(
+    @Body() PassWordSettingDto: UpdatePassWordSettingDto,
+    @CurrentUser() user: UserIdentity,
+  ) {
+    return this.userService.createPasswordAccounting(
+      user.id,
+      PassWordSettingDto,
+    );
+  }
+
+  // file settings/securities/password-accounting/update.php
+  @UseGuards(TokenGuard)
+  @Post('/settings/securities/password-accounting/update')
+  updatePasswordSettings(
+    @Body() updatePassWordSettingDto: UpdatePassWordSettingDto,
+    @CurrentUser() user: UserIdentity,
+  ) {
+    return this.userService.updatePasswordAccounting(
+      user.id,
+      updatePassWordSettingDto,
+    );
+  }
+
+  // file settings/securities/password-accounting/delete.php
+  @UseGuards(TokenGuard)
+  @Delete('/settings/securities/password-accounting/delete')
+  deletePasswordSettings(
+    @Body() PassWordSettingDto: UpdatePassWordSettingDto,
+    @CurrentUser() user: UserIdentity,
+  ) {
+    return this.userService.deletePasswordAccounting(
+      user.id,
+      PassWordSettingDto,
+    );
   }
 }
