@@ -93,7 +93,7 @@ export class SettingsController {
     );
   }
 
-  // File php/user/therapeutic-alternatives/index.php
+  //  https://ecoo.ltsgroup.tech/settings/account/security
   @Post('/account/security')
   @UseGuards(TokenGuard)
   async updatePasswordAccount(
