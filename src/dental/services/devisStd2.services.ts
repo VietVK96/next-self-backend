@@ -528,7 +528,6 @@ export class DevisStd2Services {
           }
           actes.push({ ...dataActes });
         }
-
         result = {
           ...result,
           id_user: dataDENTALQUOTATION?.id_user,

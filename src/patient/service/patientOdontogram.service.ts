@@ -479,7 +479,7 @@ export class PatientOdontogramService {
    * @return string SVG du schéma dentaire
    */
   getXml(name: string, imageToURL?: boolean) {
-    const filePath = path.join(process.cwd(), 'svg', `${name}.svg`);
+    const filePath = path.join(process.cwd(), 'resources/svg', `${name}.svg`);
     if (!fs.existsSync(filePath)) {
       throw new CBadRequestException('validation.in ' + name);
     }
