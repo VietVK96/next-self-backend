@@ -370,12 +370,12 @@ export class DevisServices {
           //     $acte = $row;
 
           acte.estimatedMonthTreatment = dayjs(estimatedMonthTreatment).format(
-            'DD/MM/YYYY',
+            'YYYY-MM',
           );
           add(estimatedMonthTreatment, { months: 1 });
         }
 
-        const date_devis = dayjs(plan?.createdAt).format('DD/MM/YYYY');
+        const date_devis = dayjs(plan?.createdAt).format('YYYY/MM/DD');
         const duree_devis =
           currentUser?.userPreferenceQuotation?.periodOfValidity;
         const organisme = '',
@@ -577,7 +577,7 @@ export class DevisServices {
                       DQO.DQO_TITLE as titreDevisHN,
                       DATE_FORMAT(DQO.DQO_DATE_ACCEPT, '%d/%m/%Y') as date_acceptation,
                       DATE_FORMAT(DQO.DQO_BIRTHDAY, '%d/%m/%Y') as date_de_naissance_patient,
-                      DATE_FORMAT(DQO.DQO_DATE, '%d/%m/%Y') as date_devis,
+                      DATE_FORMAT(DQO.DQO_DATE, '%Y/%m/%d') as date_devis,
                       DQO.DQO_IDENT_PRAT as ident_prat,
                       DQO.DQO_ADDR_PRAT as addr_prat,
                       DQO.DQO_IDENT_CONTACT as nom_prenom_patient,
@@ -824,17 +824,17 @@ export class DevisServices {
       const schemaInitial = await this.odotogramService?.show({
         name: 'adult',
         status: 'initial',
-        conId: no_devis,
+        conId: contactEntity?.id,
       });
       const schemaActuel = await this.odotogramService?.show({
         name: 'adult',
         status: 'current',
-        conId: no_devis,
+        conId: contactEntity?.id,
       });
       const schemaDevis = await this.odotogramService?.show({
         name: 'adult',
         status: 'planned',
-        conId: no_devis,
+        conId: contactEntity?.id,
       });
       total_rss =
         Math.round((total_rss / socialSecurityReimbursementRate) * 100) / 100;
