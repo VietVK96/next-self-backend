@@ -957,9 +957,9 @@ export class QuotationMutualServices {
                 break;
             }
 
-            result.cotation = `${row.ngapKeyName} ${parseFloat(
-              row.coef,
-            ).toFixed(2)}`;
+            result.cotation = row?.ngapKeyName
+              ? `${row?.ngapKeyName} ${parseFloat(row.coef).toFixed(2)}`
+              : row.coef;
             result.tarif_secu = ngapKeyUnitPrice * row?.coef;
             if (row?.remboursable == 'oui') {
               result.rss = ngapKeyUnitPrice * row?.coef;
@@ -1103,6 +1103,7 @@ export class QuotationMutualServices {
         await queryRunner.manager.save(DentalQuotationActEntity, acts);
         await queryRunner.commitTransaction();
         return {
+          id_devis,
           txch,
           ident_prat,
           ident_pat,
@@ -1110,7 +1111,7 @@ export class QuotationMutualServices {
           date_de_naissance_patient,
           date_devis,
           duree_devis,
-          INSEE,
+          insee: INSEE,
           adresse_pat,
           tel,
           contrat,
@@ -1295,6 +1296,7 @@ export class QuotationMutualServices {
       }
 
       return {
+        id_devis: req?.no_devis,
         txch,
         ident_prat,
         ident_pat,
@@ -1302,7 +1304,7 @@ export class QuotationMutualServices {
         date_de_naissance_patient,
         date_devis,
         duree_devis,
-        INSEE,
+        insee: INSEE,
         adresse_pat,
         tel,
         contrat,
