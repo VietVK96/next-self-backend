@@ -29,6 +29,7 @@ import {
 } from '../dto/act-families.dto';
 import { LettersEntity } from 'src/entities/letters.entity';
 import { LibraryActAttachmentPivotEntity } from 'src/entities/library-act-attachment-pivot.entity';
+import { SuccessResponse } from 'src/common/response/success.res';
 
 @Injectable()
 export class LibrariesService {
@@ -714,5 +715,14 @@ export class LibrariesService {
     }
 
     return await this.libraryActRepo.save({ id, ...libraryAct });
+  }
+
+  async actsDelete(id: number): Promise<SuccessResponse> {
+    try {
+      await this.libraryActRepo.softDelete(id);
+      return { success: true };
+    } catch (err) {
+      throw new CBadRequestException(ErrorCode.CAN_NOT_DELETE_LIBRARY_ACT);
+    }
   }
 }

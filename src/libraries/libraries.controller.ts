@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -13,6 +14,7 @@ import {
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
+import { SuccessResponse } from 'src/common/response/success.res';
 import { LibraryActFamilyEntity } from 'src/entities/library-act-family.entity';
 import { LibraryActEntity } from 'src/entities/library-act.entity';
 import {
@@ -102,5 +104,17 @@ export class LibrariesController {
     @CurrentUser() user: UserIdentity,
   ) {
     return await this.librariesService.actsUpdate(id, user, request);
+  }
+
+  /**
+   * File: php/libraries/acts/update.php 100%
+   */
+  @Delete('acts/delete/:id')
+  @UseGuards(TokenGuard)
+  async actsDelete(
+    @Param('id') id: number,
+    @CurrentUser() user: UserIdentity,
+  ): Promise<SuccessResponse> {
+    return await this.librariesService.actsDelete(id);
   }
 }
