@@ -60,7 +60,7 @@ export class CcamUnitPriceEntity {
     width: 11,
     default: 0,
   })
-  grid?: string;
+  grid?: number;
 
   /**
    * @ORM\Column(name="unit_price", type="decimal", precision=10, scale=2, options={"default": 0})
@@ -111,7 +111,7 @@ export class CcamUnitPriceEntity {
     name: 'created_on',
     type: 'date',
   })
-  createdOn?: number;
+  createdOn?: string;
 }
 
 // application\Entities\CcamUnitPrice.php

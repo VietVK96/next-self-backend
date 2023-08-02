@@ -56,6 +56,9 @@ import { PaymentSchedulesModule } from 'src/payment-schedule/payment-schedule.mo
 import { LibraryActEntity } from 'src/entities/library-act.entity';
 import { DevisServices } from './services/devisHN.services';
 import { UploadEntity } from 'src/entities/upload.entity';
+import { TherapeuticAlternativeService } from './services/therapeuticAlternative.service';
+import { CcamEntity } from 'src/entities/ccam.entity';
+import { CcamUnitPriceEntity } from 'src/entities/ccamunitprice.entity';
 
 @Module({
   imports: [
@@ -102,6 +105,8 @@ import { UploadEntity } from 'src/entities/upload.entity';
       LibraryOdontogramEntity,
       LibraryActEntity,
       UploadEntity,
+      CcamEntity,
+      CcamUnitPriceEntity,
     ]),
     PaymentSchedulesModule,
   ],
@@ -125,6 +130,7 @@ import { UploadEntity } from 'src/entities/upload.entity';
     PatientOdontogramService,
     QuotesServices,
     DevisServices,
+    TherapeuticAlternativeService,
   ],
 })
 export class DentalModule {}

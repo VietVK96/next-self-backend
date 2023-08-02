@@ -19,6 +19,7 @@ import { LibraryActComplementaryEntity } from './library-act-complementary.entit
 import { TraceabilityEntity } from './traceability.entity';
 import { LettersEntity } from './letters.entity';
 import { OrganizationEntity } from './organization.entity';
+import { LibraryActAttachmentPivotEntity } from './library-act-attachment-pivot.entity';
 
 export enum EnumLibraryActNomenclature {
   NGAP = 'NGAP',
@@ -143,7 +144,7 @@ export class LibraryActEntity {
     default: EnumLibraryActNomenclature.CCAM,
     nullable: true,
   })
-  nomenclature?: EnumLibraryActNomenclature;
+  nomenclature?: string;
 
   /**
    * @ORM\Column(name="materials", type="simple_array", nullable=true)
@@ -382,6 +383,12 @@ export class LibraryActEntity {
     name: 'organization_id',
   })
   organization?: OrganizationEntity;
+
+  @OneToMany(
+    () => LibraryActAttachmentPivotEntity,
+    (pivotLibraryActAttachment) => pivotLibraryActAttachment.libraryAct,
+  )
+  pivotLibraryActAttachments: LibraryActAttachmentPivotEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

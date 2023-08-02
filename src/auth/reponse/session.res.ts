@@ -112,7 +112,7 @@ export class UserPractitionersRes {
 export class UserUserSettingRes {
   eventTitleFormat?: Array<string>[];
   displayAllWaitingRooms?: boolean;
-  printAdditionalPatientInformatio?: boolean;
+  printAdditionalPatientInformation?: boolean;
   activateSendingAppointmentReminders?: boolean;
 }
 
