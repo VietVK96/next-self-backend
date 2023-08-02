@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { parseISO } from 'date-fns';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
@@ -89,6 +89,31 @@ export class LibrariesService {
   }
 
   /**
+   * php/libraries/act-families/store.php done
+   *
+   */
+  async storeActFamily(
+    request: ActFamiliesDto,
+    identity: UserIdentity,
+  ): Promise<LibraryActFamilyEntity[]> {
+    const where: FindOptionsWhere<LibraryActFamilyEntity> = {
+      organizationId: identity.org,
+    };
+    if (request.used_only) {
+      where.used = 1;
+    }
+    const data = await this.libraryActFamilyRepo.find({
+      where,
+      order: {
+        position: 'ASC',
+        id: 'ASC',
+      },
+    });
+
+    return data;
+  }
+
+  /**
    * php/libraries/act-families/acts/index.php 100%
    */
   async getAct(
@@ -145,32 +170,12 @@ export class LibrariesService {
 
   async actsStore(identity: UserIdentity, params: ActsStoreDto) {
     const organization = await this.organizationRepo.findOne({
-      relations: [
-        'users',
-        'libraryBanks',
-        'address',
-        'logo',
-        'contacts',
-        'ngapKeys',
-        'libraryActFamilies',
-        'bankChecks',
-        'contraindications',
-        'glossaries',
-        'medicalDevices',
-        'medicamentFamilies',
-        'prescriptionTemplates',
-        'subscriptions',
-        'tags',
-        'tariffTypes',
-        'workstations',
-        'correspondentTypes',
-        'correspondents',
-        // 'resources',
-      ],
+      relations: ['users'],
       where: {
         id: identity?.org,
       },
     });
+
     let libraryActFamily: LibraryActFamilyEntity = {};
     if (params && params?.family && params?.family?.id) {
       libraryActFamily = await this.libraryActFamilyRepo.findOne({
@@ -185,7 +190,7 @@ export class LibrariesService {
       );
     }
 
-    let libraryAct: LibraryActEntity;
+    const libraryAct = {} as LibraryActEntity;
     libraryAct.organizationId = organization?.id;
     libraryAct.family = libraryActFamily;
     libraryAct.label = params?.label;
@@ -193,13 +198,15 @@ export class LibrariesService {
     libraryAct.descriptiveText = params?.descriptive_text;
     const nextPosition = await this.dataSource
       .createQueryBuilder(LibraryActEntity, 'la')
-      .select('la.position + 1')
+      .select('la.position')
       .where('la.libraryActFamilyId = :id', { id: libraryActFamily?.id })
       .orderBy({
         'la.position': 'DESC',
       })
       .getRawOne();
-    libraryAct.position = nextPosition ?? 0;
+    libraryAct.position = nextPosition?.la_position
+      ? nextPosition?.la_position + 1
+      : 0;
     const valueOf = Object.values(EnumLibraryActNomenclature) as string[];
     if (params?.nomenclature && valueOf.includes(params?.nomenclature)) {
       libraryAct.nomenclature =
@@ -215,8 +222,8 @@ export class LibrariesService {
     const odontograms = params?.odontograms ?? [];
     if (odontograms && odontograms.length > 0) {
       for (const odontogram of odontograms) {
-        const libraryOdontogram: LibraryOdontogramEntity = {};
-        libraryOdontogram.organization = organization;
+        const libraryOdontogram = {} as LibraryOdontogramEntity;
+        libraryOdontogram.organizationId = organization?.id;
         libraryOdontogram.color = odontogram?.color;
         libraryOdontogram.visibleCrown = odontogram?.visible_crown;
         libraryOdontogram.visibleRoot = odontogram?.visible_root;
@@ -230,6 +237,7 @@ export class LibrariesService {
 
     const quantities = params?.quantities ?? [];
     if (quantities && quantities?.length > 0) {
+      libraryAct.quantities = [];
       for (const quantity of quantities) {
         const ccam = null;
         const ccamId = quantity?.ccam?.id ?? null;
@@ -260,7 +268,7 @@ export class LibrariesService {
         };
 
         const libraryActQuantity: LibraryActQuantityEntity = {};
-        libraryActQuantity.organization = organization;
+        libraryActQuantity.organizationId = organization?.id;
         libraryActQuantity.ccam = ccam;
         libraryActQuantity.ngapKey = ngapKey;
         libraryActQuantity.label = quantity?.label;
@@ -280,11 +288,12 @@ export class LibrariesService {
         libraryActQuantity.traceabilityMerged = quantity?.traceability_merged;
         libraryActQuantity.transmitted = quantity?.transmitted;
         libraryActQuantity.used = quantity?.used;
+        libraryActQuantity.odontograms = [];
         const odontograms = quantity?.odontograms;
         if (odontograms && odontograms?.length > 0) {
           for (const odontogram of odontograms) {
-            const libraryOdontogram: LibraryOdontogramEntity = {};
-            libraryOdontogram.organization = organization;
+            const libraryOdontogram = {} as LibraryOdontogramEntity;
+            libraryOdontogram.organizationId = organization?.id;
             libraryOdontogram.color = odontogram?.color;
             libraryOdontogram.visibleCrown = odontogram?.visible_crown;
             libraryOdontogram.visibleRoot = odontogram?.visible_root;
@@ -303,6 +312,7 @@ export class LibrariesService {
             traceability?.observation,
         );
         if (traceabilities && traceabilities?.length > 0) {
+          libraryActQuantity.traceabilities = [];
           for (const traceability of traceabilities) {
             let medicalDevice = null;
             const medicalDeviceId = traceability?.medical_device_id ?? null;
@@ -311,8 +321,8 @@ export class LibrariesService {
                 where: { id: medicalDeviceId },
               });
             }
-            const libraryActQuantityTraceability: TraceabilityEntity = {};
-            libraryActQuantityTraceability.organization = organization;
+            const libraryActQuantityTraceability = {} as TraceabilityEntity;
+            libraryActQuantityTraceability.organizationId = organization?.id;
             libraryActQuantityTraceability.medicalDevice = medicalDevice;
             libraryActQuantityTraceability.reference = traceability?.reference;
             libraryActQuantityTraceability.observation =
@@ -343,14 +353,14 @@ export class LibrariesService {
     }
     const associations = params?.associations ?? [];
     if (associations && associations?.length > 0) {
+      libraryAct.associations = [];
       for (const association of associations) {
         const id = association?.child?.id;
         const child = await this.libraryActRepo.findOne({ where: { id } });
         if (!id || !child) {
           throw new CBadRequestException(ErrorCode.NOT_FOUND_LIBRARY_ACT);
         }
-
-        const libraryActAssociation: LibraryActAssociationEntity = {};
+        const libraryActAssociation = {} as LibraryActAssociationEntity;
         libraryActAssociation.child = child;
         libraryActAssociation.position = association?.position;
         libraryActAssociation.automatic = association?.automatic;
@@ -365,6 +375,7 @@ export class LibrariesService {
         traceability?.observation,
     );
     for (const traceability of traceabilities) {
+      libraryAct.traceabilities = [];
       let medicalDevice: MedicalDeviceEntity = null;
       const medicalDeviceId = params?.medical_device_id;
       if (medicalDeviceId) {
@@ -372,8 +383,8 @@ export class LibrariesService {
           where: { id: medicalDeviceId },
         });
       }
-      const libraryActTraceability: TraceabilityEntity = {};
-      libraryActTraceability.organization = organization;
+      const libraryActTraceability = {} as TraceabilityEntity;
+      libraryActTraceability.organizationId = organization?.id;
       libraryActTraceability.medicalDevice = medicalDevice;
       libraryActTraceability.reference = traceability?.reference;
       libraryActTraceability.observation = traceability?.observation;
@@ -389,7 +400,6 @@ export class LibrariesService {
       });
       libraryAct.attachments = mails;
     }
-
     return await this.libraryActRepo.save(libraryAct);
   }
 
@@ -723,6 +733,38 @@ export class LibrariesService {
       return { success: true };
     } catch (err) {
       throw new CBadRequestException(ErrorCode.CAN_NOT_DELETE_LIBRARY_ACT);
+    }
+  }
+
+  async actsCopy(id: number): Promise<SuccessResponse> {
+    try {
+      const libraryActFamily = await this.libraryActFamilyRepo.findOne({
+        where: { id },
+        relations: ['acts'],
+      });
+      if (libraryActFamily && libraryActFamily?.id) {
+        let newLibraryActFamily = {} as LibraryActFamilyEntity;
+        delete libraryActFamily?.id;
+        delete libraryActFamily?.internalReferenceId;
+        newLibraryActFamily = libraryActFamily;
+        newLibraryActFamily.acts = libraryActFamily.acts;
+        await this.libraryActFamilyRepo.save({ ...newLibraryActFamily });
+        return { success: true };
+      }
+      return { success: false };
+    } catch (err) {
+      throw new CBadRequestException(ErrorCode.CAN_NOT_DELETE_LIBRARY_ACT);
+    }
+  }
+
+  async deleteActFamilies(id: number): Promise<SuccessResponse> {
+    try {
+      await this.libraryActFamilyRepo.softDelete(id);
+      return { success: true };
+    } catch (err) {
+      throw new CBadRequestException(
+        ErrorCode.CAN_NOT_DELETE_LIBRARY_ACT_FAMILIES,
+      );
     }
   }
 }
