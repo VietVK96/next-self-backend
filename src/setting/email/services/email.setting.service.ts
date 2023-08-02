@@ -80,12 +80,9 @@ export class EmailSettingService {
       emailAccount.displayName = payload.displayName;
       emailAccount.emailAddress = payload.emailAddress;
       emailAccount.replyToAddress = payload.replyToAddress;
-      console.log('emailAccount', emailAccount, emailId);
       const savedEmailAccount = await queryRunner.manager
         .getRepository(EmailAccountEntity)
         .save(emailAccount);
-
-      console.log('savedEmailAccount', savedEmailAccount);
 
       let emailOutgoingServer: EmailOutgoingServerEntity;
       if (emailId) {
