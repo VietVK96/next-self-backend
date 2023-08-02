@@ -502,9 +502,9 @@ export class FactureServices {
   }
 
   async newFacture({
-    id_facture,
+    // id_facture,
     id_user,
-    id_societe,
+    // id_societe,
     contactId,
     id_devis,
     dateFacture,
