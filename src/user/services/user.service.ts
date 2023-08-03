@@ -265,14 +265,16 @@ export class UserService {
     organizationId: number,
     body: GetOneActiveRes,
   ): Promise<SuccessResponse> {
-    if (!queryId || !loginUserId || organizationId) {
+    if (!queryId || !loginUserId || !organizationId) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
     const user = await this.userRepository.findOne({ where: { id: queryId } });
     if (!user) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     const transaction = this.dataSource.createQueryRunner();
     try {
-      const { firstname, lastname, color, permission } = body.user;
+      await transaction.connect();
+      await transaction.startTransaction();
+      const { firstname, lastname, color, permission } = body?.user;
 
       const permissionLibrary = permission.library;
       const permissionPatient = permission.patient;
@@ -281,12 +283,11 @@ export class UserService {
       const permissionDelete = permission.permissionDelete;
       const doctors = body.doctors;
 
-      await transaction.connect();
-      await transaction.startTransaction();
-
-      const userEntity = await this.userRepository.findOne({
-        where: { id: loginUserId },
-      });
+      const userEntity = await transaction.manager
+        .getRepository(UserEntity)
+        .findOne({
+          where: { id: loginUserId },
+        });
 
       if (!userEntity) {
         throw new CBadRequestException(ErrorCode.NOT_FOUND);
@@ -294,7 +295,7 @@ export class UserService {
 
       const userAdmin = userEntity?.admin;
 
-      const targetUserEntity: UserEntity = await this.dataSource
+      const targetUserEntity: UserEntity = await transaction.manager
         .getRepository(UserEntity)
         .createQueryBuilder('usr')
         .innerJoin('usr.type', 'ust')
@@ -314,7 +315,7 @@ export class UserService {
 
       let privilegeTargetEntity: PrivilegeEntity;
       if (userEntity?.id && targetUserEntity?.id) {
-        privilegeTargetEntity = await this.dataSource
+        privilegeTargetEntity = await transaction.manager
           .getRepository(PrivilegeEntity)
           .findOne({
             where: {
@@ -333,13 +334,15 @@ export class UserService {
         }
 
         privilegeTargetEntity.name = lastname + ' ' + firstname;
-        await this.dataSource
+        await transaction.manager
           .getRepository(PrivilegeEntity)
           .save(privilegeTargetEntity);
       }
 
       targetUserEntity.color = color;
-      await this.userRepository.save(targetUserEntity);
+      await transaction.manager
+        .getRepository(UserEntity)
+        .save(targetUserEntity);
 
       if (userAdmin) {
         targetUserEntity.permissionLibrary = permissionLibrary;
@@ -347,7 +350,9 @@ export class UserService {
         targetUserEntity.permissionPatientView = permissionPatientView;
         targetUserEntity.permissionPassword = permissionPassword;
         targetUserEntity.permissionDelete = permissionDelete;
-        await this.userRepository.save(targetUserEntity);
+        await transaction.manager
+          .getRepository(UserEntity)
+          .save(targetUserEntity);
 
         if (doctors && doctors.length > 0) {
           for (const doc of doctors) {
@@ -359,7 +364,7 @@ export class UserService {
             const permissionAccounting = permission?.accountancy;
             let privilegeProfessionalEntity: PrivilegeEntity;
             if (userEntity?.id && practitionerId) {
-              privilegeProfessionalEntity = await this.dataSource
+              privilegeProfessionalEntity = await transaction.manager
                 .getRepository(PrivilegeEntity)
                 .findOne({
                   where: {
@@ -370,9 +375,11 @@ export class UserService {
             }
 
             if (!privilegeProfessionalEntity) {
-              const practitionerEntity = await this.userRepository.findOne({
-                where: { id: practitionerId },
-              });
+              const practitionerEntity = await transaction.manager
+                .getRepository(UserEntity)
+                .findOne({
+                  where: { id: practitionerId },
+                });
               if (!practitionerEntity)
                 throw new CBadRequestException(ErrorCode.NOT_FOUND);
               privilegeProfessionalEntity = new PrivilegeEntity();
@@ -390,7 +397,7 @@ export class UserService {
               permissionAccounting;
             privilegeProfessionalEntity.enable = enable;
 
-            await this.dataSource
+            await transaction.manager
               .getRepository(PrivilegeEntity)
               .save(privilegeProfessionalEntity);
           }
