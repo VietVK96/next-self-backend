@@ -133,8 +133,4 @@ export class TagService {
       success: true,
     };
   }
-
-  // async getTags(identity: UserIdentity, payload: TagDto) {
-  //   return await this.organizationRepository.findOne({where:{ id: identity?.org}, relations: ['resources']})
-  // }
 }
