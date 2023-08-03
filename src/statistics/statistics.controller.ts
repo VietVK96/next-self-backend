@@ -1,9 +1,15 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { TokenGuard } from 'src/common/decorator/auth.decorator';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
 import { StatisticsActsService } from './services/statistics.acts.service';
 import { StatisticsEventsService } from './services/statistics.events.service';
 import { FilterValuesStatisticDto } from './dto';
+import { StatisticsPaymentService } from './services/statistics.payment.service';
+import { StatisticsPatientService } from './services/statistics.patient.service';
 
 @ApiBearerAuth()
 @ApiTags('Statistics')
@@ -12,6 +18,8 @@ export class StatisticsController {
   constructor(
     private statisticsActsService: StatisticsActsService,
     private statisticsEventsService: StatisticsEventsService,
+    private statisticsPaymentService: StatisticsPaymentService,
+    private statisticsPatientService: StatisticsPatientService,
   ) {}
 
   @Get('/acts/caresheets')
@@ -54,5 +62,78 @@ export class StatisticsController {
   @UseGuards(TokenGuard)
   async getOccupancyRate(@Query() request: FilterValuesStatisticDto) {
     return this.statisticsEventsService.getOccupancyRate(request);
+  }
+
+  /**
+   * File php/statistics/payments/sales-revenues.php
+   * Line 9 -> 36
+   */
+  @Get('payment/sales-revenues')
+  @UseGuards(TokenGuard)
+  async paymentSalesRevenues(@Query() param: FilterValuesStatisticDto) {
+    return this.statisticsPaymentService.paymentSalesRevenues(param);
+  }
+
+  /**
+   * File php/statistics/payments/receipts-by-types.php
+   * Line 9 -> 37
+   */
+  @Get('payment/receipts-by-types')
+  @UseGuards(TokenGuard)
+  async paymentReceiptsByType(@Query() param: FilterValuesStatisticDto) {
+    return this.statisticsPaymentService.paymentReceiptsByType(param);
+  }
+
+  /**
+   * File php/statistics/payments/receipts-by-choices.php
+   * Line 9 -> 50
+   */
+  @Get('payment/receipts-by-choices')
+  @UseGuards(TokenGuard)
+  async paymentReceiptsByChoices(@Query() param: FilterValuesStatisticDto) {
+    return this.statisticsPaymentService.paymentReceiptsByChoices(param);
+  }
+
+  /**
+   * File php/statistics/patients/index.php
+   * Line 15 -> 71
+   */
+  @Get('patient/index')
+  @UseGuards(TokenGuard)
+  async patientIndex(
+    @CurrentUser() user: UserIdentity,
+    @Query() param: FilterValuesStatisticDto,
+  ) {
+    return this.statisticsPatientService.patientIndex(param, user);
+  }
+
+  /**
+   * File php/statistics/patients/new.php
+   * Line 15 -> 35
+   */
+  @Get('patient/new')
+  @UseGuards(TokenGuard)
+  async patientNew(@Query() param: FilterValuesStatisticDto) {
+    return this.statisticsPatientService.patientNew(param);
+  }
+
+  /**
+   * File /php/statistics/patients/children.php
+   * Line 9 -> 47
+   */
+  @Get('patient/children')
+  @UseGuards(TokenGuard)
+  async patientChildren(@Query() param: FilterValuesStatisticDto) {
+    return this.statisticsPatientService.patientChildren(param);
+  }
+
+  /**
+   * File php/statistics/patients/average.php
+   * Line 9 -> 45
+   */
+  @Get('patient/average')
+  @UseGuards(TokenGuard)
+  async patientAverage(@Query() param: FilterValuesStatisticDto) {
+    return this.statisticsPatientService.patientAverage(param);
   }
 }
