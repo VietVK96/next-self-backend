@@ -226,6 +226,7 @@ export class ResourceEntity {
     },
   })
   subscribers?: UserEntity[];
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 

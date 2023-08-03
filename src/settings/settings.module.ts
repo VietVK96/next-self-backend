@@ -6,6 +6,7 @@ import { TariffTypesService } from './services/tariff-types.service';
 import { AccountService } from './services/account.service';
 import { UserEntity } from 'src/entities/user.entity';
 import { SyncWzagendaUserEntity } from 'src/entities/sync-wzagenda-user.entity';
+import { NotificationService } from './services/notification.service';
 
 @Module({
   imports: [
@@ -16,6 +17,6 @@ import { SyncWzagendaUserEntity } from 'src/entities/sync-wzagenda-user.entity';
     ]),
   ],
   controllers: [SettingsController],
-  providers: [TariffTypesService, AccountService],
+  providers: [TariffTypesService, AccountService, NotificationService],
 })
 export class SettingsModule {}
