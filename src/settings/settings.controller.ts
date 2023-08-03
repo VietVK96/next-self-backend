@@ -16,6 +16,8 @@ import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { TokenGuard, UserIdentity } from 'src/common/decorator/auth.decorator';
 import { AccountSecurityService } from './services/account-security.service';
 import { UpdatePassWordDto } from './dtos/user-setting.dto';
+import { AccountService } from './services/account.service';
+import { NotificationService } from './services/notification.service';
 
 @ApiBearerAuth()
 @ApiTags('Settings')
@@ -24,6 +26,8 @@ export class SettingsController {
   constructor(
     private tariffTypesSerivce: TariffTypesService,
     private accountSecurityService: AccountSecurityService,
+    private accountService: AccountService,
+    private notificationService: NotificationService,
   ) {}
 
   // https://ecoo.ltsgroup.tech/settings/tariff-types/index.php
@@ -103,6 +107,20 @@ export class SettingsController {
     return await this.accountSecurityService.updatePasswordAccount(
       identity.id,
       updatePassAccountDto,
+    );
+  }
+  // settings/account/wzagenda.php
+  @Get('/account/wzagenda')
+  @UseGuards(TokenGuard)
+  async fetchAccountWzagenda(@CurrentUser() identity: UserIdentity) {
+    return await this.accountService.fetchAccountWzagenda(identity);
+  }
+
+  @Get('/notification/historical')
+  @UseGuards(TokenGuard)
+  async getNotificationHistorical(@CurrentUser() identity: UserIdentity) {
+    return await this.notificationService.getNotificationHistorical(
+      identity.id,
     );
   }
 }
