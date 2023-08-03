@@ -17,6 +17,8 @@ import { UploadEntity } from 'src/entities/upload.entity';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { UploadModule } from 'src/upload/upload.module';
+import { AccountService } from './services/account.service';
+import { SyncWzagendaUserEntity } from 'src/entities/sync-wzagenda-user.entity';
 
 @Module({
   imports: [
@@ -27,6 +29,7 @@ import { UploadModule } from 'src/upload/upload.module';
       TagEntity,
       UserMedicalEntity,
       OrganizationEntity,
+      SyncWzagendaUserEntity,
     ]),
     UploadModule,
   ],
@@ -40,6 +43,7 @@ import { UploadModule } from 'src/upload/upload.module';
     PermissionService,
     UserService,
     AddressService,
+    AccountService,
   ],
   exports: [SettingOrganizationService],
 })

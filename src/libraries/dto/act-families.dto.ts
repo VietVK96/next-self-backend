@@ -18,6 +18,13 @@ export class ActFamiliesDto {
   used_only?: boolean;
 }
 
+export class ActFamiliesStoreDto {
+  @ApiProperty({
+    required: false,
+  })
+  used_only?: boolean;
+}
+
 export class ActFamiliesSearchDto {
   @ApiProperty({
     required: false,
