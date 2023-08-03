@@ -226,8 +226,6 @@ export class LibrariesService {
           odontogram?.internal_reference_id;
         libraryAct.odontograms.push(libraryOdontogram);
       }
-
-      // await this.dataSource.getRepository(LibraryOdontogramEntity).save(libraryAct?.odontograms)
     }
 
     const quantities = params?.quantities ?? [];
@@ -708,22 +706,28 @@ export class LibrariesService {
     }
   }
 
-  async actsCopy(id: number): Promise<SuccessResponse> {
+  async actsCopy(id: number, identity: UserIdentity): Promise<any> {
     try {
-      const libraryActFamily = await this.libraryActFamilyRepo.findOne({
-        where: { id },
-        relations: ['acts'],
-      });
-      if (libraryActFamily && libraryActFamily?.id) {
-        let newLibraryActFamily = {} as LibraryActFamilyEntity;
-        delete libraryActFamily?.id;
-        delete libraryActFamily?.internalReferenceId;
-        newLibraryActFamily = libraryActFamily;
-        newLibraryActFamily.acts = libraryActFamily.acts;
-        await this.libraryActFamilyRepo.save({ ...newLibraryActFamily });
-        return { success: true };
-      }
-      return { success: false };
+      const queryBuilder = this.dataSource
+        .createQueryBuilder(LibraryActEntity, 'la')
+        .leftJoinAndSelect('la.quantities', 'laq')
+        .leftJoinAndSelect('laq.ccam', 'laqccam')
+        .leftJoinAndSelect('laqccam.unitPrices', 'laqccamup')
+        .leftJoinAndSelect('laqccam.family', 'laqccamf')
+        .leftJoinAndSelect('la.family', 'laf')
+        .leftJoinAndSelect('la.odontograms', 'lao')
+        .leftJoinAndSelect('la.associations', 'laa')
+        .leftJoinAndSelect('laa.child', 'laac')
+        .leftJoinAndSelect('la.complementaries', 'lac')
+        .leftJoinAndSelect('la.attachments', 'laat')
+        .leftJoinAndSelect('la.traceabilities', 'lat')
+        .leftJoinAndSelect('lat.medicalDevice', 'latm')
+        .where('la.id = :id', { id });
+      const libraryActCurrent = await queryBuilder.getOne();
+      libraryActCurrent.label = `(Copie) ${libraryActCurrent?.label ?? ''}`;
+      delete libraryActCurrent?.id;
+
+      return await this.libraryActRepo.save(libraryActCurrent);
     } catch (err) {
       throw new CBadRequestException(ErrorCode.CAN_NOT_DELETE_LIBRARY_ACT);
     }
