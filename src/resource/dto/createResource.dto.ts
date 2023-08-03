@@ -1,5 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+export class CreateResourceSubcriber {
+  @ApiProperty()
+  id?: number;
+}
+
 export class CreateResourceDto {
   @ApiProperty({
     required: true,
@@ -26,5 +31,5 @@ export class CreateResourceDto {
   addressee?: number;
 
   @ApiProperty()
-  listAssistante?: [{ id?: number }];
+  listAssistante?: CreateResourceSubcriber[];
 }

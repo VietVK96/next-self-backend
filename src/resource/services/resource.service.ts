@@ -9,6 +9,9 @@ import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-request.exception';
 import { UserResourceEntity } from 'src/entities/user-resource.entity';
 import { UpdateResourceDto } from '../dto/updateResource.dto';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
+import { SuccessResponse } from 'src/common/response/success.res';
 
 @Injectable()
 export class ResourceService {
@@ -133,54 +136,58 @@ export class ResourceService {
     };
   }
 
-  async save(payload: CreateResourceDto, identity: UserIdentity) {
+  async save(
+    payload: CreateResourceDto,
+    identity: UserIdentity,
+  ): Promise<SuccessResponse> {
     const currentUser = await this.userRepository.findOne({
       where: {
         id: identity.id,
       },
     });
+    if (!currentUser) throw new CBadRequestException(ErrorCode.NOT_FOUND);
 
-    if (currentUser.admin !== 1) {
-      throw new CForbiddenRequestException(
-        'Only the administrator can perform this operation.',
-      );
+    if (!currentUser?.admin) {
+      throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
     }
 
     const getOrg = await this.organizationRepository.findOne({
       where: { id: identity?.org },
-      relations: { users: true },
     });
+    if (!getOrg) throw new CBadRequestException(ErrorCode.FORBIDDEN);
 
     const resource = new ResourceEntity();
-    resource.organizationId = identity.org;
-    resource.name = payload.name;
+    resource.organizationId = getOrg?.id;
+    resource.name = payload?.name;
     resource.color = payload?.color;
     resource.useDefaultColor = payload?.userDefaultColor;
-    if (payload.addressee !== 0) {
-      resource.userId = payload.addressee;
+    resource.free = 0;
+    const addresseeId = payload?.addressee;
+    if (addresseeId !== 0) {
+      const doctor = await this.userRepository.findOneOrFail({
+        where: { id: addresseeId },
+      });
+      if (doctor) resource.userId = doctor?.id;
     }
+    const res = await this.resourceRepository.save(resource);
 
-    const users = getOrg.users?.map((usr) => usr.id);
-
-    const subscribersList = payload?.listAssistante.map((item) =>
+    const subscribersIdList = payload?.listAssistante.map((item) =>
       Number(item.id),
     );
     const userList = await this.userRepository.find({
-      where: { id: In(subscribersList) },
+      where: { id: In(subscribersIdList) },
     });
 
-    resource.subscribers = userList;
+    for (const u of userList) {
+      await this.userResourceRepository.save({
+        usrId: u?.id,
+        resourceId: res.id,
+      });
+    }
 
-    const res = await this.resourceRepository.save(resource);
-    // for (let sub of subscribersList) {
-    //   if (users.includes(sub)) {
-    //     const userResource = new UserResourceEntity();
-    //     userResource.resourceId = res.id;
-    //     userResource.usrId = sub;
-    //     this.userResourceRepository.save(userResource);
-    //   }
-    // }
-    return res;
+    return {
+      success: true,
+    };
   }
 
   async update(identity: UserIdentity, payload: UpdateResourceDto) {
