@@ -329,7 +329,7 @@ export class LettersEntity {
     () => LibraryActAttachmentPivotEntity,
     (pivotLibraryActAttachment) => pivotLibraryActAttachment.mail,
   )
-  public pivotLibraryActAttachments: LibraryActAttachmentPivotEntity[];
+  pivotLibraryActAttachments: LibraryActAttachmentPivotEntity[];
 
   // @Check TimeStamp
   // use TimestampableEntity;
