@@ -116,7 +116,7 @@ export class DentalQuotationActEntity {
    * @Serializer\Groups({"detail"})
    * @Assert\Type("array")
    */
-  teeth?: string;
+  // teeth?: string;
 
   /**
    * @ORM\Column(name="DQA_NAME", type="text", nullable=true)
@@ -135,7 +135,7 @@ export class DentalQuotationActEntity {
    * @Assert\Type("string")
    * @Assert\Length(max=255)
    */
-  label?: string;
+  // label?: string;
 
   /**
    * @ORM\Column(name="DQA_MATERIAL", type="integer", nullable=true)
@@ -173,7 +173,7 @@ export class DentalQuotationActEntity {
    * @Assert\Type("string")
    * @Assert\Length(max=255)
    */
-  cotation?: string;
+  // cotation?: string;
 
   @Column({
     name: 'DQA_PURCHASE_PRICE',
@@ -264,7 +264,7 @@ export class DentalQuotationActEntity {
    * @Assert\Type("float")
    * @Assert\NotNull
    */
-  amoAmount?: number;
+  // amoAmount?: number;
 
   /**
    * @ORM\Column(name="DQA_SECU_REPAYMENT", type="float")
@@ -287,7 +287,7 @@ export class DentalQuotationActEntity {
    * @Assert\Type("float")
    * @Assert\NotNull
    */
-  amoRefund?: number;
+  // amoRefund?: number;
 
   /**
    * @ORM\Column(name="DQA_MUTUAL_REPAYMENT_TYPE", type="integer")

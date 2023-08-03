@@ -110,7 +110,7 @@ export class OrdonnancesServices {
       });
 
       const date_ordonnance = medicalOrder?.date;
-      const format_papier = medicalOrder?.format;
+      // const format_papier = medicalOrder?.format;
       const ident_patient = medicalOrder?.identContact;
       const ident_prat = medicalOrder?.identPrat;
       const adresse = medicalOrder?.address;

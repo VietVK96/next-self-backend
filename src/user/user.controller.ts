@@ -1,11 +1,13 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
+  Param,
   Post,
+  Put,
   Query,
   UseGuards,
+  Delete,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
@@ -23,6 +25,8 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { PreferenceService } from './services/preference.sevece';
 import { TokenDownloadService } from './services/token-download.service';
 import { UpdatePassWordSettingDto } from './dto/user-setting.dto';
+import { ErrorCode } from 'src/constants/error';
+import { GetOneActiveRes } from './res/get-active.res';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -123,6 +127,51 @@ export class UserController {
     return this.userService.deletePasswordAccounting(
       user.id,
       PassWordSettingDto,
+    );
+  }
+  //settings/group/users.php
+  //all line
+  @Get('/active')
+  @UseGuards(TokenGuard)
+  async getActiveUser(@CurrentUser() identity: UserIdentity) {
+    try {
+      return await this.userService.getActiveUser(identity.org);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_USER, error);
+    }
+  }
+
+  @Get('/active/:id')
+  @UseGuards(TokenGuard)
+  async getOneActiveUser(
+    @CurrentUser() identity: UserIdentity,
+    @Param('id') id: number,
+  ) {
+    try {
+      return await this.userService.getOneActiveUser(
+        identity.id,
+        id,
+        identity.org,
+      );
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_USER, error);
+    }
+  }
+
+  //settings/group/user.php
+  //all line
+  @Put('/active/:id')
+  @UseGuards(TokenGuard)
+  async updateActiveUser(
+    @CurrentUser() identity: UserIdentity,
+    @Param('id') id: number,
+    @Body() body: GetOneActiveRes,
+  ) {
+    return await this.userService.updateActiveUser(
+      identity.id,
+      id,
+      identity.org,
+      body,
     );
   }
 }
