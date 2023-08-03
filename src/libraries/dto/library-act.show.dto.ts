@@ -12,40 +12,34 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-export class ActFamiliesDto {
-  @ApiProperty({
-    required: false,
-  })
-  used_only?: boolean;
-}
-
-export class ActFamiliesStoreDto {
-  @ApiProperty({
-    required: false,
-  })
-  used_only?: boolean;
-}
-
-export class ActFamiliesSearchDto {
-  @ApiProperty({
-    required: false,
-  })
-  search_term?: string;
-
-  @ApiProperty({
-    required: false,
-  })
-  serializer_groups?: string[];
-}
-
-export class ActsIndexDto {
+export class ActsShowDto {
   @ApiProperty({
     required: true,
   })
-  search_term?: string;
+  id?: number;
 
   @ApiProperty({
     required: true,
   })
-  only_used?: boolean;
+  associations_group?: [any];
+
+  @ApiProperty({
+    required: true,
+  })
+  odontograms_group?: [any];
+
+  @ApiProperty({
+    required: true,
+  })
+  'traceability:read'?: string;
+
+  @ApiProperty({
+    required: true,
+  })
+  'attachment:read'?: number;
+
+  @ApiProperty({
+    required: true,
+  })
+  used_only?: boolean;
 }

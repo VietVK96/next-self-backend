@@ -150,7 +150,7 @@ export class SaveEventService {
     const reminders = payload?.reminders;
 
     let eventId = payload.eventId;
-    const eventTypeId = checkId(payload.eventTypeId);
+    const eventTypeId = checkId(payload.eventTypeId) || null;
     const _private = payload.private;
     const dates = payload.dates ? payload.dates.split(',') : [];
     const exdates = payload.exdates ? payload.exdates.split(',') : [];
@@ -541,7 +541,7 @@ export class SaveEventService {
       await queryRunner.commitTransaction();
     } catch (e) {
       await queryRunner.rollbackTransaction();
-      return new CBadRequestException(ErrorCode.SAVE_FAILED);
+      throw new CBadRequestException(ErrorCode.SAVE_FAILED);
     } finally {
       await queryRunner.release();
     }

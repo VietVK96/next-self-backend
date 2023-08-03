@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { TokenGuard, UserIdentity } from 'src/common/decorator/auth.decorator';
+import { AccountService } from './services/account.service';
 import { NotificationService } from './services/notification.service';
 
 @ApiBearerAuth()
@@ -22,6 +23,7 @@ import { NotificationService } from './services/notification.service';
 export class SettingsController {
   constructor(
     private tariffTypesSerivce: TariffTypesService,
+    private accountService: AccountService,
     private notificationService: NotificationService,
   ) {}
 
@@ -90,6 +92,13 @@ export class SettingsController {
       identity,
       parseInt(id),
     );
+  }
+
+  // settings/account/wzagenda.php
+  @Get('/account/wzagenda')
+  @UseGuards(TokenGuard)
+  async fetchAccountWzagenda(@CurrentUser() identity: UserIdentity) {
+    return await this.accountService.fetchAccountWzagenda(identity);
   }
 
   @Get('/notification/historical')

@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -14,6 +23,8 @@ import {
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { PreferenceService } from './services/preference.sevece';
 import { TokenDownloadService } from './services/token-download.service';
+import { ErrorCode } from 'src/constants/error';
+import { GetOneActiveRes } from './res/get-active.res';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -69,5 +80,51 @@ export class UserController {
     return {
       token,
     };
+  }
+
+  //settings/group/users.php
+  //all line
+  @Get('/active')
+  @UseGuards(TokenGuard)
+  async getActiveUser(@CurrentUser() identity: UserIdentity) {
+    try {
+      return await this.userService.getActiveUser(identity.org);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_USER, error);
+    }
+  }
+
+  @Get('/active/:id')
+  @UseGuards(TokenGuard)
+  async getOneActiveUser(
+    @CurrentUser() identity: UserIdentity,
+    @Param('id') id: number,
+  ) {
+    try {
+      return await this.userService.getOneActiveUser(
+        identity.id,
+        id,
+        identity.org,
+      );
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_USER, error);
+    }
+  }
+
+  //settings/group/user.php
+  //all line
+  @Put('/active/:id')
+  @UseGuards(TokenGuard)
+  async updateActiveUser(
+    @CurrentUser() identity: UserIdentity,
+    @Param('id') id: number,
+    @Body() body: GetOneActiveRes,
+  ) {
+    return await this.userService.updateActiveUser(
+      identity.id,
+      id,
+      identity.org,
+      body,
+    );
   }
 }
