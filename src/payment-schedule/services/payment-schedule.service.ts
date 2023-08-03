@@ -5,6 +5,7 @@ import { PaymentSchedulesDto } from '../dto/payment.dto';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
+import { PaymentPlanEntity } from 'src/entities/payment-plan.entity';
 
 @Injectable()
 export class PaymentScheduleService {
@@ -29,7 +30,7 @@ export class PaymentScheduleService {
     `;
     const qr = queryBuiler
       .select(select)
-      .from('payment_schedule', 'payment_schedule')
+      .from(PaymentPlanEntity, 'payment_schedule')
       .where('id = :paymentScheduleId', {
         paymentScheduleId: paymentScheduleId,
       })

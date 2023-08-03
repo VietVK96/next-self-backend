@@ -1,5 +1,4 @@
 import { ApiProperty, ApiExtraModels } from '@nestjs/swagger';
-import { EnumMedicalHeaderFormatType } from 'src/entities/medical-header.entity';
 
 @ApiExtraModels()
 export class DevisStd2Dto {

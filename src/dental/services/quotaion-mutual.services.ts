@@ -463,152 +463,158 @@ export class QuotationMutualServices {
     identity: UserIdentity,
     // pdf = false,
   ) {
-    // vérification si un numéro de plan de traitement ou de devis a été passé dans l'URL
-    if (!req?.no_pdt && !req?.no_devis) {
-      throw new CBadRequestException(
-        'Pas de plan de traitement ni de devis s&eacute;lectionn&eacute;',
-      );
-    }
-    let txch = 0;
-    const tauxRemboursementSecu = 100; // 2013-09-06 Sébastien BORDAT Remplacement 70 par 100
-
-    const group = await this.organizationRepo.findOne({
-      where: { id: identity?.org },
-      select: {
-        ccamEnabled: true,
-      },
-    });
-    const hasCcamEnabled = Boolean(group.ccamEnabled);
-    let initData: QuotationMutualInitByRes = req?.no_pdt
-      ? await this.initByPdtId(req, identity)
-      : ({} as QuotationMutualInitByRes);
-    initData = req?.no_devis
-      ? await this.initByDevisId(req, identity)
-      : initData;
-
-    // let id_facture = 0;
-    // let noFacture = '';
-
-    // const bill = await this.billRepo.findOne({
-    //   where: {
-    //     dqoId: req?.no_devis,
-    //     delete: 0,
-    //   },
-    // });
-    // if (bill) {
-    // id_facture = bill?.id;
-    // noFacture = bill?.nbr;
-    // }
-    const ar_details = [];
-    let total_prixvente = 0;
-    let total_prestation = 0;
-    let total_charges = 0;
-    let total_honoraires = 0;
-
-    let total_secuAmount = 0;
-    let total_secuRepayment = 0;
-    let total_mutualRepayment = 0;
-    let total_mutualComplement = 0;
-    let total_personAmount = 0;
-    // let total_rss = 0;
-    let total_nrss = 0;
-
-    if (!txch) {
-      const query = await this.dataSource
-        .createQueryBuilder()
-        .select(
-          'IF(IFNULL(USR_RATE_CHARGES, 0) >= 1, IFNULL(USR_RATE_CHARGES, 0) / 100, IFNULL(USR_RATE_CHARGES, 0))',
-        )
-        .from(UserEntity, 'T_USER_USR')
-        .where('USR_ID = :id', { id: initData?.id_user })
-        .getRawOne();
-      if (query) txch = Number(query);
-    }
-
-    if (initData?.actes) {
-      initData?.actes?.map(async (ar_acte) => {
-        const libraryActQuantityId = ar_acte?.library_act_quantity_id;
-
-        if (libraryActQuantityId) {
-          const libraryActQuantity = await this.libraryActQuantityRepo.findOne({
-            where: { id: libraryActQuantityId },
-          });
-          if (libraryActQuantity?.materials)
-            ar_acte.materiau = libraryActQuantity?.materials;
-        }
-        ar_acte.nouveau = true;
-        ar_acte.prixvente = parseFloat(
-          (ar_acte?.prixachat / (1 - txch)).toFixed(2),
+    try {
+      // vérification si un numéro de plan de traitement ou de devis a été passé dans l'URL
+      if (!req?.no_pdt && !req?.no_devis) {
+        throw new CBadRequestException(
+          'Pas de plan de traitement ni de devis s&eacute;lectionn&eacute;',
         );
-        ar_acte.prestation = parseFloat(
-          (+ar_acte?.honoraires * (1 - txch) - +ar_acte?.prixachat).toFixed(2),
-        );
+      }
+      let txch = 0;
+      const tauxRemboursementSecu = 100; // 2013-09-06 Sébastien BORDAT Remplacement 70 par 100
 
-        ar_acte.charges =
-          +ar_acte.honoraires - ar_acte.prestation - ar_acte.prixvente;
-        ar_acte.honoraires =
-          +ar_acte.prixvente + ar_acte.prestation + ar_acte.charges;
-
-        if (hasCcamEnabled) {
-          ar_acte.rss = +ar_acte.secuAmount;
-        } else {
-          if (ar_acte.remboursable == 'oui') {
-            ar_acte.rss = (+ar_acte.rss * tauxRemboursementSecu) / 100;
-          }
-        }
-
-        ar_acte.nrss = +ar_acte.honoraires - ar_acte.rss;
-        if (Math.abs(+ar_acte.nrss) < 0.01) {
-          ar_acte.nrss = 0;
-        }
-        ar_acte.roc = '';
-
-        total_prixvente += toFixed(ar_acte.prixvente);
-        total_prestation += toFixed(ar_acte.prestation);
-        total_charges += toFixed(ar_acte.charges);
-        total_nrss += toFixed(ar_acte.nrss);
-
-        total_secuAmount += toFixed(ar_acte.secuAmount);
-        total_secuRepayment += toFixed(ar_acte.secuRepayment);
-        total_mutualRepayment += toFixed(ar_acte.mutualRepayment);
-        total_mutualComplement += toFixed(ar_acte.mutualComplement);
-        total_personAmount += toFixed(ar_acte.personAmount);
-
-        ar_acte.prixvente = toFixed(ar_acte.prixvente);
-        ar_acte.prestation = toFixed(ar_acte.prestation);
-        ar_acte.charges = toFixed(ar_acte.charges);
-        ar_acte.honoraires = toFixed(ar_acte.honoraires);
-        ar_acte.rss = toFixed(ar_acte.rss);
-        ar_acte.nrss = toFixed(ar_acte.nrss);
-        ar_details.push(ar_acte);
+      const group = await this.organizationRepo.findOne({
+        where: { id: identity?.org },
+        select: {
+          ccamEnabled: true,
+        },
       });
+      const hasCcamEnabled = Boolean(group.ccamEnabled);
+      let initData: QuotationMutualInitByRes = req?.no_pdt
+        ? await this.initByPdtId(req, identity)
+        : ({} as QuotationMutualInitByRes);
+      initData = req?.no_devis
+        ? await this.initByDevisId(req, identity)
+        : initData;
+      // let id_facture = 0;
+      // let noFacture = '';
+
+      // const bill = await this.billRepo.findOne({
+      //   where: {
+      //     dqoId: req?.no_devis,
+      //     delete: 0,
+      //   },
+      // });
+      // if (bill) {
+      // id_facture = bill?.id;
+      // noFacture = bill?.nbr;
+      // }
+      const ar_details = [];
+      let total_prixvente = 0;
+      let total_prestation = 0;
+      let total_charges = 0;
+      let total_honoraires = 0;
+
+      let total_secuAmount = 0;
+      let total_secuRepayment = 0;
+      let total_mutualRepayment = 0;
+      let total_mutualComplement = 0;
+      let total_personAmount = 0;
+      // let total_rss = 0;
+      let total_nrss = 0;
+
+      if (!txch) {
+        const query = await this.dataSource
+          .createQueryBuilder()
+          .select(
+            'IF(IFNULL(USR_RATE_CHARGES, 0) >= 1, IFNULL(USR_RATE_CHARGES, 0) / 100, IFNULL(USR_RATE_CHARGES, 0))',
+          )
+          .from(UserEntity, 'T_USER_USR')
+          .where('USR_ID = :id', { id: initData?.id_user })
+          .getRawOne();
+        if (query) txch = Number(query);
+      }
+
+      if (initData?.actes) {
+        initData?.actes?.map(async (ar_acte) => {
+          const libraryActQuantityId = ar_acte?.library_act_quantity_id;
+
+          if (libraryActQuantityId) {
+            const libraryActQuantity =
+              await this.libraryActQuantityRepo.findOne({
+                where: { id: libraryActQuantityId },
+              });
+            if (libraryActQuantity?.materials)
+              ar_acte.materiau = libraryActQuantity?.materials;
+          }
+          ar_acte.nouveau = true;
+          ar_acte.prixvente = parseFloat(
+            (ar_acte?.prixachat / (1 - txch)).toFixed(2),
+          );
+          ar_acte.prestation = parseFloat(
+            (+ar_acte?.honoraires * (1 - txch) - +ar_acte?.prixachat).toFixed(
+              2,
+            ),
+          );
+
+          ar_acte.charges =
+            +ar_acte.honoraires - ar_acte.prestation - ar_acte.prixvente;
+          ar_acte.honoraires =
+            +ar_acte.prixvente + ar_acte.prestation + ar_acte.charges;
+
+          if (hasCcamEnabled) {
+            ar_acte.rss = +ar_acte.secuAmount;
+          } else {
+            if (ar_acte.remboursable == 'oui') {
+              ar_acte.rss = (+ar_acte.rss * tauxRemboursementSecu) / 100;
+            }
+          }
+
+          ar_acte.nrss = +ar_acte.honoraires - ar_acte.rss;
+          if (Math.abs(+ar_acte.nrss) < 0.01) {
+            ar_acte.nrss = 0;
+          }
+          ar_acte.roc = '';
+
+          total_prixvente += toFixed(ar_acte.prixvente);
+          total_prestation += toFixed(ar_acte.prestation);
+          total_charges += toFixed(ar_acte.charges);
+          total_nrss += toFixed(ar_acte.nrss);
+
+          total_secuAmount += toFixed(ar_acte.secuAmount);
+          total_secuRepayment += toFixed(ar_acte.secuRepayment);
+          total_mutualRepayment += toFixed(ar_acte.mutualRepayment);
+          total_mutualComplement += toFixed(ar_acte.mutualComplement);
+          total_personAmount += toFixed(ar_acte.personAmount);
+
+          ar_acte.prixvente = toFixed(ar_acte.prixvente);
+          ar_acte.prestation = toFixed(ar_acte.prestation);
+          ar_acte.charges = toFixed(ar_acte.charges);
+          ar_acte.honoraires = toFixed(ar_acte.honoraires);
+          ar_acte.rss = toFixed(ar_acte.rss);
+          ar_acte.nrss = toFixed(ar_acte.nrss);
+          ar_details.push(ar_acte);
+        });
+      }
+
+      total_honoraires = +total_honoraires.toFixed(2);
+      // total_prixvente = +total_prixvente.toFixed(2);
+      // total_prestation = +total_prestation.toFixed(2);
+      // total_charges = +total_charges.toFixed(2);
+      // total_rss = +total_rss.toFixed(2);
+      // total_nrss = +total_nrss.toFixed(2);
+
+      total_secuAmount = +total_secuAmount.toFixed(2);
+      total_secuRepayment = +total_secuRepayment.toFixed(2);
+      total_mutualRepayment = +total_mutualRepayment.toFixed(2);
+      total_mutualComplement = +total_mutualComplement.toFixed(2);
+      total_personAmount = +total_personAmount.toFixed(2);
+
+      const date_signature = dayjs().format('DD/MM/YYYY');
+      return {
+        ...initData,
+        ar_details,
+        total_secuAmount,
+        total_honoraires,
+        total_secuRepayment,
+        total_mutualRepayment,
+        total_mutualComplement,
+        total_personAmount,
+        date_signature,
+      };
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode?.NOT_FOUND);
     }
-
-    total_honoraires = +total_honoraires.toFixed(2);
-    // total_prixvente = +total_prixvente.toFixed(2);
-    // total_prestation = +total_prestation.toFixed(2);
-    // total_charges = +total_charges.toFixed(2);
-    // total_rss = +total_rss.toFixed(2);
-    // total_nrss = +total_nrss.toFixed(2);
-
-    total_secuAmount = +total_secuAmount.toFixed(2);
-    total_secuRepayment = +total_secuRepayment.toFixed(2);
-    total_mutualRepayment = +total_mutualRepayment.toFixed(2);
-    total_mutualComplement = +total_mutualComplement.toFixed(2);
-    total_personAmount = +total_personAmount.toFixed(2);
-
-    const date_signature = dayjs().format('DD/MM/YYYY');
-    return {
-      ...initData,
-      ar_details,
-      total_secuAmount,
-      total_honoraires,
-      total_secuRepayment,
-      total_mutualRepayment,
-      total_mutualComplement,
-      total_personAmount,
-      date_signature,
-    };
   }
   // dental/quotation-mutual/devis_init_champs.php 52 - 542
   async initByPdtId(
@@ -848,87 +854,121 @@ export class QuotationMutualServices {
        *     Récupération des remboursements de la mutuelle
        */
       const actes = [];
-      const selectEvent = `
-      library_act_id,
-      library_act_quantity_id,
-      ETK.ETK_NAME as 'libelle',
-         IFNULL(ETK.ETK_AMOUNT, 0) as 'honoraires',
-         IFNULL(DET.DET_PURCHASE_PRICE, 0) as 'prixachat',
-         DET.DET_TOOTH as 'localisation',
-         DET.DET_COEF as coef,
-         DET.DET_TYPE as type,
-         DET.DET_CCAM_CODE as ccamCode,
-         
-         IFNULL(IF(DET.DET_EXCEEDING = 'N', 0, DET.DET_SECU_AMOUNT), 0) as secuAmount,
-         IFNULL(DET.DET_SECU_REPAYMENT, 0) as secuRepayment,
-         IFNULL(DET.DET_MUTUAL_REPAYMENT_TYPE, 1) as mutualRepaymentType,
-         IFNULL(DET.DET_MUTUAL_REPAYMENT_RATE, 0) as mutualRepaymentRate,
-         IFNULL(DET.DET_MUTUAL_REPAYMENT, 0) as mutualRepayment,
-         IFNULL(DET.DET_MUTUAL_COMPLEMENT, 0) as mutualComplement,
-         IFNULL(DET.DET_PERSON_REPAYMENT, 0) as personRepayment,
-         IFNULL(DET.DET_PERSON_AMOUNT, 0) as personAmount,
+      // const selectEvent = `
+      // library_act_id,
+      // library_act_quantity_id,
+      // ETK.ETK_NAME as 'libelle',
+      // IFNULL(ETK.ETK_AMOUNT, 0) as 'honoraires',
+      // IFNULL(DET.DET_PURCHASE_PRICE, 0) as 'prixachat',
+      // DET.DET_TOOTH as 'localisation',
+      // DET.DET_COEF as coef,
+      // DET.DET_TYPE as type,
+      // DET.DET_CCAM_CODE as ccamCode,
 
-         IF (DET.DET_EXCEEDING = 'N', 'non', 'oui') as remboursable,
-         0 as 'materiau',
-         0 as 'roc',
-         ngap_key.name AS ngap_key_name,
-         ngap_key.unit_price AS ngap_key_unit_price
-      `;
-      const eventTask = await this.dataSource
-        .createQueryBuilder()
-        .select(selectEvent)
-        .from(EventTaskEntity, 'ETK')
-        .leftJoin(DentalEventTaskEntity, 'DET', 'DET.ETK_ID = ETK.ETK_ID')
-        .leftJoin(NgapKeyEntity, 'ngap_key', 'ngap_key.id = DET.ngap_key_id')
-        .where('ETK.EVT_ID IN :id', { id: ids_events })
-        .orderBy('ETK.EVT_ID, ETK.ETK_POS')
-        .getRawMany();
-      eventTask?.forEach((row) => {
-        const result = {
-          ...row,
-          cotation: 'NPC',
-          tarif_secu: 0,
-          rss: 0,
-        };
+      // IFNULL(IF(DET.DET_EXCEEDING = 'N', 0, DET.DET_SECU_AMOUNT), 0) as secuAmount,
+      // IFNULL(DET.DET_SECU_REPAYMENT, 0) as secuRepayment,
+      // IFNULL(DET.DET_MUTUAL_REPAYMENT_TYPE, 1) as mutualRepaymentType,
+      // IFNULL(DET.DET_MUTUAL_REPAYMENT_RATE, 0) as mutualRepaymentRate,
+      // IFNULL(DET.DET_MUTUAL_REPAYMENT, 0) as mutualRepayment,
+      // IFNULL(DET.DET_MUTUAL_COMPLEMENT, 0) as mutualComplement,
+      // IFNULL(DET.DET_PERSON_REPAYMENT, 0) as personRepayment,
+      // IFNULL(DET.DET_PERSON_AMOUNT, 0) as personAmount,
 
-        if (row?.type == 'CCAM') {
-          result.cotation = row?.ccamCode;
-          result.tarif_secu = row?.secuAmount;
-          result.rss = row?.secuRepayment;
-        } else if (row?.type == 'NGAP') {
-          let ngapKeyName = row?.ngap_key_name;
-          const ngapKeyUnitPrice = row?.ngap_key_unit_price;
+      // IF (DET.DET_EXCEEDING = 'N', 'non', 'oui') as remboursable,
+      // 0 as 'materiau',
+      // 0 as 'roc',
+      // ngap_key.name AS ngap_key_name,
+      // ngap_key.unit_price AS ngap_key_unit_price
+      // `;
+      // const eventTask = await this.dataSource
+      //   .createQueryBuilder()
+      //   .select(selectEvent)
+      //   .from(EventTaskEntity, 'ETK')
+      //   .leftJoin(DentalEventTaskEntity, 'DET', 'DET.ETK_ID = ETK.ETK_ID')
+      //   .leftJoin(NgapKeyEntity, 'ngap_key', 'ngap_key.id = DET.ngap_key_id')
+      //   .where('ETK.EVT_ID IN ?', [ids_events])
+      //   .orderBy('ETK.EVT_ID, ETK.ETK_POS')
+      //   .getRawMany();
+      const eventTask = await this.dataSource.query(`
+      SELECT
+          library_act_id,
+          library_act_quantity_id,
+          ETK.ETK_NAME as 'libelle',
+             IFNULL(ETK.ETK_AMOUNT, 0) as 'honoraires',
+             IFNULL(DET.DET_PURCHASE_PRICE, 0) as 'prixachat',
+             DET.DET_TOOTH as 'localisation',
+             DET.DET_COEF as coef,
+             DET.DET_TYPE as type,
+             DET.DET_CCAM_CODE as ccamCode,
+             
+             IFNULL(IF(DET.DET_EXCEEDING = 'N', 0, DET.DET_SECU_AMOUNT), 0) as secuAmount,
+             IFNULL(DET.DET_SECU_REPAYMENT, 0) as secuRepayment,
+             IFNULL(DET.DET_MUTUAL_REPAYMENT_TYPE, 1) as mutualRepaymentType,
+             IFNULL(DET.DET_MUTUAL_REPAYMENT_RATE, 0) as mutualRepaymentRate,
+             IFNULL(DET.DET_MUTUAL_REPAYMENT, 0) as mutualRepayment,
+             IFNULL(DET.DET_MUTUAL_COMPLEMENT, 0) as mutualComplement,
+             IFNULL(DET.DET_PERSON_REPAYMENT, 0) as personRepayment,
+             IFNULL(DET.DET_PERSON_AMOUNT, 0) as personAmount,
 
-          // bug#267 2013-09-25 Sébastien BORDAT
-          // Gestion des lettres clés MONACO
-          switch (ngapKeyName) {
-            case 'CR MC':
-            case 'CV MC':
-              ngapKeyName = 'C';
-              break;
-            case 'DR MC':
-            case 'DV MC':
-              ngapKeyName = 'D';
-              break;
-            case 'ZR MC':
-            case 'ZV MC':
-              ngapKeyName = 'Z';
-              break;
-            default:
-              break;
+             IF (DET.DET_EXCEEDING = 'N', 'non', 'oui') as remboursable,
+             0 as 'materiau',
+             0 as 'roc',
+             ngap_key.name AS ngap_key_name,
+             ngap_key.unit_price AS ngap_key_unit_price
+      FROM T_EVENT_TASK_ETK ETK
+      LEFT OUTER JOIN T_DENTAL_EVENT_TASK_DET DET ON DET.ETK_ID = ETK.ETK_ID
+      LEFT OUTER JOIN ngap_key ON ngap_key.id = DET.ngap_key_id
+      WHERE ETK.EVT_ID IN (${ids_events})
+      ORDER BY ETK.EVT_ID, ETK.ETK_POS
+      `);
+      if (eventTask) {
+        eventTask?.forEach((row) => {
+          const result = {
+            ...row,
+            cotation: 'NPC',
+            tarif_secu: 0,
+            rss: 0,
+          };
+
+          if (row?.type == 'CCAM') {
+            result.cotation = row?.ccamCode;
+            result.tarif_secu = row?.secuAmount;
+            result.rss = row?.secuRepayment;
+          } else if (row?.type == 'NGAP') {
+            let ngapKeyName = row?.ngap_key_name;
+            const ngapKeyUnitPrice = row?.ngap_key_unit_price;
+
+            // bug#267 2013-09-25 Sébastien BORDAT
+            // Gestion des lettres clés MONACO
+            switch (ngapKeyName) {
+              case 'CR MC':
+              case 'CV MC':
+                ngapKeyName = 'C';
+                break;
+              case 'DR MC':
+              case 'DV MC':
+                ngapKeyName = 'D';
+                break;
+              case 'ZR MC':
+              case 'ZV MC':
+                ngapKeyName = 'Z';
+                break;
+              default:
+                break;
+            }
+
+            result.cotation = row?.ngapKeyName
+              ? `${row?.ngapKeyName} ${parseFloat(row.coef).toFixed(2)}`
+              : row.coef;
+            result.tarif_secu = ngapKeyUnitPrice * row?.coef;
+            if (row?.remboursable == 'oui') {
+              result.rss = ngapKeyUnitPrice * row?.coef;
+            }
           }
 
-          result.cotation = `${row.ngapKeyName} ${parseFloat(row.coef).toFixed(
-            2,
-          )}`;
-          result.tarif_secu = ngapKeyUnitPrice * row?.coef;
-          if (row?.remboursable == 'oui') {
-            result.rss = ngapKeyUnitPrice * row?.coef;
-          }
-        }
-
-        actes.push(result);
-      });
+          actes.push(result);
+        });
+      }
       const date_devis = checkDay(plan?.createdAt);
       const duree_devis = periodOfValidity;
       const organisme = ''; //"Nom de l'organisme complémentaire";
@@ -945,13 +985,13 @@ export class QuotationMutualServices {
           id: checkId(req?.no_pdt),
         },
         select: {
-          id: true,
+          paymentScheduleId: true,
         },
       });
       let paymentSchedule;
       let paymentScheduleId: number;
       if (paymentScheduleStatement) {
-        paymentScheduleId = paymentScheduleStatement?.id;
+        paymentScheduleId = paymentScheduleStatement?.paymentScheduleId;
         paymentSchedule = await this.paymentScheduleService.duplicate(
           paymentScheduleId,
           identity,
@@ -1034,7 +1074,7 @@ export class QuotationMutualServices {
           quotationPlaceOfSubcontractingLabel,
         ]);
 
-        const id_devis = query2Result?.raw?.insertId;
+        const id_devis = query2Result?.insertId;
         const acts: DentalQuotationActEntity[] = actes.map((acte) => {
           return {
             DQOId: id_devis,
@@ -1060,9 +1100,10 @@ export class QuotationMutualServices {
             personAmount: acte?.personAmount,
           };
         });
-        await this.dentalQuotationActRepo.save(acts);
+        await queryRunner.manager.save(DentalQuotationActEntity, acts);
         await queryRunner.commitTransaction();
         return {
+          id_devis,
           txch,
           ident_prat,
           ident_pat,
@@ -1070,7 +1111,7 @@ export class QuotationMutualServices {
           date_de_naissance_patient,
           date_devis,
           duree_devis,
-          INSEE,
+          insee: INSEE,
           adresse_pat,
           tel,
           contrat,
@@ -1102,10 +1143,13 @@ export class QuotationMutualServices {
         };
       } catch (err) {
         await queryRunner.rollbackTransaction();
+        throw new CBadRequestException(ErrorCode.NOT_FOUND);
       } finally {
         await queryRunner.release();
       }
-    } catch (error) {}
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
   }
 
   // dental/quotation-mutual/devis_init_champs.php 542 - 679
@@ -1252,6 +1296,7 @@ export class QuotationMutualServices {
       }
 
       return {
+        id_devis: req?.no_devis,
         txch,
         ident_prat,
         ident_pat,
@@ -1259,7 +1304,7 @@ export class QuotationMutualServices {
         date_de_naissance_patient,
         date_devis,
         duree_devis,
-        INSEE,
+        insee: INSEE,
         adresse_pat,
         tel,
         contrat,
