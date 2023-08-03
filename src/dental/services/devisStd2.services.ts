@@ -285,8 +285,7 @@ export class DevisStd2Services {
           result?.nom_prenom_patient + '\n' + dataContact[0]?.address;
         result.tel = dataContact[0]?.phone;
       }
-      try {
-        const dataActes = await this.dataSource.manager.query(`
+      const dataActes = await this.dataSource.manager.query(`
           SELECT ETK.ETK_ID as 'id_devisStd2_ligne',
           ETK.library_act_id,
           ETK.library_act_quantity_id,
@@ -317,53 +316,47 @@ export class DevisStd2Services {
              0 as 'materiau',
              0 as 'roc',
              'operation' as 'typeLigne'
-      FROM T_EVENT_TASK_ETK ETK
-      LEFT OUTER JOIN T_DENTAL_EVENT_TASK_DET DET ON DET.ETK_ID = ETK.ETK_ID
-      LEFT OUTER JOIN ngap_key ON ngap_key.id = DET.ngap_key_id
-      WHERE ETK.EVT_ID IN (" ${ids_events}")
-      ORDER BY ETK.EVT_ID, ETK.ETK_POS
+            FROM T_EVENT_TASK_ETK ETK
+            LEFT OUTER JOIN T_DENTAL_EVENT_TASK_DET DET ON DET.ETK_ID = ETK.ETK_ID
+            LEFT OUTER JOIN ngap_key ON ngap_key.id = DET.ngap_key_id
+            WHERE ETK.EVT_ID IN (" ${ids_events}")
+            ORDER BY ETK.EVT_ID, ETK.ETK_POS
           `);
-        const actes: DevisStd2ActesRes[] = [];
+      const actes: DevisStd2ActesRes[] = [];
 
-        dataActes.forEach((row) => {
-          row.rss = 0;
-          if (row.remboursable === 'oui') {
-            row.rss = row.tarif_secu;
-          }
-          switch (row.type) {
-            case 'CCAM':
-              row.cotation = row.ccamCode;
-              break;
-            case 'NGAP':
-              row.cotation = `${row.ngap_key_name.replace(
-                /^(C|D|Z)(R|V) MC/i,
-                '$1',
-              )} ${parseFloat(row.coef)}`;
-              break;
-            default:
-              row.cotation = 'NPC';
-              break;
-          }
-          const acte = { ...row };
-          actes.push(acte);
-        });
-        result.actes = actes;
-        result.date_devis = checkDay(plans?.createdAt, 'DD/MM/YYYY');
-        result.duree_devis = '';
-        result.organisme = ''; //"Nom de l'organisme complémentaire";
-        result.contrat = ''; //"N° de contrat ou d'adhérent";
-        result.ref = ''; //"Référence dossier";
-        result.dispo = 'FALSE';
-        result.dispo_desc = '';
-        result.infosCompl = 'Les soins ne sont pas compris dans ce devis.';
-        result.date_acceptation = '';
-        result.dateSql = checkDay(plans?.createdAt, 'DD/MM/YYYY');
-      } catch (error) {
-        console.log(
-          '🚀 ~ file: devisStd2.services.ts:369 ~ DevisStd2Services ~ error:',
-          error,
-        );
-      }
+      dataActes.forEach((row) => {
+        row.rss = 0;
+        if (row.remboursable === 'oui') {
+          row.rss = row.tarif_secu;
+        }
+        switch (row.type) {
+          case 'CCAM':
+            row.cotation = row.ccamCode;
+            break;
+          case 'NGAP':
+            row.cotation = `${row.ngap_key_name.replace(
+              /^(C|D|Z)(R|V) MC/i,
+              '$1',
+            )} ${parseFloat(row.coef)}`;
+            break;
+          default:
+            row.cotation = 'NPC';
+            break;
+        }
+        const acte = { ...row };
+        actes.push(acte);
+      });
+      result.actes = actes;
+      result.date_devis = checkDay(plans?.createdAt, 'DD/MM/YYYY');
+      result.duree_devis = '';
+      result.organisme = ''; //"Nom de l'organisme complémentaire";
+      result.contrat = ''; //"N° de contrat ou d'adhérent";
+      result.ref = ''; //"Référence dossier";
+      result.dispo = 'FALSE';
+      result.dispo_desc = '';
+      result.infosCompl = 'Les soins ne sont pas compris dans ce devis.';
+      result.date_acceptation = '';
+      result.dateSql = checkDay(plans?.createdAt, 'DD/MM/YYYY');
       const dataPlan = await this.planPlfRepository.findOne({
         where: { id: id_pdt },
       });
@@ -711,11 +704,6 @@ export class DevisStd2Services {
           });
         }
       });
-      console.log(
-        '🚀 ~ file: devisStd2.services.ts:712 ~ DevisStd2Services ~ result?.actes.map ~ actes:',
-        result.actes,
-      );
-
       result.odontogramType = 'adult';
     } catch (error) {
       throw new CBadRequestException(error.message);
