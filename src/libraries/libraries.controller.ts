@@ -101,9 +101,8 @@ export class LibrariesController {
    */
   @Post('acts/copy/:id')
   @UseGuards(TokenGuard)
-  async actsIndex(@Param('id') id: number): Promise<any> {
-    console.log(id);
-    return await this.librariesService.actsCopy(id);
+  async actsIndex(@CurrentUser() user, @Param('id') id: number): Promise<any> {
+    return await this.librariesService.actsCopy(id, user);
   }
 
   /**

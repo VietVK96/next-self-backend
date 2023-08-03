@@ -226,8 +226,6 @@ export class LibrariesService {
           odontogram?.internal_reference_id;
         libraryAct.odontograms.push(libraryOdontogram);
       }
-
-      // await this.dataSource.getRepository(LibraryOdontogramEntity).save(libraryAct?.odontograms)
     }
 
     const quantities = params?.quantities ?? [];
@@ -708,7 +706,7 @@ export class LibrariesService {
     }
   }
 
-  async actsCopy(id: number): Promise<any> {
+  async actsCopy(id: number, identity: UserIdentity): Promise<any> {
     try {
       const queryBuilder = this.dataSource
         .createQueryBuilder(LibraryActEntity, 'la')
@@ -725,9 +723,11 @@ export class LibrariesService {
         .leftJoinAndSelect('la.traceabilities', 'lat')
         .leftJoinAndSelect('lat.medicalDevice', 'latm')
         .where('la.id = :id', { id });
-      const libraryAct = await queryBuilder.getOne();
-      libraryAct.label = `(Copie) ${libraryAct?.label ?? ''}`;
-      return await this.libraryActRepo.save(libraryAct);
+      const libraryActCurrent = await queryBuilder.getOne();
+      libraryActCurrent.label = `(Copie) ${libraryActCurrent?.label ?? ''}`;
+      delete libraryActCurrent?.id;
+
+      return await this.libraryActRepo.save(libraryActCurrent);
     } catch (err) {
       throw new CBadRequestException(ErrorCode.CAN_NOT_DELETE_LIBRARY_ACT);
     }
