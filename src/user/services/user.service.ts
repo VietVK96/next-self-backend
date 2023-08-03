@@ -10,12 +10,16 @@ import { UpdateTherapeuticDto } from '../dto/therapeutic.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { UserSmsEntity } from 'src/entities/user-sms.entity';
+import * as crypto from 'crypto';
+import * as phpPassword from 'node-php-password';
+import { SuccessResponse } from 'src/common/response/success.res';
+import { UpdatePassWordSettingDto } from '../dto/user-setting.dto';
 import { AccountStatusEnum } from 'src/enum/account-status.enum';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { GetOneActiveRes } from '../res/get-active.res';
 import { PrivilegeEntity } from 'src/entities/privilege.entity';
-import { SuccessResponse } from 'src/common/response/success.res';
+
 @Injectable()
 export class UserService {
   constructor(
@@ -131,6 +135,137 @@ export class UserService {
       };
     } catch (error) {
       throw new BadRequestException(error);
+    }
+  }
+
+  async getPasswordAccounting(id: number) {
+    try {
+      const userFind = await this.userRepository.findOneOrFail({
+        where: { id: id },
+      });
+      if (userFind) return { userFind };
+    } catch (err) {
+      throw new BadRequestException(err);
+    }
+  }
+
+  async createPasswordAccounting(
+    id: number,
+    updatePassWordSettingDto: UpdatePassWordSettingDto,
+  ): Promise<SuccessResponse> {
+    try {
+      const userFind = await this.userRepository.findOneOrFail({
+        where: { id: id },
+      });
+
+      const { password, confirmation_password } = updatePassWordSettingDto;
+
+      if (password !== confirmation_password) {
+        throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
+      }
+
+      const newPassword = phpPassword.hash(password);
+      userFind.passwordAccounting = newPassword;
+      await this.userRepository.save(userFind);
+
+      return {
+        success: true,
+      };
+    } catch (err) {
+      throw new BadRequestException(err);
+    }
+  }
+
+  async updatePasswordAccounting(
+    id: number,
+    updatePassWordSettingDto: UpdatePassWordSettingDto,
+  ): Promise<SuccessResponse> {
+    try {
+      const userFind = await this.userRepository.findOneOrFail({
+        where: { id: id },
+      });
+      const { old_password, password, confirmation_password } =
+        updatePassWordSettingDto;
+
+      if (!userFind.passwordAccounting) {
+        const shasum = crypto.createHash('sha1');
+        const passwordHash = shasum.update(old_password).digest('hex');
+
+        if (passwordHash !== userFind.passwordAccounting) {
+          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
+        }
+
+        if (password !== confirmation_password) {
+          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
+        }
+
+        const newPassword = phpPassword.hash(password);
+        userFind.passwordAccounting = newPassword;
+        await this.userRepository.save(userFind);
+        return { success: true };
+      } else {
+        if (!phpPassword.verify(old_password, userFind.passwordAccounting)) {
+          throw new CBadRequestException(ErrorCode.CAN_NOT_LOGIN);
+        }
+        if (
+          phpPassword.needsRehash(password, 'PASSWORD_DEFAULT', { cost: 10 })
+        ) {
+          if (password !== confirmation_password) {
+            throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
+          }
+
+          const newPassword = phpPassword.hash(password);
+          userFind.passwordAccounting = newPassword;
+          await this.userRepository.save(userFind);
+          return { success: true };
+        }
+      }
+    } catch (err) {
+      throw new BadRequestException(err);
+    }
+  }
+
+  async deletePasswordAccounting(
+    id: number,
+    updatePassWordSettingDto: UpdatePassWordSettingDto,
+  ): Promise<SuccessResponse> {
+    try {
+      const userFind = await this.userRepository.findOneOrFail({
+        where: { id: id },
+      });
+
+      const { password } = updatePassWordSettingDto;
+
+      if (!userFind.passwordAccounting) {
+        const shasum = crypto.createHash('sha1');
+        const passwordHash = shasum.update(password).digest('hex');
+        if (passwordHash !== userFind.passwordAccounting) {
+          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
+        }
+
+        const newPassword = null;
+        userFind.passwordAccounting = newPassword;
+        await this.userRepository.save(userFind);
+        return {
+          success: true,
+        };
+      } else {
+        if (!phpPassword.verify(password, userFind.passwordAccounting)) {
+          throw new CBadRequestException(ErrorCode.CAN_NOT_LOGIN);
+        }
+        if (
+          phpPassword.needsRehash(password, 'PASSWORD_DEFAULT', { cost: 10 })
+        ) {
+          const newPassword = null;
+          userFind.passwordAccounting = newPassword;
+          await this.userRepository.save(userFind);
+          return {
+            success: true,
+          };
+        }
+      }
+    } catch (err) {
+      throw new BadRequestException(err);
     }
   }
 
