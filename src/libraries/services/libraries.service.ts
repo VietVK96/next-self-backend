@@ -30,6 +30,8 @@ import {
 import { LettersEntity } from 'src/entities/letters.entity';
 import { LibraryActAttachmentPivotEntity } from 'src/entities/library-act-attachment-pivot.entity';
 import { SuccessResponse } from 'src/common/response/success.res';
+import { format, intervalToDuration } from 'date-fns';
+import { LibraryActOdontogramPivotEntity } from 'src/entities/library-act-odontogram-pivot.entity';
 
 @Injectable()
 export class LibrariesService {
@@ -61,6 +63,8 @@ export class LibrariesService {
     private libraryActAssociationRepo: Repository<LibraryActAssociationEntity>,
     @InjectRepository(LibraryActAttachmentPivotEntity)
     private libraryActAttachmentPivotRepo: Repository<LibraryActAttachmentPivotEntity>,
+    @InjectRepository(LibraryActOdontogramPivotEntity)
+    private libraryActOdontogramPivotRepo: Repository<LibraryActOdontogramPivotEntity>,
   ) {}
 
   /**
@@ -189,7 +193,7 @@ export class LibrariesService {
         ErrorCode.NOT_FOUND_LIBRARY_ACT_FAMILY,
       );
     }
-
+    delete libraryActFamily?.organizationId;
     const libraryAct = {} as LibraryActEntity;
     libraryAct.organizationId = organization?.id;
     libraryAct.family = libraryActFamily;
@@ -216,56 +220,53 @@ export class LibrariesService {
     }
     libraryAct.materials = JSON.stringify(params?.materials ?? []);
     libraryAct.traceabilityActivated = +params?.traceability_activated;
-    libraryAct.transmitted = +(params?.transmitted ?? true);
-    libraryAct.used = +(params?.used ?? true);
-
+    libraryAct.transmitted = +params?.transmitted;
+    libraryAct.used = +params?.used;
+    libraryAct.odontograms = [] as LibraryOdontogramEntity[];
     const odontograms = params?.odontograms ?? [];
     if (odontograms && odontograms.length > 0) {
       for (const odontogram of odontograms) {
         const libraryOdontogram = {} as LibraryOdontogramEntity;
         libraryOdontogram.organizationId = organization?.id;
         libraryOdontogram.color = odontogram?.color;
-        libraryOdontogram.visibleCrown = odontogram?.visible_crown;
-        libraryOdontogram.visibleRoot = odontogram?.visible_root;
-        libraryOdontogram.visibleImplant = odontogram?.visible_implant;
-        libraryOdontogram.visibleAreas = odontogram?.visible_areas;
-        libraryOdontogram.invisibleAreas = odontogram?.invisible_areas;
-        libraryOdontogram.rankOfTooth = odontogram?.rank_of_tooth;
+        libraryOdontogram.visibleCrown = +odontogram?.visible_crown;
+        libraryOdontogram.visibleRoot = +odontogram?.visible_root;
+        libraryOdontogram.visibleImplant = +odontogram?.visible_implant;
+        libraryOdontogram.visibleAreas = JSON.stringify(
+          odontogram?.visible_areas,
+        );
+        libraryOdontogram.invisibleAreas = JSON.stringify(
+          odontogram?.invisible_areas,
+        );
+        libraryOdontogram.rankOfTooth = odontogram?.rank_of_tooth ?? 0;
+        libraryOdontogram.internalReferenceId =
+          odontogram?.internal_reference_id;
         libraryAct.odontograms.push(libraryOdontogram);
       }
+
+      // await this.dataSource.getRepository(LibraryOdontogramEntity).save(libraryAct?.odontograms)
     }
 
     const quantities = params?.quantities ?? [];
     if (quantities && quantities?.length > 0) {
       libraryAct.quantities = [];
       for (const quantity of quantities) {
-        const ccam = null;
+        let ccam = null;
         const ccamId = quantity?.ccam?.id ?? null;
         if (ccamId) {
-          const ccam = await this.ccamRepo.findOne({ where: { id: ccamId } });
+          ccam = await this.ccamRepo.findOne({ where: { id: ccamId } });
           if (!ccam) throw new CBadRequestException(ErrorCode.NOT_FOUND_CCAM);
         }
 
-        const ngapKey = null;
+        let ngapKey = null;
         const ngapKeyId = quantity?.ngapKey?.id;
         if (ngapKeyId) {
-          const ngapKey = await this.ngapKeyRepo.findOne({
+          ngapKey = await this.ngapKeyRepo.findOne({
             where: { id: ngapKeyId },
           });
           if (!ngapKey)
             throw new CBadRequestException(ErrorCode.NOT_FOUND_CCAM);
         }
-
-        const formatDuration = (milliseconds: number): string => {
-          const totalSeconds = Math.floor(milliseconds / 1000);
-          const hours = Math.floor(totalSeconds / 3600);
-          const minutes = Math.floor((totalSeconds % 3600) / 60);
-          const seconds = totalSeconds % 60;
-          return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(
-            2,
-            '0',
-          )}:${String(seconds).padStart(2, '0')}`;
-        };
 
         const libraryActQuantity: LibraryActQuantityEntity = {};
         libraryActQuantity.organizationId = organization?.id;
@@ -279,8 +280,8 @@ export class LibrariesService {
         libraryActQuantity.coefficient = quantity?.coefficient;
         libraryActQuantity.exceeding = quantity?.exceeding;
         libraryActQuantity.duration = quantity?.duration
-          ? formatDuration(quantity?.duration)
-          : null;
+          ? quantity?.duration.toString()
+          : '00:00:00';
         libraryActQuantity.buyingPrice = quantity?.buying_price;
         libraryActQuantity.materials = quantity?.materials;
         libraryActQuantity.traceabilityActivated =
@@ -295,12 +296,18 @@ export class LibrariesService {
             const libraryOdontogram = {} as LibraryOdontogramEntity;
             libraryOdontogram.organizationId = organization?.id;
             libraryOdontogram.color = odontogram?.color;
-            libraryOdontogram.visibleCrown = odontogram?.visible_crown;
-            libraryOdontogram.visibleRoot = odontogram?.visible_root;
-            libraryOdontogram.visibleImplant = odontogram?.visible_implant;
-            libraryOdontogram.visibleAreas = odontogram?.visible_areas;
-            libraryOdontogram.invisibleAreas = odontogram?.invisible_areas;
-            libraryOdontogram.rankOfTooth = odontogram?.rank_of_tooth;
+            libraryOdontogram.visibleCrown = +odontogram?.visible_crown;
+            libraryOdontogram.visibleRoot = +odontogram?.visible_root;
+            libraryOdontogram.visibleImplant = +odontogram?.visible_implant;
+            libraryOdontogram.visibleAreas = JSON.stringify(
+              odontogram?.visible_areas,
+            );
+            libraryOdontogram.invisibleAreas = JSON.stringify(
+              odontogram?.invisible_areas,
+            );
+            libraryOdontogram.rankOfTooth = odontogram?.rank_of_tooth ?? 0;
+            libraryOdontogram.internalReferenceId =
+              odontogram?.internal_reference_id;
             libraryActQuantity.odontograms.push(libraryOdontogram);
           }
         }
@@ -322,6 +329,8 @@ export class LibrariesService {
               });
             }
             const libraryActQuantityTraceability = {} as TraceabilityEntity;
+            libraryActQuantityTraceability.libraryActQuantityId =
+              libraryActQuantity?.id;
             libraryActQuantityTraceability.organizationId = organization?.id;
             libraryActQuantityTraceability.medicalDevice = medicalDevice;
             libraryActQuantityTraceability.reference = traceability?.reference;
@@ -337,11 +346,11 @@ export class LibrariesService {
         if (tariffs && tariffs?.length > 0) {
           for (const tariff of tariffs) {
             if (tariff?.tariff) {
-              const tariffType = await this.tariffTypeRepo.findOne({
-                where: { id: tariff?.tariff_type?.id },
-              });
-              const libraryActQuantityTariff: LibraryActQuantityTariffEntity =
-                {};
+              // const tariffType = await this.tariffTypeRepo.findOne({
+              //   where: { id: tariff?.tariff_type?.id },
+              // });
+              const libraryActQuantityTariff =
+                {} as LibraryActQuantityTariffEntity;
               libraryActQuantityTariff.tariffType = tariff?.tariff_type;
               libraryActQuantityTariff.tariff = tariff?.tariff;
               libraryActQuantity.tariffs.push(libraryActQuantityTariff);
@@ -351,6 +360,7 @@ export class LibrariesService {
         libraryAct.quantities.push(libraryActQuantity);
       }
     }
+
     const associations = params?.associations ?? [];
     if (associations && associations?.length > 0) {
       libraryAct.associations = [];
@@ -361,7 +371,8 @@ export class LibrariesService {
           throw new CBadRequestException(ErrorCode.NOT_FOUND_LIBRARY_ACT);
         }
         const libraryActAssociation = {} as LibraryActAssociationEntity;
-        libraryActAssociation.child = child;
+        libraryActAssociation.libraryActParentId = libraryAct?.id;
+        libraryActAssociation.libraryActChildId = child?.id;
         libraryActAssociation.position = association?.position;
         libraryActAssociation.automatic = association?.automatic;
         libraryAct.associations.push(libraryActAssociation);
@@ -385,7 +396,7 @@ export class LibrariesService {
       }
       const libraryActTraceability = {} as TraceabilityEntity;
       libraryActTraceability.organizationId = organization?.id;
-      libraryActTraceability.medicalDevice = medicalDevice;
+      libraryActTraceability.medicalDeviceId = medicalDevice?.id;
       libraryActTraceability.reference = traceability?.reference;
       libraryActTraceability.observation = traceability?.observation;
       libraryAct.traceabilities.push(libraryActTraceability);
@@ -440,28 +451,7 @@ export class LibrariesService {
     libraryAct.odontograms = [];
 
     const organization = await this.organizationRepo.findOne({
-      relations: [
-        'users',
-        'libraryBanks',
-        'address',
-        'logo',
-        'contacts',
-        'ngapKeys',
-        'libraryActFamilies',
-        'bankChecks',
-        'contraindications',
-        'glossaries',
-        'medicalDevices',
-        'medicamentFamilies',
-        'prescriptionTemplates',
-        'resources',
-        'subscriptions',
-        'tags',
-        'tariffTypes',
-        'workstations',
-        'correspondentTypes',
-        'correspondents',
-      ],
+      relations: ['users'],
       where: {
         id: identity?.org,
       },
@@ -470,15 +460,21 @@ export class LibrariesService {
     const odontograms = params?.odontograms ?? [];
     if (odontograms && odontograms.length > 0) {
       for (const odontogram of odontograms) {
-        const libraryOdontogram: LibraryOdontogramEntity = {};
-        libraryOdontogram.organization = organization;
-        libraryOdontogram.color = odontogram?.color;
-        libraryOdontogram.visibleCrown = odontogram?.visible_crown;
-        libraryOdontogram.visibleRoot = odontogram?.visible_root;
-        libraryOdontogram.visibleImplant = odontogram?.visible_implant;
-        libraryOdontogram.visibleAreas = odontogram?.visible_areas;
-        libraryOdontogram.invisibleAreas = odontogram?.invisible_areas;
-        libraryOdontogram.rankOfTooth = odontogram?.rank_of_tooth;
+        const libraryOdontogram = {} as LibraryOdontogramEntity;
+        libraryOdontogram.organizationId = organization?.id;
+        libraryOdontogram.color = JSON.stringify(odontogram?.color);
+        libraryOdontogram.visibleCrown = +odontogram?.visible_crown;
+        libraryOdontogram.visibleRoot = +odontogram?.visible_root;
+        libraryOdontogram.visibleImplant = +odontogram?.visible_implant;
+        libraryOdontogram.visibleAreas = JSON.stringify(
+          odontogram?.visible_areas,
+        );
+        libraryOdontogram.invisibleAreas = JSON.stringify(
+          odontogram?.invisible_areas,
+        );
+        libraryOdontogram.rankOfTooth = odontogram?.rank_of_tooth ?? 0;
+        libraryOdontogram.internalReferenceId =
+          odontogram?.internal_reference_id ?? 0;
         libraryAct.odontograms.push(libraryOdontogram);
       }
     }
@@ -493,7 +489,7 @@ export class LibrariesService {
         const quantityById = await this.libraryActQuantityRepo.findOne({
           where: { id },
         });
-        const libraryActQuantity: LibraryActQuantityEntity = {};
+        const libraryActQuantity = {} as LibraryActQuantityEntity;
         if (!id || !quantityById) {
           libraryActQuantity.organizationId = organization?.id;
           libraryActQuantity.organization = organization;
@@ -556,7 +552,7 @@ export class LibrariesService {
         libraryActQuantity.odontograms = [];
         if (odontograms && odontograms?.length > 0) {
           for (const odontogram of odontograms) {
-            const libraryOdontogram: LibraryOdontogramEntity = {};
+            const libraryOdontogram = {} as LibraryOdontogramEntity;
             const odontogramById = await this.libraryOdontogramRepo.findOne({
               where: { id: odontogram?.id },
             });

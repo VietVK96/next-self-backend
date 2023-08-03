@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { EnumLibraryActQuantityExceeding } from 'src/entities/library-act-quantity.entity';
 import { EnumLibraryActNomenclature } from '../../entities/library-act.entity';
 import {
+  IsArray,
   IsBoolean,
   IsEnum,
   IsNumber,
@@ -654,6 +655,65 @@ export class ActsStoreFamilyActsDto {
   traceabilities?: [any];
 }
 
+export class ActsStoreOdontogramDto {
+  @ApiProperty({
+    required: false,
+  })
+  @ValidateNested()
+  color?: any;
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  visible_crown?: boolean;
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  visible_root?: boolean;
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  visible_implant?: boolean;
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  visible_areas?: [string];
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  invisible_areas?: [any];
+
+  @ApiProperty({
+    required: false,
+    default: 0,
+  })
+  @IsOptional()
+  @IsNumber()
+  rank_of_tooth?: number;
+
+  @ApiProperty({
+    required: false,
+    default: null,
+  })
+  @IsOptional()
+  @IsNumber()
+  internal_reference_id?: number;
+}
+
 export class ActsStoreDto {
   @ApiProperty({
     required: false,
@@ -752,7 +812,7 @@ export class ActsStoreDto {
     required: false,
     default: [],
   })
-  odontograms?: [any];
+  odontograms?: ActsStoreOdontogramDto[];
 
   @ApiProperty({
     required: false,
