@@ -1,18 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { EmailAccountEntity } from 'src/entities/email-account.entity';
 import { UserEntity } from 'src/entities/user.entity';
-import { DataSource } from 'typeorm';
-import { FindEmailSettingRes } from '../response/find.email.res';
+import { DataSource, Repository } from 'typeorm';
+import { FindEmailSettingRes } from './response/find.email.res';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { EmailOutgoingServerEntity } from 'src/entities/email-outgoing-server.entity';
-import { SaveEmailDto } from '../dto/saveEmail.setting.dto';
+import { SaveEmailDto } from './dto/saveEmail.setting.dto';
 import * as crypto from 'crypto-js';
 import { env } from 'process';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class EmailSettingService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private dataSource: DataSource,
+    @InjectRepository(EmailAccountEntity)
+    private emailAccountRepo: Repository<EmailAccountEntity>,
+  ) {}
 
   async find(userId: number): Promise<FindEmailSettingRes> {
     const user = await this.dataSource.getRepository(UserEntity).findOne({
@@ -29,11 +34,9 @@ export class EmailSettingService {
   }
 
   async findById(emailId: number): Promise<EmailAccountEntity> {
-    const email = await this.dataSource
-      .getRepository(EmailAccountEntity)
-      .findOne({
-        where: { id: emailId },
-      });
+    const email = await this.emailAccountRepo.findOne({
+      where: { id: emailId },
+    });
     if (!email) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     delete email.MAX_ENTRIES;
 
@@ -145,15 +148,13 @@ export class EmailSettingService {
   }
 
   async delete(emailId: number) {
-    const email = await this.dataSource
-      .getRepository(EmailAccountEntity)
-      .findOne({
-        where: { id: emailId },
-      });
+    const email = await this.emailAccountRepo.findOne({
+      where: { id: emailId },
+    });
     if (!email) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     else {
       delete email.MAX_ENTRIES;
-      await this.dataSource.getRepository(EmailAccountEntity).delete(email);
+      await this.emailAccountRepo.delete(emailId);
     }
     return;
   }

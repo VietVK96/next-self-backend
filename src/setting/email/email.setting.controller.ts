@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { EmailSettingService } from './services/email.setting.service';
+import { EmailSettingService } from './email.setting.service';
 import {
   CurrentUser,
   TokenGuard,

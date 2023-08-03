@@ -60,9 +60,8 @@ import { MedicamentModule } from './medicament/medicament.module';
 import { ImportModule } from './import/import.module';
 import { MedicamentFamilyModule } from './medicament-family/medicament-family.module';
 import { PeriodontalChartsModule } from './periodontal-charts/periodontal-charts.module';
-import { AccountModule } from './setting/account/account.module';
-import { EmailSettingModule } from './setting/email/email.setting.module';
 import { ConversationsModule } from './conversations/conversations.module';
+import { SettingModule } from './setting/setting.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -177,9 +176,8 @@ const importsModules = [
   ImportModule,
   MedicamentFamilyModule,
   PeriodontalChartsModule,
-  AccountModule,
-  EmailSettingModule,
   ConversationsModule,
+  SettingModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {

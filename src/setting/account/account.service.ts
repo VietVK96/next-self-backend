@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { FindAccountRes } from '../response/find.account.res';
+import { FindAccountRes } from './response/find.account.res';
 import { UserEntity } from 'src/entities/user.entity';
 import { SpecialtyCodeEntity } from 'src/entities/specialty-code.entity';
-import { UpdateMyInformationDto } from '../dto/updateMyInformation.account.dto';
+import { UpdateMyInformationDto } from './dto/updateMyInformation.account.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { AddressEntity } from 'src/entities/address.entity';
 import axios from 'axios';
@@ -15,7 +15,7 @@ import { AmoEntity } from 'src/entities/amo.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 
 @Injectable()
-export class AccountService {
+export class AccountSettingService {
   constructor(private dataSource: DataSource) {}
 
   async find(userId: number): Promise<FindAccountRes> {
@@ -102,7 +102,7 @@ export class AccountService {
   }> {
     const user = await this.dataSource.getRepository(UserEntity).findOneOrFail({
       where: { id: userId },
-      relations: { address: true, medical: true },
+      relations: { address: true, medical: true, amo: true, setting: true },
     });
     delete user.password;
     delete user.passwordAccounting;

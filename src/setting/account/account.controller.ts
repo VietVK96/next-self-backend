@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AccountService } from './services/account.service';
+import { AccountSettingService } from './account.service';
 import {
   CurrentUser,
   TokenGuard,
@@ -11,8 +11,8 @@ import { UpdateMyInformationDto } from './dto/updateMyInformation.account.dto';
 @ApiBearerAuth()
 @ApiTags('Setting')
 @Controller('setting/account')
-export class AccounController {
-  constructor(private accountService: AccountService) {}
+export class AccounSettingController {
+  constructor(private accountService: AccountSettingService) {}
 
   // settings/account/index.php
   @Get('')
