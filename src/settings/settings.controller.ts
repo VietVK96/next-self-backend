@@ -98,4 +98,10 @@ export class SettingsController {
   async fetchAccountWzagenda(@CurrentUser() identity: UserIdentity) {
     return await this.accountService.fetchAccountWzagenda(identity);
   }
+
+  @Get('/account/interfaceage')
+  @UseGuards(TokenGuard)
+  async fetchAccountPractitioners(@CurrentUser() identity: UserIdentity) {
+    return await this.accountService.fetchAccountPractitioners(identity);
+  }
 }
