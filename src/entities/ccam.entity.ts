@@ -257,7 +257,7 @@ export class CcamEntity {
     name: 'created_on',
     type: 'date',
   })
-  createdOn?: number;
+  createdOn?: string;
 
   /**
    * @ORM\Column(name="deleted_on", type="date", nullable=true)

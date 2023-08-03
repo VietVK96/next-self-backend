@@ -1,0 +1,221 @@
+<style>
+    @page {
+      size: a4 landscape;
+    }
+    table {
+        width: 100%;
+        border-spacing: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    div.page-footer-margin {
+        height: 10mm;
+    }
+    
+</style>
+
+<page style="position:relative" backtop="{{#if duplicata}}10mm{{else}}0mm{{/if}}" backright="0mm" backbottom="10mm" backleft="0mm" orientation="paysage">
+    {{#if duplicata}}
+    <page_header>
+        <span style="color: red; font-size: 14pt;">DUPLICATA</span>
+    </page_header>
+    {{/if}}
+    <div>
+      {{{title}}}
+    </div>
+    <table cellspacing="2mm" border="0" style="margin-top:2mm; margin-bottom:2mm">
+      <col style="width: 25%;" />
+      <col style="width: 35%;" />
+      <col style="width: 40%;" />
+      <tbody>
+          <tr>
+              <td rowspan="2" style="background-color: #e0e6f4; padding: 2mm;">
+                  <div style="color: #00529e;">
+                      Identification du Chirurgien-dentiste traitant (avec numéro ADELI/FINESS) :
+                  </div>
+                  <div style="margin-top: 2mm;">
+                      {{{ident_prat}}}
+                  </div>
+              </td>
+              <td style="background-color: #c6cfe9; padding: 2mm; vertical-align: middle;">
+                  <table style="width: 100%;">
+                      <tr>
+                          <td style="width: 70%; font-weight: bold; white-space: nowrap; height: 5mm; vertical-align: middle;">
+                              Date d'établissement du devis :
+                          </td>
+                          <td style="width: 30%; text-align: right; height: 5mm; vertical-align: middle;">
+                              {{date_devis}}
+                          </td>
+                      </tr>
+                      <tr>
+                          <td style="width: 70%; font-weight: bold; white-space: nowrap; height: 5mm; vertical-align: middle;">
+                              Durée de validité du devis : 
+                          </td>
+                          <td style="width: 30%; text-align: right; height: 5mm; vertical-align: middle;">
+                              {{duree_devis}}
+                          </td>
+                      </tr>
+                  </table>
+              </td>
+              <td rowspan="2" style="background-color: #e0e6f4; padding: 2mm;">
+                  {{description}}
+              </td>
+          </tr>
+          <tr>
+              <td style="background-color: #c6cfe9; padding: 2mm; vertical-align: middle;">
+                  <table style="width: 100%;">
+                      <tr>
+                          <td style="width: 50%; font-weight: bold; white-space: nowrap; height: 5mm; vertical-align: middle;">
+                              Identification du patient :
+                          </td>
+                          <td style="width: 50%; text-align: right; height: 5mm; vertical-align: middle;">
+                              {{ident_pat}}
+                          </td>
+                      </tr>
+                      <tr>
+                          <td style="width: 50%; font-weight: bold; white-space: nowrap; height: 5mm; vertical-align: middle;">
+                              Nom et prénom :
+                          </td>
+                          <td style="width: 50%; text-align: right; height: 5mm; vertical-align: middle;">
+                              {{nom_prenom_patient}}
+                          </td>
+                      </tr>
+                      <tr>
+                          <td style="width: 50%; font-weight: bold; white-space: nowrap; height: 5mm; vertical-align: middle;">
+                              Date de naissance :
+                          </td>
+                          <td style="width: 50%; text-align: right; height: 5mm; vertical-align: middle;">
+                              {{date_de_naissance_patient}}
+                          </td>
+                      </tr>
+                      <tr>
+                          <td style="width: 50%; font-weight: bold; white-space: nowrap; height: 5mm; vertical-align: middle;">
+                              N°INSEE de l'assuré :
+                          </td>
+                          <td style="width: 50%; text-align: right; height: 5mm; vertical-align: middle;">
+                              {{INSEE}}
+                          </td>
+                      </tr>
+                  </table>
+              </td>
+          </tr>
+      </tbody>
+    </table>
+    <div style="text-align: center; padding: 2mm; margin-bottom:2mm">
+        Description précise et détaillée des actes :
+    </div>
+    <table style="width: 100%; border-top: solid 1px #000000; border-bottom: solid 1px #000000;" cellspacing="0" cellpadding="0">
+        <col style="width: 5.5%" />
+        <col style="width: 34%" />
+        <col style="width: 5%" />
+        <col style="width: 6%" />
+        <col style="width: 7%" />
+        <col style="width: 7%" />
+        <col style="width: 7%" />
+        <col style="width: 7%" />
+        <col style="width: 7%" />
+        <col style="width: 7%" />
+        <col style="width: 7.5%" />
+        <thead>
+            <tr style="border-bottom: 1px solid #000; background: #cacbcd; border-right: solid 1px #000000; border-left: solid 1px #000000;">
+                <th style="text-align: center; font-size: 7pt; padding: 1mm; vertical-align: middle; border-right:1px solid #000; border-left: solid 1px #000000;">Localisation ou N° de dents</th>
+                <th style="text-align: center; font-size: 7pt; padding: 1mm; vertical-align: middle; border-right:1px solid #000;">Nature de l'acte ou libellé CCAM</th>
+                <th style="text-align: center; font-size: 7pt; padding: 1mm; vertical-align: middle; border-right:1px solid #000;">Matériaux utilisés</th>
+                <th style="text-align: center; font-size: 7pt; padding: 1mm; vertical-align: middle; border-right:1px solid #000;">Cotation</th>
+                <th style="text-align: center; font-size: 7pt; padding: 1mm; vertical-align: middle; border-right:1px solid #000;">Tarif Sécu</th>
+                <th style="text-align: center; font-size: 7pt; padding: 1mm; vertical-align: middle; border-right:1px solid #000;">Honoraires</th>
+                <th style="text-align: center; font-size: 7pt; padding: 1mm; vertical-align: middle; border-right:1px solid #000;">Remb. Sécu</th>
+                <th style="text-align: center; font-size: 7pt; padding: 1mm; vertical-align: middle; border-right:1px solid #000;">Remb. Mutuelle</th>
+                <th style="text-align: center; font-size: 7pt; padding: 1mm; vertical-align: middle; border-right:1px solid #000;">Remb. Mut. Complément</th>
+                <th style="text-align: center; font-size: 7pt; padding: 1mm; vertical-align: middle; border-right:1px solid #000;">A la charge du patient</th>
+                <th style="text-align: center; font-size: 7pt; padding: 1mm; vertical-align: middle;  border-right: solid 1px #000000;">Réservé à l'organisme complémentaire</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {{#each ar_details}}
+              <tr style="background-color: {{#if (isOdd @index)}}#e7e7e8;{{/if}}  ">
+                  <td style="border-left: solid 1px #000000; vertical-align: middle; padding: 1mm; font-size: 9pt; border-right: solid 1px #000000; text-align: center;">
+                      {{#each (splitString this.location)}}
+                          {{this}}{{#if @last}}{{else}}<br/>{{/if}}
+                      {{/each}}
+                  </td>
+                  <td style="vertical-align: middle; padding: 1mm; font-size: 9pt; border-right: solid 1px #000000; ">{{this.libelle}}</td>
+                  <td style="vertical-align: middle; padding: 1mm; font-size: 9pt; border-right: solid 1px #000000; text-align: center;">{{this.materiau}}</td>
+                  <td style="vertical-align: middle; padding: 1mm; font-size: 9pt; border-right: solid 1px #000000; text-align: center;">{{this.cotation}}</td>
+                  <td style="vertical-align: middle; padding: 1mm; font-size: 9pt; border-right: solid 1px #000000; text-align: right;">{{this.secuAmount}}</td>
+                  <td style="vertical-align: middle; padding: 1mm; font-size: 9pt; border-right: solid 1px #000000; text-align: right;">{{this.honoraires}}</td>
+                  <td style="vertical-align: middle; padding: 1mm; font-size: 9pt; border-right: solid 1px #000000; text-align: right;">{{this.secuRepayment}}</td>
+                  <td style="vertical-align: middle; padding: 1mm; font-size: 9pt; border-right: solid 1px #000000; text-align: right;">{{this.mutualRepayment}}</td>
+                  <td style="vertical-align: middle; padding: 1mm; font-size: 9pt; border-right: solid 1px #000000; text-align: right;">{{this.mutualComplement}}</td>
+                  <td style="vertical-align: middle; padding: 1mm; font-size: 9pt; border-right: solid 1px #000000; text-align: right;">{{this.personAmount}}</td>
+                  <td style="border-right: solid 1px #000000;">{{this.roc}}</td>
+              </tr>
+          {{/each}}
+
+            <tr>
+              <th colspan="4" style=" border-left: solid 1px #000000; border-right: solid 1px #000000; background-color: #cacbcd; font-size: 9pt; text-align: right; padding: 1mm;">TOTAL (en euros)</th>
+              <td style="padding: 1mm; font-size: 9pt; border-right: solid 1px #000000; text-align: right;">{{total_secuAmount}}</td>
+              <td style="padding: 1mm; font-size: 9pt; border-right: solid 1px #000000; text-align: right;">{{total_honoraires}}</td>
+              <td style="padding: 1mm; font-size: 9pt; border-right: solid 1px #000000; text-align: right;">{{total_secuRepayment}}</td>
+              <td style="padding: 1mm; font-size: 9pt; border-right: solid 1px #000000; text-align: right;">{{total_mutualRepayment}}</td>
+              <td style="padding: 1mm; font-size: 9pt; border-right: solid 1px #000000; text-align: right;">{{total_mutualComplement}}</td>
+              <td style="padding: 1mm; font-size: 9pt; border-right: solid 1px #000000; text-align: right;">{{total_personAmount}}</td>
+              <td style="padding: 1mm; font-size: 9pt; text-align: right; border-right: solid 1px #000000;">{{total_roc}}</td>
+          </tr>
+
+        </tbody>
+    </table>
+    <table style="width: 100%; border-collapse: separate; margin-top:2mm;" cellspacing="2mm">
+        <col style="width: 33%;" />
+        <col style="width: 34%;" />
+        <col style="width: 33%;" />
+        <tbody>
+            <tr>
+                <td style="padding: 2mm; border: solid 1px #000000; text-align: center;">
+                    <strong>Honoraires : {{quotationAmount}} &euro;</strong>
+                </td>
+                <td style="padding: 2mm; border: solid 1px #000000; text-align: center;">
+                    <strong>Remboursements : {{quotationPersonRepayment}} &euro;</strong>
+                </td>
+                <td style="padding: 2mm; border: solid 1px #000000; text-align: center;">
+                    <strong>A la charge du patient : {{quotationPersonAmount}} &euro;</strong>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+  <div style="margin-top:10mm">
+    <table>
+        <col style="width: 50%;">
+        <col style="width: 50%;">
+        <tbody>
+            <tr>
+                <td colspan="2">
+                    <strong>Le patient reconnaît avoir eu la possibilité du choix de son traitement.</strong>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Date et signature du patient ou du responsable légal : {{date_acceptation}}
+                    <img src="{{imageSrcPatient}}" />
+                </td>
+                <td>
+                    Signature du Chirurgien-dentiste :
+                    <img src="{{imageSrcPraticien}}" />
+                </td>
+            </tr>
+        </tbody>
+    </table>
+  </div>
+
+
+</page>

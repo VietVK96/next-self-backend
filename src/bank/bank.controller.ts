@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -18,7 +19,11 @@ import {
 } from 'src/common/decorator/auth.decorator';
 
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { BankCheckPrintDto, UpdateBankCheckDto } from './dto/bank.dto';
+import {
+  BankCheckPrintDto,
+  CreateUpdateBankDto,
+  UpdateBankCheckDto,
+} from './dto/bank.dto';
 import { ErrorCode } from 'src/constants/error';
 
 @ApiTags('Bank')
@@ -92,5 +97,46 @@ export class BankController {
   @UseGuards(TokenGuard)
   async duplicateBankChecks(@Param('id') id: number) {
     return await this.bankService.duplicateBankChecks(id);
+  }
+
+  @Get('/banks/all')
+  @UseGuards(TokenGuard)
+  async findAllBankByUser(@CurrentUser() identity: UserIdentity) {
+    try {
+      return await this.bankService.findAllByUser(identity.id);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_BANKS, error);
+    }
+  }
+
+  @Post('/banks')
+  @UseGuards(TokenGuard)
+  async createUpdateBank(
+    @CurrentUser() identity: UserIdentity,
+    @Body() payload: CreateUpdateBankDto,
+  ) {
+    return await this.bankService.createUpdateBank(
+      identity.id,
+      identity.org,
+      payload,
+    );
+  }
+
+  @Delete('/banks/:id')
+  @UseGuards(TokenGuard)
+  async deleteBank(
+    @CurrentUser() identity: UserIdentity,
+    @Param('id') id: number,
+  ) {
+    return await this.bankService.deleteBank(id, identity.id, identity.org);
+  }
+
+  @Get('/banks/:id')
+  @UseGuards(TokenGuard)
+  async getOneBank(
+    @CurrentUser() identity: UserIdentity,
+    @Param('id') id: number,
+  ) {
+    return await this.bankService.getOne(id);
   }
 }

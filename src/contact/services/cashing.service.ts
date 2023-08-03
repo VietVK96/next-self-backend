@@ -26,6 +26,14 @@ import * as dayjs from 'dayjs';
 import { DEFAULT_LOCALE } from 'src/constants/locale';
 import * as path from 'path';
 import { createPdf } from '@saemhco/nestjs-html-pdf';
+import { checkDay } from 'src/common/util/day';
+import {
+  BankStatement,
+  Beneficiaries,
+  PatientStatement,
+  PaymentInterface,
+  SlipCheck,
+} from '../../interfaces/interface';
 
 dayjs.locale(DEFAULT_LOCALE);
 @Injectable()
@@ -43,6 +51,155 @@ export class CashingService {
     private findContactService: FindContactService,
   ) {}
 
+  async exportPayments(
+    user: number,
+    conditions: FindAllStructDto[],
+  ): Promise<string> {
+    const payments: PaymentInterface[] = [];
+
+    const where = this.conditionsToSQL(conditions);
+    // query table T_CASHING_CSG join many table ....
+    const statements: PaymentInterface[] = await this.dataSource.query(
+      `SELECT
+      T_CASHING_CSG.CSG_ID AS id,
+      T_CASHING_CSG.CON_ID AS patient_id,
+      T_CASHING_CSG.LBK_ID AS bank_id,
+      T_CASHING_CSG.SLC_ID AS slip_check_id,
+      T_CASHING_CSG.CSG_DATE AS date,
+      T_CASHING_CSG.CSG_PAYMENT_DATE AS paymentDate,
+      T_CASHING_CSG.CSG_PAYMENT AS payment,
+      T_CASHING_CSG.CSG_TYPE AS type,
+      T_CASHING_CSG.CSG_AMOUNT AS amount,
+      T_CASHING_CSG.amount_care as amountCare,
+      T_CASHING_CSG.amount_prosthesis as amountProsthesis,
+      T_CASHING_CSG.CSG_DEBTOR AS debtor,
+      T_CASHING_CSG.CSG_CHECK_NBR AS checkNbr,
+      T_CASHING_CSG.CSG_CHECK_BANK AS checkBank,
+      T_CASHING_CSG.CSG_MSG AS msg
+  FROM T_CASHING_CSG
+  LEFT OUTER JOIN T_CASHING_CONTACT_CSC ON T_CASHING_CONTACT_CSC.CSG_ID = T_CASHING_CSG.CSG_ID
+  LEFT OUTER JOIN T_CONTACT_CON ON T_CONTACT_CON.CON_ID = T_CASHING_CONTACT_CSC.CON_ID
+  LEFT OUTER JOIN T_LIBRARY_BANK_LBK ON T_LIBRARY_BANK_LBK.LBK_ID = T_CASHING_CSG.LBK_ID
+  WHERE T_CASHING_CSG.USR_ID = ?${where}  ORDER BY T_CASHING_CSG.CSG_PAYMENT_DATE DESC, T_CASHING_CSG.created_at DESC`,
+      [user],
+    );
+
+    for (const statement of statements) {
+      const payment = statement;
+      const id = statement?.id;
+      const patientId = statement?.patient_id;
+      const bankId = statement?.bank_id;
+      const slipCheckId = statement?.slip_check_id;
+      // query table T_CONTACT_CON
+      const patientStatement: PatientStatement[] = await this.dataSource.query(
+        `SELECT
+      T_CONTACT_CON.CON_ID AS id,
+      T_CONTACT_CON.CON_NBR AS number,
+      T_CONTACT_CON.CON_LASTNAME AS lastname,
+      T_CONTACT_CON.CON_FIRSTNAME AS firstname
+  FROM T_CONTACT_CON
+  WHERE T_CONTACT_CON.CON_ID = ?`,
+        [patientId],
+      );
+      payment.patient = patientStatement;
+
+      // query table T_CASHING_CONTACT_CSC Join T_CONTACT_CON
+      const beneficiariesStatement: Beneficiaries[] =
+        await this.dataSource.query(
+          `SELECT
+      T_CONTACT_CON.CON_ID AS id,
+      T_CONTACT_CON.CON_LASTNAME AS lastname,
+      T_CONTACT_CON.CON_FIRSTNAME AS firstname,
+      T_CASHING_CONTACT_CSC.CSC_AMOUNT AS amount,
+      T_CASHING_CONTACT_CSC.amount_care,
+      T_CASHING_CONTACT_CSC.amount_prosthesis
+  FROM T_CASHING_CONTACT_CSC
+  JOIN T_CONTACT_CON
+  WHERE T_CASHING_CONTACT_CSC.CSG_ID = ?
+    AND T_CASHING_CONTACT_CSC.CON_ID = T_CONTACT_CON.CON_ID`,
+          [id],
+        );
+      payment.beneficiaries = beneficiariesStatement;
+
+      // query table T_LIBRARY_BANK_LBK
+      const bankStatement: BankStatement[] = await this.dataSource.query(
+        `SELECT
+      T_LIBRARY_BANK_LBK.LBK_ID AS id,
+      T_LIBRARY_BANK_LBK.LBK_ACCOUNTING_CODE AS accounting_code,
+      T_LIBRARY_BANK_LBK.third_party_account,
+      T_LIBRARY_BANK_LBK.product_account,
+      T_LIBRARY_BANK_LBK.LBK_NAME as bank_name
+  FROM T_LIBRARY_BANK_LBK
+  WHERE T_LIBRARY_BANK_LBK.LBK_ID = ?`,
+        [bankId],
+      );
+      payment.bank = bankStatement;
+
+      // query table T_SLIP_CHECK_SLC join T_LIBRARY_BANK_LBK
+      const slipCheckStatement: SlipCheck[] = await this.dataSource.query(
+        `SELECT
+      T_SLIP_CHECK_SLC.SLC_ID AS id,
+      T_SLIP_CHECK_SLC.SLC_NBR AS number,
+      T_SLIP_CHECK_SLC.SLC_DATE AS date,
+      T_SLIP_CHECK_SLC.label,
+      T_SLIP_CHECK_SLC.amount,
+      T_LIBRARY_BANK_LBK.LBK_NAME AS bank_name
+  FROM T_SLIP_CHECK_SLC
+  JOIN T_LIBRARY_BANK_LBK
+  WHERE T_SLIP_CHECK_SLC.SLC_ID = ?
+    AND T_SLIP_CHECK_SLC.LBK_ID = T_LIBRARY_BANK_LBK.LBK_ID`,
+        [slipCheckId],
+      );
+      payment.slip_check = slipCheckStatement;
+      // ruslt
+      payments.push(payment);
+    }
+
+    // Tiếp theo, sử dụng payments để tạo tệp CSV và xuất dữ liệu.
+    // tạo tệp CSV
+    let csvContent =
+      'NOTE : Utiliser encodage UTF-8 et comme separateur le point virgule pour la lecture de ce fichier\n';
+    csvContent += `PRATICIEN;PRATICIEN_NAME\n`;
+
+    // Ghi dữ liệu payments vào tệp CSV
+
+    for (const payment of payments) {
+      let debiteurNumber = -1;
+      let debiteur = payment?.debtor;
+      let bankName = '';
+      switch (payment?.payment) {
+        case 'cheque':
+          bankName = payment?.checkBank;
+        default:
+          bankName = payment?.bank[0]?.bank_name;
+      }
+
+      if (payment.patient && payment.patient.length > 0) {
+        debiteurNumber = payment?.patient[0]?.number;
+        debiteur =
+          payment?.patient[0]?.lastname + payment?.patient?.[0]?.firstname;
+      }
+
+      let noBordereau = 0;
+      if (payment?.slip_check) {
+        noBordereau = payment.slip_check?.[0]?.number;
+      }
+      csvContent += `${debiteurNumber || ''},${
+        payment?.date ? dayjs(payment?.date).format('DD/MM/YYYY') : ''
+      },${
+        payment?.paymentDate
+          ? dayjs(payment?.paymentDate).format('DD/MM/YYYY')
+          : ''
+      }, "${debiteur ? debiteur : ''}",${payment?.payment || ''},${
+        payment?.checkNbr || ''
+      },"${bankName}",${noBordereau ? noBordereau : ''},${
+        payment?.type || ''
+      },${payment?.amount || ''},"${payment?.msg || ''}"\n`;
+    }
+
+    return csvContent;
+  }
+
   // php/cashing/print.php 31
   async print(payload: CashingPrintDto) {
     try {
@@ -54,6 +211,7 @@ export class CashingService {
         : await this.findByDoctor(user?.id, payload?.conditions, {
             order: 'ASC',
           });
+
       payments = payments?.filter(
         (payment) => payment?.date || payment?.paymentDate,
       );
@@ -61,7 +219,7 @@ export class CashingService {
 
       const filePath = path.join(
         process.cwd(),
-        'templates/cashing',
+        'templates/pdf/cashing',
         'cashing.hbs',
       );
       const options = {
@@ -354,12 +512,8 @@ export class CashingService {
         .where('SLC.SLC_ID = :id', { id: payment.slip_check_id })
         .andWhere('SLC.LBK_ID = LBK.LBK_ID')
         .getRawOne();
-      const paymentDate = dayjs(payment.paymentDate).isValid()
-        ? dayjs(payment.paymentDate).format('YYYY-MM-DD')
-        : null;
-      const date = dayjs(payment.date).isValid()
-        ? dayjs(payment.date).format('YYYY-MM-DD')
-        : null;
+      const paymentDate = checkDay(payment?.paymentDate);
+      const date = checkDay(payment?.date);
       result.push({
         ...payment,
         paymentDate,
@@ -424,12 +578,8 @@ export class CashingService {
         .where('CSC.CSG_ID = :id', { id: payment.id })
         .andWhere('CSC.CON_ID = CON.CON_ID')
         .getRawMany();
-      const paymentDate = dayjs(payment.paymentDate).isValid()
-        ? dayjs(payment.paymentDate).format('YYYY-MM-DD')
-        : null;
-      const date = dayjs(payment.date).isValid()
-        ? dayjs(payment.date).format('YYYY-MM-DD')
-        : null;
+      const paymentDate = checkDay(payment?.paymentDate);
+      const date = checkDay(payment?.date);
       results.push({
         ...payment,
         paymentDate,
@@ -440,5 +590,62 @@ export class CashingService {
     }
 
     return results;
+  }
+
+  // suport findByDoctor
+  private conditionsToSQL(conditions: FindAllStructDto[]): string {
+    const conditionFields = {
+      // Định nghĩa các trường điều kiện tại đây
+      // Ví dụ:
+      // field1: 'table_name.field1',
+      // field2: 'table_name.field2',
+      'csg.date': 'T_CASHING_CSG.CSG_DATE',
+      'csg.paymentDate': 'T_CASHING_CSG.CSG_PAYMENT_DATE',
+      'csg.amount': 'T_CASHING_CSG.CSG_AMOUNT',
+      'csg.payment': 'T_CASHING_CSG.CSG_PAYMENT',
+      'csg.type': 'T_CASHING_CSG.CSG_TYPE',
+      'con.nbr': 'T_CONTACT_CON.CON_NBR',
+      'con.lastname': 'T_CONTACT_CON.CON_LASTNAME',
+      'con.firstname': 'T_CONTACT_CON.CON_FIRSTNAME',
+      'lbk.id': 'T_LIBRARY_BANK_LBK.LBK_ID',
+      'lbk.name': 'T_LIBRARY_BANK_LBK.LBK_NAME',
+      'lbk.abbr': 'T_LIBRARY_BANK_LBK.LBK_ABBR',
+    };
+    const conditionOperators = {
+      // Định nghĩa các toán tử điều kiện tại đây
+      // Ví dụ:
+      // equals: '=',
+      // greaterThan: '>',
+      // lessThan: '<',
+      // ...
+      gte: '>=',
+      eq: '=',
+      lte: '<=',
+      like: 'LIKE',
+    };
+    // Viết hàm chuyển đổi các điều kiện thành câu SQL tương tự như trước đó
+    // (Ví dụ: AND field1 = value1 AND field2 > value2 ...)
+    // Hàm này không cần sửa đổi nếu logic xử lý điều kiện không thay đổi.
+    // Return câu điều kiện SQL được tạo ra từ mảng conditions.
+    const wheres = [];
+
+    for (const condition of conditions) {
+      let conditionUse = condition;
+
+      if (typeof condition === 'string') {
+        conditionUse = JSON.parse(condition);
+      }
+      const operator = conditionUse?.op;
+      const value = conditionUse?.value;
+      const field = conditionUse?.field;
+
+      if (conditionFields[field] && conditionOperators[operator]) {
+        wheres.push(
+          `${conditionFields[field]} ${conditionOperators[operator]} "${value}"`,
+        );
+      }
+    }
+
+    return wheres.length > 0 ? ' AND ' + wheres.join(' AND ') : '';
   }
 }

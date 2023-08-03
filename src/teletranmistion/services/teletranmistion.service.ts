@@ -17,6 +17,7 @@ import { TeletransmissionEntity } from 'src/entities/teletransmission.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 import { SaveTeletranmistionDto } from '../dto/save-teletranmistion.dto';
+import { NomieService } from './nomie.service';
 
 @Injectable()
 export class TeletranmistionService {
@@ -40,6 +41,7 @@ export class TeletranmistionService {
     @InjectRepository(LotCareSheetEntity)
     private lotCareSheetRepo: Repository<LotCareSheetEntity>,
     private sesamvitaleTeletranmistionService: SesamvitaleTeletranmistionService,
+    private noemieService: NomieService,
   ) {}
 
   async save(
@@ -155,36 +157,41 @@ export class TeletranmistionService {
         endDate,
       );
 
-    if (listeDateChangementEtat && listeDateChangementEtat.length > 0) {
-      for (const details of listeDateChangementEtat) {
+    if (
+      listeDateChangementEtat?.lot &&
+      listeDateChangementEtat.lot.length > 0
+    ) {
+      for (const details of listeDateChangementEtat.lot) {
         let lot = await this.lotRepo.findOne({
           where: {
-            externalReferenceId: payload.external_reference_id,
+            externalReferenceId: parseInt(details?.idLot[0] ?? ''),
             organizationId: identity.org,
           },
         });
         const lotStatus = await this.lotStatusRepo.findOne({
           where: {
-            value: parseInt(details?.cstatut ?? '0'),
+            value: parseInt(details?.cstatut[0] ?? '0'),
           },
         });
         if (!lot) {
           const lotNew = this.lotRepo.create({
             organizationId: identity.org,
-            finessNumber: teletransmission?.finessNumber,
-            number: details?.numLot,
-            mode: details?.typeSecuLot,
-            creationDate: dayjs(details?.dateCrea).format('YYYY-MM-DD'),
-            amount: parseFloat(details?.montantTotal),
-            amountAmo: parseFloat(details?.montantAmo),
-            amountAmc: parseFloat(details?.montantAmc),
-            externalReferenceId: parseInt(details?.idLot ?? ''),
+            finessNumber: teletransmission?.finessNumber[0],
+            number: details?.numLot[0] ?? '',
+            mode: details?.typeSecuLot[0] ?? '',
+            creationDate: dayjs(details?.dateCrea[0]._ ?? '').format(
+              'YYYY-MM-DD',
+            ),
+            amount: parseFloat(details?.montantTotal[0] ?? ''),
+            amountAmo: parseFloat(details?.montantAmo[0] ?? ''),
+            amountAmc: parseFloat(details?.montantAmc[0] ?? ''),
+            externalReferenceId: parseInt(details?.idLot[0] ?? ''),
           });
           const rnm = details.rnm ?? null;
-          if (rnm && rnm !== null) {
+          if (rnm && rnm !== null && rnm.length > 0) {
             const amcData = await this.amcRepo.findOne({
               where: {
-                numero: rnm,
+                numero: rnm[0],
               },
             });
             if (amcData) {
@@ -206,9 +213,9 @@ export class TeletranmistionService {
             lotNew.lotStatusId = lotStatus.id;
           }
 
-          const sendingDate = details?.sendingDate;
-          if (sendingDate && sendingDate !== null) {
-            lotNew.sendingDate = dayjs(sendingDate).format('YYYY-MM-DD');
+          const sendingDate = details?.dateEnvoi;
+          if (sendingDate && sendingDate !== null && sendingDate.length > 0) {
+            lotNew.sendingDate = dayjs(sendingDate[0]._).format('YYYY-MM-DD');
           }
           lot = await this.lotRepo.save(lotNew);
           //
@@ -218,10 +225,10 @@ export class TeletranmistionService {
             canUpdate = true;
             lot.lotStatusId = lotStatus.id;
           }
-          const sendingDate = details?.sendingDate;
-          if (sendingDate && sendingDate !== null) {
+          const sendingDate = details?.dateEnvoi;
+          if (sendingDate && sendingDate !== null && sendingDate.length > 0) {
             canUpdate = true;
-            lot.sendingDate = dayjs(sendingDate).format('YYYY-MM-DD');
+            lot.sendingDate = dayjs(sendingDate[0]._).format('YYYY-MM-DD');
           }
           if (canUpdate) {
             await this.lotRepo.save(lot);
@@ -251,11 +258,7 @@ export class TeletranmistionService {
       }
     }
 
-    // @TODO
-    // $organization = $container->get('app.repository.organization')->find($session->get('organization_id'));
-    // $container->get('app.service.noemie')->process($client, $organization, $teletransmission->getFinessNumber());
+    this.noemieService.process(identity.org, teletransmission.finessNumber);
     return teletransmission;
   }
-
-  // async process() {}
 }

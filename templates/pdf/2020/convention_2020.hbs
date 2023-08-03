@@ -1,0 +1,661 @@
+<head>
+    <title>Devis convention 2020</title>
+    <style>
+    @page {
+        padding: 0;
+        size: A3 landscape;
+    }
+
+    body {
+        font-family: Arial;
+        font-size: 10px;
+    }
+
+    #footer {
+        bottom: 0;
+        height: 5mm;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    table td,
+    table th {
+        padding: 1mm 2mm;
+        border: solid 0.1pt #000000;
+        vertical-align: top;
+    }
+
+    table.treatment th {
+        font-size: 12px;
+        font-weight: normal;
+        text-align: center;
+    }
+
+    table.payment-plan th.due-date,
+    table.payment-plan td.due-date {
+        width: 90%;
+    }
+
+    table.payment-plan th.amount,
+    table.payment-plan td.amount {
+        width: 10%;
+    }
+
+    table.payment-plan td.amount {
+        text-align: right;
+    }
+
+    </style>
+</head>
+<body>
+    <div style=""><html lang="fr"></html>
+        <div style="margin-bottom: 2mm;">
+            <h2 style="text-align: center; font-weight: normal; " >
+                DEVIS POUR LES TRAITEMENTS ET ACTES BUCCO-DENTAIRES FAISANT L'OBJET D'UNE ENTENTE DIRECTE
+            </h2>
+            <div style="text-align: center;">
+                <p style="font-size: 14px;">conformément aux dispositions de la convention nationale des chirurgiens-dentistes (publiée au JO du 25 août 2018)</p>
+            </div>
+        </div>
+        <div style="text-align: center; margin-bottom: 2mm;">
+            <p style="font-size: 14px;">Ce devis est la propriété du patient ou de son représentant légal. La communication de ce document à un tiers se fait sous sa seule responsabilité. Ce devis est informatif, les montants des honoraires et prises en charge sont définis selon les droits effectifs à la date de réalisation de l'acte. Les soins à tarifs opposables ne sont pas compris dans ce devis.</p>
+        </div>
+        <table style="border-collapse: separate; border-spacing: 1mm;">
+            <tbody>
+                <tr>
+                    <td style="width: 50%;">
+                        <div style="margin-bottom: 1mm;">
+                            <strong>Identification du chirurgien-dentiste traitant</strong>
+                        </div>
+                        <div style="margin-bottom: 1mm;">
+                            Nom et prénom : {{quote.user.fullName}} ( {{#if (isset quote.user.freelance)}} "EI" {{/if}} )
+                        </div>
+                        <div style="margin-bottom: 1mm;">
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td style="width: 50%; padding: 0; border: 0;">Identification RPPS : {{ quote.user.medical.rppsNumber }}</td>
+                                        <td style="width: 50%; padding: 0; border: 0;">N° ADELI : {{ quote.user.medical.finessNumber }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="padding: 0; border: 0;">N° d'établissement (FINESS) : {{ quote.user.finessNumber }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div>
+                            Raison sociale et adresse : {{#if (isset quote.user.companyName)}} {{quote.user..organization.name }} {{/if}}
+                            <div style="height: 10mm; overflow: hidden; text-overflow: ellipsis;">
+                                {{#if (notEmpty organization.address)}}
+                                <div>
+                                    {{quote.user..organization.address.street}} {{quote.user..organization.address.street2}} {{quote.user..organization.address.zipCode}} {{quote.user..organization.address.city}} {{quote.user..organization.address.country}}
+                                </div>
+                                {{/if}}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="width: 50%;" rowspan="2">
+                        <div style="margin-bottom: 1mm;">
+                            <strong>Identification du patient</strong>
+                        </div>
+                        <div style="margin-bottom: 1mm;">
+                            Nom et prénom : {{ quote.patient.lastName }} {{ quote.patient.firstName }}
+                        </div>
+                        <div style="margin-bottom: 1mm;">
+                            Date de naissance : {{ quote.patient.birthDate }}
+                        </div>
+                        <div style="margin-bottom: 5mm;">
+                            N° de Sécurité Sociale du patient : {{ insee }}
+                        </div>
+                        <div style="background-color: #eeeeee; padding: 2mm;">
+                            <div style="margin-bottom: 1mm;">
+                                <em>A remplir par l'assuré si celui-ci souhaite envoyer ce devis à son organisme complémentaire pour connaître son éventuel reste à charge selon son contrat :</em>
+                            </div>
+                            <div style="margin-bottom: 1mm;">
+                                Nom de l'organisme complémentaire :
+                            </div>
+                            <div style="margin-bottom: 1mm;">
+                                N° de contract ou d'adhérent :
+                            </div>
+                            <div>
+                                Référence dossier (à remplir par l'organisme complémentaire) :
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div style="margin-bottom: 1mm;">
+                            Date du devis : {{ quote.date }}
+                        </div>
+                        <div style="margin-bottom: 1mm;">
+                            Valable jusqu'au  <p>(sous réserve de modification réglementaire) </p> : {{ quote.validUntil }}
+                        </div>
+                        <div style="margin-bottom: 1mm;">
+                            Ce devis contient <span class="page_count" style="display: inline-block; width: 10mm;"></span> pages indissociables.
+                        </div>
+                        <div>
+                            Description du traitement proposé :
+                            <div style="height: 16mm; overflow: hidden; text-overflow: ellipsis;">
+                                {{ quote.description }}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <div style="margin-bottom: 2mm;">
+                            <strong>Lieu de fabrication du dispositif médical</strong>
+                        </div>
+                        <div>
+                            <label style="display: inline-block; margin: 0;">
+                                <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if isInEuropean}}checked{{/if}} />
+                                <span style="vertical-align: middle;">au sein de l'Union Européenne</span>
+                            </label>
+                            <label style="display: inline-block; margin: 0;">
+                                <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if notInEuropean}}checked{{/if}} />
+                                <span style="vertical-align: middle;">hors Union Européenne</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label style="display: inline-block; margin: 0;">
+                                <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if (isset quote.placeOfSubcontracting)}}checked{{/if}} />
+                                <span style="vertical-align: middle;">sans sous-traitance du fabricant</span>
+                            </label>
+                            <label style="display: inline-block; margin: 0;">
+                                <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if (isset quote.placeOfSubcontracting)}}checked{{/if}} />
+                                <span style="vertical-align: middle;">avec une partie de la réalisation du fabricant sous traitée :</span>
+                            </label>
+                            <label style="display: inline-block; margin: 0;">
+                                <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if isInEuropean}}checked{{/if}} />
+                                <span style="vertical-align: middle;">au sein de l'Union Européenne</span>
+                            </label>
+                            <label style="display: inline-block; margin: 0;">
+                                <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if notInEuropean}}checked{{/if}} />
+                                <span style="vertical-align: middle;">hors Union Européenne</span>
+                            </label>
+                        </div>
+                        <div>
+                             <p>A l'issue du traitement, il vous sera remis une fiche de traçabilité et la déclaration de conformité du dispositif médical (document rempli par le fabricant ou son mandataire et sous sa seule responsabilité). </p>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <div style="margin-bottom: 2mm;">
+                            <strong>Légende explicative du devis</strong>
+                        </div>
+                        <div>
+                            <div>
+                                <table style="margin-bottom: 2mm;">
+                                    <tbody>
+                                        <tr>
+                                            <th style="vertical-align: top; width: 25%;" rowspan="2">** Matériaux et normes</th>
+                                            <td style="text-align: center; width: 5%;">1</td>
+                                            <td style="vertical-align: top; width: 20%;">Alliage précieux NF EN ISO 22674 2016</td>
+                                            <td style="text-align: center; width: 5%;">2</td>
+                                            <td style="vertical-align: top; width: 20%;">Alliage non précieux ISO 22674 2016</td>
+                                            <td style="text-align: center; width: 5%;">3</td>
+                                            <td style="vertical-align: top; width: 20%;">Céramo-céramique NF EN ISO 9693 2016</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="text-align: center; width: 5%;">4</td>
+                                            <td style="vertical-align: top;">Céramique céramométallique NF EN ISO 6872 2015</td>
+                                            <td style="text-align: center; width: 5%;">5</td>
+                                            <td style="vertical-align: top;">Polymères de base NF EN ISO 20795:1:2013</td>
+                                            <td style="text-align: center; width: 5%;">6</td>
+                                            <td style="vertical-align: top;">Dents artificielles NF EN ISO 22112 2017</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <table style="margin-bottom: 2mm;">
+                                    <tbody>
+                                        <tr>
+                                            <th style="vertical-align: top; width: 25%;" rowspan="4">**** Paniers</th>
+                                            <th style="vertical-align: top; text-align: center; width: 10%;">Codes</th>
+                                            <th style="vertical-align: top; text-align: center; width: 15%;">Libellés</th>
+                                            <th style="vertical-align: top; text-align: center; width: 25%;">Conditions tarifaires</th>
+                                            <th style="vertical-align: top; text-align: center; width: 25%;">Prise en charge complémentaire</th>
+                                        </tr>
+                                        <tr>
+                                            <td style="vertical-align: top; text-align: center;">1</td>
+                                            <td style="vertical-align: top; text-align: center;">100% Santé</td>
+                                            <td style="vertical-align: top; text-align: center;">soumis à honoraires limites de facturation</td>
+                                            <td style="vertical-align: top; text-align: center;">sans reste à charge si le patient bénéficie d’un contrat dit responsable</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="vertical-align: top; text-align: center;">2</td>
+                                            <td style="vertical-align: top; text-align: center;">Modéré</td>
+                                            <td style="vertical-align: top; text-align: center;">soumis à honoraires limites de facturation</td>
+                                            <td style="vertical-align: top; text-align: center;">selon le contrat du patient</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="vertical-align: top; text-align: center;">3</td>
+                                            <td style="vertical-align: top; text-align: center;">Libre</td>
+                                            <td style="vertical-align: top; text-align: center;">honoraires libres</td>
+                                            <td style="vertical-align: top; text-align: center;">selon le contrat du patient</td>
+                                        </tr>
+                                        <tr>
+                                            <th style="vertical-align: top; width: 25%;">Panier Complémentaire Santé Solidaire</th>
+                                            <td style="vertical-align: top; text-align: center;">4</td>
+                                            <td style="vertical-align: top; text-align: center;">Complémentaire Santé Solidaire</td>
+                                            <td style="vertical-align: top; text-align: center;">soumis à honoraires limites de facturation</td>
+                                            <td style="vertical-align: top; text-align: center;">pour les assurés bénéficiaires de la Complémentaire Santé Solidaire</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div>
+                                <div>
+                                     <p>* HN = Hors Nomenclature </p>
+                                </div>
+                                <div>
+                                     <p>*** Les montants remboursés et non remboursés du régime obligatoire sont informatifs, la prise en charge définitive est définie à la date de réalisation de l'acte. </p>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div style="page-break-after: always;">
+        </div>
+    </div>
+    <div id="header">
+        <table style="border-collapse: separate; border-spacing: 1mm;">
+            <tbody>
+                <tr>
+                    <td style="width: 50%;">
+                        <div style="margin-bottom: 1mm;">
+                            <strong>Identification du chirurgien-dentiste traitant</strong>
+                        </div>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td style="width: 50%; padding: 0; border: 0;">Identification RPPS : {{ quote.user.medical.rppsNumber }}</td>
+                                    <td style="width: 50%; padding: 0; border: 0;">N° ADELI : {{ quote.user.medical.finessNumber }}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" style="padding: 0; border: 0;">N° d'établissement (FINESS) : {{ quote.user.finessNumber }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                    <td style="width: 50%;">
+                        <div style="margin-bottom: 1mm;">
+                            <strong>Identification du patient</strong>
+                        </div>
+                        <div style="margin-bottom: 1mm;">
+                            <div style="float: right;">
+                                Date de naissance : {{ quote.patient.birthDate}}
+                            </div>
+                            <div>
+                                Nom et prénom : {{ quote.patient.lastName }} {{ quote.patient.firstName }}
+                            </div>
+                        </div>
+                        <div>
+                            N° de Sécurité Sociale du patient : {{insee}}
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div style="padding: 1mm; margin-bottom: 2mm;">
+        <div style="margin-bottom: 2mm;">
+            <strong>Traitement proposé - </strong> Description précise et détaillée des actes
+        </div>
+        <table class="treatment">
+            <tbody>
+                <tr>
+                    <th style="width: 5%;">N° de traitement</th>
+                    <th style="width: 5%;">N° dent ou Localisation</th>
+                    <th style="width: 8%;">Cotation CCAM, NGAP ou acte HN</th>
+                    <th>Nature de l'acte</th>
+                    <th style="width: 5%;">Matériaux utilisés (**)</th>
+                    <th style="width: 5%;">Panier (****)</th>
+                    <th style="width: 8%;">Honoraires limites de facturation</th>
+                    <th style="width: 8%;">Honoraires dont prix de vente du dispositif médical</th>
+                    <th style="width: 8%;">Base de remboursement AMO</th>
+                    <th style="width: 8%;">Montant remboursé AMO (***)</th>
+                    <th style="width: 8%;">Montant non remboursé AMO</th>
+                </tr>
+                {{#each acts.acts}}
+                  <tr>
+                      <td style="text-align: center;">{{ this.act.treatmentNumber }}</td>
+                      <td style="text-align: center;">{{this.act.dentalLocalization}}</td>
+                      <td style="text-align: center;">{{ this.act.cotation }}</td>
+                      <td>{{ this.label }}</td>
+                      <td style="text-align: center;">{{this.act.materials}}</td>
+                      <td style="text-align: center;">{{#if (isset this.panier )}}{{ this.panier }}{{/if}}</td>
+                      <td style="text-align: right;">{{#if (isset this.maximumPrice )}}{{ this.maximumPrice }} {{../quote.user.setting.currency}}{{/if }}</td>
+                      <td style="text-align: right;">{{ this.amount}} {{../quote.user.setting.currency}}</td>
+                      <td style="text-align: right;">{{#if (isset amoAmount )}}{{ this.amoAmount}} {{../quote.user.setting.currency}}{{else}}NR{{/if }}</td>
+                      <td style="text-align: right;">{{ this.amoRefund}} {{../quote.user.setting.currency}}</td>
+                      <td style="text-align: right;">{{ this.patientAmount}} {{../quote.user.setting.currency}}</td>
+                  </tr>
+                {{/each}}
+                <tr>
+                    <td colspan="7" style="text-align: right;">Total (des actes envisagés)</td>
+                    <td style="text-align: right;">{{ acts.amountTotal}} {{quote.user.setting.currency}}</td>
+                    <td style="text-align: right;">{{ acts.amoAmountTotal}} {{quote.user.setting.currency}}</td>
+                    <td style="text-align: right;">{{ acts.amoRefundTotal}} {{quote.user.setting.currency}}</td>
+                    <td style="text-align: right;">{{ acts.patientAmountTotal}} {{quote.user.setting.currency}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {{#if (notEmpty therapeuticAlternatives)}}
+        <div style="padding: 1mm; margin-bottom: 2mm;">
+            <div style="margin-bottom: 2mm;">
+                <div>
+                    <strong>Information alternative thérapeutique</strong>
+                </div>
+                <div>
+                     <p>- en cas de reste à charge éventuel, une information sur des alternatives thérapeutiques 100% Santé ou à défaut, à entente directe modérée est donnée par le praticien. Sur demande du patient, elle peut donner lieu à une nouvelle proposition de plan de traitement complet, dans un devis distinct. </p>
+                </div>
+            </div>
+            {{#if (notEmpty rac0)}}
+                <table class="treatment">
+                    <tbody>
+                        <tr>
+                            <td colspan="11">
+                                <strong>Acte sans reste à charge</strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th style="width: 5%;">N° de traitement</th>
+                            <th style="width: 5%;">N° dent ou Localisation</th>
+                            <th style="width: 8%;">Cotation CCAM, NGAP ou acte HN</th>
+                            <th>Nature de l'acte</th>
+                            <th style="width: 5%;">Matériaux utilisés (**)</th>
+                            <th style="width: 8%;">Honoraires limites de facturation</th>
+                            <th style="width: 8%;">Honoraires dont prix de vente du dispositif médical</th>
+                            <th style="width: 8%;">Base de remboursement AMO</th>
+                            <th style="width: 8%;">Montant remboursé AMO (***)</th>
+                            <th style="width: 8%;">Montant non remboursé AMO</th>
+                            <th style="width: 5%;">Réalisé par votre praticien</th>
+                        </tr>
+                        {{#each rac0}}
+                            <tr>
+                                <td style="text-align: center;">{{ this.treatmentNumber }}</td>
+                                <td style="text-align: center;">{{this.dentalLocalization}}</td>
+                                <td style="text-align: center;">{{ this.code }}</td>
+                                <td>{{ this.ccam.shortName }}</td>
+                                <td style="text-align: center;">{{ this.materialCode }}</td>
+                                <td style="text-align: right;">{{#if (isset this.maximumPrice)}} {{this.maximumPrice}} {{../quote.user.setting.currency}}{{/if}}</td>
+                                <td style="text-align: right;">
+                                    {{#if (isset this.madeByPractitioner)}} 
+                                        {{#if (isset this.maximumPrice)}}
+                                            {{this.maximumPrice}} {{../quote.user.setting.currency}}
+                                        {{else}}
+                                            {{this.amoAmount}} {{../quote.user.setting.currency}}
+                                        {{/if}} 
+                                    {{/if}}</td>
+                                <td style="text-align: right;">{{ this.amoAmount}} {{../quote.user.setting.currency}}</td>
+                                <td style="text-align: right;">{{ this.amoRefund}} {{../quote.user.setting.currency}}</td>
+                                <td style="text-align: right;">
+                                    {{#if (isset this.madeByPractitioner)}} 
+                                        {{this.amoAmountRefund}} {{../quote.user.setting.currency}}
+                                    {{/if}}
+                                </td>
+                                <td style="text-align: center;">
+                                    {{#if (isset this.madeByPractitioner)}}
+                                        Oui
+                                    {{else }}
+                                        Non
+                                    {{/if}}</td>
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            {{/if}}
+            {{#if (notEmpty racm)}}
+            <table class="treatment">
+                <tbody>
+                    <tr>
+                    <td colspan="11">
+                        <strong>Acte en reste à charge modéré</strong>
+                    </td>
+                    </tr>
+                    <tr>
+                    <th style="width: 5%;">N° de traitement</th>
+                    <th style="width: 5%;">N° dent ou Localisation</th>
+                    <th style="width: 8%;">Cotation CCAM, NGAP ou acte HN</th>
+                    <th>Nature de l'acte</th>
+                    <th style="width: 5%;">Matériaux utilisés (**)</th>
+                    <th style="width: 8%;">Honoraires limites de facturation</th>
+                    <th style="width: 8%;">Honoraires dont prix de vente du dispositif médical</th>
+                    <th style="width: 8%;">Base de remboursement AMO</th>
+                    <th style="width: 8%;">Montant remboursé AMO (***)</th>
+                    <th style="width: 8%;">Montant non remboursé AMO</th>
+                    <th style="width: 5%;">Réalisé par votre praticien</th>
+                    </tr>
+                    {{#each racm}}
+                        <tr>
+                            <td style="text-align: center;">{{ this.treatmentNumber }}</td>
+                            <td style="text-align: center;">{{this.dentalLocalization}}</td>
+                            <td style="text-align: center;">{{ this.code }}</td>
+                            <td>{{ this.ccam.shortName }}</td>
+                            <td style="text-align: center;">{{ this.materialCode }}</td>
+                            <td style="text-align: right;">
+                                {{#if (isset this.maximumPrice)}} 
+                                    {{this.maximumPrice}} {{../quote.user.setting.currency}}
+                                {{/if}}
+                            </td>
+                            <td style="text-align: right;">
+                                {{#if (isset this.madeByPractitioner)}} 
+                                    {{#if (isset this.maximumPrice)}}
+                                        {{this.maximumPrice}} {{../quote.user.setting.currency}}
+                                    {{else}}
+                                        {{this.amoAmount}} {{../quote.user.setting.currency}}
+                                    {{/if}}
+                                {{/if}}
+                            </td>
+                            <td style="text-align: right;">{{ this.amoAmount}} {{../quote.user.setting.currency}}</td>
+                            <td style="text-align: right;">{{ this.amoRefund}} {{../quote.user.setting.currency}}</td>
+                            <td style="text-align: right;">
+                                {{#if (isset this.madeByPractitioner)}}
+                                    {{this.amoAmountRefund}} {{../quote.user.setting.currency}}
+                                {{/if}}
+                            </td>
+                            <td style="text-align: center;">
+                                {{#if (isset this.madeByPractitioner)}}
+                                    Oui
+                                {{else }}
+                                    Non
+                                {{/if}}
+                            </td>
+                        </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+            {{/if}}
+        </div>
+    {{/if}}
+    {{#if isPrintAdditional}}
+    <div style="page-break-before: always;"></div>
+    <div style="padding: 1mm; margin-bottom: 2mm;">
+        <div style="margin-bottom: 2mm;">
+            <div>
+                <strong>Complément d'information pour patient C2S</strong>
+            </div>
+            <div>
+                 <p>Pour certains actes prothétiques (couronnes, bridges ou appareillages amovibles) et certains actes d'ODF « inclus » dans le panier C2S, le patient ne débourse rien et les organismes sociaux versent directement au praticien l'intégralité de ses honoraires. </p>
+                <br />
+                 <p>Pour les autres actes prothétiques « exclus » du panier C2S, seul le montant correspondant à la base de remboursement AMO est versé au praticien par les organismes sociaux, le patient réglant la différence au praticien. </p>
+            </div>
+        </div>
+        <table class="treatment">
+            <tbody>
+                <tr>
+                    <th style="width: 5%;">N° de traitement</th>
+                    <th style="width: 5%;">N° dent ou Localisation</th>
+                    <th style="width: 8%;">Cotation CCAM, NGAP ou acte HN</th>
+                    <th>Nature de l'acte</th>
+                    <th style="width: 5%;">Matériaux utilisés (**)</th>
+                    <th style="width: 8%;">Honoraires dont prix de vente du dispositif médical</th>
+                    <th style="width: 8%;">Base de remboursement AMO</th>
+                    <th style="width: 8%;">Montant remboursé AMO (***)</th>
+                    <th style="width: 8%;">Montant non remboursé AMO</th>
+                </tr>
+                {{#each acts.acts}}
+                <tr>
+                    <td style="text-align: center;">{{ this.treatmentNumber }}</td>
+                    <td style="text-align: center;">{{this.dentalLocalization}}</td>
+                    <td style="text-align: center;">{{ this.cotation }}</td>
+                    <td>{{ this.label }}</td>
+                    <td style="text-align: center;">{{this.materials}}</td>
+                    <td style="text-align: right;">{{ this.amount }} {{../quote.user.setting.currency}}</td>
+                    <td style="text-align: right;">
+                        {{#if (isset this.amoAmount)}}
+                            {{ this.amoAmount}} {{../quote.user.setting.currency}}
+                        {else}
+                            NR
+                        {{/if}}
+                    </td>
+                    <td style="text-align: right;">{{ this.amoRefund}} {{../quote.user.setting.currency}}</td>
+                    <td style="text-align: right;">{{ this.patientAmount}} {{../quote.user.setting.currency}}</td>
+                </tr>
+                {{/each}}
+                <tr>
+                    <td colspan="5" style="text-align: right;">Total (des actes envisagés)</td>
+                    <td style="text-align: right;">{{ acts.amountTotal}} {{quote.user.setting.currency}}</td>
+                    <td style="text-align: right;">{{ acts.amoAmountTotal}} {{quote.user.setting.currency}}</td>
+                    <td style="text-align: right;">{{ acts.amoRefundTotal}} {{quote.user.setting.currency}}</td>
+                    <td style="text-align: right;">{{ acts.patientAmountTotal}} {{quote.user.setting.currency}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {{/if}}
+    <table style="border-collapse: separate; border-spacing: 1mm;">
+        <tbody>
+            <tr>
+                <td style="width: 50%; overflow: hidden;">
+                    <div>
+                         <p>Le patient ou son représentant légal reconnaît avoir eu la possibilité du choix de son traitement. </p>
+                        <br />
+                         <p>Date et signature du patient ou du (ou des) responsable(s) légal (légaux). </p>
+                    </div>
+                    {{#if (isset quote.acceptedOn )}}
+                    <div>
+                        {{ quote.acceptedOn}}
+                    </div>
+                    {{/if}}
+                    {{#if (isset quote.signaturePatient)}}
+                        <div style="text-align: center;">
+                            <img src="{{ quote.signaturePatient }}" />
+                        </div>
+                    {{else}}
+                        <div style="height: 25mm;"></div>
+                    {{/if}}
+                </td>
+                <td style="width: 50%; overflow: hidden;">
+                    <div>
+                         <p>Signature du Chirurgien-dentiste </p>
+                    </div>
+                    {{#if (isset quote.signaturePraticien )}}
+                        <div style="text-align: center;">
+                            <img src="{{ quote.signaturePraticien }}" />
+                        </div>
+                    {{else }}
+                        <div style="height: 25mm;"></div>
+                    {{/if}}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    {{#if (isset quote.displayNotice)}}
+    <div style="page-break-before: always;"></div>
+    <div style="padding: 1mm; margin-bottom: 2mm; font-size: 9pt;">
+        <div style="margin-bottom: 2mm;">
+            <strong>NOTICE EXPLICATIVE</strong>
+        </div>
+        <div>
+            <p>Ce devis s'applique à tout traitement, pour lequel un dispositif médical sur mesure est nécessaire (prothèse dentaire essentiellement). Le chirurgien-dentiste vous précise la date du devis et la date de fin de validité de ce devis.</p>
+            <p>Votre Chirurgien-Dentiste vous informe des différentes possibilités de traitement qui vous sont offertes et peut vous proposer plusieurs devis le cas échéant.</p>
+            <p>Si vous désirez transmettre ce devis à votre organisme complémentaire pour connaître votre reste à charge, vous pouvez renseigner le pavé correspondant.</p>
+            <p>Dans ce devis, le Chirurgien-Dentiste décrit le traitement qu'il vous propose ainsi que les différents matériaux utilisés. Il vous précise la nature de l'acte conformément à la Classification Commune des Actes Médicaux (CCAM) ou pour les actes d'orthodontie, à la Nomenclature Générale des Actes et Prestations (NGAP). Lorsqu'un acte est non remboursable par l'Assurance Maladie Obligatoire, le Chirurgien-Dentiste indique dans la colonne Base de remboursement de l'Assurance Maladie Obligatoire la mention "NR" (Non Remboursable). Par ailleurs, quand l'acte n'est pas décrit à la CCAM ou à la NGAP, le Chirurgien-Dentiste indique la mention "HN" (Hors nomenclature).</p>
+            <p>Lorsque le Chirurgien-Dentiste vous propose un ou des actes avec un reste à charge (après l'intervention de la complémentaire), il doit mentionner dans la partie "information alternative thérapeutique" du devis les actes sans reste à charge (panier 100% santé) ou à défaut avec un reste à charge maîtrisé constituant une alternative thérapeutique chaque fois qu'elle existe et si elle est ou non réalisé par le praticien.</p>
+            <p>
+                Le Chirurgien-dentiste doit indiquer le lieu de fabrication du dispositif médical (exemple : couronne), qui peut être :<br />
+                - au sein de l'Union Européenne (UE)<br />
+                - hors de l'Union Européenne.
+            </p>
+            <p>En cas de sous-traitante de la fabrication du dispositif par le fournisseur, le Chirurgien-Dentiste en précise le lieu.</p>
+            <p>
+                ATTENTION : dans le cas de la pose d'un dispositif médical classé CMR (cancérigène, mutagène, toxique pour la reproduction) contenant du cobalt métallique, le Chirurgien-Dentiste doit vous tenir informé de sa nocivité potentielle.
+            </p>
+        </div>
+    </div>
+    {{/if}}
+    {{#if (isset quote.paymentPlan)}}
+    <div style="page-break-before: always;"></div>
+    <div style="padding: 1mm; margin-bottom: 2mm;">
+        <div style="margin-bottom: 2mm;">
+            <div>
+                <strong>Modalité de règlement du devis du {{ quote.date}} - réf : {{ quote.referenceNumber }}</strong>
+            </div>
+        </div>
+        <table class="payment-plan">
+            <thead>
+                <tr>
+                    <th class="due-date">Échéance</th>
+                    <th class="amount">Montant</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each quote.paymentPlan.deadlines}}
+                    <tr>
+                        <td class="due-date">{{ this.dueDate}} {{../quote.user.setting.currency}}</td>
+                        <td class="amount">{{ this.amount}} {{../quote.user.setting.currency}}</td>
+                    </tr>
+                {{/each}}
+                <tr>
+                    <td class="due-date"></td>
+                    <td class="amount">{{ quote.paymentPlan.amount}} {{../quote.user.setting.currency}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <table style="border-collapse: separate; border-spacing: 1mm;">
+        <tbody>
+            <tr>
+                <td style="width: 50%; overflow: hidden;">
+                    <div>
+                         <p>Date et signature du patient ou du (ou des) responsable(s) légal (légaux). </p>
+                    </div>
+                    {{#if (isset quote.acceptedOn) }}
+                        <div>
+                            {{ quote.acceptedOn}}
+                        </div>
+                    {{/if}}
+                    {{#if (isset quote.signaturePatient)}}
+                        <div style="text-align: center;">
+                            <img src="{{ quote.signaturePatient }}" />
+                        </div>
+                    {{else}}
+                    <div style="height: 25mm;"></div>
+                    {{/if}}
+                </td>
+                <td style="width: 50%; overflow: hidden;">
+                    <div>
+                         <p>Signature du Chirurgien-dentiste </p>
+                    </div>
+                    {{#if (isset quote.signaturePraticien)}}
+                        <div style="text-align: center;">
+                            <img src="{{ quote.signaturePraticien }}" />
+                        </div>
+                     {{else}}
+                        <div style="height: 25mm;"></div>
+                    {{/if}}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    {{/if}}
+</body>

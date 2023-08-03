@@ -12,23 +12,23 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUpdateMailDto } from '../dto/createUpdateMail.dto';
 import { CreateUpdateMailRes } from '../response/createUpdateMail.res';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
-import { UserService } from 'src/user/services/user.service';
 import { PatientService } from 'src/patient/service/patient.service';
-import { CorrespondentService } from 'src/correspondent/services/correspondent.service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ConfigService } from '@nestjs/config';
-import { fr } from 'date-fns/locale';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { LettersEntity } from '../../entities/letters.entity';
+import { UserEntity } from 'src/entities/user.entity';
+import { ErrorCode } from 'src/constants/error';
+import { MailInputsDto, MailOptionsDto } from '../dto/mail.dto';
 import { ContextMailDto, FindVariableDto } from '../dto/findVariable.dto';
 import { mailVariable } from 'src/constants/mailVariable';
-import { UserEntity } from 'src/entities/user.entity';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { UploadEntity } from 'src/entities/upload.entity';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import Handlebars from 'handlebars';
+import { FactureEmailDataDto } from 'src/dental/dto/facture.dto';
 
 @Injectable()
 export class MailService {
@@ -51,6 +51,7 @@ export class MailService {
     docId: number,
     groupId: number,
     search: string,
+    practitionerId: string,
   ): Promise<FindAllMailRes> {
     if (!search) search = '';
     const pageSize = 100;
@@ -63,7 +64,8 @@ export class MailService {
     FROM T_USER_USR`);
 
     let mails: FindAllMailDto[];
-    if (docId) {
+
+    if (!practitionerId) {
       mails = await this.dataSource.query(
         ` SELECT SQL_CALC_FOUND_ROWS
             T_LETTERS_LET.LET_ID AS id,
@@ -82,9 +84,8 @@ export class MailService {
                 T_LETTERS_LET.USR_ID IS NULL OR
                 T_LETTERS_LET.USR_ID = ?
             )
-        ORDER BY favorite DESC
-        LIMIT ?`,
-        [search, docId, pageSize],
+        ORDER BY favorite DESC`,
+        [search, docId],
       );
       for (const iterator of mails) {
         if (iterator.doctor_id !== null && docId)
@@ -137,17 +138,17 @@ export class MailService {
       }
     }
 
-    const offSet = (pageIndex - 1) * pageSize;
-    const dataPaging = mails.slice(offSet, offSet + pageSize);
+    const startIndex = pageIndex === -1 ? 0 : (pageIndex - 1) * pageSize;
+    const endIndex = pageIndex === -1 ? mails.length : startIndex + pageSize;
+    const mailPaging = mails.slice(startIndex, endIndex);
 
-    const result: FindAllMailRes = {
+    return {
       draw,
-      recordsTotal: dataPaging.length,
-      recordsFiltered: dataPaging.length,
+      recordsTotal: pageIndex === -1 ? mails.length : mailPaging.length,
+      recordsFiltered: pageIndex === -1 ? mails.length : mailPaging.length,
       totalData: mails.length,
-      data: dataPaging,
+      data: mailPaging,
     };
-    return result;
   }
 
   // php/mail/find.php
@@ -219,7 +220,7 @@ export class MailService {
       id: qr.id,
       type: qr.type,
       title: qr.title,
-      body: qr.body,
+      body: qr.msg,
       footer_content: qr.footerContent,
       footer_height: qr.footerHeight,
       height: qr.height,
@@ -485,9 +486,9 @@ export class MailService {
       context.dental.nextAppointmentDuration = '';
       context.dental.nextAppointmentTitle = '';
 
-      const nextAppointment = await this.patientService.getNextAppointment(
-        context?.contact?.id,
-      );
+      // const nextAppointment = await this.patientService.getNextAppointment(
+      //   context?.contact?.id,
+      // );
 
       // if(nextAppointment && nextAppointment?.EVT_START){
       // $datetime1 = new \DateTime($nextAppointment['EVT_START']);
@@ -506,11 +507,11 @@ export class MailService {
         const currentDate: Date = new Date(); // Replace this with the current date
         const ageInYears: number = differenceInYears(currentDate, birthday);
         const ageInMonths: number = differenceInMonths(currentDate, birthday);
-        const ageFormatted: string = format(
-          currentDate,
-          ageInYears < 1 ? 'PPPP' : 'P',
-          { locale: fr },
-        );
+        // const ageFormatted: string = format(
+        //   currentDate,
+        //   ageInYears < 1 ? 'PPPP' : 'P',
+        //   { locale: fr },
+        // );
         context.contact.age =
           ageInYears < 1
             ? `(${ageInMonths} mois)`
@@ -600,7 +601,7 @@ export class MailService {
     const footerHeight = !!inputs?.footer_height
       ? Number(inputs?.footer_height)
       : 0;
-    const body = inputs?.body;
+    // const body = inputs?.body;
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -641,7 +642,7 @@ export class MailService {
 
   // application/Services/Mail.php=> 454 -> 489
   async render(message: string, context: any, signature?: any) {
-    const uniqid = Date.now().toString(); // Generate a unique identifier
+    // const uniqid = Date.now().toString(); // Generate a unique identifier
 
     // Replace the default date format in Handlebars
     Handlebars.registerHelper('formatDate', function (dateString) {
@@ -1051,5 +1052,383 @@ export class MailService {
                 T_EVENT_EVT.EVT_START
             LIMIT 1`);
     return event.lenght !== 0 ? event[0] : null;
+  }
+
+  async sendFactureEmail(data: FactureEmailDataDto) {
+    await this.mailerService.sendMail({
+      from: data?.from,
+      to: data?.to,
+      subject: data?.subject,
+      template: data?.template,
+      attachments: data?.attachments,
+    });
+  }
+
+  async findOnePaymentScheduleTemplateByDoctor(doctorId: number) {
+    const queryBuilder = this.dataSource.createQueryBuilder();
+    const select = 'LET.LET_ID as id';
+    const result = await queryBuilder
+      .select(select)
+      .from(LettersEntity, 'LET')
+      .leftJoin(UserEntity, 'USR', 'USR.USR_ID = LET.USR_ID')
+      .where("LET.LET_TITLE = 'ECHEANCIER'")
+      .andWhere('LET.CON_ID IS NULL')
+      .andWhere('LET.CPD_ID IS NULL')
+      .andWhere(
+        `LET.USR_ID IS NULL OR
+				          LET.USR_ID = :userId`,
+        {
+          userId: doctorId,
+        },
+      )
+      .orderBy('USR.USR_ID DESC')
+      .getRawOne();
+    if (!result) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND_LETTER);
+    }
+    return this.find(result?.id);
+  }
+
+  /**
+   * Formatte le corps du courrier pour l'affichage PDF.
+   *
+   * @param array $inputs Informations du courrier.
+   * @param array $options Options.
+   *	print: Code Javascript pour impression inclus.
+   *	filename: Enregistrement du PDF dans le fichier.
+   */
+  async pdf(inputs: MailInputsDto, options: MailOptionsDto) {
+    this.addPage(inputs);
+    this.clean(inputs);
+    this.addPageBreak(inputs);
+    this.addFontAndSize(inputs);
+    this.resizeTable(inputs);
+    if (options.preview) {
+      return inputs.body;
+    }
+  }
+
+  /**
+   * Transforme les paragraphes vides en sauts de page.
+   * Transforme les espaces insécables en espaces.
+   * Supprime l'attribut "align".
+   *
+   * @param array $inputs Informations du courrier.
+   */
+  clean(inputs: MailInputsDto) {
+    const cleanBlank = inputs.body.replace(
+      '/<p[^>]*>(<span[^>]*>)?(s|&nbsp;?)*(</span>)?</p>/',
+      '<br>',
+    );
+    const cleanNonBreakingSpace = cleanBlank.replace('&nbsp;', ' ');
+    const cleanAlignAttribute = cleanNonBreakingSpace.replace(
+      '/salign="[^"]+"/i',
+      '',
+    );
+    inputs.body = cleanAlignAttribute;
+  }
+
+  /**
+   * Transforme les commentaires <!-- pagebreak --> en nouvelle page.
+   *
+   * @param array $inputs Informations du courrier.
+   */
+  addPageBreak(inputs: MailInputsDto) {
+    const tagsAutoClose = [
+      'area',
+      'base',
+      'br',
+      'col',
+      'command',
+      'embed',
+      'hr',
+      'img',
+      'input',
+      'link',
+      'meta',
+      'param',
+      'source',
+      'option',
+      'circle',
+      'ellipse',
+      'path',
+      'rect',
+      'line',
+      'polygon',
+      'polyline',
+    ];
+    const pages = inputs.body.split('<!-- pagebreak -->');
+    let content = '';
+
+    // Pour chaque page du HTML.
+    pages.forEach((page, pageIndex) => {
+      page = content + page;
+      content = '';
+      const tags = [];
+      let matches = [];
+
+      const tagRegex = /<(\/?)([^>\s\/]+)([^>]*)?>/g;
+      let match: RegExpExecArray;
+      while ((match = tagRegex.exec(page)) !== null) {
+        matches.push(match);
+      }
+
+      // Suppression des balises autofermantes.
+      matches = matches.filter((value) => !tagsAutoClose.includes(value[2]));
+
+      // Suppression des balises ouvertes ET fermées.
+      matches.forEach((value) => {
+        if (!value[1]) {
+          tags.push(value[2]);
+        } else {
+          const offset = tags.indexOf(value[2]);
+          if (offset !== -1) {
+            tags.splice(offset, 1);
+          }
+        }
+      });
+
+      // Reconstruct the HTML with remaining opening tags.
+      const keys = Object.keys(tags);
+      const keysReversed = keys.reverse();
+      keysReversed.forEach((key) => {
+        page += `</${matches[key][2]}>`;
+        if (matches[key][2] === 'page') {
+          content = `<${matches[key][2]} ${matches[key][3]} pageset="old">${content}`;
+        } else {
+          content = matches[key][0] + content;
+        }
+      });
+
+      pages[pageIndex] = page;
+    });
+
+    inputs.body = pages.join('');
+  }
+
+  /**
+   * Récupération des éléments qui ont une police de caractères
+   * afin de l'inclure également à tous les éléments enfants.
+   *
+   * @param array $inputs Informations du courrier.
+   */
+  addFontAndSize(inputs: MailInputsDto) {
+    // Assuming inputs['body'] contains the HTML string
+    const htmlString =
+      '<?xml encoding="utf-8" ?><div>' + inputs.body + '</div>';
+
+    // Create a new DOMParser object and parse the HTML string
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(htmlString, 'text/html');
+
+    // Example usage of evaluateXPath function
+    const xpathExpression =
+      "descendant-or-self::*[contains(@style,'font-family') or contains(@style,'font-size')]";
+    const nodes = this.evaluateXPath(xpathExpression, xmlDoc);
+
+    for (const node of nodes) {
+      let style = node.getAttribute('style');
+      let matches: string[];
+
+      this.removeDataMceAttributes(node);
+
+      if ((matches = style.match(/font-family[^;]+;/))) {
+        const styleFontFamily = matches[0].replace(/'/g, '');
+        style = style.replace(matches[0], styleFontFamily);
+        node.setAttribute('style', style);
+
+        const childs = this.evaluateXPath(
+          './/descendant::*[not(contains(@style,"font-family"))]',
+          node,
+        );
+        this.integrateStyleIntoChilds(childs, styleFontFamily);
+      }
+
+      if ((matches = style.match(/font-size[^;]+;/))) {
+        const styleFontSize = matches[0];
+
+        const childs = this.evaluateXPath(
+          './/descendant::*[not(contains(@style,"font-size"))]',
+          node,
+        );
+        document.getElementById('a');
+        this.integrateStyleIntoChilds(childs, styleFontSize);
+      }
+    }
+
+    const selectNodes = xmlDoc.getElementsByTagName('select');
+    let index = selectNodes.length - 1;
+
+    while (index > -1) {
+      const node = selectNodes[index];
+      const selectedOption =
+        node.querySelector('option[selected]') || node.querySelector('option');
+
+      const replacementNode = xmlDoc.createElement('div');
+      replacementNode.textContent = selectedOption
+        ? selectedOption.textContent
+        : '';
+
+      node.parentNode.replaceChild(replacementNode, node);
+
+      index--;
+    }
+    // Transformation du DOM en chaine de caractères + suppression des commentaires.
+    const xmlString = new XMLSerializer().serializeToString(
+      xmlDoc.documentElement,
+    );
+    const startIndex = xmlString.indexOf('<div>');
+    const endIndex = xmlString.lastIndexOf('</div>');
+    inputs.body = xmlString.slice(startIndex + 5, endIndex);
+  }
+
+  // Function to evaluate XPath expressions
+  evaluateXPath(
+    xpathExpression: string,
+    contextNode: Document | HTMLElement,
+  ): HTMLElement[] {
+    const evaluator = new XPathEvaluator();
+    const result = evaluator.evaluate(
+      xpathExpression,
+      contextNode,
+      null,
+      XPathResult.ANY_TYPE,
+      null,
+    );
+
+    const nodes = [];
+    let node = result.iterateNext();
+    while (node) {
+      nodes.push(node);
+      node = result.iterateNext();
+    }
+    return nodes;
+  }
+
+  removeDataMceAttributes(node: HTMLElement) {
+    for (const attribute of node.attributes) {
+      if (attribute.nodeName.match(/^data-mce-/i)) {
+        node.removeAttribute(attribute.nodeName);
+      }
+    }
+  }
+
+  integrateStyleIntoChilds(childs: HTMLElement[], styleAttribute: string) {
+    for (const child of childs) {
+      let attribute = styleAttribute;
+      if (child.hasAttribute('style')) {
+        attribute += child.getAttribute('style');
+      }
+      child.setAttribute('style', attribute);
+    }
+  }
+
+  resizeTable(inputs: MailInputsDto) {
+    // Assuming inputs['body'] contains the HTML string
+    const htmlString =
+      '<?xml encoding="utf-8" ?><div>' + inputs.body + '</div>';
+
+    // Create a new DOMParser object and parse the HTML string
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(htmlString, 'text/html');
+
+    // Function to transform table elements and their columns
+    // Call the function to transform table elements and columns
+    this.transformTables(xmlDoc);
+
+    // Transformation du DOM en chaine de caractères + suppression des commentaires.
+    const xmlString = new XMLSerializer().serializeToString(
+      xmlDoc.documentElement,
+    );
+    const startIndex = xmlString.indexOf('<div>');
+    const endIndex = xmlString.lastIndexOf('</div>');
+    inputs.body = xmlString.slice(startIndex + 5, endIndex);
+    return inputs;
+  }
+
+  transformTables(xmlDoc: Document) {
+    const nodes = xmlDoc.getElementsByTagName('table');
+    // Create a new DOMXPath object for XPath queries
+    const xpath = new XPathEvaluator();
+    for (const node of nodes) {
+      // Insertion d'une largeur de 100% aux balises <table>.
+      if (
+        !node.hasAttribute('width') &&
+        !node.getAttribute('style').match(/width\:/)
+      ) {
+        node.setAttribute('style', 'width: 100%;' + node.getAttribute('style'));
+      }
+
+      // Insertion d'une largeur aux colonnes des tableaux.
+      const rows = node.getElementsByTagName('tr');
+      for (const row of rows) {
+        const cols = xpath.evaluate(
+          './/td|.//th',
+          row,
+          null,
+          XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+          null,
+        );
+        const length = cols.snapshotLength;
+        const width = 100 / length;
+        for (let i = 0; i < length; i++) {
+          const col = cols.snapshotItem(i) as HTMLElement;
+          if (
+            !col.hasAttribute('width') &&
+            !col.getAttribute('style').match(/width\:/)
+          ) {
+            col.setAttribute(
+              'style',
+              'width: ' + width + '%;' + col.getAttribute('style'),
+            );
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Insertion des balises <page> et <page_header> et <page_footer> pour la génération du PDF.
+   *
+   * @param array $inputs Informations du courrier.
+   *
+   * application/Services/Mail.php 746 - 783
+   */
+  addPage(inputs: MailInputsDto) {
+    let backtop = '0';
+    let backbottom = '0';
+    let pageHeader = '';
+    let pageFooter = '';
+    // Vérification si une entête existe
+    if (inputs?.header) {
+      backtop = `${inputs?.header?.height}px`;
+      pageHeader = `<page_header>${inputs?.header?.body}</page_header>)`;
+    }
+
+    if (inputs?.footer) {
+      backbottom = `${inputs?.footer?.height}px`;
+      pageFooter = `<page_footer>${inputs?.footer?.body}</page_footer>)`;
+    } else if (inputs?.footer_content) {
+      backbottom = `${inputs?.footer_content?.height}px`;
+      pageFooter = `<page_footer>${inputs?.footer_content?.body}</page_footer>)`;
+    }
+
+    const body = `
+      <style type="text/css">
+      * { font-size: 12pt; font-family: Arial,sans-serif; }
+      p { margin: 0; padding: 0; }
+      blockquote { padding: 1em 40px; }
+      hr { height: 1px; background-color: #000000; }
+      ul, ol { margin-top: 1em; margin-bottom: 1em; }
+      .mceitemtable, .mceitemtable td, .mceitemtable th, .mceitemtable caption, .mceitemvisualaid { border: 0 !important; }
+      .mce-pagebreak { page-break-before:always; }
+      </style>
+      <page backtop="${backtop}" backright="0" backbottom="${backbottom}" backleft="0" orientation="portrait">
+      ${pageHeader}
+      ${pageFooter}
+      ${inputs?.body}
+      </page>
+    `;
+    inputs.body = body;
   }
 }

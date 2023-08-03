@@ -36,6 +36,7 @@ export class StringHelper {
   ): string[] {
     if (!length) length = 76;
     if (!character) character = ' ';
+    if (!string) return [];
     if (string.indexOf('\n') !== -1) {
       const ar_strings = string.split('\n');
       let array_reste: string[] = [];
@@ -187,3 +188,12 @@ export class StringHelper {
     return haystack.endsWith(needle);
   }
 }
+
+/**
+ * This function is same as PHP's nl2br() with default parameters.
+ *
+ * @param {string} str Input text
+ * @param {boolean} replaceMode Use replace instead of insert
+ * @param {boolean} isXhtml Use XHTML
+ * @return {string} Filtered text
+ */

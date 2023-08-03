@@ -8,9 +8,10 @@ import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { UserSmsEntity } from 'src/entities/user-sms.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { UserService } from 'src/user/services/user.service';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Not, Repository } from 'typeorm';
 import * as fs from 'fs';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AccountStatusEnum } from 'src/enum/account-status.enum';
 
 @Injectable()
 export class OrganizationService {
@@ -19,7 +20,28 @@ export class OrganizationService {
     private userService: UserService,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
+    @InjectRepository(OrganizationEntity)
+    private organizationRepo: Repository<OrganizationEntity>,
   ) {}
+
+  private async _getPractitioners() {
+    const user = await this.userRepository.find({
+      where: {
+        client: Not(AccountStatusEnum.TERMINATED),
+      },
+      relations: {
+        medical: true,
+        eventTypes: true,
+        setting: true,
+      },
+      order: {
+        lastname: 'ASC',
+        firstname: 'ASC',
+      },
+    });
+
+    return user.filter((x) => x.medical);
+  }
 
   async hasStorageSpace(groupId: number, size?: number): Promise<boolean> {
     const queryBuilder = this.dataSource.createQueryBuilder();
@@ -115,5 +137,22 @@ export class OrganizationService {
     const versionNumber = packageData.version;
 
     return { organization, user, versionNumber };
+  }
+
+  async getCurrentOrganization(organizationId: number) {
+    if (organizationId) {
+      const currentOrganization = await this.organizationRepo.findOneOrFail({
+        where: { id: organizationId },
+        relations: { address: true, logo: true },
+      });
+      const practitioners = await this._getPractitioners();
+      const modeDesynchronise = practitioners.every(
+        (x) => x.setting.sesamVitaleModeDesynchronise,
+      );
+      return {
+        organization: currentOrganization,
+        modeDesynchronise,
+      };
+    }
   }
 }

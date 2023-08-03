@@ -63,12 +63,16 @@ export class GlossriesController {
     return this.glossariesService.saveGlossary(payload, identity.org);
   }
 
+  //settings/glossaries/delete.php
+  //all line
   @Delete('/:id')
   @UseGuards(TokenGuard)
   async deleteGlossary(@Param('id') id: number) {
     return this.glossariesService.deleteGlossary(id);
   }
 
+  //settings/glossaries/edit.php
+  //all line
   @Put('/:id')
   @UseGuards(TokenGuard)
   async updateGlossary(
@@ -78,6 +82,8 @@ export class GlossriesController {
     return this.glossariesService.updateGlossary(id, payload);
   }
 
+  //settings/glossaries/entries/edit.php
+  //all line
   @Put('entries/:id')
   @UseGuards(TokenGuard)
   async updateGlossaryEntry(

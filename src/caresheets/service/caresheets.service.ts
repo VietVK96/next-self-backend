@@ -23,8 +23,8 @@ const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
 const PAV_MINIMUM_AMOUNT = 120;
 
 @Injectable()
-export class CaresheetsService {
-  private readonly logger: Logger = new Logger(CaresheetsService.name);
+export class ActsService {
+  private readonly logger: Logger = new Logger(ActsService.name);
 
   constructor(
     private configService: ConfigService,
@@ -102,8 +102,8 @@ export class CaresheetsService {
         !patient?.lastname &&
         !patient?.birthDate &&
         !patient?.birthRank &&
-        !patient?.inseeNumber &&
-        !patient?.inseeNumberKey
+        !patient?.insee &&
+        !patient?.inseeKey
       ) {
         throw new CBadRequestException(ErrorCode.ERROR_PATIENT_IS_REQUIRED);
       } else {
@@ -216,7 +216,7 @@ export class CaresheetsService {
             : act?.medical?.ngapKey?.name, // nameToTransmit
           coefficient: coefficient,
           montantHonoraire: amount !== amoAmount ? amount : null,
-          libelle: act?.label,
+          libelle: act?.name,
           numeroDents: teeth.join(','),
           codeAssociation: act?.medical?.associationCode,
           codeAccordPrealable: code_accord_prealable,
@@ -315,8 +315,8 @@ export class CaresheetsService {
     const mois = getTimeString(patient?.birthDate, 'month');
     const annee = getTimeString(patient?.birthDate, 'year');
     const lunaire = !!patient?.birthDateLunar ? 'true' : 'false';
-    const numeroSS = patient?.inseeNumber ?? '';
-    const cleNumeroSS = patient?.inseeNumberKey ?? '';
+    const numeroSS = patient?.insee ?? '';
+    const cleNumeroSS = patient?.inseeKey ?? '';
     const rangNaissance = patient?.birthRank ?? '';
     const xml = `
     <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">

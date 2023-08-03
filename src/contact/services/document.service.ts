@@ -30,6 +30,7 @@ export class DocumentServices {
     contactId: number,
     file: Express.Multer.File,
     type: string,
+    page: string,
   ): Promise<SuccessResponse> {
     const allowedMimeTypes = [
       'image/gif',
@@ -40,7 +41,7 @@ export class DocumentServices {
       'image/x-ms-bmp',
       'image/tiff',
     ];
-    if (!allowedMimeTypes.includes(file.mimetype)) {
+    if (!allowedMimeTypes.includes(file.mimetype) && page !== 'document') {
       throw new CBadRequestException('invalid type file');
     }
     if (file.size > 40 * 1024 * 1024) {

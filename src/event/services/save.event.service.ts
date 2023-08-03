@@ -109,7 +109,7 @@ export class SaveEventService {
           themeAsideBgcolor: userPreferencePayload.themeAsideBgcolor,
           reminderVisitDuration: userPreferencePayload.reminderVisitDuration,
           ccamBridgeQuickentry: userPreferencePayload.ccamBridgeQuickentry,
-          ccamPriceList: userPreferencePayload.ccam_price_list,
+          priceGrid: userPreferencePayload.ccam_price_list,
           patientCareTime: userPreferencePayload.patient_care_time,
           calendarBorderColored: userPreferencePayload.calendar_border_colored,
         })
@@ -142,7 +142,7 @@ export class SaveEventService {
     const msg = payload?.msg || '';
     const color = checkNumber(payload?.color) || -15;
     const rrule = payload?.rrule;
-    const hasRecurrEvents = payload?.hasRecurrEvents;
+    const hasRecurrEvents = checkNumber(payload?.hasRecurrEvents);
     const scp = payload?.scp;
     const practitionerId = checkId(payload?.practitionerId);
     const resourceId = checkId(payload?.resourceId);
@@ -249,8 +249,6 @@ export class SaveEventService {
         eventLateness = eventStatement.lateness;
 
         if (!hasRecurrEvents) {
-          console.log(eventTypeId);
-
           await Promise.all([
             queryRunner.query(
               `
@@ -492,7 +490,6 @@ export class SaveEventService {
         const reminderIds: number[] = reminders.map((reminder) =>
           Number(reminder.id),
         );
-        reminderIds.push(0);
         const inQuery: string = Array(reminderIds.length).fill('?').join(',');
 
         await queryRunner.query(
@@ -543,11 +540,6 @@ export class SaveEventService {
       }
       await queryRunner.commitTransaction();
     } catch (e) {
-      console.log(
-        '🚀 ~ file: save.event.service.ts:544 ~ SaveEventService ~ saveAgenda ~ e:',
-        e,
-      );
-
       await queryRunner.rollbackTransaction();
       return new CBadRequestException(ErrorCode.SAVE_FAILED);
     } finally {
