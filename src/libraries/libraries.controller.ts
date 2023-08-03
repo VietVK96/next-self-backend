@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -21,9 +22,8 @@ import {
   ActFamiliesDto,
   ActFamiliesSearchDto,
   ActFamiliesStoreDto,
-  ActsShowDto,
-  ActsStoreDto,
 } from './dto/act-families.dto';
+import { ActsStoreDto } from './dto/library-act.store.dto';
 import { LibraryActsService } from './services/acts.service';
 import { LibrariesService } from './services/libraries.service';
 
@@ -87,18 +87,6 @@ export class LibrariesController {
     return await this.librariesService.getAct(id, identity, request);
   }
 
-  /**
-   * File: php/libraries/acts/show.php 100%
-   */
-  @Get('acts/:id')
-  @UseGuards(TokenGuard)
-  async getActs(
-    @Param('id') id: number,
-    @CurrentUser() identity: UserIdentity,
-  ): Promise<LibraryActEntity> {
-    return await this.actService.getActs(id, identity);
-  }
-
   @Get('act-families-search')
   @UseGuards(TokenGuard)
   async searchActFamilies(
@@ -123,7 +111,7 @@ export class LibrariesController {
   /**
    * File: php/libraries/acts/update.php 100%
    */
-  @Post('acts/update/:id')
+  @Put('acts/update/:id')
   @UseGuards(TokenGuard)
   async actsUpdate(
     @Param('id') id: number,
@@ -140,5 +128,26 @@ export class LibrariesController {
   @UseGuards(TokenGuard)
   async actsDelete(@Param('id') id: number): Promise<SuccessResponse> {
     return await this.librariesService.actsDelete(id);
+  }
+
+  /**
+   * File: php/libraries/acts/show.php 100%
+   */
+  @Get('acts/show')
+  @UseGuards(TokenGuard)
+  async actsShow(@Query() payload: ActFamiliesDto): Promise<any> {
+    return await this.librariesService.actsShow(payload);
+  }
+
+  /**
+   * File: php/libraries/acts-families/show.php 100%
+   */
+  @Get('acts/:id')
+  @UseGuards(TokenGuard)
+  async getActs(
+    @Param('id') id: number,
+    @CurrentUser() identity: UserIdentity,
+  ): Promise<LibraryActEntity> {
+    return await this.actService.getActs(id, identity);
   }
 }

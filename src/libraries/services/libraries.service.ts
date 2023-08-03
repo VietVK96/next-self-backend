@@ -21,12 +21,9 @@ import { OrganizationEntity } from 'src/entities/organization.entity';
 import { TariffTypeEntity } from 'src/entities/tariff-type.entity';
 import { TraceabilityEntity } from 'src/entities/traceability.entity';
 import { DataSource, FindOptionsWhere, In, Like, Repository } from 'typeorm';
-import {
-  ActFamiliesDto,
-  ActFamiliesSearchDto,
-  ActsShowDto,
-  ActsStoreDto,
-} from '../dto/act-families.dto';
+import { ActFamiliesDto, ActFamiliesSearchDto } from '../dto/act-families.dto';
+import { ActsStoreDto } from '../dto/library-act.store.dto';
+import { ActsShowDto } from '../dto/library-act.show.dto';
 import { LettersEntity } from 'src/entities/letters.entity';
 import { LibraryActAttachmentPivotEntity } from 'src/entities/library-act-attachment-pivot.entity';
 import { SuccessResponse } from 'src/common/response/success.res';
@@ -156,20 +153,6 @@ export class LibrariesService {
       },
       relations: params.serializer_groups,
     });
-  }
-
-  async actsIndex(params: ActsShowDto) {
-    const id = params?.id;
-    const queryBuilder = this.dataSource
-      .createQueryBuilder(LibraryActEntity, 'la')
-      .select('laq')
-      .innerJoin('la.quantities', 'laq')
-      .where('la.id = :id', { id });
-    if (params && params?.used_only) {
-      queryBuilder.andWhere(`laq.used = 1`);
-    }
-    const libraryAct = queryBuilder;
-    return await libraryAct.getRawOne();
   }
 
   async actsStore(identity: UserIdentity, params: ActsStoreDto) {
@@ -417,13 +400,6 @@ export class LibrariesService {
   async actsUpdate(id: number, identity: UserIdentity, params: ActsStoreDto) {
     const libraryAct: LibraryActEntity = await this.libraryActRepo.findOne({
       where: { id },
-      relations: [
-        'odontograms',
-        'associations',
-        'complementaries',
-        'traceabilities',
-        'attachments',
-      ],
     });
     if (!libraryAct) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND_LIBRARY_ACT);
@@ -750,6 +726,35 @@ export class LibrariesService {
       return { success: false };
     } catch (err) {
       throw new CBadRequestException(ErrorCode.CAN_NOT_DELETE_LIBRARY_ACT);
+    }
+  }
+
+  async actsShow(params: ActsShowDto): Promise<any> {
+    try {
+      const id = params?.id;
+      const queryBuilder = this.dataSource
+        .createQueryBuilder(LibraryActEntity, 'la')
+        .leftJoinAndSelect('la.quantities', 'laq')
+        .leftJoinAndSelect('laq.ccam', 'laqccam')
+        .leftJoinAndSelect('laqccam.unitPrices', 'laqccamup')
+        .leftJoinAndSelect('laqccam.family', 'laqccamf')
+        .leftJoinAndSelect('la.family', 'laf')
+        .leftJoinAndSelect('la.odontograms', 'lao')
+        .leftJoinAndSelect('la.associations', 'laa')
+        .leftJoinAndSelect('laa.child', 'laac')
+        .leftJoinAndSelect('la.complementaries', 'lac')
+        .leftJoinAndSelect('la.attachments', 'laat')
+        .leftJoinAndSelect('la.traceabilities', 'lat')
+        .leftJoinAndSelect('lat.medicalDevice', 'latm')
+        .where('la.id = :id', { id });
+      if (params?.used_only) {
+        queryBuilder.andWhere('laq.used = :used', { used: true });
+      }
+      const libraryAct = await queryBuilder.getOne();
+      return libraryAct;
+    } catch (err) {
+      console.log(err?.message);
+      throw new CBadRequestException(ErrorCode.NOT_FOUND_LIBRARY_ACT);
     }
   }
 
