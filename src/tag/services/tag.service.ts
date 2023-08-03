@@ -6,6 +6,8 @@ import { TagEntity } from 'src/entities/tag.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { OrganizationEntity } from 'src/entities/organization.entity';
+import { ErrorCode } from 'src/constants/error';
+import { SuccessResponse } from 'src/common/response/success.res';
 
 export interface PaginatedResponse<T> {
   items: T[];
@@ -101,11 +103,15 @@ export class TagService {
   async createUpdateTag(organization_id: number, payload: CreateUpdateTagDto) {
     let currentTag: TagEntity;
     if (payload?.id) {
-      currentTag = await this.tagRepository.findOneOrFail({
+      currentTag = await this.tagRepository.findOne({
         where: { id: payload?.id },
       });
+      if (!currentTag) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
-    const color = { background: payload.color, foreground: '#000000' };
+    const color = {
+      background: payload.color.background,
+      foreground: '#000000',
+    };
     const newTag: TagEntity = {
       ...currentTag,
       title: payload.title,
@@ -115,14 +121,17 @@ export class TagService {
     return await this.tagRepository.save(newTag);
   }
 
-  async deleteTag(id: number) {
-    const currentTag = await this.tagRepository.findOneOrFail({
+  async deleteTag(id: number): Promise<SuccessResponse> {
+    const currentTag = await this.tagRepository.findOne({
       where: { id },
     });
-    if (currentTag) {
-      await this.tagRepository.remove(currentTag);
+    if (!currentTag) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
-    return;
+    await this.tagRepository.remove(currentTag);
+    return {
+      success: true,
+    };
   }
 
   // async getTags(identity: UserIdentity, payload: TagDto) {

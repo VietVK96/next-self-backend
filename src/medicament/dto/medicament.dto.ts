@@ -7,7 +7,7 @@ export class SearchMedicamentDto {
 
 export class CreateMedicamentDto {
   @ApiProperty()
-  family?: number;
+  mdtId?: number;
 
   @ApiProperty()
   abbreviation?: string;

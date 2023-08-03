@@ -101,7 +101,7 @@ export class EventTaskEntity {
   // @JoinColumn({
   //   name: 'CON_ID',
   // })
-  contact?: ContactEntity;
+  // contact?: ContactEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\LibraryAct")
@@ -150,21 +150,21 @@ export class EventTaskEntity {
    * @Assert\Type("string")
    * @Assert\NotBlank
    */
-  @Column({
-    name: 'ETK_NAME',
-    length: 255,
-    type: 'varchar',
-  })
-  label?: string;
-
-  /**
-   * @ORM\Column(name="ETK_NAME", type="string", length=81, nullable=false)
-   */
   // @Column({
   //   name: 'ETK_NAME',
   //   length: 255,
   //   type: 'varchar',
   // })
+  // label?: string;
+
+  /**
+   * @ORM\Column(name="ETK_NAME", type="string", length=81, nullable=false)
+   */
+  @Column({
+    name: 'ETK_NAME',
+    length: 255,
+    type: 'varchar',
+  })
   name?: string;
 
   /**
@@ -328,7 +328,7 @@ export class EventTaskEntity {
   //   width: 11,
   //   default: 0,
   // })
-  state?: number;
+  // state?: number;
 
   /**
    * @ORM\Column(name="ccam_family", type="string", length=3, nullable=true)

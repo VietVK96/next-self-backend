@@ -1,3 +1,4 @@
+import { SettingsModule } from './settings/settings.module';
 import { Module, RequestMethod } from '@nestjs/common';
 import configuration from './common/config';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -52,12 +53,15 @@ import { TeletranmistionModule } from './teletranmistion/teletranmistion.module'
 import { RecipeModule } from './recipe/recipe.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { EventTypeModule } from './event-type/event-type.module';
+import { CcamModule } from './ccam/ccam.module';
 import { PaymentModule } from './payment/payment.module';
 import { PrescriptionTemplateModule } from './prescription-template/prescription-template.module';
 import { MedicamentModule } from './medicament/medicament.module';
+import { ImportModule } from './import/import.module';
 import { MedicamentFamilyModule } from './medicament-family/medicament-family.module';
 import { PeriodontalChartsModule } from './periodontal-charts/periodontal-charts.module';
 import { ResourceModule } from './resource/resource.module';
+import { ConversationsModule } from './conversations/conversations.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -160,16 +164,20 @@ const importsModules = [
   BankModule,
   PaymentSchedulesModule,
   SecuritiesModule,
+  SettingsModule,
   TeletranmistionModule,
   RecipeModule,
   StatisticsModule,
   EventTypeModule,
+  CcamModule,
   PaymentModule,
   PrescriptionTemplateModule,
   MedicamentModule,
+  ImportModule,
   MedicamentFamilyModule,
   PeriodontalChartsModule,
   ResourceModule,
+  ConversationsModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {
