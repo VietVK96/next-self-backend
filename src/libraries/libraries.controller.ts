@@ -97,6 +97,16 @@ export class LibrariesController {
   }
 
   /**
+   * File: php/libraries/acts/copy.php 100%
+   */
+  @Post('acts/copy/:id')
+  @UseGuards(TokenGuard)
+  async actsIndex(@Param('id') id: number): Promise<any> {
+    console.log(id);
+    return await this.librariesService.actsCopy(id);
+  }
+
+  /**
    * File: php/libraries/acts/store.php 100%
    */
   @Post('acts/store')

@@ -708,22 +708,26 @@ export class LibrariesService {
     }
   }
 
-  async actsCopy(id: number): Promise<SuccessResponse> {
+  async actsCopy(id: number): Promise<any> {
     try {
-      const libraryActFamily = await this.libraryActFamilyRepo.findOne({
-        where: { id },
-        relations: ['acts'],
-      });
-      if (libraryActFamily && libraryActFamily?.id) {
-        let newLibraryActFamily = {} as LibraryActFamilyEntity;
-        delete libraryActFamily?.id;
-        delete libraryActFamily?.internalReferenceId;
-        newLibraryActFamily = libraryActFamily;
-        newLibraryActFamily.acts = libraryActFamily.acts;
-        await this.libraryActFamilyRepo.save({ ...newLibraryActFamily });
-        return { success: true };
-      }
-      return { success: false };
+      const queryBuilder = this.dataSource
+        .createQueryBuilder(LibraryActEntity, 'la')
+        .leftJoinAndSelect('la.quantities', 'laq')
+        .leftJoinAndSelect('laq.ccam', 'laqccam')
+        .leftJoinAndSelect('laqccam.unitPrices', 'laqccamup')
+        .leftJoinAndSelect('laqccam.family', 'laqccamf')
+        .leftJoinAndSelect('la.family', 'laf')
+        .leftJoinAndSelect('la.odontograms', 'lao')
+        .leftJoinAndSelect('la.associations', 'laa')
+        .leftJoinAndSelect('laa.child', 'laac')
+        .leftJoinAndSelect('la.complementaries', 'lac')
+        .leftJoinAndSelect('la.attachments', 'laat')
+        .leftJoinAndSelect('la.traceabilities', 'lat')
+        .leftJoinAndSelect('lat.medicalDevice', 'latm')
+        .where('la.id = :id', { id });
+      const libraryAct = await queryBuilder.getOne();
+      libraryAct.label = `(Copie) ${libraryAct?.label ?? ''}`;
+      return await this.libraryActRepo.save(libraryAct);
     } catch (err) {
       throw new CBadRequestException(ErrorCode.CAN_NOT_DELETE_LIBRARY_ACT);
     }
