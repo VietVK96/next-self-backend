@@ -61,7 +61,9 @@ import { ImportModule } from './import/import.module';
 import { MedicamentFamilyModule } from './medicament-family/medicament-family.module';
 import { PeriodontalChartsModule } from './periodontal-charts/periodontal-charts.module';
 import { StorageModule } from './storage/storage.module';
+import { WorkstationModule } from './workstation/workstation.module';
 import { ConversationsModule } from './conversations/conversations.module';
+import { SettingModule } from './setting/setting.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -177,7 +179,9 @@ const importsModules = [
   MedicamentFamilyModule,
   PeriodontalChartsModule,
   StorageModule,
+  WorkstationModule,
   ConversationsModule,
+  SettingModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {

@@ -159,7 +159,7 @@ export class EventTypeService {
       where: { id },
     });
     if (!currentEventType) throw new CBadRequestException(ErrorCode.NOT_FOUND);
-    await this.eventTypeRepository.remove(currentEventType);
+    await this.eventTypeRepository.softRemove(currentEventType);
     return {
       success: true,
     };
