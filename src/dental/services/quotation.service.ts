@@ -57,9 +57,9 @@ export class QuotationServices {
       id_devis_ligne,
       quotationPlaceOfManufacture,
       quotationPlaceOfManufactureLabel,
-      quotationWithSubcontracting,
-      quotationPlaceOfSubcontracting,
-      quotationPlaceOfSubcontractingLabel,
+      // quotationWithSubcontracting,
+      // quotationPlaceOfSubcontracting,
+      // quotationPlaceOfSubcontractingLabel,
       date_acceptation,
     } = req;
     const idUser = identity?.id;

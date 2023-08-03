@@ -4,6 +4,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -11,6 +12,7 @@ import { UserEntity } from './user.entity';
 import { CorrespondentEntity } from './correspondent.entity';
 import { DentalQuotationEntity } from './dental-quotation.entity';
 import { ContactEntity } from './contact.entity';
+import { LibraryActAttachmentPivotEntity } from './library-act-attachment-pivot.entity';
 
 export enum EnumLettersType {
   CONTACT = 'contact',
@@ -322,6 +324,12 @@ export class LettersEntity {
     default: 0,
   })
   footerHeight?: number;
+
+  @OneToMany(
+    () => LibraryActAttachmentPivotEntity,
+    (pivotLibraryActAttachment) => pivotLibraryActAttachment.mail,
+  )
+  pivotLibraryActAttachments: LibraryActAttachmentPivotEntity[];
 
   // @Check TimeStamp
   // use TimestampableEntity;

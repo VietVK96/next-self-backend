@@ -12,6 +12,7 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { ErrorCode } from 'src/constants/error';
 import { AccountStatusEnum } from 'src/enum/account-status.enum';
 import { SuccessCode } from 'src/constants/success';
+import { SuccessResponse } from 'src/common/response/success.res';
 
 @Injectable()
 export class EventTypeService {
@@ -41,10 +42,11 @@ export class EventTypeService {
   }
 
   async findAll(id: number) {
-    const user = await this.userRepository.findOneOrFail({
+    const user = await this.userRepository.findOne({
       where: { id },
       relations: { eventTypes: true },
     });
+    if (!user) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     return user.eventTypes.map(
       ({
         id,
@@ -89,10 +91,11 @@ export class EventTypeService {
 
   async duplicate(userId: number, payload: DuplicateEventTypeDto) {
     const practitionerIds = payload.practitioners;
-    const user = await this.userRepository.findOneOrFail({
+    const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: { eventTypes: true },
     });
+    if (!user) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     const userPractitioners = await this._getPractitioners();
     const practitioners = userPractitioners.filter(
       (item) => item.id !== user.id,
@@ -132,9 +135,10 @@ export class EventTypeService {
   }
 
   async update(id: number, payload: UpdateEventTypeDto) {
-    const currentEventType = await this.eventTypeRepository.findOneOrFail({
+    const currentEventType = await this.eventTypeRepository.findOne({
       where: { id },
     });
+    if (!currentEventType) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     const newEventType = {
       ...currentEventType,
       ...payload,
@@ -150,12 +154,14 @@ export class EventTypeService {
     return await this.eventTypeRepository.save(newEventType);
   }
 
-  async delete(id: number) {
-    const currentEventType = await this.eventTypeRepository.findOneOrFail({
+  async delete(id: number): Promise<SuccessResponse> {
+    const currentEventType = await this.eventTypeRepository.findOne({
       where: { id },
     });
-    if (currentEventType)
-      await this.eventTypeRepository.remove(currentEventType);
-    return SuccessCode.DELETE_SUCCESS;
+    if (!currentEventType) throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    await this.eventTypeRepository.softRemove(currentEventType);
+    return {
+      success: true,
+    };
   }
 }

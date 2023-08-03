@@ -17,6 +17,8 @@ import {
 import { OrdonnancesServices } from './services/ordonnances.services';
 import { OrdonnancesDto } from './dto/ordonnances.dto';
 import { FactureServices } from './services/facture.services';
+import { QuotesConventionDto } from './dto/quotes.dto';
+import { QuotesServices } from './services/quotes.service';
 import { DevisStd2Services } from './services/devisStd2.services';
 import { DevisStd2Dto } from './dto/devisStd2.dto';
 import {
@@ -25,6 +27,7 @@ import {
   FactureEmailDto,
 } from './dto/facture.dto';
 import {
+  Convention2020RequestAjaxDto,
   DevisRequestAjaxDto,
   QuotationDevisRequestAjaxDto,
 } from './dto/devis_request_ajax.dto';
@@ -32,6 +35,7 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { ErrorCode } from 'src/constants/error';
 import { QuotationServices } from './services/quotation.service';
 import { QuotationMutualServices } from './services/quotaion-mutual.services';
+import { QuotationMutualInitChampsDto } from './dto/quotatio-mutual.dto';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -40,6 +44,7 @@ export class DentalController {
   constructor(
     private ordonnancesServices: OrdonnancesServices,
     private factureServices: FactureServices,
+    private quotesServices: QuotesServices,
     private devisStd2Services: DevisStd2Services,
     private quotationServices: QuotationServices,
     private quotationMutualServices: QuotationMutualServices,
@@ -104,6 +109,15 @@ export class DentalController {
   @UseGuards(TokenGuard)
   async mail(@Body() payload: EnregistrerFactureDto) {
     return this.ordonnancesServices.getMail(payload);
+  }
+
+  @Post('quotes/devis/init')
+  @UseGuards(TokenGuard)
+  async devisInitChamp(
+    @CurrentUser() identity: UserIdentity,
+    @Body() payload: QuotesConventionDto,
+  ) {
+    return this.quotesServices.init(payload, identity);
   }
 
   @Get('/ordonnances/ordo_pdf')
@@ -175,6 +189,14 @@ export class DentalController {
     return await this.devisStd2Services.getInitChamps(params, identity);
   }
 
+  @Get('/quotation-mutual/init_champs')
+  @UseGuards(TokenGuard)
+  async quotationMutualInitChamps(
+    @Query() req: QuotationMutualInitChampsDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.quotationMutualServices.initChamps(req, identity);
+  }
   @Post('/quotation-mutual/devis_email')
   @UseGuards(TokenGuard)
   async devisEmail(@Body() payload: EnregistrerFactureDto) {
@@ -257,5 +279,44 @@ export class DentalController {
       id_contact,
       identity,
     );
+  }
+
+  @Post('/quotes/convention-2020/devis_requetes_ajax/:id')
+  @UseGuards(TokenGuard)
+  async convention2020RequestAjax(
+    @Body() payload: Convention2020RequestAjaxDto,
+    @Param('id') id: number,
+  ) {
+    return this.quotesServices.devisRequestAjax(payload, id);
+  }
+
+  /**
+   * ecoophp/dental/quotes/convention-2020/devis_pdf.php
+   * Line: 23-92
+   */
+  @Get('/quotes/convention-2020/devis_pdf')
+  @UseGuards(TokenGuard)
+  async quotesDevisPdf(
+    @Res() res,
+    @Query() req: PrintPDFDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    try {
+      const buffer = await this.quotesServices.generatePdf(req);
+
+      res.set({
+        // pdf
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Length': buffer.length,
+        // prevent cache
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    }
   }
 }

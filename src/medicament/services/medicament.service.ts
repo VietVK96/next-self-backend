@@ -52,7 +52,7 @@ export class MedicamentService {
 
     const {
       bcbdextherId,
-      family,
+      mdtId,
       abbreviation,
       name,
       format,
@@ -66,7 +66,7 @@ export class MedicamentService {
         where: { id: In(contraindications) },
       });
     return await this.medicamentRepo.save({
-      mdtId: family,
+      mdtId,
       name,
       abbreviation,
       format,
@@ -82,6 +82,7 @@ export class MedicamentService {
     if (!id) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
+
     const currentMedicament = await this.medicamentRepo.findOne({
       where: { id },
       relations: { contraindications: true },
@@ -118,7 +119,7 @@ export class MedicamentService {
 
     const {
       bcbdextherId,
-      family,
+      mdtId,
       abbreviation,
       name,
       format,
@@ -134,7 +135,7 @@ export class MedicamentService {
     }
     return await this.medicamentRepo.save({
       ...currentMedicament,
-      mdtId: family,
+      mdtId,
       name,
       abbreviation,
       format,
@@ -163,7 +164,7 @@ export class MedicamentService {
     if (!currentMedicament) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
-    await this.medicamentRepo.remove(currentMedicament);
+    await this.medicamentRepo.softRemove(currentMedicament);
     return {
       success: true,
     };

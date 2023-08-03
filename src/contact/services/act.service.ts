@@ -108,12 +108,12 @@ export class ActServices {
     const dataDental = await this.dentalEventRepository.findOne({
       where: { id: id },
     });
-    const { date, label } = data;
+    const { date, name } = data;
     const { ald } = dataDental;
     return {
       date,
       id,
-      label: label ?? '',
+      label: name ?? '',
       medical: { ald: !!ald },
     };
   }

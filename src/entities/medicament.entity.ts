@@ -173,7 +173,6 @@ export class MedicamentEntity {
     nullable: true,
   })
   internalReference?: string;
-
   /**
    * @ORM\ManyToMany(targetEntity="Contraindication")
    * @ORM\JoinTable(
