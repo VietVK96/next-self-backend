@@ -683,10 +683,11 @@ export class QuotesServices {
         periodOfValidity,
         idDevis: id_devis,
       };
-    } catch (e) {
+    } catch (error) {
       if (queryRunner?.isTransactionActive) {
         await queryRunner.rollbackTransaction();
       }
+      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
   }
 
