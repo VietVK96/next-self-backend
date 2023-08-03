@@ -447,7 +447,6 @@ export class PatientOdontogramService {
     this.checkOdontogramName(req?.name);
     this.checkStatus(req?.status);
     const styles = await this.run(req?.status, checkId(req?.conId));
-
     let xml = this.getXml(req?.name);
     for (const key in styles) {
       const style = styles[key];

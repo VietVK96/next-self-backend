@@ -230,7 +230,12 @@ export class DevisStd2Services {
         relations: ['address'],
       });
 
-      result.identPrat = 'Dr' + dataUser?.lastname + dataUser?.firstname;
+      result.identPrat =
+        'Dr. ' +
+        dataUser?.lastname +
+        ' ' +
+        dataUser?.firstname +
+        (dataUser?.freelance ? '" EI "' : '');
       result.adresse_prat = dataUser?.address?.city;
 
       const dataContact = await this.dataSource.query(
@@ -275,88 +280,90 @@ export class DevisStd2Services {
 
       if (dataContact?.civilite) {
         result.nom_prenom_patient =
-          dataContact[0]?.civilite + '' + result?.nom_prenom_patient;
+          dataContact[0]?.civilite + ' ' + result?.nom_prenom_patient;
         result.adresse_pat =
           result?.nom_prenom_patient + '\n' + dataContact[0]?.address;
         result.tel = dataContact[0]?.phone;
       }
-      const dataActes = await this.dataSource.query(
-        `
-        SELECT ETK.ETK_ID as 'id_devisStd2_ligne',
-        ETK.library_act_id,
-        ETK.library_act_quantity_id,
-           '00/00/0000' as 'dateLigne',
-           ETK.ETK_NAME as 'descriptionLigne',
-           IFNULL(ETK.ETK_AMOUNT, 0) as 'prixLigne',
-           IFNULL(DET.DET_PURCHASE_PRICE, 0) as 'prixachat',
-           DET.DET_TOOTH as 'dentsLigne',
-           DET.DET_COEF as coef,
-           ngap_key.name AS ngap_key_name,
-           
-           DET.DET_TYPE as type,
-           DET.DET_CCAM_CODE as ccamCode,
-           
-           IF (DET.DET_TYPE = 'CCAM', DET.DET_CCAM_CODE, CONCAT_WS(' ', ngap_key.name, DET.DET_COEF)) as cotation,
-           IFNULL(IF (DET.DET_TYPE = 'CCAM', DET.DET_SECU_AMOUNT, (ngap_key.unit_price * DET.DET_COEF)), 0) as tarif_secu,
-           
-           IFNULL(DET.DET_SECU_AMOUNT, 0) as secuAmount,
-           IFNULL(DET.DET_SECU_REPAYMENT, 0) as secuRepayment,
-           IFNULL(DET.DET_MUTUAL_REPAYMENT_TYPE, 1) as mutualRepaymentType,
-           IFNULL(DET.DET_MUTUAL_REPAYMENT_RATE, 0) as mutualRepaymentRate,
-           IFNULL(DET.DET_MUTUAL_REPAYMENT, 0) as mutualRepayment,
-           IFNULL(DET.DET_MUTUAL_COMPLEMENT, 0) as mutualComplement,
-           IFNULL(DET.DET_PERSON_REPAYMENT, 0) as personRepayment,
-           IFNULL(DET.DET_PERSON_AMOUNT, 0) as personAmount,
-           
-           IF (DET.DET_EXCEEDING = 'N', 'non', 'oui') as remboursable,
-           0 as 'materiau',
-           0 as 'roc',
-           'operation' as 'typeLigne'
-    FROM T_EVENT_TASK_ETK ETK
-    LEFT OUTER JOIN T_DENTAL_EVENT_TASK_DET DET ON DET.ETK_ID = ETK.ETK_ID
-    LEFT OUTER JOIN ngap_key ON ngap_key.id = DET.ngap_key_id
-    WHERE ETK.EVT_ID IN (" ? ")
-    ORDER BY ETK.EVT_ID, ETK.ETK_POS
-        `,
-        [ids_events],
-      );
+      try {
+        const dataActes = await this.dataSource.manager.query(`
+          SELECT ETK.ETK_ID as 'id_devisStd2_ligne',
+          ETK.library_act_id,
+          ETK.library_act_quantity_id,
+             '00/00/0000' as 'dateLigne',
+             ETK.ETK_NAME as 'descriptionLigne',
+             IFNULL(ETK.ETK_AMOUNT, 0) as 'prixLigne',
+             IFNULL(DET.DET_PURCHASE_PRICE, 0) as 'prixachat',
+             DET.DET_TOOTH as 'dentsLigne',
+             DET.DET_COEF as coef,
+             ngap_key.name AS ngap_key_name,
+             
+             DET.DET_TYPE as type,
+             DET.DET_CCAM_CODE as ccamCode,
+             
+             IF (DET.DET_TYPE = 'CCAM', DET.DET_CCAM_CODE, CONCAT_WS(' ', ngap_key.name, DET.DET_COEF)) as cotation,
+             IFNULL(IF (DET.DET_TYPE = 'CCAM', DET.DET_SECU_AMOUNT, (ngap_key.unit_price * DET.DET_COEF)), 0) as tarif_secu,
+             
+             IFNULL(DET.DET_SECU_AMOUNT, 0) as secuAmount,
+             IFNULL(DET.DET_SECU_REPAYMENT, 0) as secuRepayment,
+             IFNULL(DET.DET_MUTUAL_REPAYMENT_TYPE, 1) as mutualRepaymentType,
+             IFNULL(DET.DET_MUTUAL_REPAYMENT_RATE, 0) as mutualRepaymentRate,
+             IFNULL(DET.DET_MUTUAL_REPAYMENT, 0) as mutualRepayment,
+             IFNULL(DET.DET_MUTUAL_COMPLEMENT, 0) as mutualComplement,
+             IFNULL(DET.DET_PERSON_REPAYMENT, 0) as personRepayment,
+             IFNULL(DET.DET_PERSON_AMOUNT, 0) as personAmount,
+             
+             IF (DET.DET_EXCEEDING = 'N', 'non', 'oui') as remboursable,
+             0 as 'materiau',
+             0 as 'roc',
+             'operation' as 'typeLigne'
+      FROM T_EVENT_TASK_ETK ETK
+      LEFT OUTER JOIN T_DENTAL_EVENT_TASK_DET DET ON DET.ETK_ID = ETK.ETK_ID
+      LEFT OUTER JOIN ngap_key ON ngap_key.id = DET.ngap_key_id
+      WHERE ETK.EVT_ID IN (" ${ids_events}")
+      ORDER BY ETK.EVT_ID, ETK.ETK_POS
+          `);
+        const actes: DevisStd2ActesRes[] = [];
 
-      const actes: DevisStd2ActesRes[] = [];
-
-      dataActes.forEach((row) => {
-        row.rss = 0;
-        if (row.remboursable === 'oui') {
-          row.rss = row.tarif_secu;
-        }
-        switch (row.type) {
-          case 'CCAM':
-            row.cotation = row.ccamCode;
-            break;
-          case 'NGAP':
-            row.cotation = `${row.ngap_key_name.replace(
-              /^(C|D|Z)(R|V) MC/i,
-              '$1',
-            )} ${parseFloat(row.coef)}`;
-            break;
-          default:
-            row.cotation = 'NPC';
-            break;
-        }
-        const acte = { ...row };
-        actes.push(acte);
-      });
-      result.actes = actes;
-      result.date_devis = checkDay(plans?.createdAt, 'DD/MM/YYYY');
-      result.duree_devis = '';
-      result.organisme = ''; //"Nom de l'organisme complémentaire";
-      result.contrat = ''; //"N° de contrat ou d'adhérent";
-      result.ref = ''; //"Référence dossier";
-      result.dispo = 'FALSE';
-      result.dispo_desc = '';
-      result.infosCompl = 'Les soins ne sont pas compris dans ce devis.';
-      result.date_acceptation = '';
-      result.dateSql = checkDay(plans?.createdAt, 'DD/MM/YYYY');
-
+        dataActes.forEach((row) => {
+          row.rss = 0;
+          if (row.remboursable === 'oui') {
+            row.rss = row.tarif_secu;
+          }
+          switch (row.type) {
+            case 'CCAM':
+              row.cotation = row.ccamCode;
+              break;
+            case 'NGAP':
+              row.cotation = `${row.ngap_key_name.replace(
+                /^(C|D|Z)(R|V) MC/i,
+                '$1',
+              )} ${parseFloat(row.coef)}`;
+              break;
+            default:
+              row.cotation = 'NPC';
+              break;
+          }
+          const acte = { ...row };
+          actes.push(acte);
+        });
+        result.actes = actes;
+        result.date_devis = checkDay(plans?.createdAt, 'DD/MM/YYYY');
+        result.duree_devis = '';
+        result.organisme = ''; //"Nom de l'organisme complémentaire";
+        result.contrat = ''; //"N° de contrat ou d'adhérent";
+        result.ref = ''; //"Référence dossier";
+        result.dispo = 'FALSE';
+        result.dispo_desc = '';
+        result.infosCompl = 'Les soins ne sont pas compris dans ce devis.';
+        result.date_acceptation = '';
+        result.dateSql = checkDay(plans?.createdAt, 'DD/MM/YYYY');
+      } catch (error) {
+        console.log(
+          '🚀 ~ file: devisStd2.services.ts:369 ~ DevisStd2Services ~ error:',
+          error,
+        );
+      }
       const dataPlan = await this.planPlfRepository.findOne({
         where: { id: id_pdt },
       });
@@ -392,10 +399,11 @@ export class DevisStd2Services {
             ],
           );
 
-          const idDevisStd2 = paymentScheduleUpdate?.id;
+          result.idDevisStd2 = paymentScheduleUpdate?.insertId;
           let position = 0;
-          for (const acte of actes) {
+          for (const acte of result?.actes) {
             const inputParameters = [
+              result.idDevisStd2,
               acte?.library_act_id,
               acte?.library_act_quantity_id,
               acte?.dentsLigne,
@@ -422,11 +430,11 @@ export class DevisStd2Services {
                 'Probl&egrave;me durant la cr&eacute;ation des actes du devis ... ',
               );
             } else {
-              result.id_devisStd2_ligne = stmt?.insertId;
+              acte.id_devisStd2_ligne = stmt?.insertId;
             }
           }
           const quote = await this.dentalQuotationActRepository.find({
-            where: { DQOId: idDevisStd2 },
+            where: { DQOId: result?.idDevisStd2 },
             relations: ['quotation'],
           });
           const attachments: LettersEntity[] = [];
@@ -438,7 +446,7 @@ export class DevisStd2Services {
               }
             }
           }
-          // result.attachments = attachments;
+          result.attachments = attachments;
         } catch {
           throw new CBadRequestException('dsa');
         }
@@ -703,6 +711,10 @@ export class DevisStd2Services {
           });
         }
       });
+      console.log(
+        '🚀 ~ file: devisStd2.services.ts:712 ~ DevisStd2Services ~ result?.actes.map ~ actes:',
+        result.actes,
+      );
 
       result.odontogramType = 'adult';
     } catch (error) {
@@ -749,24 +761,16 @@ export class DevisStd2Services {
           }),
         );
       } else {
-        result.schemaActuel =
-          '<div class="scheme-body" style="padding: 0mm; margin: 0mm">' +
-          this.patientOdontogramService.show({
-            conId: result?.id_contact,
-            name: result?.odontogramType,
-            status: 'current',
-            imageToURL: true,
-          }) +
-          '</div>';
-        result.schemaDevis =
-          '<div class="scheme-body" style="padding: 0mm; margin: 0mm">' +
-          this.patientOdontogramService.show({
-            conId: result?.id_contact,
-            name: result?.odontogramType,
-            status: 'current',
-            imageToURL: true,
-          }) +
-          '</div>';
+        result.schemaActuelStyles = await this.patientOdontogramService.run(
+          'current',
+          result?.id_contact,
+        );
+        result.schemaDevisStyles = await this.patientOdontogramService.run(
+          'planned',
+          result?.id_contact,
+        );
+        result.schemaActuel = '';
+        result.schemaDevis = '';
       }
     }
 
