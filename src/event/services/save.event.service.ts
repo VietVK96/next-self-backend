@@ -540,7 +540,6 @@ export class SaveEventService {
       }
       await queryRunner.commitTransaction();
     } catch (e) {
-      console.log('-----data-----', e);
       await queryRunner.rollbackTransaction();
       throw new CBadRequestException(ErrorCode.SAVE_FAILED);
     } finally {
