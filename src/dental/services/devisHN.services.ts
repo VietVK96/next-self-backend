@@ -408,11 +408,11 @@ export class DevisServices {
           const dir = await this.configService.get('app.uploadDir');
           logo.fileName = `${dir}/${logo.token}${extension}`;
           logo = await this.uploadRepository.save(logo);
-          fs.copyFile(`${filename}`, `${logo?.fileName}`, (err) => {
-            if (err) {
+          if (fs.existsSync(filename)) {
+            fs.copyFile(`${filename}`, `${logo?.fileName}`, (err) => {
               console.log('-----data-----', err);
-            }
-          });
+            });
+          }
         }
 
         const quote = await this.dentalQuotationRepository.findOne({
@@ -435,7 +435,7 @@ export class DevisServices {
           if (count >= 2) quote.logo = null;
           await this.dentalQuotationRepository.delete(quote?.id);
         }
-
+        let id_devisHN = 0;
         await this.dataSource.transaction(async (manager) => {
           const dataReplace = await manager.query(
             `
@@ -485,7 +485,7 @@ export class DevisServices {
             ],
           );
 
-          const id_devisHN = dataReplace?.insertId;
+          id_devisHN = dataReplace?.insertId;
           const newDQAs = actes?.map((acte, index) => {
             return {
               DQOId: id_devisHN,
@@ -519,6 +519,7 @@ export class DevisServices {
         res = {
           id_user,
           id_contact,
+          id_devisHN,
           id_pdt: no_pdt,
           medical_entete_id,
           titreDevisHN,
