@@ -15,7 +15,6 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { CreateResourceDto } from './dto/createResource.dto';
-import { identity } from 'rxjs';
 import { UpdateResourceDto } from './dto/updateResource.dto';
 
 @ApiTags('Resource')
@@ -51,9 +50,7 @@ export class ResourceController {
   @Get('/create')
   @UseGuards(TokenGuard)
   async findAllUsersAndPractitioners(@CurrentUser() identity: UserIdentity) {
-    return await this.resourceService.findAllUsersAndPractitioners(
-      identity?.org,
-    );
+    return await this.resourceService.findAllUsersAndPractitioners(identity);
   }
 
   @Post('/store')

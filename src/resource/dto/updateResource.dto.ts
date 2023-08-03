@@ -10,8 +10,16 @@ export class UpdateResourceDto {
   name?: string;
 
   @ApiProperty()
+  useDefaultColor?: number;
+
+  @ApiProperty()
   color?: string;
 
   @ApiProperty()
-  listAssistante: string[];
+  listAssistante: SubscribersIdList[];
+}
+
+export class SubscribersIdList {
+  @ApiProperty()
+  id?: number;
 }

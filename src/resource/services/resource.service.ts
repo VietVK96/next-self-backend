@@ -6,12 +6,13 @@ import { OrganizationEntity } from 'src/entities/organization.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { CreateResourceDto } from '../dto/createResource.dto';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
-import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-request.exception';
 import { UserResourceEntity } from 'src/entities/user-resource.entity';
 import { UpdateResourceDto } from '../dto/updateResource.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { SuccessResponse } from 'src/common/response/success.res';
+import { MailerService } from '@nestjs-modules/mailer';
+import { FindAllUsersAndPractitionersDto } from '../dto/findAllUsersAndPractitioners.dto';
 
 @Injectable()
 export class ResourceService {
@@ -25,6 +26,7 @@ export class ResourceService {
     @InjectRepository(UserResourceEntity)
     private userResourceRepository: Repository<UserResourceEntity>,
     private readonly dataSource: DataSource,
+    private mailerService: MailerService,
   ) {}
 
   async findAll(organizationId: number): Promise<ResourceEntity[]> {
@@ -55,7 +57,10 @@ export class ResourceService {
     }
   }
 
-  async find(idResource: number, identity: UserIdentity): Promise<any> {
+  async find(
+    idResource: number,
+    identity: UserIdentity,
+  ): Promise<ResourceEntity> {
     try {
       const getResource = await this.resourceRepository.findOne({
         where: {
@@ -103,10 +108,12 @@ export class ResourceService {
     }
   }
 
-  async findAllUsersAndPractitioners(organizationId: number): Promise<any> {
+  async findAllUsersAndPractitioners(
+    identity: UserIdentity,
+  ): Promise<FindAllUsersAndPractitionersDto> {
     const getUser = await this.organizationRepository.findOne({
       where: {
-        id: organizationId,
+        id: identity?.org,
       },
       relations: {
         users: { medical: true },
@@ -130,10 +137,12 @@ export class ResourceService {
     });
 
     const practitioners = users.filter((user) => user.medical !== null);
-    return {
-      users,
+
+    const result: FindAllUsersAndPractitionersDto = {
       practitioners,
+      users,
     };
+    return result;
   }
 
   async save(
@@ -142,7 +151,7 @@ export class ResourceService {
   ): Promise<SuccessResponse> {
     const currentUser = await this.userRepository.findOne({
       where: {
-        id: identity.id,
+        id: identity?.id,
       },
     });
     if (!currentUser) throw new CBadRequestException(ErrorCode.NOT_FOUND);
@@ -159,8 +168,15 @@ export class ResourceService {
     const resource = new ResourceEntity();
     resource.organizationId = getOrg?.id;
     resource.name = payload?.name;
-    resource.color = payload?.color;
-    resource.useDefaultColor = payload?.userDefaultColor;
+    if (payload?.useDefaultColor === 1) {
+      resource.useDefaultColor = 1;
+      resource.color = JSON.parse(
+        `{"background": "#000000", "foreground": "#ffffff"}`,
+      );
+    } else {
+      resource.useDefaultColor = 0;
+      resource.color = payload?.color;
+    }
     resource.free = 0;
     const addresseeId = payload?.addressee;
     if (addresseeId !== 0) {
@@ -185,19 +201,96 @@ export class ResourceService {
       });
     }
 
+    /**
+     * Envoi d'un email au service commercial pour indiquer qu'un agenda supplémentaire a été créé.
+     * /settings/resource/store.php 63->71
+     */
+    const creator = `${currentUser.lastname} ${currentUser.firstname}`;
+    await this.mailerService.sendMail({
+      to: 'datpham0108@gmail.com',
+      subject: 'Agenda supplémentaire',
+      template: 'mail/resource_create.hbs',
+      context: {
+        name: res.name,
+        creator,
+      },
+    });
+
     return {
       success: true,
     };
   }
 
-  async update(identity: UserIdentity, payload: UpdateResourceDto) {
-    const getResource = await this.resourceRepository.findOne({
+  async update(
+    identity: UserIdentity,
+    payload: UpdateResourceDto,
+  ): Promise<SuccessResponse> {
+    const currentUser = await this.userRepository.findOne({
       where: {
-        id: payload.id,
+        id: identity?.id,
+      },
+    });
+    if (!currentUser) throw new CBadRequestException(ErrorCode.NOT_FOUND);
+
+    if (!currentUser?.admin) {
+      throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
+    }
+
+    const currentResource = await this.resourceRepository.findOne({
+      where: {
+        id: payload?.id,
         organizationId: identity?.org,
       },
       relations: { subscribers: true },
     });
-    console.log(getResource);
+
+    if (!currentResource) throw new CBadRequestException(ErrorCode.NOT_FOUND);
+
+    const actualSubcsribers: UserEntity[] = await this.dataSource
+      .getRepository(UserResourceEntity)
+      .createQueryBuilder()
+      .relation(ResourceEntity, 'subscribers')
+      .of(currentResource)
+      .loadMany();
+
+    currentResource.name = payload?.name;
+    if (payload?.useDefaultColor === 1) {
+      currentResource.useDefaultColor = 1;
+      currentResource.color = JSON.parse(
+        `{"background": "#000000", "foreground": "#ffffff"}`,
+      );
+    } else {
+      currentResource.useDefaultColor = 0;
+      currentResource.color = payload?.color;
+    }
+
+    const listAssistante = payload?.listAssistante?.map((item) =>
+      Number(item?.id),
+    );
+    const users = await this.userRepository.find({
+      where: { id: In(listAssistante) },
+    });
+
+    await this.resourceRepository.save(currentResource);
+
+    for (const sub of actualSubcsribers) {
+      if (!users.includes(sub)) {
+        await this.userResourceRepository.delete({
+          usrId: sub.id,
+          resourceId: currentResource.id,
+        });
+      }
+    }
+
+    for (const u of users) {
+      await this.userResourceRepository.save({
+        usrId: u?.id,
+        resourceId: currentResource.id,
+      });
+    }
+
+    return {
+      success: true,
+    };
   }
 }

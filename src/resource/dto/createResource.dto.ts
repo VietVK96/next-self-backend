@@ -20,7 +20,7 @@ export class CreateResourceDto {
   @ApiProperty({
     default: 0,
   })
-  userDefaultColor?: number;
+  useDefaultColor?: number;
 
   @ApiProperty({
     default: 0,
