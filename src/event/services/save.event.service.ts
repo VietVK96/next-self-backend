@@ -242,7 +242,7 @@ export class SaveEventService {
             state: true,
           },
           where: {
-            id: checkId(eventId),
+            id: checkId(eventId) || 0,
           },
         });
         eventStatus = eventStatement.state;
@@ -458,7 +458,7 @@ export class SaveEventService {
         Number(state) === EventStateEnum.PRESENT
       ) {
         const patient = await this.contactRepo.findOneBy({
-          id: Number(contactId),
+          id: Number(contactId) || 0,
         });
         await queryRunner.query(
           `
