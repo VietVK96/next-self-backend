@@ -331,10 +331,10 @@ export class DevisStd2Services {
         }
         switch (row.type) {
           case 'CCAM':
-            row.cotation = row.ccamCode;
+            row.cotation = row?.ccamCode;
             break;
           case 'NGAP':
-            row.cotation = `${row.ngap_key_name.replace(
+            row.cotation = `${row.ngap_key_name?.replace(
               /^(C|D|Z)(R|V) MC/i,
               '$1',
             )} ${parseFloat(row.coef)}`;
@@ -363,10 +363,10 @@ export class DevisStd2Services {
       result.paymentScheduleId = dataPlan?.paymentScheduleId;
       if (result?.paymentScheduleId) {
         result.paymentSchedule = await this.paymentScheduleService.duplicate(
-          result.paymentScheduleId,
+          result?.paymentScheduleId,
           identity,
         );
-        result.paymentScheduleId = result.paymentSchedule?.id;
+        result.paymentScheduleId = result?.paymentSchedule?.id;
       }
 
       this.dataSource.transaction(async (manager) => {
