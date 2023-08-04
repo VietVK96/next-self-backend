@@ -24,10 +24,11 @@ export class OrganizationService {
     private organizationRepo: Repository<OrganizationEntity>,
   ) {}
 
-  private async _getPractitioners() {
+  private async _getPractitioners(organizationId: number) {
     const user = await this.userRepository.find({
       where: {
         client: Not(AccountStatusEnum.TERMINATED),
+        organizationId,
       },
       relations: {
         medical: true,
@@ -145,7 +146,7 @@ export class OrganizationService {
         where: { id: organizationId },
         relations: { address: true, logo: true },
       });
-      const practitioners = await this._getPractitioners();
+      const practitioners = await this._getPractitioners(organizationId);
       const modeDesynchronise = practitioners.every(
         (x) => x.setting.sesamVitaleModeDesynchronise,
       );

@@ -99,7 +99,7 @@ export class OrdonnancesServices {
     try {
       const medicalOrder = await this.medicalRepository.findOne({
         where: {
-          id,
+          id: id || 0,
           user: {
             organizationId: identity.org,
           },

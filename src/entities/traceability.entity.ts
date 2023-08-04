@@ -64,6 +64,7 @@ export class TraceabilityEntity {
 
   @ManyToOne(() => LibraryActEntity, (e) => e.traceabilities, {
     createForeignKeyConstraints: false,
+    // cascade: true
   })
   @JoinColumn({ name: 'library_act_id' })
   libraryAct?: LibraryActEntity;

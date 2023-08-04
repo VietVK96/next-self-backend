@@ -135,6 +135,7 @@ import { LotCareSheetEntity } from './lot-caresheet.entity';
 import { CorrespondentPhoneCppEntity } from './correspondent-phone-cpp.entity';
 import { NoemioCaresheetEntity } from './noemie-caresheet.entity';
 import { LibraryActAttachmentPivotEntity } from './library-act-attachment-pivot.entity';
+import { LibraryActOdontogramPivotEntity } from './library-act-odontogram-pivot.entity';
 
 @Module({
   imports: [
@@ -274,6 +275,7 @@ import { LibraryActAttachmentPivotEntity } from './library-act-attachment-pivot.
       CorrespondentPhoneCppEntity,
       NoemioCaresheetEntity,
       LibraryActAttachmentPivotEntity,
+      LibraryActOdontogramPivotEntity,
     ]),
   ],
   controllers: [],
