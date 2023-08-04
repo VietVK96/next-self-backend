@@ -1,5 +1,5 @@
 export const checkId = (id: any): number | null => {
-  return Number(id) ? Number(id) : 0;
+  return Number(id) ? Number(id) : null;
 };
 
 export const checkNumber = (num: number | string): number | null => {
