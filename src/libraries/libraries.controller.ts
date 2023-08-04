@@ -22,10 +22,12 @@ import {
   ActFamiliesDto,
   ActFamiliesSearchDto,
   ActFamiliesStoreDto,
+  ActFamiliesUpdateDto,
 } from './dto/act-families.dto';
 import { ActsStoreDto } from './dto/library-act.store.dto';
 import { LibraryActsService } from './services/acts.service';
 import { LibrariesService } from './services/libraries.service';
+import { AcFamiliesCopyRes } from './res/act-families.res';
 
 @ApiTags('Libraries')
 @Controller('libraries')
@@ -39,61 +41,67 @@ export class LibrariesController {
   /**
    * File: php/libraries/act-families/index.php
    */
-  @Get('act-families')
+  @Get('act-families/index')
   @UseGuards(TokenGuard)
-  async get(
+  async indexActFamily(
     @Query() request: ActFamiliesDto,
     @CurrentUser() identity: UserIdentity,
   ): Promise<LibraryActFamilyEntity[]> {
-    return await this.librariesService.getALl(request, identity);
+    return await this.librariesService.indexActFamily(request, identity);
   }
 
   @Post('act-families/store')
   @UseGuards(TokenGuard)
-  async store(
-    @Query() request: ActFamiliesStoreDto,
+  async storeActFamily(
+    @Body() request: ActFamiliesStoreDto,
     @CurrentUser() identity: UserIdentity,
-  ): Promise<LibraryActFamilyEntity[]> {
+  ): Promise<any> {
     return await this.librariesService.storeActFamily(request, identity);
   }
 
   /**
    * File: php/libraries/act-families/copy.php
    */
-  @Get('act-families/copy')
+  @Post('act-families/copy/:id')
   @UseGuards(TokenGuard)
-  async copy(
-    @Query() request: ActFamiliesDto,
-    @CurrentUser() identity: UserIdentity,
-  ): Promise<LibraryActFamilyEntity[]> {
-    return await this.librariesService.getALl(request, identity);
-  }
-
-  @UseGuards(TokenGuard)
-  @Delete('act-families/delete/:id')
-  async delete(@Param('id') id: number): Promise<SuccessResponse> {
-    return await this.librariesService.deleteActFamilies(id);
-  }
-
-  /** php/libraries/act-families/acts/index.php 100%
-   */
-  @Get('act-families/:id')
-  @UseGuards(TokenGuard)
-  async getActFamilies(
+  async copyActFamily(
     @Param('id') id: number,
     @CurrentUser() identity: UserIdentity,
-    @Query() request: ActFamiliesDto,
-  ): Promise<LibraryActEntity[]> {
-    return await this.librariesService.getAct(id, identity, request);
+  ): Promise<any> {
+    return await this.librariesService.copyActFamily(id, identity);
   }
 
-  @Get('act-families-search')
+  /**
+   * php/libraries/act-families/acts/delete.php 100%
+   */
   @UseGuards(TokenGuard)
-  async searchActFamilies(
-    @Query() request: ActFamiliesSearchDto,
-    @CurrentUser() user,
-  ) {
-    return await this.librariesService.searchActFamilies(user, request);
+  @Delete('act-families/delete/:id')
+  async deleteActFamily(@Param('id') id: number): Promise<SuccessResponse> {
+    return await this.librariesService.deleteActFamily(id);
+  }
+
+  /**
+   * php/libraries/act-families/acts/update.php 100%
+   */
+  @UseGuards(TokenGuard)
+  @Put('act-families/update/:id')
+  async updateActFamily(
+    @Param('id') id: number,
+    @Body() req: ActFamiliesUpdateDto,
+  ): Promise<any> {
+    return await this.librariesService.updateActFamily(id, req);
+  }
+
+  /**
+   * php/libraries/act-families/acts/index.php 100%
+   */
+  @Get('act-families/show/:id')
+  @UseGuards(TokenGuard)
+  async showActFamilies(
+    @Param('id') id: number,
+    @CurrentUser() identity: UserIdentity,
+  ): Promise<LibraryActFamilyEntity> {
+    return await this.librariesService.showActFamily(id, identity);
   }
 
   /**
@@ -162,4 +170,13 @@ export class LibrariesController {
   ): Promise<LibraryActEntity> {
     return await this.actService.getActs(id, identity);
   }
+
+  // @Get('act-families-search')
+  // @UseGuards(TokenGuard)
+  // async searchActFamilies(
+  //   @Query() request: ActFamiliesSearchDto,
+  //   @CurrentUser() user,
+  // ) {
+  //   return await this.librariesService.searchActFamilies(user, request);
+  // }
 }

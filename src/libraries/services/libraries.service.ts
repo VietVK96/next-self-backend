@@ -1,6 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { parseISO } from 'date-fns';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
@@ -21,7 +20,12 @@ import { OrganizationEntity } from 'src/entities/organization.entity';
 import { TariffTypeEntity } from 'src/entities/tariff-type.entity';
 import { TraceabilityEntity } from 'src/entities/traceability.entity';
 import { DataSource, FindOptionsWhere, In, Like, Repository } from 'typeorm';
-import { ActFamiliesDto, ActFamiliesSearchDto } from '../dto/act-families.dto';
+import {
+  ActFamiliesDto,
+  ActFamiliesSearchDto,
+  ActFamiliesStoreDto,
+  ActFamiliesUpdateDto,
+} from '../dto/act-families.dto';
 import { ActsStoreDto } from '../dto/library-act.store.dto';
 import { ActsShowDto } from '../dto/library-act.show.dto';
 import { LettersEntity } from 'src/entities/letters.entity';
@@ -68,7 +72,7 @@ export class LibrariesService {
    * php/libraries/act-families/index.php done
    *
    */
-  async getALl(
+  async indexActFamily(
     request: ActFamiliesDto,
     identity: UserIdentity,
   ): Promise<LibraryActFamilyEntity[]> {
@@ -78,15 +82,12 @@ export class LibrariesService {
     if (request.used_only) {
       where.used = 1;
     }
-    const data = await this.libraryActFamilyRepo.find({
+    return await this.libraryActFamilyRepo.find({
       where,
       order: {
         position: 'ASC',
-        id: 'ASC',
       },
     });
-
-    return data;
   }
 
   /**
@@ -94,50 +95,88 @@ export class LibrariesService {
    *
    */
   async storeActFamily(
-    request: ActFamiliesDto,
+    request: ActFamiliesStoreDto,
     identity: UserIdentity,
-  ): Promise<LibraryActFamilyEntity[]> {
-    const where: FindOptionsWhere<LibraryActFamilyEntity> = {
-      organizationId: identity.org,
-    };
-    if (request.used_only) {
-      where.used = 1;
-    }
-    const data = await this.libraryActFamilyRepo.find({
-      where,
-      order: {
-        position: 'ASC',
-        id: 'ASC',
-      },
-    });
+  ): Promise<any> {
+    const libraryActFamily = {} as LibraryActFamilyEntity;
+    libraryActFamily.label = request?.label;
+    libraryActFamily.color = request?.color;
+    libraryActFamily.used = +request?.used;
+    const nextPosition = await this.dataSource
+      .createQueryBuilder(LibraryActEntity, 'la')
+      .select('la.position')
+      .where('la.libraryActFamilyId = :id', { id: libraryActFamily?.id })
+      .orderBy({
+        'la.position': 'DESC',
+      })
+      .getRawOne();
+    libraryActFamily.position = nextPosition?.la_position
+      ? nextPosition?.la_position + 1
+      : 0;
 
-    return data;
+    return await this.libraryActFamilyRepo.save(libraryActFamily);
+  }
+
+  /**
+   * php/libraries/act-families/update.php done
+   *
+   */
+  async updateActFamily(id: number, req: ActFamiliesUpdateDto): Promise<any> {
+    try {
+      const libraryActFamily = await this.libraryActFamilyRepo.findOne({
+        where: { id },
+        relations: ['acts'],
+      });
+      libraryActFamily.label = req?.label;
+      libraryActFamily.color = req?.color;
+      libraryActFamily.used = +req?.used;
+      libraryActFamily.position = req?.position;
+      return await this.libraryActFamilyRepo.save({ id, ...libraryActFamily });
+    } catch (err) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND_LIBRARY_ACT_FAMILY);
+    }
+  }
+
+  /**
+   * php/libraries/act-families/copy.php done
+   *
+   */
+  async copyActFamily(id: number, identity: UserIdentity): Promise<any> {
+    try {
+      const libraryActFamily = await this.libraryActFamilyRepo.findOne({
+        where: { id },
+        relations: ['acts'],
+      });
+      if (libraryActFamily) {
+        libraryActFamily.label = `(Copie) ${libraryActFamily?.label}`;
+        if (libraryActFamily?.acts && libraryActFamily?.acts.length > 0) {
+          const acts = [] as LibraryActEntity[];
+          for (const act of libraryActFamily?.acts) {
+            const libraryAct = await this.libraryActRepo.findOne({
+              where: { id: act?.id },
+              relations: ['family'],
+            });
+            delete act?.id;
+            delete act?.family?.id;
+            acts.push(libraryAct);
+          }
+          libraryActFamily.acts = acts;
+        }
+        return await this.libraryActFamilyRepo.save(libraryActFamily);
+      }
+    } catch (err) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND_LIBRARY_ACT_FAMILY);
+    }
   }
 
   /**
    * php/libraries/act-families/acts/index.php 100%
    */
-  async getAct(
+  async showActFamily(
     id: number,
     identity: UserIdentity,
-    request: ActFamiliesDto,
-  ): Promise<LibraryActEntity[]> {
-    const where: FindOptionsWhere<LibraryActEntity> = {
-      organizationId: identity.org,
-      libraryActFamilyId: id,
-    };
-    if (request.used_only) {
-      where.used = 1;
-    }
-    const data = await this.libraryActRepo.find({
-      where,
-      order: {
-        position: 'ASC',
-        id: 'ASC',
-      },
-    });
-
-    return data;
+  ): Promise<LibraryActFamilyEntity> {
+    return await this.libraryActFamilyRepo.findOne({ where: { id } });
   }
 
   async searchActFamilies(
@@ -153,6 +192,17 @@ export class LibrariesService {
       },
       relations: params.serializer_groups,
     });
+  }
+
+  async deleteActFamily(id: number): Promise<SuccessResponse> {
+    try {
+      await this.libraryActFamilyRepo.softDelete(id);
+      return { success: true };
+    } catch (err) {
+      throw new CBadRequestException(
+        ErrorCode.CAN_NOT_DELETE_LIBRARY_ACT_FAMILIES,
+      );
+    }
   }
 
   async actsStore(identity: UserIdentity, params: ActsStoreDto) {
@@ -1220,17 +1270,6 @@ export class LibrariesService {
       return result;
     } catch (err) {
       throw new CBadRequestException(ErrorCode.CAN_NOT_DELETE_LIBRARY_ACT);
-    }
-  }
-
-  async deleteActFamilies(id: number): Promise<SuccessResponse> {
-    try {
-      await this.libraryActFamilyRepo.softDelete(id);
-      return { success: true };
-    } catch (err) {
-      throw new CBadRequestException(
-        ErrorCode.CAN_NOT_DELETE_LIBRARY_ACT_FAMILIES,
-      );
     }
   }
 }
