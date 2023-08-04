@@ -218,13 +218,14 @@ export class ResourceEntity {
   @JoinTable({
     name: 'user_resource',
     joinColumn: {
-      name: 'user_id',
+      name: 'resource_id',
     },
     inverseJoinColumn: {
       name: 'user_id',
     },
   })
   subscribers?: UserEntity[];
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 

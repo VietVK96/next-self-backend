@@ -19,6 +19,8 @@ import { UserEntity } from 'src/entities/user.entity';
 import { UploadModule } from 'src/upload/upload.module';
 import { AccountService } from './services/account.service';
 import { SyncWzagendaUserEntity } from 'src/entities/sync-wzagenda-user.entity';
+import { NotificationService } from './services/notification.service';
+import { AccountSecurityService } from './services/account-security.service';
 
 @Module({
   imports: [
@@ -44,6 +46,10 @@ import { SyncWzagendaUserEntity } from 'src/entities/sync-wzagenda-user.entity';
     UserService,
     AddressService,
     AccountService,
+    TariffTypesService,
+    AccountService,
+    NotificationService,
+    AccountSecurityService,
   ],
   exports: [SettingOrganizationService],
 })
