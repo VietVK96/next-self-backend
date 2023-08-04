@@ -905,7 +905,7 @@ export class QuotesServices {
       const id = checkId(req?.id);
       const quote = await this.dentalQuotationRepository.findOne({
         where: {
-          id,
+          id: id || 0,
         },
         relations: {
           acts: {

@@ -7,6 +7,8 @@ import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { UserEntity } from 'src/entities/user.entity';
 import { QuotationDevisRequestAjaxDto } from '../dto/devis_request_ajax.dto';
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
+import { QuotationInitChampsDto } from '../dto/quotation.dto';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class QuotationServices {
@@ -230,5 +232,17 @@ export class QuotationServices {
     }
 
     return `Erreur -2`;
+  }
+
+  // ecoophp/dental/quotation/devis_init_champs.php
+  async initChamps(req: QuotationInitChampsDto, identity: UserIdentity) {
+    try {
+    } catch (error) {
+      console.log(
+        '🚀 ~ file: quotation.service.ts:243 ~ QuotationServices ~ initChamps ~ error:',
+        error,
+      );
+      throw new CBadRequestException(ErrorCode.INVALID_PARAMETER);
+    }
   }
 }
