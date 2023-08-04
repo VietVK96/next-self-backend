@@ -66,6 +66,7 @@ import { AccountModule } from './account/account.module';
 import { StorageModule } from './storage/storage.module';
 import { WorkstationModule } from './workstation/workstation.module';
 import { ConversationsModule } from './conversations/conversations.module';
+import { AppointmentReminderLibrarieModule } from './appointment-reminder-library-attachment/appointmentReminderLibrarie.module';
 import { SettingModule } from './setting/setting.module';
 
 const importsModules = [
@@ -186,6 +187,7 @@ const importsModules = [
   StorageModule,
   WorkstationModule,
   ConversationsModule,
+  AppointmentReminderLibrarieModule,
   SettingModule,
 ];
 
