@@ -3,10 +3,11 @@ import { ErrorCode } from 'src/constants/error';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Not, Repository } from 'typeorm';
 import { UserEntity } from 'src/entities/user.entity';
 import { SyncWzagendaUserEntity } from 'src/entities/sync-wzagenda-user.entity';
 import { WzagendaRes } from '../res/index.res';
+import { AccountStatusEnum } from 'src/enum/account-status.enum';
 
 @Injectable()
 export class AccountService {
@@ -32,28 +33,29 @@ export class AccountService {
     }
   }
 
-  async fetchAccountPractitioners(identity: UserIdentity): Promise<any> {
-    try {
-      // const [user, wzAgendaUser] = await Promise.all([
-      //   this.userRepository.findOne({ where: { id: identity?.id } }),
-      //   this.syncWzagendaUserRepository.findOne({
-      //     where: { id: identity?.id },
-      //   }),
-      // ]);
-      const accountStatus = 5;
-      const query = `
-      SELECT
-      user.*,medical.*
-  FROM T_USER_USR user
-  JOIN user_medical medical on user.USR_ID = medical.user_id
-  WHERE user.USR_CLIENT <> ?
-  ORDER BY user.USR_LASTNAME ASC, user.USR_FIRSTNAME ASC
-  `;
-      const practioners = await this.dataSource.query(query, [accountStatus]);
-      // return { user, wzAgendaUser };
-      console.log(practioners);
-    } catch (err) {
-      throw new CBadRequestException(ErrorCode?.NOT_FOUND);
-    }
+  async fetchAccountPractitioners(organizationId) {
+    const user = await this.userRepository.find({
+      where: {
+        client: Not(AccountStatusEnum.TERMINATED),
+        organizationId,
+      },
+      relations: {
+        medical: true,
+      },
+      order: {
+        lastname: 'ASC',
+        firstname: 'ASC',
+      },
+    });
+    return user
+      .filter((x) => x.medical)
+      .map((y) => {
+        return {
+          id: y?.id,
+          lastname: y?.lastname,
+          firstname: y?.firstname,
+          medical: y?.medical,
+        };
+      });
   }
 }

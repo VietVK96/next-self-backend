@@ -102,6 +102,6 @@ export class SettingsController {
   @Get('/account/interfaceage')
   @UseGuards(TokenGuard)
   async fetchAccountPractitioners(@CurrentUser() identity: UserIdentity) {
-    return await this.accountService.fetchAccountPractitioners(identity);
+    return await this.accountService.fetchAccountPractitioners(identity.org);
   }
 }
