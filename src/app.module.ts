@@ -60,13 +60,12 @@ import { MedicamentModule } from './medicament/medicament.module';
 import { ImportModule } from './import/import.module';
 import { MedicamentFamilyModule } from './medicament-family/medicament-family.module';
 import { PeriodontalChartsModule } from './periodontal-charts/periodontal-charts.module';
+import { StorageModule } from './storage/storage.module';
+import { WorkstationModule } from './workstation/workstation.module';
 import { ConversationsModule } from './conversations/conversations.module';
-import { ServeStaticModule } from '@nestjs/serve-static';
+import { SettingModule } from './setting/setting.module';
 
 const importsModules = [
-  ServeStaticModule.forRoot({
-    rootPath: join(__dirname, '..', 'resources'),
-  }),
   ConfigModule.forRoot({
     load: configuration,
     isGlobal: true,
@@ -179,7 +178,10 @@ const importsModules = [
   ImportModule,
   MedicamentFamilyModule,
   PeriodontalChartsModule,
+  StorageModule,
+  WorkstationModule,
   ConversationsModule,
+  SettingModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {
