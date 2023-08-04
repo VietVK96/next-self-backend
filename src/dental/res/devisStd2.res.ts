@@ -1,8 +1,10 @@
 import { AddressEntity } from 'src/entities/address.entity';
 import { LettersEntity } from 'src/entities/letters.entity';
+import { PatientOdontogramStyleRes } from 'src/patient/reponse/patientOdontogram.res';
 import { PaymentItemRes } from 'src/payment-schedule/response/payment.res';
 
 export class DevisStd2InitRes {
+  idDevisStd2: number;
   id_user: number;
   id_pdt: number;
   schemas: string;
@@ -67,6 +69,8 @@ export class DevisStd2InitRes {
   odontogramType: string;
   schemaActuel: string;
   schemaDevis: string;
+  schemaActuelStyles?: PatientOdontogramStyleRes;
+  schemaDevisStyles?: PatientOdontogramStyleRes;
   date_signature: string;
 }
 
