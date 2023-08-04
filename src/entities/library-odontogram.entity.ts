@@ -2,13 +2,16 @@ import {
   Column,
   Entity,
   JoinColumn,
+  JoinTable,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { OrganizationEntity } from './organization.entity';
 import { LibraryActEntity } from './library-act.entity';
 import { LibraryActQuantityEntity } from './library-act-quantity.entity';
+import { LibraryActOdontogramPivotEntity } from './library-act-odontogram-pivot.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\LibraryOdontogramRepository")
@@ -173,16 +176,40 @@ export class LibraryOdontogramEntity {
   @ManyToMany(() => LibraryActEntity, (e) => e.odontograms, {
     createForeignKeyConstraints: false,
   })
+  @JoinTable({
+    name: 'library_act_odontogram',
+    joinColumn: {
+      name: 'library_odontogram_id',
+    },
+    inverseJoinColumn: {
+      name: 'library_act_id',
+    },
+  })
   libraryActs?: LibraryActEntity[];
 
   /**
    * @ORM\ManyToMany(targetEntity="LibraryActQuantity", mappedBy="odontograms")
    */
   //   protected $libraryActQuantities;
-  @ManyToMany(() => LibraryActQuantityEntity, (e) => e.odontograms, {
+  @ManyToMany(() => LibraryActQuantityEntity, {
     createForeignKeyConstraints: false,
   })
+  @JoinTable({
+    name: 'library_act_quantity_odontogram',
+    joinColumn: {
+      name: 'library_odontogram_id',
+    },
+    inverseJoinColumn: {
+      name: 'library_act_quantity_id',
+    },
+  })
   libraryActQuantities?: LibraryActQuantityEntity[];
+
+  @OneToMany(
+    () => LibraryActOdontogramPivotEntity,
+    (pivotLibraryActOdontogram) => pivotLibraryActOdontogram.libraryOdontogram,
+  )
+  pivotLibraryActOdontograms: LibraryActOdontogramPivotEntity[];
 }
 
 // application\Entities\LibraryOdontogram.php

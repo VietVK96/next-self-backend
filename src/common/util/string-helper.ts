@@ -36,6 +36,7 @@ export class StringHelper {
   ): string[] {
     if (!length) length = 76;
     if (!character) character = ' ';
+    if (!string) return [];
     if (string.indexOf('\n') !== -1) {
       const ar_strings = string.split('\n');
       let array_reste: string[] = [];
@@ -158,6 +159,7 @@ export class StringHelper {
    * @return string
    */
   public static formatInsee(string: string): string {
+    if (!string) return '';
     string = string.replace(/\W/g, '').toUpperCase();
     return string.replace(
       /(\w{1})(\w{2})(\w{2})(\w{2})(\w{3})(\w{3})(\w{2})/,

@@ -1,5 +1,4 @@
 import { ApiProperty, ApiExtraModels } from '@nestjs/swagger';
-import { EnumMedicalHeaderFormatType } from 'src/entities/medical-header.entity';
 
 @ApiExtraModels()
 export class DevisStd2Dto {
@@ -7,7 +6,7 @@ export class DevisStd2Dto {
     name: 'id_user',
     required: false,
   })
-  id_user?: number[];
+  id_user?: number;
 
   @ApiProperty({
     name: 'id_contact',
@@ -26,4 +25,6 @@ export class DevisStd2Dto {
     required: false,
   })
   no_devis?: number;
+
+  pdf?: boolean;
 }

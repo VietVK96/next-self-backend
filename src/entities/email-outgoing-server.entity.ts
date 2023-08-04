@@ -9,7 +9,13 @@
  * @UniqueEntity("emailAccount")
  */
 
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { EmailAccountEntity } from './email-account.entity';
 
 // File: application\Entity\EmailOutgoingServer.php: class EmailOutgoingServer extends AbstractEntity
@@ -25,12 +31,20 @@ export class EmailOutgoingServerEntity {
   })
   id?: number;
 
+  @Column({
+    name: 'email_account_id',
+  })
+  emailAccountId: number;
+
   /**
    * @ORM\OneToOne(targetEntity="EmailAccount", inversedBy="outgoingServer")
    */
   // protected $emailAccount
   @OneToOne(() => EmailAccountEntity, (e) => e.outgoingServer, {
     createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'email_account_id',
   })
   emailAccount?: EmailAccountEntity;
 

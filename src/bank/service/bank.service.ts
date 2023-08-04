@@ -24,7 +24,7 @@ import { PermissionService } from 'src/user/services/permission.service';
 import { LibraryBankEntity } from 'src/entities/library-bank.entity';
 import { AddressEntity } from 'src/entities/address.entity';
 import axios from 'axios';
-import { SuccessCode } from 'src/constants/success';
+import { SuccessResponse } from 'src/common/response/success.res';
 
 @Injectable()
 export class BankService {
@@ -104,14 +104,14 @@ export class BankService {
       const token: string[] = [];
       let currencyName = 'Euro';
 
-      const user = await this.userRepo.findOneOrFail({
-        where: { id: doctor_id },
+      const user = await this.userRepo.findOne({
+        where: { id: doctor_id || 0 },
         relations: {
           address: true,
         },
       });
-      const bankCheck = await this.bankCheckRepo.findOneOrFail({
-        where: { id },
+      const bankCheck = await this.bankCheckRepo.findOne({
+        where: { id: id || 0 },
       });
       currencyName += Number(amount) >= 2 ? 's' : '';
       token.push(numberToWords.toWords(amountSplit[0]));
@@ -159,9 +159,11 @@ export class BankService {
   }
 
   async updateBankChecks(id: number, payload: UpdateBankCheckDto) {
-    const currentBankCheck = await this.bankCheckRepo.findOneOrFail({
-      where: { id },
+    id = checkId(id);
+    const currentBankCheck = await this.bankCheckRepo.findOne({
+      where: { id: id || 0 },
     });
+    if (!currentBankCheck) throw new CBadRequestException(ErrorCode.NOT_FOUND);
 
     //@TODO Not understand validator
     // $violations = $container -> get('validator') -> validate($bankCheck);
@@ -177,10 +179,11 @@ export class BankService {
   }
 
   async duplicateBankChecks(id: number) {
-    const currentBankCheck = await this.bankCheckRepo.findOneOrFail({
-      where: { id },
+    id = checkId(id);
+    const currentBankCheck = await this.bankCheckRepo.findOne({
+      where: { id: id || 0 },
     });
-
+    if (!currentBankCheck) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     return await this.bankCheckRepo.save({
       ...currentBankCheck,
       id: null,
@@ -214,19 +217,24 @@ export class BankService {
     organizationId: number,
     payload: CreateUpdateBankDto,
   ) {
-    if (!payload.id) {
+    const id = checkId(payload.id);
+    if (!id) {
       const hasPermissionCreate = await this.permissionService.hasPermission(
         'PERMISSION_LIBRARY',
         2,
         userId,
       );
+      if (!hasPermissionCreate) {
+        throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
+      }
+    } else {
       const hasPermissionUpdate = await this.permissionService.hasPermission(
         'PERMISSION_LIBRARY',
         4,
         userId,
       );
-      if (!hasPermissionCreate && !hasPermissionUpdate) {
-        return ErrorCode.PERMISSION_DENIED;
+      if (!hasPermissionUpdate) {
+        throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
       }
     }
     try {
@@ -238,7 +246,6 @@ export class BankService {
 
       const {
         bankOfGroup,
-        id,
         abbr,
         name,
         bankCode,
@@ -258,12 +265,15 @@ export class BankService {
           libraryBankEntity.organizationId = organizationId;
           if (!bankOfGroup) libraryBankEntity.usrId = userId;
         } else {
-          libraryBankEntity = await this.libraryBankRepo.findOneOrFail({
-            where: { id: id, usrId: userId },
+          libraryBankEntity = await this.libraryBankRepo.findOne({
+            where: { id: id || 0, usrId: userId },
             relations: { address: true, user: true },
           });
-          if (!libraryBankEntity.user && !libraryBankEntity.user.admin) {
-            return ErrorCode.PERMISSION_DENIED;
+          if (!libraryBankEntity) {
+            throw new CBadRequestException(ErrorCode.NOT_FOUND);
+          }
+          if (!libraryBankEntity?.user?.admin) {
+            throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
           }
           addressEntity = libraryBankEntity.address;
         }
@@ -295,24 +305,27 @@ export class BankService {
         libraryBankEntity.slipCheckNbr = slipCheckNbr;
         libraryBankEntity.isDefault = transfertDefault;
 
-        const address = payload.address;
-        const { street, zipCode, city, countryAbbr } = address;
-        if (address || street || zipCode || city || countryAbbr) {
-          let country;
-          if (countryAbbr) {
-            country = countries.find((x) => x.cca2 === countryAbbr);
-          }
-          if (!addressEntity) addressEntity = new AddressEntity();
-          if (street) addressEntity.street = street;
-          if (city) addressEntity.city = city;
-          if (zipCode) addressEntity.zipCode = zipCode;
-          if (country) addressEntity.country = country.translations.fra.common;
-          if (countryAbbr) addressEntity.countryAbbr = countryAbbr;
+        const address = payload?.address;
+        if (address) {
+          const { street, zipCode, city, countryAbbr } = address;
+          if (address || street || zipCode || city || countryAbbr) {
+            let country;
+            if (countryAbbr) {
+              country = countries.find((x) => x.cca2 === countryAbbr);
+            }
+            if (!addressEntity) addressEntity = new AddressEntity();
+            if (street) addressEntity.street = street;
+            if (city) addressEntity.city = city;
+            if (zipCode) addressEntity.zipCode = zipCode;
+            if (country)
+              addressEntity.country = country.translations.fra.common;
+            if (countryAbbr) addressEntity.countryAbbr = countryAbbr;
 
-          const newAddress = await this.addressRepo.save(addressEntity);
-          libraryBankEntity.adrId = newAddress.id;
-        } else if (addressEntity) {
-          await this.addressRepo.remove(addressEntity);
+            const newAddress = await this.addressRepo.save(addressEntity);
+            libraryBankEntity.adrId = newAddress.id;
+          } else if (addressEntity) {
+            await this.addressRepo.remove(addressEntity);
+          }
         }
 
         const newLibraryBankEntity = await this.libraryBankRepo.save(
@@ -322,19 +335,27 @@ export class BankService {
         return newLibraryBankEntity;
       }
     } catch (error) {
-      return error;
+      throw new CBadRequestException(error?.message);
     }
   }
 
-  async deleteBank(id: number, userId: number, organizationId: number) {
+  async deleteBank(
+    id: number,
+    userId: number,
+    organizationId: number,
+  ): Promise<SuccessResponse> {
     try {
+      id = checkId(id);
       if (id) {
-        const libraryBankEntity = await this.libraryBankRepo.findOneOrFail({
-          where: { id, usrId: userId },
+        const libraryBankEntity = await this.libraryBankRepo.findOne({
+          where: { id: id || 0, usrId: userId },
           relations: { user: true },
         });
-        if (!libraryBankEntity.user && !libraryBankEntity.user.admin) {
-          return ErrorCode.PERMISSION_DENIED;
+        if (!libraryBankEntity) {
+          throw new CBadRequestException(ErrorCode.NOT_FOUND);
+        }
+        if (!libraryBankEntity?.user?.admin) {
+          throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
         }
         const hasPermissionDelete = await this.permissionService.hasPermission(
           'PERMISSION_DELETE',
@@ -342,7 +363,7 @@ export class BankService {
           userId,
         );
         if (!hasPermissionDelete) {
-          return ErrorCode.PERMISSION_DENIED;
+          throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
         }
         const listLibraryBank = await this.libraryBankRepo.find({
           where: {
@@ -352,13 +373,28 @@ export class BankService {
           },
         });
         if (listLibraryBank.length <= 1)
-          return ErrorCode.AT_LEAST_ONE_BANK_IS_REQUIRED;
+          throw new CBadRequestException(
+            ErrorCode.AT_LEAST_ONE_BANK_IS_REQUIRED,
+          );
         libraryBankEntity.deletedAt = new Date();
         await this.libraryBankRepo.save(libraryBankEntity);
-        return SuccessCode.DELETE_SUCCESS;
+        return {
+          success: true,
+        };
       }
     } catch (error) {
-      return error;
+      throw new CBadRequestException(error?.message);
     }
+  }
+
+  async getOne(id: number) {
+    id = checkId(id);
+    if (!id) throw new CBadRequestException(ErrorCode.FORBIDDEN);
+    const currentBank = await this.libraryBankRepo.findOne({
+      where: { id: id },
+      relations: { address: true },
+    });
+    if (!currentBank) throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    return currentBank;
   }
 }

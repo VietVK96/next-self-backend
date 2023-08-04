@@ -1,4 +1,13 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -6,6 +15,7 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { ContraindicationsService } from './services/contradications.service';
+import { CreateContraindicationsDto } from './dto/contraindications.dto';
 
 @ApiBearerAuth()
 @ApiTags('Contraindications')
@@ -20,5 +30,34 @@ export class ContraindicationsController {
   @UseGuards(TokenGuard)
   async findAllContraindications(@CurrentUser() identity: UserIdentity) {
     return this.contraindicationsService.findAll(identity);
+  }
+
+  @Post()
+  @UseGuards(TokenGuard)
+  async create(
+    @CurrentUser() identity: UserIdentity,
+    @Body() body: CreateContraindicationsDto,
+  ) {
+    return this.contraindicationsService.create(
+      identity.id,
+      body,
+      identity.org,
+    );
+  }
+
+  @Put('/:id')
+  @UseGuards(TokenGuard)
+  async update(
+    @CurrentUser() identity: UserIdentity,
+    @Body() body: CreateContraindicationsDto,
+    @Param('id') id: number,
+  ) {
+    return this.contraindicationsService.update(identity.id, body, id);
+  }
+
+  @Delete('/:id')
+  @UseGuards(TokenGuard)
+  async delete(@CurrentUser() identity: UserIdentity, @Param('id') id: number) {
+    return this.contraindicationsService.delete(identity.id, id);
   }
 }

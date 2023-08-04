@@ -5,7 +5,7 @@ import {
   EnumCashingPayment,
   EnumCashingType,
 } from 'src/entities/cashing.entity';
-import { Condition, DataSource, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import {
   ByDayRes,
   CashingPrintDto,
@@ -211,6 +211,7 @@ export class CashingService {
         : await this.findByDoctor(user?.id, payload?.conditions, {
             order: 'ASC',
           });
+
       payments = payments?.filter(
         (payment) => payment?.date || payment?.paymentDate,
       );

@@ -109,7 +109,7 @@ export class SaveEventService {
           themeAsideBgcolor: userPreferencePayload.themeAsideBgcolor,
           reminderVisitDuration: userPreferencePayload.reminderVisitDuration,
           ccamBridgeQuickentry: userPreferencePayload.ccamBridgeQuickentry,
-          ccamPriceList: userPreferencePayload.ccam_price_list,
+          priceGrid: userPreferencePayload.ccam_price_list,
           patientCareTime: userPreferencePayload.patient_care_time,
           calendarBorderColored: userPreferencePayload.calendar_border_colored,
         })
@@ -142,7 +142,7 @@ export class SaveEventService {
     const msg = payload?.msg || '';
     const color = checkNumber(payload?.color) || -15;
     const rrule = payload?.rrule;
-    const hasRecurrEvents = payload?.hasRecurrEvents;
+    const hasRecurrEvents = checkNumber(payload?.hasRecurrEvents);
     const scp = payload?.scp;
     const practitionerId = checkId(payload?.practitionerId);
     const resourceId = checkId(payload?.resourceId);
@@ -150,7 +150,7 @@ export class SaveEventService {
     const reminders = payload?.reminders;
 
     let eventId = payload.eventId;
-    const eventTypeId = checkId(payload.eventTypeId);
+    const eventTypeId = checkId(payload.eventTypeId) || null;
     const _private = payload.private;
     const dates = payload.dates ? payload.dates.split(',') : [];
     const exdates = payload.exdates ? payload.exdates.split(',') : [];
@@ -242,7 +242,7 @@ export class SaveEventService {
             state: true,
           },
           where: {
-            id: checkId(eventId),
+            id: checkId(eventId) || 0,
           },
         });
         eventStatus = eventStatement.state;
@@ -458,7 +458,7 @@ export class SaveEventService {
         Number(state) === EventStateEnum.PRESENT
       ) {
         const patient = await this.contactRepo.findOneBy({
-          id: Number(contactId),
+          id: Number(contactId) || 0,
         });
         await queryRunner.query(
           `
@@ -490,7 +490,6 @@ export class SaveEventService {
         const reminderIds: number[] = reminders.map((reminder) =>
           Number(reminder.id),
         );
-        reminderIds.push(0);
         const inQuery: string = Array(reminderIds.length).fill('?').join(',');
 
         await queryRunner.query(
@@ -542,7 +541,7 @@ export class SaveEventService {
       await queryRunner.commitTransaction();
     } catch (e) {
       await queryRunner.rollbackTransaction();
-      return new CBadRequestException(ErrorCode.SAVE_FAILED);
+      throw new CBadRequestException(ErrorCode.SAVE_FAILED);
     } finally {
       await queryRunner.release();
     }

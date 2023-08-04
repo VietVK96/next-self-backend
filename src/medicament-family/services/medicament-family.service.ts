@@ -21,7 +21,7 @@ export class MedicamentFamilyService {
   ) {}
 
   async findAll(organizationId: number) {
-    if (organizationId) {
+    if (!organizationId) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
     const organization = await this.organizationRepo.findOne({
@@ -95,7 +95,7 @@ export class MedicamentFamilyService {
     if (!currentMedicamentFamily) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
-    await this.medicamentFamilyRepo.remove(currentMedicamentFamily);
+    await this.medicamentFamilyRepo.softRemove(currentMedicamentFamily);
     return {
       success: true,
     };
