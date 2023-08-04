@@ -60,6 +60,7 @@ import { MedicamentModule } from './medicament/medicament.module';
 import { ImportModule } from './import/import.module';
 import { MedicamentFamilyModule } from './medicament-family/medicament-family.module';
 import { PeriodontalChartsModule } from './periodontal-charts/periodontal-charts.module';
+import { UserPreferenceModule } from './user-preference/user-preference.module';
 import { AccountModule } from './account/account.module';
 import { StorageModule } from './storage/storage.module';
 import { WorkstationModule } from './workstation/workstation.module';
@@ -179,6 +180,7 @@ const importsModules = [
   ImportModule,
   MedicamentFamilyModule,
   PeriodontalChartsModule,
+  UserPreferenceModule,
   StorageModule,
   WorkstationModule,
   ConversationsModule,
