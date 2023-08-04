@@ -8,6 +8,9 @@ import { UserEntity } from 'src/entities/user.entity';
 import { SyncWzagendaUserEntity } from 'src/entities/sync-wzagenda-user.entity';
 import { WzagendaRes } from '../res/index.res';
 import { UserService } from 'src/user/services/user.service';
+import { google } from 'googleapis';
+import { UpdateGoogleCalendarDto } from '../dtos/google-calendar.dto';
+import { SuccessResponse } from 'src/common/response/success.res';
 
 @Injectable()
 export class AccountService {
@@ -53,8 +56,56 @@ export class AccountService {
     const user = await this.userService.find(userId);
     const google = await this.findGoogleByUser(userId);
     return {
-      user,
+      professional: user?.professional,
       google,
     };
+  }
+
+  async updateGoogleCalendar(
+    identity: UserIdentity,
+    body: UpdateGoogleCalendarDto,
+  ): Promise<SuccessResponse> {
+    try {
+      if (!body?.code || !body?.google_calendar_id) {
+        throw new CBadRequestException(ErrorCode.CALENDAR_ID_IS_REQUIRED);
+      }
+      const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+      const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+      const client = process.env.CLIENT_SIDE;
+
+      const oauth2Client = new google.auth.OAuth2(
+        GOOGLE_CLIENT_ID,
+        GOOGLE_CLIENT_SECRET,
+        client,
+      );
+
+      const res = await oauth2Client.getToken(body?.code);
+      const { access_token, refresh_token } = res.tokens;
+
+      if (!refresh_token)
+        throw new CBadRequestException(
+          ErrorCode.CANNOT_GET_CALENDAR_INFORMATION,
+        );
+
+      const query = `
+        INSERT INTO T_SYNC_GOOGLE_USER_SGU (USR_ID, SGU_ACCESS_TOKEN, SGU_TOKEN, SGU_CALENDAR_ID, SGU_ACTIVATED_ON)
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP())
+        ON DUPLICATE KEY UPDATE
+        SGU_ACCESS_TOKEN = VALUES(SGU_ACCESS_TOKEN),
+        SGU_TOKEN = VALUES(SGU_TOKEN),
+        SGU_CALENDAR_ID = VALUES(SGU_CALENDAR_ID),
+        SGU_GOOGLE_LAST_MODIFIED = SGU_LAST_MODIFIED`;
+      await this.dataSource.query(query, [
+        identity?.id,
+        access_token,
+        refresh_token,
+        body?.google_calendar_id,
+      ]);
+      return {
+        success: true,
+      };
+    } catch (error) {
+      throw new CBadRequestException(error?.message);
+    }
   }
 }

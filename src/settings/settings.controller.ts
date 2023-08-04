@@ -15,6 +15,7 @@ import {
 import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { TokenGuard, UserIdentity } from 'src/common/decorator/auth.decorator';
 import { AccountService } from './services/account.service';
+import { UpdateGoogleCalendarDto } from './dtos/google-calendar.dto';
 
 @ApiBearerAuth()
 @ApiTags('Settings')
@@ -104,5 +105,15 @@ export class SettingsController {
   @UseGuards(TokenGuard)
   async getGoogleCalendar(@CurrentUser() identity: UserIdentity) {
     return await this.accountService.getGoogleCalendar(identity.id);
+  }
+
+  //settings/account/google.php
+  @Post('/account/google-calendar')
+  @UseGuards(TokenGuard)
+  async updateGoogleCalendar(
+    @CurrentUser() identity: UserIdentity,
+    @Body() body: UpdateGoogleCalendarDto,
+  ) {
+    return await this.accountService.updateGoogleCalendar(identity, body);
   }
 }
