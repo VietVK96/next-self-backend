@@ -12,12 +12,13 @@ import { StringHelper } from 'src/common/util/string-helper';
 import { PaymentRequest } from './monetico/paymentRequest';
 import { Monetico } from './monetico/monetico';
 import { Request } from 'express';
+import { FindNotificationDto } from './response/find.notification.setting.res';
 
 @Injectable()
 export class NotificationSettingService {
   constructor(private dataSource: DataSource) {}
 
-  async find(userId: number, request: Request) {
+  async find(userId: number, request: Request): Promise<FindNotificationDto> {
     const user = await this.dataSource.getRepository(UserEntity).findOneOrFail({
       where: { id: userId },
       relations: {
@@ -33,7 +34,6 @@ export class NotificationSettingService {
       address = user?.group?.address;
     }
 
-    console.log(address);
     if (address && hasAllFieldsRequiredForBilling(address)) {
       const billing = new OrderContextBilling(
         address.street,
@@ -118,8 +118,34 @@ export class NotificationSettingService {
         pack1000smsPaymentRequest,
       );
 
-      console.log(products);
-      return products;
+      if (user) {
+        delete user.group;
+        delete user.group;
+      }
+      const smsCount: { sumSms: number }[] = await this.dataSource.query(
+        `
+      SELECT SUM(
+          CASE WHEN T_GROUP_GRP.GRP_SHARE_SMS = 1
+          THEN T_USER_SMS_USS.USS_STOCK
+          ELSE (
+              CASE WHEN user.USR_ID = ?
+              THEN T_USER_SMS_USS.USS_STOCK
+              ELSE 0
+              END
+          )
+          END
+      ) as sumSms
+      FROM T_USER_USR user
+      JOIN T_GROUP_GRP on user.organization_id = T_GROUP_GRP.GRP_ID
+      JOIN T_USER_SMS_USS on user.USR_ID = T_USER_SMS_USS.USR_ID`,
+        [userId],
+      );
+      return {
+        user,
+        smsQuantity: smsCount[0].sumSms,
+        products,
+        address,
+      };
     }
   }
 }

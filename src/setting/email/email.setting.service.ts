@@ -1,3 +1,4 @@
+import { MAX_ENTRIES } from 'src/constants/glassary';
 import { Injectable } from '@nestjs/common';
 import { EmailAccountEntity } from 'src/entities/email-account.entity';
 import { UserEntity } from 'src/entities/user.entity';
@@ -10,6 +11,7 @@ import { SaveEmailDto } from './dto/saveEmail.setting.dto';
 import * as crypto from 'crypto-js';
 import { env } from 'process';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class EmailSettingService {
@@ -33,29 +35,49 @@ export class EmailSettingService {
     };
   }
 
-  async findById(emailId: number): Promise<EmailAccountEntity> {
-    const email = await this.emailAccountRepo.findOne({
-      where: { id: emailId },
-    });
-    if (!email) throw new CBadRequestException(ErrorCode.NOT_FOUND);
-    delete email.MAX_ENTRIES;
-
-    const emailOutgoingServer = await this.dataSource
-      .getRepository(EmailOutgoingServerEntity)
-      .findOne({
-        where: { emailAccountId: emailId },
+  async findById(
+    emailId: number,
+    withPassword = false,
+  ): Promise<EmailAccountEntity | CBadRequestException> {
+    try {
+      const email = await this.emailAccountRepo.findOne({
+        where: { id: emailId },
       });
-    delete emailOutgoingServer.password;
-    const decryptedPassword = crypto.DES.decrypt(
-      emailOutgoingServer.username,
-      env.SECRET_KEY_EMAIL,
-    );
-    emailOutgoingServer.username = decryptedPassword.toString(crypto.enc.Utf8);
+      if (!email) return new CBadRequestException(ErrorCode.NOT_FOUND);
+      delete email.MAX_ENTRIES;
 
-    return {
-      ...email,
-      outgoingServer: emailOutgoingServer,
-    };
+      const emailOutgoingServer = await this.dataSource
+        .getRepository(EmailOutgoingServerEntity)
+        .findOne({
+          where: { emailAccountId: emailId },
+        });
+
+      if (withPassword) {
+        const decryptedPassword = crypto.DES.decrypt(
+          emailOutgoingServer.password,
+          env.SECRET_KEY_EMAIL,
+        );
+        emailOutgoingServer.password = decryptedPassword.toString(
+          crypto.enc.Utf8,
+        );
+      } else {
+        delete emailOutgoingServer.password;
+      }
+      const decryptedUserName = crypto.DES.decrypt(
+        emailOutgoingServer.username,
+        env.SECRET_KEY_EMAIL,
+      );
+      emailOutgoingServer.username = decryptedUserName.toString(
+        crypto.enc.Utf8,
+      );
+
+      return {
+        ...email,
+        outgoingServer: emailOutgoingServer,
+      };
+    } catch (e) {
+      return new CBadRequestException(ErrorCode.FORBIDDEN);
+    }
   }
 
   async save(
@@ -157,5 +179,40 @@ export class EmailSettingService {
       await this.emailAccountRepo.delete(emailId);
     }
     return;
+  }
+
+  async mailTester(mailId: number) {
+    try {
+      const mailInfo = await this.findById(mailId, true);
+      if (mailInfo instanceof CBadRequestException) {
+        return mailInfo;
+      }
+      await this.sendMailTest(mailInfo, mailInfo.emailAddress);
+    } catch (e) {
+      return new CBadRequestException(ErrorCode.FORBIDDEN);
+    }
+  }
+  async sendMailTest(mailInfo: EmailAccountEntity, email: string) {
+    const transporter = nodemailer.createTransport({
+      host: mailInfo.outgoingServer.hostname,
+      secure: false,
+      auth: {
+        user: mailInfo.outgoingServer.username,
+        pass: mailInfo.outgoingServer.password,
+        // port: mailInfo.outgoingServer.port,
+      },
+    });
+
+    const mailOptions = {
+      from: `${mailInfo.displayName} <${mailInfo.outgoingServer.username}>`,
+      to: email,
+      subject: `Message de l'adresse électronique ${mailInfo.outgoingServer.username}`,
+      bcc: 'someone@example.com',
+      text: `
+      Félicitation, votre adresse électronique ${mailInfo.outgoingServer.username} est bien configurée - vos patients recevront desormais vos messages depuis cette adresse électronique.
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
   }
 }
