@@ -201,7 +201,7 @@ export class LibrariesService {
     } else {
       libraryAct.nomenclature = EnumLibraryActNomenclature.CCAM;
     }
-    libraryAct.materials = JSON.stringify(params?.materials ?? []);
+    libraryAct.materials = params?.materials?.join(',');
     libraryAct.traceabilityActivated = +params?.traceability_activated;
     libraryAct.transmitted = +params?.transmitted;
     libraryAct.used = +params?.used;
@@ -215,12 +215,9 @@ export class LibrariesService {
         libraryOdontogram.visibleCrown = +odontogram?.visible_crown;
         libraryOdontogram.visibleRoot = +odontogram?.visible_root;
         libraryOdontogram.visibleImplant = +odontogram?.visible_implant;
-        libraryOdontogram.visibleAreas = JSON.stringify(
-          odontogram?.visible_areas,
-        );
-        libraryOdontogram.invisibleAreas = JSON.stringify(
-          odontogram?.invisible_areas,
-        );
+        (libraryOdontogram.visibleAreas = odontogram?.visible_areas?.join(',')),
+          (libraryOdontogram.invisibleAreas =
+            odontogram?.invisible_areas?.join(','));
         libraryOdontogram.rankOfTooth = odontogram?.rank_of_tooth ?? 0;
         libraryOdontogram.internalReferenceId =
           odontogram?.internal_reference_id;
@@ -240,19 +237,21 @@ export class LibrariesService {
         }
 
         let ngapKey = null;
-        const ngapKeyId = quantity?.ngapKey?.id;
+        const ngapKeyId = quantity?.ngap_key?.id;
         if (ngapKeyId) {
           ngapKey = await this.ngapKeyRepo.findOne({
             where: { id: ngapKeyId },
           });
           if (!ngapKey)
-            throw new CBadRequestException(ErrorCode.NOT_FOUND_CCAM);
+            throw new CBadRequestException(ErrorCode.NOT_FOUND_NGAP_KEY);
         }
 
         const libraryActQuantity: LibraryActQuantityEntity = {};
         libraryActQuantity.organizationId = organization?.id;
         libraryActQuantity.ccam = ccam;
+        libraryActQuantity.ccamId = ccam?.id;
         libraryActQuantity.ngapKey = ngapKey;
+        libraryActQuantity.ngapKeyId = ngapKey?.id;
         libraryActQuantity.label = quantity?.label;
         libraryActQuantity.observation = quantity?.observation;
         libraryActQuantity.descriptiveText = quantity?.descriptive_text;
@@ -261,15 +260,20 @@ export class LibrariesService {
         libraryActQuantity.coefficient = quantity?.coefficient;
         libraryActQuantity.exceeding = quantity?.exceeding;
         libraryActQuantity.duration = quantity?.duration
-          ? quantity?.duration.toString()
+          ? quantity?.duration
           : '00:00:00';
         libraryActQuantity.buyingPrice = quantity?.buying_price;
-        libraryActQuantity.materials = quantity?.materials;
+        libraryActQuantity.materials =
+          quantity?.materials?.length === 0
+            ? null
+            : quantity?.materials?.join(',');
         libraryActQuantity.traceabilityActivated =
           quantity?.traceability_activated;
-        libraryActQuantity.traceabilityMerged = quantity?.traceability_merged;
-        libraryActQuantity.transmitted = quantity?.transmitted;
-        libraryActQuantity.used = quantity?.used;
+        libraryActQuantity.traceabilityMerged = quantity?.traceability_merged
+          ? 1
+          : 0;
+        libraryActQuantity.transmitted = quantity?.transmitted ? 1 : 0;
+        libraryActQuantity.used = quantity?.used ? 1 : 0;
         libraryActQuantity.odontograms = [];
         const odontograms = quantity?.odontograms;
         if (odontograms && odontograms?.length > 0) {
@@ -280,12 +284,10 @@ export class LibrariesService {
             libraryOdontogram.visibleCrown = +odontogram?.visible_crown;
             libraryOdontogram.visibleRoot = +odontogram?.visible_root;
             libraryOdontogram.visibleImplant = +odontogram?.visible_implant;
-            libraryOdontogram.visibleAreas = JSON.stringify(
-              odontogram?.visible_areas,
-            );
-            libraryOdontogram.invisibleAreas = JSON.stringify(
-              odontogram?.invisible_areas,
-            );
+            (libraryOdontogram.visibleAreas =
+              odontogram?.visible_areas?.join(',')),
+              (libraryOdontogram.invisibleAreas =
+                odontogram?.invisible_areas?.join(','));
             libraryOdontogram.rankOfTooth = odontogram?.rank_of_tooth ?? 0;
             libraryOdontogram.internalReferenceId =
               odontogram?.internal_reference_id;
@@ -477,7 +479,7 @@ export class LibrariesService {
         }
 
         const ngapKey = null;
-        const ngapKeyId = quantity?.ngapKey?.id;
+        const ngapKeyId = quantity?.ngap_key?.id;
         if (ngapKeyId) {
           const ngapKey = await this.ngapKeyRepo.findOne({
             where: { id: ngapKeyId },
@@ -508,10 +510,10 @@ export class LibrariesService {
         libraryActQuantity.coefficient = quantity?.coefficient;
         libraryActQuantity.exceeding = quantity?.exceeding;
         libraryActQuantity.duration = quantity?.duration
-          ? formatDuration(quantity?.duration)
+          ? formatDuration(Number(quantity?.duration))
           : null;
         libraryActQuantity.buyingPrice = quantity?.buying_price;
-        libraryActQuantity.materials = quantity?.materials;
+        libraryActQuantity.materials = quantity?.materials.join(',');
         libraryActQuantity.traceabilityActivated =
           +quantity?.traceability_activated;
         libraryActQuantity.traceabilityMerged = +quantity?.traceability_merged;
@@ -535,11 +537,13 @@ export class LibrariesService {
               libraryOdontogram.organization = organization;
             }
             libraryOdontogram.color = odontogram?.color;
-            libraryOdontogram.visibleCrown = odontogram?.visible_crown;
-            libraryOdontogram.visibleRoot = odontogram?.visible_root;
-            libraryOdontogram.visibleImplant = odontogram?.visible_implant;
-            libraryOdontogram.visibleAreas = odontogram?.visible_areas;
-            libraryOdontogram.invisibleAreas = odontogram?.invisible_areas;
+            libraryOdontogram.visibleCrown = +odontogram?.visible_crown;
+            libraryOdontogram.visibleRoot = +odontogram?.visible_root;
+            libraryOdontogram.visibleImplant = +odontogram?.visible_implant;
+            libraryOdontogram.visibleAreas =
+              odontogram?.visible_areas.join(',');
+            libraryOdontogram.invisibleAreas =
+              odontogram?.invisible_areas.join(',');
             libraryOdontogram.rankOfTooth = odontogram?.rank_of_tooth;
             libraryActQuantity.odontograms.push(libraryOdontogram);
           }
@@ -726,6 +730,9 @@ export class LibrariesService {
       const libraryActCurrent = await queryBuilder.getOne();
       libraryActCurrent.label = `(Copie) ${libraryActCurrent?.label ?? ''}`;
       delete libraryActCurrent?.id;
+      delete libraryActCurrent?.createdAt;
+      delete libraryActCurrent?.updatedAt;
+      console.log(libraryActCurrent);
 
       return await this.libraryActRepo.save(libraryActCurrent);
     } catch (err) {
@@ -755,10 +762,225 @@ export class LibrariesService {
         queryBuilder.andWhere('laq.used = :used', { used: true });
       }
       const libraryAct = await queryBuilder.getOne();
-      return libraryAct;
+
+      const result = {
+        id: libraryAct?.id,
+        family: {
+          id: libraryAct?.family?.id,
+          label: libraryAct?.family?.id,
+          color: libraryAct?.family?.color,
+          position: libraryAct?.family?.position,
+          used: !!libraryAct?.family?.used,
+          internal_reference_id: libraryAct?.family?.internalReferenceId,
+        },
+        label: libraryAct?.label,
+        observation: libraryAct?.observation,
+        descriptive_text: libraryAct?.descriptiveText,
+        position: libraryAct?.position,
+        nomenclature: libraryAct?.nomenclature,
+        materials:
+          libraryAct?.materials === '' ? [] : libraryAct?.materials?.split(','),
+        traceability_activated: !!libraryAct?.traceabilityActivated,
+        transmitted: !!libraryAct?.transmitted,
+        used: !!libraryAct?.used,
+        internal_reference_id: libraryAct?.internalReferenceId,
+
+        quantities: libraryAct?.quantities?.map((item) => {
+          return {
+            number_of_teeth: item?.numberOfTeeth,
+            amount: item?.amount,
+            coefficient: item?.coefficient,
+            exceeding: item?.exceeding,
+            duration: item?.duration,
+            buying_price: item?.buyingPrice,
+            tariffs: [],
+            traceability_activated: !!item?.traceabilityActivated,
+            traceability_merged: !!item?.traceabilityMerged,
+            transmitted: !!item?.transmitted,
+            used: !!item?.used,
+            label: item?.label,
+            ccam: !item?.ccamId
+              ? null
+              : {
+                  short_name: item?.ccam?.shortName,
+                  observation: item?.ccam?.observation,
+                  activity: item?.ccam?.activity,
+                  phase: item?.ccam?.phase,
+                  opposable: !!item?.ccam?.opposable,
+                  modifiers: item?.ccam?.modifiers,
+                  repayable_on_condition: !!item?.ccam?.repayableOnCondition,
+                  number_of_teeth: item?.ccam?.numberOfTeeth,
+                  age_min: item?.ccam?.ageMin,
+                  age_max: item?.ccam?.ageMax,
+                  deleted_on: item?.ccam?.deletedOn,
+                  id: item?.ccam?.id,
+                  family: {
+                    id: item?.ccam?.family?.id,
+                    code: item?.ccam?.family?.code,
+                    label: item?.ccam?.family?.label,
+                  },
+                  code: item?.ccam?.code,
+                  name: item?.ccam?.name,
+                  created_on: item?.ccam?.createdOn,
+                  unit_prices: item?.ccam?.unitPrices?.map((itemUP) => {
+                    return {
+                      grid: itemUP.grid,
+                      unit_price: itemUP.unitPrice,
+                      maximum_price: itemUP.maximumPrice,
+                      id: itemUP.id,
+                      created_on: itemUP.createdOn,
+                    };
+                  }),
+                  conditions: item?.ccam?.conditions?.map((itemCo) => {
+                    return {
+                      forbidden_teeth: itemCo?.forbiddenTeeth?.split(','),
+                      id: itemCo?.id,
+                    };
+                  }),
+                  associations: item?.ccam?.associations,
+                },
+            ngap_key: !item?.ngapKeyId
+              ? null
+              : {
+                  unit_price: item?.ngapKey?.unitPrice,
+                  complement_night: item?.ngapKey?.complementNight,
+                  complement_holiday: item?.ngapKey?.complementHoliday,
+                  used: !!item?.ngapKey?.used,
+                  id: item?.ngapKey?.id,
+                  name: item?.ngapKey?.name,
+                },
+            odontograms: item?.odontograms?.map((item) => {
+              return {
+                id: item?.id,
+                color: item?.color,
+                visible_crown: !!item?.visibleCrown,
+                visible_root: !!item?.visibleRoot,
+                visible_implant: !!item?.visibleImplant,
+                visible_areas:
+                  item?.visibleAreas === ''
+                    ? []
+                    : item?.visibleAreas?.split(','),
+                invisible_areas:
+                  item?.invisibleAreas === ''
+                    ? []
+                    : item?.invisibleAreas?.split(','),
+                rank_of_tooth: item?.rankOfTooth,
+              };
+            }),
+            traceabilities: item?.traceabilities?.map((itemTrac) => {
+              return {
+                medical_device_id: itemTrac.medicalDeviceId,
+                reference: itemTrac.reference,
+                observation: itemTrac.observation,
+              };
+            }),
+          };
+        }),
+
+        odontograms: libraryAct?.odontograms?.map((item) => {
+          return {
+            id: item?.id,
+            color: item?.color,
+            visible_crown: !!item?.visibleCrown,
+            visible_root: !!item?.visibleRoot,
+            visible_implant: !!item?.visibleImplant,
+            visible_areas:
+              item?.visibleAreas === '' ? [] : item?.visibleAreas?.split(','),
+            invisible_areas:
+              item?.invisibleAreas === ''
+                ? []
+                : item?.invisibleAreas?.split(','),
+            rank_of_tooth: item?.rankOfTooth,
+          };
+        }),
+
+        associations: libraryAct?.associations?.map((item) => {
+          return {
+            position: item?.position,
+            automatic: !!item?.automatic,
+            child: {
+              observation: item?.child?.observation,
+              position: item?.child?.position,
+              nomenclature: item?.child?.nomenclature,
+              traceability_activated: !!item?.child?.traceabilityActivated,
+              transmitted: !!item?.child?.transmitted,
+              used: !!item?.child?.used,
+              selected: false,
+              id: item?.child?.id,
+              label: item?.child?.label,
+              attachment_count: item?.child?.attachmentCount,
+              traceabilities: [],
+              attachments: [],
+              quantities: [],
+              odontograms: [],
+              associations: [],
+              complementaries: [],
+            },
+          };
+        }),
+
+        complementaries: libraryAct?.complementaries?.map((item) => {
+          return {
+            child: {
+              id: item?.child?.id,
+              label: item?.child?.label,
+              observation: item?.child?.observation,
+              descriptive_text: item?.child?.descriptiveText,
+              position: item?.child?.position,
+              nomenclature: item?.child?.nomenclature,
+              materials:
+                item?.child?.materials === ''
+                  ? []
+                  : item?.child?.materials?.split(','),
+              traceability_activated: item?.child?.traceabilityActivated,
+              transmitted: item?.child?.transmitted,
+              used: item?.child?.used,
+              internal_reference_id: item?.child?.internalReferenceId,
+              quantities: item?.child?.quantities,
+              odontograms: item?.child?.odontograms,
+              associations: item?.child?.associations,
+              complementaries: item?.child?.complementaries,
+              traceabilities: item?.child?.traceabilities,
+              attachment_count: item?.child?.attachmentCount,
+              attachments: item?.child?.attachments,
+            },
+            position: item?.position,
+            used: !!item?.used,
+          };
+        }),
+
+        traceabilities: libraryAct?.traceabilities?.map((item) => {
+          return {
+            medical_device_id: item?.medicalDeviceId,
+            reference: item?.reference,
+            observation: item?.observation,
+          };
+        }),
+
+        attachment_count: libraryAct?.attachmentCount,
+
+        attachments: libraryAct?.attachments?.map((item) => {
+          return {
+            type: item?.type,
+            id: item?.id,
+            doctor_id: item?.doctor?.id,
+            title: item?.title,
+            favorite: item?.favorite,
+            created_at: item?.createdAt,
+            updated_at: item?.updatedAt,
+            doctor: {
+              id: item?.doctor?.id,
+              lastname: item?.doctor?.lastname,
+              firstname: item?.doctor?.firstname,
+              email: item?.doctor?.email,
+            },
+          };
+        }),
+      };
+
+      return result;
     } catch (err) {
-      console.log(err?.message);
-      throw new CBadRequestException(ErrorCode.NOT_FOUND_LIBRARY_ACT);
+      throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
     }
   }
 
