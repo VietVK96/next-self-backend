@@ -23,7 +23,22 @@ export class ActFamiliesStoreDto {
   @ApiProperty({
     required: false,
   })
-  used_only?: boolean;
+  @IsOptional()
+  @IsString()
+  label?: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  color?: string;
+
+  @ApiProperty({
+    required: false,
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  used?: boolean;
 }
 
 export class ActFamiliesSearchDto {
@@ -48,4 +63,33 @@ export class ActsIndexDto {
     required: true,
   })
   only_used?: boolean;
+}
+
+export class ActFamiliesUpdateDto {
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  label?: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  color?: string;
+
+  @ApiProperty({
+    required: false,
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  used?: boolean;
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  position?: number;
 }
