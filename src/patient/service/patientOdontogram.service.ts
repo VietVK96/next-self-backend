@@ -447,7 +447,6 @@ export class PatientOdontogramService {
     this.checkOdontogramName(req?.name);
     this.checkStatus(req?.status);
     const styles = await this.run(req?.status, checkId(req?.conId));
-
     let xml = this.getXml(req?.name);
     for (const key in styles) {
       const style = styles[key];
@@ -479,7 +478,7 @@ export class PatientOdontogramService {
    * @return string SVG du schéma dentaire
    */
   getXml(name: string, imageToURL?: boolean) {
-    const filePath = path.join(process.cwd(), 'svg', `${name}.svg`);
+    const filePath = path.join(process.cwd(), 'resources/svg', `${name}.svg`);
     if (!fs.existsSync(filePath)) {
       throw new CBadRequestException('validation.in ' + name);
     }

@@ -14,7 +14,10 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { TokenGuard, UserIdentity } from 'src/common/decorator/auth.decorator';
+import { AccountSecurityService } from './services/account-security.service';
+import { UpdatePassWordDto } from './dtos/user-setting.dto';
 import { AccountService } from './services/account.service';
+import { UpdateGoogleCalendarDto } from './dtos/google-calendar.dto';
 import { NotificationService } from './services/notification.service';
 
 @ApiBearerAuth()
@@ -23,6 +26,7 @@ import { NotificationService } from './services/notification.service';
 export class SettingsController {
   constructor(
     private tariffTypesSerivce: TariffTypesService,
+    private accountSecurityService: AccountSecurityService,
     private accountService: AccountService,
     private notificationService: NotificationService,
   ) {}
@@ -94,11 +98,40 @@ export class SettingsController {
     );
   }
 
+  //  https://ecoo.ltsgroup.tech/settings/account/security
+  @Post('/account/security')
+  @UseGuards(TokenGuard)
+  async updatePasswordAccount(
+    @CurrentUser() identity: UserIdentity,
+    @Body() updatePassAccountDto: UpdatePassWordDto,
+  ) {
+    return await this.accountSecurityService.updatePasswordAccount(
+      identity.id,
+      updatePassAccountDto,
+    );
+  }
   // settings/account/wzagenda.php
   @Get('/account/wzagenda')
   @UseGuards(TokenGuard)
   async fetchAccountWzagenda(@CurrentUser() identity: UserIdentity) {
     return await this.accountService.fetchAccountWzagenda(identity);
+  }
+
+  //settings/account/google.php
+  @Get('/account/google-calendar')
+  @UseGuards(TokenGuard)
+  async getGoogleCalendar(@CurrentUser() identity: UserIdentity) {
+    return await this.accountService.getGoogleCalendar(identity.id);
+  }
+
+  //settings/account/google.php
+  @Post('/account/google-calendar')
+  @UseGuards(TokenGuard)
+  async updateGoogleCalendar(
+    @CurrentUser() identity: UserIdentity,
+    @Body() body: UpdateGoogleCalendarDto,
+  ) {
+    return await this.accountService.updateGoogleCalendar(identity, body);
   }
 
   @Get('/notification/historical')
