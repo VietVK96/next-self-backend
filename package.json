@@ -41,6 +41,7 @@
     "@nestjs/swagger": "^6.3.0",
     "@nestjs/typeorm": "^9.0.1",
     "@saemhco/nestjs-html-pdf": "^0.1.0",
+    "@types/crypto-js": "^4.1.1",
     "@types/mime-types": "^2.1.1",
     "@types/multer": "^1.4.7",
     "@types/nodemailer": "^6.4.8",

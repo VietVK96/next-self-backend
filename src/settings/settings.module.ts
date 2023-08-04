@@ -9,6 +9,8 @@ import { SyncWzagendaUserEntity } from 'src/entities/sync-wzagenda-user.entity';
 import { UserService } from 'src/user/services/user.service';
 import { AddressService } from 'src/address/service/address.service';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
+import { NotificationService } from './services/notification.service';
+import { AccountSecurityService } from './services/account-security.service';
 
 @Module({
   imports: [
@@ -20,6 +22,13 @@ import { UserMedicalEntity } from 'src/entities/user-medical.entity';
     ]),
   ],
   controllers: [SettingsController],
-  providers: [TariffTypesService, AccountService, UserService, AddressService],
+  providers: [
+    TariffTypesService,
+    AccountService,
+    NotificationService,
+    AccountSecurityService,
+    UserService,
+    AddressService,
+  ],
 })
 export class SettingsModule {}
