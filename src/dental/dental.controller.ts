@@ -180,7 +180,7 @@ export class DentalController {
   }
 
   // dental/devisStd2/devis_email.php
-  @Get('/devisStd2/index/')
+  @Get('/devisStd2/index')
   @UseGuards(TokenGuard)
   async getInitChampsDevisStd2(
     @CurrentUser() identity: UserIdentity,
