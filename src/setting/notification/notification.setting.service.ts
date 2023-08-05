@@ -12,13 +12,13 @@ import { StringHelper } from 'src/common/util/string-helper';
 import { PaymentRequest } from './monetico/paymentRequest';
 import { Monetico } from './monetico/monetico';
 import { Request } from 'express';
-import { FindNotificationDto } from './response/find.notification.setting.res';
+import { FindNotificationRes } from './response/find.notification.setting.res';
 
 @Injectable()
 export class NotificationSettingService {
   constructor(private dataSource: DataSource) {}
 
-  async find(userId: number, request: Request): Promise<FindNotificationDto> {
+  async find(userId: number, request: Request): Promise<FindNotificationRes> {
     const user = await this.dataSource.getRepository(UserEntity).findOneOrFail({
       where: { id: userId },
       relations: {
