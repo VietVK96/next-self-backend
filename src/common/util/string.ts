@@ -71,3 +71,15 @@ export function validateEmail(email: string) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 }
+
+/**
+ * @param firstname string
+ * @param lastname string
+ * @returns string
+ */
+export function generateFullName(firstname: string, lastname: string): string {
+  firstname = firstname ? firstname : '';
+  lastname = lastname ? lastname : '';
+  const fullname = firstname + ' ' + lastname;
+  return fullname.trim();
+}
