@@ -442,6 +442,13 @@ export class QuotationServices {
     }
   }
 
+  /**
+   *  ecoophp/dental/quotation/devis_init_champs.php 60 -523
+   * @param req QuotationInitChampsDto
+   * @param result QuotationInitChampsRes
+   * @param identity UserIdentity
+   * @returns QuotationInitChampsRes
+   */
   async initChampsByIdPdt(
     req: QuotationInitChampsDto,
     result: QuotationInitChampsRes,
@@ -884,6 +891,14 @@ export class QuotationServices {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
   }
+
+  /**
+   *  ecoophp/dental/quotation/devis_init_champs.php 523 - 673
+   * @param req QuotationInitChampsDto
+   * @param result QuotationInitChampsRes
+   * @param identity UserIdentity
+   * @returns QuotationInitChampsRes
+   */
   async initChampsByNoDevis(
     req: QuotationInitChampsDto,
     result: QuotationInitChampsRes,
