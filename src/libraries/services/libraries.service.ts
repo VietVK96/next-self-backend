@@ -69,6 +69,32 @@ export class LibrariesService {
   ) {}
 
   /**
+   * php/libraries/act-families/acts/index.php 100%
+   */
+  async indexActByActFamilyId(
+    id: number,
+    identity: UserIdentity,
+    request: ActFamiliesDto,
+  ): Promise<LibraryActEntity[]> {
+    const where: FindOptionsWhere<LibraryActEntity> = {
+      organizationId: identity.org,
+      libraryActFamilyId: id,
+    };
+    if (request.used_only) {
+      where.used = 1;
+    }
+    const data = await this.libraryActRepo.find({
+      where,
+      order: {
+        position: 'ASC',
+        id: 'ASC',
+      },
+    });
+
+    return data;
+  }
+
+  /**
    * php/libraries/act-families/index.php done
    *
    */
@@ -100,8 +126,9 @@ export class LibrariesService {
   ): Promise<any> {
     const libraryActFamily = {} as LibraryActFamilyEntity;
     libraryActFamily.label = request?.label;
-    libraryActFamily.color = request?.color;
+    libraryActFamily.color = JSON.stringify(request?.color);
     libraryActFamily.used = +request?.used;
+    libraryActFamily.organizationId = identity.org;
     const nextPosition = await this.dataSource
       .createQueryBuilder(LibraryActEntity, 'la')
       .select('la.position')
@@ -128,7 +155,7 @@ export class LibrariesService {
         relations: ['acts'],
       });
       libraryActFamily.label = req?.label;
-      libraryActFamily.color = req?.color;
+      libraryActFamily.color = JSON.stringify(req?.color);
       libraryActFamily.used = +req?.used;
       libraryActFamily.position = req?.position;
       return await this.libraryActFamilyRepo.save({ id, ...libraryActFamily });
@@ -271,7 +298,7 @@ export class LibrariesService {
         libraryOdontogram.rankOfTooth = odontogram?.rank_of_tooth ?? 0;
         libraryOdontogram.internalReferenceId =
           odontogram?.internal_reference_id ?? null;
-        libraryAct.odontograms.push(libraryOdontogram);
+        libraryAct.odontograms?.push(libraryOdontogram);
       }
     }
 
@@ -341,7 +368,7 @@ export class LibrariesService {
             libraryOdontogram.rankOfTooth = odontogram?.rank_of_tooth ?? 0;
             libraryOdontogram.internalReferenceId =
               odontogram?.internal_reference_id ?? null;
-            libraryActQuantity.odontograms.push(libraryOdontogram);
+            libraryActQuantity.odontograms?.push(libraryOdontogram);
           }
         }
 
@@ -369,7 +396,7 @@ export class LibrariesService {
             libraryActQuantityTraceability.reference = traceability?.reference;
             libraryActQuantityTraceability.observation =
               traceability?.observation;
-            libraryActQuantity.traceabilities.push(
+            libraryActQuantity.traceabilities?.push(
               libraryActQuantityTraceability,
             );
           }
@@ -377,17 +404,19 @@ export class LibrariesService {
 
         const tariffs = quantity?.tariffs ?? [];
         if (tariffs && tariffs?.length > 0) {
+          libraryActQuantity.tariffs = [];
           for (const tariff of tariffs) {
             if (tariff?.tariff) {
               const libraryActQuantityTariff =
                 {} as LibraryActQuantityTariffEntity;
               libraryActQuantityTariff.tariffType = tariff?.tariff_type;
               libraryActQuantityTariff.tariff = tariff?.tariff;
-              libraryActQuantity.tariffs.push(libraryActQuantityTariff);
+              libraryActQuantity?.tariffs?.push(libraryActQuantityTariff);
             }
           }
         }
-        libraryAct.quantities.push(libraryActQuantity);
+
+        libraryAct.quantities?.push(libraryActQuantity);
       }
     }
 
@@ -405,7 +434,7 @@ export class LibrariesService {
         libraryActAssociation.libraryActChildId = child?.id;
         libraryActAssociation.position = association?.position;
         libraryActAssociation.automatic = association?.automatic;
-        libraryAct.associations.push(libraryActAssociation);
+        libraryAct.associations?.push(libraryActAssociation);
       }
     }
     let traceabilities = params?.traceabilities ?? [];
@@ -429,7 +458,7 @@ export class LibrariesService {
       libraryActTraceability.medicalDeviceId = medicalDevice?.id;
       libraryActTraceability.reference = traceability?.reference;
       libraryActTraceability.observation = traceability?.observation;
-      libraryAct.traceabilities.push(libraryActTraceability);
+      libraryAct.traceabilities?.push(libraryActTraceability);
     }
 
     const attachments = params?.attachments ?? [];
@@ -464,11 +493,11 @@ export class LibrariesService {
     libraryAct.descriptiveText = params?.descriptive_text;
     libraryAct.position = params?.position;
     libraryAct.nomenclature = params?.nomenclature;
-    libraryAct.materials = JSON.stringify(params?.materials);
+    libraryAct.materials = params?.materials?.join(',');
     libraryAct.traceabilityActivated = +params?.traceability_activated;
     libraryAct.used = +params?.used;
-    const laoPromises = libraryAct.odontograms.map((odontogram) =>
-      this.libraryOdontogramRepo.softDelete(odontogram?.id),
+    const laoPromises = libraryAct?.odontograms?.map((odontogram) =>
+      this.libraryOdontogramRepo?.softDelete(odontogram?.id),
     );
     await Promise.all(laoPromises);
     libraryAct.odontograms = [];
@@ -485,28 +514,26 @@ export class LibrariesService {
       for (const odontogram of odontograms) {
         const libraryOdontogram = {} as LibraryOdontogramEntity;
         libraryOdontogram.organizationId = organization?.id;
-        libraryOdontogram.color = JSON.stringify(odontogram?.color);
+        libraryOdontogram.color = odontogram?.color;
         libraryOdontogram.visibleCrown = +odontogram?.visible_crown;
         libraryOdontogram.visibleRoot = +odontogram?.visible_root;
         libraryOdontogram.visibleImplant = +odontogram?.visible_implant;
-        libraryOdontogram.visibleAreas = JSON.stringify(
-          odontogram?.visible_areas,
-        );
-        libraryOdontogram.invisibleAreas = JSON.stringify(
-          odontogram?.invisible_areas,
-        );
+        libraryOdontogram.visibleAreas = odontogram?.visible_areas?.join(',');
+        libraryOdontogram.invisibleAreas =
+          odontogram?.invisible_areas?.join(',');
         libraryOdontogram.rankOfTooth = odontogram?.rank_of_tooth ?? 0;
         libraryOdontogram.internalReferenceId =
           odontogram?.internal_reference_id ?? null;
-        libraryAct.odontograms.push(libraryOdontogram);
+        libraryAct.odontograms?.push(libraryOdontogram);
       }
     }
 
-    const laqIds = libraryAct.quantities.map((quantity) => quantity?.id);
+    const laqIds = libraryAct.quantities?.map((quantity) => quantity?.id);
     await this.libraryActQuantityRepo.softDelete({ id: In(laqIds) });
     libraryAct.quantities = [];
 
     const quantities = params?.quantities ?? [];
+
     if (quantities && quantities?.length > 0) {
       for (const quantity of quantities) {
         const quantityById = await this.libraryActQuantityRepo.findOne({
@@ -560,14 +587,14 @@ export class LibrariesService {
           ? formatDuration(Number(quantity?.duration))
           : null;
         libraryActQuantity.buyingPrice = quantity?.buying_price;
-        libraryActQuantity.materials = quantity?.materials.join(',');
+        libraryActQuantity.materials = quantity?.materials?.join(',');
         libraryActQuantity.traceabilityActivated =
           +quantity?.traceability_activated;
         libraryActQuantity.traceabilityMerged = +quantity?.traceability_merged;
         libraryActQuantity.transmitted = +quantity?.transmitted;
         libraryActQuantity.used = +quantity?.used;
         const odontograms = quantity?.odontograms;
-        const laoPromises = libraryActQuantity.odontograms.map((odontogram) =>
+        const laoPromises = libraryActQuantity.odontograms?.map((odontogram) =>
           this.libraryOdontogramRepo.softDelete(odontogram?.id),
         );
         await Promise.all(laoPromises);
@@ -588,20 +615,20 @@ export class LibrariesService {
             libraryOdontogram.visibleRoot = +odontogram?.visible_root;
             libraryOdontogram.visibleImplant = +odontogram?.visible_implant;
             libraryOdontogram.visibleAreas =
-              odontogram?.visible_areas.join(',');
+              odontogram?.visible_areas?.join(',');
             libraryOdontogram.invisibleAreas =
-              odontogram?.invisible_areas.join(',');
+              odontogram?.invisible_areas?.join(',');
             libraryOdontogram.rankOfTooth = odontogram?.rank_of_tooth;
             libraryActQuantity.odontograms.push(libraryOdontogram);
           }
         }
 
-        const latIds = libraryActQuantity.traceabilities.map(
+        const latIds = libraryActQuantity.traceabilities?.map(
           (quantity) => quantity?.id,
         );
         await this.libraryActTraceabilityRepo.softDelete({ id: In(latIds) });
         libraryAct.traceabilities = [];
-        const traceabilities = quantity?.traceabilities.filter(
+        const traceabilities = quantity?.traceabilities?.filter(
           (traceability) =>
             traceability?.medical_device_id ||
             traceability?.reference ||
@@ -650,7 +677,7 @@ export class LibrariesService {
               where: { id: tariff?.tariff_type?.id },
             });
             if (
-              !libraryActQuantity.tariffs.find((libraryActQuantityTariff) => {
+              !libraryActQuantity.tariffs?.find((libraryActQuantityTariff) => {
                 libraryActQuantityTariff.tariffType === tariffType;
               })
             ) {
@@ -666,7 +693,7 @@ export class LibrariesService {
       }
     }
 
-    const laaPromises = libraryAct.associations.map((association) => {
+    const laaPromises = libraryAct.associations?.map((association) => {
       return this.libraryActAssociationRepo.softDelete({
         libraryActParentId: association?.libraryActParentId,
         libraryActChildId: association?.libraryActChildId,
@@ -701,7 +728,7 @@ export class LibrariesService {
       }
     }
 
-    const latIds = libraryAct.traceabilities.map(
+    const latIds = libraryAct.traceabilities?.map(
       (traceability) => traceability?.id,
     );
     await this.libraryActTraceabilityRepo.softDelete({ id: In(latIds) });
@@ -729,7 +756,7 @@ export class LibrariesService {
       libraryAct.traceabilities.push(libraryActTraceability);
     }
 
-    const mailIds = libraryAct.attachments.map((attachment) => attachment?.id);
+    const mailIds = libraryAct.attachments?.map((attachment) => attachment?.id);
     await this.libraryActAttachmentPivotRepo.softDelete({
       mailId: In(mailIds),
     });
@@ -739,7 +766,7 @@ export class LibrariesService {
     if (attachments && attachments?.length > 0) {
       const mails = await this.lettersRepo.find({
         where: {
-          id: In(params?.attachments.map((attachment) => attachment?.id)),
+          id: In(params?.attachments?.map((attachment) => attachment?.id)),
         },
       });
       libraryAct.attachments = mails;
@@ -1044,12 +1071,17 @@ export class LibrariesService {
         .leftJoinAndSelect('la.traceabilities', 'lat')
         .leftJoinAndSelect('lat.medicalDevice', 'latm')
         .leftJoinAndSelect('laat.user', 'lattu')
+        .leftJoinAndSelect('laq.odontograms', 'laqo')
+        .leftJoinAndSelect('laq.tariffs', 'laqt')
+        .leftJoinAndSelect('laq.traceabilities', 'laqtr')
         .where('la.id = :id', { id });
       if (params?.used_only) {
         queryBuilder.andWhere('laq.used = :used', { used: true });
       }
       const libraryAct = await queryBuilder.getOne();
-
+      console.log(libraryAct);
+      console.log(libraryAct?.quantities?.[0]?.tariffs);
+      console.log(libraryAct?.quantities?.[0]?.traceabilities);
       const result = {
         id: libraryAct?.id,
         family: {
@@ -1081,7 +1113,14 @@ export class LibrariesService {
             exceeding: item?.exceeding,
             duration: item?.duration,
             buying_price: item?.buyingPrice,
-            tariffs: [],
+            tariffs: item?.tariffs?.map((itemTariffs) => {
+              return {
+                tariff: itemTariffs.tariff,
+                tarriff_type: {
+                  id: itemTariffs.id,
+                },
+              };
+            }),
             traceability_activated: !!item?.traceabilityActivated,
             traceability_merged: !!item?.traceabilityMerged,
             transmitted: !!item?.transmitted,
