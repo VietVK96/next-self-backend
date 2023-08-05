@@ -33,7 +33,6 @@ export class NotificationSettingService {
       address = user?.group?.address;
     }
 
-    console.log(address);
     if (address && hasAllFieldsRequiredForBilling(address)) {
       const billing = new OrderContextBilling(
         address.street,
@@ -118,7 +117,6 @@ export class NotificationSettingService {
         pack1000smsPaymentRequest,
       );
 
-      console.log(products);
       return products;
     }
   }

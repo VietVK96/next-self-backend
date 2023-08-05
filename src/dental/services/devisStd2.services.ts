@@ -767,6 +767,7 @@ export class DevisStd2Services {
     );
     result.total_roc = 0;
     result.date_signature = dayjs().format('DD/MM/YYYY');
+    delete result.actes;
     return result;
   }
 
