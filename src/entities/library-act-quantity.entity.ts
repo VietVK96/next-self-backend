@@ -393,7 +393,9 @@ export class LibraryActQuantityEntity {
    */
   //   protected $odontograms;
 
-  @ManyToMany(() => LibraryOdontogramEntity)
+  @ManyToMany(() => LibraryOdontogramEntity, {
+    cascade: true,
+  })
   @JoinTable({
     name: 'library_act_quantity_odontogram',
     joinColumn: {
@@ -416,7 +418,8 @@ export class LibraryActQuantityEntity {
     () => LibraryActQuantityTariffEntity,
     (e) => e.libraryActQuantity,
     {
-      createForeignKeyConstraints: false,
+      // createForeignKeyConstraints: false,
+      cascade: true,
     },
   )
   tariffs?: LibraryActQuantityTariffEntity[];
@@ -429,7 +432,8 @@ export class LibraryActQuantityEntity {
   //   protected $traceabilities;
 
   @OneToMany(() => TraceabilityEntity, (e) => e.libraryActQuantity, {
-    createForeignKeyConstraints: false,
+    // createForeignKeyConstraints: false,
+    cascade: true,
   })
   traceabilities?: TraceabilityEntity[];
 }

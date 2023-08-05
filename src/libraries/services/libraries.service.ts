@@ -66,6 +66,8 @@ export class LibrariesService {
     private libraryActAttachmentPivotRepo: Repository<LibraryActAttachmentPivotEntity>,
     @InjectRepository(LibraryActOdontogramPivotEntity)
     private libraryActOdontogramPivotRepo: Repository<LibraryActOdontogramPivotEntity>,
+    @InjectRepository(LibraryActQuantityTariffEntity)
+    private libraryActQuantityTariffRepo: Repository<LibraryActQuantityTariffEntity>,
   ) {}
 
   /**
@@ -415,7 +417,6 @@ export class LibrariesService {
             }
           }
         }
-
         libraryAct.quantities?.push(libraryActQuantity);
       }
     }
@@ -465,11 +466,12 @@ export class LibrariesService {
     if (attachments && attachments?.length > 0) {
       const mails = await this.lettersRepo.find({
         where: {
-          id: In(params?.attachments.map((attachment) => attachment?.id)),
+          id: In(params?.attachments?.map((attachment) => attachment?.id)),
         },
       });
       libraryAct.attachments = mails;
     }
+    console.log(libraryAct);
     return await this.libraryActRepo.save(libraryAct);
   }
 
@@ -1080,8 +1082,7 @@ export class LibrariesService {
       }
       const libraryAct = await queryBuilder.getOne();
       console.log(libraryAct);
-      console.log(libraryAct?.quantities?.[0]?.tariffs);
-      console.log(libraryAct?.quantities?.[0]?.traceabilities);
+      console.log(libraryAct?.quantities);
       const result = {
         id: libraryAct?.id,
         family: {
