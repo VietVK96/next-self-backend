@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Post,
-  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -17,7 +16,6 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { SettingOrganizationService } from './services/setting-organization.service';
 import { UpdateOrganizationDto } from './dtos/setting-organization.dto';
-import { Request } from 'express';
 
 @ApiBearerAuth()
 @Controller('settings/organizations')

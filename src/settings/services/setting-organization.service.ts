@@ -5,7 +5,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { SuccessResponse } from 'src/common/response/success.res';
 import { UploadService } from 'src/upload/services/upload.service';
-import { PermissionService } from 'src/user/services/permission.service';
 import { Connection, DataSource, Not, Repository } from 'typeorm';
 import { UploadEntity } from 'src/entities/upload.entity';
 import * as fs from 'fs';

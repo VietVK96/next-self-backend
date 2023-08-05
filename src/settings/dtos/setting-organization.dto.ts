@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MaxLength } from 'class-validator';
 
 export class UpdateOrganizationAddress {
   @ApiProperty()
@@ -31,20 +30,15 @@ export class UpdateOrganizationDto {
   logo?: Express.Multer.File;
 
   @ApiProperty()
-  // @IsString()
-  // @MaxLength(255)
   name?: string;
 
   @ApiProperty()
-  // @IsEmail()
   email?: string;
 
   @ApiProperty()
   phone_number?: string;
 
   @ApiProperty()
-  // @IsString()
-  // @MaxLength(255)
   image_library_link?: string;
 
   @ApiProperty()
