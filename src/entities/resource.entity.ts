@@ -79,21 +79,21 @@ export class ResourceEntity {
    */
   // protected $addressee = null;
 
-  @Column({
-    name: 'user_id',
-    type: 'int',
-    width: 11,
-    nullable: true,
-  })
-  addresseeId?: number;
+  // @Column({
+  //   name: 'user_id',
+  //   type: 'int',
+  //   width: 11,
+  //   nullable: true,
+  // })
+  // addresseeId?: number;
 
-  @ManyToOne(() => UserEntity, {
-    createForeignKeyConstraints: false,
-  })
-  @JoinColumn({
-    name: 'user_id',
-  })
-  addressee?: UserEntity;
+  // @ManyToOne(() => UserEntity, {
+  //   createForeignKeyConstraints: false,
+  // })
+  // @JoinColumn({
+  //   name: 'user_id',
+  // })
+  // addressee?: UserEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\User")
@@ -214,6 +214,7 @@ export class ResourceEntity {
 
   @ManyToMany(() => UserEntity, (e) => e.resources, {
     createForeignKeyConstraints: false,
+    cascade: true,
   })
   @JoinTable({
     name: 'user_resource',

@@ -224,7 +224,10 @@ WHERE T_REMINDER_MESSAGE_RMM.USR_ID = ?
           await Promise.all(promises2);
         }
       }
-      return;
+      await queryRunner.commitTransaction();
+      return {
+        success: true,
+      };
     } catch (e) {
       await queryRunner.rollbackTransaction();
       return new CBadRequestException(ErrorCode.SAVE_FAILED);

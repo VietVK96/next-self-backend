@@ -2,11 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class SaveMessageNotificationDto {
   @ApiProperty()
-  sms: string;
+  sms?: string;
 
   @ApiProperty()
-  email: string;
+  email?: string;
 
   @ApiProperty()
-  'pop-up': string;
+  'pop-up'?: string;
 }

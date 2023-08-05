@@ -140,7 +140,7 @@ export class SaveUpdateContactService {
         reqBody?.medical?.policy_holder?.patient?.id || null;
 
       const patientMedical = await this.patientMedicalRepository.findOne({
-        where: { patientId: patient?.id },
+        where: { patientId: patient?.id || 0 },
         relations: {
           policyHolder: true,
         },

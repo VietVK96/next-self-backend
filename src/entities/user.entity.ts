@@ -534,7 +534,7 @@ export class UserEntity {
     name: 'settings',
     type: 'json',
   })
-  settings?: string;
+  settings?: any;
 
   /**
    * @ORM\Column(name="USR_SIGNATURE", type="text", nullable=true)
