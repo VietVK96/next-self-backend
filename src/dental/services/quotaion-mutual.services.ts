@@ -47,8 +47,6 @@ export class QuotationMutualServices {
     private dentalQuotationRepository: Repository<DentalQuotationEntity>,
     @InjectRepository(LettersEntity)
     private lettersRepository: Repository<LettersEntity>,
-    @InjectRepository(UserPreferenceQuotationEntity)
-    private userPreferenceQuotationRepository: Repository<UserPreferenceQuotationEntity>,
     @InjectRepository(OrganizationEntity)
     private organizationRepo: Repository<OrganizationEntity>,
     @InjectRepository(PlanPlfEntity)
@@ -56,7 +54,7 @@ export class QuotationMutualServices {
     @InjectRepository(EventEntity)
     private eventRepo: Repository<EventEntity>,
     @InjectRepository(UserPreferenceQuotationEntity)
-    private userPreferenceRepo: Repository<UserPreferenceQuotationEntity>,
+    private userPreferenceQuotationRepo: Repository<UserPreferenceQuotationEntity>,
     @InjectRepository(DentalQuotationActEntity)
     private dentalQuotationActRepo: Repository<DentalQuotationActEntity>,
     @InjectRepository(BillEntity)
@@ -313,13 +311,13 @@ export class QuotationMutualServices {
         .getRawOne();
       // const userPreferenceQuotation = user?.upq;
       if (user?.upq instanceof UserPreferenceQuotationEntity) {
-        await this.userPreferenceQuotationRepository.save({ user: user });
+        await this.userPreferenceQuotationRepo.save({ user: user });
       }
       quotationPlaceOfManufactureLabel =
         quotationPlaceOfManufactureLabel ?? null;
       quotationPlaceOfSubcontractingLabel =
         quotationPlaceOfSubcontractingLabel ?? null;
-      await this.userPreferenceQuotationRepository.save({
+      await this.userPreferenceQuotationRepo.save({
         user,
         quotationPlaceOfManufacture,
         quotationPlaceOfManufactureLabel,
@@ -753,9 +751,10 @@ export class QuotationMutualServices {
         );
       }
 
-      const userPreferenceQuotation = await this.userPreferenceRepo.findOne({
-        where: { usrId: id_user || 0 },
-      });
+      const userPreferenceQuotation =
+        await this.userPreferenceQuotationRepo.findOne({
+          where: { usrId: id_user || 0 },
+        });
       const periodOfValidity = userPreferenceQuotation?.periodOfValidity;
       const quotationPlaceOfManufacture =
         userPreferenceQuotation?.placeOfManufacture;

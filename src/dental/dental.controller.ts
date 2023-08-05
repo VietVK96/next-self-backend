@@ -260,10 +260,10 @@ export class DentalController {
   }
 
   // ecoophp/dental/quotation/devis_init_champs.php
-  @Post('/quotation/init')
+  @Get('/quotation/init')
   @UseGuards(TokenGuard)
   async quotationInitChamps(
-    @Body() req: QuotationInitChampsDto,
+    @Query() req: QuotationInitChampsDto,
     @CurrentUser() identity: UserIdentity,
   ) {
     return this.quotationServices.initChamps(req, identity);
