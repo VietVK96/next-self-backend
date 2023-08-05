@@ -10,6 +10,7 @@ import {
   IsString,
   MaxLength,
   ValidateNested,
+  isString,
 } from 'class-validator';
 export class ActsStoreFamilyColorDto {
   @ApiProperty({
@@ -190,8 +191,8 @@ export class ActsStoreFamilyQuantitiesDto {
     required: false,
   })
   @IsOptional()
-  @IsNumber()
-  duration?: number;
+  @IsString()
+  duration?: string;
 
   @ApiProperty({
     required: false,
