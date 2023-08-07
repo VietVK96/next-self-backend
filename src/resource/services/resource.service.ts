@@ -91,8 +91,8 @@ export class ResourceService {
         ...updateRest,
         practitionerId: practitionerId,
         practitioner: `${
-          practitioner.lastname && practitioner.firstname
-            ? practitioner.lastname + ' ' + practitioner.firstname
+          practitioner?.lastname && practitioner?.firstname
+            ? practitioner?.lastname + ' ' + practitioner?.firstname
             : ''
         }`,
         listAssistante: listAssistante.map(({ id, firstname, lastname }) => ({

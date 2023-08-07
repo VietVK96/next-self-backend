@@ -189,6 +189,7 @@ const importsModules = [
   ConversationsModule,
   AppointmentReminderLibrarieModule,
   SettingModule,
+  AccountModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {
