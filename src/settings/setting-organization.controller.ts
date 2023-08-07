@@ -1,8 +1,9 @@
 import {
+  Body,
   Controller,
   Delete,
   Post,
-  Req,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -14,6 +15,7 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { SettingOrganizationService } from './services/setting-organization.service';
+import { UpdateOrganizationDto } from './dtos/setting-organization.dto';
 
 @ApiBearerAuth()
 @Controller('settings/organizations')
@@ -21,33 +23,33 @@ import { SettingOrganizationService } from './services/setting-organization.serv
 export class SettingOrganizationController {
   constructor(private settingOrganizationService: SettingOrganizationService) {}
 
-  @Post('/upload')
-  @UseInterceptors(FileInterceptor('file'))
-  @ApiConsumes('multipart/form-data')
+  @Post('/update')
   @ApiBody({
-    description: 'body upload document',
     schema: {
       type: 'object',
       properties: {
-        file: {
+        logo: {
           type: 'string',
           format: 'binary',
           description: 'file image/pdf',
         },
-        contact: {
-          type: 'number',
-        },
       },
-      required: ['file', 'contact'],
     },
   })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('logo'))
   @UseGuards(TokenGuard)
-  async upload(@CurrentUser() user: UserIdentity, @Req() request: Request) {
-    const files: Express.Multer.File = request['file'];
-    const type: string = request.body['type'];
-    const page: string = request.body['page'];
-
-    return await this.settingOrganizationService.upload(user.org, page, files);
+  async update(
+    @CurrentUser() identity: UserIdentity,
+    @UploadedFile() logo,
+    @Body() body: UpdateOrganizationDto,
+  ) {
+    return await this.settingOrganizationService.update(
+      identity.org,
+      identity.id,
+      body,
+      logo,
+    );
   }
 
   @Delete('delete')

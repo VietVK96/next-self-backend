@@ -33,6 +33,7 @@ import { AccountSecurityService } from './services/account-security.service';
       OrganizationEntity,
       SyncWzagendaUserEntity,
       UserMedicalEntity,
+      UserEntity,
     ]),
     UploadModule,
   ],
