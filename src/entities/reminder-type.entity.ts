@@ -20,7 +20,7 @@ export class ReminderTypeEntity {
    * @ORM\Column(name="RMT_NAME", type="string", length=45, nullable=false)
    */
   @Column({
-    name: 'RMR_NAME',
+    name: 'RMT_NAME',
     length: 45,
   })
   name?: string;

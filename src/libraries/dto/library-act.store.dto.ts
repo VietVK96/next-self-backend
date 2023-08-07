@@ -2,14 +2,17 @@ import { ApiProperty } from '@nestjs/swagger';
 import { EnumLibraryActQuantityExceeding } from 'src/entities/library-act-quantity.entity';
 import { EnumLibraryActNomenclature } from '../../entities/library-act.entity';
 import {
+  ArrayNotEmpty,
   IsArray,
   IsBoolean,
   IsEnum,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
   MaxLength,
   ValidateNested,
+  isString,
 } from 'class-validator';
 export class ActsStoreFamilyColorDto {
   @ApiProperty({
@@ -733,7 +736,9 @@ export class ActsStoreDto {
   @ApiProperty({
     required: false,
   })
-  @ValidateNested()
+  // @ValidateNested({ each: true })
+  // @IsArray()
+  // @ArrayNotEmpty()
   quantities?: ActsStoreFamilyQuantitiesDto[];
 
   @ApiProperty({

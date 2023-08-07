@@ -438,6 +438,7 @@ export class QuotesServices {
           AND DQO.DQO_ID = BIL.DQO_ID`,
         [payload?.no_pdt],
       );
+
       await queryRunner.query('SET FOREIGN_KEY_CHECKS = 0');
       const planAmount = plan?.amount;
       const planPersonRepayment = plan?.personRepayment;

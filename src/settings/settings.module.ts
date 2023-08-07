@@ -4,21 +4,21 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
 import { TariffTypesService } from './services/tariff-types.service';
 import { ConfigService } from '@nestjs/config';
-import { AddressService } from 'src/address/service/address.service';
 import { OrganizationService } from 'src/organization/service/organization.service';
 import { UploadService } from 'src/upload/services/upload.service';
 import { PermissionService } from 'src/user/services/permission.service';
-import { UserService } from 'src/user/services/user.service';
 import { SettingOrganizationService } from './services/setting-organization.service';
 import { SettingOrganizationController } from './setting-organization.controller';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { TagEntity } from 'src/entities/tag.entity';
 import { UploadEntity } from 'src/entities/upload.entity';
-import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { UploadModule } from 'src/upload/upload.module';
 import { AccountService } from './services/account.service';
 import { SyncWzagendaUserEntity } from 'src/entities/sync-wzagenda-user.entity';
+import { UserService } from 'src/user/services/user.service';
+import { AddressService } from 'src/address/service/address.service';
+import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { NotificationService } from './services/notification.service';
 import { AccountSecurityService } from './services/account-security.service';
 
@@ -32,6 +32,7 @@ import { AccountSecurityService } from './services/account-security.service';
       UserMedicalEntity,
       OrganizationEntity,
       SyncWzagendaUserEntity,
+      UserMedicalEntity,
     ]),
     UploadModule,
   ],
@@ -50,6 +51,8 @@ import { AccountSecurityService } from './services/account-security.service';
     AccountService,
     NotificationService,
     AccountSecurityService,
+    UserService,
+    AddressService,
   ],
   exports: [SettingOrganizationService],
 })
