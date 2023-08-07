@@ -18,6 +18,7 @@ import { ExceedingEnum } from 'src/constants/act';
 import { UserEntity } from 'src/entities/user.entity';
 import { CcamUnitPriceEntity } from 'src/entities/ccamunitprice.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { checkNumber } from 'src/common/util/number';
 
 @Injectable()
 export class TaskService {
@@ -112,12 +113,12 @@ export class TaskService {
                 name: payload.value,
               });
             }
-            if (payload?.name === 'msg' && (payload.value as string)) {
+            if (payload?.name === 'msg') {
               await this.eventTaskRepository.update(payload.pk, {
                 msg: payload.value,
               });
             }
-            if (payload?.name === 'date' && (payload.value as string)) {
+            if (payload?.name === 'date') {
               // Modification du complément prestation
               oldEventTask = await this.eventTaskRepository.findOneBy({
                 id: payload.pk,
@@ -127,7 +128,7 @@ export class TaskService {
                 date: payload.value,
               });
             }
-            if (payload?.name === 'teeth' && (payload.value as string)) {
+            if (payload?.name === 'teeth') {
               const installTeeth = `INSERT INTO T_DENTAL_EVENT_TASK_DET (ETK_ID, DET_TOOTH) VALUES (?, ?) ON DUPLICATE KEY UPDATE DET_TOOTH = VALUES(DET_TOOTH)`;
               await this.dataSource.manager.query(installTeeth, [
                 payload.pk,
@@ -153,10 +154,7 @@ export class TaskService {
                 refreshAmount = true;
               }
             }
-            if (
-              payload?.name === 'code' ||
-              (payload?.name === 'ccamCode' && (payload.value as string))
-            ) {
+            if (payload?.name === 'code' || payload?.name === 'ccamCode') {
               const installCode = `INSERT INTO T_DENTAL_EVENT_TASK_DET (ETK_ID, DET_TYPE, DET_CCAM_CODE)
               VALUES (?, 'CCAM', ?)
               ON DUPLICATE KEY UPDATE
@@ -167,7 +165,7 @@ export class TaskService {
                 payload?.value,
               ]);
             }
-            if (payload?.name === 'comp' && (payload.value as string)) {
+            if (payload?.name === 'comp') {
               oldComplement = await this.dataSource
                 .createQueryBuilder()
                 .select('T_DENTAL_EVENT_TASK_DET.DET_COMP')
@@ -184,7 +182,7 @@ export class TaskService {
                 payload?.value || null,
               ]);
             }
-            if (payload?.name === 'exceeding' && (payload.value as string)) {
+            if (payload?.name === 'exceeding') {
               const installExceeding = `INSERT INTO T_DENTAL_EVENT_TASK_DET (ETK_ID, DET_EXCEEDING)
               VALUES (?, ?)
               ON DUPLICATE KEY UPDATE
@@ -201,7 +199,7 @@ export class TaskService {
                 await this.dataSource.manager.query(updateAMOUNT, [payload.pk]);
               }
             }
-            if (payload.name === 'amount' && (payload.value as string)) {
+            if (payload.name === 'amount') {
               const event = await this.dataSource.manager.query(
                 `
                     SELECT
@@ -219,7 +217,7 @@ export class TaskService {
                       AND T_EVENT_TASK_ETK.USR_ID = T_USER_USR.USR_ID
                       AND T_USER_USR.USR_ID = T_USER_PREFERENCE_USP.USR_ID
                 `,
-                [payload.pk],
+                [checkNumber(payload.pk) || 0],
               );
 
               const date = dayjs(event[0].ETK_DATE).format('YYYY-MM-DD');
@@ -274,7 +272,7 @@ export class TaskService {
                 [Number(payload.value), payload.pk],
               );
             }
-            if (payload?.name === 'caresheet' && (payload.value as boolean)) {
+            if (payload?.name === 'caresheet') {
               const state = payload.value ? 2 : 1;
               const installCaresheet = `
               UPDATE T_EVENT_TASK_ETK
