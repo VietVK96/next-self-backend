@@ -72,4 +72,11 @@ export class EmailSettingController {
   async delete(@Param('id') id: number) {
     return await this.emailSettingService.delete(id);
   }
+
+  // settings/email-accounts/mail-tester.php
+  @Get('/mail-tester/:id')
+  @UseGuards(TokenGuard)
+  async mailTester(@Param('id') id: number) {
+    return await this.emailSettingService.mailTester(id);
+  }
 }

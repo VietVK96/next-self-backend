@@ -55,6 +55,7 @@ export class MailService {
   ): Promise<FindAllMailRes> {
     if (!search) search = '';
     const pageSize = 100;
+    console.log('practitionerId', practitionerId);
 
     const doctors: PersonInfoDto[] = await this.dataSource.query(`SELECT
         T_USER_USR.USR_ID AS id,

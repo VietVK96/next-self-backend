@@ -5,6 +5,7 @@ import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
@@ -23,7 +24,25 @@ export class ActFamiliesStoreDto {
   @ApiProperty({
     required: false,
   })
-  used_only?: boolean;
+  @IsNotEmpty()
+  @IsString()
+  label?: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  color?: {
+    background?: string;
+    foreground?: string;
+  };
+
+  @ApiProperty({
+    required: false,
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  used?: boolean;
 }
 
 export class ActFamiliesSearchDto {
@@ -48,4 +67,36 @@ export class ActsIndexDto {
     required: true,
   })
   only_used?: boolean;
+}
+
+export class ActFamiliesUpdateDto {
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  label?: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  color?: {
+    background?: string;
+    foreground?: string;
+  };
+
+  @ApiProperty({
+    required: false,
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  used?: boolean;
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  position?: number;
 }

@@ -60,11 +60,15 @@ import { MedicamentModule } from './medicament/medicament.module';
 import { ImportModule } from './import/import.module';
 import { MedicamentFamilyModule } from './medicament-family/medicament-family.module';
 import { PeriodontalChartsModule } from './periodontal-charts/periodontal-charts.module';
+import { ResourceModule } from './resource/resource.module';
+import { UserPreferenceModule } from './user-preference/user-preference.module';
 import { AccountModule } from './account/account.module';
 import { StorageModule } from './storage/storage.module';
 import { WorkstationModule } from './workstation/workstation.module';
 import { ConversationsModule } from './conversations/conversations.module';
+import { AppointmentReminderLibrarieModule } from './appointment-reminder-library-attachment/appointmentReminderLibrarie.module';
 import { SettingModule } from './setting/setting.module';
+import { BordereauxModule } from './bordereaux/bordereaux.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -179,10 +183,15 @@ const importsModules = [
   ImportModule,
   MedicamentFamilyModule,
   PeriodontalChartsModule,
+  ResourceModule,
+  UserPreferenceModule,
   StorageModule,
   WorkstationModule,
   ConversationsModule,
+  AppointmentReminderLibrarieModule,
   SettingModule,
+  AccountModule,
+  BordereauxModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {
