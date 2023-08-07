@@ -68,6 +68,7 @@ import { WorkstationModule } from './workstation/workstation.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { AppointmentReminderLibrarieModule } from './appointment-reminder-library-attachment/appointmentReminderLibrarie.module';
 import { SettingModule } from './setting/setting.module';
+import { BordereauxModule } from './bordereaux/bordereaux.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -190,6 +191,7 @@ const importsModules = [
   AppointmentReminderLibrarieModule,
   SettingModule,
   AccountModule,
+  BordereauxModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {

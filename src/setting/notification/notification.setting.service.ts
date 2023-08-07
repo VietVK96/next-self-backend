@@ -12,12 +12,19 @@ import { StringHelper } from 'src/common/util/string-helper';
 import { PaymentRequest } from './monetico/paymentRequest';
 import { Monetico } from './monetico/monetico';
 import { Request } from 'express';
+import { FindNotificationRes } from './response/find.notification.setting.res';
+import { FindMessageNotificationRes } from './response/findMessage.notification.res';
+import { DEFAULT_MESSAGE } from 'src/constants/default';
+import { SaveMessageNotificationDto } from './dto/saveMessage.notification.dto';
+import { ReminderTypeEntity } from 'src/entities/reminder-type.entity';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class NotificationSettingService {
   constructor(private dataSource: DataSource) {}
 
-  async find(userId: number, request: Request) {
+  async find(userId: number, request: Request): Promise<FindNotificationRes> {
     const user = await this.dataSource.getRepository(UserEntity).findOneOrFail({
       where: { id: userId },
       relations: {
@@ -117,7 +124,115 @@ export class NotificationSettingService {
         pack1000smsPaymentRequest,
       );
 
-      return products;
+      if (user) {
+        delete user.group;
+        delete user.group;
+      }
+      const smsCount: { sumSms: number }[] = await this.dataSource.query(
+        `
+      SELECT SUM(
+          CASE WHEN T_GROUP_GRP.GRP_SHARE_SMS = 1
+          THEN T_USER_SMS_USS.USS_STOCK
+          ELSE (
+              CASE WHEN user.USR_ID = ?
+              THEN T_USER_SMS_USS.USS_STOCK
+              ELSE 0
+              END
+          )
+          END
+      ) as sumSms
+      FROM T_USER_USR user
+      JOIN T_GROUP_GRP on user.organization_id = T_GROUP_GRP.GRP_ID
+      JOIN T_USER_SMS_USS on user.USR_ID = T_USER_SMS_USS.USR_ID`,
+        [userId],
+      );
+      return {
+        user,
+        smsQuantity: smsCount[0].sumSms,
+        products,
+        address,
+      };
+    }
+  }
+
+  async findMessage(userId: number): Promise<FindMessageNotificationRes> {
+    const statement = await this.dataSource.query(
+      `
+    SELECT
+    T_REMINDER_MESSAGE_RMM.RMM_ID AS id,
+    T_REMINDER_MESSAGE_RMM.RMM_MSG AS body,
+    T_REMINDER_TYPE_RMT.RMT_ID AS reminder_type_id,
+    T_REMINDER_TYPE_RMT.RMT_NAME AS reminder_type_name
+FROM T_REMINDER_MESSAGE_RMM
+JOIN T_REMINDER_TYPE_RMT
+WHERE T_REMINDER_MESSAGE_RMM.USR_ID = ?
+  AND T_REMINDER_MESSAGE_RMM.RMT_ID = T_REMINDER_TYPE_RMT.RMT_ID`,
+      [userId],
+    );
+
+    const messages = {};
+    for (const message of statement) {
+      messages[message['reminder_type_name']] = message['body'];
+    }
+    return {
+      messages,
+      defaultMessage: DEFAULT_MESSAGE,
+    };
+  }
+
+  async saveMessage(userId: number, payload: SaveMessageNotificationDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      if (Object.keys(payload).length > 0) {
+        const promises = [];
+        for (const name in payload) {
+          promises.push(
+            queryRunner.manager
+              .getRepository(ReminderTypeEntity)
+              .findOne({ where: { name: name } }),
+          );
+        }
+        const reminderTypes: ReminderTypeEntity[] = await Promise.all(promises);
+        if (Object.keys(reminderTypes).length > 0) {
+          const promises2 = [];
+          for (const reminderType of reminderTypes) {
+            if (!payload[reminderType.name]) {
+              promises2.push(
+                queryRunner.query(
+                  ` DELETE FROM T_REMINDER_MESSAGE_RMM
+              WHERE USR_ID = ?
+                AND RMT_ID = ?`,
+                  [userId, reminderType.id],
+                ),
+              );
+            } else {
+              promises2.push(
+                queryRunner.query(
+                  ` INSERT INTO T_REMINDER_MESSAGE_RMM (USR_ID, RMT_ID, RMM_MSG)
+              VALUES (?, ?, ?)
+              ON DUPLICATE KEY
+              UPDATE
+              RMM_MSG = VALUES(RMM_MSG)`,
+                  [userId, reminderType.id, payload[reminderType.name]],
+                ),
+              );
+            }
+          }
+          await Promise.all(promises2);
+        }
+      }
+      await queryRunner.commitTransaction();
+      return {
+        success: true,
+      };
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      return new CBadRequestException(ErrorCode.SAVE_FAILED);
+    } finally {
+      await queryRunner.release();
     }
   }
 }
