@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, In, Not, Repository } from 'typeorm';
+import { DataSource, In, Like, Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   EnregistrerFactureDto,
@@ -36,7 +36,7 @@ import { facturePdfFooter } from '../constant/htmlTemplate';
 import { br2nl } from 'src/common/util/string';
 import { validateEmail } from 'src/common/util/string';
 import { MailService } from 'src/mail/services/mail.service';
-import { format } from 'date-fns';
+import { format, getDayOfYear } from 'date-fns';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 
 @Injectable()
@@ -499,7 +499,9 @@ export class FactureServices {
           infosCompl,
           modePaiement,
         });
-      } catch {}
+      } catch (err) {
+        throw new CBadRequestException(err);
+      }
     }
   }
 
@@ -531,39 +533,32 @@ export class FactureServices {
     modePaiement: string;
   }) {
     let noFacture: string;
-    const dateFormat = '%Y%j';
     const currentDate = new Date();
     const formattedDate =
-      currentDate.getFullYear().toString() +
-      (currentDate.getMonth() + 1).toString().padStart(2, '0') +
-      currentDate.getDate().toString().padStart(2, '0');
+      currentDate.getFullYear().toString() + getDayOfYear(currentDate);
 
     try {
-      const stm = await this.dataSource.query(
-        `
-      SELECT
-      MAX(T_BILL_BIL.BIL_NBR) AS noFacture
-      FROM T_BILL_BIL
-      WHERE T_BILL_BIL.USR_ID = ?
-      AND T_BILL_BIL.BIL_NBR LIKE CONCAT('u', ?, '-', DATE_FORMAT(NOW(), ?), '-', '%')`,
-        [id_user, id_user, dateFormat],
-      );
-
-      noFacture = stm[0].noFacture;
-      if (noFacture) {
-        noFacture = id_user + '-' + formattedDate + '-00001';
+      const stm = await this.billRepository.findOne({
+        where: {
+          usrId: id_user,
+          nbr: Like(`u${id_user}-${formattedDate}%`),
+        },
+        order: { nbr: 'DESC' },
+      });
+      noFacture = stm?.nbr;
+      if (!noFacture) {
+        noFacture = 'u' + id_user + '-' + formattedDate + '-00001';
       } else {
         noFacture =
           'u' +
           id_user +
           '-' +
-          new Date().toISOString().slice(0, 10).replace(/-/g, '') +
+          formattedDate +
           '-' +
           String(
             Number(noFacture.substring(noFacture.lastIndexOf('-') + 1)) + 1,
           ).padStart(5, '0');
       }
-
       const bill = await this.billRepository.save({
         nbr: noFacture,
         creationDate: dateFacture,
@@ -573,13 +568,13 @@ export class FactureServices {
         identContact: identPat,
         payload: modePaiement,
         infosCompl: infosCompl,
-        id_user: id_user,
+        usrId: id_user,
         conId: contactId,
-        id_devis: id_devis,
-      });
+        dqoId: id_devis !== 0 ? id_devis : null,
+      } as BillEntity);
       return bill;
     } catch (err) {
-      console.error(
+      throw new CBadRequestException(
         '-1002 : Probl&egrave;me durant la création de la facture. Merci de réessayer plus tard.',
       );
     }
