@@ -33,7 +33,7 @@ export class AccountService {
     }
   }
 
-  async fetchAccountPractitioners(organizationId) {
+  async fetchAccountPractitioners(organizationId: number) {
     const user = await this.userRepository.find({
       where: {
         client: Not(AccountStatusEnum.TERMINATED),
