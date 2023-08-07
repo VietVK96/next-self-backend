@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   Header,
@@ -18,13 +19,13 @@ import { CreateCertificatDto } from './dto/certificat.dto';
 
 @ApiBearerAuth()
 @ApiTags('Account')
-@Controller('account')
+@Controller('/account')
 export class AccountController {
   constructor(private certificatService: CertificatService) {}
 
   @Get('/certificate')
   @UseGuards(TokenGuard)
-  async findImagingSoftwares(@CurrentUser() identity: UserIdentity) {
+  async getCertificate(@CurrentUser() identity: UserIdentity) {
     return this.certificatService.findCertificat(identity.id);
   }
 
@@ -33,13 +34,13 @@ export class AccountController {
   @UseGuards(TokenGuard)
   async createCertificat(
     @CurrentUser() identity: UserIdentity,
-    @Query() query: CreateCertificatDto,
+    @Body() body: CreateCertificatDto,
     @Request() request,
   ) {
     return this.certificatService.createCertificat(
       identity.id,
       identity.org,
-      query,
+      body,
       request,
     );
   }
