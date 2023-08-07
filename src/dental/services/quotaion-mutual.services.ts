@@ -47,8 +47,6 @@ export class QuotationMutualServices {
     private dentalQuotationRepository: Repository<DentalQuotationEntity>,
     @InjectRepository(LettersEntity)
     private lettersRepository: Repository<LettersEntity>,
-    @InjectRepository(UserPreferenceQuotationEntity)
-    private userPreferenceQuotationRepository: Repository<UserPreferenceQuotationEntity>,
     @InjectRepository(OrganizationEntity)
     private organizationRepo: Repository<OrganizationEntity>,
     @InjectRepository(PlanPlfEntity)
@@ -56,7 +54,7 @@ export class QuotationMutualServices {
     @InjectRepository(EventEntity)
     private eventRepo: Repository<EventEntity>,
     @InjectRepository(UserPreferenceQuotationEntity)
-    private userPreferenceRepo: Repository<UserPreferenceQuotationEntity>,
+    private userPreferenceQuotationRepo: Repository<UserPreferenceQuotationEntity>,
     @InjectRepository(DentalQuotationActEntity)
     private dentalQuotationActRepo: Repository<DentalQuotationActEntity>,
     @InjectRepository(BillEntity)
@@ -246,7 +244,7 @@ export class QuotationMutualServices {
             delete mailConverted?.footer;
             const mailResult = await this.mailService.store(mailConverted);
             const newMail = await this.lettersRepository.findOne({
-              where: { id: mailResult?.id },
+              where: { id: mailResult?.id || 0 },
             });
             const promises = [];
             for (const attachment of attachments) {
@@ -313,13 +311,13 @@ export class QuotationMutualServices {
         .getRawOne();
       // const userPreferenceQuotation = user?.upq;
       if (user?.upq instanceof UserPreferenceQuotationEntity) {
-        await this.userPreferenceQuotationRepository.save({ user: user });
+        await this.userPreferenceQuotationRepo.save({ user: user });
       }
       quotationPlaceOfManufactureLabel =
         quotationPlaceOfManufactureLabel ?? null;
       quotationPlaceOfSubcontractingLabel =
         quotationPlaceOfSubcontractingLabel ?? null;
-      await this.userPreferenceQuotationRepository.save({
+      await this.userPreferenceQuotationRepo.save({
         user,
         quotationPlaceOfManufacture,
         quotationPlaceOfManufactureLabel,
@@ -344,7 +342,7 @@ export class QuotationMutualServices {
   // dental/quotation-mutual/devis_pdf.php 45-121
   async generatePdf(req: PrintPDFDto, identity: UserIdentity) {
     const id = checkId(req?.id);
-    const initChamp = await this.initChamps({ no_devis: id }, identity);
+    const initChamp = await this.initChamps({ no_devis: id || 0 }, identity);
     let content = '';
     let dataTemp: any;
     try {
@@ -355,8 +353,8 @@ export class QuotationMutualServices {
           const mailConverted = await this.mailService.transform(
             mail,
             this.mailService.context({
-              doctor_id: initChamp.id_user,
-              patient_id: initChamp.ident_pat,
+              doctor_id: initChamp?.id_user,
+              patient_id: initChamp?.ident_pat,
               payment_schedule_id: initChamp?.paymentScheduleId,
             }),
           );
@@ -670,7 +668,7 @@ export class QuotationMutualServices {
        * - vérification si le rendez-vous possède un utilisateur sinon
        * on récupère l'identifiant de l'utilisateur passé en paramètre
        */
-      let id_user = req?.id_user;
+      let id_user = checkId(req?.id_user);
       if (!req?.id_user) {
         id_user = event.usrId;
         if (!id_user) {
@@ -681,7 +679,7 @@ export class QuotationMutualServices {
       }
 
       const user = await this.userRepository.findOne({
-        where: { id: id_user },
+        where: { id: id_user || 0 },
         relations: {
           type: true,
           address: true,
@@ -720,7 +718,7 @@ export class QuotationMutualServices {
       </div>dayOfYear
       `;
       const medicalHeader = await this.medicalHeaderRepository.findOne({
-        where: { userId: id_user },
+        where: { userId: id_user || 0 },
       });
       if (medicalHeader) {
         const medicalHeaderIdentPratQuot = medicalHeader.identPratQuot;
@@ -753,9 +751,10 @@ export class QuotationMutualServices {
         );
       }
 
-      const userPreferenceQuotation = await this.userPreferenceRepo.findOne({
-        where: { usrId: id_user },
-      });
+      const userPreferenceQuotation =
+        await this.userPreferenceQuotationRepo.findOne({
+          where: { usrId: id_user || 0 },
+        });
       const periodOfValidity = userPreferenceQuotation?.periodOfValidity;
       const quotationPlaceOfManufacture =
         userPreferenceQuotation?.placeOfManufacture;
@@ -957,9 +956,9 @@ export class QuotationMutualServices {
                 break;
             }
 
-            result.cotation = `${row.ngapKeyName} ${parseFloat(
-              row.coef,
-            ).toFixed(2)}`;
+            result.cotation = row?.ngapKeyName
+              ? `${row?.ngapKeyName} ${parseFloat(row.coef).toFixed(2)}`
+              : row.coef;
             result.tarif_secu = ngapKeyUnitPrice * row?.coef;
             if (row?.remboursable == 'oui') {
               result.rss = ngapKeyUnitPrice * row?.coef;
@@ -982,7 +981,7 @@ export class QuotationMutualServices {
       // Gestion de l'échéancier
       const paymentScheduleStatement = await this.planRepo.findOne({
         where: {
-          id: checkId(req?.no_pdt),
+          id: checkId(req?.no_pdt) || 0,
         },
         select: {
           paymentScheduleId: true,
@@ -1103,6 +1102,7 @@ export class QuotationMutualServices {
         await queryRunner.manager.save(DentalQuotationActEntity, acts);
         await queryRunner.commitTransaction();
         return {
+          id_devis,
           txch,
           ident_prat,
           ident_pat,
@@ -1110,7 +1110,7 @@ export class QuotationMutualServices {
           date_de_naissance_patient,
           date_devis,
           duree_devis,
-          INSEE,
+          insee: INSEE,
           adresse_pat,
           tel,
           contrat,
@@ -1295,6 +1295,7 @@ export class QuotationMutualServices {
       }
 
       return {
+        id_devis: req?.no_devis,
         txch,
         ident_prat,
         ident_pat,
@@ -1302,7 +1303,7 @@ export class QuotationMutualServices {
         date_de_naissance_patient,
         date_devis,
         duree_devis,
-        INSEE,
+        insee: INSEE,
         adresse_pat,
         tel,
         contrat,

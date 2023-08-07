@@ -100,7 +100,7 @@ export class PhoneEntity {
    * @ORM\ManyToMany(targetEntity="Patient", mappedBy="phoneNumbers")
    */
   //   protected $patients;
-  @ManyToMany(() => ContactEntity, {
+  @ManyToMany(() => ContactEntity, (e) => e.phoneNumbers, {
     createForeignKeyConstraints: false,
   })
   patients?: ContactEntity[];

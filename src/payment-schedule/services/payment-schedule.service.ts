@@ -19,14 +19,6 @@ export class PaymentScheduleService {
 
   //File /application/Services/PaymentSchedule.php, line 82-126
   async find(paymentScheduleId: number, groupId: number) {
-    console.log(
-      '🚀 ~ file: payment-schedule.service.ts:22 ~ PaymentScheduleService ~ find ~ groupId:',
-      groupId,
-    );
-    console.log(
-      '🚀 ~ file: payment-schedule.service.ts:21 ~ PaymentScheduleService ~ find ~ paymentScheduleId:',
-      paymentScheduleId,
-    );
     const queryBuiler = this.dataSource.createQueryBuilder();
     const select = `
       id,

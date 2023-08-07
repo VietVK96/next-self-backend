@@ -20,6 +20,7 @@ export const addressFormatter = (address) => {
 };
 
 export const inseeFormatter = (num) => {
+  if (!num) return '';
   const result = num.replace(
     /^([a-zA-Z0-9])([a-zA-Z0-9]{2})([a-zA-Z0-9]{2})([a-zA-Z0-9]{2})([a-zA-Z0-9]{3})([a-zA-Z0-9]{3})([a-zA-Z0-9]{2})?$/,
     '$1 $2 $3 $4 $5 $6 $7',

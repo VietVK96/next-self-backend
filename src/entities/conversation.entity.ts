@@ -66,13 +66,12 @@ export class ConversationEntity {
    */
   //
   // protected $owner;
-  @Column({
-    name: 'user_id',
-    type: 'int',
-    width: 11,
-    nullable: true,
-  })
-  ownerId?: number;
+  // @Column({
+  //   name: 'user_id',
+  //   type: 'int',
+  //   width: 11,
+  //   nullable: true,
+  // })
 
   @ManyToOne(() => UserEntity, {
     createForeignKeyConstraints: false,
@@ -122,6 +121,7 @@ export class ConversationEntity {
 
   @OneToMany(() => ConversationMemberEntity, (e) => e.conversation, {
     createForeignKeyConstraints: false,
+    cascade: ['insert', 'remove'],
   })
   members?: ConversationMemberEntity[];
 
