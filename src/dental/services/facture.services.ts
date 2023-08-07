@@ -467,7 +467,7 @@ export class FactureServices {
           where: { id: addressEntity || 0 },
         });
         if (address) {
-          identPat =
+          identPat +=
             '\n' +
             address?.street +
             '\n' +
