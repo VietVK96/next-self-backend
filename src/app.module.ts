@@ -190,6 +190,7 @@ const importsModules = [
   ConversationsModule,
   AppointmentReminderLibrarieModule,
   SettingModule,
+  AccountModule,
   BordereauxModule,
 ];
 
