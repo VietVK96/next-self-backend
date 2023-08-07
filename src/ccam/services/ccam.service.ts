@@ -38,7 +38,7 @@ export class CcamServices {
   async show(id: number) {
     const ccams = await this.ccamrepo.findOne({
       where: { id: id },
-      relations: ['family', 'unitPrices'],
+      relations: ['family', 'conditions', 'unitPrices'],
     });
 
     return ccams;

@@ -2,9 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import { EnumLibraryActQuantityExceeding } from 'src/entities/library-act-quantity.entity';
 import { EnumLibraryActNomenclature } from '../../entities/library-act.entity';
 import {
+  ArrayNotEmpty,
   IsArray,
   IsBoolean,
   IsEnum,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
@@ -135,7 +137,7 @@ export class ActsStoreFamilyQuantitiesDto {
   })
   @IsOptional()
   @ValidateNested()
-  ngapKey?: ActsStoreFamilyQuantitiesNgapKeyDto;
+  ngap_key?: ActsStoreFamilyQuantitiesNgapKeyDto;
 
   @ApiProperty({
     required: false,
@@ -205,8 +207,7 @@ export class ActsStoreFamilyQuantitiesDto {
     required: false,
   })
   @IsOptional()
-  @IsString()
-  materials?: string;
+  materials?: string[];
 
   @ApiProperty({
     required: false,
@@ -219,22 +220,22 @@ export class ActsStoreFamilyQuantitiesDto {
     required: false,
   })
   @IsOptional()
-  @IsNumber()
-  traceability_merged?: number;
+  @IsBoolean()
+  traceability_merged?: boolean;
+
+  @ApiProperty({
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  transmitted?: boolean;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
   @IsNumber()
-  transmitted?: number;
-
-  @ApiProperty({
-    required: false,
-  })
-  @IsOptional()
-  @IsNumber()
-  used?: number;
+  used?: boolean;
 
   @ApiProperty({
     required: false,
@@ -267,7 +268,7 @@ export class ActsStoreAssociationsChildDto {
     required: false,
   })
   @IsOptional()
-  observation?: number;
+  observation?: string;
 
   @ApiProperty({
     required: false,
@@ -285,29 +286,29 @@ export class ActsStoreAssociationsChildDto {
     required: false,
   })
   @IsOptional()
-  @IsNumber()
-  traceability_activated?: number;
+  @IsBoolean()
+  traceability_activated?: boolean;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
-  @IsNumber()
-  transmitted?: number;
+  @IsBoolean()
+  transmitted?: boolean;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
-  @IsNumber()
-  used?: number;
+  @IsBoolean()
+  used?: boolean;
 
   @ApiProperty({
     required: false,
   })
   @IsOptional()
-  @IsNumber()
-  selected?: number;
+  @IsBoolean()
+  selected?: boolean;
 
   @ApiProperty({
     required: false,
@@ -625,7 +626,7 @@ export class ActsStoreOdontogramDto {
   })
   @IsOptional()
   @IsArray()
-  invisible_areas?: [any];
+  invisible_areas?: [string];
 
   @ApiProperty({
     required: false,
@@ -649,7 +650,7 @@ export class ActsStoreDto {
     required: false,
     default: '',
   })
-  @IsOptional()
+  @IsString()
   @MaxLength(255)
   label?: string;
 
@@ -735,7 +736,9 @@ export class ActsStoreDto {
   @ApiProperty({
     required: false,
   })
-  @ValidateNested()
+  // @ValidateNested({ each: true })
+  // @IsArray()
+  // @ArrayNotEmpty()
   quantities?: ActsStoreFamilyQuantitiesDto[];
 
   @ApiProperty({

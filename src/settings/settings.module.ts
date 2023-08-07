@@ -3,32 +3,37 @@ import { TariffTypeEntity } from './../entities/tariff-type.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
 import { TariffTypesService } from './services/tariff-types.service';
-import { AccountService } from './services/account.service';
+import { ConfigService } from '@nestjs/config';
+import { OrganizationService } from 'src/organization/service/organization.service';
+import { UploadService } from 'src/upload/services/upload.service';
+import { PermissionService } from 'src/user/services/permission.service';
+import { SettingOrganizationService } from './services/setting-organization.service';
+import { SettingOrganizationController } from './setting-organization.controller';
+import { OrganizationEntity } from 'src/entities/organization.entity';
+import { TagEntity } from 'src/entities/tag.entity';
+import { UploadEntity } from 'src/entities/upload.entity';
 import { UserEntity } from 'src/entities/user.entity';
+import { UploadModule } from 'src/upload/upload.module';
+import { AccountService } from './services/account.service';
 import { SyncWzagendaUserEntity } from 'src/entities/sync-wzagenda-user.entity';
 import { UserService } from 'src/user/services/user.service';
 import { AddressService } from 'src/address/service/address.service';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { NotificationService } from './services/notification.service';
 import { AccountSecurityService } from './services/account-security.service';
-import { OrganizationEntity } from 'src/entities/organization.entity';
-import { TagEntity } from 'src/entities/tag.entity';
-import { UploadEntity } from 'src/entities/upload.entity';
-import { UploadModule } from 'src/upload/upload.module';
-import { SettingOrganizationController } from './setting-organization.controller';
-import { ConfigService } from '@nestjs/config';
-import { OrganizationService } from 'src/organization/service/organization.service';
-import { UploadService } from 'src/upload/services/upload.service';
-import { PermissionService } from 'src/user/services/permission.service';
-import { SettingOrganizationService } from './services/setting-organization.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       TariffTypeEntity,
+      UploadEntity,
       UserEntity,
+      TagEntity,
+      UserMedicalEntity,
+      OrganizationEntity,
       SyncWzagendaUserEntity,
       UserMedicalEntity,
+      UserEntity,
       UploadEntity,
       TagEntity,
       OrganizationEntity,
@@ -37,6 +42,15 @@ import { SettingOrganizationService } from './services/setting-organization.serv
   ],
   controllers: [SettingsController, SettingOrganizationController],
   providers: [
+    TariffTypesService,
+    SettingOrganizationService,
+    UploadService,
+    ConfigService,
+    OrganizationService,
+    PermissionService,
+    UserService,
+    AddressService,
+    AccountService,
     TariffTypesService,
     AccountService,
     NotificationService,
@@ -49,5 +63,6 @@ import { SettingOrganizationService } from './services/setting-organization.serv
     OrganizationService,
     PermissionService,
   ],
+  exports: [SettingOrganizationService],
 })
 export class SettingsModule {}
