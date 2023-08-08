@@ -3,7 +3,7 @@ import { ErrorCode } from 'src/constants/error';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Repository, Not } from 'typeorm';
 import { UserEntity } from 'src/entities/user.entity';
 import { SyncWzagendaUserEntity } from 'src/entities/sync-wzagenda-user.entity';
 import { WzagendaRes } from '../res/index.res';
@@ -11,6 +11,7 @@ import { UserService } from 'src/user/services/user.service';
 import { google } from 'googleapis';
 import { UpdateGoogleCalendarDto } from '../dtos/google-calendar.dto';
 import { SuccessResponse } from 'src/common/response/success.res';
+import { AccountStatusEnum } from 'src/enum/account-status.enum';
 
 @Injectable()
 export class AccountService {
@@ -51,6 +52,31 @@ export class AccountService {
     }
   }
 
+  async fetchAccountPractitioners(organizationId: number) {
+    const user = await this.userRepository.find({
+      where: {
+        client: Not(AccountStatusEnum.TERMINATED),
+        organizationId,
+      },
+      relations: {
+        medical: true,
+      },
+      order: {
+        lastname: 'ASC',
+        firstname: 'ASC',
+      },
+    });
+    return user
+      .filter((x) => x.medical)
+      .map((y) => {
+        return {
+          id: y?.id,
+          lastname: y?.lastname,
+          firstname: y?.firstname,
+          medical: y?.medical,
+        };
+      });
+  }
   async getGoogleCalendar(userId: number) {
     if (!userId) throw new CBadRequestException(ErrorCode.FORBIDDEN);
     const user = await this.userService.find(userId);

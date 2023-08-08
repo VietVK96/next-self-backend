@@ -76,3 +76,39 @@ export interface IRecevoirRsp {
     }[];
   }[];
 }
+
+export interface IConsulterListeCpseRsp {
+  erreur?: string[];
+  carteCps?: {
+    idNational?: string[];
+    numNatPs?: string[];
+    fseAutorise?: string[];
+    lotAutorise?: string[];
+    nomPs?: string[];
+    prenomPs?: string[];
+    typeCarte?: string[];
+    finess?: string[];
+    numFiness?: string[];
+  }[];
+}
+
+export interface IConsulterUtlDetailRsp {
+  erreur?: string[];
+  utilisateur?: {
+    idtUtil?: string[];
+    nomPs?: string[];
+    prenomPs?: string[];
+    estArchive?: string[];
+    statut?: IConsulterUtlStatut[];
+  }[];
+}
+
+export interface IConsulterUtlStatut {
+  codeConvention: string[];
+  numIdtNat: string[];
+  numNatPs: string[];
+  nomUtf: string[];
+  numStructure: string[];
+  numFiness: string[];
+  codeSpecialite: string[];
+}

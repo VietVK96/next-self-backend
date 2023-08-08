@@ -117,6 +117,11 @@ export class SettingsController {
     return await this.accountService.fetchAccountWzagenda(identity);
   }
 
+  @Get('/account/interfaceage')
+  @UseGuards(TokenGuard)
+  async fetchAccountPractitioners(@CurrentUser() identity: UserIdentity) {
+    return await this.accountService.fetchAccountPractitioners(identity.org);
+  }
   //settings/account/google.php
   @Get('/account/google-calendar')
   @UseGuards(TokenGuard)
