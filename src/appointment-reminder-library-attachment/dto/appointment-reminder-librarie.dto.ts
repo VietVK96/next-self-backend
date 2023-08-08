@@ -5,7 +5,6 @@ export class CreateAppointmentReminderLibrarieQueryDto {
   category?: string;
   timelimit?: number;
   timelimit_unit?: string;
-  attachments?: number[];
   update_all_future_appointments?: number;
 }
 
