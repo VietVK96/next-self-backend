@@ -5,14 +5,14 @@ import {
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
-import { DsioService } from './services/dsio.service';
+import { DsioImporterService } from './services/dsio-importer.service';
 import { ImporterDsioDto } from './dto/importer-dsio.dto';
 
 @ApiBearerAuth()
 @Controller('/dsio')
 @ApiTags('Dsio')
 export class DsioController {
-  constructor(private dsioService: DsioService) {}
+  constructor(private dsioImporterService: DsioImporterService) {}
 
   /**
    * php/dsio/importer.php -> full
@@ -23,6 +23,6 @@ export class DsioController {
     @CurrentUser() user: UserIdentity,
     @Body() importerDsioDto: ImporterDsioDto,
   ) {
-    return await this.dsioService.importer(user, importerDsioDto);
+    return await this.dsioImporterService.importer(user, importerDsioDto);
   }
 }

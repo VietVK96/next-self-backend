@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { DataSource, EntityManager } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { ImporterDsioDto } from '../dto/importer-dsio.dto';
-import { InjectEntityManager } from '@nestjs/typeorm';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
 import * as utc from 'dayjs/plugin/utc';
 import * as timezone from 'dayjs/plugin/timezone';
 import * as fs from 'fs';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { DsioService } from './dsio.service';
 
 /**
  * php/dsio/import_shell.php
@@ -16,9 +15,7 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 export class ImporterService {
   constructor(
     private dataSource: DataSource,
-    @InjectEntityManager()
-    private entityManager: EntityManager,
-    private configService: ConfigService,
+    private dsioService: DsioService,
   ) {}
 
   /**
@@ -83,10 +80,10 @@ export class ImporterService {
       // Lien entre actes et bibliothèque d'actes
       const t_family_tasks = []; // Relation id familles d'actes DSIO => e.coo
       const t_library_family_task_lft = []; // Relation id actes DSIO => e.coo
-      const t_dsio_tasks = [];
+      const t_dsio_tasks = {};
       const t_dsio_tasks_quantity = [];
       const t_dsio_dental_tasks_quantity = [];
-      const LFT_ASSOCIATED_ACTS = [];
+      const LFT_ASSOCIATED_ACTS = {};
       const LFT_POS = 0;
       const LFY_ID = 0;
       const t_QD = {
@@ -182,6 +179,16 @@ export class ImporterService {
         return pattern.test(string);
       }
 
+      const nth_record = 0;
+
+      const handle_query: fs.WriteStream = fs.createWriteStream(
+        `${filename}.json`,
+      );
+
+      function query_log(query: string) {
+        handle_query.write(`${query};\n`);
+      }
+
       // php/dsio/import_shell.php line 2755 ->
       // Lancement de l'importation
       //$connection->beginTransaction();
@@ -197,8 +204,25 @@ export class ImporterService {
 
       const dsio = {};
       try {
-        //@TODO $dsio = new dsio($filename);
-        //@TODO $dsio->import();
+        this.dsioService.construct(
+          filename,
+          importerDsioDto,
+          groupId,
+          utf8,
+          FRQ,
+          HMD,
+          HMF,
+          HAD,
+          HAF,
+        );
+        this.dsioService.import(
+          filename,
+          importerDsioDto,
+          groupId,
+          utf8,
+          LFT_ASSOCIATED_ACTS,
+          t_dsio_tasks,
+        );
 
         // Mise à jour du numéro de dossier patient max.
         await this.dataSource.query(
@@ -249,6 +273,7 @@ export class ImporterService {
               "Une erreur est survenue durant l'importation de votre fichier DSIO. Nous allons intervenir dessus le plus rapidement possible puis revenir vers vous.",
           }),
         );
+        throw error;
         // @TODO die();
       }
 
@@ -257,7 +282,7 @@ export class ImporterService {
         JSON.stringify({
           status: 1,
           action: 'Validation des données',
-          prc: '99.99',
+          prc: 99.99,
         }),
       );
       //@TODO set_time_limit(30);
@@ -274,7 +299,7 @@ export class ImporterService {
         JSON.stringify({
           status: 1,
           action: 'Opération terminée',
-          prc: '100',
+          prc: 100,
         }),
       );
     } catch (error) {

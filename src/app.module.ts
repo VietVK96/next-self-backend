@@ -60,6 +60,7 @@ import { MedicamentFamilyModule } from './medicament-family/medicament-family.mo
 import { PeriodontalChartsModule } from './periodontal-charts/periodontal-charts.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { DsioModule } from './dsio/dsio.module';
+import { CommandModule } from './command/command.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -174,6 +175,7 @@ const importsModules = [
   PeriodontalChartsModule,
   ConversationsModule,
   DsioModule,
+  CommandModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {
