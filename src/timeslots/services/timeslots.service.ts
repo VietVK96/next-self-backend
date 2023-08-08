@@ -72,7 +72,7 @@ export class TimeslotsService {
           end_date: dayjs(timeslot.end_date).format('YYYY-MM-DD HH:mm:ss'),
         };
       });
-    } catch (error) {
+    } catch {
       throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
     }
   }
