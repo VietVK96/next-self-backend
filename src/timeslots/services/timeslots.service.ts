@@ -61,7 +61,7 @@ export class TimeslotsService {
         const color: {
           background: string;
           foreground: string;
-        } = JSON.parse(timeslot.color);
+        } = timeslot.color;
         return {
           ...timeslot,
           color: {
@@ -72,7 +72,8 @@ export class TimeslotsService {
           end_date: dayjs(timeslot.end_date).format('YYYY-MM-DD HH:mm:ss'),
         };
       });
-    } catch {
+    } catch (error) {
+      console.log(error);
       throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
     }
   }
