@@ -22,3 +22,17 @@ export class ThirdPartyDto {
   @ApiProperty({ isArray: true, type: String, required: false })
   filterValue?: string[];
 }
+
+export class ThirdPartyUpdateDto {
+  @ApiProperty()
+  amc_amount?: number;
+
+  @ApiProperty()
+  amo_amount?: number;
+
+  @ApiProperty()
+  create_payment?: boolean;
+
+  @ApiProperty()
+  creation_date?: string;
+}

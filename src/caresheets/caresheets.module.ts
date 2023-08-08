@@ -14,6 +14,8 @@ import { InterfacageService } from 'src/interfacage/services/interfacage.service
 import { PermissionService } from 'src/user/services/permission.service';
 import { HttpModule } from '@nestjs/axios';
 import { ActsService } from './service/caresheets.service';
+import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
+import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { ActsService } from './service/caresheets.service';
       PatientAmoEntity,
       CcamEntity,
       CaresheetStatusEntity,
+      ThirdPartyAmcEntity,
+      ThirdPartyAmoEntity,
     ]),
     forwardRef(() => ContactModule),
     HttpModule,

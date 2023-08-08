@@ -1,11 +1,14 @@
 import { ContactEntity } from 'src/entities/contact.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import { ThirdPartyDto } from './dto/index.dto';
+import { DataSource, IsNull, Repository } from 'typeorm';
+import { ThirdPartyDto, ThirdPartyUpdateDto } from './dto/index.dto';
 import { UserEntity } from 'src/entities/user.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
-import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
+import {
+  EnumThirdPartyStatus,
+  ThirdPartyAmcEntity,
+} from 'src/entities/third-party-amc.entity';
 import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 import { AmoEntity } from 'src/entities/amo.entity';
 import { AmcEntity } from 'src/entities/amc.entity';
@@ -16,11 +19,20 @@ import { thirdPartySort } from 'src/constants/third-party';
 import { Parser } from 'json2csv';
 import { Response } from 'express';
 import { ThirdPartyStatusEnum } from 'src/enum/third-party-status.enum';
+import { LibraryBankEntity } from 'src/entities/library-bank.entity';
+import {
+  CashingEntity,
+  EnumCashingPayment,
+  EnumCashingType,
+} from 'src/entities/cashing.entity';
+import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
+import { ActsService } from 'src/caresheets/service/caresheets.service';
 
 @Injectable()
 export class ThirdPartyService {
   constructor(
     private dataSource: DataSource,
+    private actsService: ActsService,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     @InjectRepository(ContactEntity)
@@ -33,6 +45,14 @@ export class ThirdPartyService {
     private amoRepository: Repository<AmoEntity>,
     @InjectRepository(AmcEntity)
     private amcRepository: Repository<AmcEntity>,
+    @InjectRepository(FseEntity)
+    private fseRepository: Repository<FseEntity>,
+    @InjectRepository(LibraryBankEntity)
+    private libraryBankRepository: Repository<LibraryBankEntity>,
+    @InjectRepository(CashingContactEntity)
+    private cashingContactRepository: Repository<CashingContactEntity>,
+    @InjectRepository(CashingEntity)
+    private cashingRepository: Repository<CashingEntity>,
   ) {}
 
   async getCaresheet(payload: ThirdPartyDto) {
@@ -75,7 +95,7 @@ export class ThirdPartyService {
           });
           break;
         case 'caresheet.number':
-          queryBuilder.andWhere('caresheet.number = LPAD(:number, 9, 0)', {
+          queryBuilder.andWhere('caresheet.nbr = LPAD(:number, 9, 0)', {
             number: valueParam,
           });
           break;
@@ -203,8 +223,11 @@ export class ThirdPartyService {
       }
       return res;
     });
-    const offSet = (page - 1) * per_page;
-    const dataPaging = patientThirdParties.slice(offSet, offSet + per_page);
+    const offSet = page && per_page ? (page - 1) * per_page : 0;
+    const dataPaging =
+      page && per_page
+        ? patientThirdParties.slice(offSet, offSet + per_page)
+        : patientThirdParties;
     const data = {
       current_page_number: page,
       custom_parameters: { sorted: true },
@@ -292,5 +315,184 @@ export class ThirdPartyService {
     res.header('Content-Type', 'text/csv');
     res.attachment('suivi_tiers_payants.csv');
     res.status(200).send(data);
+  }
+
+  /**
+   * File: php/third-party/update.php
+   * Line: 18 -> 164
+   */
+  async updateCaresheet(id: number, payload: ThirdPartyUpdateDto) {
+    const caresheet = await this.fseRepository.findOne({
+      where: { id },
+      relations: ['user', 'patient'],
+    });
+    const bank = await this.libraryBankRepository.findOne({
+      where: [{ usrId: IsNull() }, { usrId: caresheet?.user?.id }],
+      order: {
+        isDefault: 'DESC',
+        usrId: 'DESC',
+        pos: 'ASC',
+      },
+    });
+    const thirdPartyAmcs = await this.thirdPartyAmcRepository.find({
+      relations: ['amc'],
+    });
+    const thirdPartyAmos = await this.thirdPartyAmoRepository.find({
+      relations: ['amo'],
+    });
+
+    const payment: CashingEntity = {
+      usrId: caresheet?.user?.id,
+      lbkId: bank?.id,
+      date: payload?.creation_date,
+      paymentDate: payload?.creation_date,
+      payment: EnumCashingPayment.VIREMENT,
+      type: EnumCashingType.SOLDE,
+      debtor: `TP-${format(new Date(payload?.creation_date), 'yyyyMMdd')}-${
+        caresheet?.nbr
+      }`,
+      amount: 0,
+      amountCare: 0,
+      amountProsthesis: 0,
+      thirdPartyAmos: [],
+      thirdPartyAmcs: [],
+      payees: [],
+    };
+    const thirdPartyAmo = thirdPartyAmos.find(
+      (tp) => tp?.caresheetId === caresheet?.id,
+    );
+    const thirdPartyAmc = thirdPartyAmcs.find(
+      (tp) => tp?.caresheetId === caresheet?.id,
+    );
+    if (thirdPartyAmo && payload?.amo_amount !== 0) {
+      const amountRemaining =
+        parseFloat(thirdPartyAmo?.amount.toString()) -
+        parseFloat(thirdPartyAmo?.amountPaid?.toString());
+      const amountCareRemaining =
+        parseFloat(thirdPartyAmo?.amountCare?.toString()) -
+        parseFloat(thirdPartyAmo?.amountCarePaid?.toString());
+      const amountPaid = Math.max(
+        -thirdPartyAmo?.amountPaid,
+        Math.min(amountRemaining, payload?.amo_amount),
+      );
+      const amountCarePaid = Math.max(
+        -thirdPartyAmo?.amountCarePaid,
+        Math.min(amountCareRemaining, amountPaid),
+      );
+      const amountProsthesisPaid = amountPaid - amountCarePaid;
+
+      thirdPartyAmo.amountPaid =
+        parseFloat(thirdPartyAmo?.amountPaid?.toString()) + amountPaid;
+      thirdPartyAmo.amountPaidManually =
+        parseFloat(thirdPartyAmo?.amountPaidManually?.toString()) + amountPaid;
+      thirdPartyAmo.amountCarePaid =
+        parseFloat(thirdPartyAmo?.amountCarePaid?.toString()) + amountCarePaid;
+      thirdPartyAmo.amountProsthesisPaid =
+        parseFloat(thirdPartyAmo?.amountProsthesisPaid?.toString()) +
+        amountProsthesisPaid;
+      const amountRemainingAmo =
+        parseFloat(thirdPartyAmo?.amount.toString()) -
+        parseFloat(thirdPartyAmo?.amountPaid?.toString());
+
+      let status = EnumThirdPartyStatus.INCOMPLETE;
+      if (!amountRemainingAmo) {
+        status = EnumThirdPartyStatus.PAID;
+      } else if (!thirdPartyAmo?.amountPaid) {
+        status = EnumThirdPartyStatus.WAITING;
+      }
+      thirdPartyAmo.status = status;
+      payment.amount = payment.amount + amountPaid;
+      payment.amountCare = payment.amountCare + amountCarePaid;
+      payment.amountProsthesis =
+        payment.amountProsthesis + amountProsthesisPaid;
+      payment.debtor = `${payment.debtor}-(AMO)${thirdPartyAmo?.amo?.libelle}`;
+      payment.isTp = 1;
+      await this.thirdPartyAmoRepository.update(
+        thirdPartyAmo.id,
+        thirdPartyAmo,
+      );
+      payment.thirdPartyAmos.push(thirdPartyAmo);
+    }
+
+    if (thirdPartyAmc && payload?.amc_amount !== 0) {
+      const amountRemaining = thirdPartyAmc?.amount - thirdPartyAmc?.amountPaid;
+      const amountCareRemaining =
+        thirdPartyAmc?.amountCare - thirdPartyAmc?.amountCarePaid;
+      const amountPaid = Math.max(
+        -thirdPartyAmc?.amountPaid,
+        Math.min(amountRemaining, payload?.amo_amount),
+      );
+      const amountCarePaid = Math.max(
+        -thirdPartyAmc?.amountCarePaid,
+        Math.min(amountCareRemaining, amountPaid),
+      );
+      const amountProsthesisPaid = amountPaid - amountCarePaid;
+
+      thirdPartyAmc.amountPaid =
+        parseFloat(thirdPartyAmc?.amountPaid.toString()) + amountPaid;
+      thirdPartyAmc.amountPaidManually =
+        parseFloat(thirdPartyAmc?.amountPaidManually.toString()) + amountPaid;
+      thirdPartyAmc.amountCarePaid =
+        parseFloat(thirdPartyAmc?.amountCarePaid.toString()) + amountCarePaid;
+      thirdPartyAmc.amountProsthesisPaid =
+        parseFloat(thirdPartyAmc?.amountProsthesisPaid?.toString()) +
+        amountProsthesisPaid;
+      const amountRemainingAmc =
+        parseFloat(thirdPartyAmc?.amount.toString()) -
+        parseFloat(thirdPartyAmc?.amountPaid?.toString());
+
+      let status = EnumThirdPartyStatus.INCOMPLETE;
+      if (!amountRemainingAmc) {
+        status = EnumThirdPartyStatus.PAID;
+      } else if (!thirdPartyAmc?.amountPaid) {
+        status = EnumThirdPartyStatus.WAITING;
+      }
+      thirdPartyAmc.status = status;
+      payment.amount = payment.amount + amountPaid;
+      payment.amountCare = payment.amountCare + amountCarePaid;
+      payment.amountProsthesis =
+        payment.amountProsthesis + amountProsthesisPaid;
+      payment.debtor = `${payment.debtor}-(AMC)${thirdPartyAmc?.amc?.libelle}`;
+      payment.isTp = 1;
+      await this.thirdPartyAmcRepository.update(
+        thirdPartyAmc.id,
+        thirdPartyAmc,
+      );
+      payment.thirdPartyAmcs.push(thirdPartyAmc);
+    }
+    const thirdPartyAmoStatus = thirdPartyAmo ? thirdPartyAmo?.status : null;
+    const thirdPartyAmcStatus = thirdPartyAmc ? thirdPartyAmc?.status : null;
+    if (
+      thirdPartyAmoStatus === EnumThirdPartyStatus.REJECTED ||
+      thirdPartyAmcStatus === EnumThirdPartyStatus.REJECTED
+    ) {
+      caresheet.tiersPayantStatus = EnumThirdPartyStatus.REJECTED;
+    } else if (
+      (!thirdPartyAmoStatus ||
+        thirdPartyAmoStatus === EnumThirdPartyStatus.PAID) &&
+      (!thirdPartyAmcStatus ||
+        thirdPartyAmcStatus === EnumThirdPartyStatus.PAID)
+    ) {
+      caresheet.tiersPayantStatus = EnumThirdPartyStatus.PAID;
+    } else {
+      caresheet.tiersPayantStatus = EnumThirdPartyStatus.WAITING;
+    }
+    caresheet.thirdPartyAmountPaid =
+      (thirdPartyAmo?.amountPaid ? thirdPartyAmo.amountPaid : 0) +
+      (thirdPartyAmc?.amountPaid ? thirdPartyAmc.amountPaid : 0);
+    await this.fseRepository.update(caresheet.id, caresheet);
+    if (payload?.create_payment && payment?.amount !== 0) {
+      const paymentPayee = new CashingContactEntity();
+      paymentPayee.patient = caresheet.patient;
+      paymentPayee.amount = payment.amount;
+      paymentPayee.amountCare = payment.amountCare;
+      paymentPayee.amountProsthesis = payment.amountProsthesis;
+      payment.payees.push(paymentPayee);
+      const paymentRes = await this.cashingRepository.save(payment);
+      paymentPayee.csgId = paymentRes?.id;
+      await this.cashingContactRepository.save(paymentPayee);
+    }
+    const data = await this.actsService.show(caresheet.id);
+    return data;
   }
 }

@@ -8,6 +8,11 @@ import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
 import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 import { AmoEntity } from 'src/entities/amo.entity';
 import { AmcEntity } from 'src/entities/amc.entity';
+import { FseEntity } from 'src/entities/fse.entity';
+import { LibraryBankEntity } from 'src/entities/library-bank.entity';
+import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
+import { CashingEntity } from 'src/entities/cashing.entity';
+import { CaresheetsModule } from 'src/caresheets/caresheets.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -17,7 +22,12 @@ import { AmcEntity } from 'src/entities/amc.entity';
       ThirdPartyAmoEntity,
       AmoEntity,
       AmcEntity,
+      FseEntity,
+      LibraryBankEntity,
+      CashingContactEntity,
+      CashingEntity,
     ]),
+    CaresheetsModule,
   ],
   controllers: [ThirdPartyController],
   providers: [ThirdPartyService],
