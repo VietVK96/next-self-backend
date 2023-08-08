@@ -438,6 +438,7 @@ export class QuotesServices {
           AND DQO.DQO_ID = BIL.DQO_ID`,
         [payload?.no_pdt],
       );
+
       await queryRunner.query('SET FOREIGN_KEY_CHECKS = 0');
       const planAmount = plan?.amount;
       const planPersonRepayment = plan?.personRepayment;
@@ -659,9 +660,18 @@ export class QuotesServices {
         amoRefundTotal = amoRefundTotal + amoRefund;
         patientAmountTotal = patientAmountTotal + patientAmount;
 
-        act['patientAmountTotal'] = patientAmountTotal;
+        act['patientAmount'] = patientAmount;
         act['maximumPrice'] = maximumPrice;
         act['panier'] = panier;
+        const ngapCodeArr = act?.ngapCode ? act.ngapCode.split(' ') : [];
+        act.ngapCode = ngapCodeArr
+          ? ngapCodeArr.reduce((code, value) => {
+              if (value !== 'null') {
+                return `${code} ${value}`;
+              }
+              return code;
+            }, '')
+          : '';
       }
 
       return {
@@ -671,11 +681,14 @@ export class QuotesServices {
         amoAmountTotal,
         amoRefundTotal,
         patientAmountTotal,
+        periodOfValidity,
+        idDevis: id_devis,
       };
-    } catch (e) {
+    } catch (error) {
       if (queryRunner?.isTransactionActive) {
         await queryRunner.rollbackTransaction();
       }
+      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
   }
 
@@ -718,7 +731,7 @@ export class QuotesServices {
         new Date(a?.createdOn).getTime() - new Date(b?.createdOn).getTime(),
     );
     if (unitPrices && unitPrices?.length > 0) {
-      return unitPrices[0];
+      return unitPrices[0]?.maximumPrice;
     }
     return null;
   }
@@ -893,7 +906,7 @@ export class QuotesServices {
       const id = checkId(req?.id);
       const quote = await this.dentalQuotationRepository.findOne({
         where: {
-          id,
+          id: id || 0,
         },
         relations: {
           acts: {

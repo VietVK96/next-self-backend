@@ -149,11 +149,16 @@ export class GlossariesService {
       where: { id },
     });
     if (!glossaryEntry) {
-      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+      throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
     }
-    return await this.glossaryEntryRepo.save({
-      ...glossaryEntry,
-      content: payload?.content,
-    });
+
+    try {
+      await this.glossaryEntryRepo.save({
+        ...glossaryEntry,
+        content: payload?.content,
+      });
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.SAVE_FAILED);
+    }
   }
 }

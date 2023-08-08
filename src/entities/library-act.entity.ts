@@ -20,6 +20,7 @@ import { TraceabilityEntity } from './traceability.entity';
 import { LettersEntity } from './letters.entity';
 import { OrganizationEntity } from './organization.entity';
 import { LibraryActAttachmentPivotEntity } from './library-act-attachment-pivot.entity';
+import { LibraryActOdontogramPivotEntity } from './library-act-odontogram-pivot.entity';
 
 export enum EnumLibraryActNomenclature {
   NGAP = 'NGAP',
@@ -64,7 +65,8 @@ export class LibraryActEntity {
   })
   libraryActFamilyId?: number;
   @ManyToOne(() => LibraryActFamilyEntity, (e) => e.acts, {
-    createForeignKeyConstraints: false,
+    // createForeignKeyConstraints: false,
+    // cascade: true,
   })
   @JoinColumn({
     name: 'library_act_family_id',
@@ -231,7 +233,8 @@ export class LibraryActEntity {
   //   protected $quantities;
 
   @OneToMany(() => LibraryActQuantityEntity, (e) => e.act, {
-    createForeignKeyConstraints: false,
+    // createForeignKeyConstraints: false,
+    cascade: true,
   })
   quantities?: LibraryActQuantityEntity[];
 
@@ -248,7 +251,7 @@ export class LibraryActEntity {
   //   protected $odontograms;
 
   @ManyToMany(() => LibraryOdontogramEntity, (e) => e.libraryActs, {
-    createForeignKeyConstraints: false,
+    cascade: true,
   })
   @JoinTable({
     name: 'library_act_odontogram',
@@ -270,7 +273,8 @@ export class LibraryActEntity {
   //   protected $associations;
 
   @OneToMany(() => LibraryActAssociationEntity, (e) => e.parent, {
-    createForeignKeyConstraints: false,
+    // createForeignKeyConstraints: false,
+    cascade: true,
   })
   associations?: LibraryActAssociationEntity[];
 
@@ -280,7 +284,8 @@ export class LibraryActEntity {
   // protected $associatedWithMe;
 
   @OneToMany(() => LibraryActAssociationEntity, (e) => e.child, {
-    createForeignKeyConstraints: false,
+    // createForeignKeyConstraints: false,
+    cascade: true,
   })
   associatedWithMe?: LibraryActAssociationEntity[];
 
@@ -293,7 +298,8 @@ export class LibraryActEntity {
   //   protected $complementaries;
 
   @OneToMany(() => LibraryActComplementaryEntity, (e) => e.parent, {
-    createForeignKeyConstraints: false,
+    // createForeignKeyConstraints: false,
+    cascade: true,
   })
   complementaries?: LibraryActComplementaryEntity[];
 
@@ -303,7 +309,8 @@ export class LibraryActEntity {
   // protected $complementariesWithMe;
 
   @OneToMany(() => LibraryActComplementaryEntity, (e) => e.child, {
-    createForeignKeyConstraints: false,
+    // createForeignKeyConstraints: false,
+    cascade: true,
   })
   complementariesWithMe?: LibraryActComplementaryEntity[];
 
@@ -315,7 +322,8 @@ export class LibraryActEntity {
   // protected $traceabilities;
 
   @OneToMany(() => TraceabilityEntity, (e) => e.libraryAct, {
-    createForeignKeyConstraints: false,
+    // createForeignKeyConstraints: false,
+    cascade: true,
   })
   traceabilities?: TraceabilityEntity[];
 
@@ -352,7 +360,9 @@ export class LibraryActEntity {
    */
   // protected $attachments;
 
-  @ManyToMany(() => LettersEntity)
+  @ManyToMany(() => LettersEntity, {
+    cascade: true,
+  })
   @JoinTable({
     name: 'library_act_attachment',
     joinColumn: {
@@ -389,6 +399,12 @@ export class LibraryActEntity {
     (pivotLibraryActAttachment) => pivotLibraryActAttachment.libraryAct,
   )
   pivotLibraryActAttachments: LibraryActAttachmentPivotEntity[];
+
+  @OneToMany(
+    () => LibraryActOdontogramPivotEntity,
+    (pivotLibraryActOdontogram) => pivotLibraryActOdontogram.libraryAct,
+  )
+  pivotLibraryActOdontograms: LibraryActOdontogramPivotEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
