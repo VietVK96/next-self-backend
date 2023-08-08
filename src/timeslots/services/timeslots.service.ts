@@ -73,7 +73,6 @@ export class TimeslotsService {
         };
       });
     } catch (error) {
-      console.log(error);
       throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
     }
   }
