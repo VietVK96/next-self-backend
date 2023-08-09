@@ -16,7 +16,7 @@ export default registerAs('app', () => ({
   },
   wzagenda: {
     wsdl:
-      process?.env?.WZAGENDA_END_POINT ||
+      process?.env?.WZAGENDA_WSDL_END_POINT ||
       `https://secure.wz-agenda.net/webservices/3.1/server.php?wsdl`,
     namespace:
       process?.env?.WZAGENDA_END_POINT ||
