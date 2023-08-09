@@ -23,6 +23,7 @@ import {
   ActFamiliesSearchDto,
   ActFamiliesStoreDto,
   ActFamiliesUpdateDto,
+  ActsIndexDto,
 } from './dto/act-families.dto';
 import { ActsStoreDto } from './dto/library-act.store.dto';
 import { LibraryActsService } from './services/acts.service';
@@ -195,5 +196,15 @@ export class LibrariesController {
     @CurrentUser() user,
   ) {
     return await this.librariesService.searchActFamilies(user, request);
+  }
+
+  /**
+   * php/libraries/acts/index.php?search_term=
+   *
+   */
+  @Get('acts-index')
+  @UseGuards(TokenGuard)
+  async searchlibrariesActs(@Query() payload: ActsIndexDto) {
+    return await this.librariesService.getAtcsBySearchTermAndOnltUsed(payload);
   }
 }

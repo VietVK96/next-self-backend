@@ -59,6 +59,7 @@ import { UploadEntity } from 'src/entities/upload.entity';
 import { TherapeuticAlternativeService } from './services/therapeuticAlternative.service';
 import { CcamEntity } from 'src/entities/ccam.entity';
 import { CcamUnitPriceEntity } from 'src/entities/ccamunitprice.entity';
+import { MailTransportService } from 'src/mail/services/mailTransport.service';
 
 @Module({
   imports: [
@@ -131,6 +132,7 @@ import { CcamUnitPriceEntity } from 'src/entities/ccamunitprice.entity';
     QuotesServices,
     DevisServices,
     TherapeuticAlternativeService,
+    MailTransportService,
   ],
 })
 export class DentalModule {}

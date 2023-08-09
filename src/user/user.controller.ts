@@ -8,6 +8,7 @@ import {
   Query,
   UseGuards,
   Delete,
+  Res,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
@@ -24,6 +25,9 @@ import {
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { PreferenceService } from './services/preference.sevece';
 import { TokenDownloadService } from './services/token-download.service';
+import { UnpaidService } from './services/unpaid.service';
+import { UnpaidDto } from './dto/unpaid.dto';
+import { Response } from 'express';
 import { UpdatePassWordSettingDto } from './dto/user-setting.dto';
 import { ErrorCode } from 'src/constants/error';
 import { GetOneActiveRes } from './res/get-active.res';
@@ -36,6 +40,7 @@ export class UserController {
     private userService: UserService,
     private preferenceService: PreferenceService,
     private tokenDownloadService: TokenDownloadService,
+    private unpaidService: UnpaidService,
   ) {}
 
   /**
@@ -84,6 +89,20 @@ export class UserController {
     };
   }
 
+  // File php/user/unpaid/index.php
+  @Get('unpaid/index')
+  @UseGuards(TokenGuard)
+  async getUserUnpaidPatient(@Query() payload: UnpaidDto) {
+    return await this.unpaidService.getUserUnpaidPatient(payload);
+  }
+
+  /**
+   * File: php/third-party/export.php
+   */
+  @Get('unpaid/export')
+  async export(@Res() res: Response, @Query() payload: UnpaidDto) {
+    return await this.unpaidService.getExportQuery(res, payload);
+  }
   // file settings/securities/password-accounting/index.php
   @Get('/settings/securities/password-accounting')
   @UseGuards(TokenGuard)

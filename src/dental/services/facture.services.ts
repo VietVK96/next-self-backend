@@ -38,11 +38,15 @@ import { validateEmail } from 'src/common/util/string';
 import { MailService } from 'src/mail/services/mail.service';
 import { format, getDayOfYear } from 'date-fns';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { MailTransportService } from 'src/mail/services/mailTransport.service';
+import * as fs from 'fs';
+import * as handlebars from 'handlebars';
 
 @Injectable()
 export class FactureServices {
   constructor(
     private mailService: MailService,
+    private mailTransportService: MailTransportService,
     @InjectRepository(BillEntity)
     private billRepository: Repository<BillEntity>,
     @InjectRepository(BillLineEntity)
@@ -797,7 +801,7 @@ export class FactureServices {
       const result = await qb
         .select('bill.date', 'billDate')
         .addSelect('usr.email', 'userEmail')
-        .addSelect('usr.lastnamne', 'userLastname')
+        .addSelect('usr.lastname', 'userLastname')
         .addSelect('usr.firstname', 'userFirstname')
         .addSelect('con.id', 'contactId')
         .addSelect('con.email', 'contactEmail')
@@ -807,6 +811,7 @@ export class FactureServices {
         .innerJoin('bill.contact', 'con')
         .where('bill.id = :id', { id: id_facture })
         .getRawOne();
+
       const billDate = result?.billDate;
       const billDateAsString = format(billDate, 'dd/MM/yyyy');
       const userEmail = result?.userEmail;
@@ -829,9 +834,18 @@ export class FactureServices {
         relations: ['user', 'user.address', 'user.setting', 'patient'],
         where: { id: id_facture || 0 },
       });
-
       const homePhoneNumber = invoice?.user?.phoneNumber ?? null;
-      await this.mailService.sendFactureEmail({
+      const emailTemplate = fs.readFileSync(
+        path.join(__dirname, '../../../templates/mail/facture/invoice.hbs'),
+        'utf-8',
+      );
+      const template = handlebars.compile(emailTemplate);
+      const fullName = [invoice?.user?.lastname, invoice?.user?.firstname].join(
+        ' ',
+      );
+      const mailBody = template({ fullName, invoice, homePhoneNumber });
+
+      await this.mailTransportService.sendFactureEmail(identity.id, {
         from: invoice?.user?.email,
         to: invoice?.patient?.email,
         subject: `Facture du ${format(
@@ -843,7 +857,7 @@ export class FactureServices {
           invoice?.patient?.lastname,
           invoice?.patient?.firstname,
         ].join(' ')}`,
-        template: 'mail/facture/invoice.hbs',
+        template: mailBody,
         context: {
           ...invoice,
           creationDate: format(new Date(invoice?.date), 'MMMM dd, yyyy'),
@@ -858,7 +872,7 @@ export class FactureServices {
         attachments: [
           {
             filename: filename,
-            context: null,
+            content: await this.generatePdf({ id: id_facture }, identity),
           },
         ],
       });
