@@ -11,6 +11,7 @@ import { PatientMedicalEntity } from 'src/entities/patient-medical.entity';
 import { format } from 'date-fns';
 import { Parser } from 'json2csv';
 import { Response } from 'express';
+import { ErrorCode } from 'src/constants/error';
 @Injectable()
 export class UnpaidService {
   constructor(
@@ -32,7 +33,7 @@ export class UnpaidService {
       where: { id: payload?.id },
     });
     if (!user) {
-      throw new CNotFoundRequestException('User Not Found');
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
     }
     const queryBuilder = this.dataSource
       .createQueryBuilder()
