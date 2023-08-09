@@ -39,6 +39,23 @@ export class LibrariesController {
   ) {}
 
   /**
+   * php/libraries/act-families/acts/index.php 100%
+   */
+  @Get('act-families/index/:id')
+  @UseGuards(TokenGuard)
+  async getActFamilies(
+    @Param('id') id: number,
+    @CurrentUser() identity: UserIdentity,
+    @Query() request: ActFamiliesDto,
+  ): Promise<LibraryActEntity[]> {
+    return await this.librariesService.indexActByActFamilyId(
+      id,
+      identity,
+      request,
+    );
+  }
+
+  /**
    * File: php/libraries/act-families/index.php
    */
   @Get('act-families/index')
@@ -171,12 +188,12 @@ export class LibrariesController {
     return await this.actService.getActs(id, identity);
   }
 
-  // @Get('act-families-search')
-  // @UseGuards(TokenGuard)
-  // async searchActFamilies(
-  //   @Query() request: ActFamiliesSearchDto,
-  //   @CurrentUser() user,
-  // ) {
-  //   return await this.librariesService.searchActFamilies(user, request);
-  // }
+  @Get('act-families-search')
+  @UseGuards(TokenGuard)
+  async searchActFamilies(
+    @Query() request: ActFamiliesSearchDto,
+    @CurrentUser() user,
+  ) {
+    return await this.librariesService.searchActFamilies(user, request);
+  }
 }

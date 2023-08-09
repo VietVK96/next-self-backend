@@ -107,7 +107,7 @@ export class CertificatService {
   async createCertificat(
     userId: number,
     organizationId: number,
-    query: CreateCertificatDto,
+    body: CreateCertificatDto,
     request,
   ) {
     if (!userId || !organizationId)
@@ -117,8 +117,11 @@ export class CertificatService {
     const identifiant = userEntity?.log;
     const groupTime = organizationId.toString() + '-' + Date.now().toString();
     try {
+      if (!body?.cookie) {
+        throw new CBadRequestException(ErrorCode.NOT_FOUND_COOKIE);
+      }
       const certificat = await this.ids_CertRequest(
-        JSON.parse(query.cookie),
+        JSON.parse(body?.cookie),
         request,
         identifiant,
         groupTime,

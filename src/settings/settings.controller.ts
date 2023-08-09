@@ -17,6 +17,7 @@ import { TokenGuard, UserIdentity } from 'src/common/decorator/auth.decorator';
 import { AccountSecurityService } from './services/account-security.service';
 import { UpdatePassWordDto } from './dtos/user-setting.dto';
 import { AccountService } from './services/account.service';
+import { UpdateGoogleCalendarDto } from './dtos/google-calendar.dto';
 import { NotificationService } from './services/notification.service';
 
 @ApiBearerAuth()
@@ -114,6 +115,28 @@ export class SettingsController {
   @UseGuards(TokenGuard)
   async fetchAccountWzagenda(@CurrentUser() identity: UserIdentity) {
     return await this.accountService.fetchAccountWzagenda(identity);
+  }
+
+  @Get('/account/interfaceage')
+  @UseGuards(TokenGuard)
+  async fetchAccountPractitioners(@CurrentUser() identity: UserIdentity) {
+    return await this.accountService.fetchAccountPractitioners(identity.org);
+  }
+  //settings/account/google.php
+  @Get('/account/google-calendar')
+  @UseGuards(TokenGuard)
+  async getGoogleCalendar(@CurrentUser() identity: UserIdentity) {
+    return await this.accountService.getGoogleCalendar(identity.id);
+  }
+
+  //settings/account/google.php
+  @Post('/account/google-calendar')
+  @UseGuards(TokenGuard)
+  async updateGoogleCalendar(
+    @CurrentUser() identity: UserIdentity,
+    @Body() body: UpdateGoogleCalendarDto,
+  ) {
+    return await this.accountService.updateGoogleCalendar(identity, body);
   }
 
   @Get('/notification/historical')

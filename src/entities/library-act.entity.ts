@@ -66,7 +66,7 @@ export class LibraryActEntity {
   libraryActFamilyId?: number;
   @ManyToOne(() => LibraryActFamilyEntity, (e) => e.acts, {
     // createForeignKeyConstraints: false,
-    cascade: true,
+    // cascade: true,
   })
   @JoinColumn({
     name: 'library_act_family_id',
@@ -274,7 +274,7 @@ export class LibraryActEntity {
 
   @OneToMany(() => LibraryActAssociationEntity, (e) => e.parent, {
     // createForeignKeyConstraints: false,
-    // cascade: true
+    cascade: true,
   })
   associations?: LibraryActAssociationEntity[];
 
@@ -284,7 +284,8 @@ export class LibraryActEntity {
   // protected $associatedWithMe;
 
   @OneToMany(() => LibraryActAssociationEntity, (e) => e.child, {
-    createForeignKeyConstraints: false,
+    // createForeignKeyConstraints: false,
+    cascade: true,
   })
   associatedWithMe?: LibraryActAssociationEntity[];
 

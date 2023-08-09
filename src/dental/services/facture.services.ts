@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, In, Not, Repository } from 'typeorm';
+import { DataSource, In, Like, Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   EnregistrerFactureDto,
@@ -36,13 +36,17 @@ import { facturePdfFooter } from '../constant/htmlTemplate';
 import { br2nl } from 'src/common/util/string';
 import { validateEmail } from 'src/common/util/string';
 import { MailService } from 'src/mail/services/mail.service';
-import { format } from 'date-fns';
+import { format, getDayOfYear } from 'date-fns';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { MailTransportService } from 'src/mail/services/mailTransport.service';
+import * as fs from 'fs';
+import * as handlebars from 'handlebars';
 
 @Injectable()
 export class FactureServices {
   constructor(
     private mailService: MailService,
+    private mailTransportService: MailTransportService,
     @InjectRepository(BillEntity)
     private billRepository: Repository<BillEntity>,
     @InjectRepository(BillLineEntity)
@@ -467,7 +471,7 @@ export class FactureServices {
           where: { id: addressEntity || 0 },
         });
         if (address) {
-          identPat =
+          identPat +=
             '\n' +
             address?.street +
             '\n' +
@@ -499,7 +503,9 @@ export class FactureServices {
           infosCompl,
           modePaiement,
         });
-      } catch {}
+      } catch (err) {
+        throw new CBadRequestException(err);
+      }
     }
   }
 
@@ -531,39 +537,32 @@ export class FactureServices {
     modePaiement: string;
   }) {
     let noFacture: string;
-    const dateFormat = '%Y%j';
     const currentDate = new Date();
     const formattedDate =
-      currentDate.getFullYear().toString() +
-      (currentDate.getMonth() + 1).toString().padStart(2, '0') +
-      currentDate.getDate().toString().padStart(2, '0');
+      currentDate.getFullYear().toString() + getDayOfYear(currentDate);
 
     try {
-      const stm = await this.dataSource.query(
-        `
-      SELECT
-      MAX(T_BILL_BIL.BIL_NBR) AS noFacture
-      FROM T_BILL_BIL
-      WHERE T_BILL_BIL.USR_ID = ?
-      AND T_BILL_BIL.BIL_NBR LIKE CONCAT('u', ?, '-', DATE_FORMAT(NOW(), ?), '-', '%')`,
-        [id_user, id_user, dateFormat],
-      );
-
-      noFacture = stm[0].noFacture;
-      if (noFacture) {
-        noFacture = id_user + '-' + formattedDate + '-00001';
+      const stm = await this.billRepository.findOne({
+        where: {
+          usrId: id_user,
+          nbr: Like(`u${id_user}-${formattedDate}%`),
+        },
+        order: { nbr: 'DESC' },
+      });
+      noFacture = stm?.nbr;
+      if (!noFacture) {
+        noFacture = 'u' + id_user + '-' + formattedDate + '-00001';
       } else {
         noFacture =
           'u' +
           id_user +
           '-' +
-          new Date().toISOString().slice(0, 10).replace(/-/g, '') +
+          formattedDate +
           '-' +
           String(
             Number(noFacture.substring(noFacture.lastIndexOf('-') + 1)) + 1,
           ).padStart(5, '0');
       }
-
       const bill = await this.billRepository.save({
         nbr: noFacture,
         creationDate: dateFacture,
@@ -573,13 +572,13 @@ export class FactureServices {
         identContact: identPat,
         payload: modePaiement,
         infosCompl: infosCompl,
-        id_user: id_user,
+        usrId: id_user,
         conId: contactId,
-        id_devis: id_devis,
-      });
+        dqoId: id_devis !== 0 ? id_devis : null,
+      } as BillEntity);
       return bill;
     } catch (err) {
-      console.error(
+      throw new CBadRequestException(
         '-1002 : Probl&egrave;me durant la création de la facture. Merci de réessayer plus tard.',
       );
     }
@@ -802,7 +801,7 @@ export class FactureServices {
       const result = await qb
         .select('bill.date', 'billDate')
         .addSelect('usr.email', 'userEmail')
-        .addSelect('usr.lastnamne', 'userLastname')
+        .addSelect('usr.lastname', 'userLastname')
         .addSelect('usr.firstname', 'userFirstname')
         .addSelect('con.id', 'contactId')
         .addSelect('con.email', 'contactEmail')
@@ -812,6 +811,7 @@ export class FactureServices {
         .innerJoin('bill.contact', 'con')
         .where('bill.id = :id', { id: id_facture })
         .getRawOne();
+
       const billDate = result?.billDate;
       const billDateAsString = format(billDate, 'dd/MM/yyyy');
       const userEmail = result?.userEmail;
@@ -834,9 +834,18 @@ export class FactureServices {
         relations: ['user', 'user.address', 'user.setting', 'patient'],
         where: { id: id_facture || 0 },
       });
-
       const homePhoneNumber = invoice?.user?.phoneNumber ?? null;
-      await this.mailService.sendFactureEmail({
+      const emailTemplate = fs.readFileSync(
+        path.join(__dirname, '../../../templates/mail/facture/invoice.hbs'),
+        'utf-8',
+      );
+      const template = handlebars.compile(emailTemplate);
+      const fullName = [invoice?.user?.lastname, invoice?.user?.firstname].join(
+        ' ',
+      );
+      const mailBody = template({ fullName, invoice, homePhoneNumber });
+
+      await this.mailTransportService.sendFactureEmail(identity.id, {
         from: invoice?.user?.email,
         to: invoice?.patient?.email,
         subject: `Facture du ${format(
@@ -848,7 +857,7 @@ export class FactureServices {
           invoice?.patient?.lastname,
           invoice?.patient?.firstname,
         ].join(' ')}`,
-        template: 'mail/facture/invoice.hbs',
+        template: mailBody,
         context: {
           ...invoice,
           creationDate: format(new Date(invoice?.date), 'MMMM dd, yyyy'),
@@ -863,7 +872,7 @@ export class FactureServices {
         attachments: [
           {
             filename: filename,
-            context: null,
+            content: await this.generatePdf({ id: id_facture }, identity),
           },
         ],
       });

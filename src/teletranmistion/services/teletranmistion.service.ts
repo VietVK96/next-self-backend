@@ -15,9 +15,12 @@ import { LotStatusEntity } from 'src/entities/lot-status.entity';
 import { LotEntity } from 'src/entities/lot.entity';
 import { TeletransmissionEntity } from 'src/entities/teletransmission.entity';
 import { UserEntity } from 'src/entities/user.entity';
-import { Repository } from 'typeorm';
+import { Repository, DataSource, Not } from 'typeorm';
 import { SaveTeletranmistionDto } from '../dto/save-teletranmistion.dto';
 import { NomieService } from './nomie.service';
+import { ConsulterUtlDto } from 'src/teletranmistion/dto/user-teletransmission.dto';
+import { AccountStatusEnum } from 'src/enum/account-status.enum';
+import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 
 @Injectable()
 export class TeletranmistionService {
@@ -42,6 +45,7 @@ export class TeletranmistionService {
     private lotCareSheetRepo: Repository<LotCareSheetEntity>,
     private sesamvitaleTeletranmistionService: SesamvitaleTeletranmistionService,
     private noemieService: NomieService,
+    private dataSource: DataSource,
   ) {}
 
   async save(
@@ -260,5 +264,96 @@ export class TeletranmistionService {
 
     this.noemieService.process(identity.org, teletransmission.finessNumber);
     return teletransmission;
+  }
+
+  async getInterfaceageActivation(organizationId: number) {
+    const users = await this.dataSource.getRepository(UserEntity).find({
+      where: {
+        client: Not(AccountStatusEnum.TERMINATED),
+        organizationId,
+      },
+      relations: {
+        medical: true,
+        eventTypes: true,
+        setting: true,
+      },
+      order: {
+        lastname: 'ASC',
+        firstname: 'ASC',
+      },
+    });
+
+    const cards = [];
+    const practioners = users
+      .filter((x) => x.medical)
+      .map((y) => {
+        return {
+          id: y?.id,
+          lastname: y?.lastname,
+          firstname: y?.firstname,
+          medical: y?.medical,
+        };
+      });
+    for (const user of practioners) {
+      const listeCps =
+        await this.sesamvitaleTeletranmistionService.consulterListeCps(
+          user?.medical?.finessNumber,
+        );
+      const carteCps = listeCps?.carteCps;
+      if (!carteCps) {
+        continue;
+      }
+      cards.push(carteCps[0]);
+    }
+
+    return {
+      practioners,
+      cards,
+    };
+  }
+
+  async postInterfaceageActivation(
+    id: number,
+    consulterUtlDto: ConsulterUtlDto,
+  ) {
+    const userList = consulterUtlDto?.user;
+    for (const userItem of userList) {
+      const user = await this.dataSource
+        .getRepository(UserEntity)
+        .findOne({ where: { id: userItem?.id }, relations: { medical: true } });
+      const finessNumber = user?.medical?.finessNumber;
+      const userDetail =
+        await this.sesamvitaleTeletranmistionService.consulterUtlDetail(
+          finessNumber,
+          userItem?.medical?.nationalIdentifierNumber,
+        );
+      if (!userDetail?.utilisateur) {
+        continue;
+      }
+
+      const statuses = userDetail?.utilisateur[0]?.statut;
+      const statusesFiltered = statuses?.filter((status) => {
+        return (
+          status?.numFiness[0] === finessNumber &&
+          status?.numIdtNat[0] === userItem.medical?.nationalIdentifierNumber
+        );
+      });
+
+      if (statusesFiltered?.length === 0) {
+        continue;
+      }
+
+      const specialtyCode = statusesFiltered[0]?.codeSpecialite[0];
+      const medical = user?.medical;
+      medical.lastName = userDetail?.utilisateur[0]?.nomPs[0] ?? '';
+      medical.firstName = userDetail?.utilisateur[0].prenomPs[0] ?? '';
+      medical.specialtyCodeId = Number(specialtyCode);
+      medical.nationalIdentifierNumber =
+        userItem?.medical?.nationalIdentifierNumber;
+
+      return await this.dataSource
+        .getRepository(UserMedicalEntity)
+        .save(medical);
+    }
   }
 }

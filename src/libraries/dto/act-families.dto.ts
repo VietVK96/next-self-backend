@@ -5,6 +5,7 @@ import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
@@ -23,14 +24,17 @@ export class ActFamiliesStoreDto {
   @ApiProperty({
     required: false,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
   label?: string;
 
   @ApiProperty({
     required: false,
   })
-  color?: string;
+  color?: {
+    background?: string;
+    foreground?: string;
+  };
 
   @ApiProperty({
     required: false,
@@ -76,7 +80,10 @@ export class ActFamiliesUpdateDto {
   @ApiProperty({
     required: false,
   })
-  color?: string;
+  color?: {
+    background?: string;
+    foreground?: string;
+  };
 
   @ApiProperty({
     required: false,

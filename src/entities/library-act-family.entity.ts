@@ -121,7 +121,8 @@ export class LibraryActFamilyEntity {
   //   protected $acts;
 
   @OneToMany(() => LibraryActEntity, (e) => e.family, {
-    createForeignKeyConstraints: false,
+    // createForeignKeyConstraints: false,
+    cascade: true,
   })
   acts?: LibraryActEntity[];
 

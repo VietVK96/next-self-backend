@@ -21,8 +21,6 @@ import {
 export class RecipeService {
   constructor(private dataSource: DataSource) {}
 
-  private slipCheckIds: number[] = [];
-
   async findAll(queryParams: QueryParamsDto, user: UserIdentity) {
     const response = {
       page: 0,
@@ -32,6 +30,8 @@ export class RecipeService {
         amount: 0,
       },
     };
+
+    const slipCheckIds: number[] = [];
     // fomart money
     const numberFormatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -95,7 +95,7 @@ export class RecipeService {
           const slipCheckName = `${payment.slip_check[0]?.label} - #${slipCheckNumber} - ${payment.slip_check[0]?.bank_name}`;
           let slipCheckDate;
           // Vérification si le bordereau de remise de chèque n'a pas déjà été affiché
-          if (!this.slipCheckIds.includes(slipCheckId)) {
+          if (!slipCheckIds.includes(slipCheckId)) {
             slipCheckDate = dayjs(slipCheckDateRoot).format('DD/MM/YYYY');
 
             const row: ItemResponse = {
@@ -124,9 +124,10 @@ export class RecipeService {
             row.cell.amount = payment.slip_check[0]?.amount;
             row.id = `:depositslip:${slipCheckId}`;
             row.cell.i1 = 'printBordereau';
+
             response.rows.push(row);
           }
-          this.slipCheckIds.push(slipCheckId);
+          slipCheckIds.push(slipCheckId);
           checkbox = slipCheckNumber;
         } else if (mode === 'cheque' && type !== 'remboursement') {
           checkbox = 0;
