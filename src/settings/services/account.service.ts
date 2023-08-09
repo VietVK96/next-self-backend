@@ -66,58 +66,50 @@ export class AccountService {
     identity: UserIdentity,
     req: AccountWzAgendaSubmitDto,
   ): Promise<any> {
-    try {
-      if (!req?.calendarId) {
-        throw new CBadRequestException(ErrorCode?.NOT_FOUND_CALENDAR_ID);
-      }
-      let wzAgendaUser = await this.syncWzagendaUserRepository.findOne({
+    if (!req?.calendarId) {
+      throw new CBadRequestException(ErrorCode?.NOT_FOUND_CALENDAR_ID);
+    }
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+    <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="https://secure.wz-agenda.net/webservices/3.1/server.php#wzcalendar" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:checkSubscriptionId><is xsi:type="xsd:string">${req?.calendarId}</is></ns1:checkSubscriptionId></SOAP-ENV:Body></SOAP-ENV:Envelope>`;
+    const res = await this.sendRequestWzAgenda<any>(xml);
+    if (res == '0') {
+      throw new CBadRequestException(ErrorCode.CAN_NOT_REQUEST_TO_WZ_AGENDA);
+    }
+    let wzAgendaUser = await this.syncWzagendaUserRepository.findOne({
+      where: { id: identity?.id },
+    });
+    if (!wzAgendaUser) {
+      const user = await this.userRepository.findOne({
         where: { id: identity?.id },
       });
-      if (!wzAgendaUser) {
-        const user = await this.userRepository.findOne({
-          where: { id: identity?.id },
-        });
-        wzAgendaUser = await this.syncWzagendaUserRepository.save({
-          id: identity?.id,
-          calendarId: req?.calendarId,
-        });
-      }
-
-      const xml = `<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="https://secure.wz-agenda.net/webservices/3.1/server.php#wzcalendar" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-        <SOAP-ENV:Body>
-          <ns1:checkSubscriptionId>
-            <is xsi:type="xsd:string">${req?.calendarId}</is>
-          </ns1:checkSubscriptionId>
-        </SOAP-ENV:Body>
-      </SOAP-ENV:Envelope>`;
-      const data = await this.sendRequest<any>('ListeChangementEtat', xml);
-      return null;
-    } catch (err) {
-      throw new CBadRequestException(ErrorCode?.NOT_FOUND);
+      wzAgendaUser = await this.syncWzagendaUserRepository.save({
+        id: identity?.id,
+        calendarId: req?.calendarId,
+      });
     }
+
+    return await this.syncWzagendaUserRepository.save({
+      id: wzAgendaUser.id,
+      ...wzAgendaUser,
+    });
   }
 
-  private async sendRequest<T>(
-    action: string,
+  private async sendRequestWzAgenda<T>(
     contents: string,
     mock?: string,
   ): Promise<T> {
     const url = this.config.get<string>('app.wzagenda.wsdl');
-
     const headers = {
       'Content-Type': 'text/xml; charset=utf-8',
     };
-
     const httpsAgent = new https.Agent({
       rejectUnauthorized: false,
-      secureOptions: constants.SSL_OP_LEGACY_SERVER_CONNECT,
     });
 
     let { data } = await firstValueFrom(
       this.httpService.post(url, contents, {
         headers,
         httpsAgent,
-        httpAgent: httpsAgent,
       }),
     );
 
@@ -128,23 +120,27 @@ export class AccountService {
     const resJson = await parseStringPromise(data);
     if (
       !resJson ||
-      !resJson['soap:Envelope'] ||
-      !resJson['soap:Envelope']['soap:Body'] ||
-      !resJson['soap:Envelope']['soap:Body'][0][`${action}Response`] ||
-      !resJson['soap:Envelope']['soap:Body'][0][`${action}Response`][0][
-        `${action}Result`
-      ]
+      !resJson['SOAP-ENV:Envelope'] ||
+      !resJson['SOAP-ENV:Envelope']['SOAP-ENV:Body'] ||
+      !resJson['SOAP-ENV:Envelope']['SOAP-ENV:Body'][0] ||
+      !resJson['SOAP-ENV:Envelope']['SOAP-ENV:Body'][0][
+        'ns4:checkSubscriptionIdResponse'
+      ] ||
+      !resJson['SOAP-ENV:Envelope']['SOAP-ENV:Body'][0][
+        'ns4:checkSubscriptionIdResponse'
+      ][0] ||
+      !resJson['SOAP-ENV:Envelope']['SOAP-ENV:Body'][0][
+        'ns4:checkSubscriptionIdResponse'
+      ][0]['success'] ||
+      !resJson['SOAP-ENV:Envelope']['SOAP-ENV:Body'][0][
+        'ns4:checkSubscriptionIdResponse'
+      ][0]['success'][0]
     ) {
-      throw new CBadRequestException(ErrorCode.CAN_NOT_REQUEST_TO_DENTAL_VIA);
+      throw new CBadRequestException(ErrorCode.CAN_NOT_REQUEST_TO_WZ_AGENDA);
     }
-    const soapBody =
-      resJson['soap:Envelope']['soap:Body'][0][`${action}Response`][0][
-        `${action}Result`
-      ][0];
-    if (soapBody['erreur']['libelleErreur']) {
-      throw new CBadRequestException(soapBody['erreur']['libelleErreur']);
-    }
-    return soapBody as T;
+    return resJson['SOAP-ENV:Envelope']['SOAP-ENV:Body'][0][
+      'ns4:checkSubscriptionIdResponse'
+    ][0]['success'][0]['_'];
   }
 
   async fetchAccountPractitioners(organizationId: number) {
