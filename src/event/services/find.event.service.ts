@@ -9,6 +9,10 @@ import { HistoricalsDto, ReminderDto } from '../dto/find.event.dto';
 import { FindEventByIdRes } from '../response/find.event.res';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
+import { PrintReq } from '../dto/printEvent.dto';
+import * as path from 'path';
+import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
+import { createPdf } from '@saemhco/nestjs-html-pdf';
 
 const classNameFromStatuses: Map<number, string> = new Map<number, string>();
 classNameFromStatuses.set(1, 'present');
@@ -100,9 +104,11 @@ export class FindEventService {
     resources: number[],
     startDate: string,
     endDate: string,
-    viewCancelledEvents: number,
-    confidentiality: number,
+    viewCancelledEvents?: number,
+    confidentiality?: number,
   ) {
+    if (!viewCancelledEvents) viewCancelledEvents = 0;
+    if (!confidentiality) confidentiality = 0;
     try {
       const formattedResources = resources.map((item) => `'${item}'`).join(',');
 
@@ -439,5 +445,61 @@ export class FindEventService {
     ORDER BY start, end`;
     const result = await this.dataSource.query(previousQuery, [contact, end]);
     return result;
+  }
+
+  /**
+   *
+   * php/event/print-planning.php
+   */
+  async printPlanning(param: PrintReq) {
+    try {
+      const formattedResources = param.resources
+        .map((item) => `'${item}'`)
+        .join(',');
+      if (!formattedResources) {
+        throw new CBadRequestException(ErrorCode.NOT_FOUND_RESOURCES);
+      }
+      const events = await this.findAll(
+        param?.resources,
+        param?.start,
+        param?.end,
+      );
+      console.log('events', events);
+      const data = {
+        events,
+        view: param?.view,
+        start: param?.start,
+        end: param?.end,
+        pbw: param?.pbw,
+      };
+
+      const filePath = path.join(
+        process.cwd(),
+        'templates/events',
+        'print_planning.hbs',
+      );
+
+      const options = {
+        format: 'A4',
+        displayHeaderFooter: false,
+        margin: {
+          left: '5mm',
+          top: '5mm',
+          right: '5mm',
+          bottom: '5mm',
+        },
+      };
+      const file: PdfTemplateFile[] = [
+        {
+          data: data,
+          path: filePath,
+        },
+      ];
+      return await customCreatePdf({ files: file, options });
+    } catch (e) {
+      console.log(e);
+
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+    }
   }
 }
