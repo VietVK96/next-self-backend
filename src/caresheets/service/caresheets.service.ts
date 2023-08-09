@@ -19,6 +19,7 @@ import { ExemptionCodeEnum } from 'src/enum/exemption-code.enum';
 import { ConfigService } from '@nestjs/config';
 import { CaresheetStatusEntity } from 'src/entities/caresheet-status.entity';
 import { RequestException } from 'src/common/exceptions/request-exception.exception';
+import { CaresheetRes } from '../reponse/index.res';
 const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
 const PAV_MINIMUM_AMOUNT = 120;
 
@@ -798,5 +799,123 @@ export class ActsService {
     // array_walk_recursive($resultToArray, array($this, 'cast'));
 
     return resultToArray;
+  }
+
+  async getUserCaresheet(
+    userId: number,
+    page: number,
+    size: number,
+    filterParams?: string[],
+    filterValues?: string[],
+  ) {
+    const _take = size || 25;
+    const _skip = page ? (page - 1) * _take : 0;
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
+    }
+
+    const queryBuilder = this.fseRepository.createQueryBuilder('caresheet');
+    queryBuilder
+      .andWhere('caresheet.usrId = :id', { id: user?.id })
+      .andWhere('caresheet.electronicCaresheet = 1');
+
+    for (let i = 0; i < filterParams?.length; i++) {
+      const filterParam = filterParams[i];
+      const filterValue = filterValues[i];
+
+      switch (filterParam) {
+        case 'caresheet.mode':
+          queryBuilder.andWhere('caresheet.mode = :mode', {
+            mode: filterValue,
+          });
+          break;
+
+        case 'caresheet.creationDate':
+          queryBuilder.andWhere('caresheet.date = :creationDate', {
+            creationDate: filterValue,
+          });
+          break;
+
+        case 'caresheet.number':
+          queryBuilder.andWhere('caresheet.nbr = LPAD(:number, 9, 0)', {
+            number: filterValue,
+          });
+          break;
+
+        case 'lot.number':
+          queryBuilder
+            .select('lot')
+            .innerJoin('caresheet.lots', 'lot')
+            .andWhere('lot.number = LPAD(:lotNumber, 3, 0)', {
+              lotNumber: filterValue,
+            });
+          break;
+
+        case 'fseStatus.id':
+          queryBuilder
+            .addSelect('fseStatus')
+            .innerJoin('caresheet.fseStatus', 'fseStatus')
+            .andWhere('fseStatus.id = :fseStatus', {
+              fseStatus: filterValue,
+            });
+          break;
+
+        case 'dreStatus.id':
+          queryBuilder
+            .addSelect('dreStatus')
+            .innerJoin('caresheet.dreStatus', 'dreStatus')
+            .andWhere('dreStatus.id = :dreStatus', {
+              dreStatus: filterValue,
+            });
+          break;
+
+        case 'patient.fullName':
+          queryBuilder
+            .addSelect('patient')
+            .innerJoin('caresheet.patient', 'patient')
+            .andWhere(
+              'patient.lastName LIKE :patient OR patient.firstName LIKE :patient',
+              {
+                patient: `%${filterValue}%`,
+              },
+            );
+          break;
+      }
+    }
+    queryBuilder
+      .orderBy('caresheet.date', 'DESC')
+      .addOrderBy('caresheet.nbr', 'DESC')
+      .skip(_skip)
+      .take(_take);
+    const result = await queryBuilder.getManyAndCount();
+    const items = result[0].map((item) => {
+      const res: CaresheetRes = {
+        ...item,
+        electronicCaresheet: Boolean(item.electronicCaresheet),
+        tiersPayant: Boolean(item.tiersPayant),
+        tiersPayantStatus: Boolean(item.tiersPayantStatus),
+      };
+      return res;
+    });
+    return {
+      current_page_number: page,
+      num_items_per_page: _take,
+      custom_parameters: { sorted: true },
+      items: items,
+      total_count: result[1],
+      paginator_options: {
+        defaultSortDirection: 'desc',
+        defaultSortFieldName: 'caresheet.creationDate+caresheet.number',
+        distinct: false,
+        filterFieldParameterName: 'filterParam',
+        filterValueParameterName: 'filterValue',
+        pageParameterName: 'page',
+        sortDirectionParameterName: 'direction',
+        sortFieldParameterName: 'sort',
+      },
+    };
   }
 }

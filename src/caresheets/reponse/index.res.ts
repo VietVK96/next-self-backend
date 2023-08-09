@@ -146,3 +146,77 @@ export class PatientThirdPartyRes {
   @ApiProperty()
   third_party_amo?: ThirdPartyAmoRes;
 }
+
+export class CaresheetRes {
+  @ApiProperty()
+  id?: number;
+
+  @ApiProperty()
+  usrId?: number;
+
+  @ApiProperty()
+  conId?: number;
+
+  @ApiProperty()
+  fseStatusId?: number;
+
+  @ApiProperty()
+  dreStatusId?: number;
+
+  @ApiProperty()
+  amoId?: number;
+
+  @ApiProperty()
+  amcId?: number;
+
+  @ApiProperty()
+  numeroFacturation?: string;
+
+  @ApiProperty()
+  nbr?: string;
+
+  @ApiProperty()
+  date?: string;
+
+  @ApiProperty()
+  mode?: string;
+
+  @ApiProperty()
+  type?: string;
+
+  @ApiProperty()
+  electronicCaresheet?: boolean;
+
+  @ApiProperty()
+  tiersPayant?: boolean;
+
+  @ApiProperty()
+  tiersPayantStatus?: boolean;
+
+  @ApiProperty()
+  amount?: number;
+
+  @ApiProperty()
+  thirdPartyAmount?: number;
+
+  @ApiProperty()
+  thirdPartyAmountPaid?: number;
+
+  @ApiProperty()
+  amountAMO?: number;
+
+  @ApiProperty()
+  amountAMC?: number;
+
+  @ApiProperty()
+  amountAssure?: number;
+
+  @ApiProperty()
+  externalReferenceId?: number;
+
+  @ApiProperty()
+  createdAt?: Date;
+
+  @ApiProperty()
+  updatedAt?: Date;
+}
