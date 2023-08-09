@@ -11,6 +11,7 @@ import { PaymentMethodEnum } from 'src/enum/payment-method.enum';
 import { CashingEntity } from 'src/entities/cashing.entity';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { PaymentTypeEnum } from 'src/enum/payment-type.enum';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class BordereauxService {
@@ -53,7 +54,7 @@ export class BordereauxService {
     const user = await this.userRepository.findOne({ where: { id: user_id } });
     const banks = await this.libraryBankRepository.find();
     if (!user) {
-      throw new CNotFoundRequestException('User Not Found');
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
     }
 
     const queryBuilder = this.dataSource
@@ -184,7 +185,7 @@ export class BordereauxService {
     const user = await this.userRepository.findOne({ where: { id: user_id } });
     const banks = await this.libraryBankRepository.find();
     if (!user) {
-      throw new CNotFoundRequestException('User Not Found');
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
     }
 
     const queryBuilder = this.dataSource
