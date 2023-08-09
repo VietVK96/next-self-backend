@@ -8,7 +8,6 @@ import {
   UseGuards,
   Delete,
   Param,
-  Patch,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { CreateUpdateMailDto } from './dto/createUpdateMail.dto';
@@ -20,7 +19,7 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { ContextMailDto, FindVariableDto } from './dto/findVariable.dto';
 import { TranformDto } from './dto/transform.dto';
-import { MailPayloadDto, UpdateMailDto } from './dto/mail.dto';
+import { UpdateMailDto } from './dto/mail.dto';
 
 @ApiBearerAuth()
 @Controller('/mails')
