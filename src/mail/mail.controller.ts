@@ -19,6 +19,7 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { ContextMailDto, FindVariableDto } from './dto/findVariable.dto';
 import { TranformDto } from './dto/transform.dto';
+import { UpdateMailDto } from './dto/mail.dto';
 
 @ApiBearerAuth()
 @Controller('/mails')
@@ -110,6 +111,14 @@ export class MailController {
     return await this.mailService.transform(payload, context);
   }
 
+  /**
+   *  php/mail/update.php
+   */
+  @UseGuards(TokenGuard)
+  @Post('/update')
+  async update(@Body() payload: UpdateMailDto) {
+    return await this.mailService.update(payload);
+  }
   // php/mail/footers.php 100%
   @Get('/footers')
   @UseGuards(TokenGuard)

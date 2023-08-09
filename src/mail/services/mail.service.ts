@@ -19,7 +19,7 @@ import { PaymentScheduleService } from 'src/payment-schedule/services/payment-sc
 import { LettersEntity } from '../../entities/letters.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { ErrorCode } from 'src/constants/error';
-import { MailInputsDto, MailOptionsDto } from '../dto/mail.dto';
+import { MailInputsDto, MailOptionsDto, UpdateMailDto } from '../dto/mail.dto';
 import { ContextMailDto, FindVariableDto } from '../dto/findVariable.dto';
 import { mailVariable } from 'src/constants/mailVariable';
 import { OrganizationEntity } from 'src/entities/organization.entity';
@@ -1465,6 +1465,66 @@ export class MailService {
     inputs.body = body;
   }
 
+  // application/Services/Mail.php=> 329 -> 381
+  async update(inputs: UpdateMailDto) {
+    console.log('update', inputs?.body);
+    const headerId =
+      inputs?.header && inputs?.header?.id ? inputs?.header?.id : null;
+    const footerId =
+      inputs?.footer && inputs?.footer?.id ? inputs?.footer?.id : null;
+    const type = inputs?.type ? inputs?.type : null;
+    const height = inputs?.height ? inputs?.height : null;
+    const favorite = !!inputs?.favorite ?? false;
+    const footerContent = !!inputs?.footer_content
+      ? inputs?.footer_content
+      : null;
+    const footerHeight = !!inputs?.footer_height
+      ? Number(inputs?.footer_height)
+      : 0;
+    const body = inputs?.body;
+    const title = inputs?.title;
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const res = await queryRunner.query(
+        `
+        UPDATE T_LETTERS_LET
+        SET header_id = ?,
+                  footer_id = ?,
+          LET_TITLE = ?,
+          LET_MSG = ?,
+                  footer_content = ?,
+                  footer_height = ?,
+          LET_TYPE = ?,
+          height = ?,
+          favorite = ?
+        WHERE LET_ID = ?
+      `,
+        [
+          headerId,
+          footerId,
+          title,
+          body,
+          footerContent,
+          footerHeight,
+          type,
+          height,
+          favorite,
+          inputs?.id,
+        ],
+      );
+
+      console.log('res', res);
+      await queryRunner.commitTransaction();
+      return this.find(inputs?.id);
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
+  }
   /**
    * application/Repositories/Mail.php => 33 -> 44
    */
