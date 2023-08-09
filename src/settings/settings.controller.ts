@@ -19,6 +19,7 @@ import { UpdatePassWordDto } from './dtos/user-setting.dto';
 import { AccountService } from './services/account.service';
 import { UpdateGoogleCalendarDto } from './dtos/google-calendar.dto';
 import { NotificationService } from './services/notification.service';
+import { AccountWzAgendaSubmitDto } from './dtos/wzagenda.dto';
 
 @ApiBearerAuth()
 @ApiTags('Settings')
@@ -145,5 +146,15 @@ export class SettingsController {
     return await this.notificationService.getNotificationHistorical(
       identity.id,
     );
+  }
+
+  //settings/account/wzagenda-submit.php
+  @Post('/account/wzagenda-submit')
+  @UseGuards(TokenGuard)
+  async wzAgendaSubmit(
+    @CurrentUser() identity: UserIdentity,
+    @Body() body: AccountWzAgendaSubmitDto,
+  ) {
+    return await this.accountService.accountWzAgendaSubmit(identity, body);
   }
 }

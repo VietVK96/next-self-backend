@@ -109,4 +109,34 @@ export class MailController {
     const context = await this.mailService.contextMail(contextParam, docId);
     return await this.mailService.transform(payload, context);
   }
+
+  // php/mail/footers.php 100%
+  @Get('/footers')
+  @UseGuards(TokenGuard)
+  async footers(
+    @Query('doctor_id') doctor_id?: number,
+    @Query('patient_id') patient_id?: number,
+    @Query('correspondent_id') correspondent_id?: number,
+  ) {
+    return await this.mailService.footers({
+      doctor_id,
+      patient_id,
+      correspondent_id,
+    });
+  }
+
+  // php/mail/footers.php 100%
+  @Get('/headers')
+  @UseGuards(TokenGuard)
+  async headers(
+    @Query('doctor_id') doctor_id?: number,
+    @Query('patient_id') patient_id?: number,
+    @Query('correspondent_id') correspondent_id?: number,
+  ) {
+    return await this.mailService.headers({
+      doctor_id,
+      patient_id,
+      correspondent_id,
+    });
+  }
 }
