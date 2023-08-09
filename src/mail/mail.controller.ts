@@ -8,6 +8,7 @@ import {
   UseGuards,
   Delete,
   Param,
+  Patch,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { CreateUpdateMailDto } from './dto/createUpdateMail.dto';
@@ -19,6 +20,7 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { ContextMailDto, FindVariableDto } from './dto/findVariable.dto';
 import { TranformDto } from './dto/transform.dto';
+import { MailPayloadDto, UpdateMailDto } from './dto/mail.dto';
 
 @ApiBearerAuth()
 @Controller('/mails')
@@ -108,5 +110,14 @@ export class MailController {
       contextParam.patient_id = Number(payload.correspondent.id);
     const context = await this.mailService.contextMail(contextParam, docId);
     return await this.mailService.transform(payload, context);
+  }
+
+  /**
+   *  php/mail/update.php
+   */
+  @UseGuards(TokenGuard)
+  @Post('/update')
+  async update(@Body() payload: UpdateMailDto) {
+    return await this.mailService.update(payload);
   }
 }
