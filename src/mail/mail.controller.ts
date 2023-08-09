@@ -109,4 +109,6 @@ export class MailController {
     const context = await this.mailService.contextMail(contextParam, docId);
     return await this.mailService.transform(payload, context);
   }
+
+  // php/mail/send.php
 }

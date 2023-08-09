@@ -29,6 +29,12 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import Handlebars from 'handlebars';
 import { FactureEmailDataDto } from 'src/dental/dto/facture.dto';
+import { sanitizeFilename } from 'src/common/util/file';
+import path from 'path';
+import { tmpdir } from 'os';
+import { SendMailDto } from '../dto/sendMail.dto';
+import { validateEmail } from 'src/common/util/string';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class MailService {
@@ -156,6 +162,7 @@ export class MailService {
   async findById(id: number) {
     const qr = await this.lettersRepo.findOne({
       where: { id: id },
+      relations: { user: true },
     });
 
     if (!qr) throw new CNotFoundRequestException(`Mail Not found`);
@@ -233,6 +240,7 @@ export class MailService {
       conrrespondent: conrrespondents.length <= 0 ? null : conrrespondents[0],
       header: headers.length === 0 ? null : headers[0],
       footer: footers.length === 0 ? null : footers[0],
+      user: qr.user,
     };
 
     return mail;
@@ -276,7 +284,7 @@ export class MailService {
 
   // application/Services/Mail.php => function find()
   async find(id: number) {
-    const mail = await this.dataSource.query(
+    const mails = await this.dataSource.query(
       `SELECT
 				LET_ID AS id,
 				LET_TYPE AS type,
@@ -298,9 +306,11 @@ export class MailService {
       [id],
     );
 
-    if (!mail) {
+    if (mails.lenght === 0) {
       throw new CBadRequestException(`Le champ ${id} est invalide.`);
     }
+
+    const mail = mails[0];
     mail.doctor = null;
     if (mail?.doctor_id) {
       const doctor = await this.dataSource.query(
@@ -1431,5 +1441,97 @@ export class MailService {
       </page>
     `;
     inputs.body = body;
+  }
+
+  async send(mailId: number, payload: SendMailDto) {
+    const mail = await this.findById(mailId);
+    let mailTitle = mail.title;
+    const mailFilename = sanitizeFilename(`${mailTitle}.pdf`);
+    const mailDirname = path.join(tmpdir(), mailFilename);
+    const doctor = mail.doctor;
+    const doctorLastname = doctor?.lastname;
+    const doctorFirstname = doctor?.firstname;
+    const patient = mail.patient;
+    const correspondent = mail?.conrrespondent;
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const mailTo: string[] = [];
+      const messageTo: string[] = [];
+      if (payload?.other && payload.other.length !== 0) {
+        for (const mail of payload.other) {
+          if (validateEmail(mail)) {
+            mailTo.push(mail);
+            messageTo.push(mail);
+          }
+        }
+      }
+
+      if (
+        payload?.correspondent &&
+        correspondent &&
+        validateEmail(correspondent?.email)
+      ) {
+        mailTo.push(correspondent.email);
+        messageTo.push(
+          `${correspondent?.lastname} ${correspondent?.firstname} (${correspondent?.email})`,
+        );
+        if (patient) {
+          mailTitle = `${patient?.lastname} ${patient?.firstname} - ${patient?.email}`;
+        }
+      }
+
+      if (payload.patient && patient && validateEmail(patient?.email)) {
+        mailTo.push(patient.email);
+        messageTo.push(
+          `${patient?.lastname} ${patient?.firstname} (${patient?.email})`,
+        );
+        await queryRunner.query(
+          `
+        INSERT INTO T_CONTACT_NOTE_CNO (CON_ID, CNO_DATE, CNO_MESSAGE)
+        VALUES (?, CURDATE(), ?)`,
+          [
+            patient?.id,
+            `Envoi du courrier ${mailFilename} par email : ${messageTo.join(
+              ';',
+            )}`,
+          ],
+        );
+      }
+
+      if (mailTo.length === 0) {
+        return new CBadRequestException('Au moins un destinataire est requis');
+      }
+
+      const context = this.contextMail(
+        {
+          patient_id: mail?.patient?.id ? mail.patient.id : null,
+          correspondent_id: mail?.conrrespondent?.id
+            ? mail.conrrespondent.id
+            : null,
+        },
+        mail?.doctor?.id,
+      );
+      const mailConverted = await this.transform(context, {
+        filename: mailDirname,
+      });
+      const subject = `${mail.title} du ${dayjs().format(
+        'YYYY-MM-DD HH:mm:ss',
+      )} de Dr ${mail?.user.lastname} ${mail?.user.firstname}`;
+
+      if (mail?.patient) {
+        subject.concat(
+          ` pour ${mail.patient.lastname} ${mail.patient.firstname}`,
+        );
+      }
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      return new CBadRequestException(ErrorCode.FORBIDDEN);
+    } finally {
+      await queryRunner.release();
+    }
   }
 }
