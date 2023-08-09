@@ -1,15 +1,14 @@
-import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { BordereauxService } from './bordereaux.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { TokenGuard } from 'src/common/decorator/auth.decorator';
-import { Response } from 'express';
-import { BordereauxService } from './service/bordereaux.service';
 import { BordereauxDto } from './dto/index.dto';
 
-@ApiBearerAuth()
+@Controller('bordereaux')
 @ApiTags('Bordereaux')
-@Controller('/bordereaux')
+@ApiBearerAuth()
 export class BordereauxController {
-  constructor(private bordereauxService: BordereauxService) {}
+  constructor(private readonly bordereauxService: BordereauxService) {}
 
   //File: php/bordereaux/index.php
   @Get('index')
@@ -33,5 +32,16 @@ export class BordereauxController {
   @UseGuards(TokenGuard)
   async getUserBank(@Query('id') id: number) {
     return await this.bordereauxService.getUserBank(id);
+  }
+  /**
+   * File php/bordereaux/show.php 100%
+   *
+   * @param id
+   * @returns
+   */
+  @Get('show/:id')
+  @UseGuards(TokenGuard)
+  findOne(@Param('id') id: string) {
+    return this.bordereauxService.findOne(+id);
   }
 }

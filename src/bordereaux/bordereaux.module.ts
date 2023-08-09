@@ -1,16 +1,15 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ContactEntity } from 'src/entities/contact.entity';
-import { UserEntity } from 'src/entities/user.entity';
-import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
-import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
-import { AmoEntity } from 'src/entities/amo.entity';
-import { AmcEntity } from 'src/entities/amc.entity';
-import { BordereauxService } from './service/bordereaux.service';
+import { BordereauxService } from './bordereaux.service';
 import { BordereauxController } from './bordereaux.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { SlipCheckEntity } from 'src/entities/slip-check.entity';
+import { UserEntity } from 'src/entities/user.entity';
 import { LibraryBankEntity } from 'src/entities/library-bank.entity';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity, LibraryBankEntity])],
+  imports: [
+    TypeOrmModule.forFeature([SlipCheckEntity, UserEntity, LibraryBankEntity]),
+  ],
   controllers: [BordereauxController],
   providers: [BordereauxService],
 })

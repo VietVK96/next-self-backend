@@ -1,34 +1,42 @@
-import { ContactEntity } from 'src/entities/contact.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, IsNull, Repository } from 'typeorm';
-import { UserEntity } from 'src/entities/user.entity';
-import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
-import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
-import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
-import { AmoEntity } from 'src/entities/amo.entity';
-import { AmcEntity } from 'src/entities/amc.entity';
-import { FseEntity } from 'src/entities/fse.entity';
-import { format, parseISO } from 'date-fns';
-import { Parser } from 'json2csv';
-import { Response } from 'express';
-import { BordereauxDto } from '../dto/index.dto';
-import { SlipCheckEntity } from 'src/entities/slip-check.entity';
 import { LibraryBankEntity } from 'src/entities/library-bank.entity';
+import { SlipCheckEntity } from 'src/entities/slip-check.entity';
+import { UserEntity } from 'src/entities/user.entity';
+import { DataSource, IsNull, Repository } from 'typeorm';
+import { BordereauxDto } from './dto/index.dto';
+import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { bordereauSort } from 'src/constants/bordereau';
 import { PaymentMethodEnum } from 'src/enum/payment-method.enum';
-import { PaymentTypeEnum } from 'src/enum/payment-type.enum';
 import { CashingEntity } from 'src/entities/cashing.entity';
+import { ContactEntity } from 'src/entities/contact.entity';
+import { PaymentTypeEnum } from 'src/enum/payment-type.enum';
 
 @Injectable()
 export class BordereauxService {
   constructor(
     private dataSource: DataSource,
+    @InjectRepository(SlipCheckEntity)
+    private readonly slipCheckRepository: Repository<SlipCheckEntity>,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     @InjectRepository(LibraryBankEntity)
     private libraryBankRepository: Repository<LibraryBankEntity>,
   ) {}
+
+  /**
+   * File php/bordereaux/show.php
+   *
+   * @param id
+   * @returns
+   */
+  async findOne(id: number): Promise<SlipCheckEntity[]> {
+    const slipCheck = this.slipCheckRepository.find({
+      relations: ['libraryBank', 'cashings'],
+      where: { id: id },
+    });
+    return slipCheck;
+  }
 
   /**
    * File: php/bordereaux/index.php

@@ -25,7 +25,9 @@ import { ContactPatchDto } from '../dto/contact.payment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ConfigService } from '@nestjs/config';
+import { checkEmpty } from 'src/common/util/string';
 import * as fs from 'fs';
+import { checkId } from 'src/common/util/number';
 
 @Injectable()
 export class ContactService {
@@ -59,6 +61,7 @@ export class ContactService {
    *
    */
   async findOne(id: number, doctorId: number, identity: UserIdentity) {
+    id = checkId(id);
     const queryBuiler = this.dataSource.createQueryBuilder();
     const select = `
       CON.CON_ID as id,
@@ -150,7 +153,7 @@ export class ContactService {
         },
       )
       .where('CON.CON_ID = :id AND CON.organization_id = :orgId', {
-        id,
+        id: id || 0,
         orgId: identity.org,
       });
     const record = await qr.getRawOne();
@@ -548,5 +551,58 @@ count(CON_ID) as countId,COD_TYPE as codType
     } catch (error) {
       return null;
     }
+  }
+
+  /**
+   * /application/Entity/Patient.php
+   * Line 805-> 820
+   */
+  async isCmu(datetime: string, patient: ContactEntity) {
+    const activeCmu = this.getActiveAmc(datetime, patient);
+    const medical = patient?.medical;
+    if (activeCmu) {
+      return !!activeCmu?.isCmu;
+    }
+    if (medical) {
+      return this.isActiveAcsMedical(medical);
+    }
+    return false;
+  }
+
+  /**
+   * /application/Entity/Patient.php
+   * Line 599-> 610
+   */
+  getActiveAmc(datetime: string, patient: ContactEntity) {
+    const listAmcs = patient?.amcs ?? [];
+    const amcs = listAmcs.map((amc) => {
+      if (
+        (!amc?.startDate ||
+          new Date(amc?.startDate).getTime() <= new Date(datetime).getTime()) &&
+        (!amc?.endDate ||
+          new Date(amc?.endDate).getTime() >= new Date(datetime).getTime())
+      ) {
+        return amc;
+      }
+    });
+    if (!checkEmpty(amcs)) {
+      return amcs[0];
+    }
+    return null;
+  }
+
+  /**
+   * /application/Entity/PatientMedical.php
+   * Line: 152 -> 157
+   */
+  isActiveAcsMedical(medical: PatientMedicalEntity) {
+    const now = new Date();
+    return (
+      ['11', '12', '13', '14'].includes(medical?.serviceAmoCode) &&
+      (!medical?.serviceAmoStartDate ||
+        now.getTime() >= new Date(medical?.serviceAmoStartDate).getTime()) &&
+      (!medical?.serviceAmoEndDate ||
+        now.getTime() <= new Date(medical?.serviceAmoEndDate).getTime())
+    );
   }
 }

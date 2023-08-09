@@ -13,10 +13,8 @@ import { CreateUpdateMailDto } from '../dto/createUpdateMail.dto';
 import { CreateUpdateMailRes } from '../response/createUpdateMail.res';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { PatientService } from 'src/patient/service/patient.service';
-import { CorrespondentService } from 'src/correspondent/services/correspondent.service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ConfigService } from '@nestjs/config';
-import { fr } from 'date-fns/locale';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { LettersEntity } from '../../entities/letters.entity';
 import { UserEntity } from 'src/entities/user.entity';
@@ -53,9 +51,11 @@ export class MailService {
     docId: number,
     groupId: number,
     search: string,
+    practitionerId: string,
   ): Promise<FindAllMailRes> {
     if (!search) search = '';
     const pageSize = 100;
+    console.log('practitionerId', practitionerId);
 
     const doctors: PersonInfoDto[] = await this.dataSource.query(`SELECT
         T_USER_USR.USR_ID AS id,
@@ -65,7 +65,8 @@ export class MailService {
     FROM T_USER_USR`);
 
     let mails: FindAllMailDto[];
-    if (docId) {
+
+    if (!practitionerId) {
       mails = await this.dataSource.query(
         ` SELECT SQL_CALC_FOUND_ROWS
             T_LETTERS_LET.LET_ID AS id,
@@ -84,9 +85,8 @@ export class MailService {
                 T_LETTERS_LET.USR_ID IS NULL OR
                 T_LETTERS_LET.USR_ID = ?
             )
-        ORDER BY favorite DESC
-        LIMIT ?`,
-        [search, docId, pageSize],
+        ORDER BY favorite DESC`,
+        [search, docId],
       );
       for (const iterator of mails) {
         if (iterator.doctor_id !== null && docId)
@@ -139,17 +139,17 @@ export class MailService {
       }
     }
 
-    const offSet = (pageIndex - 1) * pageSize;
-    const dataPaging = mails.slice(offSet, offSet + pageSize);
+    const startIndex = pageIndex === -1 ? 0 : (pageIndex - 1) * pageSize;
+    const endIndex = pageIndex === -1 ? mails.length : startIndex + pageSize;
+    const mailPaging = mails.slice(startIndex, endIndex);
 
-    const result: FindAllMailRes = {
+    return {
       draw,
-      recordsTotal: dataPaging.length,
-      recordsFiltered: dataPaging.length,
+      recordsTotal: pageIndex === -1 ? mails.length : mailPaging.length,
+      recordsFiltered: pageIndex === -1 ? mails.length : mailPaging.length,
       totalData: mails.length,
-      data: dataPaging,
+      data: mailPaging,
     };
-    return result;
   }
 
   // php/mail/find.php
@@ -487,9 +487,9 @@ export class MailService {
       context.dental.nextAppointmentDuration = '';
       context.dental.nextAppointmentTitle = '';
 
-      const nextAppointment = await this.patientService.getNextAppointment(
-        context?.contact?.id,
-      );
+      // const nextAppointment = await this.patientService.getNextAppointment(
+      //   context?.contact?.id,
+      // );
 
       // if(nextAppointment && nextAppointment?.EVT_START){
       // $datetime1 = new \DateTime($nextAppointment['EVT_START']);
@@ -508,11 +508,11 @@ export class MailService {
         const currentDate: Date = new Date(); // Replace this with the current date
         const ageInYears: number = differenceInYears(currentDate, birthday);
         const ageInMonths: number = differenceInMonths(currentDate, birthday);
-        const ageFormatted: string = format(
-          currentDate,
-          ageInYears < 1 ? 'PPPP' : 'P',
-          { locale: fr },
-        );
+        // const ageFormatted: string = format(
+        //   currentDate,
+        //   ageInYears < 1 ? 'PPPP' : 'P',
+        //   { locale: fr },
+        // );
         context.contact.age =
           ageInYears < 1
             ? `(${ageInMonths} mois)`
@@ -602,7 +602,7 @@ export class MailService {
     const footerHeight = !!inputs?.footer_height
       ? Number(inputs?.footer_height)
       : 0;
-    const body = inputs?.body;
+    // const body = inputs?.body;
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -643,7 +643,7 @@ export class MailService {
 
   // application/Services/Mail.php=> 454 -> 489
   async render(message: string, context: any, signature?: any) {
-    const uniqid = Date.now().toString(); // Generate a unique identifier
+    // const uniqid = Date.now().toString(); // Generate a unique identifier
 
     // Replace the default date format in Handlebars
     Handlebars.registerHelper('formatDate', function (dateString) {

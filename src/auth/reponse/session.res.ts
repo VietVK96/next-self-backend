@@ -112,7 +112,7 @@ export class UserPractitionersRes {
 export class UserUserSettingRes {
   eventTitleFormat?: Array<string>[];
   displayAllWaitingRooms?: boolean;
-  printAdditionalPatientInformatio?: boolean;
+  printAdditionalPatientInformation?: boolean;
   activateSendingAppointmentReminders?: boolean;
 }
 
@@ -367,4 +367,7 @@ export class SessionRes {
 
   @ApiProperty()
   user?: UserUserRes;
+
+  @ApiProperty()
+  users?: Array<UserUserRes>;
 }

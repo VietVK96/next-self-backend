@@ -20,7 +20,6 @@ import {
   dateFormatter,
   inseeFormatter,
 } from '../../common/formatter/index';
-import { CorrespondentPhoneCppEntity } from 'src/entities/correspondent-phone-cpp.entity';
 
 @Injectable()
 export class CorrespondentService {

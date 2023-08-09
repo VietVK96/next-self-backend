@@ -48,6 +48,18 @@ import { QuotationServices } from './services/quotation.service';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { PlanEventEntity } from 'src/entities/plan-event.entity';
 import { PaymentPlanDeadlineEntity } from 'src/entities/payment-plan-deadline.entity';
+import { PatientOdontogramService } from 'src/patient/service/patientOdontogram.service';
+import { AntecedentPrestationEntity } from 'src/entities/antecedentprestation.entity';
+import { LibraryOdontogramEntity } from 'src/entities/library-odontogram.entity';
+import { QuotesServices } from './services/quotes.service';
+import { PaymentSchedulesModule } from 'src/payment-schedule/payment-schedule.module';
+import { LibraryActEntity } from 'src/entities/library-act.entity';
+import { DevisServices } from './services/devisHN.services';
+import { UploadEntity } from 'src/entities/upload.entity';
+import { TherapeuticAlternativeService } from './services/therapeuticAlternative.service';
+import { CcamEntity } from 'src/entities/ccam.entity';
+import { CcamUnitPriceEntity } from 'src/entities/ccamunitprice.entity';
+import { MailTransportService } from 'src/mail/services/mailTransport.service';
 
 @Module({
   imports: [
@@ -90,7 +102,14 @@ import { PaymentPlanDeadlineEntity } from 'src/entities/payment-plan-deadline.en
       UserEntity,
       AmoEntity,
       AmcEntity,
+      AntecedentPrestationEntity,
+      LibraryOdontogramEntity,
+      LibraryActEntity,
+      UploadEntity,
+      CcamEntity,
+      CcamUnitPriceEntity,
     ]),
+    PaymentSchedulesModule,
   ],
   controllers: [DentalController, DevisHNController],
   providers: [
@@ -109,6 +128,11 @@ import { PaymentPlanDeadlineEntity } from 'src/entities/payment-plan-deadline.en
     DevisStd2Services,
     QuotationServices,
     ConfigService,
+    PatientOdontogramService,
+    QuotesServices,
+    DevisServices,
+    TherapeuticAlternativeService,
+    MailTransportService,
   ],
 })
 export class DentalModule {}

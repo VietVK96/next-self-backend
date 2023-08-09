@@ -15,6 +15,20 @@ export const getBetween = (str: string, start: string, end: string) => {
   return str.split(start).pop().split(end)[0];
 };
 
+export const checkEmpty = (value: any) => {
+  switch (value) {
+    case 0:
+    case '0':
+    case '':
+    case []:
+    case null:
+    case undefined:
+    case false:
+      return true;
+    default:
+      return false;
+  }
+};
 /**
  * This function is same as PHP's nl2br() with default parameters.
  *
@@ -56,4 +70,16 @@ export function htmlEntities(str: string | number) {
 export function validateEmail(email: string) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
+}
+
+/**
+ * @param firstname string
+ * @param lastname string
+ * @returns string
+ */
+export function generateFullName(firstname: string, lastname: string): string {
+  firstname = firstname ? firstname : '';
+  lastname = lastname ? lastname : '';
+  const fullname = firstname + ' ' + lastname;
+  return fullname.trim();
 }

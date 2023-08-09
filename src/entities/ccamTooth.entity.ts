@@ -93,12 +93,6 @@ export class CcamToothEntity {
   /**
    * @ORM\Column(name="forbidden_teeth_cmu", type="simple_array", nullable=true)
    */
-  @Column({
-    name: 'forbidden_teeth',
-    type: 'varchar',
-    length: 255,
-    nullable: true,
-  })
   forbiddenTeethCmu?: string;
 }
 

@@ -193,7 +193,7 @@ export class EnregistrerFactureDto {
 @ApiExtraModels()
 export class PrintPDFDto {
   @ApiProperty()
-  id?: string;
+  id?: number;
   @ApiProperty()
   duplicate?: boolean;
   @ApiProperty()
