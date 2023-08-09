@@ -72,7 +72,6 @@ export class AccountService {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
     <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="https://secure.wz-agenda.net/webservices/3.1/server.php#wzcalendar" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:checkSubscriptionId><is xsi:type="xsd:string">${req?.calendarId}</is></ns1:checkSubscriptionId></SOAP-ENV:Body></SOAP-ENV:Envelope>`;
     const res = await this.sendRequestWzAgenda<any>(xml);
-    console.log('res', res);
     if (res == '0') {
       throw new CBadRequestException(ErrorCode.CAN_NOT_REQUEST_TO_WZ_AGENDA);
     }
@@ -119,7 +118,6 @@ export class AccountService {
     }
     data = data.replaceAll('xsi:nil="true"', '');
     const resJson = await parseStringPromise(data);
-    console.log('resJson', resJson);
     if (
       !resJson ||
       !resJson['SOAP-ENV:Envelope'] ||
