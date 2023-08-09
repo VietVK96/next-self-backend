@@ -18,6 +18,8 @@ import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { PhoneEntity } from 'src/entities/phone.entity';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
+import { MailTransportService } from './services/mailTransport.service';
+import { EmailAccountEntity } from 'src/entities/email-account.entity';
 
 @Module({
   imports: [
@@ -33,6 +35,7 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
       AmcEntity,
       PhoneEntity,
       CorrespondentEntity,
+      EmailAccountEntity,
     ]),
   ],
   controllers: [MailController],
@@ -43,6 +46,7 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
     PermissionService,
     ContactService,
     PaymentScheduleService,
+    MailTransportService,
   ],
   exports: [MailService],
 })
