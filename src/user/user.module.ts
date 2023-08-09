@@ -11,6 +11,8 @@ import { PreferenceService } from './services/preference.sevece';
 import { JwtModule } from '@nestjs/jwt';
 import { TokenDownloadService } from './services/token-download.service';
 import { JWT_SECRET_DOWNLOAD } from 'src/constants/jwt';
+import { UnpaidService } from './services/unpaid.service';
+import { ContactEntity } from 'src/entities/contact.entity';
 
 @Module({
   imports: [
@@ -18,6 +20,7 @@ import { JWT_SECRET_DOWNLOAD } from 'src/constants/jwt';
       UserEntity,
       UserPreferenceEntity,
       UserMedicalEntity,
+      ContactEntity,
     ]),
     AddressModule,
     JwtModule.register({
@@ -30,8 +33,9 @@ import { JWT_SECRET_DOWNLOAD } from 'src/constants/jwt';
     UserService,
     PreferenceService,
     TokenDownloadService,
+    UnpaidService,
   ],
-  exports: [PermissionService, UserService, PreferenceService],
+  exports: [PermissionService, UserService, PreferenceService, UnpaidService],
   controllers: [UserController],
 })
 export class UserModule {}

@@ -12,6 +12,14 @@ import { google } from 'googleapis';
 import { UpdateGoogleCalendarDto } from '../dtos/google-calendar.dto';
 import { SuccessResponse } from 'src/common/response/success.res';
 import { AccountStatusEnum } from 'src/enum/account-status.enum';
+import { AccountWzAgendaSubmitDto } from '../dtos/wzagenda.dto';
+import { WzAgendaService } from './wzagenda.service';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+import * as https from 'https';
+import { constants } from 'crypto';
+import { firstValueFrom } from 'rxjs';
+import { parseStringPromise } from 'xml2js';
 
 @Injectable()
 export class AccountService {
@@ -21,6 +29,8 @@ export class AccountService {
     private userService: UserService,
     @InjectRepository(SyncWzagendaUserEntity)
     private syncWzagendaUserRepository: Repository<SyncWzagendaUserEntity>,
+    private config: ConfigService,
+    private readonly httpService: HttpService,
     private dataSource: DataSource,
   ) {}
 
@@ -52,6 +62,91 @@ export class AccountService {
     }
   }
 
+  async accountWzAgendaSubmit(
+    identity: UserIdentity,
+    req: AccountWzAgendaSubmitDto,
+  ): Promise<any> {
+    try {
+      if (!req?.calendarId) {
+        throw new CBadRequestException(ErrorCode?.NOT_FOUND_CALENDAR_ID);
+      }
+      let wzAgendaUser = await this.syncWzagendaUserRepository.findOne({
+        where: { id: identity?.id },
+      });
+      if (!wzAgendaUser) {
+        const user = await this.userRepository.findOne({
+          where: { id: identity?.id },
+        });
+        wzAgendaUser = await this.syncWzagendaUserRepository.save({
+          id: identity?.id,
+          calendarId: req?.calendarId,
+        });
+      }
+
+      const xml = `<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="https://secure.wz-agenda.net/webservices/3.1/server.php#wzcalendar" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+        <SOAP-ENV:Body>
+          <ns1:checkSubscriptionId>
+            <is xsi:type="xsd:string">${req?.calendarId}</is>
+          </ns1:checkSubscriptionId>
+        </SOAP-ENV:Body>
+      </SOAP-ENV:Envelope>`;
+      const data = await this.sendRequest<any>('ListeChangementEtat', xml);
+      return null;
+    } catch (err) {
+      throw new CBadRequestException(ErrorCode?.NOT_FOUND);
+    }
+  }
+
+  private async sendRequest<T>(
+    action: string,
+    contents: string,
+    mock?: string,
+  ): Promise<T> {
+    const url = this.config.get<string>('app.wzagenda.wsdl');
+
+    const headers = {
+      'Content-Type': 'text/xml; charset=utf-8',
+    };
+
+    const httpsAgent = new https.Agent({
+      rejectUnauthorized: false,
+      secureOptions: constants.SSL_OP_LEGACY_SERVER_CONNECT,
+    });
+
+    let { data } = await firstValueFrom(
+      this.httpService.post(url, contents, {
+        headers,
+        httpsAgent,
+        httpAgent: httpsAgent,
+      }),
+    );
+
+    if (mock && mock !== '') {
+      data = mock;
+    }
+    data = data.replaceAll('xsi:nil="true"', '');
+    const resJson = await parseStringPromise(data);
+    if (
+      !resJson ||
+      !resJson['soap:Envelope'] ||
+      !resJson['soap:Envelope']['soap:Body'] ||
+      !resJson['soap:Envelope']['soap:Body'][0][`${action}Response`] ||
+      !resJson['soap:Envelope']['soap:Body'][0][`${action}Response`][0][
+        `${action}Result`
+      ]
+    ) {
+      throw new CBadRequestException(ErrorCode.CAN_NOT_REQUEST_TO_DENTAL_VIA);
+    }
+    const soapBody =
+      resJson['soap:Envelope']['soap:Body'][0][`${action}Response`][0][
+        `${action}Result`
+      ][0];
+    if (soapBody['erreur']['libelleErreur']) {
+      throw new CBadRequestException(soapBody['erreur']['libelleErreur']);
+    }
+    return soapBody as T;
+  }
+
   async fetchAccountPractitioners(organizationId: number) {
     const user = await this.userRepository.find({
       where: {
@@ -77,6 +172,7 @@ export class AccountService {
         };
       });
   }
+
   async getGoogleCalendar(userId: number) {
     if (!userId) throw new CBadRequestException(ErrorCode.FORBIDDEN);
     const user = await this.userService.find(userId);
