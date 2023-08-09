@@ -20,6 +20,7 @@ import * as https from 'https';
 import { constants } from 'crypto';
 import { firstValueFrom } from 'rxjs';
 import { parseStringPromise } from 'xml2js';
+import { format } from 'date-fns';
 
 @Injectable()
 export class AccountService {
@@ -75,22 +76,17 @@ export class AccountService {
     if (res == '0') {
       throw new CBadRequestException(ErrorCode.CAN_NOT_REQUEST_TO_WZ_AGENDA);
     }
-    let wzAgendaUser = await this.syncWzagendaUserRepository.findOne({
+    const params: SyncWzagendaUserEntity = {};
+    const wzAgendaUser = await this.syncWzagendaUserRepository.findOne({
       where: { id: identity?.id },
     });
-    if (!wzAgendaUser) {
-      const user = await this.userRepository.findOne({
-        where: { id: identity?.id },
-      });
-      wzAgendaUser = await this.syncWzagendaUserRepository.save({
-        id: identity?.id,
-        calendarId: req?.calendarId,
-      });
+    if (wzAgendaUser && wzAgendaUser?.id) {
+      params.id = identity?.id;
     }
-
     return await this.syncWzagendaUserRepository.save({
-      id: wzAgendaUser.id,
-      ...wzAgendaUser,
+      ...params,
+      calendarId: req?.calendarId,
+      lastModified: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
     });
   }
 
