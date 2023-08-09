@@ -19,7 +19,11 @@ import { ExemptionCodeEnum } from 'src/enum/exemption-code.enum';
 import { ConfigService } from '@nestjs/config';
 import { CaresheetStatusEntity } from 'src/entities/caresheet-status.entity';
 import { RequestException } from 'src/common/exceptions/request-exception.exception';
-import { CaresheetRes } from '../reponse/index.res';
+import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
+import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
+import { CaresheetModeEnum } from 'src/enum/caresheet.enum';
+import { CaresheetTypeEnum } from 'src/enum/caresheet-type.enum';
+import { CaresheetRes, CaresheetThirdPartyRes } from '../reponse/index.res';
 const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
 const PAV_MINIMUM_AMOUNT = 120;
 
@@ -43,6 +47,10 @@ export class ActsService {
     private dentalEventTaskRepository: Repository<DentalEventTaskEntity>,
     @InjectRepository(CaresheetStatusEntity)
     private caresheetStatusRepository: Repository<CaresheetStatusEntity>,
+    @InjectRepository(ThirdPartyAmcEntity)
+    private thirdPartyAmcRepository: Repository<ThirdPartyAmcEntity>,
+    @InjectRepository(ThirdPartyAmoEntity)
+    private thirdPartyAmoRepository: Repository<ThirdPartyAmoEntity>,
   ) {}
 
   /**
@@ -799,6 +807,149 @@ export class ActsService {
     // array_walk_recursive($resultToArray, array($this, 'cast'));
 
     return resultToArray;
+  }
+
+  /**
+   * php/caresheets/show.php
+   */
+  async show(id: number) {
+    const caresheet: FseEntity = await this.fseRepository.findOne({
+      where: { id },
+      relations: ['fseStatus', 'patient', 'lots', 'rejections'],
+    });
+    const thirdPartyAmcs = await this.thirdPartyAmcRepository.find({
+      relations: ['amc'],
+    });
+    const thirdPartyAmos = await this.thirdPartyAmoRepository.find({
+      relations: ['amo'],
+    });
+    const thirdPartyAmc = thirdPartyAmcs.find(
+      (tp) => tp.caresheetId === caresheet?.id,
+    );
+    const thirdPartyAmo = thirdPartyAmos.find(
+      (tp) => tp.caresheetId === caresheet?.id,
+    );
+    const data: CaresheetThirdPartyRes = {
+      id: caresheet?.id,
+      mode: caresheet?.mode,
+      mode_readable: caresheet?.mode
+        ? CaresheetModeEnum.choices[caresheet?.mode]
+        : '',
+      number: caresheet?.nbr,
+      type: caresheet?.type,
+      type_readable: caresheet?.type
+        ? CaresheetTypeEnum.choices[caresheet?.type]
+        : '',
+      tiers_payant: !!caresheet?.tiersPayant,
+      tiers_payant_status: caresheet?.tiersPayantStatus,
+      amount: caresheet?.amount,
+      amount_amc: caresheet?.amountAMC,
+      amount_amo: caresheet?.amountAMO,
+      amount_patient: caresheet?.amountAssure,
+      creation_date: caresheet?.date,
+      electronic_caresheet: !!caresheet?.electronicCaresheet,
+      third_party_amount: caresheet?.thirdPartyAmount,
+      third_party_amount_paid: caresheet?.thirdPartyAmountPaid,
+      third_party_amount_remaining:
+        caresheet?.thirdPartyAmount && caresheet?.thirdPartyAmountPaid
+          ? caresheet?.thirdPartyAmount - caresheet?.thirdPartyAmountPaid
+          : 0,
+      lots: caresheet?.lots,
+      rejections: caresheet?.rejections,
+      fse_status: caresheet?.fseStatus,
+    };
+
+    if (thirdPartyAmc && thirdPartyAmc?.amc) {
+      data.third_party_amc = {
+        id: thirdPartyAmc?.id,
+        is_dre: !!thirdPartyAmc?.isDre,
+        status: thirdPartyAmc?.status,
+        amount: thirdPartyAmc?.amount,
+        amount_care: thirdPartyAmc?.amountCare,
+        amount_care_paid: thirdPartyAmc?.amountCarePaid,
+        amount_care_remaining:
+          thirdPartyAmc?.amountCare && thirdPartyAmc?.amountCarePaid
+            ? thirdPartyAmc?.amountCare - thirdPartyAmc?.amountCarePaid
+            : 0,
+        amount_paid: thirdPartyAmc?.amountPaid,
+        amount_paid_manually: thirdPartyAmc?.amountPaidManually,
+        amount_paid_noemie: thirdPartyAmc?.amountPaidNoemie,
+        amount_prosthesis: thirdPartyAmc?.amountProsthesis,
+        amount_prosthesis_paid: thirdPartyAmc?.amountProsthesisPaid,
+        amount_prosthesis_remaining:
+          thirdPartyAmc?.amountProsthesis && thirdPartyAmc?.amountProsthesisPaid
+            ? thirdPartyAmc?.amountProsthesis -
+              thirdPartyAmc?.amountProsthesisPaid
+            : 0,
+        amount_remaining:
+          thirdPartyAmc?.amount && thirdPartyAmc?.amountPaid
+            ? thirdPartyAmc?.amount - thirdPartyAmc?.amountPaid
+            : 0,
+        amc: {
+          id: thirdPartyAmc?.amc?.id,
+          is_gu: !!thirdPartyAmc?.amc?.isGu,
+          libelle: thirdPartyAmc?.amc?.libelle,
+          numero: thirdPartyAmc?.amc?.numero,
+        },
+      };
+    }
+
+    if (thirdPartyAmo && thirdPartyAmo?.amo) {
+      data.third_party_amo = {
+        id: thirdPartyAmo?.id,
+        status: thirdPartyAmo?.status,
+        amount: thirdPartyAmo?.amount,
+        amount_care: thirdPartyAmo?.amountCare,
+        amount_care_paid: thirdPartyAmo?.amountCarePaid,
+        amount_care_remaining:
+          thirdPartyAmo?.amountCare && thirdPartyAmo?.amountCarePaid
+            ? thirdPartyAmo?.amountCare - thirdPartyAmo?.amountCarePaid
+            : 0,
+        amount_paid: thirdPartyAmo?.amountPaid,
+        amount_paid_manually: thirdPartyAmo?.amountPaidManually,
+        amount_paid_noemie: thirdPartyAmo?.amountPaidNoemie,
+        amount_prosthesis: thirdPartyAmo?.amountProsthesis,
+        amount_prosthesis_paid: thirdPartyAmo?.amountProsthesisPaid,
+        amount_prosthesis_remaining:
+          thirdPartyAmo?.amountProsthesis && thirdPartyAmo?.amountProsthesisPaid
+            ? thirdPartyAmo?.amountProsthesis -
+              thirdPartyAmo?.amountProsthesisPaid
+            : 0,
+        amount_remaining:
+          thirdPartyAmo?.amount && thirdPartyAmo?.amountPaid
+            ? thirdPartyAmo?.amount - thirdPartyAmo?.amountPaid
+            : 0,
+        amo: {
+          id: thirdPartyAmo?.amo?.id,
+          libelle: thirdPartyAmo?.amo?.libelle,
+          caisse_gestionnaire: thirdPartyAmo?.amo?.caisseGestionnaire,
+          centre_gestionnaire: thirdPartyAmo?.amo?.centreGestionnaire,
+          centre_informatique: thirdPartyAmo?.amo?.centreInformatique,
+          code_national: thirdPartyAmo?.amo?.codeNational,
+          grand_regime: thirdPartyAmo?.amo?.grandRegime,
+          organisme_destinataire: thirdPartyAmo?.amo?.organismeDestinataire,
+          numero: thirdPartyAmc?.amc?.numero,
+        },
+      };
+    }
+    if (caresheet?.patient) {
+      data.patient = {
+        id: caresheet?.patient?.id,
+        first_name: caresheet?.patient?.firstname,
+        last_name: caresheet?.patient?.lastname,
+        full_name: `${caresheet?.patient?.lastname ?? ''} ${
+          caresheet?.patient?.firstname ?? ''
+        }`,
+        email: caresheet?.patient?.email,
+        birth_rank: caresheet?.patient?.birthOrder,
+        number: caresheet?.patient?.nbr,
+        amcs: caresheet?.patient?.amcs ?? [],
+        amos: caresheet?.patient?.amos ?? [],
+        patient_users: caresheet?.patient?.patientUsers ?? [],
+        phone_numbers: caresheet?.patient?.phoneNumbers ?? [],
+      };
+    }
+    return data;
   }
 
   async getUserCaresheet(
