@@ -21,6 +21,7 @@ import { AddressService } from 'src/address/service/address.service';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { NotificationService } from './services/notification.service';
 import { AccountSecurityService } from './services/account-security.service';
+import { MedicamentDatabaseService } from './services/medicament-database.service';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { AccountSecurityService } from './services/account-security.service';
     ConfigService,
     OrganizationService,
     PermissionService,
+    MedicamentDatabaseService,
   ],
   exports: [SettingOrganizationService],
 })

@@ -11,6 +11,7 @@ import {
   Body,
   Delete,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { TokenGuard, UserIdentity } from 'src/common/decorator/auth.decorator';
@@ -19,6 +20,8 @@ import { UpdatePassWordDto } from './dtos/user-setting.dto';
 import { AccountService } from './services/account.service';
 import { UpdateGoogleCalendarDto } from './dtos/google-calendar.dto';
 import { NotificationService } from './services/notification.service';
+import { MedicamentDatabaseService } from './services/medicament-database.service';
+import { FindMedicamentDatabaseDto } from './dtos/medicament-database.dto';
 
 @ApiBearerAuth()
 @ApiTags('Settings')
@@ -29,6 +32,7 @@ export class SettingsController {
     private accountSecurityService: AccountSecurityService,
     private accountService: AccountService,
     private notificationService: NotificationService,
+    private medicamentDatabaseService: MedicamentDatabaseService,
   ) {}
 
   // https://ecoo.ltsgroup.tech/settings/tariff-types/index.php
@@ -139,6 +143,26 @@ export class SettingsController {
   async getNotificationHistorical(@CurrentUser() identity: UserIdentity) {
     return await this.notificationService.getNotificationHistorical(
       identity.id,
+    );
+  }
+
+  @Get('/medicament-database')
+  @UseGuards(TokenGuard)
+  async connnectMedicamentDatabase(@CurrentUser() identity: UserIdentity) {
+    return await this.medicamentDatabaseService.connnectMedicamentDatabase(
+      identity.id,
+    );
+  }
+
+  @Get('/medicament-database/find')
+  @UseGuards(TokenGuard)
+  async findMedicamentDatabase(
+    @CurrentUser() identity: UserIdentity,
+    @Query() query: FindMedicamentDatabaseDto,
+  ) {
+    return await this.medicamentDatabaseService.findMedicamentDatabase(
+      identity.id,
+      query,
     );
   }
 }
