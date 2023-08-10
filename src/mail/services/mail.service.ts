@@ -43,7 +43,7 @@ export class MailService {
     private dataSource: DataSource,
     @InjectRepository(ContactEntity)
     private contactRepo: Repository<ContactEntity>,
-  ) { }
+  ) {}
 
   // php/mail/findAll.php
   async findAll(
@@ -509,7 +509,7 @@ export class MailService {
         const ageInMonths = Math.floor(
           Number(
             (ageInMilliseconds % BigInt(1000 * 60 * 60 * 24 * 365.25)) /
-            BigInt(1000 * 60 * 60 * 24 * 30.4375),
+              BigInt(1000 * 60 * 60 * 24 * 30.4375),
           ),
         );
         function formatAge(years: number, months: number) {
@@ -931,7 +931,7 @@ export class MailService {
         const ageInMonths = Math.floor(
           Number(
             (ageInMilliseconds % BigInt(1000 * 60 * 60 * 24 * 365.25)) /
-            BigInt(1000 * 60 * 60 * 24 * 30.4375),
+              BigInt(1000 * 60 * 60 * 24 * 30.4375),
           ),
         );
 

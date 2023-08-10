@@ -25,7 +25,7 @@ import { UpdateMailDto } from './dto/mail.dto';
 @Controller('/mails')
 @ApiTags('Mail')
 export class MailController {
-  constructor(private readonly mailService: MailService) { }
+  constructor(private readonly mailService: MailService) {}
 
   /**
    * php/mail/findAll.php 100%
