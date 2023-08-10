@@ -13,11 +13,9 @@ import { UpdateGoogleCalendarDto } from '../dtos/google-calendar.dto';
 import { SuccessResponse } from 'src/common/response/success.res';
 import { AccountStatusEnum } from 'src/enum/account-status.enum';
 import { AccountWzAgendaSubmitDto } from '../dtos/wzagenda.dto';
-import { WzAgendaService } from './wzagenda.service';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import * as https from 'https';
-import { constants } from 'crypto';
 import { firstValueFrom } from 'rxjs';
 import { parseStringPromise } from 'xml2js';
 import { format } from 'date-fns';
@@ -76,13 +74,11 @@ export class AccountService {
     if (res == '0') {
       throw new CBadRequestException(ErrorCode.CAN_NOT_REQUEST_TO_WZ_AGENDA);
     }
-    const params: SyncWzagendaUserEntity = {};
+    const params: any = {};
     const wzAgendaUser = await this.syncWzagendaUserRepository.findOne({
       where: { id: identity?.id },
     });
-    if (wzAgendaUser && wzAgendaUser?.id) {
-      params.id = identity?.id;
-    }
+    params.id = identity?.id;
     return await this.syncWzagendaUserRepository.save({
       ...params,
       calendarId: req?.calendarId,
