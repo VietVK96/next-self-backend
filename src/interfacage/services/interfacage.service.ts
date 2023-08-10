@@ -97,7 +97,7 @@ export class InterfacageService {
       const actMedicalCcams = groupByDate.filter((v) => v?.ccam);
       if (actMedicalCcams.length <= 1) continue;
       const actMedicalDemiTarifs: DentalEventTaskEntity[] =
-        actMedicalCcams.filter((actMedical) => actMedical?.coefficient === 0.5);
+        actMedicalCcams.filter((actMedical) => actMedical?.coef === 0.5);
       if (actMedicalDemiTarifs.length > 0) {
         associationCode = 1;
         this.add(actMedicalDemiTarifs, 2);

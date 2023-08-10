@@ -209,8 +209,8 @@ export class ActsService {
       }
       for (const act of dataActs) {
         const amount = act?.amount;
-        const amoAmount = act?.medical?.amoAmount;
-        const coefficient = act?.medical?.coefficient;
+        const amoAmount = act?.medical?.secuAmount;
+        const coefficient = act?.medical?.coef;
         const rawTeeth = act?.medical?.teeth
           ?.split(',')
           .map((tooth) => (tooth === '00' ? ['01', '02'] : tooth))
@@ -271,7 +271,7 @@ export class ActsService {
         }
 
         /** === MODIFICATEURS === */
-        const modifiers = act?.medical?.modifiers ?? [];
+        const modifiers = act?.medical?.ccamModifier ?? [];
         for (let i = 0; i < modifiers.length; i++) {
           acte['codeModificateur' + (i + 1)] = modifiers[i];
         }

@@ -157,7 +157,7 @@ export class EnregistrerFactureDto {
     name: 'dateDeb',
     required: false,
   })
-  dateDeb?: Date;
+  dateDeb?: string;
 
   @ApiProperty({
     name: 'dateFin',
@@ -253,4 +253,13 @@ export class FactureEmailDataDto {
     required: false,
   })
   attachments?: any;
+}
+
+export class FactureFindEventTasksDto {
+  user_id?: number;
+  patient_id?: number;
+  dateDeb?: string;
+  dateFin?: string;
+  displayOnlyActsRealized?: string;
+  displayOnlyActsListed?: string;
 }
