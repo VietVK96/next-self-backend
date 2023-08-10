@@ -40,29 +40,22 @@ export class DetailsRes {
 }
 
 export class AjaxSeancesCaseRes {
-  date: string[];
-  events: AjaxEventRes;
+  date: string;
+  data: AjaxEventTaskRes[];
 }
 
-export class AjaxEventRes {
-  [date: string]: AjaxEventTaskRes[];
-}
 export class AjaxEventTaskRes {
   id?: number;
   name?: string;
   date?: string;
   amount?: number;
   cotation?: string;
-  dental?: {
-    _separator?: string;
-    teeth?: string;
-    type?: string;
-    coef?: number;
-    exceeding?: string;
-    ccamCode?: string;
-    secuAmount?: number;
-    ngapKey?: {
-      name?: string;
-    };
-  };
+  ccamFamily?: string;
+  teeth?: string;
+  secuAmount?: number;
+  exceeding?: string;
+  type?: string;
+  ccamCode?: string;
+  coef?: number;
+  ngapKeyName?: string;
 }

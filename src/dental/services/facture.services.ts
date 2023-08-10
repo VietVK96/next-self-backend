@@ -47,7 +47,6 @@ import * as path from 'path';
 import { checkDay } from 'src/common/util/day';
 import { checkBoolean, checkId, checkNumber } from 'src/common/util/number';
 import {
-  AjaxEventRes,
   AjaxEventTaskRes,
   AjaxSeancesCaseRes,
   DetailsRes,
@@ -238,69 +237,80 @@ export class FactureServices {
         {
           try {
             let eventTasks = await this.findEventTasks(payload);
+
             if (checkBoolean(payload?.displayOnlyProsthesis)) {
               eventTasks = eventTasks.filter((eventTask) => {
                 return this.isProsthesis(eventTask?.ccamFamily);
               });
             }
+
             let date = '';
-            const result = eventTasks.reduce(
-              (a, eventTask) => {
-                let amoAmount = checkNumber(eventTask?.dental?.secuAmount);
-                let cotation = '';
+            let i = 0;
+            const result = eventTasks.reduce((result, eventTask) => {
+              let amoAmount = checkNumber(eventTask?.dental?.secuAmount);
+              let cotation = '';
 
-                switch (eventTask?.dental?.type) {
-                  case 'CCAM':
-                    cotation = eventTask?.dental?.ccamCode;
-                    amoAmount =
-                      amoAmount * checkNumber(eventTask?.dental?.coef);
-                    break;
+              switch (eventTask?.dental?.type) {
+                case 'CCAM':
+                  cotation = eventTask?.dental?.ccamCode;
+                  amoAmount = amoAmount * checkNumber(eventTask?.dental?.coef);
+                  break;
 
-                  case 'NGAP':
-                    cotation =
-                      ('   ' + eventTask?.dental?.ngapKey?.name)?.slice(-3) +
-                      ' ' +
-                      eventTask.dental.coef;
-                    break;
+                case 'NGAP':
+                  cotation =
+                    ('   ' + (eventTask?.dental?.ngapKey?.name || ''))?.slice(
+                      -3,
+                    ) +
+                    ' ' +
+                    eventTask.dental.coef;
+                  break;
 
-                  default:
-                    cotation = 'NPC';
-                    break;
-                }
+                default:
+                  cotation = 'NPC';
+                  break;
+              }
 
-                if (
-                  eventTask?.dental?.exceeding ===
-                  EnumDentalEventTaskExceeding.N
-                ) {
-                  amoAmount = 0;
-                }
+              if (
+                eventTask?.dental?.exceeding === EnumDentalEventTaskExceeding.N
+              ) {
+                amoAmount = 0;
+              }
 
-                const eTask: AjaxEventTaskRes = {
-                  ...eventTask,
-                  cotation,
-                  dental: {
-                    ...eventTask.dental,
-                    secuAmount: amoAmount,
-                  },
-                };
+              const eTask: AjaxEventTaskRes = {
+                ...eventTask,
+                cotation,
+                date: eventTask?.date,
+                name: eventTask?.name,
+                amount: eventTask?.amount,
+                ccamFamily: eventTask?.ccamFamily,
+                teeth: eventTask?.dental?.teeth,
+                secuAmount: eventTask?.dental?.secuAmount,
+                exceeding: eventTask?.dental?.exceeding,
+                type: eventTask?.dental?.type,
+                ccamCode: eventTask?.dental?.ccamCode,
+                coef: eventTask?.dental?.coef,
+                ngapKeyName: eventTask?.dental?.ngapKey?.name,
+              };
 
-                if (date && eventTask.date === date) {
-                  a.events = {
-                    ...a.events,
-                    [date]: [...(a.events[date] || []), eTask],
+              if (date && eventTask.date === date) {
+                result[i].data.push(eTask);
+              } else {
+                if (date === '') {
+                  result[0] = {
+                    date: eventTask.date,
+                    data: [eTask],
                   };
                 } else {
-                  a.date.push(eventTask.date);
-                  a.events[eventTask.date] = [eTask];
+                  result[i + 1] = {
+                    date: eventTask.date,
+                    data: [eTask],
+                  };
+                  i++;
                 }
-                date = eventTask.date;
-                return a;
-              },
-              {
-                date: [],
-                events: {} as AjaxEventRes,
-              } as AjaxSeancesCaseRes,
-            );
+              }
+              date = eventTask.date;
+              return result;
+            }, [] as AjaxSeancesCaseRes[]);
 
             return result;
           } catch (error) {
@@ -371,6 +381,9 @@ export class FactureServices {
         },
       },
       where,
+      order: {
+        date: 'ASC',
+      },
     });
   }
 
