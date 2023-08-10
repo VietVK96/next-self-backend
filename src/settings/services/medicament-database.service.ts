@@ -4,8 +4,6 @@ import { DataSource, Repository } from 'typeorm';
 import * as soap from 'soap';
 import { tabConversion } from 'src/constants/medicament-database';
 import { UserEntity } from 'src/entities/user.entity';
-import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { ErrorCode } from 'src/constants/error';
 import { FindMedicamentDatabaseDto } from '../dtos/medicament-database.dto';
 import {
   FindMedicamentDatabaseContraindicationRes,

@@ -146,6 +146,8 @@ export class SettingsController {
     );
   }
 
+  //settings/medicament-databases/index.php
+  //all lines
   @Get('/medicament-database')
   @UseGuards(TokenGuard)
   async connnectMedicamentDatabase(@CurrentUser() identity: UserIdentity) {
@@ -154,6 +156,8 @@ export class SettingsController {
     );
   }
 
+  //php/bcb/findAll.php
+  //all lines
   @Get('/medicament-database/find')
   @UseGuards(TokenGuard)
   async findMedicamentDatabase(
