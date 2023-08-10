@@ -1,6 +1,8 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import fs from 'fs';
+import handlebars from 'handlebars';
+import dayjs from 'dayjs';
 import sharp from 'sharp';
 import { differenceInMonths, differenceInYears, format } from 'date-fns';
 import { DataSource, Repository } from 'typeorm';
@@ -30,11 +32,12 @@ import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import Handlebars from 'handlebars';
 import { FactureEmailDataDto } from 'src/dental/dto/facture.dto';
 import { sanitizeFilename } from 'src/common/util/file';
-import path from 'path';
-import { tmpdir } from 'os';
+import * as path from 'path';
 import { SendMailDto } from '../dto/sendMail.dto';
 import { validateEmail } from 'src/common/util/string';
-import dayjs from 'dayjs';
+import { MailTransportService } from './mailTransport.service';
+import { tmpdir } from 'os';
+import { SuccessResponse } from 'src/common/response/success.res';
 
 @Injectable()
 export class MailService {
@@ -43,12 +46,15 @@ export class MailService {
     private mailerService: MailerService,
     private patientService: PatientService,
     private paymentScheduleService: PaymentScheduleService,
+    private mailTransportService: MailTransportService,
     @InjectRepository(LettersEntity)
     private lettersRepo: Repository<LettersEntity>,
     private dataSource: DataSource,
     @InjectRepository(ContactEntity)
     private contactRepo: Repository<ContactEntity>,
   ) {}
+
+  MAX_FILESIZE = 10 * 1024 * 1024;
 
   // php/mail/findAll.php
   async findAll(
@@ -162,7 +168,11 @@ export class MailService {
   async findById(id: number) {
     const qr = await this.lettersRepo.findOne({
       where: { id: id },
-      relations: { user: true },
+      relations: {
+        user: {
+          address: true,
+        },
+      },
     });
 
     if (!qr) throw new CNotFoundRequestException(`Mail Not found`);
@@ -1443,14 +1453,17 @@ export class MailService {
     inputs.body = body;
   }
 
-  async send(mailId: number, payload: SendMailDto) {
-    const mail = await this.findById(mailId);
+  async sendTemplate(
+    userId: number,
+    payload: SendMailDto,
+    files: Express.Multer.File[],
+  ) {
+    const mail = await this.findById(payload.id);
+    console.log(mail);
     let mailTitle = mail.title;
     const mailFilename = sanitizeFilename(`${mailTitle}.pdf`);
-    const mailDirname = path.join(tmpdir(), mailFilename);
+    // const mailDirname = path ? path.join(tmpdir(), mailFilename) : null;
     const doctor = mail.doctor;
-    const doctorLastname = doctor?.lastname;
-    const doctorFirstname = doctor?.firstname;
     const patient = mail.patient;
     const correspondent = mail?.conrrespondent;
 
@@ -1495,9 +1508,9 @@ export class MailService {
         VALUES (?, CURDATE(), ?)`,
           [
             patient?.id,
-            `Envoi du courrier ${mailFilename} par email : ${messageTo.join(
-              ';',
-            )}`,
+            `Envoi du courrier ${mailFilename} par email : ${
+              messageTo ? messageTo?.join(';') : ''
+            }`,
           ],
         );
       }
@@ -1506,20 +1519,21 @@ export class MailService {
         return new CBadRequestException('Au moins un destinataire est requis');
       }
 
-      const context = this.contextMail(
-        {
-          patient_id: mail?.patient?.id ? mail.patient.id : null,
-          correspondent_id: mail?.conrrespondent?.id
-            ? mail.conrrespondent.id
-            : null,
-        },
-        mail?.doctor?.id,
-      );
-      const mailConverted = await this.transform(context, {
-        filename: mailDirname,
-      });
-      const subject = `${mail.title} du ${dayjs().format(
-        'YYYY-MM-DD HH:mm:ss',
+      // const context = await this.contextMail(
+      //   {
+      //     patient_id: mail?.patient?.id ? mail.patient.id : null,
+      //     correspondent_id: mail?.conrrespondent?.id
+      //       ? mail.conrrespondent.id
+      //       : null,
+      //   },
+      //   mail?.doctor?.id,
+      // );
+      // const mailConverted = await this.transform(mail, context, mailFilename);
+      // @TODO
+      // Mail::pdf($mailConverted, array('filename' => $mailDirname));
+
+      const subject = `${mail.title} du ${dayjs(new Date()).format(
+        'YYYY-MM-DD',
       )} de Dr ${mail?.user.lastname} ${mail?.user.firstname}`;
 
       if (mail?.patient) {
@@ -1527,9 +1541,45 @@ export class MailService {
           ` pour ${mail.patient.lastname} ${mail.patient.firstname}`,
         );
       }
+
+      const attachments: { filename: string; content: Buffer }[] = [];
+      for (const file of files) {
+        if (this.MAX_FILESIZE < file.size)
+          return new CBadRequestException(
+            'La taille des pièces jointes ne doit pas excéder 10Mo',
+          );
+        attachments.push({
+          filename: file.originalname,
+          content: file.buffer,
+        });
+      }
+
+      const fullName = [mail?.user?.lastname, mail?.user?.firstname].join(' ');
+      const emailTemplate = fs.readFileSync(
+        path.join(__dirname, '../../../templates/mail/mailTemplate.hbs'),
+        'utf-8',
+      );
+      const template = handlebars.compile(emailTemplate);
+      const mailBody = template({ fullName, mail });
+
+      const result = await this.mailTransportService.sendEmail(userId, {
+        from: doctor.email,
+        to: mailTo,
+        subject: subject,
+        template: mailBody,
+        context: mail,
+        attachments: attachments,
+      });
+
+      if (
+        result instanceof CBadRequestException ||
+        (result instanceof SuccessResponse && !result?.success)
+      )
+        return new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
+      return { success: true };
     } catch (e) {
       await queryRunner.rollbackTransaction();
-      return new CBadRequestException(ErrorCode.FORBIDDEN);
+      return new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
     } finally {
       await queryRunner.release();
     }

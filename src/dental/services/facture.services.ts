@@ -845,7 +845,7 @@ export class FactureServices {
       );
       const mailBody = template({ fullName, invoice, homePhoneNumber });
 
-      await this.mailTransportService.sendFactureEmail(identity.id, {
+      await this.mailTransportService.sendEmail(identity.id, {
         from: invoice?.user?.email,
         to: invoice?.patient?.email,
         subject: `Facture du ${format(
