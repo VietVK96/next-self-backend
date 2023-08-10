@@ -13,7 +13,7 @@ export class FindMedicamentDatabaseContraindicationRes {
 
 export class FindMedicamentDatabaseRes {
   @ApiProperty()
-  id: number;
+  id?: number;
 
   @ApiProperty()
   libelleCourt?: string;
