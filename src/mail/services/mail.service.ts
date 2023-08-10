@@ -16,7 +16,7 @@ import { PatientService } from 'src/patient/service/patient.service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ConfigService } from '@nestjs/config';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
-import { LettersEntity } from '../../entities/letters.entity';
+import { EnumLettersType, LettersEntity } from '../../entities/letters.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { ErrorCode } from 'src/constants/error';
 import { MailInputsDto, MailOptionsDto, UpdateMailDto } from '../dto/mail.dto';
@@ -29,6 +29,7 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import Handlebars from 'handlebars';
 import { FactureEmailDataDto } from 'src/dental/dto/facture.dto';
+import { FindHeaderFooterRes } from '../response/findHeaderFooter.res';
 
 @Injectable()
 export class MailService {
@@ -1538,31 +1539,52 @@ export class MailService {
     correspondent_id: number;
   }) {
     try {
-      let context = null;
-      console.log(1);
-      const footers = await this.dataSource
-        .createQueryBuilder(LettersEntity, 'mail')
-        .innerJoin('mail.doctor', 'doctor')
-        .where('doctor.id = :id', { id: doctor_id })
-        .andWhere(`mail.type = "footer"`)
-        .andWhere('mail.patient = null')
-        .andWhere('mail.correspondent = null')
-        .orderBy('mail.title', 'DESC')
-        .getRawMany();
-      console.log(2);
-      if (!patient_id) {
-        context = await this.context({
-          doctor_id: doctor_id,
-          patient_id: patient_id,
-          correspondent_id: correspondent_id,
+      const footers = await this.lettersRepo.find({
+        where: {
+          usrId: doctor_id,
+          type: EnumLettersType.FOOTER,
+        },
+        relations: {
+          doctor: true,
+        },
+        order: {
+          title: 'ASC',
+        },
+      });
+
+      const res: FindHeaderFooterRes[] = [];
+      if (footers.length > 0) {
+        footers.forEach((footer) => {
+          res.push({
+            id: footer.id,
+            title: footer.title,
+            body: footer.msg,
+            type: footer.type,
+            height: footer.height,
+            favorite: footer.favorite,
+            createdAt: footer.createdAt,
+            updatedAt: footer.updatedAt,
+          });
         });
-        footers.forEach(async (footer) => {
-          if (footer?.body) {
-            footer.body = await this.render(footer?.body, context);
+      }
+
+      if (patient_id) {
+        const context = await this.contextMail(
+          {
+            patient_id,
+            correspondent_id,
+          },
+          doctor_id,
+        );
+
+        res.forEach(async (item) => {
+          if (item?.body) {
+            item.body = await this.render(item?.body, context);
           }
         });
       }
-      return { footers };
+
+      return res;
     } catch (err) {
       throw new CBadRequestException(err?.message);
     }
@@ -1581,29 +1603,52 @@ export class MailService {
     correspondent_id: number;
   }) {
     try {
-      let context = null;
-      const headers = await this.dataSource
-        .createQueryBuilder(LettersEntity, 'mail')
-        .innerJoin('mail.doctor', 'doctor')
-        .where('doctor.id = :id', { id: doctor_id })
-        .andWhere("mail.type = 'header'")
-        .andWhere('mail.patient', null)
-        .andWhere('mail.correspondent', null)
-        .orderBy('mail.title', 'DESC')
-        .getRawMany();
-      if (!patient_id) {
-        context = await this.context({
-          doctor_id,
-          patient_id,
-          correspondent_id,
+      const headers = await this.lettersRepo.find({
+        where: {
+          usrId: doctor_id,
+          type: EnumLettersType.HEADER,
+        },
+        relations: {
+          doctor: true,
+        },
+        order: {
+          title: 'ASC',
+        },
+      });
+
+      const res: FindHeaderFooterRes[] = [];
+      if (headers.length > 0) {
+        headers.forEach((header) => {
+          res.push({
+            id: header.id,
+            title: header.title,
+            body: header.msg,
+            type: header.type,
+            height: header.height,
+            favorite: header.favorite,
+            createdAt: header.createdAt,
+            updatedAt: header.updatedAt,
+          });
         });
-        headers.forEach(async (header) => {
-          if (header?.body) {
-            header.body = await this.render(header?.body, context);
+      }
+
+      if (patient_id) {
+        const context = await this.contextMail(
+          {
+            patient_id,
+            correspondent_id,
+          },
+          doctor_id,
+        );
+
+        res.forEach(async (item) => {
+          if (item?.body) {
+            item.body = await this.render(item?.body, context);
           }
         });
       }
-      return { headers };
+
+      return res;
     } catch (err) {
       throw new CBadRequestException(err?.message);
     }

@@ -119,16 +119,21 @@ export class MailController {
   async update(@Body() payload: UpdateMailDto) {
     return await this.mailService.update(payload);
   }
+
   // php/mail/footers.php 100%
   @Get('/footers')
   @UseGuards(TokenGuard)
+  @ApiHeader({
+    name: 'X-DoctorId',
+    description: 'DoctorId',
+  })
   async footers(
-    @Query('doctor_id') doctor_id?: number,
+    @CurrentDoctor() docId: number,
     @Query('patient_id') patient_id?: number,
     @Query('correspondent_id') correspondent_id?: number,
   ) {
     return await this.mailService.footers({
-      doctor_id,
+      doctor_id: docId,
       patient_id,
       correspondent_id,
     });
@@ -137,13 +142,17 @@ export class MailController {
   // php/mail/footers.php 100%
   @Get('/headers')
   @UseGuards(TokenGuard)
+  @ApiHeader({
+    name: 'X-DoctorId',
+    description: 'DoctorId',
+  })
   async headers(
-    @Query('doctor_id') doctor_id?: number,
+    @CurrentDoctor() docId: number,
     @Query('patient_id') patient_id?: number,
     @Query('correspondent_id') correspondent_id?: number,
   ) {
     return await this.mailService.headers({
-      doctor_id,
+      doctor_id: docId,
       patient_id,
       correspondent_id,
     });
