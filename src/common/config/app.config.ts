@@ -14,4 +14,12 @@ export default registerAs('app', () => ({
     host: process.env.SESAM_VITALE_HOST || 'localhost',
     port: process.env.SESAM_VITALE_PORT || 1234,
   },
+  wzagenda: {
+    wsdl:
+      process?.env?.WZAGENDA_WSDL_END_POINT ||
+      `https://secure.wz-agenda.net/webservices/3.1/server.php?wsdl`,
+    namespace:
+      process?.env?.WZAGENDA_END_POINT ||
+      `https://secure.wz-agenda.net/webservices/3.1/server.php#wzcalendar`,
+  },
 }));

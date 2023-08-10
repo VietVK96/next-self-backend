@@ -18,10 +18,10 @@ import { PatientService } from 'src/patient/service/patient.service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ConfigService } from '@nestjs/config';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
-import { LettersEntity } from '../../entities/letters.entity';
+import { EnumLettersType, LettersEntity } from '../../entities/letters.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { ErrorCode } from 'src/constants/error';
-import { MailInputsDto, MailOptionsDto } from '../dto/mail.dto';
+import { MailInputsDto, MailOptionsDto, UpdateMailDto } from '../dto/mail.dto';
 import { ContextMailDto, FindVariableDto } from '../dto/findVariable.dto';
 import { mailVariable } from 'src/constants/mailVariable';
 import { OrganizationEntity } from 'src/entities/organization.entity';
@@ -38,6 +38,7 @@ import { validateEmail } from 'src/common/util/string';
 import { MailTransportService } from './mailTransport.service';
 import { tmpdir } from 'os';
 import { SuccessResponse } from 'src/common/response/success.res';
+import { FindHeaderFooterRes } from '../response/findHeaderFooter.res';
 
 @Injectable()
 export class MailService {
@@ -428,70 +429,47 @@ export class MailService {
     const logoFilename = logo?.filename;
     const groupId = logo?.group_id;
     context.logo = await this.getLogoAsBase64(logoFilename);
-    const doctor = await this.dataSource.query(
-      `
-      SELECT
-        T_USER_USR.USR_ID AS id,
-        T_USER_USR.ADR_ID AS address_id,
-        T_USER_USR.USR_ADMIN AS admin,
-        T_USER_USR.USR_LOG AS login,
-        T_USER_USR.USR_ABBR AS short_name,
-        T_USER_USR.USR_LASTNAME AS lastname,
-        T_USER_USR.USR_FIRSTNAME AS firstname,
-        T_USER_USR.color,
-        T_USER_USR.USR_MAIL AS email,
-        T_USER_USR.USR_PHONE_NUMBER AS phone_home_number,
-        T_USER_USR.USR_GSM AS phone_mobile_number,
-        T_USER_USR.USR_FAX_NUMBER AS fax_number,
-        T_USER_USR.USR_NUMERO_FACTURANT AS adeli,
-        T_USER_USR.finess AS finess,
-        T_USER_USR.USR_RATE_CHARGES AS taxes,
-              social_security_reimbursement_base_rate,
-              social_security_reimbursement_rate,
-        T_USER_USR.USR_AGA_MEMBER AS aga_member,
-        T_USER_USR.freelance,
-        T_USER_USR.USR_DEPASSEMENT_PERMANENT AS droit_permanent_depassement,
-        T_USER_USR.USR_SIGNATURE AS signature,
-        T_USER_USR.USR_TOKEN AS token,
-        T_USER_USR.USR_BCB_LICENSE AS bcbdexther_license,
-        T_LICENSE_LIC.LIC_END AS end_of_license_at,
-        T_USER_TYPE_UST.UST_PRO AS professional,
-        T_USER_PREFERENCE_USP.signature_automatic,
-        user_medical.rpps_number AS rpps_number
-      FROM T_USER_USR
-      JOIN T_USER_PREFERENCE_USP ON T_USER_PREFERENCE_USP.USR_ID = T_USER_USR.USR_ID
-      LEFT OUTER JOIN T_LICENSE_LIC ON T_LICENSE_LIC.USR_ID = T_USER_USR.USR_ID AND T_USER_USR.USR_CLIENT = 0
-      LEFT OUTER JOIN T_USER_TYPE_UST ON T_USER_TYPE_UST.UST_ID = T_USER_USR.UST_ID
-      LEFT OUTER JOIN user_medical ON user_medical.user_id = T_USER_USR.USR_ID
-      WHERE T_USER_USR.USR_ID = ?
-    `,
-      [inputs?.doctor_id],
-    );
-    context.praticien = JSON.parse(JSON.stringify(doctor));
-    context.praticien.fullname = [
-      doctor?.lastname,
-      doctor?.firstname,
-      doctor?.freelance,
-    ]
-      .filter((name) => {
-        if (!!name) return name;
-        return name instanceof Boolean && name ? 'EI' : '';
-      })
-      .join(' ');
-    context.praticien.phoneNumber = doctor?.praticien?.phone_home_number;
-    context.praticien.gsm = doctor?.praticien?.phone_mobile_number;
-    context.praticien.faxNumber = doctor?.praticien?.fax_number;
-    context.praticien.numeroFacturant = doctor?.praticien?.adeli;
-    context.praticien.medical.rppsNumber = doctor?.praticien?.rpps_number;
-    if (context?.praticien?.address) {
-      context.praticien.zipCode = doctor?.praticien?.address?.zip_code;
+
+    const doctor = await this.dataSource.getRepository(UserEntity).findOne({
+      relations: { preference: true, medical: true, address: true },
+      where: { id: inputs?.doctor_id },
+    });
+    context['praticien'] = {
+      ...JSON.parse(JSON.stringify(doctor)),
+      fullname: [
+        doctor.lastname,
+        doctor.firstname,
+        doctor.freelance ? 'EI' : '',
+      ]
+        .filter(Boolean)
+        .join(' '),
+      phoneNumber: doctor.phoneNumber,
+      gsm: doctor.gsm,
+      faxNumber: doctor.faxNumber,
+      numeroFacturant: doctor.numeroFacturant,
+      medical: {
+        rppsNumber: doctor.medical.rppsNumber,
+      },
+    };
+    if (doctor.address) {
+      context['praticien']['address']['zipCode'] = doctor.address.zipCode;
     }
-    delete context?.praticien?.signature;
-    if (doctor?.signature_automatic && doctor?.signature) {
-      context.praticien.signature = `<img class='signaturePraticien' alt='Signature praticien' src='${doctor?.signature}' />`;
+    delete context['praticien']['signature'];
+
+    if (
+      true === Boolean(doctor.preference.signatureAutomatic) &&
+      doctor.signature !== null
+    ) {
+      context['praticien'][
+        'signature'
+      ] = `<img class='signaturePraticien' alt='Signature praticien' src='${doctor.signature}' />`;
     }
+
     if (inputs?.patient_id) {
-      const patient = this.patientService.find(inputs?.patient_id);
+      const patient = await this.contactRepo.findOne({
+        relations: ['civilityTitle', 'phones.type', 'contactUsers'],
+        where: { id: inputs?.patient_id },
+      });
       context.contact = JSON.parse(JSON.stringify(patient));
       context.nbr = context?.contact?.number;
       context.inseeKey = context?.contact?.insee_key;
@@ -507,36 +485,63 @@ export class MailService {
       context.dental.nextAppointmentDuration = '';
       context.dental.nextAppointmentTitle = '';
 
-      // const nextAppointment = await this.patientService.getNextAppointment(
-      //   context?.contact?.id,
-      // );
-
-      // if(nextAppointment && nextAppointment?.EVT_START){
-      // $datetime1 = new \DateTime($nextAppointment['EVT_START']);
-      // $datetime2 = new \DateTime($nextAppointment['EVT_END']);
-      // $interval = $datetime2->diff($datetime1);
-      // $duration = (new \DateTime())->setTime($interval->h, $interval->i);
-
-      // $context['contact']['nextAppointmentDate'] = static::formatDatetime($datetime1, [\IntlDateFormatter::FULL, \IntlDateFormatter::NONE]);
-      // $context['contact']['nextAppointmentTime'] = static::formatDatetime($datetime1, [\IntlDateFormatter::NONE, \IntlDateFormatter::SHORT]);
-      // $context['contact']['nextAppointmentDuration'] = static::formatDatetime($duration, [\IntlDateFormatter::NONE, \IntlDateFormatter::SHORT]);
-      // $context['contact']['nextAppointmentTitle'] = $nextAppointment['EVT_NAME'];
-      // }
+      const nextAppointment = await this.getNextAppointment(
+        context['contact']['id'],
+      );
+      if (nextAppointment && nextAppointment?.EVT_START) {
+        const datetime1 = new Date(nextAppointment['EVT_START']);
+        const datetime2 = new Date(nextAppointment['EVT_END']);
+        const interval = datetime2.getTime() - datetime1.getTime();
+        const duration = new Date(interval);
+        const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+        const timeFormatter = new Intl.DateTimeFormat('fr-FR', {
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true,
+        });
+        const nextAppointmentDate = dateFormatter.format(datetime1);
+        const nextAppointmentTime = timeFormatter.format(datetime1);
+        const nextAppointmentDuration = `${duration.getUTCHours()}h ${duration.getUTCMinutes()}m`;
+        const nextAppointmentTitle = nextAppointment['EVT_NAME'];
+        context['contact'] = {
+          ...context['contact'],
+          nextAppointmentDate,
+          nextAppointmentTime,
+          nextAppointmentDuration,
+          nextAppointmentTitle,
+        };
+      }
 
       if (!context?.contact?.birthday) {
         const birthday = new Date(context?.contact?.birthday);
         const currentDate: Date = new Date(); // Replace this with the current date
-        const ageInYears: number = differenceInYears(currentDate, birthday);
-        const ageInMonths: number = differenceInMonths(currentDate, birthday);
-        // const ageFormatted: string = format(
-        //   currentDate,
-        //   ageInYears < 1 ? 'PPPP' : 'P',
-        //   { locale: fr },
-        // );
-        context.contact.age =
-          ageInYears < 1
-            ? `(${ageInMonths} mois)`
-            : `(${ageInYears} ${ageInYears === 1 ? 'an' : 'ans'})`;
+        const ageInMilliseconds =
+          BigInt(currentDate.getMilliseconds()) -
+          BigInt(birthday.getMilliseconds());
+        const ageInYears = Math.floor(
+          Number(ageInMilliseconds / BigInt(1000 * 60 * 60 * 24 * 365.25)),
+        );
+        const ageInMonths = Math.floor(
+          Number(
+            (ageInMilliseconds % BigInt(1000 * 60 * 60 * 24 * 365.25)) /
+              BigInt(1000 * 60 * 60 * 24 * 30.4375),
+          ),
+        );
+        function formatAge(years: number, months: number) {
+          if (years === 0) {
+            return `${months} mois`;
+          } else if (years === 1) {
+            return `1 an`;
+          } else {
+            return `${years} ans`;
+          }
+        }
+        context.contact.age = formatAge(ageInYears, ageInMonths);
       }
 
       if (context?.contact?.civility) {
@@ -553,24 +558,52 @@ export class MailService {
       const temp = [];
       const phones = context?.contact?.phones;
       for (const phone of phones) {
-        temp[phone?.type?.name] = phone?.number;
+        temp[phone?.type?.name] = phone?.nbr;
       }
       context.contact.phone = temp;
+      for (const doctor of patient.contactUsers) {
+        if (doctor.id === inputs?.doctor_id) {
+          context['contact'] = {
+            ...context['contact'],
+            amountDue: doctor.amount,
+            dateLastRec: doctor.lastPayment,
+            dateLastSoin: doctor.lastCare,
+          };
+        }
+      }
     }
-    if (inputs?.payment_schedule_id) {
-      const paymentSchedule = this.paymentScheduleService.find(
-        inputs?.payment_schedule_id,
-        groupId,
-      );
-      context.payment_schedule = await this.mailerService.sendMail({
-        to: 'nguyenthanh.rise.88@gmail.com',
-        subject: 'Greeting from NestJS NodeMailer',
-        template: '/payment_schedule',
-        context: {
-          payment_schedule: paymentSchedule,
-        },
-      });
+
+    if (inputs?.correspondent_id) {
+      const correspondent = await this.dataSource
+        .getRepository(CorrespondentEntity)
+        .findOne({
+          relations: ['gender'],
+          where: { id: inputs?.correspondent_id },
+        });
+      context['correspondent'] = JSON.parse(JSON.stringify(correspondent));
+      context['correspondent->msg'] = correspondent.msg;
+      context['correspondent->type'] = correspondent.type
+        ? correspondent.type
+        : '';
+
+      if (correspondent.gender) {
+        context['correspondent'] = {
+          ...correspondent['correspondent'],
+          gender: correspondent.gender.name,
+          genderLong: correspondent.gender.longName,
+          dear: correspondent.gender.type === 'F' ? 'Chère' : 'Cher',
+        };
+      }
     }
+
+    // @TODO
+    // Récupération de l'échéancier
+    // if (!empty($inputs['payment_schedule_id'])) {
+    // 	$paymentSchedule = PaymentSchedule::find($inputs['payment_schedule_id'], $groupId);
+    // 	$context['payment_schedule'] = Registry::get('twig')->render('mails/payment_schedule.twig', [
+    // 		'payment_schedule' => $paymentSchedule
+    // 	]);
+    // }
     return context;
   }
 
@@ -1453,6 +1486,66 @@ export class MailService {
     inputs.body = body;
   }
 
+  async update(inputs: UpdateMailDto) {
+    console.log('update', inputs?.body);
+    const headerId =
+      inputs?.header && inputs?.header?.id ? inputs?.header?.id : null;
+    const footerId =
+      inputs?.footer && inputs?.footer?.id ? inputs?.footer?.id : null;
+    const type = inputs?.type ? inputs?.type : null;
+    const height = inputs?.height ? inputs?.height : null;
+    const favorite = !!inputs?.favorite ?? false;
+    const footerContent = !!inputs?.footer_content
+      ? inputs?.footer_content
+      : null;
+    const footerHeight = !!inputs?.footer_height
+      ? Number(inputs?.footer_height)
+      : 0;
+    const body = inputs?.body;
+    const title = inputs?.title;
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const res = await queryRunner.query(
+        `
+        UPDATE T_LETTERS_LET
+        SET header_id = ?,
+                  footer_id = ?,
+          LET_TITLE = ?,
+          LET_MSG = ?,
+                  footer_content = ?,
+                  footer_height = ?,
+          LET_TYPE = ?,
+          height = ?,
+          favorite = ?
+        WHERE LET_ID = ?
+      `,
+        [
+          headerId,
+          footerId,
+          title,
+          body,
+          footerContent,
+          footerHeight,
+          type,
+          height,
+          favorite,
+          inputs?.id,
+        ],
+      );
+
+      console.log('res', res);
+      await queryRunner.commitTransaction();
+      return this.find(inputs?.id);
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   async sendTemplate(
     userId: number,
     payload: SendMailDto,
@@ -1582,6 +1675,133 @@ export class MailService {
       return new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
     } finally {
       await queryRunner.release();
+    }
+  }
+  /**
+   * application/Repositories/Mail.php => 33 -> 44
+   */
+  async footers({
+    doctor_id,
+    patient_id,
+    correspondent_id,
+  }: {
+    doctor_id: number;
+    patient_id: number;
+    correspondent_id: number;
+  }) {
+    try {
+      const footers = await this.lettersRepo.find({
+        where: {
+          usrId: doctor_id,
+          type: EnumLettersType.FOOTER,
+        },
+        relations: {
+          doctor: true,
+        },
+        order: {
+          title: 'ASC',
+        },
+      });
+
+      const res: FindHeaderFooterRes[] = [];
+      if (footers.length > 0) {
+        footers.forEach((footer) => {
+          res.push({
+            id: footer.id,
+            title: footer.title,
+            body: footer.msg,
+            type: footer.type,
+            height: footer.height,
+            favorite: footer.favorite,
+            createdAt: footer.createdAt,
+            updatedAt: footer.updatedAt,
+          });
+        });
+      }
+
+      if (patient_id) {
+        const context = await this.contextMail(
+          {
+            patient_id,
+            correspondent_id,
+          },
+          doctor_id,
+        );
+
+        res.forEach(async (item) => {
+          if (item?.body) {
+            item.body = await this.render(item?.body, context);
+          }
+        });
+      }
+
+      return res;
+    } catch (err) {
+      throw new CBadRequestException(err?.message);
+    }
+  }
+
+  /**
+   * application/Repositories/Mail.php => 15 -> 25
+   */
+  async headers({
+    doctor_id,
+    patient_id,
+    correspondent_id,
+  }: {
+    doctor_id: number;
+    patient_id: number;
+    correspondent_id: number;
+  }) {
+    try {
+      const headers = await this.lettersRepo.find({
+        where: {
+          usrId: doctor_id,
+          type: EnumLettersType.HEADER,
+        },
+        relations: {
+          doctor: true,
+        },
+        order: {
+          title: 'ASC',
+        },
+      });
+
+      const res: FindHeaderFooterRes[] = [];
+      if (headers.length > 0) {
+        headers.forEach((header) => {
+          res.push({
+            id: header.id,
+            title: header.title,
+            body: header.msg,
+            type: header.type,
+            height: header.height,
+            favorite: header.favorite,
+            createdAt: header.createdAt,
+            updatedAt: header.updatedAt,
+          });
+        });
+      }
+
+      if (patient_id) {
+        const context = await this.contextMail(
+          {
+            patient_id,
+            correspondent_id,
+          },
+          doctor_id,
+        );
+
+        res.forEach(async (item) => {
+          if (item?.body) {
+            item.body = await this.render(item?.body, context);
+          }
+        });
+      }
+
+      return res;
+    } catch (err) {
+      throw new CBadRequestException(err?.message);
     }
   }
 }

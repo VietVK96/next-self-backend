@@ -31,6 +31,7 @@ import { TranformDto } from './dto/transform.dto';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { SendMailDto } from './dto/sendMail.dto';
+import { UpdateMailDto } from './dto/mail.dto';
 
 @ApiBearerAuth()
 @Controller('/mails')
@@ -147,5 +148,51 @@ export class MailController {
     @CurrentUser() identity: UserIdentity,
   ) {
     return await this.mailService.sendTemplate(identity.id, body, files);
+  }
+  /**
+   *  php/mail/update.php
+   */
+  @UseGuards(TokenGuard)
+  @Post('/update')
+  async update(@Body() payload: UpdateMailDto) {
+    return await this.mailService.update(payload);
+  }
+
+  // php/mail/footers.php 100%
+  @Get('/footers')
+  @UseGuards(TokenGuard)
+  @ApiHeader({
+    name: 'X-DoctorId',
+    description: 'DoctorId',
+  })
+  async footers(
+    @CurrentDoctor() docId: number,
+    @Query('patient_id') patient_id?: number,
+    @Query('correspondent_id') correspondent_id?: number,
+  ) {
+    return await this.mailService.footers({
+      doctor_id: docId,
+      patient_id,
+      correspondent_id,
+    });
+  }
+
+  // php/mail/footers.php 100%
+  @Get('/headers')
+  @UseGuards(TokenGuard)
+  @ApiHeader({
+    name: 'X-DoctorId',
+    description: 'DoctorId',
+  })
+  async headers(
+    @CurrentDoctor() docId: number,
+    @Query('patient_id') patient_id?: number,
+    @Query('correspondent_id') correspondent_id?: number,
+  ) {
+    return await this.mailService.headers({
+      doctor_id: docId,
+      patient_id,
+      correspondent_id,
+    });
   }
 }
