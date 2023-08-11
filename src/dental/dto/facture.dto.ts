@@ -222,7 +222,7 @@ export class FactureEmailDataDto {
     name: 'to',
     required: true,
   })
-  to?: string;
+  to?: string | string[];
 
   @ApiProperty({
     name: 'subject',

@@ -8,8 +8,17 @@ import {
   UseGuards,
   Delete,
   Param,
+  UseInterceptors,
+  Req,
+  UploadedFiles,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiHeader,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CreateUpdateMailDto } from './dto/createUpdateMail.dto';
 import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
 import {
@@ -19,6 +28,9 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { ContextMailDto, FindVariableDto } from './dto/findVariable.dto';
 import { TranformDto } from './dto/transform.dto';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { Request } from 'express';
+import { SendMailDto } from './dto/sendMail.dto';
 import { UpdateMailDto } from './dto/mail.dto';
 
 @ApiBearerAuth()
@@ -111,6 +123,32 @@ export class MailController {
     return await this.mailService.transform(payload, context);
   }
 
+  // php/mail/send.php
+  @Post('/send')
+  @UseInterceptors(FilesInterceptor('files'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+        contact: {
+          type: 'number',
+        },
+      },
+    },
+  })
+  @UseGuards(TokenGuard)
+  async send(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body() body: SendMailDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return await this.mailService.sendTemplate(identity.id, body, files);
+  }
   /**
    *  php/mail/update.php
    */
