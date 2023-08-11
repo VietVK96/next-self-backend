@@ -669,9 +669,9 @@ export class FindEventService {
 
       let row = preference?.hmd;
 
-      const arr = [];
+      const arrTimes = [];
       for (let i = 0; i < lineNumber; i++) {
-        arr.push(row);
+        arrTimes.push(row);
         row = dayjs(row, 'HH:mm')
           .add(preference?.frequency, 'minute')
           .format('HH:mm');
@@ -714,8 +714,11 @@ export class FindEventService {
         };
       });
 
+      console.log(newEvents);
+
       const data = {
         events: newEvents,
+        eventLenght: newEvents?.length,
         preference: preference,
         view: param?.view,
         start: param?.start,
@@ -724,7 +727,7 @@ export class FindEventService {
         ids: param?.resources.length,
         lineNumber: lineNumber,
         lineHeight: lineHeight,
-        arr: arr,
+        arrTimes: arrTimes,
         userPreferenceView: userPreferenceView,
         begin: begin,
         arrDays: arrDays,
