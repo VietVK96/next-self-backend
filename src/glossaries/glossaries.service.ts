@@ -9,7 +9,7 @@ import { saveGlossaryEntryPayload } from './dto/saveEntry.glossaries.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { SaveGlossaryDto } from './dto/save.glossaries.dto';
 import { MAX_ENTRIES, MAX_GLOSSARY } from 'src/constants/glassary';
-import { UpdateGlossaryDto } from './dto/update.glossary.dto';
+import { SortGlossaryDto, UpdateGlossaryDto } from './dto/update.glossary.dto';
 import { UpdateGlossaryEntryDto } from './dto/update.glossaryEntry.dto';
 import { ErrorCode } from 'src/constants/error';
 import { SuccessResponse } from 'src/common/response/success.res';
@@ -26,7 +26,9 @@ export class GlossariesService {
 
   // php/glossaries/index.php 100%
   async findGlossaries(): Promise<FindGlossariesRes[]> {
-    const glossaries = await this.glossaryRepo.find();
+    const glossaries = await this.glossaryRepo.find({
+      order: { position: 'ASC', id: 'ASC' },
+    });
     const res = glossaries.map((glossary) => {
       return this.convertToGlossaryRes(glossary);
     });
@@ -70,11 +72,13 @@ export class GlossariesService {
     payload: saveGlossaryEntryPayload,
     orgId: number,
   ): Promise<GlossaryEntryRes> {
-    const count = await this.glossaryRepo.count();
-    if (count > MAX_ENTRIES) {
-      throw new CBadRequestException(
-        `Le nombre maximal de glossaire entry a ${MAX_ENTRIES}`,
-      );
+    const count = await this.glossaryEntryRepo.count({
+      where: { glossaryId: Number(payload.glossary) },
+    });
+    if (count >= MAX_ENTRIES) {
+      // `Le nombre maximal d'entrée du glossaire a été atteint (max=${MAX_ENTRIES})`,
+
+      throw new CBadRequestException(ErrorCode.MAXIMUM.concat('_ENTREE'));
     }
 
     const lastGlossaryEntry: GlossaryEntryEntity[] =
@@ -105,10 +109,10 @@ export class GlossariesService {
     orgId: number,
   ): Promise<FindGlossariesRes> {
     const count = await this.glossaryRepo.count();
-    if (count > MAX_GLOSSARY) {
-      throw new CBadRequestException(
-        `Le nombre maximal de glossaire a ${MAX_GLOSSARY}`,
-      );
+    if (count >= MAX_GLOSSARY) {
+      // `Le nombre maximal de glossaire a été atteint (max=${MAX_GLOSSARY}).`,
+
+      throw new CBadRequestException(ErrorCode.MAXIMUM);
     }
 
     const lastGlossary: GlossaryEntity[] = await this.dataSource.query(
@@ -176,5 +180,22 @@ export class GlossariesService {
     } catch (error) {
       throw new CBadRequestException(ErrorCode.SAVE_FAILED);
     }
+  }
+
+  async sortable(payload: SortGlossaryDto[]) {
+    const ids = payload.map((item) => item.id);
+    let i = 0;
+    for (const id of ids) {
+      try {
+        await this.dataSource
+          .createQueryBuilder()
+          .update(GlossaryEntity)
+          .set({ position: i })
+          .where({ id })
+          .execute();
+        i++;
+      } catch (error) {}
+    }
+    return;
   }
 }
