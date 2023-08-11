@@ -25,5 +25,10 @@ export class PrintReq {
   @ApiProperty({
     required: false,
   })
-  pbw?: boolean;
+  pbw?: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  mode?: number;
 }

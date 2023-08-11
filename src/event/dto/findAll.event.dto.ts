@@ -87,6 +87,9 @@ export class FindAllEventDto {
     id?: number;
     name?: string;
   };
+
+  @ApiProperty()
+  row?: string;
 }
 
 export class BgEventDto {

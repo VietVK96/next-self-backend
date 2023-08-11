@@ -1,0 +1,255 @@
+<html>
+  <head>
+    <style type="text/css" rel="stylesheet">
+      html, body {
+        height: 100%;
+      }
+
+      html, html * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      .page {
+        width: 297mm;
+        height: 200mm;
+        position: relative;
+                /*height: 100%;*/
+/*                filter:progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+                -webkit-transform: rotate(-90deg);
+                   -moz-transform:rotate(-90deg);
+                        transform: rotate(-90deg);*/
+      }
+
+      table {
+        width: 100%;
+        /*height: 100%;*/
+        table-layout: fixed;
+        border-collapse: collapse;
+        border: solid 1px #000;
+      }
+
+      table td {
+        border: solid 1px #000;
+      }
+
+      table th {
+        height: 30px;
+      }
+
+      table th.time,
+        table td.time {
+        width: 50px;
+                text-align: center;
+            }
+
+            .appointment {
+                position: absolute;
+                top: 0;
+                width: 100%;
+                overflow: hidden;
+            }
+
+            .appointment.pbw {
+                background-color: #FFFFFF !important;
+                border: solid 1px #000 !important;
+                color: #000 !important;
+            }
+
+            .resources {
+                position: absolute;
+                top: 0;
+                left: 50px;
+                right: 0;
+                bottom: 0;
+            }
+
+            .resource {
+                position: relative;
+            }
+
+        </style>
+
+    <script>
+        var lineNumber = {{lineNumber}};
+        var frequency = {{preference.frequency}};
+        var amStart = new Date(`1970-01-01T{{preference.hmd}}`);
+        var pmEnd = new Date(`1970-01-01T{{preference.haf}}`);
+        var pbw = {{pbw}};
+        var appointments = {{events}}
+        
+        function adjustOverlapping(column) {
+          const width = column.clientWidth;
+          const groups = groupOverlappingElements(column);
+            groups.forEach(group => {
+            group.forEach((currentGroup, index) => {
+              let currentGroupWidth = Math.floor(width / group.length);
+              const currentGroupLeft = index * currentGroupWidth;
+              if (index == (group.length - 1)) {
+                currentGroupWidth += Math.max(0, width - (group.length * currentGroupWidth));
+              }
+              currentGroupWidth = Math.min(width, currentGroupWidth);
+              currentGroup.forEach(appointment => {
+                appointment.style.width = `${currentGroupWidth}px`;
+                appointment.style.left = `${currentGroupLeft}px`;
+                  });
+                });
+                });
+            }
+
+         function groupOverlappingElements(column) {
+
+                const groups = [];
+                const currentGroups = [];
+                const appointments = [].slice.call(column.querySelectorAll('.appointment'));
+                const overlaps = appointments.sort(function(a, b) {
+                    return a.dataset.startDatetime - b.dataset.startDatetime;
+                });
+
+                let endTime = new Date(0, 0, 0).getTime();
+                overlaps.forEach(currentAppointment => {
+                    const start = currentAppointment.dataset.startDatetime;
+                    const end = currentAppointment.dataset.endDatetime;
+                    if (currentGroups.length > 0 && endTime <= start) {
+                        groups.push(currentGroups);
+                        currentGroups.length = 0;
+                    }
+                    for (var i = 0, len = currentGroups.length; i < len; i++) {
+                        if (currentGroups[i].length > 0) {
+                            var appointment = currentGroups[i][currentGroups[i].length - 1];
+                            var eventEnd = appointment.dataset.endDatetime;
+                            if (eventEnd <= start) {
+                                currentGroups[i].push(currentAppointment);
+                                if (endTime < end)
+                                    endTime = end;
+                                return;
+                            }
+                        }
+                    }
+                    currentGroups.push([currentAppointment]);
+                    if (endTime < end) {
+                        endTime = end;
+                    }
+                });
+                if (currentGroups.length > 0) {
+                    groups.push(currentGroups);
+                }
+                return groups;
+            }
+
+        function domContentLoaded() {
+          const heightLine = document.querySelector('td.content').clientHeight + 1 // bordure;
+                const amStartToMinutes = amStart.getMinutes() + amStart.getHours() * 60;
+                
+                const pmEndToMinutes = pmEnd.getMinutes() + pmEnd.getHours() * 60;
+                let height = 0;
+                for (let row of document.querySelectorAll('tr.row')) {
+                    height += row.offsetHeight;
+                    
+                }
+                // Pour chaque rendez-vous
+                appointments.forEach(appointment => {
+                    
+                    const start = new Date(appointment.startDatetime);
+                    
+                    const startToMinutes = start.getMinutes() + start.getHours() * 60;
+                    const startToString = `${start.getFullYear()}-${('' + (start.getMonth() + 1)).padStart(2, 0)}-${('' + start.getDate()).padStart(2, 0)}`;
+                    const end = new Date(appointment.endDatetime);
+                    const endToMinutes = end.getMinutes() + end.getHours() * 60;
+                    const resourceId = appointment.resourceId;
+                    
+                    // Recherche de l'élément parent
+                    const parent = document.querySelector(`td[data-date="${startToString}"][data-resource="${resourceId}"]`);
+                    if (parent !== null && endToMinutes > amStartToMinutes && startToMinutes < pmEndToMinutes) {
+                        const el = document.createElement('div');
+                        el.dataset.start = start.getTime();
+                        el.dataset.end = end.getTime();
+                        el.classList.add('appointment');
+                        el.style.top = ((Math.max(amStartToMinutes, startToMinutes) - amStartToMinutes) / frequency) * heightLine + 'px';
+                        el.style.height = (((Math.min(pmEndToMinutes, endToMinutes) - Math.max(amStartToMinutes, startToMinutes)) / frequency) * heightLine) - 1 + 'px';
+                        el.style.backgroundColor = appointment.color.background;
+                        el.style.color = appointment.color.foreground;
+                        el.innerHTML = appointment.title;
+                        if (pbw) {
+                            el.classList.add('pbw');
+                        }
+                        parent.appendChild(el);
+                    }
+                });
+                // On repositionne tous les rendez-vous qui se chevauchent
+                for (let column of document.querySelectorAll('td[data-date]')) {
+                    adjustOverlapping(column);
+                    column.style.height = `${height}px`;
+                }
+        }
+        document.addEventListener('DOMContentLoaded', domContentLoaded);
+    </script>
+
+  </head>
+  <body>
+    
+    <div class='page'>
+      <table class='timeline'>
+        <tbody>
+          <tr>
+            <th class="time"></th>
+            <th></th>
+          </tr>
+          <tr>
+            <th class='time'></th>
+            <th></th>
+          </tr>
+          {{#each arr}}
+          <tr class='row'>
+            {{#if (eq (getMinutes this) 0)}}
+            <td
+              class='time'
+              rowspan={{divide 60 ../preference.frequency}}
+            >{{this}}</td>
+            {{/if }}
+            {{#if (eq (add (getMinutes ../preference.hmd) ../preference.frequency) 60)}}
+            <td class='content' style="height: {{../lineHeight}}px;"></td>
+            {{else}}
+            <td class='content' style="height: {{../lineHeight}}px; border-color: #999999;"></td>
+            {{/if}}
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+
+      <div class='resources'>
+        <table>
+          <tbody>
+            <tr>
+              {{#each arrDays}}
+              <th colspan={{../ids}}>{{this.label}}</th>
+              {{/each}}
+            </tr>
+            <tr>
+              {{#each arrDays}}
+              {{#each ../arrResources}}
+              <th style='overflow: hidden;white-space: nowrap;text-overflow: ellipsis;' >
+              {{this.name}}
+              </th>
+              {{/each}}
+              {{/each}}
+            </tr>
+            <tr>
+              {{#each arrDays}}
+              {{#each ../arrResources}}
+              <td
+                class='resource'
+                data-resource={{this.id}}
+                data-date={{../this.value}}
+              ></td>
+              {{/each}}
+              {{/each}}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </body>
+</html>
