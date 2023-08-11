@@ -9,6 +9,11 @@ export interface IConsulterTeleTrans {
   etatLotDre?: string;
 }
 
+export interface IConsulterFacture {
+  etatLotFse?: number;
+  etatLotDre?: number;
+}
+
 export interface IListeDateChangementEtat {
   lot?: {
     idLot?: string[];

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository, In } from 'typeorm';
-import { format, isAfter, isBefore } from 'date-fns';
+import { format, isAfter, isBefore, subWeeks } from 'date-fns';
 import { create } from 'xmlbuilder2';
 import axios from 'axios';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
@@ -28,6 +28,7 @@ import {
   CaresheetStatusRes,
   CaresheetThirdPartyRes,
 } from '../reponse/index.res';
+import { SesamvitaleTeletranmistionService } from './sesamvitale-teletranmistion.service';
 const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
 const PAV_MINIMUM_AMOUNT = 120;
 
@@ -55,6 +56,7 @@ export class ActsService {
     private thirdPartyAmcRepository: Repository<ThirdPartyAmcEntity>,
     @InjectRepository(ThirdPartyAmoEntity)
     private thirdPartyAmoRepository: Repository<ThirdPartyAmoEntity>,
+    private sesamvitaleTeletranmistionService: SesamvitaleTeletranmistionService,
   ) {}
 
   /**
@@ -1076,5 +1078,51 @@ export class ActsService {
 
   async getAllCaresheetStatus(): Promise<CaresheetStatusRes[]> {
     return await this.caresheetStatusRepository.find();
+  }
+
+  /**
+   * sesam-vitale/caresheets/update.php
+   * 16-61
+   */
+  async update(id: number) {
+    const user = await this.userRepository.findOne({
+      where: { id },
+    });
+    if (!user) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
+    }
+
+    const startDatetime = subWeeks(Date.now(), 2);
+
+    const caresheets = await this.fseRepository
+      .createQueryBuilder('caresheet')
+      .where('caresheet.usrId = :id', { id })
+      .andWhere('caresheet.externalReferenceId IS NOT NULL')
+      .andWhere('caresheet.date >= :creationDate', {
+        creationDate: startDatetime,
+      })
+      .getMany();
+
+    for (const caresheet of caresheets) {
+      const facture =
+        await this.sesamvitaleTeletranmistionService.consulterFacture(
+          caresheet.externalReferenceId,
+        );
+      const fseStatus = await this.caresheetStatusRepository.findOne({
+        where: {
+          value: facture.etatLotFse,
+        },
+      });
+      if (fseStatus) {
+        caresheet.fseStatus = fseStatus;
+      }
+      const dreStatus = await this.caresheetStatusRepository.findOne({
+        where: { value: facture.etatLotDre },
+      });
+      if (dreStatus) {
+        caresheet.dreStatus = dreStatus;
+      }
+      await this.fseRepository.save(caresheet);
+    }
   }
 }
