@@ -7,6 +7,7 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { CaresheetsDto } from './dto/index.dto';
 import { ActsService } from './service/caresheets.service';
+import { CaresheetStatusRes } from './reponse/index.res';
 
 @ApiBearerAuth()
 @ApiTags('Caresheets')
@@ -51,5 +52,15 @@ export class CaresheetsController {
       filterParam,
       filterValue,
     );
+  }
+
+  /**
+   * php/caresheets/statuses/index.php
+   * 13-24
+   */
+  @Get('/status')
+  @UseGuards(TokenGuard)
+  async getAllCaresheetStatus(): Promise<CaresheetStatusRes[]> {
+    return await this.service.getAllCaresheetStatus();
   }
 }

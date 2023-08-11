@@ -23,7 +23,11 @@ import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
 import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 import { CaresheetModeEnum } from 'src/enum/caresheet.enum';
 import { CaresheetTypeEnum } from 'src/enum/caresheet-type.enum';
-import { CaresheetRes, CaresheetThirdPartyRes } from '../reponse/index.res';
+import {
+  CaresheetRes,
+  CaresheetStatusRes,
+  CaresheetThirdPartyRes,
+} from '../reponse/index.res';
 const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
 const PAV_MINIMUM_AMOUNT = 120;
 
@@ -1068,5 +1072,9 @@ export class ActsService {
         sortFieldParameterName: 'sort',
       },
     };
+  }
+
+  async getAllCaresheetStatus(): Promise<CaresheetStatusRes[]> {
+    return await this.caresheetStatusRepository.find();
   }
 }
