@@ -1606,16 +1606,6 @@ export class MailService {
         return new CBadRequestException('Au moins un destinataire est requis');
       }
 
-      // const context = await this.contextMail(
-      //   {
-      //     patient_id: mail?.patient?.id ? mail.patient.id : null,
-      //     correspondent_id: mail?.conrrespondent?.id
-      //       ? mail.conrrespondent.id
-      //       : null,
-      //   },
-      //   mail?.doctor?.id,
-      // );
-      // const mailConverted = await this.transform(mail, context, mailFilename);
       // @TODO
       // Mail::pdf($mailConverted, array('filename' => $mailDirname));
 
