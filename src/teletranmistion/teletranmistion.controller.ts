@@ -56,7 +56,6 @@ external_reference_id
     @CurrentUser() identity: UserIdentity,
     @Body() consulterUtlDto: ConsulterUtlDto,
   ) {
-    console.log('user List', consulterUtlDto);
     return await this.userTeletranmistionService.postInterfaceageActivation(
       identity.id,
       consulterUtlDto,

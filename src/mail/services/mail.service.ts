@@ -68,8 +68,6 @@ export class MailService {
   ): Promise<FindAllMailRes> {
     if (!search) search = '';
     const pageSize = 100;
-    console.log('practitionerId', practitionerId);
-
     const doctors: PersonInfoDto[] = await this.dataSource.query(`SELECT
         T_USER_USR.USR_ID AS id,
         T_USER_USR.USR_LASTNAME AS lastname,
@@ -1487,7 +1485,6 @@ export class MailService {
   }
 
   async update(inputs: UpdateMailDto) {
-    console.log('update', inputs?.body);
     const headerId =
       inputs?.header && inputs?.header?.id ? inputs?.header?.id : null;
     const footerId =
@@ -1535,8 +1532,6 @@ export class MailService {
           inputs?.id,
         ],
       );
-
-      console.log('res', res);
       await queryRunner.commitTransaction();
       return this.find(inputs?.id);
     } catch (err) {
@@ -1552,7 +1547,6 @@ export class MailService {
     files: Express.Multer.File[],
   ) {
     const mail = await this.findById(payload.id);
-    console.log(mail);
     let mailTitle = mail.title;
     const mailFilename = sanitizeFilename(`${mailTitle}.pdf`);
     // const mailDirname = path ? path.join(tmpdir(), mailFilename) : null;
