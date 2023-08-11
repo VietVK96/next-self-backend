@@ -126,3 +126,13 @@ export class CreateUpdateBankDto {
   @ApiProperty()
   address?: CreateUpdateBankStreet;
 }
+export class SortableUpdateBankCheckDto {
+  @ApiProperty()
+  name?: string;
+
+  @ApiProperty()
+  position?: number;
+
+  @ApiProperty()
+  id?: number;
+}

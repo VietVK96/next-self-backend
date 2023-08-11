@@ -3,7 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { PrescriptionTemplateEntity } from 'src/entities/prescription-template.entity';
 import { DataSource, In, Repository } from 'typeorm';
-import { CreatePrescriptionTemplateDto } from '../dto/prescription-template.dto';
+import {
+  CreatePrescriptionTemplateDto,
+  SortablePrescriptionTemplateDto,
+} from '../dto/prescription-template.dto';
 import { MedicamentEntity } from 'src/entities/medicament.entity';
 import { ErrorCode } from 'src/constants/error';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
@@ -25,16 +28,19 @@ export class PrescriptionTemplateService {
     if (!organizationId) {
       throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
-    const organization = await this.organizationRepo.findOne({
-      where: { id: organizationId },
+    const prescriptionTemplate = await this.prescriptionTemplateRepo.find({
+      where: { organizationId: organizationId },
       relations: {
-        prescriptionTemplates: {
-          medicaments: true,
-        },
+        medicaments: true,
+      },
+      order: {
+        position: 'ASC',
+        id: 'ASC',
       },
     });
-    if (!organization) throw new CBadRequestException(ErrorCode.NOT_FOUND);
-    return organization.prescriptionTemplates;
+    if (!prescriptionTemplate)
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    return prescriptionTemplate;
   }
 
   async create(organizationId: number, payload: CreatePrescriptionTemplateDto) {
@@ -112,5 +118,22 @@ export class PrescriptionTemplateService {
     return {
       success: true,
     };
+  }
+
+  async sortable(payload: SortablePrescriptionTemplateDto[]) {
+    const ids = payload.map((item) => item.id);
+    let i = 0;
+    for (const id of ids) {
+      try {
+        await this.dataSource
+          .createQueryBuilder()
+          .update(PrescriptionTemplateEntity)
+          .set({ position: i })
+          .where({ id })
+          .execute();
+        i++;
+      } catch (error) {}
+    }
+    return;
   }
 }

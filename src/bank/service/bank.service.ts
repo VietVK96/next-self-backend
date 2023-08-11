@@ -8,6 +8,7 @@ import { DataSource, Repository } from 'typeorm';
 import {
   BankCheckPrintDto,
   CreateUpdateBankDto,
+  SortableUpdateBankCheckDto,
   UpdateBankCheckDto,
 } from '../dto/bank.dto';
 import { UserEntity } from 'src/entities/user.entity';
@@ -78,19 +79,19 @@ export class BankService {
   }
 
   async bankChecks(organizationId: number) {
-    const organization = await this.organizationRepo.findOne({
-      where: { id: organizationId },
-      relations: {
-        bankChecks: true,
-      },
-    });
-
-    return organization.bankChecks.map(({ id, name, position, fields }) => ({
-      id,
-      name,
-      position,
-      fields,
-    }));
+    const bankCheck = this.dataSource
+      .createQueryBuilder(BankCheckEntity, 'bankCheck')
+      .select([
+        'bankCheck.id',
+        'bankCheck.name',
+        'bankCheck.position',
+        'bankCheck.fields',
+      ])
+      .where('bankCheck.organizationId = :organizationId')
+      .setParameter('organizationId', organizationId)
+      .orderBy('bankCheck.position', 'ASC')
+      .addOrderBy('bankCheck.id', 'ASC');
+    return await bankCheck.getMany();
   }
 
   async print(params: BankCheckPrintDto) {
@@ -396,5 +397,22 @@ export class BankService {
     });
     if (!currentBank) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     return currentBank;
+  }
+
+  async sortable(payload: SortableUpdateBankCheckDto[]) {
+    const ids = payload.map((item) => item.id);
+    let i = 0;
+    for (const id of ids) {
+      try {
+        await this.dataSource
+          .createQueryBuilder()
+          .update(BankCheckEntity)
+          .set({ position: i })
+          .where({ id })
+          .execute();
+        i++;
+      } catch (error) {}
+    }
+    return;
   }
 }

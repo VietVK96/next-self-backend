@@ -35,6 +35,7 @@ import { SuccessResponse } from 'src/common/response/success.res';
 import { format, intervalToDuration } from 'date-fns';
 import { LibraryActOdontogramPivotEntity } from 'src/entities/library-act-odontogram-pivot.entity';
 import { checkId } from 'src/common/util/number';
+import { AcFamiliesCopyRes } from '../res/act-families.res';
 
 @Injectable()
 export class LibrariesService {
@@ -1366,5 +1367,22 @@ export class LibrariesService {
       libraryActs.andWhere('libraryActQuantity.used = :used', { used: true });
     }
     return await libraryActs.getMany();
+  }
+
+  async sortableLibraryActFamily(payload: AcFamiliesCopyRes[]) {
+    const ids = payload.map((item) => item.id);
+    let i = 0;
+    for (const id of ids) {
+      try {
+        await this.dataSource
+          .createQueryBuilder()
+          .update(LibraryActFamilyEntity)
+          .set({ position: i })
+          .where({ id })
+          .execute();
+        i++;
+      } catch (error) {}
+    }
+    return;
   }
 }
