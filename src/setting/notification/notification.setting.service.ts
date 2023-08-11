@@ -160,7 +160,11 @@ export class NotificationSettingService {
       }),
     );
 
-    const monetico = new Monetico();
+    const monetico = new Monetico(
+      process.env.MONETICO_COMPANY_CODE,
+      process.env.MONETICO_EPT_CODE,
+      process.env.MONETICO_SECURITY_KEY,
+    );
 
     products.push({
       pack100sms: monetico.getFormFields(pack100smsPaymentRequest),
