@@ -8,6 +8,7 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { Request } from 'express';
 import { SaveMessageNotificationDto } from './dto/saveMessage.notification.dto';
+import { SaveSmsShareDto } from './dto/notification.dto';
 
 @ApiBearerAuth()
 @ApiTags('Setting')
@@ -35,6 +36,18 @@ export class NotificationSettingController {
   ) {
     return await this.notificationSettingService.saveMessage(
       identity.id,
+      payload,
+    );
+  }
+
+  @Post()
+  @UseGuards(TokenGuard)
+  async saveSmsShare(
+    @CurrentUser() identity: UserIdentity,
+    @Body() payload: SaveSmsShareDto,
+  ) {
+    return await this.notificationSettingService.saveSmsShare(
+      identity.org,
       payload,
     );
   }

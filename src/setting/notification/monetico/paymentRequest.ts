@@ -1,3 +1,4 @@
+import * as dayjs from 'dayjs';
 import { OrderContext } from './orderContext';
 
 export class PaymentRequest {
@@ -48,7 +49,7 @@ export class PaymentRequest {
       lgue: this.langue,
       version: version,
       reference: this.reference,
-      date: this.date,
+      date: dayjs(this.date).format('DD/MM/YYYY:hh:mm:ss'),
       montant: this.formatAmount(this.montant, this.devise),
       contexte_commande: Buffer.from(
         JSON.stringify(this.contexteCommande),
