@@ -63,4 +63,14 @@ export class CaresheetsController {
   async getAllCaresheetStatus(): Promise<CaresheetStatusRes[]> {
     return await this.service.getAllCaresheetStatus();
   }
+
+  /**
+   * sesam-vitale/caresheets/update.php
+   * 16-61
+   */
+  @Post('/update')
+  @UseGuards(TokenGuard)
+  async update(@Query('id') id?: number) {
+    return await this.service.update(id);
+  }
 }
