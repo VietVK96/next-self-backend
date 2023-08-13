@@ -29,9 +29,65 @@ import {
   CaresheetThirdPartyRes,
 } from '../reponse/index.res';
 import { SesamvitaleTeletranmistionService } from './sesamvitale-teletranmistion.service';
+import * as path from 'path';
+import { customCreatePdf } from 'src/common/util/pdf';
+import PDFMerger = require('pdf-merger-js');
+import * as dayjs from 'dayjs';
+import { LotEntity } from 'src/entities/lot.entity';
 const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
 const PAV_MINIMUM_AMOUNT = 120;
-
+const helpersCaresheetPdf = {
+  formatDate: function (date) {
+    return dayjs(date).format('DDMMYYYY');
+  },
+  slice: function (string, start, end) {
+    if (!string) return;
+    return string.toString().slice(start, end);
+  },
+  padStart: function (value, num) {
+    if (!value) return;
+    return value.padStart(num, '');
+  },
+  padEnd: function (value, num) {
+    if (!value) return;
+    return value.padEnd(num, '');
+  },
+  joinAndReplace: function (string, key, value) {
+    if (!string) return;
+    return string.join('').replace(key, value);
+  },
+  setVar: function (varName, varValue, options) {
+    options.data.root[varName] = varValue;
+  },
+  math: function (lvalue, operator, rvalue) {
+    lvalue = parseFloat(lvalue);
+    rvalue = parseFloat(rvalue);
+    return {
+      '+': lvalue + rvalue,
+      '-': lvalue - rvalue,
+      '*': lvalue * rvalue,
+      '/': lvalue / rvalue,
+      '%': lvalue % rvalue,
+    }[operator];
+  },
+  table: function (context) {
+    if (!context) return;
+    const listItem = context.toString().split('');
+    const width = Math.floor(100 / listItem.length);
+    let str = `
+    <table class="text-center">
+      <tbody>
+        <tr>`;
+    for (let i = 0, j = listItem.length; i < j; i++) {
+      str += `<td style="width: ${width}%;">${listItem[i]}</td>`;
+    }
+    str += `
+        </tr>
+      </tbody>
+    </table>`;
+    return str;
+  },
+};
 @Injectable()
 export class ActsService {
   private readonly logger: Logger = new Logger(ActsService.name);
@@ -57,6 +113,8 @@ export class ActsService {
     @InjectRepository(ThirdPartyAmoEntity)
     private thirdPartyAmoRepository: Repository<ThirdPartyAmoEntity>,
     private sesamvitaleTeletranmistionService: SesamvitaleTeletranmistionService,
+    @InjectRepository(LotEntity)
+    private lotRepository: Repository<LotEntity>,
   ) {}
 
   /**
@@ -1124,5 +1182,85 @@ export class ActsService {
       }
       await this.fseRepository.save(caresheet);
     }
+  }
+
+  async print(userId: number, ids: Array<number>, duplicata?: boolean) {
+    const options = {
+      format: 'A4',
+      displayHeaderFooter: true,
+      headerTemplate: '<div></div>',
+      footerTemplate: '<div></div>',
+      margin: {
+        left: '10mm',
+        top: '25mm',
+        right: '10mm',
+        bottom: '15mm',
+      },
+    };
+    const pdfMerger = new PDFMerger();
+    for (const id of ids) {
+      const caresheet = await this.fseRepository.findOne({
+        where: { id },
+        relations: [
+          'actMedicals',
+          'actMedicals.act',
+          'actMedicals.ccam',
+          'actMedicals.ngapKey',
+          'patient',
+          'patient.medical',
+          'patient.medical.policyHolder',
+        ],
+      });
+
+      const filePath = path.join(
+        process.cwd(),
+        'templates/pdf/caresheets',
+        'duplicata.hbs',
+      );
+      const data = {
+        caresheet,
+        duplicata,
+      };
+      const pdf = await customCreatePdf({
+        files: [{ path: filePath, data }],
+        options,
+        helpers: helpersCaresheetPdf,
+      });
+
+      await pdfMerger.add(pdf);
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['medical', 'medical.specialtyCode'],
+    });
+
+    const queryBuilder = this.lotRepository
+      .createQueryBuilder('lot')
+      .distinct()
+      .leftJoinAndSelect('lot.amc', 'amc')
+      .leftJoinAndSelect('lot.amo', 'amo')
+      .innerJoinAndSelect('lot.caresheets', 'caresheets')
+      .where('caresheets.id IN (:id)', { id: ids });
+
+    const lots = await queryBuilder.getMany();
+    for (const lot of lots) {
+      const filePath = path.join(
+        process.cwd(),
+        'templates/pdf/lot',
+        'bordereau_teletransmission.hbs',
+      );
+      const data = {
+        lot,
+        user,
+      };
+      const pdf = await customCreatePdf({
+        files: [{ path: filePath, data }],
+        options,
+        helpers: helpersCaresheetPdf,
+      });
+      await pdfMerger.add(pdf);
+    }
+    return await pdfMerger.saveAsBuffer();
   }
 }

@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -8,6 +16,7 @@ import {
 import { CaresheetsDto } from './dto/index.dto';
 import { ActsService } from './service/caresheets.service';
 import { CaresheetStatusRes } from './reponse/index.res';
+import { CaresheetModeEnum } from 'src/enum/caresheet.enum';
 
 @ApiBearerAuth()
 @ApiTags('Caresheets')
@@ -72,5 +81,36 @@ export class CaresheetsController {
   @UseGuards(TokenGuard)
   async update(@Query('id') id?: number) {
     return await this.service.update(id);
+  }
+
+  @Get('/modes')
+  @UseGuards(TokenGuard)
+  async getCaresheetsModes() {
+    return CaresheetModeEnum.choices;
+  }
+
+  /**
+   * php/caresheets/print.php
+   * 12-80
+   */
+
+  @Get('/print')
+  @UseGuards(TokenGuard)
+  async print(
+    @Res() res,
+    @CurrentUser() identity: UserIdentity,
+    @Query('id') ids?: Array<number>,
+    @Query('duplicata') duplicata?: boolean,
+  ) {
+    const buffer = await this.service.print(identity.id, ids, duplicata);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=print.pdf`,
+      'Content-Length': buffer?.length,
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: 0,
+    });
+    res.end(buffer);
   }
 }

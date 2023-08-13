@@ -17,6 +17,7 @@ import { ActsService } from './service/caresheets.service';
 import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
 import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 import { SesamvitaleTeletranmistionService } from './service/sesamvitale-teletranmistion.service';
+import { LotEntity } from 'src/entities/lot.entity';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { SesamvitaleTeletranmistionService } from './service/sesamvitale-teletra
       CaresheetStatusEntity,
       ThirdPartyAmcEntity,
       ThirdPartyAmoEntity,
+      LotEntity,
     ]),
     forwardRef(() => ContactModule),
     HttpModule,
