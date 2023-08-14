@@ -17,6 +17,16 @@ import { SuccessResponse } from 'src/common/response/success.res';
 import { PermissionService } from 'src/user/services/permission.service';
 import { PerCode } from 'src/constants/permissions';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import {
+  BordereauxIndexItemRes,
+  BordereauxIndexRes,
+  BordereauxPaymentIndexItemRes,
+  BordereauxPaymentIndexRes,
+  BordereauxPaymentRes,
+  BordereauxRes,
+  BordereauxTotalAmountRes,
+  BordereauxUserBankRes,
+} from './response/bordereaux.res';
 
 @Injectable()
 export class BordereauxService {
@@ -122,7 +132,8 @@ export class BordereauxService {
     });
     const totalAmountQueryBuilder = queryBuilder.clone();
     totalAmountQueryBuilder.select('SUM(bordereau.amount)', 'totalAmount');
-    const totalAmount = await totalAmountQueryBuilder.getRawOne();
+    const totalAmount: BordereauxTotalAmountRes =
+      await totalAmountQueryBuilder.getRawOne();
     const totalAmountValue = totalAmount?.totalAmount
       ? parseFloat(totalAmount?.totalAmount)
       : 0;
@@ -135,8 +146,8 @@ export class BordereauxService {
         direction?.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
       );
     }
-    const queryResult = await queryBuilder.getRawMany();
-    const bordereauxs = queryResult.map((q) => {
+    const queryResult: BordereauxRes[] = await queryBuilder.getRawMany();
+    const bordereauxs: BordereauxIndexItemRes[] = queryResult.map((q) => {
       const paymentChoiceReadable =
         PaymentMethodEnum.choices[q?.paymentChoice] ?? '';
       return {
@@ -156,7 +167,7 @@ export class BordereauxService {
     });
     const offSet = (page - 1) * per_page;
     const dataPaging = bordereauxs.slice(offSet, offSet + per_page);
-    const data = {
+    const data: BordereauxIndexRes = {
       current_page_number: page,
       custom_parameters: { sorted: true },
       extra: { total_amount: totalAmountValue },
@@ -264,25 +275,29 @@ export class BordereauxService {
         direction?.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
       );
     }
-    const queryResult = await queryBuilder.getRawMany();
-    const bordereauxPayment = queryResult.map((q) => {
-      const methodReadable = PaymentMethodEnum.choices[q?.payment] ?? '';
-      const typeReadable = PaymentTypeEnum.choices[q?.type] ?? '';
-      return {
-        id: q?.id,
-        creation_date: q?.date,
-        label: q?.debtor,
-        method: q?.payment,
-        method_readable: methodReadable,
-        payment_date: q?.paymentDate,
-        type: q?.type,
-        type_readable: typeReadable,
-        amount: q?.amount,
-      };
-    });
+    const queryResult: BordereauxPaymentRes[] = await queryBuilder.getRawMany();
+    const bordereauxPayment: BordereauxPaymentIndexItemRes[] = queryResult.map(
+      (q) => {
+        const methodReadable = PaymentMethodEnum.choices[q?.payment] ?? '';
+        const typeReadable = PaymentTypeEnum.choices[q?.type] ?? '';
+        return {
+          id: q?.id,
+          label: q?.debtor,
+          method: q?.payment,
+          method_readable: methodReadable,
+          payment_date: q?.paymentDate,
+          type: q?.type,
+          type_readable: typeReadable,
+          amount: q?.amount,
+        };
+      },
+    );
     const offSet = (page - 1) * per_page;
-    const dataPaging = bordereauxPayment.slice(offSet, offSet + per_page);
-    const data = {
+    const dataPaging: BordereauxPaymentIndexItemRes[] = bordereauxPayment.slice(
+      offSet,
+      offSet + per_page,
+    );
+    const data: BordereauxPaymentIndexRes = {
       current_page_number: page,
       custom_parameters: { sorted: true },
       items: dataPaging,
@@ -316,7 +331,7 @@ export class BordereauxService {
         name: 'ASC',
       },
     });
-    const data = banks?.map((bank) => {
+    const data: BordereauxUserBankRes[] = banks?.map((bank) => {
       return {
         account_number: bank?.accountNumber ?? '',
         agency_code: bank?.branchCode ?? '',
