@@ -10,6 +10,8 @@ import { PlanEventEntity } from 'src/entities/plan-event.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { EventService } from './services/event.service';
 import { PermissionService } from 'src/user/services/permission.service';
+import { GetSessionService } from 'src/auth/services/get-session.service';
+import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 
 @Module({
   imports: [
@@ -19,6 +21,7 @@ import { PermissionService } from 'src/user/services/permission.service';
       ContactEntity,
       UserEntity,
       PlanEventEntity,
+      UserMedicalEntity,
     ]),
   ],
   controllers: [EventController],
@@ -27,6 +30,7 @@ import { PermissionService } from 'src/user/services/permission.service';
     SaveEventService,
     EventService,
     PermissionService,
+    GetSessionService,
   ],
 })
 export class EventModule {}

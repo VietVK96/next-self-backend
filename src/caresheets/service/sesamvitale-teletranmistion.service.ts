@@ -4,6 +4,7 @@ import {
   IConsulterListeCpseRsp,
   IConsulterTeleTrans,
   IConsulterUtlDetailRsp,
+  IConsulterFacture,
   IListeDateChangementEtat,
   IRecevoirDetailListeRsp,
   IRecevoirRsp,
@@ -133,6 +134,23 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
 </soapenv:Envelope>`;
     const data = await this.sendRequest<IConsulterUtlDetailRsp>(
       'ConsulterUtlDetail',
+      xml,
+    );
+    return data;
+  }
+
+  async consulterFacture(idFacture: number): Promise<IConsulterFacture> {
+    const xml = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">
+    <soapenv:Body>
+      <jux:ConsulterFacture>
+        <xsd:appelConsulterFacture>
+          <xsd:idFacture>${idFacture}</xsd:idFacture>
+        </xsd:appelConsulterFacture>
+      </jux:ConsulterFacture>
+    </soapenv:Body>
+  </soapenv:Envelope>`;
+    const data = await this.sendRequest<IConsulterFacture>(
+      'ConsulterFacture',
       xml,
     );
     return data;

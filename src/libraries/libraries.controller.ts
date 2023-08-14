@@ -207,4 +207,16 @@ export class LibrariesController {
   async searchlibrariesActs(@Query() payload: ActsIndexDto) {
     return await this.librariesService.getAtcsBySearchTermAndOnltUsed(payload);
   }
+
+  @Put('sortable')
+  @UseGuards(TokenGuard)
+  async sortableLibraryActFamily(@Body() payload: AcFamiliesCopyRes[]) {
+    return await this.librariesService.sortableLibraryActFamily(payload);
+  }
+
+  @Put('acts-sortable')
+  @UseGuards(TokenGuard)
+  async sortableLibraryAct(@Body() payload: AcFamiliesCopyRes[]) {
+    return await this.actService.sortableLibraryAct(payload);
+  }
 }

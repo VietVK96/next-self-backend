@@ -128,16 +128,3 @@ export class AddressEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt?: Date;
 }
-//application/Entities/Address.php
-//application/Entities/AddressEntity.php
-
-export function hasAllFieldsRequiredForBilling(
-  address: AddressEntity,
-): boolean {
-  return ![
-    address.street,
-    address.city,
-    address.zipCode,
-    address.countryAbbr,
-  ].reduce((empty, value) => empty || value === '', false);
-}

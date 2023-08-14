@@ -471,3 +471,17 @@ export class CaresheetPatientRes {
   @ApiProperty()
   phone_numbers?: PhoneEntity[];
 }
+
+export class CaresheetStatusRes {
+  @ApiProperty()
+  id?: number;
+
+  @ApiProperty()
+  value?: number;
+
+  @ApiProperty()
+  label?: string;
+
+  @ApiProperty()
+  description?: string;
+}

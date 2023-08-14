@@ -1,9 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, In, Like, Not, Repository } from 'typeorm';
+import {
+  And,
+  DataSource,
+  FindOptionsWhere,
+  In,
+  IsNull,
+  LessThanOrEqual,
+  Like,
+  MoreThan,
+  MoreThanOrEqual,
+  Not,
+  Repository,
+} from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   EnregistrerFactureDto,
   FactureEmailDto,
+  FactureFindEventTasksDto,
   PrintPDFDto,
 } from '../dto/facture.dto';
 import { BillEntity } from 'src/entities/bill.entity';
@@ -12,7 +25,10 @@ import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
-import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
+import {
+  DentalEventTaskEntity,
+  EnumDentalEventTaskExceeding,
+} from 'src/entities/dental-event-task.entity';
 import { EventEntity } from 'src/entities/event.entity';
 import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
@@ -29,8 +45,13 @@ import { AddressEntity } from 'src/entities/address.entity';
 import { createPdf } from '@saemhco/nestjs-html-pdf';
 import * as path from 'path';
 import { checkDay } from 'src/common/util/day';
-import { checkId } from 'src/common/util/number';
-import { DetailsRes, InitFactureRes } from '../res/facture.res';
+import { checkBoolean, checkId, checkNumber } from 'src/common/util/number';
+import {
+  AjaxEventTaskRes,
+  AjaxSeancesCaseRes,
+  DetailsRes,
+  InitFactureRes,
+} from '../res/facture.res';
 import { customCreatePdf } from 'src/common/util/pdf';
 import { facturePdfFooter } from '../constant/htmlTemplate';
 import { br2nl } from 'src/common/util/string';
@@ -41,6 +62,8 @@ import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import * as fs from 'fs';
 import * as handlebars from 'handlebars';
+import { isNull } from 'util';
+import { ExceedingEnum } from 'src/constants/act';
 
 @Injectable()
 export class FactureServices {
@@ -77,7 +100,7 @@ export class FactureServices {
     private contactNoteRepository: Repository<ContactNoteEntity>,
     private dataSource: DataSource,
   ) {}
-  async update(payload: EnregistrerFactureDto) {
+  async requestAjax(payload: EnregistrerFactureDto) {
     const id_facture = checkId(payload?.id_facture);
     const id_facture_ligne = checkId(payload?.id_facture_ligne);
     const user_id = checkId(payload?.user_id);
@@ -212,134 +235,156 @@ export class FactureServices {
 
       case 'seances':
         {
-          if (payload?.displayOnlyActsRealized === 'on') {
-            const dataEventTasks = await this.eventTaskRepository.find({
-              where: {
-                usrId: user_id || 0,
-                conId: patient_id || 0,
-                status: 0,
-                amountSaved: null,
-              },
-              relations: ['event', 'dental'],
-            });
-            const dataFilDate = dataEventTasks?.filter((dataEventTask) => {
-              return (
-                new Date(dataEventTask?.date)?.getTime() >=
-                  new Date(payload?.dateDeb).getTime() &&
-                new Date(dataEventTask?.date)?.getTime() <=
-                  new Date(payload?.dateFin).getTime()
-              );
-            });
-            const ngap_keys = await this.ngapKeyRepository.find();
-            const res: { date: string; data: any[] }[] = [];
-            for (const data of dataFilDate) {
-              const current_ngap_key = ngap_keys?.find((key) => {
-                return key?.id === data?.dental?.ngapKeyId;
-              });
-              const exist = res.find((r) => r.date === data.date);
-              const newData = {
-                date: data?.date,
-                name: data?.name,
-                amount: data?.amount,
-                ccamFamily: data?.ccamFamily,
-                teeth: data?.dental?.teeth,
-                secuAmount: data?.dental?.secuAmount,
-                exceeding: data?.dental?.exceeding,
-                type: data?.dental?.type,
-                ccamCode: data?.dental?.ccamCode,
-                coef: data?.dental?.coef,
-                ngapKeyName: current_ngap_key?.name,
-              };
-              if (exist) {
-                exist.data.push(newData);
-              } else {
-                res.push({
-                  date: data.date,
-                  data: [newData],
-                });
-              }
-            }
-            return res;
-          }
-          if (payload?.displayOnlyActsListed) {
-            const dataEventTasks = await this.eventTaskRepository.find({
-              where: {
-                usrId: user_id || 0,
-                conId: patient_id || 0,
-                amountSaved: null,
-              },
-              relations: ['event', 'dental'],
-            });
-            const dataFilDate = dataEventTasks?.filter((dataEventTask) => {
-              return (
-                new Date(dataEventTask?.date)?.getTime() >=
-                  new Date(payload?.dateDeb).getTime() &&
-                new Date(dataEventTask?.date)?.getTime() <=
-                  new Date(payload?.dateFin).getTime()
-              );
-            });
-            const ngap_keys = await this.ngapKeyRepository.find();
-            const res: { date: string; data: any[] }[] = [];
-            for (const data of dataFilDate) {
-              const current_ngap_key = ngap_keys?.find((key) => {
-                return key?.id === data?.dental?.ngapKeyId;
-              });
-              const exist = res.find((r) => r.date === data.date);
-              const newData = {
-                date: data?.date,
-                name: data?.name,
-                amount: data?.amount,
-                ccamFamily: data?.ccamFamily,
-                teeth: data?.dental?.teeth,
-                secuAmount: data?.dental?.secuAmount,
-                exceeding: data?.dental?.exceeding,
-                type: data?.dental?.type,
-                ccamCode: data?.dental?.ccamCode,
-                coef: data?.dental?.coef,
-                ngapKeyName: current_ngap_key?.name,
-              };
-              if (exist) {
-                exist.data.push(newData);
-              } else {
-                res.push({
-                  date: data.date,
-                  data: [newData],
-                });
-              }
-            }
-            return res;
-          }
+          try {
+            let eventTasks = await this.findEventTasks(payload);
 
-          if (payload?.displayOnlyProsthesis) {
-            const dataEventTasks = await this.eventTaskRepository.find({
-              where: {
-                usrId: user_id || 0,
-                conId: patient_id || 0,
-                amountSaved: null,
-              },
-              relations: ['event', 'dental'],
-            });
-            const dataFilDate = dataEventTasks?.filter((dataEventTask) => {
-              return (
-                new Date(dataEventTask?.date)?.getTime() >=
-                  new Date(payload?.dateDeb).getTime() &&
-                new Date(dataEventTask?.date)?.getTime() <=
-                  new Date(payload?.dateFin).getTime()
-              );
-            });
-            // const ngap_keys = await this.ngapKeyRepository.find();
-            return dataFilDate?.map((data) => {
-              // const current_ngap_key = ngap_keys?.find((key) => {
-              //   return key?.id === data?.dental?.ngapKeyId;
-              // });
-              return {
-                ccamFamily: data?.ccamFamily,
+            if (checkBoolean(payload?.displayOnlyProsthesis)) {
+              eventTasks = eventTasks.filter((eventTask) => {
+                return this.isProsthesis(eventTask?.ccamFamily);
+              });
+            }
+
+            let date = '';
+            let i = 0;
+            const result = eventTasks.reduce((result, eventTask) => {
+              let amoAmount = checkNumber(eventTask?.dental?.secuAmount);
+              let cotation = '';
+
+              switch (eventTask?.dental?.type) {
+                case 'CCAM':
+                  cotation = eventTask?.dental?.ccamCode;
+                  amoAmount = amoAmount * checkNumber(eventTask?.dental?.coef);
+                  break;
+
+                case 'NGAP':
+                  cotation =
+                    ('   ' + (eventTask?.dental?.ngapKey?.name || ''))?.slice(
+                      -3,
+                    ) +
+                    ' ' +
+                    eventTask.dental.coef;
+                  break;
+
+                default:
+                  cotation = 'NPC';
+                  break;
+              }
+
+              if (
+                eventTask?.dental?.exceeding === EnumDentalEventTaskExceeding.N
+              ) {
+                amoAmount = 0;
+              }
+
+              const eTask: AjaxEventTaskRes = {
+                ...eventTask,
+                cotation,
+                date: eventTask?.date,
+                name: eventTask?.name,
+                amount: eventTask?.amount,
+                ccamFamily: eventTask?.ccamFamily,
+                teeth: eventTask?.dental?.teeth,
+                secuAmount: eventTask?.dental?.secuAmount,
+                exceeding: eventTask?.dental?.exceeding,
+                type: eventTask?.dental?.type,
+                ccamCode: eventTask?.dental?.ccamCode,
+                coef: eventTask?.dental?.coef,
+                ngapKeyName: eventTask?.dental?.ngapKey?.name,
               };
-            });
+
+              if (date && eventTask.date === date) {
+                result[i].data.push(eTask);
+              } else {
+                if (date === '') {
+                  result[0] = {
+                    date: eventTask.date,
+                    data: [eTask],
+                  };
+                } else {
+                  result[i + 1] = {
+                    date: eventTask.date,
+                    data: [eTask],
+                  };
+                  i++;
+                }
+              }
+              date = eventTask.date;
+              return result;
+            }, [] as AjaxSeancesCaseRes[]);
+
+            return result;
+          } catch (error) {
+            console.log(
+              '🚀 ~ file: facture.services.ts:342 ~ FactureServices ~ requestAjax ~ error:',
+              error,
+            );
+            throw new CBadRequestException(ErrorCode.NOT_FOUND);
           }
         }
         break;
     }
+  }
+
+  /**
+   * ecoophp/dental/facture/facture_requetes_ajax.php 34 -72
+   * @param payload : FactureFindEventTasksDto
+   * @returns EventTaskEntity[]
+   */
+  async findEventTasks(
+    payload: FactureFindEventTasksDto,
+  ): Promise<EventTaskEntity[]> {
+    const user_id = checkId(payload?.user_id);
+    const patient_id = checkId(payload?.patient_id);
+    const where: FindOptionsWhere<EventTaskEntity> = {
+      usrId: user_id,
+      conId: patient_id,
+      date: And(
+        MoreThanOrEqual(payload?.dateDeb),
+        LessThanOrEqual(payload?.dateFin),
+      ),
+      amountBackup: IsNull(),
+    };
+    if (checkBoolean(payload?.displayOnlyActsRealized)) {
+      where.status = MoreThan(0);
+    }
+    if (checkBoolean(payload?.displayOnlyActsListed)) {
+      where.dental = [
+        { ccamCode: Not(IsNull()) },
+        {
+          ngapKey: {
+            name: Not(IsNull()),
+          },
+        },
+      ];
+    }
+    return await this.eventTaskRepository.find({
+      select: {
+        id: true,
+        date: true,
+        name: true,
+        amount: true,
+        dental: {
+          teeth: true,
+          secuAmount: true,
+          exceeding: true,
+          type: true,
+          ccamCode: true,
+          coef: true,
+          ngapKey: {
+            name: true,
+          },
+        },
+      },
+      relations: {
+        dental: {
+          ngapKey: true,
+        },
+      },
+      where,
+      order: {
+        date: 'ASC',
+      },
+    });
   }
 
   async getInitChamps(
@@ -845,7 +890,7 @@ export class FactureServices {
       );
       const mailBody = template({ fullName, invoice, homePhoneNumber });
 
-      await this.mailTransportService.sendFactureEmail(identity.id, {
+      await this.mailTransportService.sendEmail(identity.id, {
         from: invoice?.user?.email,
         to: invoice?.patient?.email,
         subject: `Facture du ${format(
@@ -885,5 +930,50 @@ export class FactureServices {
     } catch (err) {
       throw new CBadRequestException(`${err?.message}`);
     }
+  }
+
+  /**
+   * ecoophp/application/Service/CcamFamilyService.php
+   * Retourne si la variable donnée est un code de regroupement de prothèse.
+   *
+   * @param string $family code de regroupement ccam
+   * @return bool
+   */
+  isProsthesis(family: string): boolean {
+    /**
+     * @var array liste des codes de regroupement de prothèses
+     */
+    const PROSTHESIS_FAMILIES = [
+      'BR1',
+      'CM0',
+      'CT0',
+      'CT1',
+      'CZ0',
+      'CZ1',
+      'IC0',
+      'IC1',
+      'ICO',
+      'IMP',
+      'IN1',
+      'INO',
+      'PA0',
+      'PA1',
+      'PAM',
+      'PAR',
+      'PDT',
+      'PF0',
+      'PF1',
+      'PFC',
+      'PFM',
+      'PT0',
+      'RA0',
+      'RE1',
+      'RF0',
+      'RPN',
+      'RS0',
+      'SU0',
+      'SU1',
+    ];
+    return PROSTHESIS_FAMILIES.includes(family);
   }
 }
