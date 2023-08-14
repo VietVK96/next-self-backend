@@ -10,6 +10,7 @@ import { ErrorCode } from 'src/constants/error';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ImporterService } from './importer.service';
+import { LetterImporterService } from './letter-importer.service';
 
 @Injectable()
 export class DsioImporterService {
@@ -18,6 +19,7 @@ export class DsioImporterService {
     @InjectRepository(UserPreferenceEntity)
     private userPrefRepo: Repository<UserPreferenceEntity>,
     private importerService: ImporterService,
+    private letterImporterService: LetterImporterService,
   ) {}
 
   /**
@@ -37,16 +39,11 @@ export class DsioImporterService {
 
     let command = '';
     const extension = path.extname(pathname).toUpperCase();
-    if (extension === 'ZIP') {
-      // @TODO
-      //   $importPathname = base_path('php/document/letters/import.php');
-      // $command = "php -c $phpiniPathname $importPathname filename=" . escapeshellarg($filename) . " organization_id={$session->get('organization_id')}";
-      // $filename
-      // orgId
-      // serId opt
-      // if (null !== ($userId = $request->request->get('iduser'))) {
-      //     $command .= " user_id={$userId}";
-      // }
+    if (extension === '.ZIP') {
+      await this.letterImporterService.letterImport(
+        user,
+        importerDsioDto.pathname,
+      );
     } else {
       // Import fichier DSIO
       const userPreference: UserPreferenceEntity =

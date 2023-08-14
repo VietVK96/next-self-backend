@@ -14,6 +14,9 @@ import { CcamEntity } from 'src/entities/ccam.entity';
 import { LibraryActQuantityEntity } from 'src/entities/library-act-quantity.entity';
 import { ContactModule } from 'src/contact/contact.module';
 import { LibraryBankEntity } from 'src/entities/library-bank.entity';
+import { LetterImporterService } from './services/letter-importer.service';
+import { UserEntity } from 'src/entities/user.entity';
+import { LettersEntity } from 'src/entities/letters.entity';
 
 @Module({
   imports: [
@@ -24,6 +27,8 @@ import { LibraryBankEntity } from 'src/entities/library-bank.entity';
       CcamEntity,
       LibraryActQuantityEntity,
       LibraryBankEntity,
+      UserEntity,
+      LettersEntity,
     ]),
     CommandModule,
     ContactModule,
@@ -35,6 +40,7 @@ import { LibraryBankEntity } from 'src/entities/library-bank.entity';
     DsioService,
     DsioElemService,
     DsioConfigService,
+    LetterImporterService,
   ],
 })
 export class DsioModule {}
