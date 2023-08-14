@@ -1034,6 +1034,10 @@ export class ActsService {
 
     const queryBuilder = this.fseRepository.createQueryBuilder('caresheet');
     queryBuilder
+      .leftJoinAndSelect('caresheet.lots', 'lot')
+      .leftJoinAndSelect('caresheet.patient', 'patient')
+      .leftJoinAndSelect('caresheet.fseStatus', 'fseStatus')
+      .leftJoinAndSelect('caresheet.dreStatus', 'dreStatus')
       .andWhere('caresheet.usrId = :id', { id: user?.id })
       .andWhere('caresheet.electronicCaresheet = 1');
 

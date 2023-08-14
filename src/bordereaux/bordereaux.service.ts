@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LibraryBankEntity } from 'src/entities/library-bank.entity';
+import 'dayjs/locale/fr';
+import * as dayjs from 'dayjs';
+import * as path from 'path';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
+import { ErrorCode } from 'src/constants/error';
 import { SlipCheckEntity } from 'src/entities/slip-check.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { DataSource, IsNull, Repository } from 'typeorm';
@@ -11,12 +17,10 @@ import { PaymentMethodEnum } from 'src/enum/payment-method.enum';
 import { CashingEntity } from 'src/entities/cashing.entity';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { PaymentTypeEnum } from 'src/enum/payment-type.enum';
-import { ErrorCode } from 'src/constants/error';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { SuccessResponse } from 'src/common/response/success.res';
 import { PermissionService } from 'src/user/services/permission.service';
 import { PerCode } from 'src/constants/permissions';
-import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import {
   BordereauxIndexItemRes,
   BordereauxIndexRes,
@@ -50,7 +54,7 @@ export class BordereauxService {
    * @returns
    */
   async findOne(id: number): Promise<SlipCheckEntity[]> {
-    const slipCheck = this.slipCheckRepository.find({
+    const slipCheck = await this.slipCheckRepository.find({
       relations: ['libraryBank', 'cashings'],
       where: { id: id },
     });
@@ -408,5 +412,63 @@ export class BordereauxService {
     }
 
     return { success: true };
+  }
+  /**
+   *  File php/bordereaux/print.php
+   */
+  async printPdf(id: number) {
+    try {
+      const slipCheck = await this.slipCheckRepository.find({
+        relations: [
+          'libraryBank',
+          'cashings',
+          'libraryBank.user',
+          'libraryBank.group',
+          'libraryBank.address',
+        ],
+        where: { id: id },
+      });
+
+      const filePath = path?.join(
+        process.cwd(),
+        'templates/bordereaux',
+        'index.hbs',
+      );
+
+      const options = {
+        format: 'A4',
+        displayHeaderFooter: true,
+        footerTemplate: '<div></div>',
+        headerTemplate: '<div></div>',
+        margin: {
+          left: '5mm',
+          top: '5mm',
+          right: '5mm',
+          bottom: '5mm',
+        },
+      };
+
+      const data = {
+        slipCheck: slipCheck.length > 0 ? slipCheck[0] : {},
+      };
+
+      const files: PdfTemplateFile[] = [
+        {
+          data,
+          path: filePath,
+        },
+      ];
+
+      const helpers = {
+        dateFr: (date) => {
+          return dayjs(date).locale('fr').format('dddd D MMMM YYYY');
+        },
+        count: (arr) => arr.length,
+      };
+
+      return customCreatePdf({ files, options, helpers });
+    } catch {
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+    }
   }
 }
