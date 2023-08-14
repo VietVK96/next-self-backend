@@ -5,10 +5,16 @@ import { BgEventDto, FindAllEventDto, MemoDto } from '../dto/findAll.event.dto';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { HistoricalsDto, ReminderDto } from '../dto/find.event.dto';
-
+import { ColorHelper } from 'src/common/util/color';
 import { FindEventByIdRes } from '../response/find.event.res';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
+import { PrintReq } from '../dto/printEvent.dto';
+import * as path from 'path';
+import * as dayjs from 'dayjs';
+import { createPdf } from '@saemhco/nestjs-html-pdf';
+import { GetSessionService } from 'src/auth/services/get-session.service';
+import { customCreatePdf } from 'src/common/util/pdf';
 
 const classNameFromStatuses: Map<number, string> = new Map<number, string>();
 classNameFromStatuses.set(1, 'present');
@@ -20,7 +26,10 @@ classNameFromStatuses.set(6, 'completed');
 
 @Injectable()
 export class FindEventService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly getSessionService: GetSessionService,
+  ) {}
 
   // php/event/findAll.php
   async prepareSql(sql: string, value: string) {
@@ -246,7 +255,6 @@ export class FindEventService {
        ORDER BY start_date ASC, end_date ASC`,
         [this.getStartDay(startDate), this.getEndDay(endDate)],
       );
-
       return {
         events,
         bgevents,
@@ -439,5 +447,323 @@ export class FindEventService {
     ORDER BY start, end`;
     const result = await this.dataSource.query(previousQuery, [contact, end]);
     return result;
+  }
+
+  /**
+   * Retourne les rendez-vous en fonction des identifiants des ressources,
+   * de la date et heure de début et de la date et heure de fin.
+   *
+   * @param  array $resources Identifiants des resources
+   * @param  DateTime $start Date et heure de début (inclus)
+   * @param  DateTime $end Date et heure de fin (non inclus)
+   * @return array Liste des rendez-vous
+   *
+   *
+   * fuction findAll
+   * File: App/Services/Event
+   */
+  async _findAllForPrint(param: PrintReq) {
+    try {
+      const formattedResources = param.resources
+        .map((item) => `'${item}'`)
+        .join(',');
+
+      const sqlHome = await this.prepareSql(
+        `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
+     FROM T_CONTACT_PHONE_COP
+    JOIN T_PHONE_PHO
+    JOIN T_PHONE_TYPE_PTY
+    WHERE T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
+    AND T_PHONE_PHO.PTY_ID = T_PHONE_TYPE_PTY.PTY_ID
+    AND T_PHONE_TYPE_PTY.PTY_NAME = ?`,
+        'home',
+      );
+
+      const sqlMobile = await this.prepareSql(
+        `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
+     FROM T_CONTACT_PHONE_COP
+    JOIN T_PHONE_PHO
+    JOIN T_PHONE_TYPE_PTY
+    WHERE T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
+    AND T_PHONE_PHO.PTY_ID = T_PHONE_TYPE_PTY.PTY_ID
+    AND T_PHONE_TYPE_PTY.PTY_NAME = ?`,
+        'mobile',
+      );
+      const sqlSms = await this.prepareSql(
+        `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
+     FROM T_CONTACT_PHONE_COP
+    JOIN T_PHONE_PHO
+    JOIN T_PHONE_TYPE_PTY
+    WHERE T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
+    AND T_PHONE_PHO.PTY_ID = T_PHONE_TYPE_PTY.PTY_ID
+    AND T_PHONE_TYPE_PTY.PTY_NAME = ?`,
+        'sms',
+      );
+
+      const result = await this.dataSource.query(
+        `SELECT
+                event_occurrence_evo.evo_id AS id,
+                CONCAT_WS(' ', event_occurrence_evo.evo_date, TIME(T_EVENT_EVT.EVT_START)) AS startDatetime,
+                CONCAT_WS(' ', event_occurrence_evo.evo_date, TIME(T_EVENT_EVT.EVT_END)) AS endDatetime,
+                T_EVENT_EVT.EVT_NAME AS title,
+                T_EVENT_EVT.EVT_MSG AS observation,
+                T_EVENT_EVT.EVT_COLOR AS color,
+                T_EVENT_EVT.EVT_STATE AS state,
+                T_EVENT_EVT.lateness,
+                DATE_FORMAT(T_EVENT_EVT.EVT_START, '%H:%i') AS startTime,
+                DATE_FORMAT(T_EVENT_EVT.EVT_END, '%H:%i') AS endTime,
+                DATE_FORMAT(T_EVENT_EVT.created_at, '%d/%m/%Y') AS creationDate,
+                T_USER_USR.USR_ID as doctorId,
+                T_USER_USR.USR_ABBR as doctorShortname,
+                T_USER_USR.USR_LASTNAME as doctorLastname,
+                T_USER_USR.USR_FIRSTNAME as doctorFirstname,
+                resource.id AS resourceId,
+                resource.name AS resourceName,
+                T_CONTACT_CON.CON_ID AS patientId,
+                T_CONTACT_CON.CON_NBR AS number,
+                T_CONTACT_CON.CON_LASTNAME AS lastName,
+                T_CONTACT_CON.CON_FIRSTNAME AS firstName,
+                T_CONTACT_CON.CON_BIRTHDAY AS birthDate,
+                T_CONTACT_CON.CON_MAIL AS email,
+                T_GENDER_GEN.GEN_NAME AS civilityTitle,
+                NULL AS homePhoneNumber,
+                NULL AS mobilePhoneNumber,
+                NULL AS smsPhoneNumber
+            FROM T_EVENT_EVT
+            JOIN event_occurrence_evo
+            JOIN resource
+            JOIN T_USER_USR
+            LEFT OUTER JOIN T_CONTACT_CON ON T_CONTACT_CON.CON_ID = T_EVENT_EVT.CON_ID
+            LEFT OUTER JOIN T_GENDER_GEN ON T_GENDER_GEN.GEN_ID = T_CONTACT_CON.GEN_ID
+            WHERE event_occurrence_evo.resource_id IN (${formattedResources})
+              AND event_occurrence_evo.evo_date >= ?
+              AND event_occurrence_evo.evo_date < ?
+              AND event_occurrence_evo.evo_exception = 0
+              AND event_occurrence_evo.evt_id = T_EVENT_EVT.EVT_ID
+              AND T_EVENT_EVT.EVT_DELETE = 0
+              AND T_EVENT_EVT.resource_id = resource.id
+              AND T_EVENT_EVT.USR_ID = T_USER_USR.USR_ID
+            ORDER BY startDatetime, endDatetime`,
+        [this.getStartDay(param.start), this.getEndDay(param.end)],
+      );
+
+      const events: FindAllEventDto[] = [];
+      for (const item of result) {
+        const newItem = {
+          ...item,
+          color: {
+            background: ColorHelper.inthex(item.color)[0],
+            foreground: ColorHelper.inthex(item.color)[1],
+          },
+          startDatetime: dayjs(item.startDatetime).format('YYYY-MM-DD HH:mm'),
+          homePhoneNumber:
+            item.patientId === null
+              ? null
+              : this.getPhoneNumberByContactId(sqlHome, item.patientId),
+          mobilePhoneNumber:
+            item.patientId === null
+              ? null
+              : this.getPhoneNumberByContactId(sqlMobile, item.patientId),
+          smsPhoneNumber:
+            item.patientId === null
+              ? null
+              : this.getPhoneNumberByContactId(sqlSms, item.patientId),
+          age: this.calculateAge(item.birthDate),
+          className:
+            item.state === 0 ? null : classNameFromStatuses.get(item.state),
+          resources: {
+            id: item.resourceId,
+            name: item.resourceName,
+          },
+        };
+        if (newItem.state !== 2 && newItem.state !== 3) events.push(newItem);
+      }
+
+      return events;
+    } catch {
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  /**
+   * php/event/print-planning.php + php/event/print-planningnotes.php
+   */
+  async printPlanning(param: PrintReq) {
+    try {
+      const formattedResources = param.resources
+        .map((item) => `'${item}'`)
+        .join(',');
+      if (!formattedResources) {
+        throw new CBadRequestException(ErrorCode.NOT_FOUND_RESOURCES);
+      }
+      const events = await this._findAllForPrint(param);
+
+      const data = {
+        events: events,
+        view: param?.view,
+        start: param?.start,
+        end: param?.end,
+        pbw: param?.pbw === 'true',
+      };
+
+      let filePath: string;
+
+      if (Number(param.mode) === 2) {
+        filePath = path.join(process.cwd(), 'templates/events', 'planning.hbs');
+      } else {
+        filePath = path.join(
+          process.cwd(),
+          'templates/events',
+          'planning-observation.hbs',
+        );
+      }
+      const options = {
+        format: 'A4',
+        displayHeaderFooter: false,
+      };
+
+      return await createPdf(filePath, options, data);
+    } catch (e) {
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  /**
+   * php/event/print-calendar.php
+   */
+  async printCalendar(param: PrintReq, identity: number) {
+    try {
+      const session = await this.getSessionService.getUser(identity);
+      const preference = session?.preference;
+
+      const begin = new Date(param?.start);
+
+      const userPreferenceView = param?.view === 'week' ? 7 : 1;
+
+      if (userPreferenceView === 7) {
+        let diff =
+          session?.preference?.weekStartDay - new Date(param?.start).getDay();
+
+        if (diff > 0) {
+          diff -= 7;
+        }
+        begin.setDate(begin.getDate() + diff);
+      }
+
+      const beginAMDateTime = dayjs(preference.hmd, 'HH:mm');
+      const endPMDateTime = dayjs(preference.haf, 'HH:mm');
+
+      const interval = endPMDateTime.diff(beginAMDateTime);
+
+      const lineNumber = interval / (60000 * session?.preference?.frequency);
+
+      const lineHeight = Math.floor(690 / lineNumber);
+
+      const formattedResources = param.resources
+        .map((item) => `'${item}'`)
+        .join(',');
+      if (!formattedResources) {
+        throw new CBadRequestException(ErrorCode.NOT_FOUND_RESOURCES);
+      }
+      const events = await this._findAllForPrint(param);
+
+      let row = preference?.hmd;
+
+      const arrTimes = [];
+      for (let i = 0; i < lineNumber; i++) {
+        arrTimes.push(row);
+        row = dayjs(row, 'HH:mm')
+          .add(preference?.frequency, 'minute')
+          .format('HH:mm');
+      }
+
+      const arrDays = [];
+      for (let i = 0; i < userPreferenceView; i++) {
+        if (userPreferenceView === 1) {
+          arrDays.push({
+            value: dayjs(begin).format('YYYY-MM-DD'),
+            label: dayjs(begin).format('DD/MM/YYYY'),
+          });
+        } else {
+          if (preference.days.includes(begin.getUTCDay() + i)) {
+            arrDays.push({
+              value: dayjs(begin).add(i, 'day').format('YYYY-MM-DD'),
+              label: dayjs(begin).add(i, 'day').format('DD/MM/YYYY'),
+            });
+          }
+        }
+      }
+
+      const sessionResources = await this.getSessionService.getResource(
+        identity,
+      );
+
+      const arrResources = [];
+      for (let i = 0; i < param?.resources.length; i++) {
+        arrResources.push(
+          sessionResources.find(
+            (item) => item.id === Number(param.resources[i]),
+          ),
+        );
+      }
+
+      const newEvents = events.map((item) => {
+        return {
+          ...item,
+          title: '<div>' + item.title + '</div>',
+        };
+      });
+
+      console.log(newEvents);
+
+      const data = {
+        events: newEvents,
+        eventLenght: newEvents?.length,
+        preference: preference,
+        view: param?.view,
+        start: param?.start,
+        end: param?.end,
+        pbw: param?.pbw === 'true',
+        ids: param?.resources.length,
+        lineNumber: lineNumber,
+        lineHeight: lineHeight,
+        arrTimes: arrTimes,
+        userPreferenceView: userPreferenceView,
+        begin: begin,
+        arrDays: arrDays,
+        arrResources: arrResources,
+      };
+
+      const filePath = path.join(
+        process.cwd(),
+        'templates/events',
+        'calendar.hbs',
+      );
+
+      const files = [{ path: filePath, data }];
+
+      const options = {
+        format: 'A4',
+        displayHeaderFooter: false,
+        landscape: true,
+      };
+
+      const helpers = {
+        add: (a: number, b: number) => a + b,
+        divide: (a: number, b: number) => a / b,
+        getMinutes: (i: string) => dayjs(i, 'HH:mm').minute(),
+        for: (from: number, to: number, block: any) => {
+          let accum = '';
+          for (let i = from; i <= to; i++) {
+            accum += block.fn(i);
+          }
+          return accum;
+        },
+      };
+
+      return await customCreatePdf({ files, options, helpers });
+    } catch {
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+    }
   }
 }
