@@ -355,11 +355,12 @@ export class UserService {
       },
     });
 
-    return user.map(({ id, medical, firstname, lastname }) => {
+    return user.reduce((listUser, { id, medical, firstname, lastname }) => {
       if (medical) {
-        return { id, firstname, lastname };
+        return [...listUser, { id, firstname, lastname }];
       }
-    });
+      return listUser;
+    }, []);
   }
 
   async getActiveUser(organizationId: number) {
