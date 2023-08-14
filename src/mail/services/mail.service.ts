@@ -41,6 +41,7 @@ import { tmpdir } from 'os';
 import { SuccessResponse } from 'src/common/response/success.res';
 import { FindHeaderFooterRes } from '../response/findHeaderFooter.res';
 import { DOMParser, XMLSerializer } from 'xmldom';
+import puppeteer from 'puppeteer';
 
 @Injectable()
 export class MailService {
@@ -1562,7 +1563,7 @@ export class MailService {
     if (mail instanceof CNotFoundRequestException) return mail;
     let mailTitle = mail.title;
     const mailFilename = sanitizeFilename(`${mailTitle}.pdf`);
-    const mailDirname = path ? path.join(process.cwd(), mailFilename) : '';
+    // const mailDirname = path ? path.join(process.cwd(), mailFilename) : '';
     const doctor = mail.doctor;
     const patient = mail.patient;
     const correspondent = mail?.conrrespondent;
@@ -1570,6 +1571,9 @@ export class MailService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
+
+    const browser = await puppeteer.launch({ headless: 'new' });
+    const page = await browser.newPage();
 
     try {
       const mailTo: string[] = [];
@@ -1619,6 +1623,24 @@ export class MailService {
         return new CBadRequestException('Au moins un destinataire est requis');
       }
 
+      const context = await this.contextMail(
+        {
+          patient_id: mail?.patient?.id ? mail.patient.id : null,
+          correspondent_id: mail?.conrrespondent?.id
+            ? mail.conrrespondent.id
+            : null,
+        },
+        mail?.doctor?.id,
+      );
+      const mailConverted = await this.transform(mail, context, mailFilename);
+      const htmlContent = mailConverted?.body
+        ? mailConverted?.body
+        : '<div></div>';
+      await page.setContent(`<div style="padding: 30px;">${htmlContent}</div>`);
+
+      const pdfBuffer = await page.pdf();
+      console.log('pdfBuffer', pdfBuffer);
+
       // @TODO
       // Mail::pdf($mailConverted, array('filename' => $mailDirname));
 
@@ -1650,7 +1672,7 @@ export class MailService {
         'utf-8',
       );
       const template = handlebars.compile(emailTemplate);
-      mail.title = mailDirname;
+      mail.title = mailFilename;
       const mailBody = template({ fullName, mail });
 
       const result = await this.mailTransportService.sendEmail(userId, {
@@ -1659,7 +1681,13 @@ export class MailService {
         subject: subject,
         template: mailBody,
         context: mail,
-        attachments: attachments,
+        attachments: [
+          {
+            filename: mailFilename,
+            content: pdfBuffer,
+          },
+          ...attachments,
+        ],
       });
 
       if (
@@ -1673,6 +1701,7 @@ export class MailService {
       return new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
     } finally {
       await queryRunner.release();
+      await browser.close();
     }
   }
   /**
