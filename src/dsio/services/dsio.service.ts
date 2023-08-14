@@ -15,32 +15,31 @@ import { DsioElemService } from './dsio.elem.service';
  */
 @Injectable()
 export class DsioService {
-  private currentQuery = '';
+  private currentQuery: string;
   private pathname = ''; // nom du fichier
   private filesize: number; // taille du fichier
   private handle: fs.ReadStream = null; // ressource du fichier DSIO
   private json: fs.WriteStream = null; //ressource du fichier json d'état d'avancement
   private debut = 0;
   private ESC = 'A'; // section courante
-  private PC1 = ''; // Id dsio du praticien en cours de création
+  private PC1: string;
   private Id_prat = 0; // Id dans C&W
   private Id_prat_defaut = 0; // Id par défaut si aucun sélectionné alors qu'il en faut un (rdv)
   private Id_agn = 0; // Id de la ressource de l'agenda sans praticien
   private PTC = ''; // Id dsio du patient en cours de création
   private Id_pat = 0; // Id dans C&W
   private Id_Family_Tasks = 0; // Id d'une famille de tâche
-  private ar_pat = {}; // tableau [Id_DSIO] => Id_C&W pour les patients
+  private ar_pat: Record<string, number> = {}; // tableau [Id_DSIO] => Id_C&W pour les patients
   private ar_prat: number[] | { [key: number]: string } = []; // tableau [Id_DSIO] => Id_C&W pour les praticiens
   private ar_agn = {}; // tableau [Id_DSIO] => id_ecoo pour les ressources d'agenda
   private ar_fam = {}; // tableau [Id_DSIO] => Id_C&W pour les familles
-  private curObj = null; // DSIO_ELEM
-  private patients = 0;
+  private curObj: DsioElemService = null; // DSIO_ELEM
   private FRQ: duration.Duration;
   private HMD: string;
   private HMF: string;
   private HAD: string;
   private HAF: string;
-  private AR_HRDV = [];
+  private AR_HRDV: Record<string, Record<string, string>>;
   private section = {
     A: "Détection du type d'agrément",
     B: 'Référencement des Professionnels de Santé',
@@ -59,19 +58,19 @@ export class DsioService {
     O: 'Importation des banques',
     P: 'Importation des rendez-vous',
   };
-  private usedContraindications = []; // tableau des ID de contre-indications utilisées
   public noline = 0;
   private importEtendu = false;
   private actesMacDent = false;
   private actesAgatha = false;
   private actesDentalOnLine = false;
-  private prenomsVisiodent = false;
 
   constructor(
     private dataSource: DataSource,
     private amountDueService: AmountDueService,
     private dsioElemService: DsioElemService,
-  ) {}
+  ) {
+    this.curObj = dsioElemService;
+  }
 
   // php/dsio/import_shell.php line 1753 -> 1780
   async construct(
@@ -85,44 +84,49 @@ export class DsioService {
     HAD: string,
     HAF: string,
   ) {
-    this.pathname = pathname;
-    if (fs.existsSync(pathname)) {
-      const fileCheck = execSync(`file -i ${pathname}`);
-      utf8 = fileCheck.toString().includes('utf-8');
-      this.filesize = fs.statSync(pathname).size;
-      this.handle = fs.createReadStream(pathname);
-      this.json = fs.createWriteStream(`${pathname}.json`);
-    } else {
-      fs.writeFileSync(
-        `${pathname}.json`,
-        JSON.stringify({
-          status: -2,
-          error: "Problème d'accès au fichier DSIO",
-        }),
-      );
+    try {
+      this.pathname = pathname;
+      if (fs.existsSync(pathname)) {
+        const fileCheck = execSync(`file -i ${pathname}`);
+        utf8 = fileCheck.toString().includes('utf-8');
+        this.filesize = fs.statSync(pathname).size;
+        this.handle = fs.createReadStream(pathname);
+        this.json = fs.createWriteStream(`${pathname}.json`);
+      } else {
+        fs.writeFileSync(
+          `${pathname}.json`,
+          JSON.stringify({
+            status: -2,
+            error: "Problème d'accès au fichier DSIO",
+          }),
+        );
+      }
+
+      this.initHorraires(FRQ, HMD, HMF, HAD, HAF);
+      const sections = payload.sections;
+      this.ar_prat = sections['Praticiens'] ? sections['Praticiens'] : {};
+      this.ar_agn = sections['Agendas'] ? sections['Agendas'] : {};
+
+      if (Object.keys(this.ar_prat).length) {
+        this.Id_prat_defaut = Number(`${Object.values(this.ar_prat)[0]}`);
+      } else {
+        const usrId: { USR_ID: number }[] = await this.dataSource.query(
+          'SELECT USR_ID from T_USER_USR where organization_id=? and USR_ADMIN=1 order by USR_ID asc limit 1',
+          [groupId],
+        );
+        this.Id_prat_defaut = usrId[0].USR_ID;
+      }
+
+      fs.writeFileSync(`${pathname}.prop`, JSON.stringify(payload));
+      fs.writeFileSync(`${pathname}.prop`, JSON.stringify(this));
+    } catch (error) {
+      throw error;
     }
-
-    this.initHorraires(FRQ, HMD, HMF, HAD, HAF);
-    const sections = payload.sections;
-    this.ar_prat = sections['Praticiens'] ? sections['Praticiens'] : {};
-    this.ar_agn = sections['Agendas'] ? sections['Agendas'] : {};
-
-    if (Object.keys(this.ar_prat).length) {
-      this.Id_prat_defaut = Number(`${Object.values(this.ar_prat)[0]}`);
-    } else {
-      const usrId: { USR_ID: number }[] = await this.dataSource.query(
-        'SELECT USR_ID from T_USER_USR where organization_id=? and USR_ADMIN=1 order by USR_ID asc limit 1',
-        [groupId],
-      );
-      this.Id_prat_defaut = usrId[0].USR_ID;
-    }
-
-    fs.writeFileSync(`${pathname}.prop`, JSON.stringify(payload));
-    fs.writeFileSync(`${pathname}.prop`, JSON.stringify(this));
   }
 
+  // php/dsio/import_shell.php line 1785 -> 1793
   // Initialise certaines données de l'objet pour la gestion des rdvs à créer
-  async initHorraires(
+  initHorraires(
     FRQ: number,
     HMD: string,
     HMF: string,
@@ -137,7 +141,7 @@ export class DsioService {
     this.HAF = HAF;
   }
 
-  /**
+  /** php/dsio/import_shell.php line 1801 -> 1820
    * Mémorise et fourni un horaire libre pour un rendez-vous pour un jour donné.
    *
    * @param string $date_dsio date pour laquelle obtenir un horraire libre
@@ -176,7 +180,7 @@ export class DsioService {
     return this.AR_HRDV[this.Id_prat][date_dsio];
   }
 
-  /**
+  /** php/dsio/import_shell.php line 1828 -> 1830
    * Permet de savoir si nous sommes dans la bonne section.
    *
    * @param string $bname nom de la section à tester
@@ -186,31 +190,35 @@ export class DsioService {
     return !this.ESC.localeCompare(bname);
   }
 
-  /**
+  /** php/dsio/import_shell.php line 1838 -> 1859
    * Récupère une nouvelle ligne du fichier DSIO et met à jour l'état
    * d'avancement.
    */
   async getLine(buffer: string, utf8: boolean) {
-    /* On est pas encore à la fin du fichier */
-    // @TODO set_time_limit(30);
-    const rapport = {
-      status: 1,
-      action: this.section[this.ESC],
-      prc: ((100 * this.handle.bytesRead) / this.filesize).toFixed(2),
-      noline: ++this.noline,
-      line: buffer,
-      time: Date.now() - this.debut,
-    };
+    try {
+      /* On est pas encore à la fin du fichier */
+      // @TODO set_time_limit(30);
+      const rapport = {
+        status: 1,
+        action: this.section[this.ESC],
+        prc: ((100 * this.handle.bytesRead) / this.filesize).toFixed(2),
+        noline: ++this.noline,
+        line: buffer,
+        time: Date.now() - this.debut,
+      };
 
-    fs.writeFileSync(this.json.path, JSON.stringify(rapport), { flag: 'w' });
+      fs.writeFileSync(this.json.path, JSON.stringify(rapport), { flag: 'w' });
 
-    if (!utf8) {
-      buffer = Buffer.from(buffer).toString('utf-8');
+      if (!utf8) {
+        buffer = Buffer.from(buffer).toString('utf-8');
+      }
+      return buffer;
+    } catch (error) {
+      throw error;
     }
-    return buffer;
   }
 
-  /**
+  /** php/dsio/import_shell.php line 1873 -> 2011
    * Permet de réaliser les opérations nécessaires lors du changement
    * de section (création de l'enregistrement qui était en cours de
    * définition, mise à jour de certaine données de l'objet ...).
@@ -227,135 +235,146 @@ export class DsioService {
     groupId: number,
     patient_number: number,
     LFT_ASSOCIATED_ACTS: Record<string, string>,
-    t_dsio_tasks: Record<string, string>,
+    t_dsio_tasks:
+      | Record<string, string>
+      | Record<string, Record<string, number>>,
   ) {
-    const TRIGGER_CHECKS = 'FALSE';
-    await this.dataSource.query(`SET @TRIGGER_CHECKS = ${TRIGGER_CHECKS}`);
+    try {
+      const TRIGGER_CHECKS = 'FALSE';
+      await this.dataSource.query(`SET @TRIGGER_CHECKS = ${TRIGGER_CHECKS}`);
 
-    switch (this.ESC) {
-      case 'A':
-        break;
-      case 'B':
-        this.newPrat('PN1', '', groupId); // on est à la fin de B
-        break;
-      case 'C': // on est à la fin de C
-        this.newPat('PTN', '', groupId);
-        break;
-      case 'D':
-      case 'P':
-        this.chPat('', groupId); // on est à la fin de D
-        break;
-      case 'E':
-        this.chPat('', groupId); // on est à la fin de E
-        // On va passer en section F (définition des montants dûs
-        // avant d'entamer cette section, on initialise les montants
-        // dus de l'ensemble des patients.
-        const rapport = {
-          status: 1,
-          action: 'Calcul des montants dus',
-          prc: ((100 * this.handle.bytesRead) / this.filesize).toFixed(2),
-          noline: this.noline,
-          time: Date.now() - this.debut,
-        };
-        fs.writeFileSync(`${this.pathname}.json`, JSON.stringify(rapport));
+      switch (this.ESC) {
+        case 'A':
+          break;
+        case 'B':
+          await this.newPrat('PN1', '', groupId, t_dsio_tasks); // on est à la fin de B
+          break;
+        case 'C': // on est à la fin de C
+          await this.newPat('PTN', '', groupId, t_dsio_tasks);
+          break;
+        case 'D':
+        case 'P':
+          await this.chPat('', groupId, t_dsio_tasks); // on est à la fin de D
+          break;
+        case 'E':
+          await this.chPat('', groupId, t_dsio_tasks); // on est à la fin de E
+          const rapport = {
+            status: 1,
+            action: 'Calcul des montants dus',
+            prc: ((100 * this.handle.bytesRead) / this.filesize).toFixed(2),
+            noline: this.noline,
+            time: Date.now() - this.debut,
+          };
+          fs.writeFileSync(`${this.pathname}.json`, JSON.stringify(rapport));
 
-        // Commande de calcul du montant dû
-        await this.amountDueService.execute(groupId);
+          // Commande de calcul du montant dû
+          await this.amountDueService.execute(groupId);
 
-        const TRIGGER_CHECKS = 'TRUE';
-        await this.dataSource.query(`SET @TRIGGER_CHECKS = ${TRIGGER_CHECKS}`);
-        break;
-      case 'F':
-        this.chPat('', groupId); // on est à la fin de F
-        break;
-      default: {
-        if (this.importEtendu || this.actesMacDent) {
-          switch (this.ESC) {
-            case 'G':
-              break; // on est à la fin de G ou fin de fichier
-            case 'H': // on est à la fin de H
-              if (this.curObj != null) {
-                this.chFam();
-              }
-              break;
-            case 'I': // on est à la fin de I
-              if (this.curObj != null) {
-                // Il faut enregistrer un dernier acte
-                if (this.actesMacDent) {
-                  this.curObj.setLibraryMact();
-                } else {
-                  this.curObj.setLibraryAct();
+          const TRIGGER_CHECKS = 'TRUE';
+          await this.dataSource.query(
+            `SET @TRIGGER_CHECKS = ${TRIGGER_CHECKS}`,
+          );
+          break;
+        case 'F':
+          await this.chPat('', groupId, t_dsio_tasks); // on est à la fin de F
+          break;
+        default: {
+          if (this.importEtendu || this.actesMacDent) {
+            switch (this.ESC) {
+              case 'G':
+                break; // on est à la fin de G ou fin de fichier
+              case 'H': // on est à la fin de H
+                if (this.curObj != null) {
+                  await this.chFam(groupId);
                 }
-                this.curObj = null;
-              }
-              // Il faut affecter les actes associés
-              this.assocAct(groupId, LFT_ASSOCIATED_ACTS, t_dsio_tasks);
-              break;
-            case 'J': // on est à la fin de J
-              if (this.curObj != null) {
-                this.chPat('', groupId);
-              } else {
-                this.curObj = null;
-              }
-              break;
-            default: {
-              if (!this.importEtendu) {
-                return false;
-              }
-              switch (this.ESC) {
-                case 'K': //on est à la fin de K
-                  if (this.curObj != null) {
-                    this.curObj.insertContraindication();
+                break;
+              case 'I': // on est à la fin de I
+                if (this.curObj != null) {
+                  // Il faut enregistrer un dernier acte
+                  if (this.actesMacDent) {
+                    await this.curObj.setLibraryMact(t_dsio_tasks, groupId);
+                  } else {
+                    await this.curObj.setLibraryAct(
+                      t_dsio_tasks,
+                      LFT_ASSOCIATED_ACTS,
+                      groupId,
+                    );
                   }
                   this.curObj = null;
-                  break;
-                case 'L': // on est à la fin de L
-                  if (this.curObj != null) {
-                    this.curObj.insertMedicamentFamily();
-                  }
+                }
+                // Il faut affecter les actes associés
+                await this.assocAct(groupId, LFT_ASSOCIATED_ACTS, t_dsio_tasks);
+                break;
+              case 'J': // on est à la fin de J
+                if (this.curObj != null) {
+                  await this.chPat('', groupId, t_dsio_tasks);
+                } else {
                   this.curObj = null;
-                  break;
-                case 'M': // on est à la fin de M
-                  if (this.curObj != null) {
-                    this.curObj.insertMedicament();
-                  }
-                  this.curObj = null;
-                  break;
-                case 'N': // on est à la fin de N
-                  if (this.curObj != null) {
-                    this.curObj.setCorrespondent();
-                  }
-                  this.curObj = null;
-                  break;
-                case 'O': // on est à la fin de O
-                  if (this.curObj != null) {
-                    this.curObj.setBnq(this.Id_prat);
-                  }
-                  this.curObj = null;
-                  break;
-                default: // On ne devrait jamais passer par là
-                  if (this.curObj != null) {
-                    this.chPat('', groupId);
-                  }
+                }
+                break;
+              default: {
+                if (!this.importEtendu) {
                   return false;
+                }
+
+                switch (this.ESC) {
+                  case 'K': //on est à la fin de K
+                    if (this.curObj != null) {
+                      await this.curObj.insertContraindication(groupId);
+                    }
+                    this.curObj = null;
+                    break;
+                  case 'L': // on est à la fin de L
+                    if (this.curObj != null) {
+                      await this.curObj.insertMedicamentFamily(groupId);
+                    }
+                    this.curObj = null;
+                    break;
+                  case 'M': // on est à la fin de M
+                    if (this.curObj != null) {
+                      await this.curObj.insertMedicament(groupId);
+                    }
+                    this.curObj = null;
+                    break;
+                  case 'N': // on est à la fin de N
+                    if (this.curObj != null) {
+                      await this.curObj.setCorrespondent(groupId);
+                    }
+                    this.curObj = null;
+                    break;
+                  case 'O': // on est à la fin de O
+                    if (this.curObj != null) {
+                      await this.curObj.setBnq(this.Id_prat, groupId);
+                    }
+                    this.curObj = null;
+                    break;
+                  default: // On ne devrait jamais passer par là
+                    if (this.curObj != null) {
+                      await this.chPat('', groupId, t_dsio_tasks);
+                    }
+                    return false;
+                }
               }
             }
           }
         }
       }
+
+      if (bname == 'H' && (this.importEtendu || this.actesMacDent)) {
+        // On passe en bibliothèque d'actes : on supprime l'initiale
+        await this.deleteLibrary(groupId, patient_number);
+        this.curObj = null;
+      }
+
+      this.ESC = bname;
+
+      return true;
+    } catch (error) {
+      throw error;
     }
-
-    if (bname == 'H' && (this.importEtendu || this.actesMacDent)) {
-      // On passe en bibliothèque d'actes : on supprime l'initiale
-      await this.deleteLibrary(groupId, patient_number);
-      this.curObj = null;
-    }
-
-    this.ESC = bname;
-
-    return true;
   }
 
+  // php/dsio/import_shell.php line 2021 -> 2072
   // Permet de mettre à jour l'adresse postale du groupe et de chaque compte utilisateur
   async updateAdr(bname: string, value: string, groupId: number) {
     const ar_adr_ids: number[] = [];
@@ -363,638 +382,815 @@ export class DsioService {
       ['T_USER_USR', 'USR_ID', 'organization_id'],
       ['T_GROUP_GRP', 'GRP_ID', 'GRP_ID'],
     ];
-    // Pour chaque table on vérifie qu'il existe un enregistrement d'adresse
-    // puis ou récupère l'identifiant de cet enregistrement
-    queries.forEach(async (query) => {
-      const table = query[0];
-      const field = query[1];
-      const where = query[2];
 
-      const res: { ADR_ID: number }[] = await this.dataSource.query(
-        `select ${field}, ADR_ID from ${table} where ${where}=${groupId}`,
-      );
-      if (res && res.length > 0) {
-        res.forEach(async (row) => {
-          if (!row.ADR_ID) {
-            // Il n'existe pas d'enregistrement d'adresse donc on le crée
-            const newAdd = await this.dataSource.query(
-              'insert into `T_ADDRESS_ADR` (ADR_ID) values (0)',
-            );
-            row['ADR_ID'] = newAdd.insertId;
-            await this.dataSource.query(
-              `update ${table} set ADR_ID=${row['ADR_ID']} where ${field}=${row[field]}`,
-            );
-          }
-          ar_adr_ids.push(row.ADR_ID);
-        });
+    try {
+      queries.forEach(async (query) => {
+        const table = query[0];
+        const field = query[1];
+        const where = query[2];
+
+        const res: { ADR_ID: number }[] = await this.dataSource.query(
+          `select ${field}, ADR_ID from ${table} where ${where}=${groupId}`,
+        );
+        if (res && res.length > 0) {
+          res.forEach(async (row) => {
+            if (!row.ADR_ID) {
+              // Il n'existe pas d'enregistrement d'adresse donc on le crée
+              const newAdd = await this.dataSource.query(
+                'insert into `T_ADDRESS_ADR` (ADR_ID) values (0)',
+              );
+              row['ADR_ID'] = newAdd.insertId;
+              await this.dataSource.query(
+                `update ${table} set ADR_ID=${row['ADR_ID']} where ${field}=${row[field]}`,
+              );
+            }
+            ar_adr_ids.push(row.ADR_ID);
+          });
+        }
+      });
+
+      const ADR_ID = ar_adr_ids.join(',');
+      bname = bname.substring(2);
+      let set = '';
+      if (bname === '1') {
+        // Ligne d'adresse 1
+        set = `ADR_STREET = SUBSTRING("${value}",1,255)`;
+      } else if (bname === '2') {
+        // Ligne d'adresse 2
+        set = `ADR_STREET_COMP = SUBSTRING("${value}",1,255)`;
+      } else if (bname === 'Z') {
+        // Code postal
+        set = `ADR_ZIP_CODE = SUBSTRING("${value}",1,6)`;
+      } else if (bname === 'V') {
+        // Ville
+        set = `ADR_CITY = SUBSTRING("${value}",1,255)`;
       }
-    });
 
-    const ADR_ID = ar_adr_ids.join(',');
-    bname = bname.substring(2);
-    let set = '';
-    if (bname === '1') {
-      // Ligne d'adresse 1
-      set = `ADR_STREET = SUBSTRING("${value}",1,255)`;
-    } else if (bname === '2') {
-      // Ligne d'adresse 2
-      set = `ADR_STREET_COMP = SUBSTRING("${value}",1,255)`;
-    } else if (bname === 'Z') {
-      // Code postal
-      set = `ADR_ZIP_CODE = SUBSTRING("${value}",1,6)`;
-    } else if (bname === 'V') {
-      // Ville
-      set = `ADR_CITY = SUBSTRING("${value}",1,255)`;
-    }
-
-    if (set && ADR_ID) {
-      const query = `UPDATE T_ADDRESS_ADR set ${set} where ADR_ID in (${ADR_ID})`;
-      this.currentQuery = query;
-      await this.dataSource.query(query);
+      if (set && ADR_ID) {
+        const query = `UPDATE T_ADDRESS_ADR set ${set} where ADR_ID in (${ADR_ID})`;
+        this.currentQuery = query;
+        await this.dataSource.query(query);
+      }
+    } catch (error) {
+      throw error;
     }
   }
 
-  /**
+  /** php/dsio/import_shell.php line 2081 -> 2105
    * Permet d'affecter une valeur pour une balise à l'enregistrement d'un praticien
    * en court de définition.
-   *
-   * @param string $bname nom de la balise
-   * @param string value valeur de la balise
    */
-  newPrat(bname: string, value: string, groupId: number) {
-    if (!this.esc('B')) {
-      return;
-    }
-    if (bname === 'PN1') {
-      this.chPrat(''); // Nouveau praticien
-      this.PC1 = '';
-      this.Id_prat = 0;
-      this.Id_agn = 0;
-    } else if (bname === 'PC1') {
-      this.PC1 = value;
-      this.Id_prat = this.ar_prat[value] ? this.ar_prat[value] : 0;
-    } else if (bname === 'PR1') {
-      //this.Id_agn = isset(this.ar_agn[$value])?this.ar_agn[$value]:0;
-    } else if (value && ['CA1', 'CA2', 'CAZ', 'CAV'].includes(bname)) {
-      this.updateAdr(bname, value, groupId); // Affectation de l'adresse au groupe et praticiens
+  async newPrat(
+    bname: string,
+    value: string,
+    groupId: number,
+    t_dsio_tasks:
+      | Record<string, string>
+      | Record<string, Record<string, number>>,
+  ) {
+    try {
+      if (!this.esc('B')) {
+        return;
+      }
+      if (bname === 'PN1') {
+        await this.chPrat('', groupId, t_dsio_tasks); // Nouveau praticien
+        this.PC1 = '';
+        this.Id_prat = 0;
+        this.Id_agn = 0;
+      } else if (bname === 'PC1') {
+        this.PC1 = value;
+        this.Id_prat = this.ar_prat[value] ? this.ar_prat[value] : 0;
+      } else if (bname === 'PR1') {
+        //this.Id_agn = isset(this.ar_agn[$value])?this.ar_agn[$value]:0;
+      } else if (value && ['CA1', 'CA2', 'CAZ', 'CAV'].includes(bname)) {
+        await this.updateAdr(bname, value, groupId); // Affectation de l'adresse au groupe et praticiens
+      }
+    } catch (error) {
+      throw error;
     }
   }
 
-  /**
+  /** php/dsio/import_shell.php line 2114 -> 2162
    * Dans une section, le fait de changer de praticien indique la fin de définition
    * d'un enregistrement : il faut donc appeler à créer l'enregistrement avant d'en
    * entammer un nouveau.
-   *
-   * @param string $IDSIO l'identifiant DSIO du nouveau praticien sélectionné
    */
-  chPrat(IDSIO: string) {
-    if (this.curObj) {
-      if ((this.esc('D') || this.esc('P')) && (this.Id_prat || this.Id_agn)) {
-        // enregistrement du nouvel acte/rdv
-        if (
-          !this.curObj.SDA ||
-          this.curObj.SDA === '00000000' ||
-          !dayjs(this.curObj.SDA, 'YYYYMMDD', true).isValid()
-        ) {
-          this.curObj.setInfo('SDA', '19700101');
+  async chPrat(
+    IDSIO: string,
+    groupId: number,
+    t_dsio_tasks:
+      | Record<string, string>
+      | Record<string, Record<string, number>>,
+  ) {
+    try {
+      if (this.curObj) {
+        if ((this.esc('D') || this.esc('P')) && (this.Id_prat || this.Id_agn)) {
+          // enregistrement du nouvel acte/rdv
+          if (
+            !this.curObj.SDA ||
+            this.curObj.SDA === '00000000' ||
+            !dayjs(this.curObj.SDA).isValid()
+          ) {
+            this.curObj.setInfo('SDA', '19700101');
+          }
+          this.curObj.setInfo('FRQ', this.FRQ);
+          if (this.Id_agn) {
+            const id_prat = !this.Id_prat ? this.Id_prat_defaut : this.Id_prat;
+            await this.curObj.creatRdv(this.Id_agn, id_prat, this.Id_pat);
+          } else {
+            await this.curObj.creatActe(
+              this.Id_prat,
+              this.Id_pat,
+              this.getNewHRDV(this.curObj.SDA),
+              this.actesMacDent,
+              this.actesAgatha,
+              this.actesDentalOnLine,
+              groupId,
+              t_dsio_tasks,
+            );
+          }
+          this.curObj = null;
+        } else if (this.esc('E') && this.Id_prat && this.Id_pat) {
+          // enregistrement du nouveau paiement
+          await this.curObj.creatPaiement(this.Id_prat, this.Id_pat);
+          this.curObj = null;
+        } else if (this.esc('F') && this.Id_prat && this.Id_pat) {
+          // Serge le 28/06/2013)
+          // mise à jour du montant dû du patient
+          this.curObj.setInfo('FRQ', this.FRQ);
+          await this.curObj.setAmountDue(this.Id_prat, this.Id_pat);
+          this.curObj = null;
+        } else if (this.esc('J') && this.Id_pat) {
+          let ar_ptt_user: number[] | { [key: number]: string } = [];
+          if (this.Id_prat) {
+            (ar_ptt_user as number[]).push(this.Id_prat);
+          } else {
+            ar_ptt_user = this.ar_prat;
+          }
+          this.curObj.setInfo('PTC', this.Id_pat + '');
+          if (Array.isArray(ar_ptt_user)) {
+            ar_ptt_user.forEach(async (Id_ptt_user) => {
+              this.curObj.setInfo('PC1', Id_ptt_user + '');
+              await this.curObj.setPostit();
+            });
+          } else {
+            Object.keys(ar_ptt_user).forEach(async (key) => {
+              this.curObj.setInfo('PC1', ar_ptt_user[key]);
+              await this.curObj.setPostit();
+            });
+          }
+        } else if (this.esc('N') && this.Id_prat) {
+          // enregistrement d'un nouveau correspondant
+          this.curObj.setInfo('PC1', `${this.Id_prat}`);
+          await this.curObj.setCorrespondent(groupId);
+        } else if (this.esc('O') && this.Id_prat) {
+          // enregistrement d'un nouveau correspondant
+          this.curObj.setInfo('PC1', this.Id_prat + '');
+          await this.curObj.setBnq(this.Id_prat, groupId);
         }
-        this.curObj.setInfo('FRQ', this.FRQ);
-        if (this.Id_agn) {
-          const id_prat = !this.Id_prat ? this.Id_prat_defaut : this.Id_prat;
-          this.curObj.creatRdv(this.Id_agn, id_prat, this.Id_pat);
-        } else {
-          this.curObj.creatActe(
-            this.Id_prat,
-            this.Id_pat,
-            this.getNewHRDV(this.curObj.SDA),
-            this.actesMacDent,
-            this.actesAgatha,
-            this.actesDentalOnLine,
-          );
-        }
-        this.curObj = null;
-      } else if (this.esc('E') && this.Id_prat && this.Id_pat) {
-        // enregistrement du nouveau paiement
-        this.curObj.creatPaiement(this.Id_prat, this.Id_pat);
-        this.curObj = null;
-      } else if (this.esc('F') && this.Id_prat && this.Id_pat) {
-        // Serge le 28/06/2013)
-        // mise à jour du montant dû du patient
-        this.curObj.setInfo('FRQ', this.FRQ);
-        this.curObj.setAmountDue(this.Id_prat, this.Id_pat);
-        this.curObj = null;
-      } else if (this.esc('J') && this.Id_pat) {
-        let ar_ptt_user: number[] | { [key: number]: string } = [];
-        if (this.Id_prat) {
-          (ar_ptt_user as number[]).push(this.Id_prat);
-        } else {
-          ar_ptt_user = this.ar_prat;
-        }
-        this.curObj.setInfo('PTC', this.Id_pat);
-        if (Array.isArray(ar_ptt_user)) {
-          ar_ptt_user.forEach((Id_ptt_user) => {
-            this.curObj.setInfo('PC1', Id_ptt_user);
-            this.curObj.setPostit();
-          });
-        } else {
-          Object.keys(ar_ptt_user).forEach((key) => {
-            this.curObj.setInfo('PC1', ar_ptt_user[key]);
-            this.curObj.setPostit();
-          });
-        }
-      } else if (this.esc('N') && this.Id_prat) {
-        // enregistrement d'un nouveau correspondant
-        this.curObj.setInfo('PC1', this.Id_prat);
-        this.curObj.setCorrespondent();
-      } else if (this.esc('O') && this.Id_prat) {
-        // enregistrement d'un nouveau correspondant
-        this.curObj.setInfo('PC1', this.Id_prat);
-        this.curObj.setBnq(this.Id_prat);
       }
+      this.Id_prat =
+        !IDSIO || !this.ar_prat[IDSIO]
+          ? this.Id_prat_defaut
+          : this.ar_prat[IDSIO];
+      this.Id_agn = 0;
+    } catch (error) {
+      throw error;
     }
-    this.Id_prat =
-      !IDSIO || !this.ar_prat[IDSIO]
-        ? this.Id_prat_defaut
-        : this.ar_prat[IDSIO];
-    this.Id_agn = 0;
   }
 
-  /**
+  /** php/dsio/import_shell.php line 2171 -> 2198
    * Permet d'affecter une valeur pour une balise à l'enregistrement d'un patient
    * en court de définition.
-   * @param string $bname nom de la balise
-   * @param string $value valeur de la balise
    */
-  newPat(bname: string, value: string, groupId: number) {
-    if (!this.esc('C')) {
-      return;
-    }
-    if (bname === 'PTN') {
-      // Nouveau patient
-      if (this.PTC) {
-        // On enregistre d'abord le précédent et on récupère l'ID de l'enregistrement
-        this.ar_pat[this.PTC] = this.curObj.creatPatient(
-          this.ar_fam,
-          this.ar_prat,
-          Object.keys(this.ar_pat).length + 1,
-        ); // ID du patient créé.
-        this.curObj = null; // Libération de la mémoire
+  async newPat(
+    bname: string,
+    value: string,
+    groupId: number,
+    t_dsio_tasks:
+      | Record<string, string>
+      | Record<string, Record<string, number>>,
+  ) {
+    try {
+      if (!this.esc('C')) {
+        return;
       }
+      if (bname === 'PTN') {
+        // Nouveau patient
+        if (this.PTC) {
+          // On enregistre d'abord le précédent et on récupère l'ID de l'enregistrement
+          this.ar_pat[this.PTC] = await this.curObj.creatPatient(
+            this.ar_fam,
+            this.ar_prat,
+            Object.keys(this.ar_pat).length + 1,
+            groupId,
+          ); // ID du patient créé.
+          this.curObj = null; // Libération de la mémoire
+        }
 
-      // On prépare le suivant
-      this.chPat('', groupId);
-      if (value) {
-        // il y a un prochain patient
-        // On passe au patient suivant
-        this.curObj = this.dsioElemService.construct(bname, value);
-      }
-    } else {
-      if (!this.curObj) {
-        this.curObj = this.dsioElemService.construct(bname, value);
+        // On prépare le suivant
+        this.chPat('', groupId, t_dsio_tasks);
+        if (value) {
+          this.curObj = this.dsioElemService.construct(bname, value);
+        }
       } else {
-        this.curObj.setInfo(bname, value);
+        if (!this.curObj) {
+          this.curObj = this.dsioElemService.construct(bname, value);
+        } else {
+          this.curObj.setInfo(bname, value);
+        }
+        if (bname === 'PTC') {
+          this.PTC = value;
+        }
       }
-      if (bname === 'PTC') {
-        this.PTC = value;
-      }
+    } catch (error) {
+      throw error;
     }
   }
 
-  /**
-   * Permet d'affecter une valeur pour une balise à l'enregistrement de soin
-   * en court de définition.
-   *
-   * @param string $bname nom de la balise
-   * @param string $value valeur de la balise
-   */
-  newActe(bname: string, value: string, groupId: number) {
-    if (!this.esc('D') && !this.esc('P')) {
-      return;
-    }
-    if (this.curObj == null) {
-      this.curObj = this.dsioElemService.construct(bname, value);
-      if (this.esc('P')) {
-        this.curObj.setInfo('STA', 'P');
-      }
-      if (bname === 'PTC') {
-        this.Id_pat = !value || !this.ar_pat[value] ? 0 : this.ar_pat[value];
-      } else if (bname === 'PC1') {
-        this.Id_prat = !value || !this.ar_prat[value] ? 0 : this.ar_prat[value];
-      } else if (bname === 'PR1') {
-        this.Id_agn = this.ar_agn[value] ? this.ar_agn[value] : 0;
-      }
-    } else if (bname === 'PTC') {
-      this.chPat(value, groupId);
-    } else if (bname === 'PC1') {
-      this.chPrat(value);
-    } else {
-      if (bname === 'PR1') {
-        this.Id_agn = this.ar_agn[value] ? this.ar_agn[value] : 0;
-      }
-      this.curObj.setInfo(bname, value);
-    }
-  }
-
-  /**
-   * Permet d'affecter une valeur pour une balise à l'enregistrement d'un postit
-   * en cours de définition.
-   */
-  newPostit(bname: string, value: string, groupId: number) {
-    if (!this.esc('J')) {
-      return;
-    }
-    if (this.curObj == null) {
-      this.curObj = this.dsioElemService.construct(bname, value);
-    }
-    if (bname == 'PTC') {
-      this.chPat(value, groupId);
-      this.curObj = this.dsioElemService.construct(bname, value);
-    } else if (bname == 'PC1') {
-      this.chPrat(value);
-      this.curObj = this.dsioElemService.construct(bname, value);
-      this.curObj.setInfo('PTC', this.Id_pat);
-    } else {
-      this.curObj.setInfo(bname, value);
-    }
-  }
-
-  /**
-   * Permet d'affecter une valeur pour une balise à l'enregistrement de paiement
-   * en court de définition.
-   *
-   * @param string $bname nom de la balise
-   * @param string $value valeur de la balise
-   */
-  newPaiement(bname: string, value: string, groupId: number) {
-    if (!this.esc('E')) {
-      return;
-    }
-    if (this.curObj == null) {
-      this.curObj = this.dsioElemService.construct(bname, value);
-      if (bname === 'PTC') {
-        this.Id_pat = !value || !this.ar_pat[value] ? 0 : this.ar_pat[value];
-      } else if (bname === 'PC1') {
-        this.Id_prat = !value || !this.ar_prat[value] ? 0 : this.ar_prat[value];
-      }
-    } else if (bname === 'PTC') {
-      this.chPat(value, groupId);
-    } else if (bname === 'PC1') {
-      this.chPrat(value);
-    } else {
-      this.curObj.setInfo(bname, value);
-    }
-  }
-
-  /**
-   * Permet d'affecter une valeur pour une balise à l'enregistrement d'un montant dû
-   * en court de définition.
-   *
-   * @param string $bname nom de la balise
-   * @param string $value valeur de la balise
-   */
-  newAmountDue(bname: string, value: string, groupId: number) {
-    if (!this.esc('F')) {
-      return;
-    }
-    if (this.curObj == null) {
-      this.curObj = this.dsioElemService.construct(bname, value);
-      if (bname === 'PTC') {
-        this.Id_pat = !value || !this.ar_pat[value] ? 0 : this.ar_pat[value];
-      } else if (bname == 'PC1') {
-        this.Id_prat = !value || !this.ar_prat[value] ? 0 : this.ar_prat[value];
-      }
-    } else if (bname === 'PTC') {
-      this.chPat(value, groupId);
-    } else if (bname === 'PC1') {
-      this.chPrat(value);
-    } else {
-      this.curObj.setInfo(bname, value);
-    }
-  }
-
-  /**
-   * Permet d'affecter une valeur pour une balise à l'enregistrement d'une famille
-   * en court de définition.
-   *
-   * @param string $bname nom de la balise
-   * @param string $value valeur de la balise
-   */
-  newFamily(bname: string, value: string) {
-    if (!this.esc('H')) {
-      return;
-    }
-    if (this.curObj == null) {
-      this.curObj = this.dsioElemService.construct(bname, value);
-    } else if (bname == 'FLI') {
-      this.chFam();
-      this.curObj = this.dsioElemService.construct(bname, value);
-    } else {
-      this.curObj.setInfo(bname, value);
-    }
-  }
-
-  /**
+  /** php/dsio/import_shell.php line 2207 -> 2218
    * Comme pour le chnagement de praticien (cf fonction chPrat), le fait de changer
    * de patient indique la fin de définition d'un enregistrement : il faut donc
    * appeler à créer l'enregistrement avant d'en entammer un nouveau.
    *
    * @param string $IDSIO l'identifiant DSIO du nouveau praticien sélectionné
    */
-  async chPat(IDSIO: string, groupId: number) {
-    this.chPrat('');
-    if (IDSIO && (!this.ar_pat[IDSIO] || this.ar_pat[IDSIO].length === 0)) {
-      const conIds: { CON_ID: number }[] = await this.dataSource.query(
-        `SELECT CON_ID from T_CONTACT_CON where organization_id = ${groupId} and CON_NBR = ${IDSIO} order by CON_ID asc limit 1`,
-      );
-      const CON_ID = conIds[0].CON_ID;
-      if (CON_ID) {
-        this.ar_pat[IDSIO] = CON_ID;
+  async chPat(
+    IDSIO: string,
+    groupId: number,
+    t_dsio_tasks:
+      | Record<string, string>
+      | Record<string, Record<string, number>>,
+  ) {
+    try {
+      this.chPrat('', groupId, t_dsio_tasks);
+      if (IDSIO && !this.ar_pat[IDSIO]) {
+        const conIds: { CON_ID: number }[] = await this.dataSource.query(
+          `SELECT CON_ID from T_CONTACT_CON where organization_id = ? and CON_NBR = ? order by CON_ID asc limit 1`,
+          [groupId, IDSIO],
+        );
+        const CON_ID = conIds[0].CON_ID;
+        if (CON_ID) {
+          this.ar_pat[IDSIO] = CON_ID;
+        }
       }
+      this.Id_pat = !IDSIO || !this.ar_pat[IDSIO] ? 0 : this.ar_pat[IDSIO];
+    } catch (error) {
+      throw error;
     }
-    this.Id_pat =
-      !IDSIO || !this.ar_pat[IDSIO] || this.ar_pat[IDSIO].length === 0
-        ? 0
-        : this.ar_pat[IDSIO];
   }
 
-  /**
+  /** php/dsio/import_shell.php line 2227 -> 2253
+   * Permet d'affecter une valeur pour une balise à l'enregistrement de soin
+   * en court de définition.
+   */
+  async newActe(
+    bname: string,
+    value: string,
+    groupId: number,
+    t_dsio_tasks:
+      | Record<string, string>
+      | Record<string, Record<string, number>>,
+  ) {
+    try {
+      if (!this.esc('D') && !this.esc('P')) {
+        return;
+      }
+      if (this.curObj == null) {
+        this.curObj = this.dsioElemService.construct(bname, value);
+        if (this.esc('P')) {
+          this.curObj.setInfo('STA', 'P');
+        }
+        if (bname === 'PTC') {
+          this.Id_pat = !value || !this.ar_pat[value] ? 0 : this.ar_pat[value];
+        } else if (bname === 'PC1') {
+          this.Id_prat =
+            !value || !this.ar_prat[value] ? 0 : this.ar_prat[value];
+        } else if (bname === 'PR1') {
+          this.Id_agn = this.ar_agn[value] ? this.ar_agn[value] : 0;
+        }
+      } else if (bname === 'PTC') {
+        await this.chPat(value, groupId, t_dsio_tasks);
+      } else if (bname === 'PC1') {
+        await this.chPrat(value, groupId, t_dsio_tasks);
+      } else {
+        if (bname === 'PR1') {
+          this.Id_agn = this.ar_agn[value] ? this.ar_agn[value] : 0;
+        }
+        this.curObj.setInfo(bname, value);
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /** php/dsio/import_shell.php line 2263 -> 2280
+   * Permet d'affecter une valeur pour une balise à l'enregistrement d'un postit
+   * en cours de définition.
+   */
+  async newPostit(
+    bname: string,
+    value: string,
+    groupId: number,
+    t_dsio_tasks:
+      | Record<string, string>
+      | Record<string, Record<string, number>>,
+  ) {
+    try {
+      if (!this.esc('J')) {
+        return;
+      }
+      if (this.curObj == null) {
+        this.curObj = this.dsioElemService.construct(bname, value);
+      }
+      if (bname == 'PTC') {
+        await this.chPat(value, groupId, t_dsio_tasks);
+        this.curObj = this.dsioElemService.construct(bname, value);
+      } else if (bname == 'PC1') {
+        await this.chPrat(value, groupId, t_dsio_tasks);
+        this.curObj = this.dsioElemService.construct(bname, value);
+        this.curObj.setInfo('PTC', `${this.Id_pat}`);
+      } else {
+        this.curObj.setInfo(bname, value);
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /** php/dsio/import_shell.php line 2289 -> 2307
+   * Permet d'affecter une valeur pour une balise à l'enregistrement de paiement
+   * en court de définition.
+   */
+  async newPaiement(
+    bname: string,
+    value: string,
+    groupId: number,
+    t_dsio_tasks:
+      | Record<string, string>
+      | Record<string, Record<string, number>>,
+  ) {
+    try {
+      if (!this.esc('E')) {
+        return;
+      }
+      if (this.curObj == null) {
+        this.curObj = this.dsioElemService.construct(bname, value);
+        if (bname === 'PTC') {
+          this.Id_pat = !value || !this.ar_pat[value] ? 0 : this.ar_pat[value];
+        } else if (bname === 'PC1') {
+          this.Id_prat =
+            !value || !this.ar_prat[value] ? 0 : this.ar_prat[value];
+        }
+      } else if (bname === 'PTC') {
+        await this.chPat(value, groupId, t_dsio_tasks);
+      } else if (bname === 'PC1') {
+        await this.chPrat(value, groupId, t_dsio_tasks);
+      } else {
+        this.curObj.setInfo(bname, value);
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /** php/dsio/import_shell.php line 2316 -> 2334
+   * Permet d'affecter une valeur pour une balise à l'enregistrement d'un montant dû
+   * en court de définition.
+   */
+  async newAmountDue(
+    bname: string,
+    value: string,
+    groupId: number,
+    t_dsio_tasks:
+      | Record<string, string>
+      | Record<string, Record<string, number>>,
+  ) {
+    try {
+      if (!this.esc('F')) {
+        return;
+      }
+      if (this.curObj == null) {
+        this.curObj = this.dsioElemService.construct(bname, value);
+        if (bname === 'PTC') {
+          this.Id_pat = !value || !this.ar_pat[value] ? 0 : this.ar_pat[value];
+        } else if (bname == 'PC1') {
+          this.Id_prat =
+            !value || !this.ar_prat[value] ? 0 : this.ar_prat[value];
+        }
+      } else if (bname === 'PTC') {
+        await this.chPat(value, groupId, t_dsio_tasks);
+      } else if (bname === 'PC1') {
+        await this.chPrat(value, groupId, t_dsio_tasks);
+      } else {
+        this.curObj.setInfo(bname, value);
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /** php/dsio/import_shell.php line 2343 -> 2355
+   * Permet d'affecter une valeur pour une balise à l'enregistrement d'une famille
+   * en court de définition.
+   */
+  newFamily(bname: string, value: string, groupId: number) {
+    try {
+      if (!this.esc('H')) {
+        return;
+      }
+      if (this.curObj == null) {
+        this.curObj = this.dsioElemService.construct(bname, value);
+      } else if (bname == 'FLI') {
+        this.chFam(groupId);
+        this.curObj = this.dsioElemService.construct(bname, value);
+      } else {
+        this.curObj.setInfo(bname, value);
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /** php/dsio/import_shell.php line 2363 -> 2368
    * Dans la section, le fait de changer de famille indique la fin d'une autre que
    * l'on doit enregistrer.
    */
-  chFam() {
-    if (this.curObj != null) {
-      this.curObj.setLibraryFamily();
-      this.curObj = null;
+  async chFam(groupId: number) {
+    try {
+      if (this.curObj != null) {
+        await this.curObj.setLibraryFamily(groupId);
+        this.curObj = null;
+      }
+    } catch (error) {
+      throw error;
     }
   }
 
-  /**
+  /** php/dsio/import_shell.php line 2377 -> 2394
    * Permet d'affecter une valeur pour une balise à l'enregistrement d'une famille
    * en court de définition.
-   *
-   * @param string $bname nom de la balise
-   * @param string $value valeur de la balise
    */
-  newFamilyTask(bname: string, value: string) {
-    if (!this.esc('I')) {
-      return;
-    }
+  async newFamilyTask(
+    bname: string,
+    value: string,
+    t_dsio_tasks:
+      | Record<string, string>
+      | Record<string, Record<string, number>>,
+    LFT_ASSOCIATED_ACTS: Record<string, string>,
+    groupId: number,
+  ) {
+    try {
+      if (!this.esc('I')) {
+        return;
+      }
 
-    if (bname == 'FCF') {
-      this.Id_Family_Tasks = Number(value);
-    }
-    if (this.curObj == null) {
-      this.curObj = this.dsioElemService.construct(bname, value);
-    } else if (bname === 'FCF') {
-      this.chLibAct(bname, value);
-    } else if (bname === 'ACA') {
-      this.chLibAct(bname, value);
-    } else {
-      this.curObj.setInfo(bname, value);
+      if (bname == 'FCF') {
+        this.Id_Family_Tasks = Number(value);
+      }
+      if (this.curObj == null) {
+        this.curObj = this.dsioElemService.construct(bname, value);
+      } else if (bname === 'FCF') {
+        await this.chLibAct(
+          bname,
+          value,
+          t_dsio_tasks,
+          LFT_ASSOCIATED_ACTS,
+          groupId,
+        );
+      } else if (bname === 'ACA') {
+        await this.chLibAct(
+          bname,
+          value,
+          t_dsio_tasks,
+          LFT_ASSOCIATED_ACTS,
+          groupId,
+        );
+      } else {
+        this.curObj.setInfo(bname, value);
+      }
+    } catch (error) {
+      throw error;
     }
   }
 
-  /**
+  /** php/dsio/import_shell.php line 2402 -> 2415
    * Dans la section, le fait de changer d'acte indique la fin d'un autre que l'on
    * doit enregistrer.
-   *
-   * @param string $bname nom de la balise :
    */
-  chLibAct(bname: string = null, value: string = null) {
-    // Création de l'acte + affectation aux tâches des rdv concernés
-    if (this.actesMacDent) {
-      this.curObj.setLibraryMact();
-    } else {
-      this.curObj.setLibraryAct();
-    }
-    if (bname !== null) {
-      this.curObj = this.dsioElemService.construct(bname, value);
-      if (bname !== 'FCF') {
-        this.curObj.setInfo('FCF', this.Id_Family_Tasks);
+  async chLibAct(
+    bname: string = null,
+    value: string = null,
+    t_dsio_tasks:
+      | Record<string, string>
+      | Record<string, Record<string, number>>,
+    LFT_ASSOCIATED_ACTS: Record<string, string>,
+    groupId: number,
+  ) {
+    try {
+      if (this.actesMacDent) {
+        await this.curObj.setLibraryMact(t_dsio_tasks, groupId);
+      } else {
+        await this.curObj.setLibraryAct(
+          t_dsio_tasks,
+          LFT_ASSOCIATED_ACTS,
+          groupId,
+        );
       }
+      if (bname !== null) {
+        this.curObj = this.dsioElemService.construct(bname, value);
+        if (bname !== 'FCF') {
+          this.curObj.setInfo('FCF', this.Id_Family_Tasks + '');
+        }
+      }
+    } catch (error) {
+      throw error;
     }
   }
 
-  /**
+  /** php/dsio/import_shell.php line 2421 -> 2463
    * Fonction de suppression de la bibliothèque d'actes (fournie de base) du groupe.
    * Le but est qu'elle soit remplacée par la bibliothèque extraite du DSIO
    */
   async deleteLibrary(groupId: number, max_CON_NBR: number) {
     if (max_CON_NBR > 0) {
-      // dans le cadre d'une fusion, on laisse la biblio déjà en place
       return;
     }
 
-    // const query = `INSERT INTO `T_LIBRARY_FAMILY_LFY` (`LFY_ID`,`GRP_ID`, `LFY_USABLE`)
-    //     (SELECT `LFY_ID`,$groupId,0 FROM `T_LIBRARY_FAMILY_LFY` WHERE `GRP_ID` IN (0,$groupId) and (LFY_CCAM IS NULL OR LFY_CCAM = 0))
-    // ON DUPLICATE KEY UPDATE `LFY_USABLE`=0`;
-    const query =
-      'INSERT INTO `T_LIBRARY_FAMILY_LFY` (`LFY_ID`,`GRP_ID`, `LFY_USABLE`, `LFY_POS`)' +
-      `(SELECT \`LFY_ID\`,${groupId},0,\`LFY_POS\`+200 FROM \`T_LIBRARY_FAMILY_LFY\` WHERE \`GRP_ID\` IN (0,${groupId}) and (LFY_CCAM IS NULL OR LFY_CCAM = 0))
-      ON DUPLICATE KEY UPDATE \`LFY_USABLE\`=0`;
-    await this.dataSource.query(query);
+    try {
+      const query =
+        'INSERT INTO `T_LIBRARY_FAMILY_LFY` (`LFY_ID`,`GRP_ID`, `LFY_USABLE`, `LFY_POS`) ' +
+        `(SELECT \`LFY_ID\`,${groupId},0,\`LFY_POS\`+200 FROM \`T_LIBRARY_FAMILY_LFY\` WHERE \`GRP_ID\` IN (0,${groupId}) and (LFY_CCAM IS NULL OR LFY_CCAM = 0))
+        ON DUPLICATE KEY UPDATE \`LFY_USABLE\`=0`;
+      await this.dataSource.query(query);
+    } catch (error) {
+      throw error;
+    }
   }
 
+  // php/dsio/import_shell.php line 2465 -> 2492
   async assocAct(
     groupId: number,
     LFT_ASSOCIATED_ACTS: Record<string, string>,
-    t_dsio_tasks: Record<string, string>,
+    t_dsio_tasks:
+      | Record<string, string>
+      | Record<string, Record<string, number>>,
   ) {
-    Object.entries(LFT_ASSOCIATED_ACTS).forEach(async ([LFT_ID, assoc]) => {
-      const t_assocs: (string | boolean)[] = assoc.split(',');
-      for (let i = 0; i < t_assocs.length; i++) {
-        if (t_dsio_tasks[t_assocs[i] as string]) {
-          t_assocs[i] = t_dsio_tasks[t_assocs[i] as string];
-        } else if (t_assocs[i] === '') {
-          t_assocs[i] = LFT_ID;
-        } else {
-          t_assocs[i] = false;
+    try {
+      Object.entries(LFT_ASSOCIATED_ACTS).forEach(async ([LFT_ID, assoc]) => {
+        const t_assocs: (string | boolean)[] = assoc.split(',');
+        for (let i = 0; i < t_assocs.length; i++) {
+          if (t_dsio_tasks[t_assocs[i] as string]) {
+            t_assocs[i] = t_dsio_tasks[t_assocs[i] as string] as string;
+          } else if (t_assocs[i] === '') {
+            t_assocs[i] = LFT_ID;
+          } else {
+            t_assocs[i] = false;
+          }
         }
-      }
 
-      assoc = t_assocs.filter(Boolean).join(',');
-      if (assoc.localeCompare(LFT_ID)) {
-        const query = `UPDATE T_LIBRARY_FAMILY_TASK_LFT
-          SET LFT_ASSOCIATED_ACTS = '${assoc}'
-          WHERE LFT_ID = ${LFT_ID}
-          AND GRP_ID = ${groupId}`;
-        await this.dataSource.query(query);
-      }
-    });
+        assoc = t_assocs.filter(Boolean).join(',');
+        if (assoc.localeCompare(LFT_ID)) {
+          const query = `UPDATE T_LIBRARY_FAMILY_TASK_LFT
+          SET LFT_ASSOCIATED_ACTS = ?
+          WHERE LFT_ID = ?
+          AND GRP_ID = ?`;
+          await this.dataSource.query(query, [assoc, LFT_ID, groupId]);
+        }
+      });
+    } catch (error) {
+      throw error;
+    }
   }
 
-  newCI(bname: string, value: string, groupId: number, max_CON_NBR: number) {
-    // contres-indications
-    if (!this.esc('K')) {
-      return;
-    }
+  // php/dsio/import_shell.php line 2494 -> 2509
+  async newCI(
+    bname: string,
+    value: string,
+    groupId: number,
+    max_CON_NBR: number,
+  ) {
+    try {
+      if (!this.esc('K')) {
+        return;
+      }
 
-    if (bname === 'ICI') {
-      if (this.curObj != null) {
-        this.curObj.insertContraindication(); // enregistrement de la contre-indication précédente
+      if (bname === 'ICI') {
+        if (this.curObj != null) {
+          await this.curObj.insertContraindication(groupId); // enregistrement de la contre-indication précédente
+        } else {
+          await this.deleteContraindications(groupId, max_CON_NBR); // première contre-indication => on supprime celles par défaut dans e.coo
+        }
+        this.curObj = this.dsioElemService.construct(bname, value);
       } else {
-        this.deleteContraindications(groupId, max_CON_NBR); // première contre-indication => on supprime celles par défaut dans e.coo
+        this.curObj.setInfo(bname, value);
       }
-      this.curObj = this.dsioElemService.construct(bname, value);
-    } else {
-      this.curObj.setInfo(bname, value);
+    } catch (error) {
+      throw error;
     }
   }
 
+  // php/dsio/import_shell.php line 2511 -> 2528
   async deleteContraindications(groupId: number, max_CON_NBR: number) {
     if (max_CON_NBR > 0) {
-      // en cas de fusion on ne supprime pas la bibliothèque de l'autre utilisateur
       return;
     }
 
-    await this.dataSource.query(
-      `
-      UPDATE T_MEDICAL_LIBRARY_CONTRAINDICATION_MLC
-      SET deleted_at = CURRENT_TIMESTAMP()
-      WHERE organization_id = ?
-    `,
-      [groupId],
-    );
+    try {
+      await this.dataSource.query(
+        `
+        UPDATE T_MEDICAL_LIBRARY_CONTRAINDICATION_MLC
+        SET deleted_at = CURRENT_TIMESTAMP()
+        WHERE organization_id = ?
+      `,
+        [groupId],
+      );
+    } catch (error) {
+      throw error;
+    }
   }
 
-  newMedFam(bname: string, value: string, groupId: number) {
-    if (!this.esc('L')) {
-      return;
-    }
-
-    if (bname === 'DLI') {
-      if (this.curObj != null) {
-        this.curObj.insertMedicamentFamily(); // enregistrement de la contre-indication précédente
-      } else {
-        this.deleteMedicamentFamilies(groupId); // première famille on supprime celles par défaut dans e.coo
+  // php/dsio/import_shell.php line 2530 -> 2545
+  async newMedFam(bname: string, value: string, groupId: number) {
+    try {
+      if (!this.esc('L')) {
+        return;
       }
-      this.curObj = this.dsioElemService.construct(bname, value);
-    } else {
-      this.curObj.setInfo(bname, value);
-    }
-  }
 
-  async deleteMedicamentFamilies(groupId: number) {
-    await this.dataSource.query(
-      `
-      UPDATE T_MEDICAL_PRESCRIPTION_TYPE_MDT
-      SET deleted_at = CURRENT_TIMESTAMP()
-      WHERE organization_id = ?
-    `,
-      [groupId],
-    );
-  }
-
-  newMed(bname: string, value: string) {
-    if (!this.esc('M')) {
-      return;
-    }
-
-    if (['DCD', 'MCM'].includes(bname)) {
-      if (this.curObj != null) {
-        this.curObj.insertMedicament(); // enregistrement de la contre-indication précédente
-      }
-      if (bname === 'MCM') {
-        // nouveau médicament de la même famille
-        const DCD = this.curObj.DCD;
-        this.curObj = this.dsioElemService.construct('DCD', DCD);
-        this.curObj.setInfo(bname, value);
-      } else {
-        // nouveau médicaent dans une nouvelle famille
+      if (bname === 'DLI') {
+        if (this.curObj != null) {
+          await this.curObj.insertMedicamentFamily(groupId); // enregistrement de la contre-indication précédente
+        } else {
+          await this.deleteMedicamentFamilies(groupId); // première famille on supprime celles par défaut dans e.coo
+        }
         this.curObj = this.dsioElemService.construct(bname, value);
+      } else {
+        this.curObj.setInfo(bname, value);
       }
-    } else {
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // php/dsio/import_shell.php line 2547 -> 2559
+  async deleteMedicamentFamilies(groupId: number) {
+    try {
+      await this.dataSource.query(
+        `
+        UPDATE T_MEDICAL_PRESCRIPTION_TYPE_MDT
+        SET deleted_at = CURRENT_TIMESTAMP()
+        WHERE organization_id = ?
+      `,
+        [groupId],
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // php/dsio/import_shell.php line 2561 -> 2580
+  async newMed(bname: string, value: string, groupId: number) {
+    try {
+      if (!this.esc('M')) {
+        return;
+      }
+
+      if (['DCD', 'MCM'].includes(bname)) {
+        if (this.curObj != null) {
+          await this.curObj.insertMedicament(groupId); // enregistrement de la contre-indication précédente
+        }
+        if (bname === 'MCM') {
+          // nouveau médicament de la même famille
+          const DCD = this.curObj.DCD;
+          this.curObj = this.dsioElemService.construct('DCD', DCD);
+          this.curObj.setInfo(bname, value);
+        } else {
+          // nouveau médicaent dans une nouvelle famille
+          this.curObj = this.dsioElemService.construct(bname, value);
+        }
+      } else {
+        this.curObj.setInfo(bname, value);
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // php/dsio/import_shell.php line 2582 -> 2596
+  async newCorrespondent(bname: string, value: string, groupId: number) {
+    try {
+      if (!this.esc('N')) {
+        return;
+      }
+
+      if (bname === 'RN1') {
+        if (this.curObj != null) {
+          await this.curObj.setCorrespondent(groupId); // Enregistrement du correspndant précédent
+        }
+        this.curObj = this.dsioElemService.construct(bname, value);
+      } else if (bname === 'PC1') {
+        value = this.Id_prat =
+          !value || !this.ar_prat[value] ? 0 : this.ar_prat[value];
+      }
       this.curObj.setInfo(bname, value);
+    } catch (error) {
+      throw error;
     }
   }
 
-  newCorrespondent(bname: string, value: string) {
-    if (!this.esc('N')) {
-      return;
-    }
-
-    if (bname === 'RN1') {
-      if (this.curObj != null) {
-        this.curObj.setCorrespondent(); // Enregistrement du correspndant précédent
+  // php/dsio/import_shell.php line 2598 -> 2612
+  async newBnq(bname: string, value: number, groupId: number) {
+    try {
+      if (!this.esc('O')) {
+        return;
       }
-      this.curObj = this.dsioElemService.construct(bname, value);
-    } else if (bname === 'PC1') {
-      value = this.Id_prat =
-        !value || !this.ar_prat[value] ? 0 : this.ar_prat[value];
-    }
-    this.curObj.setInfo(bname, value);
-  }
 
-  newBnq(bname: string, value: number) {
-    if (!this.esc('O')) {
-      return;
-    }
-
-    if (bname === 'PC1') {
-      if (this.curObj != null) {
-        this.curObj.setBnq(this.Id_prat); // Enregistrement du correspndant précédent
+      if (bname === 'PC1') {
+        if (this.curObj != null) {
+          await this.curObj.setBnq(this.Id_prat, groupId); // Enregistrement du correspndant précédent
+        }
+        this.Id_prat =
+          !value || !this.ar_prat[value] ? 0 : +this.ar_prat[value];
+        value = this.Id_prat;
+        this.curObj = this.dsioElemService.construct(bname, value.toString());
       }
-      this.Id_prat = !value || !this.ar_prat[value] ? 0 : +this.ar_prat[value];
-      value = this.Id_prat;
-      this.curObj = this.dsioElemService.construct(bname, value.toString());
+      this.curObj.setInfo(bname, `${value}`);
+    } catch (error) {
+      throw error;
     }
-    this.curObj.setInfo(bname, value);
   }
 
-  /**
+  /** php/dsio/import_shell.php line 2620 -> 2660
    * récupération de la valeur d'un élément en vue d'alimenter
    * le prochain enregistrement à créer
-   *
-   * @param string $buffer ligne contenant la balise et sa valeur
    */
-  checkDiezLine(buffer: string, max_CON_NBR: number, groupId: number) {
-    const bname = buffer.substring(1, 4);
-    let value = buffer
-      .slice(4)
-      .replace(
-        /[\x00-\x08\x0A-\x1F\x7F\uFEFF\u{10000}-\u{3FFFF}\u{40000}-\u{FFFFF}\u{100000}-\u{10FFFF}]/gu,
-        ' ',
-      )
-      .trim();
+  async checkDiezLine(
+    buffer: string,
+    max_CON_NBR: number,
+    groupId: number,
+    t_dsio_tasks:
+      | Record<string, string>
+      | Record<string, Record<string, number>>,
+    LFT_ASSOCIATED_ACTS: Record<string, string>,
+  ) {
+    try {
+      const bname = buffer.substring(1, 4);
+      let value = buffer
+        .slice(4)
+        .replace(
+          /[\x00-\x08\x0A-\x1F\x7F\uFEFF\u{10000}-\u{3FFFF}\u{40000}-\u{FFFFF}\u{100000}-\u{10FFFF}]/gu,
+          ' ',
+        )
+        .trim();
 
-    if ((bname === 'PC1' && !isNaN(Number(value))) || bname === 'PR1') {
-      value = String(0 + Number(value));
-    } else if (bname === 'PTC' && !isNaN(Number(value))) {
-      value = String(Math.floor(Number(value)) + max_CON_NBR);
-    }
+      if ((bname === 'PC1' && !isNaN(Number(value))) || bname === 'PR1') {
+        value = String(0 + Number(value));
+      } else if (bname === 'PTC' && !isNaN(Number(value))) {
+        value = String(Math.floor(Number(value)) + max_CON_NBR);
+      }
 
-    if (this.esc('B')) {
-      this.newPrat(bname, value, groupId);
-    } else if (this.esc('C')) {
-      this.newPat(bname, value, groupId);
-    } else if (this.esc('D') || this.esc('P')) {
-      this.newActe(bname, value, groupId);
-    } else if (this.esc('E')) {
-      this.newPaiement(bname, value, groupId);
-    } else if (this.esc('F')) {
-      // Serge le 28/06/2013
-      this.newAmountDue(bname, value, groupId);
-    } else if (this.esc('H')) {
-      // Serge le 01/07/2013
-      this.newFamily(bname, value); // Alimentation d'une nouvelle famille d'actes
-    } else if (this.esc('I')) {
-      // Serge le 04/07/2013
-      this.newFamilyTask(bname, value); // Alimentation d'un nouvel acte de la bibliothèque
-    } else if (this.esc('J')) {
-      this.newPostit(bname, value, groupId); // Alimentation d'un nouveau postit
-    } else if (this.esc('K')) {
-      this.newCI(bname, value, groupId, max_CON_NBR); // Alimentation d'une nouvelle famille de médicaments
-    } else if (this.esc('L')) {
-      this.newMedFam(bname, value, groupId); // Alimentation d'un nouvel acte de la bibliothèque
-    } else if (this.esc('M')) {
-      this.newMed(bname, value); // Alimentation d'un
-    } else if (this.esc('N')) {
-      this.newCorrespondent(bname, value); // Alimentation d'un nouveau correspondant
-    } else if (this.esc('O')) {
-      this.newBnq(bname, Number(value)); // Alimentation d'un nouveau compte bancaire
+      if (this.esc('B')) {
+        await this.newPrat(bname, value, groupId, t_dsio_tasks);
+      } else if (this.esc('C')) {
+        await this.newPat(bname, value, groupId, t_dsio_tasks);
+      } else if (this.esc('D') || this.esc('P')) {
+        await this.newActe(bname, value, groupId, t_dsio_tasks);
+      } else if (this.esc('E')) {
+        await this.newPaiement(bname, value, groupId, t_dsio_tasks);
+      } else if (this.esc('F')) {
+        // Serge le 28/06/2013
+        await this.newAmountDue(bname, value, groupId, t_dsio_tasks);
+      } else if (this.esc('H')) {
+        // Serge le 01/07/2013
+        this.newFamily(bname, value, groupId); // Alimentation d'une nouvelle famille d'actes
+      } else if (this.esc('I')) {
+        // Serge le 04/07/2013
+        await this.newFamilyTask(
+          bname,
+          value,
+          t_dsio_tasks,
+          LFT_ASSOCIATED_ACTS,
+          groupId,
+        ); // Alimentation d'un nouvel acte de la bibliothèque
+      } else if (this.esc('J')) {
+        await this.newPostit(bname, value, groupId, t_dsio_tasks); // Alimentation d'un nouveau postit
+      } else if (this.esc('K')) {
+        await this.newCI(bname, value, groupId, max_CON_NBR); // Alimentation d'une nouvelle famille de médicaments
+      } else if (this.esc('L')) {
+        await this.newMedFam(bname, value, groupId); // Alimentation d'un nouvel acte de la bibliothèque
+      } else if (this.esc('M')) {
+        await this.newMed(bname, value, groupId); // Alimentation d'un
+      } else if (this.esc('N')) {
+        await this.newCorrespondent(bname, value, groupId); // Alimentation d'un nouveau correspondant
+      } else if (this.esc('O')) {
+        await this.newBnq(bname, Number(value), groupId); // Alimentation d'un nouveau compte bancaire
+      }
+    } catch (error) {
+      throw error;
     }
   }
 
+  // php/dsio/import_shell.php line 2665 -> 2751
   // Lancement de la procédure d'importation du fichier DSIO
   async import(
     filename: string,
@@ -1002,7 +1198,9 @@ export class DsioService {
     groupId: number,
     utf8: boolean,
     LFT_ASSOCIATED_ACTS: Record<string, string>,
-    t_dsio_tasks: Record<string, string>,
+    t_dsio_tasks:
+      | Record<string, string>
+      | Record<string, Record<string, number>>,
   ) {
     try {
       this.debut = new Date().getTime();
@@ -1048,7 +1246,13 @@ export class DsioService {
               }
               break;
             case '#': // une balise d'un enregistrement à créer
-              this.checkDiezLine(buffer, payload.patient_number ?? 0, groupId);
+              this.checkDiezLine(
+                buffer,
+                payload.patient_number ?? 0,
+                groupId,
+                t_dsio_tasks,
+                LFT_ASSOCIATED_ACTS,
+              );
               break;
             default:
               if (this.esc('A')) {
@@ -1095,13 +1299,13 @@ export class DsioService {
       if (this.curObj != null) {
         if (this.esc('M')) {
           /* Il faut enregistrer un dernier médicament */
-          this.curObj.insertMedicament();
+          await this.curObj.insertMedicament(groupId);
         } else if (this.esc('N')) {
           /* Il faut enregistrer un dernier correspondant */
-          this.curObj.setCorrespondent();
+          await this.curObj.setCorrespondent(groupId);
         } else if (this.esc('O')) {
           /* Il faut enregistrer un dernier compte bancaire */
-          this.curObj.setBnq(this.Id_prat);
+          await this.curObj.setBnq(this.Id_prat, groupId);
         }
       }
     } catch (error) {
@@ -1114,7 +1318,6 @@ export class DsioService {
           "Une erreur est survenue durant l'importation de votre fichier DSIO. Nous allons intervenir dessus le plus rapidement possible puis revenir vers vous.",
       });
       fs.writeFileSync(`${filename}.json`, returnJson);
-      // die();
       throw error;
     }
   }

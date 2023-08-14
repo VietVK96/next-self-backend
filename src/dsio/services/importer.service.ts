@@ -19,7 +19,7 @@ export class ImporterService {
   ) {}
 
   /**
-   * php/dsio/import_shell.php line 5 ->
+   * php/dsio/import_shell.php line 5 -> 205, line 2755 -> 2814
    */
   async runImportShell(
     importerDsioDto: ImporterDsioDto,
@@ -43,153 +43,17 @@ export class ImporterService {
       await this.dataSource.query(`SET @groupid = ${groupId}`);
       await this.dataSource.query(`SET @TRIGGER_CHECKS = ${TRIGGER_CHECKS}`);
 
-      // $em->getFilters()->enable('organization')->setParameter('organization_id', $groupId);
-
       // decodage utf-8
       const utf8 = true;
 
       // Gestion des familles patients
       const t_COF = [];
 
-      // Récupération des types de téléphones
-      const t_phone_type_pty = {};
-      const phoneTypeResult: { PTY_NAME: number; PTY_ID: number }[] =
-        await this.dataSource.query('select * from `T_PHONE_TYPE_PTY`');
-      phoneTypeResult.map((item) => {
-        t_phone_type_pty[item.PTY_NAME] = item.PTY_ID;
-      });
-
-      // Récupération des genres
-      const t_gender_gen = {};
-      const genderResult: { GEN_NAME: string; GEN_ID: number }[] =
-        await this.dataSource.query('select * from `T_GENDER_GEN`');
-      genderResult.map((item) => {
-        t_gender_gen[item.GEN_NAME] = item.GEN_ID; // M, Mme, Mlle, M & Mme, Dr, Pr, Me
-      });
-
-      t_gender_gen['Mr'] = 1;
-      t_gender_gen['M.'] = 1;
-      t_gender_gen['Msieur'] = 1;
-      t_gender_gen['Monsieur'] = 1;
-      t_gender_gen['Madame'] = 2;
-      t_gender_gen['Mademoiselle'] = 4;
-      t_gender_gen['Melle'] = 4;
-      t_gender_gen['Melle.'] = 4;
-      t_gender_gen['Mlle.'] = 4;
-
       // Lien entre actes et bibliothèque d'actes
-      const t_family_tasks = []; // Relation id familles d'actes DSIO => e.coo
-      const t_library_family_task_lft = []; // Relation id actes DSIO => e.coo
       const t_dsio_tasks = {};
-      const t_dsio_tasks_quantity = [];
-      const t_dsio_dental_tasks_quantity = [];
       const LFT_ASSOCIATED_ACTS = {};
-      const LFT_POS = 0;
-      const LFY_ID = 0;
-      const t_QD = {
-        ED: 'D',
-        EP: 'E',
-        DE: 'E',
-        DP: 'F',
-        AG: 'G',
-        AN: 'N',
-        DA: 'A',
-        DM: 'M',
-        'DA+ED': 'B',
-        'DM+EP': 'C',
-      };
 
-      // Récupération des lettres clés
-      const ngapKeys = {};
-      const ngapKeyResult: { name: string; id: number }[] =
-        await this.dataSource.query(
-          'select * from ngap_key where organization_id = ?',
-          [groupId],
-        );
-      ngapKeyResult.map((item) => {
-        ngapKeys[item.name] = item.id;
-      });
-
-      const ccamStm = 'select id from ccam where code = ?';
-
-      /**
-       * Dernier rdv enregistré.
-       * Si l'acte suivant appartient au même patient pour le même jour et le même praticien
-       * on affecte ce nouvel acte à ce rdv.
-       */
-      const t_last_rdv = {
-        EVT_START: '',
-        CON_ID: 0,
-        USR_ID: 0,
-        EVT_ID: 0,
-      };
-
-      // Lien entre patients et contres-indications
-      const T_CONTACT_CONTRAINDICATION_COC = [];
-      const medicamentFamilies = [];
-
-      // Liens sur les postits
-      const T_POSTIT_PTT = [];
-
-      // Décallage des dossiers patient pour fusion de plusieurs bases
-      const max_CON_NBR = importerDsioDto.patient_number ?? 0;
-
-      function reconnect(seconds = 5) {
-        TRIGGER_CHECKS;
-
-        // Import devenu très long
-        // On tente de shunter cette fonction pour voir
-        return;
-
-        // $connection->close();
-        // set_time_limit($seconds + 30);
-        // sleep($seconds);
-        // $connection->query("SET @groupid = $groupId");
-        /*
-          $connection->query("SET @TRIGGER_AFTER_INSERT_CHECKS = $TRIGGER_CHECKS");
-          $connection->query("SET @TRIGGER_BEFORE_UPDATE_CHECKS = $TRIGGER_CHECKS");
-          $connection->query("SET @TRIGGER_BEFORE_DELETE_CHECKS = $TRIGGER_CHECKS"); */
-        // $connection->query("SET @TRIGGER_CHECKS = $TRIGGER_CHECKS");
-        // $connection->query("SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0");
-        // $connection->query("SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0");
-        // $connection->query("SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL'");
-      }
-
-      function dsio_log(comment: string) {
-        // global $filename;
-        // file_put_contents("$filename.log", $comment, FILE_APPEND);
-        fs.appendFileSync(`${filename}.log`, comment);
-      }
-
-      function detectUTF8(string: string): boolean {
-        const pattern = new RegExp(
-          `(?:
-        (?:[\xC2-\xDF][\x80-\xBF]) # non-overlong 2-byte
-        |(?:\xE0[\xA0-\xBF][\x80-\xBF]) # excluding overlongs
-        |(?:[\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}) # straight 3-byte
-        |(?:\xE3\xA8) # è foireux
-        |(?:\xED[\x80-\x9F][\x80-\xBF]) # excluding surrogates
-        |(?:\xF0[\x90-\xBF][\x80-\xBF]{2}) # planes 1-3
-        |(?:[\xF1-\xF3][\x80-\xBF]{3}) # planes 4-15
-        |(?:\xF4[\x80-\x8F][\x80-\xBF]{2}) # plane 16
-        )`,
-          'gs',
-        );
-
-        return pattern.test(string);
-      }
-
-      const nth_record = 0;
-
-      const handle_query: fs.WriteStream = fs.createWriteStream(
-        `${filename}.json`,
-      );
-
-      function query_log(query: string) {
-        handle_query.write(`${query};\n`);
-      }
-
-      // php/dsio/import_shell.php line 2755 ->
+      // php/dsio/import_shell.php line 2755 -> 2814
       // Lancement de l'importation
       //$connection->beginTransaction();
       await this.dataSource.query(
@@ -204,7 +68,7 @@ export class ImporterService {
 
       const dsio = {};
       try {
-        this.dsioService.construct(
+        await this.dsioService.construct(
           filename,
           importerDsioDto,
           groupId,
@@ -215,7 +79,7 @@ export class ImporterService {
           HAD,
           HAF,
         );
-        this.dsioService.import(
+        await this.dsioService.import(
           filename,
           importerDsioDto,
           groupId,
@@ -274,7 +138,6 @@ export class ImporterService {
           }),
         );
         throw error;
-        // @TODO die();
       }
 
       fs.writeFileSync(
