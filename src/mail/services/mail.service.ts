@@ -1,9 +1,10 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
-import fs from 'fs';
-import handlebars from 'handlebars';
+import * as fs from 'fs';
+import * as handlebars from 'handlebars';
 import dayjs from 'dayjs';
-import sharp from 'sharp';
+import * as sharp from 'sharp';
+import * as xpath from 'xpath';
 import { differenceInMonths, differenceInYears, format } from 'date-fns';
 import { DataSource, Repository } from 'typeorm';
 import { FindAllMailRes } from '../response/findAllMail.res';
@@ -39,6 +40,7 @@ import { MailTransportService } from './mailTransport.service';
 import { tmpdir } from 'os';
 import { SuccessResponse } from 'src/common/response/success.res';
 import { FindHeaderFooterRes } from '../response/findHeaderFooter.res';
+import { DOMParser, XMLSerializer } from 'xmldom';
 
 @Injectable()
 export class MailService {
@@ -174,7 +176,7 @@ export class MailService {
       },
     });
 
-    if (!qr) throw new CNotFoundRequestException(`Mail Not found`);
+    if (!qr) return new CNotFoundRequestException(`Mail Not found`);
 
     const doctors: PersonInfoDto[] = await this.dataSource.query(
       `SELECT
@@ -233,6 +235,7 @@ export class MailService {
       [qr.footerId],
     );
 
+    if (qr?.user?.password) delete qr.user.password;
     const mail: FindMailRes = {
       id: qr.id,
       type: qr.type,
@@ -608,20 +611,20 @@ export class MailService {
   // application/Services/Mail.php => 429 -> 445
   async transform(inputs: any, context: any, signature?: any) {
     inputs.body = await this.render(
-      inputs?.body.replace(/\|.*?\}/, '}'),
+      inputs?.body.replace(/[|].*?}/, '}'),
       context,
       signature,
     );
     if (inputs?.header) {
       inputs.header.body = this.render(
-        inputs?.header.body.replace(/\|.*?\}/, '}'),
+        inputs?.header.body.replace(/[|].*?}/, '}'),
         context,
         signature,
       );
     }
     if (inputs?.footer) {
       inputs.footer.body = this.render(
-        inputs?.footer?.body.replace(/\|.*?\}/, '}'),
+        inputs?.footer?.body.replace(/[|].*?}/, '}'),
         context,
         {},
       );
@@ -694,8 +697,13 @@ export class MailService {
 
   // application/Services/Mail.php=> 454 -> 489
   async render(message: string, context: any, signature?: any) {
-    // const uniqid = Date.now().toString(); // Generate a unique identifier
+    const errParser = `</span></span></span><span style="vertical-align: inherit;"><span style="vertical-align: inherit;"><span style="vertical-align: inherit;">`;
+    while (message.includes(errParser)) {
+      message = message.replace(errParser, '');
+    }
+    // const uniqid = Date.now().toString();
 
+    // Generate a unique identifier
     // Replace the default date format in Handlebars
     Handlebars.registerHelper('formatDate', function (dateString) {
       const date = new Date(dateString);
@@ -1149,13 +1157,13 @@ export class MailService {
    *	print: Code Javascript pour impression inclus.
    *	filename: Enregistrement du PDF dans le fichier.
    */
-  async pdf(inputs: MailInputsDto, options: MailOptionsDto) {
+  async pdf(inputs: MailInputsDto, options?: MailOptionsDto) {
     this.addPage(inputs);
     this.clean(inputs);
     this.addPageBreak(inputs);
     this.addFontAndSize(inputs);
     this.resizeTable(inputs);
-    if (options.preview) {
+    if (options?.preview) {
       return inputs.body;
     }
   }
@@ -1269,14 +1277,16 @@ export class MailService {
     const htmlString =
       '<?xml encoding="utf-8" ?><div>' + inputs.body + '</div>';
 
-    // Create a new DOMParser object and parse the HTML string
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(htmlString, 'text/html');
-
-    // Example usage of evaluateXPath function
-    const xpathExpression =
-      "descendant-or-self::*[contains(@style,'font-family') or contains(@style,'font-size')]";
-    const nodes = this.evaluateXPath(xpathExpression, xmlDoc);
+    const dom = new DOMParser().parseFromString(
+      `<?xml encoding="utf-8" ?><div>${inputs.body}</div>`,
+      'text/xml',
+    );
+    const nodes = xpath.select(
+      'descendant-or-self::*[contains(@style,"font-family") or contains(@style,"font-size")]',
+      dom,
+    ) as HTMLElement[];
 
     for (const node of nodes) {
       let style = node.getAttribute('style');
@@ -1337,24 +1347,26 @@ export class MailService {
   // Function to evaluate XPath expressions
   evaluateXPath(
     xpathExpression: string,
-    contextNode: Document | HTMLElement,
+    contextNode: HTMLElement,
   ): HTMLElement[] {
-    const evaluator = new XPathEvaluator();
-    const result = evaluator.evaluate(
-      xpathExpression,
-      contextNode,
-      null,
-      XPathResult.ANY_TYPE,
-      null,
+    const parser = new DOMParser();
+    const doc: Document = parser.parseFromString(
+      contextNode.outerHTML,
+      'text/html',
     );
 
-    const nodes = [];
-    let node = result.iterateNext();
-    while (node) {
-      nodes.push(node);
-      node = result.iterateNext();
+    const select = xpath.useNamespaces({});
+    const nodes = select(xpathExpression, doc) as Node[];
+    const elementNodes: HTMLElement[] = [];
+
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      if (node.nodeType === 1) {
+        elementNodes.push(node as HTMLElement);
+      }
     }
-    return nodes;
+
+    return elementNodes;
   }
 
   removeDataMceAttributes(node: HTMLElement) {
@@ -1547,9 +1559,10 @@ export class MailService {
     files: Express.Multer.File[],
   ) {
     const mail = await this.findById(payload.id);
+    if (mail instanceof CNotFoundRequestException) return mail;
     let mailTitle = mail.title;
     const mailFilename = sanitizeFilename(`${mailTitle}.pdf`);
-    // const mailDirname = path ? path.join(tmpdir(), mailFilename) : null;
+    const mailDirname = path ? path.join(process.cwd(), mailFilename) : '';
     const doctor = mail.doctor;
     const patient = mail.patient;
     const correspondent = mail?.conrrespondent;
@@ -1609,9 +1622,9 @@ export class MailService {
       // @TODO
       // Mail::pdf($mailConverted, array('filename' => $mailDirname));
 
-      const subject = `${mail.title} du ${dayjs(new Date()).format(
+      const subject = `${mail?.title} du ${dayjs(new Date()).format(
         'YYYY-MM-DD',
-      )} de Dr ${mail?.user.lastname} ${mail?.user.firstname}`;
+      )} de Dr ${mail?.user?.lastname} ${mail?.user?.firstname}`;
 
       if (mail?.patient) {
         subject.concat(
@@ -1637,6 +1650,7 @@ export class MailService {
         'utf-8',
       );
       const template = handlebars.compile(emailTemplate);
+      mail.title = mailDirname;
       const mailBody = template({ fullName, mail });
 
       const result = await this.mailTransportService.sendEmail(userId, {
@@ -1786,6 +1800,189 @@ export class MailService {
       return res;
     } catch (err) {
       throw new CBadRequestException(err?.message);
+    }
+  }
+
+  async preview(
+    id: number,
+    doctorId: number,
+    groupId: number,
+  ): Promise<string | CBadRequestException> {
+    try {
+      const doctor = await this.dataSource.getRepository(UserEntity).findOne({
+        where: { id: doctorId },
+        relations: {
+          medical: true,
+          address: true,
+        },
+      });
+      if (!doctor) return new CBadRequestException(ErrorCode.NOT_FOUND_DOCTOR);
+
+      const today = new Date();
+      const birthday = new Date(2000, 2, 14);
+      const diffMonth = dayjs(today).diff(dayjs(birthday), 'month');
+      const year = Math.floor(diffMonth / 12);
+      const month = diffMonth - year * 12;
+
+      const context = {
+        today: this.formatDatetime(today, { dateStyle: 'short' }),
+        todayLong: this.formatDatetime(today, { dateStyle: 'long' }),
+        logo: '',
+        praticien: {
+          fullname: `${doctor?.lastname ? doctor.lastname : ''} ${
+            doctor?.firstname ? doctor.firstname : ''
+          }`,
+          lastname: doctor?.lastname ? doctor.lastname : '',
+          firstname: doctor?.firstname ? doctor.firstname : '',
+          email: doctor?.email ? doctor.email : '',
+          phoneNumber: doctor?.phoneNumber ? doctor.phoneNumber : '',
+          gsm: doctor?.gsm ? doctor.gsm : '',
+          faxNumber: doctor?.faxNumber ? doctor.faxNumber : '',
+          numeroFacturant: doctor?.numeroFacturant
+            ? doctor.numeroFacturant
+            : '',
+          rpps: doctor?.medical?.rppsNumber ? doctor.medical.rppsNumber : '',
+          address: {
+            street: doctor?.address?.street ? doctor.address.street : '',
+            zipCode: doctor?.address?.zipCode ? doctor.address.zipCode : '',
+            city: doctor?.address?.city ? doctor.address.city : '',
+            country: doctor?.address?.country ? doctor.address.country : '',
+          },
+          medical: {
+            rppsNumber: doctor?.medical?.rppsNumber
+              ? doctor.medical.rppsNumber
+              : '',
+          },
+        },
+        contact: {
+          gender: 'M',
+          genderLong: 'Monsieur',
+          dear: 'Chèr',
+          nbr: '9999',
+          lastname: 'FAMILLEDEUX',
+          firstname: 'PHILIPPE',
+          birthday: birthday.toDateString(),
+          age: `${year > 0 ? `${year} ans` : ''} ${
+            month > 0 ? `${month} mois` : ''
+          }`,
+          email: 'philippe@familledeux.com',
+          amountDue: '9999.99',
+          dateLastRec: '2020-01-01',
+          dateLastSoin: '2020-01-01',
+          dateOfNextReminder: '2020-01-01',
+          nextAppointmentDate: '2020-01-01',
+          nextAppointmentTime: '00:00:00',
+          nextAppointmentDuration: '12:00:00',
+          nextAppointmentTitle: 'Appointment Title',
+          address: {
+            street: '515 CHE DU MAS DE ROCHET',
+            zipCode: '34170',
+            city: 'CASTELNAU LE LEZ',
+            country: 'FRANCE',
+          },
+          phones: {
+            home: '(01) 234 567 89',
+            mobile: '(01) 234 567 89',
+            office: '(01) 234 567 89',
+            fax: '(01) 234 567 89',
+          },
+          dental: {
+            insee: '1661926220098',
+            inseeKey: '96',
+          },
+        },
+        correspondent: {
+          gender: 'Mme',
+          dear: 'Chère',
+          lastname: 'FAMILLEDEUX',
+          firstname: 'ELISEE',
+          type: 'Médecin',
+          email: 'elisee@familledeux.com',
+          msg: 'correspondent msg',
+          address: {
+            street: '515 CHE DU MAS DE ROCHET',
+            zipCode: '34170',
+            city: 'CASTELNAU LE LEZ',
+            country: 'FRANCE',
+          },
+          phones: {
+            home: '(01) 234 567 89',
+            mobile: '(01) 234 567 89',
+            office: '(01) 234 567 89',
+            fax: '(01) 234 567 89',
+          },
+        },
+      };
+
+      const logoStatement = await this.dataSource.query(
+        `SELECT
+        UPL.UPL_FILENAME
+          FROM T_GROUP_GRP GRP
+          JOIN T_UPLOAD_UPL UPL
+          WHERE GRP.GRP_ID = ?
+            AND GRP.UPL_ID = UPL.UPL_ID`,
+        [groupId],
+      );
+      if (logoStatement.length > 0) {
+        const logo = logoStatement[0];
+        fs.access(`${logo['UPL_FILENAME']}`, fs.constants.F_OK, (err) => {
+          if (err) {
+            console.log('File does not exist');
+            return;
+          }
+
+          fs.readFile(`${logo['UPL_FILENAME']}`, 'utf8', (err, data) => {
+            if (err) {
+              console.log('Error reading file:', err);
+              return;
+            }
+
+            const base64Data = Buffer.from(data).toString('base64');
+            const mimeType = 'text/plain';
+            const dataUrl = `data:${mimeType};base64,${base64Data}`;
+            context.logo = `<img src=\"${dataUrl}" />`;
+          });
+        });
+      }
+      const paymentScheduleTemplate = fs.readFileSync(
+        `${process.cwd()}/templates/mail/payment_schedule.hbs`,
+        'utf-8',
+      );
+      const template = handlebars.compile(paymentScheduleTemplate);
+      const mailBody = template({
+        payment_schedule: {
+          label: 'Echéancier',
+          amount: 100.0,
+          lines: [
+            {
+              date: '2023-01-01',
+              amount: 25.0,
+            },
+            {
+              date: '2023-02-01',
+              amount: 25.0,
+            },
+            {
+              date: '2023-03-01',
+              amount: 25.0,
+            },
+            {
+              date: '2023-04-01',
+              amount: 25.0,
+            },
+          ],
+        },
+      });
+      context['payment_schedule'] = mailBody;
+      const mail = await this.findById(id);
+      if (mail instanceof CNotFoundRequestException) return mail;
+      const mailConverted = await this.transform(mail, context);
+      //  @TODO
+      // Mail::pdf($mailConverted);
+      if (mailConverted?.body) return mailConverted.body;
+      return '';
+    } catch (err) {
+      return new CBadRequestException(ErrorCode.FORBIDDEN);
     }
   }
 }

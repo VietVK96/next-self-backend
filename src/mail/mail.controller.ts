@@ -90,6 +90,7 @@ export class MailController {
     return await this.mailService.delete(id);
   }
 
+  // php/mail/transform/php
   @Post('/variable')
   @ApiHeader({
     name: 'X-DoctorId',
@@ -194,5 +195,16 @@ export class MailController {
       patient_id,
       correspondent_id,
     });
+  }
+
+  // php/mail/preview.php
+  @Get('/preview')
+  @UseGuards(TokenGuard)
+  async preview(
+    @Query('id') id: number,
+    @CurrentDoctor() docId: number,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.mailService.preview(id, docId, identity.org);
   }
 }
