@@ -24,6 +24,12 @@ export class SyncWzagendaUserEntity {
   })
   id?: number;
 
+  @OneToOne(() => UserEntity, {
+    cascade: true,
+  })
+  @JoinColumn({ name: 'USR_ID' })
+  user?: UserEntity;
+
   /**
    * @ORM\Column(name="SWU_CALENDAR_ID", type="string", length=32)
    * @var string Identifiant souscripteur permettant l'authentification
@@ -100,9 +106,12 @@ export class SyncWzagendaUserEntity {
    * ayant activé la synchronisation avec WzAgenda.
    */
   // protected $user;
-  @OneToOne(() => UserEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: 'USR_ID' })
-  user?: UserEntity;
+  // @PrimaryColumn({
+  //   name: 'USR_ID',
+  //   type: 'int',
+  //   width: 11,
+  // })
+  // userId?: number;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

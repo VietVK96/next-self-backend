@@ -67,7 +67,7 @@ export class MailTransportService {
     }
   }
 
-  async sendFactureEmail(userId: number, data: FactureEmailDataDto) {
+  async sendEmail(userId: number, data: FactureEmailDataDto) {
     const transportInstance = await this.createTranspoter(userId);
     if (transportInstance instanceof CBadRequestException)
       return transportInstance;

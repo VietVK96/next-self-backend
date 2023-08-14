@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository, In } from 'typeorm';
-import { format, isAfter, isBefore } from 'date-fns';
+import { format, isAfter, isBefore, subWeeks } from 'date-fns';
 import { create } from 'xmlbuilder2';
 import axios from 'axios';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
@@ -19,9 +19,75 @@ import { ExemptionCodeEnum } from 'src/enum/exemption-code.enum';
 import { ConfigService } from '@nestjs/config';
 import { CaresheetStatusEntity } from 'src/entities/caresheet-status.entity';
 import { RequestException } from 'src/common/exceptions/request-exception.exception';
+import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
+import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
+import { CaresheetModeEnum } from 'src/enum/caresheet.enum';
+import { CaresheetTypeEnum } from 'src/enum/caresheet-type.enum';
+import {
+  CaresheetRes,
+  CaresheetStatusRes,
+  CaresheetThirdPartyRes,
+} from '../reponse/index.res';
+import { SesamvitaleTeletranmistionService } from './sesamvitale-teletranmistion.service';
+import * as path from 'path';
+import { customCreatePdf } from 'src/common/util/pdf';
+import PDFMerger = require('pdf-merger-js');
+import * as dayjs from 'dayjs';
+import { LotEntity } from 'src/entities/lot.entity';
 const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
 const PAV_MINIMUM_AMOUNT = 120;
-
+const helpersCaresheetPdf = {
+  formatDate: function (date) {
+    return dayjs(date).format('DDMMYYYY');
+  },
+  slice: function (string, start, end) {
+    if (!string) return;
+    return string.toString().slice(start, end);
+  },
+  padStart: function (value, num) {
+    if (!value) return;
+    return value.padStart(num, '');
+  },
+  padEnd: function (value, num) {
+    if (!value) return;
+    return value.padEnd(num, '');
+  },
+  joinAndReplace: function (string, key, value) {
+    if (!string) return;
+    return string.join('').replace(key, value);
+  },
+  setVar: function (varName, varValue, options) {
+    options.data.root[varName] = varValue;
+  },
+  math: function (lvalue, operator, rvalue) {
+    lvalue = parseFloat(lvalue);
+    rvalue = parseFloat(rvalue);
+    return {
+      '+': lvalue + rvalue,
+      '-': lvalue - rvalue,
+      '*': lvalue * rvalue,
+      '/': lvalue / rvalue,
+      '%': lvalue % rvalue,
+    }[operator];
+  },
+  table: function (context) {
+    if (!context) return;
+    const listItem = context.toString().split('');
+    const width = Math.floor(100 / listItem.length);
+    let str = `
+    <table class="text-center">
+      <tbody>
+        <tr>`;
+    for (let i = 0, j = listItem.length; i < j; i++) {
+      str += `<td style="width: ${width}%;">${listItem[i]}</td>`;
+    }
+    str += `
+        </tr>
+      </tbody>
+    </table>`;
+    return str;
+  },
+};
 @Injectable()
 export class ActsService {
   private readonly logger: Logger = new Logger(ActsService.name);
@@ -42,6 +108,13 @@ export class ActsService {
     private dentalEventTaskRepository: Repository<DentalEventTaskEntity>,
     @InjectRepository(CaresheetStatusEntity)
     private caresheetStatusRepository: Repository<CaresheetStatusEntity>,
+    @InjectRepository(ThirdPartyAmcEntity)
+    private thirdPartyAmcRepository: Repository<ThirdPartyAmcEntity>,
+    @InjectRepository(ThirdPartyAmoEntity)
+    private thirdPartyAmoRepository: Repository<ThirdPartyAmoEntity>,
+    private sesamvitaleTeletranmistionService: SesamvitaleTeletranmistionService,
+    @InjectRepository(LotEntity)
+    private lotRepository: Repository<LotEntity>,
   ) {}
 
   /**
@@ -200,8 +273,8 @@ export class ActsService {
       }
       for (const act of dataActs) {
         const amount = act?.amount;
-        const amoAmount = act?.medical?.amoAmount;
-        const coefficient = act?.medical?.coefficient;
+        const amoAmount = act?.medical?.secuAmount;
+        const coefficient = act?.medical?.coef;
         const rawTeeth = act?.medical?.teeth
           ?.split(',')
           .map((tooth) => (tooth === '00' ? ['01', '02'] : tooth))
@@ -262,7 +335,7 @@ export class ActsService {
         }
 
         /** === MODIFICATEURS === */
-        const modifiers = act?.medical?.modifiers ?? [];
+        const modifiers = act?.medical?.ccamModifier ?? [];
         for (let i = 0; i < modifiers.length; i++) {
           acte['codeModificateur' + (i + 1)] = modifiers[i];
         }
@@ -798,5 +871,396 @@ export class ActsService {
     // array_walk_recursive($resultToArray, array($this, 'cast'));
 
     return resultToArray;
+  }
+
+  /**
+   * php/caresheets/show.php
+   */
+  async show(id: number) {
+    const caresheet: FseEntity = await this.fseRepository.findOne({
+      where: { id },
+      relations: ['fseStatus', 'patient', 'lots', 'rejections'],
+    });
+    const thirdPartyAmcs = await this.thirdPartyAmcRepository.find({
+      relations: ['amc'],
+    });
+    const thirdPartyAmos = await this.thirdPartyAmoRepository.find({
+      relations: ['amo'],
+    });
+    const thirdPartyAmc = thirdPartyAmcs.find(
+      (tp) => tp.caresheetId === caresheet?.id,
+    );
+    const thirdPartyAmo = thirdPartyAmos.find(
+      (tp) => tp.caresheetId === caresheet?.id,
+    );
+    const data: CaresheetThirdPartyRes = {
+      id: caresheet?.id,
+      mode: caresheet?.mode,
+      mode_readable: caresheet?.mode
+        ? CaresheetModeEnum.choices[caresheet?.mode]
+        : '',
+      number: caresheet?.nbr,
+      type: caresheet?.type,
+      type_readable: caresheet?.type
+        ? CaresheetTypeEnum.choices[caresheet?.type]
+        : '',
+      tiers_payant: !!caresheet?.tiersPayant,
+      tiers_payant_status: caresheet?.tiersPayantStatus,
+      amount: caresheet?.amount,
+      amount_amc: caresheet?.amountAMC,
+      amount_amo: caresheet?.amountAMO,
+      amount_patient: caresheet?.amountAssure,
+      creation_date: caresheet?.date,
+      electronic_caresheet: !!caresheet?.electronicCaresheet,
+      third_party_amount: caresheet?.thirdPartyAmount,
+      third_party_amount_paid: caresheet?.thirdPartyAmountPaid,
+      third_party_amount_remaining:
+        caresheet?.thirdPartyAmount && caresheet?.thirdPartyAmountPaid
+          ? caresheet?.thirdPartyAmount - caresheet?.thirdPartyAmountPaid
+          : 0,
+      lots: caresheet?.lots,
+      rejections: caresheet?.rejections,
+      fse_status: caresheet?.fseStatus,
+    };
+
+    if (thirdPartyAmc && thirdPartyAmc?.amc) {
+      data.third_party_amc = {
+        id: thirdPartyAmc?.id,
+        is_dre: !!thirdPartyAmc?.isDre,
+        status: thirdPartyAmc?.status,
+        amount: thirdPartyAmc?.amount,
+        amount_care: thirdPartyAmc?.amountCare,
+        amount_care_paid: thirdPartyAmc?.amountCarePaid,
+        amount_care_remaining:
+          thirdPartyAmc?.amountCare && thirdPartyAmc?.amountCarePaid
+            ? thirdPartyAmc?.amountCare - thirdPartyAmc?.amountCarePaid
+            : 0,
+        amount_paid: thirdPartyAmc?.amountPaid,
+        amount_paid_manually: thirdPartyAmc?.amountPaidManually,
+        amount_paid_noemie: thirdPartyAmc?.amountPaidNoemie,
+        amount_prosthesis: thirdPartyAmc?.amountProsthesis,
+        amount_prosthesis_paid: thirdPartyAmc?.amountProsthesisPaid,
+        amount_prosthesis_remaining:
+          thirdPartyAmc?.amountProsthesis && thirdPartyAmc?.amountProsthesisPaid
+            ? thirdPartyAmc?.amountProsthesis -
+              thirdPartyAmc?.amountProsthesisPaid
+            : 0,
+        amount_remaining:
+          thirdPartyAmc?.amount && thirdPartyAmc?.amountPaid
+            ? thirdPartyAmc?.amount - thirdPartyAmc?.amountPaid
+            : 0,
+        amc: {
+          id: thirdPartyAmc?.amc?.id,
+          is_gu: !!thirdPartyAmc?.amc?.isGu,
+          libelle: thirdPartyAmc?.amc?.libelle,
+          numero: thirdPartyAmc?.amc?.numero,
+        },
+      };
+    }
+
+    if (thirdPartyAmo && thirdPartyAmo?.amo) {
+      data.third_party_amo = {
+        id: thirdPartyAmo?.id,
+        status: thirdPartyAmo?.status,
+        amount: thirdPartyAmo?.amount,
+        amount_care: thirdPartyAmo?.amountCare,
+        amount_care_paid: thirdPartyAmo?.amountCarePaid,
+        amount_care_remaining:
+          thirdPartyAmo?.amountCare && thirdPartyAmo?.amountCarePaid
+            ? thirdPartyAmo?.amountCare - thirdPartyAmo?.amountCarePaid
+            : 0,
+        amount_paid: thirdPartyAmo?.amountPaid,
+        amount_paid_manually: thirdPartyAmo?.amountPaidManually,
+        amount_paid_noemie: thirdPartyAmo?.amountPaidNoemie,
+        amount_prosthesis: thirdPartyAmo?.amountProsthesis,
+        amount_prosthesis_paid: thirdPartyAmo?.amountProsthesisPaid,
+        amount_prosthesis_remaining:
+          thirdPartyAmo?.amountProsthesis && thirdPartyAmo?.amountProsthesisPaid
+            ? thirdPartyAmo?.amountProsthesis -
+              thirdPartyAmo?.amountProsthesisPaid
+            : 0,
+        amount_remaining:
+          thirdPartyAmo?.amount && thirdPartyAmo?.amountPaid
+            ? thirdPartyAmo?.amount - thirdPartyAmo?.amountPaid
+            : 0,
+        amo: {
+          id: thirdPartyAmo?.amo?.id,
+          libelle: thirdPartyAmo?.amo?.libelle,
+          caisse_gestionnaire: thirdPartyAmo?.amo?.caisseGestionnaire,
+          centre_gestionnaire: thirdPartyAmo?.amo?.centreGestionnaire,
+          centre_informatique: thirdPartyAmo?.amo?.centreInformatique,
+          code_national: thirdPartyAmo?.amo?.codeNational,
+          grand_regime: thirdPartyAmo?.amo?.grandRegime,
+          organisme_destinataire: thirdPartyAmo?.amo?.organismeDestinataire,
+          numero: thirdPartyAmc?.amc?.numero,
+        },
+      };
+    }
+    if (caresheet?.patient) {
+      data.patient = {
+        id: caresheet?.patient?.id,
+        first_name: caresheet?.patient?.firstname,
+        last_name: caresheet?.patient?.lastname,
+        full_name: `${caresheet?.patient?.lastname ?? ''} ${
+          caresheet?.patient?.firstname ?? ''
+        }`,
+        email: caresheet?.patient?.email,
+        birth_rank: caresheet?.patient?.birthOrder,
+        number: caresheet?.patient?.nbr,
+        amcs: caresheet?.patient?.amcs ?? [],
+        amos: caresheet?.patient?.amos ?? [],
+        patient_users: caresheet?.patient?.patientUsers ?? [],
+        phone_numbers: caresheet?.patient?.phoneNumbers ?? [],
+      };
+    }
+    return data;
+  }
+
+  async getUserCaresheet(
+    userId: number,
+    page: number,
+    size: number,
+    filterParams?: string[],
+    filterValues?: string[],
+  ) {
+    const _take = size || 25;
+    const _skip = page ? (page - 1) * _take : 0;
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
+    }
+
+    const queryBuilder = this.fseRepository.createQueryBuilder('caresheet');
+    queryBuilder
+      .andWhere('caresheet.usrId = :id', { id: user?.id })
+      .andWhere('caresheet.electronicCaresheet = 1');
+
+    for (let i = 0; i < filterParams?.length; i++) {
+      const filterParam = filterParams[i];
+      const filterValue = filterValues[i];
+
+      switch (filterParam) {
+        case 'caresheet.mode':
+          queryBuilder.andWhere('caresheet.mode = :mode', {
+            mode: filterValue,
+          });
+          break;
+
+        case 'caresheet.creationDate':
+          queryBuilder.andWhere('caresheet.date = :creationDate', {
+            creationDate: filterValue,
+          });
+          break;
+
+        case 'caresheet.number':
+          queryBuilder.andWhere('caresheet.nbr = LPAD(:number, 9, 0)', {
+            number: filterValue,
+          });
+          break;
+
+        case 'lot.number':
+          queryBuilder
+            .select('lot')
+            .innerJoin('caresheet.lots', 'lot')
+            .andWhere('lot.number = LPAD(:lotNumber, 3, 0)', {
+              lotNumber: filterValue,
+            });
+          break;
+
+        case 'fseStatus.id':
+          queryBuilder
+            .addSelect('fseStatus')
+            .innerJoin('caresheet.fseStatus', 'fseStatus')
+            .andWhere('fseStatus.id = :fseStatus', {
+              fseStatus: filterValue,
+            });
+          break;
+
+        case 'dreStatus.id':
+          queryBuilder
+            .addSelect('dreStatus')
+            .innerJoin('caresheet.dreStatus', 'dreStatus')
+            .andWhere('dreStatus.id = :dreStatus', {
+              dreStatus: filterValue,
+            });
+          break;
+
+        case 'patient.fullName':
+          queryBuilder
+            .addSelect('patient')
+            .innerJoin('caresheet.patient', 'patient')
+            .andWhere(
+              'patient.lastName LIKE :patient OR patient.firstName LIKE :patient',
+              {
+                patient: `%${filterValue}%`,
+              },
+            );
+          break;
+      }
+    }
+    queryBuilder
+      .orderBy('caresheet.date', 'DESC')
+      .addOrderBy('caresheet.nbr', 'DESC')
+      .skip(_skip)
+      .take(_take);
+    const result = await queryBuilder.getManyAndCount();
+    const items = result[0].map((item) => {
+      const res: CaresheetRes = {
+        ...item,
+        electronicCaresheet: Boolean(item.electronicCaresheet),
+        tiersPayant: Boolean(item.tiersPayant),
+        tiersPayantStatus: Boolean(item.tiersPayantStatus),
+      };
+      return res;
+    });
+    return {
+      current_page_number: page,
+      num_items_per_page: _take,
+      custom_parameters: { sorted: true },
+      items: items,
+      total_count: result[1],
+      paginator_options: {
+        defaultSortDirection: 'desc',
+        defaultSortFieldName: 'caresheet.creationDate+caresheet.number',
+        distinct: false,
+        filterFieldParameterName: 'filterParam',
+        filterValueParameterName: 'filterValue',
+        pageParameterName: 'page',
+        sortDirectionParameterName: 'direction',
+        sortFieldParameterName: 'sort',
+      },
+    };
+  }
+
+  async getAllCaresheetStatus(): Promise<CaresheetStatusRes[]> {
+    return await this.caresheetStatusRepository.find();
+  }
+
+  /**
+   * sesam-vitale/caresheets/update.php
+   * 16-61
+   */
+  async update(id: number) {
+    const user = await this.userRepository.findOne({
+      where: { id },
+    });
+    if (!user) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
+    }
+
+    const startDatetime = subWeeks(Date.now(), 2);
+
+    const caresheets = await this.fseRepository
+      .createQueryBuilder('caresheet')
+      .where('caresheet.usrId = :id', { id })
+      .andWhere('caresheet.externalReferenceId IS NOT NULL')
+      .andWhere('caresheet.date >= :creationDate', {
+        creationDate: startDatetime,
+      })
+      .getMany();
+
+    for (const caresheet of caresheets) {
+      const facture =
+        await this.sesamvitaleTeletranmistionService.consulterFacture(
+          caresheet.externalReferenceId,
+        );
+      const fseStatus = await this.caresheetStatusRepository.findOne({
+        where: {
+          value: facture.etatLotFse,
+        },
+      });
+      if (fseStatus) {
+        caresheet.fseStatus = fseStatus;
+      }
+      const dreStatus = await this.caresheetStatusRepository.findOne({
+        where: { value: facture.etatLotDre },
+      });
+      if (dreStatus) {
+        caresheet.dreStatus = dreStatus;
+      }
+      await this.fseRepository.save(caresheet);
+    }
+  }
+
+  async print(userId: number, ids: Array<number>, duplicata?: boolean) {
+    const options = {
+      format: 'A4',
+      displayHeaderFooter: true,
+      headerTemplate: '<div></div>',
+      footerTemplate: '<div></div>',
+      margin: {
+        left: '10mm',
+        top: '25mm',
+        right: '10mm',
+        bottom: '15mm',
+      },
+    };
+    const pdfMerger = new PDFMerger();
+    for (const id of ids) {
+      const caresheet = await this.fseRepository.findOne({
+        where: { id },
+        relations: [
+          'actMedicals',
+          'actMedicals.act',
+          'actMedicals.ccam',
+          'actMedicals.ngapKey',
+          'patient',
+          'patient.medical',
+          'patient.medical.policyHolder',
+        ],
+      });
+
+      const filePath = path.join(
+        process.cwd(),
+        'templates/pdf/caresheets',
+        'duplicata.hbs',
+      );
+      const data = {
+        caresheet,
+        duplicata,
+      };
+      const pdf = await customCreatePdf({
+        files: [{ path: filePath, data }],
+        options,
+        helpers: helpersCaresheetPdf,
+      });
+
+      await pdfMerger.add(pdf);
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['medical', 'medical.specialtyCode'],
+    });
+
+    const queryBuilder = this.lotRepository
+      .createQueryBuilder('lot')
+      .distinct()
+      .leftJoinAndSelect('lot.amc', 'amc')
+      .leftJoinAndSelect('lot.amo', 'amo')
+      .innerJoinAndSelect('lot.caresheets', 'caresheets')
+      .where('caresheets.id IN (:id)', { id: ids });
+
+    const lots = await queryBuilder.getMany();
+    for (const lot of lots) {
+      const filePath = path.join(
+        process.cwd(),
+        'templates/pdf/lot',
+        'bordereau_teletransmission.hbs',
+      );
+      const data = {
+        lot,
+        user,
+      };
+      const pdf = await customCreatePdf({
+        files: [{ path: filePath, data }],
+        options,
+        helpers: helpersCaresheetPdf,
+      });
+      await pdfMerger.add(pdf);
+    }
+    return await pdfMerger.saveAsBuffer();
   }
 }

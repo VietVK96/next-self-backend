@@ -61,7 +61,7 @@ export class TimeslotsService {
         const color: {
           background: string;
           foreground: string;
-        } = JSON.parse(timeslot.color);
+        } = timeslot.color;
         return {
           ...timeslot,
           color: {

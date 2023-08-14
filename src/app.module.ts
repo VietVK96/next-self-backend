@@ -53,6 +53,7 @@ import { TeletranmistionModule } from './teletranmistion/teletranmistion.module'
 import { RecipeModule } from './recipe/recipe.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { EventTypeModule } from './event-type/event-type.module';
+import { ThirdPartyModule } from './third-party/third-party.module';
 import { CcamModule } from './ccam/ccam.module';
 import { PaymentModule } from './payment/payment.module';
 import { PrescriptionTemplateModule } from './prescription-template/prescription-template.module';
@@ -69,6 +70,7 @@ import { ConversationsModule } from './conversations/conversations.module';
 import { AppointmentReminderLibrarieModule } from './appointment-reminder-library-attachment/appointmentReminderLibrarie.module';
 import { SettingModule } from './setting/setting.module';
 import { BordereauxModule } from './bordereaux/bordereaux.module';
+import { TraceabilityModule } from './traceability/traceability.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -176,6 +178,7 @@ const importsModules = [
   RecipeModule,
   StatisticsModule,
   EventTypeModule,
+  ThirdPartyModule,
   CcamModule,
   PaymentModule,
   PrescriptionTemplateModule,
@@ -192,6 +195,7 @@ const importsModules = [
   SettingModule,
   AccountModule,
   BordereauxModule,
+  TraceabilityModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {

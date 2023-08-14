@@ -13,6 +13,7 @@ import { SaveUpdateContactService } from './services/saveUpdate.contact.service'
 export class ContactController {
   constructor(private saveUpdateContactService: SaveUpdateContactService) {}
 
+  // /php/contact/save
   @Post('/save')
   @UseGuards(TokenGuard)
   async savePatient(
@@ -22,6 +23,7 @@ export class ContactController {
     return this.saveUpdateContactService.saveContact(body, identity);
   }
 
+  // /php/contact/save
   @Patch('/save')
   @UseGuards(TokenGuard)
   async updatePatient(

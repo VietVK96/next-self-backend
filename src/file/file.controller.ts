@@ -36,7 +36,7 @@ export class FileController {
    *
    */
   @Get('/download/:id')
-  @UseGuards(TokenGuard)
+  @UseGuards(TokenDownloadGuard)
   async downloadFile(
     @CurrentUser() user: UserIdentity,
     @Param('id') id: number,

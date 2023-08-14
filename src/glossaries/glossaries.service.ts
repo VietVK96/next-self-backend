@@ -45,8 +45,21 @@ export class GlossariesService {
   }
 
   async deleteGlossaryEntry(id: number): Promise<GlossaryEntryRes> {
-    const glossaryEntry = await this.glossaryEntryRepo.findOneBy({ id });
+    const glossaryEntry = await this.glossaryEntryRepo.findOne({
+      where: { id },
+      relations: { glossary: true },
+    });
     await this.glossaryEntryRepo.delete({ id });
+
+    const glossary: GlossaryEntity = await this.glossaryRepo.findOne({
+      where: { id: glossaryEntry.glossary.id },
+      relations: {
+        entries: true,
+      },
+    });
+    glossary.entryCount = glossary.entries.length;
+    await this.glossaryRepo.save(glossary);
+
     return {
       content: glossaryEntry.content,
       position: glossaryEntry.position,
@@ -76,10 +89,13 @@ export class GlossariesService {
       lastGlossaryEntry.length !== 0 ? lastGlossaryEntry[0].position + 1 : 0;
     const newGlossaryEntry: GlossaryEntryEntity =
       await this.glossaryEntryRepo.save(glossaryEntry);
-    const glossary: GlossaryEntity = await this.glossaryRepo.findOneBy({
-      id: Number(payload.glossary),
+    const glossary: GlossaryEntity = await this.glossaryRepo.findOne({
+      where: { id: Number(payload.glossary) },
+      relations: {
+        entries: true,
+      },
     });
-    ++glossary.entryCount;
+    glossary.entryCount = glossary.entries.length;
     await this.glossaryRepo.save(glossary);
     return this.convertToGlossaryEntryRes(newGlossaryEntry);
   }
