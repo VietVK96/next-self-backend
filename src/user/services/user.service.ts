@@ -76,7 +76,7 @@ export class UserService {
       .leftJoin(UserMedicalEntity, 'UMD', 'UMD.user_id = USR.USR_ID')
       .where('USR.USR_ID = :id', { id });
     const user = await q.getRawOne();
-    const address = await this.addressService.find(user.address_id);
+    const address = await this.addressService.find(user?.address_id);
     return {
       ...user,
       address: {
@@ -325,11 +325,12 @@ export class UserService {
       },
     });
 
-    return user.map(({ id, medical, firstname, lastname }) => {
+    return user.reduce((listUser, { id, medical, firstname, lastname }) => {
       if (medical) {
-        return { id, firstname, lastname };
+        return [...listUser, { id, firstname, lastname }];
       }
-    });
+      return listUser;
+    }, []);
   }
 
   async getActiveUser(organizationId: number) {
