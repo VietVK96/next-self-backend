@@ -16,7 +16,7 @@ import {
 import { CaresheetsDto } from './dto/index.dto';
 import { ActsService } from './service/caresheets.service';
 import { CaresheetStatusRes } from './reponse/index.res';
-import { CaresheetModeEnum } from 'src/enum/caresheet.enum';
+import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
 
 @ApiBearerAuth()
 @ApiTags('Caresheets')
@@ -83,19 +83,13 @@ export class CaresheetsController {
     return await this.service.update(id);
   }
 
-  @Get('/modes')
-  @UseGuards(TokenGuard)
-  async getCaresheetsModes() {
-    return CaresheetModeEnum.choices;
-  }
-
   /**
    * php/caresheets/print.php
    * 12-80
    */
 
   @Get('/print')
-  @UseGuards(TokenGuard)
+  @UseGuards(TokenDownloadGuard)
   async print(
     @Res() res,
     @CurrentUser() identity: UserIdentity,
