@@ -12,6 +12,11 @@ import { CashingEntity } from 'src/entities/cashing.entity';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { PaymentTypeEnum } from 'src/enum/payment-type.enum';
 import { ErrorCode } from 'src/constants/error';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { SuccessResponse } from 'src/common/response/success.res';
+import { PermissionService } from 'src/user/services/permission.service';
+import { PerCode } from 'src/constants/permissions';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 
 @Injectable()
 export class BordereauxService {
@@ -23,6 +28,9 @@ export class BordereauxService {
     private userRepository: Repository<UserEntity>,
     @InjectRepository(LibraryBankEntity)
     private libraryBankRepository: Repository<LibraryBankEntity>,
+    private readonly permissionService: PermissionService,
+    @InjectRepository(CashingEntity)
+    private readonly cashingRepository: Repository<CashingEntity>,
   ) {}
 
   /**
@@ -322,5 +330,68 @@ export class BordereauxService {
       };
     });
     return data;
+  }
+
+  /**
+   * File: php/bordereaux/delete.php
+   * Line: 100%
+   */
+
+  async delete(id: number, user: UserIdentity): Promise<SuccessResponse> {
+    const userId = user.id;
+    const bordereau = await this.slipCheckRepository.findOne({
+      where: { id: id },
+    });
+
+    if (!bordereau) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
+
+    // check quyền
+    const hasPermissionDelete = await this.permissionService.hasPermission(
+      PerCode.PERMISSION_DELETE,
+      8,
+      userId,
+    );
+    const hasPermissionPaiement = await this.permissionService.hasPermission(
+      PerCode.PERMISSION_PAIEMENT,
+      8,
+      userId,
+      bordereau.userId,
+    );
+    if (!hasPermissionDelete || !hasPermissionPaiement) {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
+    }
+
+    const queryRunner =
+      this.slipCheckRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    // delete in database
+    try {
+      const cashing = await this.cashingRepository.find({
+        where: {
+          slcId: bordereau.id,
+        },
+      });
+
+      this.cashingRepository
+        .createQueryBuilder()
+        .update(cashing)
+        .set({ slcId: null })
+        .where('slcId = :slcId', { slcId: bordereau.id })
+        .execute();
+
+      await this.slipCheckRepository.remove(bordereau);
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new CBadRequestException(ErrorCode.QUERY_REPOSITORY_ERROR);
+    } finally {
+      await queryRunner.release();
+    }
+
+    return { success: true };
   }
 }

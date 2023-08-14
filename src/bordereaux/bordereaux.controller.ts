@@ -1,7 +1,18 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { BordereauxService } from './bordereaux.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { TokenGuard } from 'src/common/decorator/auth.decorator';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
 import { BordereauxDto } from './dto/index.dto';
 
 @Controller('bordereaux')
@@ -43,5 +54,18 @@ export class BordereauxController {
   @UseGuards(TokenGuard)
   findOne(@Param('id') id: string) {
     return this.bordereauxService.findOne(+id);
+  }
+
+  /**
+   * File php/bordereaux/delete.php 100%
+   * @param id
+   * @param user
+   * @returns
+   */
+  @Delete()
+  @ApiBearerAuth()
+  @UseGuards(TokenGuard)
+  delete(@Query('id') id: number, @CurrentUser() user: UserIdentity) {
+    return this.bordereauxService.delete(id, user);
   }
 }
