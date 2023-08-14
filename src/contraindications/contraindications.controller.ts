@@ -15,11 +15,14 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { ContraindicationsService } from './services/contradications.service';
-import { CreateContraindicationsDto } from './dto/contraindications.dto';
+import {
+  CreateContraindicationsDto,
+  SortableContraindicationsDto,
+} from './dto/contraindications.dto';
 
 @ApiBearerAuth()
 @ApiTags('Contraindications')
-@Controller('/contraindications')
+@Controller('contraindications')
 export class ContraindicationsController {
   constructor(private contraindicationsService: ContraindicationsService) {}
 
@@ -43,6 +46,14 @@ export class ContraindicationsController {
       body,
       identity.org,
     );
+  }
+
+  @Put('sortable')
+  @UseGuards(TokenGuard)
+  async sortableContraindications(
+    @Body() payload: SortableContraindicationsDto[],
+  ) {
+    return await this.contraindicationsService.sortable(payload);
   }
 
   @Put('/:id')

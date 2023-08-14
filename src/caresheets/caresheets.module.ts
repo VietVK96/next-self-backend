@@ -14,6 +14,10 @@ import { InterfacageService } from 'src/interfacage/services/interfacage.service
 import { PermissionService } from 'src/user/services/permission.service';
 import { HttpModule } from '@nestjs/axios';
 import { ActsService } from './service/caresheets.service';
+import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
+import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
+import { SesamvitaleTeletranmistionService } from './service/sesamvitale-teletranmistion.service';
+import { LotEntity } from 'src/entities/lot.entity';
 
 @Module({
   imports: [
@@ -26,12 +30,20 @@ import { ActsService } from './service/caresheets.service';
       PatientAmoEntity,
       CcamEntity,
       CaresheetStatusEntity,
+      ThirdPartyAmcEntity,
+      ThirdPartyAmoEntity,
+      LotEntity,
     ]),
     forwardRef(() => ContactModule),
     HttpModule,
   ],
   controllers: [CaresheetsController],
-  providers: [PermissionService, ActsService, InterfacageService],
+  providers: [
+    PermissionService,
+    ActsService,
+    InterfacageService,
+    SesamvitaleTeletranmistionService,
+  ],
   exports: [ActsService],
 })
 export class CaresheetsModule {}

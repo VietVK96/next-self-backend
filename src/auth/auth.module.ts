@@ -32,5 +32,6 @@ import { UserMedicalEntity } from 'src/entities/user-medical.entity';
     JwtStrategy,
     GetSessionService,
   ],
+  exports: [GetSessionService, SessionService],
 })
 export class AuthModule {}

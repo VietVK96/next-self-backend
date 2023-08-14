@@ -8,6 +8,7 @@ import { DataSource, Repository } from 'typeorm';
 import {
   BankCheckPrintDto,
   CreateUpdateBankDto,
+  SortableUpdateBankCheckDto,
   UpdateBankCheckDto,
 } from '../dto/bank.dto';
 import { UserEntity } from 'src/entities/user.entity';
@@ -78,19 +79,19 @@ export class BankService {
   }
 
   async bankChecks(organizationId: number) {
-    const organization = await this.organizationRepo.findOne({
-      where: { id: organizationId },
-      relations: {
-        bankChecks: true,
-      },
-    });
-
-    return organization.bankChecks.map(({ id, name, position, fields }) => ({
-      id,
-      name,
-      position,
-      fields,
-    }));
+    const bankCheck = this.dataSource
+      .createQueryBuilder(BankCheckEntity, 'bankCheck')
+      .select([
+        'bankCheck.id',
+        'bankCheck.name',
+        'bankCheck.position',
+        'bankCheck.fields',
+      ])
+      .where('bankCheck.organizationId = :organizationId')
+      .setParameter('organizationId', organizationId)
+      .orderBy('bankCheck.position', 'ASC')
+      .addOrderBy('bankCheck.id', 'ASC');
+    return await bankCheck.getMany();
   }
 
   async print(params: BankCheckPrintDto) {
@@ -104,14 +105,14 @@ export class BankService {
       const token: string[] = [];
       let currencyName = 'Euro';
 
-      const user = await this.userRepo.findOneOrFail({
-        where: { id: doctor_id },
+      const user = await this.userRepo.findOne({
+        where: { id: doctor_id || 0 },
         relations: {
           address: true,
         },
       });
-      const bankCheck = await this.bankCheckRepo.findOneOrFail({
-        where: { id },
+      const bankCheck = await this.bankCheckRepo.findOne({
+        where: { id: id || 0 },
       });
       currencyName += Number(amount) >= 2 ? 's' : '';
       token.push(numberToWords.toWords(amountSplit[0]));
@@ -159,8 +160,9 @@ export class BankService {
   }
 
   async updateBankChecks(id: number, payload: UpdateBankCheckDto) {
-    const currentBankCheck = await this.bankCheckRepo.findOneOrFail({
-      where: { id },
+    id = checkId(id);
+    const currentBankCheck = await this.bankCheckRepo.findOne({
+      where: { id: id || 0 },
     });
     if (!currentBankCheck) throw new CBadRequestException(ErrorCode.NOT_FOUND);
 
@@ -178,8 +180,9 @@ export class BankService {
   }
 
   async duplicateBankChecks(id: number) {
+    id = checkId(id);
     const currentBankCheck = await this.bankCheckRepo.findOne({
-      where: { id },
+      where: { id: id || 0 },
     });
     if (!currentBankCheck) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     return await this.bankCheckRepo.save({
@@ -215,7 +218,8 @@ export class BankService {
     organizationId: number,
     payload: CreateUpdateBankDto,
   ) {
-    if (!payload.id) {
+    const id = checkId(payload.id);
+    if (!id) {
       const hasPermissionCreate = await this.permissionService.hasPermission(
         'PERMISSION_LIBRARY',
         2,
@@ -243,7 +247,6 @@ export class BankService {
 
       const {
         bankOfGroup,
-        id,
         abbr,
         name,
         bankCode,
@@ -264,7 +267,7 @@ export class BankService {
           if (!bankOfGroup) libraryBankEntity.usrId = userId;
         } else {
           libraryBankEntity = await this.libraryBankRepo.findOne({
-            where: { id: id, usrId: userId },
+            where: { id: id || 0, usrId: userId },
             relations: { address: true, user: true },
           });
           if (!libraryBankEntity) {
@@ -343,9 +346,10 @@ export class BankService {
     organizationId: number,
   ): Promise<SuccessResponse> {
     try {
+      id = checkId(id);
       if (id) {
         const libraryBankEntity = await this.libraryBankRepo.findOne({
-          where: { id, usrId: userId },
+          where: { id: id || 0, usrId: userId },
           relations: { user: true },
         });
         if (!libraryBankEntity) {
@@ -385,12 +389,30 @@ export class BankService {
   }
 
   async getOne(id: number) {
+    id = checkId(id);
     if (!id) throw new CBadRequestException(ErrorCode.FORBIDDEN);
     const currentBank = await this.libraryBankRepo.findOne({
-      where: { id },
+      where: { id: id },
       relations: { address: true },
     });
     if (!currentBank) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     return currentBank;
+  }
+
+  async sortable(payload: SortableUpdateBankCheckDto[]) {
+    const ids = payload.map((item) => item.id);
+    let i = 0;
+    for (const id of ids) {
+      try {
+        await this.dataSource
+          .createQueryBuilder()
+          .update(BankCheckEntity)
+          .set({ position: i })
+          .where({ id })
+          .execute();
+        i++;
+      } catch (error) {}
+    }
+    return;
   }
 }

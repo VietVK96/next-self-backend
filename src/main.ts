@@ -13,6 +13,7 @@ import { useContainer } from 'class-validator';
 import { errFormat, filterError } from './common/util/filter-error';
 import { HttpExceptionFilter } from './common/exceptions/http-exception.filter';
 import { LoggerErrorInterceptor } from 'nestjs-pino';
+import { json, urlencoded } from 'express';
 
 /**
  * Project convert PHP to nodejs
@@ -27,6 +28,8 @@ async function bootstrap() {
     options.logger = false;
   }
   const app = await NestFactory.create(AppModule, options);
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ extended: true, limit: '50mb' }));
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   app.enableCors({
     origin: function (_origin, callback) {

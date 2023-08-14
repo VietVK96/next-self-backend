@@ -22,6 +22,7 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import {
   BankCheckPrintDto,
   CreateUpdateBankDto,
+  SortableUpdateBankCheckDto,
   UpdateBankCheckDto,
 } from './dto/bank.dto';
 import { ErrorCode } from 'src/constants/error';
@@ -82,6 +83,13 @@ export class BankController {
     } catch (error) {
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
     }
+  }
+  @Put('/bank-checks/sortable')
+  @UseGuards(TokenGuard)
+  async sortableContraindications(
+    @Body() payload: SortableUpdateBankCheckDto[],
+  ) {
+    return await this.bankService.sortable(payload);
   }
 
   @Put('/bank-checks/:id')

@@ -28,6 +28,7 @@ import { ConfigService } from '@nestjs/config';
 import { checkEmpty } from 'src/common/util/string';
 import * as fs from 'fs';
 import { ContactPaymentService } from './contact.payment.service';
+import { checkId } from 'src/common/util/number';
 
 @Injectable()
 export class ContactService {
@@ -62,6 +63,7 @@ export class ContactService {
    *
    */
   async findOne(id: number, doctorId: number, identity: UserIdentity) {
+    id = checkId(id);
     const queryBuiler = this.dataSource.createQueryBuilder();
     const select = `
       CON.CON_ID as id,
@@ -153,7 +155,7 @@ export class ContactService {
         },
       )
       .where('CON.CON_ID = :id AND CON.organization_id = :orgId', {
-        id,
+        id: id || 0,
         orgId: identity.org,
       });
     const record = await qr.getRawOne();

@@ -12,7 +12,6 @@ import {
 import { UploadEntity } from './upload.entity';
 import { UserEntity } from './user.entity';
 import { ContactEntity } from './contact.entity';
-import { PlanEntity } from './plan.entity';
 import { DentalQuotationActEntity } from './dental-quotation-act.entity';
 import { PaymentPlanEntity } from './payment-plan.entity';
 import { LettersEntity } from './letters.entity';

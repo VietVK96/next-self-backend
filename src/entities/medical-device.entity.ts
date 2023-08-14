@@ -59,7 +59,8 @@ export class MedicalDeviceEntity {
    */
   //   protected $traceabilities;
   @OneToMany(() => TraceabilityEntity, (e) => e.medicalDevice, {
-    createForeignKeyConstraints: false,
+    // createForeignKeyConstraints: false,
+    cascade: true,
   })
   traceabilities?: TraceabilityEntity[];
 

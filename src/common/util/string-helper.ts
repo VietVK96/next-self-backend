@@ -159,6 +159,7 @@ export class StringHelper {
    * @return string
    */
   public static formatInsee(string: string): string {
+    if (!string) return '';
     string = string.replace(/\W/g, '').toUpperCase();
     return string.replace(
       /(\w{1})(\w{2})(\w{2})(\w{2})(\w{3})(\w{3})(\w{2})/,

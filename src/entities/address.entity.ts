@@ -128,5 +128,3 @@ export class AddressEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt?: Date;
 }
-//application/Entities/Address.php
-//application/Entities/AddressEntity.php

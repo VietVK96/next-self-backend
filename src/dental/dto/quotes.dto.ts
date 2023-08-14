@@ -1,5 +1,4 @@
 import { ApiProperty, ApiExtraModels } from '@nestjs/swagger';
-import { EnumBillLineType } from 'src/entities/bill-line.entity';
 
 @ApiExtraModels()
 export class QuotesConventionDto {
