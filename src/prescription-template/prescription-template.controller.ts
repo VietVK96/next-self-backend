@@ -15,7 +15,10 @@ import {
   CurrentUser,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
-import { CreatePrescriptionTemplateDto } from './dto/prescription-template.dto';
+import {
+  CreatePrescriptionTemplateDto,
+  SortablePrescriptionTemplateDto,
+} from './dto/prescription-template.dto';
 
 @ApiBearerAuth()
 @ApiTags('PrescriptionTemplate')
@@ -38,6 +41,14 @@ export class PrescriptionTemplateController {
     @Body() payload: CreatePrescriptionTemplateDto,
   ) {
     return this.prescriptionTemplateService.create(identity.org, payload);
+  }
+
+  @Put('sortable')
+  @UseGuards(TokenGuard)
+  async sortableContraindications(
+    @Body() payload: SortablePrescriptionTemplateDto[],
+  ) {
+    return await this.prescriptionTemplateService.sortable(payload);
   }
 
   @Put('/:id')
