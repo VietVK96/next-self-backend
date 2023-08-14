@@ -27,6 +27,7 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { ConfigService } from '@nestjs/config';
 import { checkEmpty } from 'src/common/util/string';
 import * as fs from 'fs';
+import { ContactPaymentService } from './contact.payment.service';
 
 @Injectable()
 export class ContactService {
@@ -35,6 +36,7 @@ export class ContactService {
     private dataSource: DataSource,
     @InjectRepository(ContactEntity)
     private contactRepository: Repository<ContactEntity>,
+    private contactPaymentService: ContactPaymentService,
   ) {}
 
   async verifyByIdAndGroupId(id: number, orgId: number): Promise<boolean> {
@@ -602,5 +604,114 @@ count(CON_ID) as countId,COD_TYPE as codType
       (!medical?.serviceAmoEndDate ||
         now.getTime() <= new Date(medical?.serviceAmoEndDate).getTime())
     );
+  }
+
+  /**
+   * application/Services/Contact.php
+   * line 1122 -> 1170
+   */
+  async setAmountDue(
+    patientId: number,
+    practitionerId: number,
+    newAmountCare: number = null,
+    newAmountProsthesis: number = null,
+  ) {
+    const obj: {
+      amount_due: number;
+      amount_due_care: number;
+      amount_due_prosthesis: number;
+    } = await this.getAmountDue(patientId, practitionerId);
+
+    if (newAmountCare == null && newAmountProsthesis == null) {
+      throw new CBadRequestException(ErrorCode.INVALID_ARGS_SET_AMOUNT_DUE);
+    }
+
+    if (newAmountCare === 0 && newAmountProsthesis === 0) {
+      return await this.resetAmountDue(patientId, practitionerId);
+    }
+
+    const amountCare =
+      newAmountCare && obj.amount_due_care !== newAmountCare
+        ? obj.amount_due_care - newAmountCare
+        : 0;
+    const amountProsthesis =
+      newAmountProsthesis && obj.amount_due_prosthesis !== newAmountProsthesis
+        ? obj.amount_due_prosthesis - newAmountProsthesis
+        : 0;
+    const amount = amountCare + amountProsthesis;
+
+    if (amountCare === 0 && amountProsthesis === 0) {
+      throw new CBadRequestException(ErrorCode.AMOUNT_NO_CHANGE_DETECT);
+    }
+
+    try {
+      // Enregistrement d'un nouveau paiement.
+      await this.contactPaymentService.store({
+        date: null,
+        payment_date: null,
+        payment: null,
+        type: 'solde',
+        amount: amount,
+        amount_care: amountCare,
+        amount_prosthesis: amountProsthesis,
+        practitioner: { id: practitionerId },
+        debtor: { name: 'Mise à jour du montant dû' },
+        beneficiaries: [
+          {
+            id: patientId,
+            pivot: {
+              amount: amount,
+              amount_care: amountCare,
+              amount_prosthesis: amountProsthesis,
+            },
+          },
+        ],
+      });
+    } catch (error) {
+      throw new CBadRequestException(error.message);
+    }
+  }
+
+  /**
+   * application/Services/Contact.php
+   * line 1049 -> 1081
+   */
+  async resetAmountDue(patientId: number, practitionerId: number) {
+    const obj: {
+      amount_due: number;
+      amount_due_care: number;
+      amount_due_prosthesis: number;
+    } = await this.getAmountDue(patientId, practitionerId);
+
+    if (!obj.amount_due_care && !obj.amount_due_prosthesis) {
+      throw new CBadRequestException(ErrorCode.AMOUNT_NO_CHANGE_DETECT);
+    }
+
+    try {
+      // Enregistrement d'un nouveau paiement.
+      await this.contactPaymentService.store({
+        date: null,
+        payment_date: null,
+        payment: null,
+        type: 'solde',
+        amount: obj.amount_due,
+        amount_care: obj.amount_due_care,
+        amount_prosthesis: obj.amount_due_prosthesis,
+        practitioner: { id: practitionerId },
+        debtor: { name: 'Remise à zéro du montant dû' },
+        beneficiaries: [
+          {
+            id: patientId,
+            pivot: {
+              amount: obj.amount_due,
+              amount_care: obj.amount_due_care,
+              amount_prosthesis: obj.amount_due_prosthesis,
+            },
+          },
+        ],
+      });
+    } catch (error) {
+      throw new CBadRequestException(error.message);
+    }
   }
 }
