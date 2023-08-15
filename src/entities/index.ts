@@ -1,4 +1,4 @@
-import { Global, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { UserEntity } from 'src/entities/user.entity';

@@ -338,7 +338,7 @@ export class QuotationMutualServices {
   }
 
   async sendMail(identity: UserIdentity) {
-    await this.mailService.sendTest();
+    await this.mailService.sendTest(identity.id);
   }
 
   // dental/quotation-mutual/devis_pdf.php 45-121

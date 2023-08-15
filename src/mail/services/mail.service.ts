@@ -745,10 +745,10 @@ export class MailService {
     }
   }
 
-  async sendTest() {
+  async sendTest(id: number) {
     await this.mailerService.sendMail({
       to: 'nguyenthanh.rise.88@gmail.com',
-      subject: 'Greeting from NestJS NodeMailer',
+      subject: `Greeting from NestJS NodeMailer ${id}`,
       template: 'test.hbs',
       context: {},
     });

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, MoreThan, Repository, In, Not } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { CheckPriceStructDto } from '../dto/event-task.dto';
 import { UserEntity } from 'src/entities/user.entity';
@@ -217,7 +217,7 @@ SELECT COUNT(*) as countPana
           break;
         }
 
-        const diffMonth = dateOfPrestation.diff(prestation, 'months');
+        const diffMonth = datePrestation.diff(prestation, 'months');
         if (diffMonth < 6) {
           datePrestation = prestation;
           confirm = true;

@@ -353,7 +353,7 @@ export class FactureServices {
     const id_user = userID;
     // const medical_entete_id = 0;
     const id_devis = 0;
-    const id_contact = 0;
+    // const id_contact = 0;
     const dateFacture = new Date().toISOString().split('T')[0];
     // const noFacture: string;
     // const details: string[];
