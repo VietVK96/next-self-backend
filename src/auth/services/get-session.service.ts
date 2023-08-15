@@ -5,7 +5,7 @@ import { PrivilegeEntity } from 'src/entities/privilege.entity';
 import { ResourceEntity } from 'src/entities/resource.entity';
 import { UserResourceEntity } from 'src/entities/user-resource.entity';
 import { UserEntity } from 'src/entities/user.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Repository, In } from 'typeorm';
 import {
   SessionRes,
   UserPractitionersRes,
@@ -16,6 +16,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { parseJson } from 'src/common/util/json';
+import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
+import { UserAmoEntity } from 'src/entities/user-amo.entity';
 
 @Injectable()
 export class GetSessionService {
@@ -25,6 +27,8 @@ export class GetSessionService {
     private userRepository: Repository<UserEntity>,
     @InjectRepository(UserMedicalEntity)
     private userMedicalRepository: Repository<UserMedicalEntity>,
+    @InjectRepository(UserAmoEntity)
+    private userAmoRepo: Repository<UserAmoEntity>,
   ) {}
 
   async getSession(identity: UserIdentity) {
@@ -255,6 +259,102 @@ export class GetSessionService {
         },
       )
       .groupBy('USR.USR_LASTNAME, USR.USR_FIRSTNAME');
+    const data = await qr.getRawMany();
+    const practitionerIds = data.map((d) => d.id);
+    const preferences = await this.getPreference(practitionerIds);
+    const amos = await this.getAmo(practitionerIds);
+    const medicals = await this.getMedical(practitionerIds);
+    const dataReturn = data.map((d) => {
+      const preference = preferences.find((p) => p.id === d.id);
+      const amo = amos.find((a) => a.userId === d.id);
+      const medical = medicals.find((m) => m.userId === d.id);
+
+      return {
+        ...d,
+        preference,
+        amo,
+        medical,
+      };
+    });
+    return dataReturn;
+  }
+
+  async getPreference(practitionerIds: number[]) {
+    if (!practitionerIds || practitionerIds.length === 0) {
+      return [];
+    }
+    const queryBuiler = this.dataSource.createQueryBuilder();
+    const select = `
+      USR_ID as id,
+      USP_LANGUAGE as language,
+      USP_COUNTRY as country,
+      USP_TIMEZONE as timezone,
+      USP_VIEW as view,
+      USP_DAYS as days,
+      USP_WEEK_START_DAY as weekStartDay,
+      USP_DISPLAY_HOLIDAY as displayHoliday,
+      USP_DISPLAY_EVENT_TIME as displayEventTime,
+      USP_DISPLAY_LAST_PATIENTS as displayLastPatients,
+      USP_DISPLAY_PRACTITIONER_CALENDAR as displayPractitionerCalendar,
+      USP_ENABLE_EVENT_PRACTITIONER_CHANGE as enableEventPractitionerChange,
+      USP_FREQUENCY as frequency,
+      USP_HMD as hmd,
+      USP_HMF as hmf,
+      USP_HAD as had,
+      USP_HAF as haf,
+      USP_HEIGHT_LINE as heightLine,
+      USP_QUOTATION_DISPLAY_ODONTOGRAM as quotationDisplayOdontogram,
+      USP_QUOTATION_DISPLAY_DETAILS as quotationDisplayDetails,
+      USP_QUOTATION_DISPLAY_TOOLTIP as quotationDisplayTooltip,
+      USP_QUOTATION_DISPLAY_DUPLICATA as quotationDisplayDuplicata,
+      USP_QUOTATION_COLOR as quotationColor,
+      USP_BILL_DISPLAY_TOOLTIP as billDisplayTooltip,
+      USP_BILL_TEMPLATE as billTemplate,
+      USP_ORDER_DISPLAY_TOOLTIP as orderDisplayTooltip,
+      USP_ORDER_DUPLICATA as orderDuplicata,
+      USP_ORDER_PREPRINTED_HEADER as orderPreprintedHeader,
+      USP_ORDER_PREPRINTED_HEADER_SIZE as orderPreprintedHeaderSize,
+      USP_ORDER_FORMAT as orderFormat,
+      USP_ORDER_BCB_CHECK as orderBcbCheck,
+      USP_THEME_CUSTOM as themeCustom,
+      USP_THEME_COLOR as themeColor,
+      USP_THEME_BGCOLOR as themeBgcolor,
+      USP_THEME_BORDERCOLOR as themeBordercolor,
+      USP_THEME_ASIDE_BGCOLOR as themeAsideBgcolor,
+      USP_REMINDER_VISIT_DURATION as reminderVisitDuration,
+      USP_CCAM_BRIDGE_QUICKENTRY as ccamBridgeQuickentry,
+      ccam_price_list,
+      DATE_FORMAT(patient_care_time, '%H:%i') as patient_care_time
+    `;
+
+    const qr = queryBuiler
+      .select(select)
+      .from(UserPreferenceEntity, 'USP')
+      .where('USP.USR_ID IN (:practitionerIds)', {
+        practitionerIds,
+      });
     return await qr.getRawMany();
+  }
+
+  async getAmo(practitionerIds: number[]) {
+    if (!practitionerIds || practitionerIds.length === 0) {
+      return [];
+    }
+    return await this.userAmoRepo.find({
+      where: {
+        userId: In(practitionerIds),
+      },
+    });
+  }
+
+  async getMedical(practitionerIds: number[]) {
+    if (!practitionerIds || practitionerIds.length === 0) {
+      return [];
+    }
+    return await this.userMedicalRepository.find({
+      where: {
+        userId: In(practitionerIds),
+      },
+    });
   }
 }

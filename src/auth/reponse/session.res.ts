@@ -1,4 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { UserAmoEntity } from 'src/entities/user-amo.entity';
+import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 
 export class UserResourceRes {
   @ApiProperty()
@@ -107,6 +109,59 @@ export class UserPractitionersRes {
 
   @ApiProperty()
   groupId?: number;
+
+  @ApiProperty()
+  preference?: {
+    id?: number;
+    language?: string;
+    country?: string;
+    timezone?: string;
+    view?: string;
+    days?: number[];
+    weekStartDay?: number;
+    displayHoliday?: number;
+    displayEventTime?: number;
+    displayLastPatients?: number;
+    displayPractitionerCalendar?: number;
+    enableEventPractitionerChange?: number;
+    frequency?: number;
+    hmd?: string;
+    hmf?: string;
+    had?: string;
+    haf?: string;
+    heightLine?: number;
+    quotationDisplayOdontogram?: string;
+    quotationDisplayDetails?: string;
+    quotationDisplayTooltip?: number;
+    quotationDisplayDuplicata?: string;
+    quotationColor?: {
+      background?: string;
+      foreground?: string;
+    };
+    billDisplayTooltip?: number;
+    billTemplate?: number;
+    orderDisplayTooltip?: number;
+    orderDuplicata?: number;
+    orderPreprintedHeader?: number;
+    orderPreprintedHeaderSize?: number;
+    orderFormat?: string;
+    orderBcbCheck?: number;
+    themeCustom?: number;
+    themeColor?: number;
+    themeBgcolor?: number;
+    themeBordercolor?: number;
+    themeAsideBgcolor?: number;
+    reminderVisitDuration?: number;
+    ccamBridgeQuickentry?: number;
+    ccam_price_list?: number;
+    patient_care_time?: number;
+  };
+
+  @ApiProperty()
+  amo?: UserAmoEntity;
+
+  @ApiProperty()
+  medical?: UserMedicalEntity;
 }
 
 export class UserUserSettingRes {

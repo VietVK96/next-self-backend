@@ -227,7 +227,7 @@ export class EventTaskEntity {
   //   width: 11,
   //   default: 0,
   // })
-  pos?: number;
+  // pos?: number;
 
   /**
    * @ORM\Column(name="ETK_DURATION", type="time", nullable=false)
@@ -278,7 +278,7 @@ export class EventTaskEntity {
   //   scale: 2,
   //   nullable: true,
   // })
-  amountSaved?: number;
+  // amountSaved?: number;
 
   /**
    * @ORM\Column(name="ETK_COLOR", type="integer", nullable=false)

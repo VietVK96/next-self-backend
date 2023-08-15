@@ -212,7 +212,7 @@ export class FactureServices {
                 usrId: payload?.user_id,
                 conId: payload?.patient_id,
                 status: 0,
-                amountSaved: null,
+                amountBackup: null,
               },
               relations: ['event', 'dental'],
             });
@@ -260,7 +260,7 @@ export class FactureServices {
               where: {
                 usrId: payload?.user_id,
                 conId: payload?.patient_id,
-                amountSaved: null,
+                amountBackup: null,
               },
               relations: ['event', 'dental'],
             });
@@ -309,7 +309,7 @@ export class FactureServices {
               where: {
                 usrId: payload?.user_id,
                 conId: payload?.patient_id,
-                amountSaved: null,
+                amountBackup: null,
               },
               relations: ['event', 'dental'],
             });
