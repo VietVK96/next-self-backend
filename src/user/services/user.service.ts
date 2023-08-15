@@ -534,7 +534,7 @@ export class UserService {
                 .getRepository(PrivilegeEntity)
                 .findOne({
                   where: {
-                    usrId: userEntity?.id,
+                    usrId: targetUserEntity?.id,
                     usrWithId: practitionerId,
                   },
                 });
