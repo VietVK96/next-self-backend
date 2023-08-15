@@ -14,10 +14,10 @@ export class PaymentSchedulesDto {
   @ApiProperty()
   observation?: string | null;
   @ApiProperty()
-  lines?: Line[];
+  lines?: LineDto[];
 }
 
-export class Line {
+export class LineDto {
   @ApiProperty()
   id?: number;
   @ApiProperty()

@@ -9,7 +9,6 @@ import {
   Delete,
   Param,
   UseInterceptors,
-  Req,
   UploadedFiles,
 } from '@nestjs/common';
 import {
@@ -28,8 +27,7 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { ContextMailDto, FindVariableDto } from './dto/findVariable.dto';
 import { TranformDto } from './dto/transform.dto';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { Request } from 'express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { SendMailDto } from './dto/sendMail.dto';
 import { UpdateMailDto } from './dto/mail.dto';
 

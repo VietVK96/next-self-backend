@@ -28,7 +28,14 @@ export class SaveTaskService {
     private traceabilityRepo: Repository<TraceabilityEntity>,
   ) {}
 
-  async save(payload: EventTaskSaveDto) {
+  async save(payload: EventTaskSaveDto): Promise<{
+    id?: number;
+    messages?: {
+      key?: string;
+      data?: Record<string, string>;
+      message?: string;
+    }[];
+  }> {
     const patient = await this.contactRepo.findOneBy({ id: payload?.contact });
     const amosOfPatient = await this.patientAmoRepo.findBy({
       patientId: patient?.id,
@@ -292,14 +299,14 @@ export class SaveTaskService {
       await Promise.all(promiseArr2);
     }
     for (const discountedCode of discountedCodes) {
-      //@TODO translate
-      //   $messages[] = $translator->trans('prestation.warning.associationRadiographie', [
-      //     '%name%' => $discountedCode,
-      // ]);
-      messages.push(
-        `L'acte ${discountedCode} va être facturé à 50% car il s'agit d'un acte de radiographie conventionnelle et doit être décoté par rapport à l'acte de radiographie le plus cher effectué lors de la séance.`,
-      );
+      messages.push({
+        key: 'contact.willBeBilledAtBecauseItIsAConventionalActAndMustBeDiscountedComparedToTheMostExpensiveActPerformedDuringTheSessio',
+        message: `L'acte {discountedCode} va être facturé à 50% car il s'agit d'un acte de radiographie conventionnelle et doit être décoté par rapport à l'acte de radiographie le plus cher effectué lors de la séance.`,
+        data: {
+          discountedCode,
+        },
+      });
     }
-    return { id: lastInsertId, messages: messages };
+    return { id: lastInsertId, messages };
   }
 }
