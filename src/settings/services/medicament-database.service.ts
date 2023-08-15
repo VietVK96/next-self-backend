@@ -46,9 +46,12 @@ export class MedicamentDatabaseService {
     const claudeBernard = await soap.createClientAsync(wsdlUrl);
     const resultTest = await claudeBernard?.testConnexionAsync({
       key: {
-        codeEditeur: '',
+        codeEditeur: process.env.CLAUDE_BERNARD_CODE_EDITEUR,
         idPS: claudeBernardLicence,
-        secretEditeur: this._generateKey('', claudeBernardLicence),
+        secretEditeur: this._generateKey(
+          process.env.CLAUDE_BERNARD_CODE_EDITEUR,
+          claudeBernardLicence,
+        ),
       },
     });
     return {
@@ -72,9 +75,12 @@ export class MedicamentDatabaseService {
     const claudeBernard = await soap.createClientAsync(wsdlUrl);
     const resultTest = await claudeBernard.testConnexionAsync({
       key: {
-        codeEditeur: '',
+        codeEditeur: process.env.CLAUDE_BERNARD_CODE_EDITEUR,
         idPS: claudeBernardLicence,
-        secretEditeur: this._generateKey('', claudeBernardLicence),
+        secretEditeur: this._generateKey(
+          process.env.CLAUDE_BERNARD_CODE_EDITEUR,
+          claudeBernardLicence,
+        ),
       },
     });
 
@@ -85,8 +91,16 @@ export class MedicamentDatabaseService {
     }
 
     const claudeBernardSearchResult = await claudeBernard?.rechercheBCBAsync({
+      key: {
+        codeEditeur: process.env.CLAUDE_BERNARD_CODE_EDITEUR,
+        idPS: claudeBernardLicence,
+        secretEditeur: this._generateKey(
+          process.env.CLAUDE_BERNARD_CODE_EDITEUR,
+          claudeBernardLicence,
+        ),
+      },
       query: query?.query,
-      type: query?.type ?? 1,
+      type: query?.type ?? 53248,
       baseLocation: query?.baseLocation ?? 2,
     });
 
