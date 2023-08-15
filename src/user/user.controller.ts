@@ -23,7 +23,7 @@ import {
   UpdateTherapeuticParamDto,
 } from './dto/therapeutic.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { PreferenceService } from './services/preference.sevece';
+import { PreferenceService } from './services/preference.service';
 import { TokenDownloadService } from './services/token-download.service';
 import { UnpaidService } from './services/unpaid.service';
 import { UnpaidDto, printUnpaidDto } from './dto/unpaid.dto';
@@ -32,6 +32,7 @@ import { UpdatePassWordSettingDto } from './dto/user-setting.dto';
 import { ErrorCode } from 'src/constants/error';
 import { GetOneActiveRes } from './res/get-active.res';
 import * as dayjs from 'dayjs';
+import { CreditBalancesService } from './services/credit-balances.service';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -42,6 +43,7 @@ export class UserController {
     private preferenceService: PreferenceService,
     private tokenDownloadService: TokenDownloadService,
     private unpaidService: UnpaidService,
+    private creditBalancesService: CreditBalancesService,
   ) {}
 
   /**
@@ -216,5 +218,51 @@ export class UserController {
       Expires: 0,
     });
     res.end(buffer);
+  }
+
+  /**
+   *php/user/credit-balances/print.php 100%
+   */
+  @Get('credit-balances/print')
+  @UseGuards(TokenGuard)
+  async printCreditBalances(
+    @Res() res,
+    @CurrentUser() identity: UserIdentity,
+    @Query() param?: printUnpaidDto,
+  ) {
+    const buffer = await this.creditBalancesService.printCreditBalances(
+      param,
+      identity,
+    );
+    res.set({
+      // pdf
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename=dossiers_crediteurs_${dayjs(
+        new Date(),
+      ).format('YYYYMMDD')}.pdf`,
+      'Content-Length': buffer.length,
+      // prevent cache
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: 0,
+    });
+    res.end(buffer);
+  }
+
+  /**
+   *php/user/credit-balances/export.php 100%
+   */
+  @Get('credit-balances/export')
+  @UseGuards(TokenGuard)
+  async exportCreditBalances(
+    @Res() res: Response,
+    @CurrentUser() identity: UserIdentity,
+    @Query() param: printUnpaidDto,
+  ) {
+    return await this.creditBalancesService.exportCreditBalances(
+      param,
+      identity,
+      res,
+    );
   }
 }

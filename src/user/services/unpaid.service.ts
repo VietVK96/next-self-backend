@@ -350,9 +350,9 @@ export class UnpaidService {
     }
 
     if (param?.sorts)
-      queryBuilder.orderBy(
-        'patientBalance.visitDate',
-        param?.direction === 'asc' ? 'ASC' : 'DESC',
+      queryBuilder.addOrderBy(
+        unpaidSort[param?.sorts],
+        param?.direction.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
       );
 
     const res = await queryBuilder.getMany();

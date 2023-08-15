@@ -19,16 +19,17 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { ErrorCode } from 'src/constants/error';
 import { GetOneActiveRes } from '../res/get-active.res';
 import { PrivilegeEntity } from 'src/entities/privilege.entity';
-
+import { EventTypeEntity } from 'src/entities/event-type.entity';
+import { AppointmentReminderLibraryEntity } from 'src/entities/appointment-reminder-library.entity';
 @Injectable()
 export class UserService {
   constructor(
-    private addressService: AddressService,
-    private dataSource: DataSource,
     @InjectRepository(UserMedicalEntity)
     private userMedicalRepository: Repository<UserMedicalEntity>,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
+    private addressService: AddressService,
+    private dataSource: DataSource,
   ) {}
 
   // application/Services/User.php 153 -> 207
@@ -76,12 +77,41 @@ export class UserService {
       .leftJoin(UserMedicalEntity, 'UMD', 'UMD.user_id = USR.USR_ID')
       .where('USR.USR_ID = :id', { id });
     const user = await q.getRawOne();
-    const address = await this.addressService.find(user?.address_id);
+    const address = await this.addressService.find(user.address_id);
+
+    // for get eventType and reminders when create appointment
+    const eventTypes = await this.dataSource.manager.find(EventTypeEntity, {
+      where: {
+        userId: user.id,
+      },
+    });
+    const appointmentReminderLibraries = await this.dataSource.manager.find(
+      AppointmentReminderLibraryEntity,
+      {
+        where: {
+          usrId: user.id,
+        },
+        relations: {
+          addressee: true,
+          category: true,
+          timelimitUnit: true,
+        },
+        select: {
+          id: true,
+          timelimit: true,
+          addressee: { id: true },
+          category: { id: true },
+          timelimitUnit: { id: true },
+        },
+      },
+    );
     return {
       ...user,
       address: {
         ...address,
       },
+      eventTypes,
+      appointmentReminderLibraries,
     };
   }
 
