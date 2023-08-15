@@ -13,6 +13,7 @@ import { TokenDownloadService } from './services/token-download.service';
 import { JWT_SECRET_DOWNLOAD } from 'src/constants/jwt';
 import { UnpaidService } from './services/unpaid.service';
 import { ContactEntity } from 'src/entities/contact.entity';
+import { ContactUserEntity } from 'src/entities/contact-user.entity';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ContactEntity } from 'src/entities/contact.entity';
       UserPreferenceEntity,
       UserMedicalEntity,
       ContactEntity,
+      ContactUserEntity,
     ]),
     AddressModule,
     JwtModule.register({

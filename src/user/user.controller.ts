@@ -26,11 +26,12 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { PreferenceService } from './services/preference.sevece';
 import { TokenDownloadService } from './services/token-download.service';
 import { UnpaidService } from './services/unpaid.service';
-import { UnpaidDto } from './dto/unpaid.dto';
+import { UnpaidDto, printUnpaidDto } from './dto/unpaid.dto';
 import { Response } from 'express';
 import { UpdatePassWordSettingDto } from './dto/user-setting.dto';
 import { ErrorCode } from 'src/constants/error';
 import { GetOneActiveRes } from './res/get-active.res';
+import * as dayjs from 'dayjs';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -192,5 +193,28 @@ export class UserController {
       identity.org,
       body,
     );
+  }
+
+  @Get('unpaid/print')
+  @UseGuards(TokenGuard)
+  async printUnpaid(
+    @Res() res,
+    @CurrentUser() identity: UserIdentity,
+    @Query() param?: printUnpaidDto,
+  ) {
+    const buffer = await this.unpaidService.printUnpaid(identity, param);
+    res.set({
+      // pdf
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename=impayes_${dayjs(
+        new Date(),
+      ).format('YYYYMMDD')}.pdf`,
+      'Content-Length': buffer.length,
+      // prevent cache
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: 0,
+    });
+    res.end(buffer);
   }
 }

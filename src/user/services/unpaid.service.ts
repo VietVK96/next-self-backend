@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { UserEntity } from 'src/entities/user.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, MoreThan, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UnpaidDto } from '../dto/unpaid.dto';
+import { UnpaidDto, printUnpaidDto } from '../dto/unpaid.dto';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
@@ -12,6 +12,11 @@ import { format } from 'date-fns';
 import { Parser } from 'json2csv';
 import { Response } from 'express';
 import { ErrorCode } from 'src/constants/error';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { customCreatePdf } from 'src/common/util/pdf';
+import * as path from 'path';
+import * as dayjs from 'dayjs';
+import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 @Injectable()
 export class UnpaidService {
   constructor(
@@ -20,6 +25,10 @@ export class UnpaidService {
     private userRepository: Repository<UserEntity>,
     @InjectRepository(ContactEntity)
     private patientRepository: Repository<ContactEntity>,
+    @InjectRepository(ContactUserEntity)
+    private patientBalanceRepo: Repository<ContactUserEntity>,
+    @InjectRepository(UserPreferenceEntity)
+    private userPreferenceRepo: Repository<UserPreferenceEntity>,
   ) {}
 
   async getUserUnpaid(payload: UnpaidDto) {
@@ -295,5 +304,114 @@ export class UnpaidService {
       (!medical?.serviceAmoEndDate ||
         now.getTime() <= new Date(medical?.serviceAmoEndDate).getTime())
     );
+  }
+
+  /**
+   * File php/user/unpaid/print.php 100%
+   *
+   */
+  async printUnpaid(identity: UserIdentity, param?: printUnpaidDto) {
+    const queryBuilder = this.patientBalanceRepo
+      .createQueryBuilder('patientBalance')
+      .innerJoinAndSelect('patientBalance.patient', 'patient')
+      .leftJoinAndSelect('patient.phones', 'phone')
+      .andWhere('patientBalance.usrId = :user', { user: identity.id })
+      .andWhere('patientBalance.amount >= 0');
+
+    for (let i = 0; i < param.filterParam?.length; i++) {
+      switch (param.filterParam?.[i]) {
+        case 'patientBalance.amount':
+          queryBuilder.andWhere('patientBalance.amount >= :amount', {
+            amount: param.filtervalue?.[i],
+          });
+          break;
+        case 'patientBalance.relaunchLevel':
+          queryBuilder.andWhere(
+            'patientBalance.relaunchLevel >= :relaunchLevel',
+            {
+              relaunchLevel: param.filtervalue?.[i],
+            },
+          );
+          break;
+        case 'patientBalance.visitDate':
+          const arrDate = param.filtervalue?.[i].split(';');
+          if (arrDate.length > 0 && arrDate?.[0]) {
+            queryBuilder.andWhere('patientBalance.visitDate >= :startDate', {
+              startDate: arrDate?.[0],
+            });
+          }
+          if (arrDate.length > 1 && arrDate?.[1]) {
+            queryBuilder.andWhere('patientBalance.visitDate <= :endDate', {
+              endDate: arrDate?.[1],
+            });
+          }
+          break;
+      }
+    }
+
+    if (param?.sorts)
+      queryBuilder.orderBy(
+        'patientBalance.visitDate',
+        param?.direction === 'asc' ? 'ASC' : 'DESC',
+      );
+
+    const res = await queryBuilder.getMany();
+
+    const totalAmount = res.reduce(
+      (totalAmount, item) => totalAmount + Number(item.amount),
+      0,
+    );
+
+    const currencyObj = await this.userPreferenceRepo.findOneOrFail({
+      select: ['currency'],
+      where: {
+        usrId: identity.id,
+      },
+    });
+    const data = {
+      patientBalances: res,
+      currency: currencyObj?.currency,
+      totalAmount,
+    };
+
+    console.log(totalAmount);
+
+    const filePath = path.join(process.cwd(), 'templates/unpaid', 'index.hbs');
+
+    const files = [{ path: filePath, data }];
+
+    const options = {
+      format: 'A4',
+      displayHeaderFooter: true,
+      landscape: true,
+      margin: {
+        left: '10mm',
+        top: '20mm',
+        right: '10mm',
+        bottom: '20mm',
+      },
+
+      headerTemplate: `<div style="width:100%;margin-left:10mm"><span style="font-size: 8px;">${dayjs(
+        new Date(),
+      ).format(
+        'M/D/YY, hh:mm A',
+      )}</span><span style="font-size: 8px;margin-right:40mm; float: right;">Impayés</span></div>`,
+      footerTemplate: `
+        <div style="width: 100%;margin-right:10mm; font-size: 8px; display: flex; justify-content: space-between">
+          <span style="margin-left: 10mm">${process.env.HOST}/index#unpaid</span>
+          <div>
+            <span class="pageNumber"></span>
+            <span>/</span>
+            <span class="totalPages"></span>
+          </div>
+        </div>
+      `,
+    };
+
+    const helpers = {
+      dateShort: (date) => (date ? dayjs(date).format('DD/MM/YYYY') : ''),
+    };
+
+    return await customCreatePdf({ files, options, helpers });
   }
 }
