@@ -904,10 +904,6 @@ export class FactureServices {
         homePhoneNumber,
         date,
       });
-      console.log(
-        '🚀 ~ file: facture.services.ts:892 ~ FactureServices ~ factureEmail ~ invoice:',
-        invoice,
-      );
 
       await this.mailTransportService.sendEmail(identity.id, {
         from: invoice?.user?.email,
@@ -944,10 +940,6 @@ export class FactureServices {
       });
       return { message: true };
     } catch (err) {
-      console.log(
-        '🚀 ~ file: facture.services.ts:937 ~ FactureServices ~ factureEmail ~ err:',
-        err,
-      );
       throw new CBadRequestException(`${err?.message}`);
     }
   }

@@ -245,8 +245,11 @@ export class DentalController {
 
   @Get('/quotation-mutual/send-email')
   @UseGuards(TokenGuard)
-  async sendMail(@CurrentUser() identity: UserIdentity) {
-    return this.quotationMutualServices.sendMail(identity);
+  async sendMail(
+    @Query('id') id: number,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.quotationMutualServices.sendMail(id, identity);
   }
 
   // ecoophp/dental/quotation/devis_requetes_ajax.php
