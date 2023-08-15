@@ -65,6 +65,9 @@ export const customCreatePdf = async ({
       join: (v1: string[], v2: string) => {
         return v1.join(v2);
       },
+      isEqual: (v1: any, v2: any) => {
+        return v1 === v2;
+      },
     });
 
     if (helpers) {

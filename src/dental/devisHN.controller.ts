@@ -6,7 +6,7 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { DevisHNGetInitChampDto, DevisRequestAjaxDto } from './dto/devisHN.dto';
-import { DevisHNServices } from './services/devisRequestAjax.service';
+import { DevisHNServices } from './services/devisHNRequestAjax.service';
 import { DevisServices } from './services/devisHN.services';
 
 @ApiBearerAuth()

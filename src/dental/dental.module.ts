@@ -36,7 +36,7 @@ import { DentalController } from './dental.controller';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { CorrespondentService } from 'src/correspondent/services/correspondent.service';
 import { OrdonnancesServices } from './services/ordonnances.services';
-import { DevisHNServices } from './services/devisRequestAjax.service';
+import { DevisHNServices } from './services/devisHNRequestAjax.service';
 import { FactureServices } from './services/facture.services';
 import { UserService } from 'src/user/services/user.service';
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';

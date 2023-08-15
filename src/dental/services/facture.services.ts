@@ -655,6 +655,7 @@ export class FactureServices {
             bill?.contact?.lastname + ' ' + bill?.contact?.firstname,
           contactBirthday: checkDay(bill?.contact?.birthday),
           contactInsee: bill?.contact?.insee + '' + bill?.contact?.inseeKey,
+          details: [],
         };
 
         // if (!pdf && bill.lock) {
@@ -687,7 +688,7 @@ export class FactureServices {
           '-3003 : Problème durant le rapatriement des informations de la facture ...',
         );
       }
-    } catch {
+    } catch (e) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
   }
@@ -777,7 +778,10 @@ export class FactureServices {
             }
             return dentsLigneChunk.join('\n');
           },
-          formatNumber: (n: number) => n.toFixed(2),
+          formatNumber: (n: number) => {
+            return Number(n).toFixed(2);
+          },
+          br2nl: br2nl,
         };
 
         const filePath = path.join(
@@ -787,13 +791,14 @@ export class FactureServices {
         );
         const detailsAmount = facture?.details
           ? facture?.details.reduce(
-              (accumulator, item) => accumulator + item?.secuAmount,
+              (accumulator, item) =>
+                accumulator + checkNumber(item?.secuAmount),
               0,
             )
           : 0;
         const detailsPrixLigne = facture?.details
           ? facture?.details.reduce(
-              (prixLigne, item) => prixLigne + item?.prixLigne,
+              (prixLigne, item) => prixLigne + checkNumber(item?.prixLigne),
               0,
             )
           : 0;
