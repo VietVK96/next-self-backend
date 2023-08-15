@@ -3,11 +3,9 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { LibraryActEntity } from './library-act.entity';
-import { LettersEntity } from './letters.entity';
 import { LibraryOdontogramEntity } from './library-odontogram.entity';
 
 /**

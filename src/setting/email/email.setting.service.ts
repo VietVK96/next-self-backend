@@ -1,4 +1,3 @@
-import { MAX_ENTRIES } from 'src/constants/glassary';
 import { Injectable } from '@nestjs/common';
 import { EmailAccountEntity } from 'src/entities/email-account.entity';
 import { UserEntity } from 'src/entities/user.entity';

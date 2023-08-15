@@ -346,7 +346,7 @@ export class SaveEventService {
               );
             const dates = occurrenceStatement.map((date) => date.evo_date);
 
-            const [_, eventResult] = await Promise.all([
+            const [, eventResult] = await Promise.all([
               queryRunner.query(
                 `
               UPDATE event_occurrence_evo

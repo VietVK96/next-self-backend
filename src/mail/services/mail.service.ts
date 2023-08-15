@@ -5,7 +5,7 @@ import * as handlebars from 'handlebars';
 import dayjs from 'dayjs';
 import * as sharp from 'sharp';
 import * as xpath from 'xpath';
-import { differenceInMonths, differenceInYears, format } from 'date-fns';
+import { format } from 'date-fns';
 import { DataSource, Repository } from 'typeorm';
 import { FindAllMailRes } from '../response/findAllMail.res';
 import { FindAllMailDto } from '../dto/findAllMail.dto';
@@ -37,7 +37,6 @@ import * as path from 'path';
 import { SendMailDto } from '../dto/sendMail.dto';
 import { validateEmail } from 'src/common/util/string';
 import { MailTransportService } from './mailTransport.service';
-import { tmpdir } from 'os';
 import { SuccessResponse } from 'src/common/response/success.res';
 import { FindHeaderFooterRes } from '../response/findHeaderFooter.res';
 import { DOMParser, XMLSerializer } from 'xmldom';
@@ -429,7 +428,7 @@ export class MailService {
       [inputs?.doctor_id],
     );
     const logoFilename = logo?.filename;
-    const groupId = logo?.group_id;
+    // const groupId = logo?.group_id;
     context.logo = await this.getLogoAsBase64(logoFilename);
 
     const doctor = await this.dataSource.getRepository(UserEntity).findOne({
