@@ -1027,7 +1027,7 @@ export class PlanService {
       // return JSON.stringify(planification)
       return planification;
     } catch (error) {
-      return error;
+      throw new CBadRequestException(error);
     }
   }
 

@@ -184,21 +184,21 @@ export class EventTaskEntity {
    * @Serializer\Expose
    * @Assert\Type("string")
    */
-  @Column({
-    name: 'ETK_MSG',
-    type: 'text',
-    nullable: true,
-  })
-  observation?: string;
-
-  /**
-   * @ORM\Column(name="ETK_MSG", type="text", nullable=true)
-   */
   // @Column({
   //   name: 'ETK_MSG',
   //   type: 'text',
   //   nullable: true,
   // })
+  // observation?: string;
+
+  /**
+   * @ORM\Column(name="ETK_MSG", type="text", nullable=true)
+   */
+  @Column({
+    name: 'ETK_MSG',
+    type: 'text',
+    nullable: true,
+  })
   msg?: string;
 
   /**

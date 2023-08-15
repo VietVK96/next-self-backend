@@ -1,7 +1,10 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
-import fs from 'fs';
-import sharp from 'sharp';
+import * as fs from 'fs';
+import * as handlebars from 'handlebars';
+import dayjs from 'dayjs';
+import * as sharp from 'sharp';
+import * as xpath from 'xpath';
 import { differenceInMonths, differenceInYears, format } from 'date-fns';
 import { DataSource, Repository } from 'typeorm';
 import { FindAllMailRes } from '../response/findAllMail.res';
@@ -16,10 +19,10 @@ import { PatientService } from 'src/patient/service/patient.service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ConfigService } from '@nestjs/config';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
-import { LettersEntity } from '../../entities/letters.entity';
+import { EnumLettersType, LettersEntity } from '../../entities/letters.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { ErrorCode } from 'src/constants/error';
-import { MailInputsDto, MailOptionsDto } from '../dto/mail.dto';
+import { MailInputsDto, MailOptionsDto, UpdateMailDto } from '../dto/mail.dto';
 import { ContextMailDto, FindVariableDto } from '../dto/findVariable.dto';
 import { mailVariable } from 'src/constants/mailVariable';
 import { OrganizationEntity } from 'src/entities/organization.entity';
@@ -29,6 +32,16 @@ import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import Handlebars from 'handlebars';
 import { FactureEmailDataDto } from 'src/dental/dto/facture.dto';
+import { sanitizeFilename } from 'src/common/util/file';
+import * as path from 'path';
+import { SendMailDto } from '../dto/sendMail.dto';
+import { validateEmail } from 'src/common/util/string';
+import { MailTransportService } from './mailTransport.service';
+import { tmpdir } from 'os';
+import { SuccessResponse } from 'src/common/response/success.res';
+import { FindHeaderFooterRes } from '../response/findHeaderFooter.res';
+import { DOMParser, XMLSerializer } from 'xmldom';
+import puppeteer from 'puppeteer';
 
 @Injectable()
 export class MailService {
@@ -37,12 +50,15 @@ export class MailService {
     private mailerService: MailerService,
     private patientService: PatientService,
     private paymentScheduleService: PaymentScheduleService,
+    private mailTransportService: MailTransportService,
     @InjectRepository(LettersEntity)
     private lettersRepo: Repository<LettersEntity>,
     private dataSource: DataSource,
     @InjectRepository(ContactEntity)
     private contactRepo: Repository<ContactEntity>,
   ) {}
+
+  MAX_FILESIZE = 10 * 1024 * 1024;
 
   // php/mail/findAll.php
   async findAll(
@@ -55,8 +71,6 @@ export class MailService {
   ): Promise<FindAllMailRes> {
     if (!search) search = '';
     const pageSize = 100;
-    console.log('practitionerId', practitionerId);
-
     const doctors: PersonInfoDto[] = await this.dataSource.query(`SELECT
         T_USER_USR.USR_ID AS id,
         T_USER_USR.USR_LASTNAME AS lastname,
@@ -156,9 +170,14 @@ export class MailService {
   async findById(id: number) {
     const qr = await this.lettersRepo.findOne({
       where: { id: id },
+      relations: {
+        user: {
+          address: true,
+        },
+      },
     });
 
-    if (!qr) throw new CNotFoundRequestException(`Mail Not found`);
+    if (!qr) return new CNotFoundRequestException(`Mail Not found`);
 
     const doctors: PersonInfoDto[] = await this.dataSource.query(
       `SELECT
@@ -217,6 +236,7 @@ export class MailService {
       [qr.footerId],
     );
 
+    if (qr?.user?.password) delete qr.user.password;
     const mail: FindMailRes = {
       id: qr.id,
       type: qr.type,
@@ -233,6 +253,7 @@ export class MailService {
       conrrespondent: conrrespondents.length <= 0 ? null : conrrespondents[0],
       header: headers.length === 0 ? null : headers[0],
       footer: footers.length === 0 ? null : footers[0],
+      user: qr.user,
     };
 
     return mail;
@@ -276,7 +297,7 @@ export class MailService {
 
   // application/Services/Mail.php => function find()
   async find(id: number) {
-    const mail = await this.dataSource.query(
+    const mails = await this.dataSource.query(
       `SELECT
 				LET_ID AS id,
 				LET_TYPE AS type,
@@ -298,9 +319,11 @@ export class MailService {
       [id],
     );
 
-    if (!mail) {
+    if (mails.lenght === 0) {
       throw new CBadRequestException(`Le champ ${id} est invalide.`);
     }
+
+    const mail = mails[0];
     mail.doctor = null;
     if (mail?.doctor_id) {
       const doctor = await this.dataSource.query(
@@ -408,70 +431,47 @@ export class MailService {
     const logoFilename = logo?.filename;
     const groupId = logo?.group_id;
     context.logo = await this.getLogoAsBase64(logoFilename);
-    const doctor = await this.dataSource.query(
-      `
-      SELECT
-        T_USER_USR.USR_ID AS id,
-        T_USER_USR.ADR_ID AS address_id,
-        T_USER_USR.USR_ADMIN AS admin,
-        T_USER_USR.USR_LOG AS login,
-        T_USER_USR.USR_ABBR AS short_name,
-        T_USER_USR.USR_LASTNAME AS lastname,
-        T_USER_USR.USR_FIRSTNAME AS firstname,
-        T_USER_USR.color,
-        T_USER_USR.USR_MAIL AS email,
-        T_USER_USR.USR_PHONE_NUMBER AS phone_home_number,
-        T_USER_USR.USR_GSM AS phone_mobile_number,
-        T_USER_USR.USR_FAX_NUMBER AS fax_number,
-        T_USER_USR.USR_NUMERO_FACTURANT AS adeli,
-        T_USER_USR.finess AS finess,
-        T_USER_USR.USR_RATE_CHARGES AS taxes,
-              social_security_reimbursement_base_rate,
-              social_security_reimbursement_rate,
-        T_USER_USR.USR_AGA_MEMBER AS aga_member,
-        T_USER_USR.freelance,
-        T_USER_USR.USR_DEPASSEMENT_PERMANENT AS droit_permanent_depassement,
-        T_USER_USR.USR_SIGNATURE AS signature,
-        T_USER_USR.USR_TOKEN AS token,
-        T_USER_USR.USR_BCB_LICENSE AS bcbdexther_license,
-        T_LICENSE_LIC.LIC_END AS end_of_license_at,
-        T_USER_TYPE_UST.UST_PRO AS professional,
-        T_USER_PREFERENCE_USP.signature_automatic,
-        user_medical.rpps_number AS rpps_number
-      FROM T_USER_USR
-      JOIN T_USER_PREFERENCE_USP ON T_USER_PREFERENCE_USP.USR_ID = T_USER_USR.USR_ID
-      LEFT OUTER JOIN T_LICENSE_LIC ON T_LICENSE_LIC.USR_ID = T_USER_USR.USR_ID AND T_USER_USR.USR_CLIENT = 0
-      LEFT OUTER JOIN T_USER_TYPE_UST ON T_USER_TYPE_UST.UST_ID = T_USER_USR.UST_ID
-      LEFT OUTER JOIN user_medical ON user_medical.user_id = T_USER_USR.USR_ID
-      WHERE T_USER_USR.USR_ID = ?
-    `,
-      [inputs?.doctor_id],
-    );
-    context.praticien = JSON.parse(JSON.stringify(doctor));
-    context.praticien.fullname = [
-      doctor?.lastname,
-      doctor?.firstname,
-      doctor?.freelance,
-    ]
-      .filter((name) => {
-        if (!!name) return name;
-        return name instanceof Boolean && name ? 'EI' : '';
-      })
-      .join(' ');
-    context.praticien.phoneNumber = doctor?.praticien?.phone_home_number;
-    context.praticien.gsm = doctor?.praticien?.phone_mobile_number;
-    context.praticien.faxNumber = doctor?.praticien?.fax_number;
-    context.praticien.numeroFacturant = doctor?.praticien?.adeli;
-    context.praticien.medical.rppsNumber = doctor?.praticien?.rpps_number;
-    if (context?.praticien?.address) {
-      context.praticien.zipCode = doctor?.praticien?.address?.zip_code;
+
+    const doctor = await this.dataSource.getRepository(UserEntity).findOne({
+      relations: { preference: true, medical: true, address: true },
+      where: { id: inputs?.doctor_id },
+    });
+    context['praticien'] = {
+      ...JSON.parse(JSON.stringify(doctor)),
+      fullname: [
+        doctor.lastname,
+        doctor.firstname,
+        doctor.freelance ? 'EI' : '',
+      ]
+        .filter(Boolean)
+        .join(' '),
+      phoneNumber: doctor.phoneNumber,
+      gsm: doctor.gsm,
+      faxNumber: doctor.faxNumber,
+      numeroFacturant: doctor.numeroFacturant,
+      medical: {
+        rppsNumber: doctor.medical.rppsNumber,
+      },
+    };
+    if (doctor.address) {
+      context['praticien']['address']['zipCode'] = doctor.address.zipCode;
     }
-    delete context?.praticien?.signature;
-    if (doctor?.signature_automatic && doctor?.signature) {
-      context.praticien.signature = `<img class='signaturePraticien' alt='Signature praticien' src='${doctor?.signature}' />`;
+    delete context['praticien']['signature'];
+
+    if (
+      true === Boolean(doctor.preference.signatureAutomatic) &&
+      doctor.signature !== null
+    ) {
+      context['praticien'][
+        'signature'
+      ] = `<img class='signaturePraticien' alt='Signature praticien' src='${doctor.signature}' />`;
     }
+
     if (inputs?.patient_id) {
-      const patient = this.patientService.find(inputs?.patient_id);
+      const patient = await this.contactRepo.findOne({
+        relations: ['civilityTitle', 'phones.type', 'contactUsers'],
+        where: { id: inputs?.patient_id },
+      });
       context.contact = JSON.parse(JSON.stringify(patient));
       context.nbr = context?.contact?.number;
       context.inseeKey = context?.contact?.insee_key;
@@ -487,36 +487,63 @@ export class MailService {
       context.dental.nextAppointmentDuration = '';
       context.dental.nextAppointmentTitle = '';
 
-      // const nextAppointment = await this.patientService.getNextAppointment(
-      //   context?.contact?.id,
-      // );
-
-      // if(nextAppointment && nextAppointment?.EVT_START){
-      // $datetime1 = new \DateTime($nextAppointment['EVT_START']);
-      // $datetime2 = new \DateTime($nextAppointment['EVT_END']);
-      // $interval = $datetime2->diff($datetime1);
-      // $duration = (new \DateTime())->setTime($interval->h, $interval->i);
-
-      // $context['contact']['nextAppointmentDate'] = static::formatDatetime($datetime1, [\IntlDateFormatter::FULL, \IntlDateFormatter::NONE]);
-      // $context['contact']['nextAppointmentTime'] = static::formatDatetime($datetime1, [\IntlDateFormatter::NONE, \IntlDateFormatter::SHORT]);
-      // $context['contact']['nextAppointmentDuration'] = static::formatDatetime($duration, [\IntlDateFormatter::NONE, \IntlDateFormatter::SHORT]);
-      // $context['contact']['nextAppointmentTitle'] = $nextAppointment['EVT_NAME'];
-      // }
+      const nextAppointment = await this.getNextAppointment(
+        context['contact']['id'],
+      );
+      if (nextAppointment && nextAppointment?.EVT_START) {
+        const datetime1 = new Date(nextAppointment['EVT_START']);
+        const datetime2 = new Date(nextAppointment['EVT_END']);
+        const interval = datetime2.getTime() - datetime1.getTime();
+        const duration = new Date(interval);
+        const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+        const timeFormatter = new Intl.DateTimeFormat('fr-FR', {
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true,
+        });
+        const nextAppointmentDate = dateFormatter.format(datetime1);
+        const nextAppointmentTime = timeFormatter.format(datetime1);
+        const nextAppointmentDuration = `${duration.getUTCHours()}h ${duration.getUTCMinutes()}m`;
+        const nextAppointmentTitle = nextAppointment['EVT_NAME'];
+        context['contact'] = {
+          ...context['contact'],
+          nextAppointmentDate,
+          nextAppointmentTime,
+          nextAppointmentDuration,
+          nextAppointmentTitle,
+        };
+      }
 
       if (!context?.contact?.birthday) {
         const birthday = new Date(context?.contact?.birthday);
         const currentDate: Date = new Date(); // Replace this with the current date
-        const ageInYears: number = differenceInYears(currentDate, birthday);
-        const ageInMonths: number = differenceInMonths(currentDate, birthday);
-        // const ageFormatted: string = format(
-        //   currentDate,
-        //   ageInYears < 1 ? 'PPPP' : 'P',
-        //   { locale: fr },
-        // );
-        context.contact.age =
-          ageInYears < 1
-            ? `(${ageInMonths} mois)`
-            : `(${ageInYears} ${ageInYears === 1 ? 'an' : 'ans'})`;
+        const ageInMilliseconds =
+          BigInt(currentDate.getMilliseconds()) -
+          BigInt(birthday.getMilliseconds());
+        const ageInYears = Math.floor(
+          Number(ageInMilliseconds / BigInt(1000 * 60 * 60 * 24 * 365.25)),
+        );
+        const ageInMonths = Math.floor(
+          Number(
+            (ageInMilliseconds % BigInt(1000 * 60 * 60 * 24 * 365.25)) /
+              BigInt(1000 * 60 * 60 * 24 * 30.4375),
+          ),
+        );
+        function formatAge(years: number, months: number) {
+          if (years === 0) {
+            return `${months} mois`;
+          } else if (years === 1) {
+            return `1 an`;
+          } else {
+            return `${years} ans`;
+          }
+        }
+        context.contact.age = formatAge(ageInYears, ageInMonths);
       }
 
       if (context?.contact?.civility) {
@@ -533,44 +560,72 @@ export class MailService {
       const temp = [];
       const phones = context?.contact?.phones;
       for (const phone of phones) {
-        temp[phone?.type?.name] = phone?.number;
+        temp[phone?.type?.name] = phone?.nbr;
       }
       context.contact.phone = temp;
+      for (const doctor of patient.contactUsers) {
+        if (doctor.id === inputs?.doctor_id) {
+          context['contact'] = {
+            ...context['contact'],
+            amountDue: doctor.amount,
+            dateLastRec: doctor.lastPayment,
+            dateLastSoin: doctor.lastCare,
+          };
+        }
+      }
     }
-    if (inputs?.payment_schedule_id) {
-      const paymentSchedule = this.paymentScheduleService.find(
-        inputs?.payment_schedule_id,
-        groupId,
-      );
-      context.payment_schedule = await this.mailerService.sendMail({
-        to: 'nguyenthanh.rise.88@gmail.com',
-        subject: 'Greeting from NestJS NodeMailer',
-        template: '/payment_schedule',
-        context: {
-          payment_schedule: paymentSchedule,
-        },
-      });
+
+    if (inputs?.correspondent_id) {
+      const correspondent = await this.dataSource
+        .getRepository(CorrespondentEntity)
+        .findOne({
+          relations: ['gender'],
+          where: { id: inputs?.correspondent_id },
+        });
+      context['correspondent'] = JSON.parse(JSON.stringify(correspondent));
+      context['correspondent->msg'] = correspondent.msg;
+      context['correspondent->type'] = correspondent.type
+        ? correspondent.type
+        : '';
+
+      if (correspondent.gender) {
+        context['correspondent'] = {
+          ...correspondent['correspondent'],
+          gender: correspondent.gender.name,
+          genderLong: correspondent.gender.longName,
+          dear: correspondent.gender.type === 'F' ? 'Chère' : 'Cher',
+        };
+      }
     }
+
+    // @TODO
+    // Récupération de l'échéancier
+    // if (!empty($inputs['payment_schedule_id'])) {
+    // 	$paymentSchedule = PaymentSchedule::find($inputs['payment_schedule_id'], $groupId);
+    // 	$context['payment_schedule'] = Registry::get('twig')->render('mails/payment_schedule.twig', [
+    // 		'payment_schedule' => $paymentSchedule
+    // 	]);
+    // }
     return context;
   }
 
   // application/Services/Mail.php => 429 -> 445
   async transform(inputs: any, context: any, signature?: any) {
     inputs.body = await this.render(
-      inputs?.body.replace(/\|.*?\}/, '}'),
+      inputs?.body.replace(/[|].*?}/, '}'),
       context,
       signature,
     );
     if (inputs?.header) {
       inputs.header.body = this.render(
-        inputs?.header.body.replace(/\|.*?\}/, '}'),
+        inputs?.header.body.replace(/[|].*?}/, '}'),
         context,
         signature,
       );
     }
     if (inputs?.footer) {
       inputs.footer.body = this.render(
-        inputs?.footer?.body.replace(/\|.*?\}/, '}'),
+        inputs?.footer?.body.replace(/[|].*?}/, '}'),
         context,
         {},
       );
@@ -643,8 +698,13 @@ export class MailService {
 
   // application/Services/Mail.php=> 454 -> 489
   async render(message: string, context: any, signature?: any) {
-    // const uniqid = Date.now().toString(); // Generate a unique identifier
+    const errParser = `</span></span></span><span style="vertical-align: inherit;"><span style="vertical-align: inherit;"><span style="vertical-align: inherit;">`;
+    while (message.includes(errParser)) {
+      message = message.replace(errParser, '');
+    }
+    // const uniqid = Date.now().toString();
 
+    // Generate a unique identifier
     // Replace the default date format in Handlebars
     Handlebars.registerHelper('formatDate', function (dateString) {
       const date = new Date(dateString);
@@ -1098,13 +1158,13 @@ export class MailService {
    *	print: Code Javascript pour impression inclus.
    *	filename: Enregistrement du PDF dans le fichier.
    */
-  async pdf(inputs: MailInputsDto, options: MailOptionsDto) {
+  async pdf(inputs: MailInputsDto, options?: MailOptionsDto) {
     this.addPage(inputs);
     this.clean(inputs);
     this.addPageBreak(inputs);
     this.addFontAndSize(inputs);
     this.resizeTable(inputs);
-    if (options.preview) {
+    if (options?.preview) {
       return inputs.body;
     }
   }
@@ -1218,14 +1278,16 @@ export class MailService {
     const htmlString =
       '<?xml encoding="utf-8" ?><div>' + inputs.body + '</div>';
 
-    // Create a new DOMParser object and parse the HTML string
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(htmlString, 'text/html');
-
-    // Example usage of evaluateXPath function
-    const xpathExpression =
-      "descendant-or-self::*[contains(@style,'font-family') or contains(@style,'font-size')]";
-    const nodes = this.evaluateXPath(xpathExpression, xmlDoc);
+    const dom = new DOMParser().parseFromString(
+      `<?xml encoding="utf-8" ?><div>${inputs.body}</div>`,
+      'text/xml',
+    );
+    const nodes = xpath.select(
+      'descendant-or-self::*[contains(@style,"font-family") or contains(@style,"font-size")]',
+      dom,
+    ) as HTMLElement[];
 
     for (const node of nodes) {
       let style = node.getAttribute('style');
@@ -1286,24 +1348,26 @@ export class MailService {
   // Function to evaluate XPath expressions
   evaluateXPath(
     xpathExpression: string,
-    contextNode: Document | HTMLElement,
+    contextNode: HTMLElement,
   ): HTMLElement[] {
-    const evaluator = new XPathEvaluator();
-    const result = evaluator.evaluate(
-      xpathExpression,
-      contextNode,
-      null,
-      XPathResult.ANY_TYPE,
-      null,
+    const parser = new DOMParser();
+    const doc: Document = parser.parseFromString(
+      contextNode.outerHTML,
+      'text/html',
     );
 
-    const nodes = [];
-    let node = result.iterateNext();
-    while (node) {
-      nodes.push(node);
-      node = result.iterateNext();
+    const select = xpath.useNamespaces({});
+    const nodes = select(xpathExpression, doc) as Node[];
+    const elementNodes: HTMLElement[] = [];
+
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      if (node.nodeType === 1) {
+        elementNodes.push(node as HTMLElement);
+      }
     }
-    return nodes;
+
+    return elementNodes;
   }
 
   removeDataMceAttributes(node: HTMLElement) {
@@ -1431,5 +1495,523 @@ export class MailService {
       </page>
     `;
     inputs.body = body;
+  }
+
+  async update(inputs: UpdateMailDto) {
+    const headerId =
+      inputs?.header && inputs?.header?.id ? inputs?.header?.id : null;
+    const footerId =
+      inputs?.footer && inputs?.footer?.id ? inputs?.footer?.id : null;
+    const type = inputs?.type ? inputs?.type : null;
+    const height = inputs?.height ? inputs?.height : null;
+    const favorite = !!inputs?.favorite ?? false;
+    const footerContent = !!inputs?.footer_content
+      ? inputs?.footer_content
+      : null;
+    const footerHeight = !!inputs?.footer_height
+      ? Number(inputs?.footer_height)
+      : 0;
+    const body = inputs?.body;
+    const title = inputs?.title;
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const res = await queryRunner.query(
+        `
+        UPDATE T_LETTERS_LET
+        SET header_id = ?,
+                  footer_id = ?,
+          LET_TITLE = ?,
+          LET_MSG = ?,
+                  footer_content = ?,
+                  footer_height = ?,
+          LET_TYPE = ?,
+          height = ?,
+          favorite = ?
+        WHERE LET_ID = ?
+      `,
+        [
+          headerId,
+          footerId,
+          title,
+          body,
+          footerContent,
+          footerHeight,
+          type,
+          height,
+          favorite,
+          inputs?.id,
+        ],
+      );
+      await queryRunner.commitTransaction();
+      return this.find(inputs?.id);
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async sendTemplate(
+    userId: number,
+    payload: SendMailDto,
+    files: Express.Multer.File[],
+  ) {
+    const mail = await this.findById(payload.id);
+    if (mail instanceof CNotFoundRequestException) return mail;
+    let mailTitle = mail.title;
+    const mailFilename = sanitizeFilename(`${mailTitle}.pdf`);
+    // const mailDirname = path ? path.join(process.cwd(), mailFilename) : '';
+    const doctor = mail.doctor;
+    const patient = mail.patient;
+    const correspondent = mail?.conrrespondent;
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    const browser = await puppeteer.launch({ headless: 'new' });
+    const page = await browser.newPage();
+
+    try {
+      const mailTo: string[] = [];
+      const messageTo: string[] = [];
+      if (payload?.other && payload.other.length !== 0) {
+        for (const mail of payload.other) {
+          if (validateEmail(mail)) {
+            mailTo.push(mail);
+            messageTo.push(mail);
+          }
+        }
+      }
+
+      if (
+        payload?.correspondent &&
+        correspondent &&
+        validateEmail(correspondent?.email)
+      ) {
+        mailTo.push(correspondent.email);
+        messageTo.push(
+          `${correspondent?.lastname} ${correspondent?.firstname} (${correspondent?.email})`,
+        );
+        if (patient) {
+          mailTitle = `${patient?.lastname} ${patient?.firstname} - ${patient?.email}`;
+        }
+      }
+
+      if (payload.patient && patient && validateEmail(patient?.email)) {
+        mailTo.push(patient.email);
+        messageTo.push(
+          `${patient?.lastname} ${patient?.firstname} (${patient?.email})`,
+        );
+        await queryRunner.query(
+          `
+        INSERT INTO T_CONTACT_NOTE_CNO (CON_ID, CNO_DATE, CNO_MESSAGE)
+        VALUES (?, CURDATE(), ?)`,
+          [
+            patient?.id,
+            `Envoi du courrier ${mailFilename} par email : ${
+              messageTo ? messageTo?.join(';') : ''
+            }`,
+          ],
+        );
+      }
+
+      if (mailTo.length === 0) {
+        return new CBadRequestException('Au moins un destinataire est requis');
+      }
+
+      const context = await this.contextMail(
+        {
+          patient_id: mail?.patient?.id ? mail.patient.id : null,
+          correspondent_id: mail?.conrrespondent?.id
+            ? mail.conrrespondent.id
+            : null,
+        },
+        mail?.doctor?.id,
+      );
+      const mailConverted = await this.transform(mail, context, mailFilename);
+      const htmlContent = mailConverted?.body
+        ? mailConverted?.body
+        : '<div></div>';
+      await page.setContent(`<div style="padding: 30px;">${htmlContent}</div>`);
+
+      const pdfBuffer = await page.pdf();
+      console.log('pdfBuffer', pdfBuffer);
+
+      // @TODO
+      // Mail::pdf($mailConverted, array('filename' => $mailDirname));
+
+      const subject = `${mail?.title} du ${dayjs(new Date()).format(
+        'YYYY-MM-DD',
+      )} de Dr ${mail?.user?.lastname} ${mail?.user?.firstname}`;
+
+      if (mail?.patient) {
+        subject.concat(
+          ` pour ${mail.patient.lastname} ${mail.patient.firstname}`,
+        );
+      }
+
+      const attachments: { filename: string; content: Buffer }[] = [];
+      for (const file of files) {
+        if (this.MAX_FILESIZE < file.size)
+          return new CBadRequestException(
+            'La taille des pièces jointes ne doit pas excéder 10Mo',
+          );
+        attachments.push({
+          filename: file.originalname,
+          content: file.buffer,
+        });
+      }
+
+      const fullName = [mail?.user?.lastname, mail?.user?.firstname].join(' ');
+      const emailTemplate = fs.readFileSync(
+        path.join(__dirname, '../../../templates/mail/mailTemplate.hbs'),
+        'utf-8',
+      );
+      const template = handlebars.compile(emailTemplate);
+      mail.title = mailFilename;
+      const mailBody = template({ fullName, mail });
+
+      const result = await this.mailTransportService.sendEmail(userId, {
+        from: doctor.email,
+        to: mailTo,
+        subject: subject,
+        template: mailBody,
+        context: mail,
+        attachments: [
+          {
+            filename: mailFilename,
+            content: pdfBuffer,
+          },
+          ...attachments,
+        ],
+      });
+
+      if (
+        result instanceof CBadRequestException ||
+        (result instanceof SuccessResponse && !result?.success)
+      )
+        return new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
+      return { success: true };
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      return new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
+    } finally {
+      await queryRunner.release();
+      await browser.close();
+    }
+  }
+  /**
+   * application/Repositories/Mail.php => 33 -> 44
+   */
+  async footers({
+    doctor_id,
+    patient_id,
+    correspondent_id,
+  }: {
+    doctor_id: number;
+    patient_id: number;
+    correspondent_id: number;
+  }) {
+    try {
+      const footers = await this.lettersRepo.find({
+        where: {
+          usrId: doctor_id,
+          type: EnumLettersType.FOOTER,
+        },
+        relations: {
+          doctor: true,
+        },
+        order: {
+          title: 'ASC',
+        },
+      });
+
+      const res: FindHeaderFooterRes[] = [];
+      if (footers.length > 0) {
+        footers.forEach((footer) => {
+          res.push({
+            id: footer.id,
+            title: footer.title,
+            body: footer.msg,
+            type: footer.type,
+            height: footer.height,
+            favorite: footer.favorite,
+            createdAt: footer.createdAt,
+            updatedAt: footer.updatedAt,
+          });
+        });
+      }
+
+      if (patient_id) {
+        const context = await this.contextMail(
+          {
+            patient_id,
+            correspondent_id,
+          },
+          doctor_id,
+        );
+
+        res.forEach(async (item) => {
+          if (item?.body) {
+            item.body = await this.render(item?.body, context);
+          }
+        });
+      }
+
+      return res;
+    } catch (err) {
+      throw new CBadRequestException(err?.message);
+    }
+  }
+
+  /**
+   * application/Repositories/Mail.php => 15 -> 25
+   */
+  async headers({
+    doctor_id,
+    patient_id,
+    correspondent_id,
+  }: {
+    doctor_id: number;
+    patient_id: number;
+    correspondent_id: number;
+  }) {
+    try {
+      const headers = await this.lettersRepo.find({
+        where: {
+          usrId: doctor_id,
+          type: EnumLettersType.HEADER,
+        },
+        relations: {
+          doctor: true,
+        },
+        order: {
+          title: 'ASC',
+        },
+      });
+
+      const res: FindHeaderFooterRes[] = [];
+      if (headers.length > 0) {
+        headers.forEach((header) => {
+          res.push({
+            id: header.id,
+            title: header.title,
+            body: header.msg,
+            type: header.type,
+            height: header.height,
+            favorite: header.favorite,
+            createdAt: header.createdAt,
+            updatedAt: header.updatedAt,
+          });
+        });
+      }
+
+      if (patient_id) {
+        const context = await this.contextMail(
+          {
+            patient_id,
+            correspondent_id,
+          },
+          doctor_id,
+        );
+
+        res.forEach(async (item) => {
+          if (item?.body) {
+            item.body = await this.render(item?.body, context);
+          }
+        });
+      }
+
+      return res;
+    } catch (err) {
+      throw new CBadRequestException(err?.message);
+    }
+  }
+
+  async preview(
+    id: number,
+    doctorId: number,
+    groupId: number,
+  ): Promise<string | CBadRequestException> {
+    try {
+      const doctor = await this.dataSource.getRepository(UserEntity).findOne({
+        where: { id: doctorId },
+        relations: {
+          medical: true,
+          address: true,
+        },
+      });
+      if (!doctor) return new CBadRequestException(ErrorCode.NOT_FOUND_DOCTOR);
+
+      const today = new Date();
+      const birthday = new Date(2000, 2, 14);
+      const diffMonth = dayjs(today).diff(dayjs(birthday), 'month');
+      const year = Math.floor(diffMonth / 12);
+      const month = diffMonth - year * 12;
+
+      const context = {
+        today: this.formatDatetime(today, { dateStyle: 'short' }),
+        todayLong: this.formatDatetime(today, { dateStyle: 'long' }),
+        logo: '',
+        praticien: {
+          fullname: `${doctor?.lastname ? doctor.lastname : ''} ${
+            doctor?.firstname ? doctor.firstname : ''
+          }`,
+          lastname: doctor?.lastname ? doctor.lastname : '',
+          firstname: doctor?.firstname ? doctor.firstname : '',
+          email: doctor?.email ? doctor.email : '',
+          phoneNumber: doctor?.phoneNumber ? doctor.phoneNumber : '',
+          gsm: doctor?.gsm ? doctor.gsm : '',
+          faxNumber: doctor?.faxNumber ? doctor.faxNumber : '',
+          numeroFacturant: doctor?.numeroFacturant
+            ? doctor.numeroFacturant
+            : '',
+          rpps: doctor?.medical?.rppsNumber ? doctor.medical.rppsNumber : '',
+          address: {
+            street: doctor?.address?.street ? doctor.address.street : '',
+            zipCode: doctor?.address?.zipCode ? doctor.address.zipCode : '',
+            city: doctor?.address?.city ? doctor.address.city : '',
+            country: doctor?.address?.country ? doctor.address.country : '',
+          },
+          medical: {
+            rppsNumber: doctor?.medical?.rppsNumber
+              ? doctor.medical.rppsNumber
+              : '',
+          },
+        },
+        contact: {
+          gender: 'M',
+          genderLong: 'Monsieur',
+          dear: 'Chèr',
+          nbr: '9999',
+          lastname: 'FAMILLEDEUX',
+          firstname: 'PHILIPPE',
+          birthday: birthday.toDateString(),
+          age: `${year > 0 ? `${year} ans` : ''} ${
+            month > 0 ? `${month} mois` : ''
+          }`,
+          email: 'philippe@familledeux.com',
+          amountDue: '9999.99',
+          dateLastRec: '2020-01-01',
+          dateLastSoin: '2020-01-01',
+          dateOfNextReminder: '2020-01-01',
+          nextAppointmentDate: '2020-01-01',
+          nextAppointmentTime: '00:00:00',
+          nextAppointmentDuration: '12:00:00',
+          nextAppointmentTitle: 'Appointment Title',
+          address: {
+            street: '515 CHE DU MAS DE ROCHET',
+            zipCode: '34170',
+            city: 'CASTELNAU LE LEZ',
+            country: 'FRANCE',
+          },
+          phones: {
+            home: '(01) 234 567 89',
+            mobile: '(01) 234 567 89',
+            office: '(01) 234 567 89',
+            fax: '(01) 234 567 89',
+          },
+          dental: {
+            insee: '1661926220098',
+            inseeKey: '96',
+          },
+        },
+        correspondent: {
+          gender: 'Mme',
+          dear: 'Chère',
+          lastname: 'FAMILLEDEUX',
+          firstname: 'ELISEE',
+          type: 'Médecin',
+          email: 'elisee@familledeux.com',
+          msg: 'correspondent msg',
+          address: {
+            street: '515 CHE DU MAS DE ROCHET',
+            zipCode: '34170',
+            city: 'CASTELNAU LE LEZ',
+            country: 'FRANCE',
+          },
+          phones: {
+            home: '(01) 234 567 89',
+            mobile: '(01) 234 567 89',
+            office: '(01) 234 567 89',
+            fax: '(01) 234 567 89',
+          },
+        },
+      };
+
+      const logoStatement = await this.dataSource.query(
+        `SELECT
+        UPL.UPL_FILENAME
+          FROM T_GROUP_GRP GRP
+          JOIN T_UPLOAD_UPL UPL
+          WHERE GRP.GRP_ID = ?
+            AND GRP.UPL_ID = UPL.UPL_ID`,
+        [groupId],
+      );
+      if (logoStatement.length > 0) {
+        const logo = logoStatement[0];
+        fs.access(`${logo['UPL_FILENAME']}`, fs.constants.F_OK, (err) => {
+          if (err) {
+            console.log('File does not exist');
+            return;
+          }
+
+          fs.readFile(`${logo['UPL_FILENAME']}`, 'utf8', (err, data) => {
+            if (err) {
+              console.log('Error reading file:', err);
+              return;
+            }
+
+            const base64Data = Buffer.from(data).toString('base64');
+            const mimeType = 'text/plain';
+            const dataUrl = `data:${mimeType};base64,${base64Data}`;
+            context.logo = `<img src=\"${dataUrl}" />`;
+          });
+        });
+      }
+      const paymentScheduleTemplate = fs.readFileSync(
+        `${process.cwd()}/templates/mail/payment_schedule.hbs`,
+        'utf-8',
+      );
+      const template = handlebars.compile(paymentScheduleTemplate);
+      const mailBody = template({
+        payment_schedule: {
+          label: 'Echéancier',
+          amount: 100.0,
+          lines: [
+            {
+              date: '2023-01-01',
+              amount: 25.0,
+            },
+            {
+              date: '2023-02-01',
+              amount: 25.0,
+            },
+            {
+              date: '2023-03-01',
+              amount: 25.0,
+            },
+            {
+              date: '2023-04-01',
+              amount: 25.0,
+            },
+          ],
+        },
+      });
+      context['payment_schedule'] = mailBody;
+      const mail = await this.findById(id);
+      if (mail instanceof CNotFoundRequestException) return mail;
+      const mailConverted = await this.transform(mail, context);
+      //  @TODO
+      // Mail::pdf($mailConverted);
+      if (mailConverted?.body) return mailConverted.body;
+      return '';
+    } catch (err) {
+      return new CBadRequestException(ErrorCode.FORBIDDEN);
+    }
   }
 }

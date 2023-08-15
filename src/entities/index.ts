@@ -134,6 +134,8 @@ import { FileTagEntity } from './file-tag.entity';
 import { LotCareSheetEntity } from './lot-caresheet.entity';
 import { CorrespondentPhoneCppEntity } from './correspondent-phone-cpp.entity';
 import { NoemioCaresheetEntity } from './noemie-caresheet.entity';
+import { LibraryActAttachmentPivotEntity } from './library-act-attachment-pivot.entity';
+import { LibraryActOdontogramPivotEntity } from './library-act-odontogram-pivot.entity';
 
 export const listEntities = [
   UserEntity,
@@ -270,6 +272,8 @@ export const listEntities = [
   LotCareSheetEntity,
   CorrespondentPhoneCppEntity,
   NoemioCaresheetEntity,
+  LibraryActAttachmentPivotEntity,
+  LibraryActOdontogramPivotEntity,
 ];
 @Module({
   imports: [TypeOrmModule.forFeature(listEntities)],

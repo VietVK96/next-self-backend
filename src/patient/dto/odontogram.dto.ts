@@ -3,6 +3,7 @@ export class ShowOdontogramDto {
   status?: 'planned' | 'current' | 'initial';
   imageToURL?: boolean;
   conId?: number;
+  pdf?: boolean;
 }
 
 export class applyStylesDto {

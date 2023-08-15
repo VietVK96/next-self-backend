@@ -445,6 +445,15 @@ export class FseEntity {
   })
   noemies?: NoemieEntity[];
 
+  /**
+   * @ORM\OneToMany(targetEntity="ActMedical", mappedBy="caresheet", cascade={"persist"})
+   */
+  @OneToMany(() => DentalEventTaskEntity, (e) => e.fse, {
+    createForeignKeyConstraints: false,
+  })
+  actMedicals?: DentalEventTaskEntity[];
+  // protected $actMedicals;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;
 

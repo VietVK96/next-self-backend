@@ -34,5 +34,6 @@ import { UserAmoEntity } from 'src/entities/user-amo.entity';
     JwtStrategy,
     GetSessionService,
   ],
+  exports: [GetSessionService, SessionService],
 })
 export class AuthModule {}

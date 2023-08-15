@@ -42,6 +42,8 @@ import { CashingController } from './cashing.controller';
 import { MailController } from './mail.controller';
 import { MailService } from './services/mail.service';
 import { listEntities } from 'src/entities';
+import { ReminderVisitService } from './services/reminderVisit.service';
+import { ReminderVisitController } from './reminderVisit.controller';
 
 @Module({
   controllers: [
@@ -62,6 +64,7 @@ import { listEntities } from 'src/entities';
     ContraindicationContactController,
     CashingController,
     MailController,
+    ReminderVisitController,
   ],
   providers: [
     UploadService,
@@ -91,6 +94,7 @@ import { listEntities } from 'src/entities';
     ContraindicationContactService,
     CashingService,
     MailService,
+    ReminderVisitService,
   ],
   imports: [
     TypeOrmModule.forFeature(listEntities),

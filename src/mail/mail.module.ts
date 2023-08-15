@@ -7,10 +7,11 @@ import { AddressService } from 'src/address/service/address.service';
 import { PermissionService } from 'src/user/services/permission.service';
 import { ContactService } from 'src/contact/services/contact.service';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
-import { EntityModule, listEntities } from 'src/entities';
+import { listEntities } from 'src/entities';
+import { MailTransportService } from './services/mailTransport.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature(listEntities), EntityModule],
+  imports: [TypeOrmModule.forFeature(listEntities)],
   controllers: [MailController],
   providers: [
     MailService,
@@ -19,6 +20,7 @@ import { EntityModule, listEntities } from 'src/entities';
     PermissionService,
     ContactService,
     PaymentScheduleService,
+    MailTransportService,
   ],
   exports: [MailService],
 })

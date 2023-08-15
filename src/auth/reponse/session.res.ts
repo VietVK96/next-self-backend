@@ -422,4 +422,7 @@ export class SessionRes {
 
   @ApiProperty()
   user?: UserUserRes;
+
+  @ApiProperty()
+  users?: Array<UserUserRes>;
 }

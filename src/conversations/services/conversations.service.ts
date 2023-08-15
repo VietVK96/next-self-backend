@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
+import { ConversationMemberEntity } from 'src/entities/conversation-member.entity';
 import { ConversationMessageEntity } from 'src/entities/conversation-message.entity';
 import { ConversationEntity } from 'src/entities/conversation.entity';
 import { UserEntity } from 'src/entities/user.entity';
@@ -9,10 +10,14 @@ import { DataSource, EntityManager, Repository } from 'typeorm';
 export class ConversationsService {
   constructor(
     private dataSource: DataSource,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
     @InjectRepository(ConversationEntity)
     private readonly conversationRepository: Repository<ConversationEntity>,
     @InjectRepository(ConversationMessageEntity)
-    private readonly conversationMessageEntity: Repository<ConversationMessageEntity>,
+    private readonly conversationMessageRepository: Repository<ConversationMessageEntity>,
+    @InjectRepository(ConversationMemberEntity)
+    private readonly conversationMemberRepository: Repository<ConversationMemberEntity>,
     @InjectEntityManager()
     private readonly entityManager: EntityManager,
   ) {}
@@ -76,7 +81,7 @@ export class ConversationsService {
     size: number,
   ) {
     const { skip, take } = this.paginate(page, size);
-    const query = await this.conversationMessageEntity
+    const query = await this.conversationMessageRepository
       .createQueryBuilder('conversation_message')
       .select([
         'conversation_message',
@@ -109,14 +114,13 @@ export class ConversationsService {
     body: string,
   ) {
     const conversationMessageEntity = new ConversationMessageEntity();
-    conversationMessageEntity.conversation = await this.entityManager.findOne(
-      ConversationEntity,
-      { where: { id: conversationId } },
-    );
-    conversationMessageEntity.user = await this.entityManager.findOne(
-      UserEntity,
-      { where: { id: userId } },
-    );
+    conversationMessageEntity.conversation =
+      await this.conversationRepository.findOne({
+        where: { id: conversationId },
+      });
+    conversationMessageEntity.user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
     conversationMessageEntity.body = body;
 
     const notificationQuery = `
@@ -154,21 +158,18 @@ export class ConversationsService {
     try {
       await queryRunner.manager.save(conversationMessageEntity);
       await queryRunner.commitTransaction();
-      conversationMessage = await this.entityManager.findOne(
-        ConversationMessageEntity,
-        {
-          where: { id: conversationMessageEntity.id },
-          select: {
-            user: {
-              id: true,
-              lastname: true,
-              firstname: true,
-              color: true,
-            },
+      conversationMessage = await this.conversationMessageRepository.findOne({
+        where: { id: conversationMessageEntity.id },
+        select: {
+          user: {
+            id: true,
+            lastname: true,
+            firstname: true,
+            color: true,
           },
-          relations: { user: true },
         },
-      );
+        relations: { user: true },
+      });
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -177,5 +178,32 @@ export class ConversationsService {
     }
 
     return conversationMessage;
+  }
+
+  async getConversationById(id: number) {
+    const conversation = await this.conversationRepository.findOneBy({ id });
+    return conversation;
+  }
+
+  async deleteConversation(id: number) {
+    if (id) {
+      return await this.conversationRepository.delete(id);
+    }
+  }
+
+  async getUserById(id: number) {
+    return await this.userRepository.findOne({
+      where: { id },
+      select: {
+        id: true,
+        lastname: true,
+        firstname: true,
+        color: true,
+      },
+    });
+  }
+
+  async createConversation(conversation: ConversationEntity) {
+    return await this.conversationRepository.save(conversation);
   }
 }

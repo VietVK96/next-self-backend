@@ -22,6 +22,8 @@ import { QuotesServices } from './services/quotes.service';
 import { PaymentSchedulesModule } from 'src/payment-schedule/payment-schedule.module';
 import { TherapeuticAlternativeService } from './services/therapeuticAlternative.service';
 import { listEntities } from 'src/entities';
+import { DevisServices } from './services/devisHN.services';
+import { MailTransportService } from 'src/mail/services/mailTransport.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature(listEntities), PaymentSchedulesModule],
@@ -44,7 +46,9 @@ import { listEntities } from 'src/entities';
     ConfigService,
     PatientOdontogramService,
     QuotesServices,
+    DevisServices,
     TherapeuticAlternativeService,
+    MailTransportService,
   ],
 })
 export class DentalModule {}

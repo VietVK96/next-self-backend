@@ -331,3 +331,25 @@ export class DevisRequestAjaxDto {
   })
   treatment_timeline?: boolean;
 }
+
+export class DevisHNGetInitChampDto {
+  @ApiProperty({
+    name: 'no_pdt',
+    required: false,
+  })
+  no_pdt?: number;
+
+  @ApiProperty({
+    name: 'no_devis',
+    required: false,
+  })
+  no_devis?: number;
+}
+
+export class DevisHNPdfDto extends DevisHNGetInitChampDto {
+  @ApiProperty({
+    name: 'duplicate',
+    required: false,
+  })
+  duplicate?: boolean;
+}

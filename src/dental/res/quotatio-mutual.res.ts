@@ -1,6 +1,7 @@
 import { PaymentItemRes } from 'src/payment-schedule/response/payment.res';
 
 export class QuotationMutualInitByRes {
+  id_devis: number;
   txch: number;
   ident_prat: string;
   ident_pat: number;
@@ -8,7 +9,7 @@ export class QuotationMutualInitByRes {
   date_de_naissance_patient: string;
   date_devis: string;
   duree_devis: number;
-  INSEE: string;
+  insee: string;
   adresse_pat: string;
   tel: string;
   organisme: string;

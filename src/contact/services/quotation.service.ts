@@ -102,7 +102,7 @@ export class QuotationService {
 
       if (!userPreferenceQuotation) {
         const userPreferenceQuotationNew: UserPreferenceQuotationEntity = {
-          usrId: user.id,
+          usrId: user?.id,
         };
         userPreferenceQuotation = await this.userPreferenceQuotation.save(
           userPreferenceQuotationNew,

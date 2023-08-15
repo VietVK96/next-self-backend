@@ -1,14 +1,36 @@
-import { Body, Controller, Post, Get, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Get,
+  UseGuards,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { TokenGuard } from 'src/common/decorator/auth.decorator';
-import { DevisRequestAjaxDto } from './dto/devisHN.dto';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
+import {
+  DevisHNGetInitChampDto,
+  DevisHNPdfDto,
+  DevisRequestAjaxDto,
+} from './dto/devisHN.dto';
 import { DevisHNServices } from './services/devisRequestAjax.service';
+import { DevisServices } from './services/devisHN.services';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 @ApiBearerAuth()
 @Controller('/dental')
 @ApiTags('Dental')
 export class DevisHNController {
-  constructor(private devisHNService: DevisHNServices) {}
+  constructor(
+    private devisHNService: DevisHNServices,
+    private devisService: DevisServices,
+  ) {}
 
   /**
    * /dental/devisHN/devisHN_requetes_ajax.php -> full file
@@ -24,5 +46,43 @@ export class DevisHNController {
   @UseGuards(TokenGuard)
   async devisHNEmail() {
     // return this.devisHNService.email();
+  }
+
+  /**
+   * dental/devisHN/devisHN_init_champs.php
+   */
+  @Get('/devisHN/init_champs')
+  @UseGuards(TokenGuard)
+  async devisHNGetInitChamp(
+    @CurrentUser() user: UserIdentity,
+    @Query() params: DevisHNGetInitChampDto,
+  ) {
+    return await this.devisService.getInitChamps(user, params);
+  }
+
+  @Get('devisHN/pdf')
+  @UseGuards(TokenGuard)
+  async devisHNGetPDF(
+    @Res() res,
+    @CurrentUser() user: UserIdentity,
+    @Query() params: DevisHNPdfDto,
+  ) {
+    try {
+      const buffer = await this.devisService.generatePDF(user, params);
+
+      res.set({
+        // pdf
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Length': buffer.length,
+        // prevent cache
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    }
   }
 }

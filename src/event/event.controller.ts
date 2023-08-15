@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { FindEventService } from './services/find.event.service';
@@ -21,6 +22,7 @@ import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
 import { EventService } from './services/event.service';
 import { DeteleEventDto } from './dto/delete.event.dto';
 import { SaveAgendaDto } from './dto/saveAgenda.event.dto';
+import { PrintReq } from './dto/printEvent.dto';
 
 @Controller('event')
 @ApiTags('Event')
@@ -39,7 +41,7 @@ export class EventController {
     @Query('resources') resources: number[],
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
-    @Query('viewCancelledEvents') viewCancelledEvents: number,
+    @Query('viewCancelledEvents') viewCancelledEvents?: number,
     @Query('confidentiality') confidentiality?: number,
   ) {
     return await this.findEventService.findAll(
@@ -110,5 +112,46 @@ export class EventController {
     @Param('id') id: number,
   ) {
     return await this.eventService.detete(id, identity.org, payload);
+  }
+
+  @Get('/print/planning')
+  @UseGuards(TokenGuard)
+  async printPlanning(@Res() res, @Query() param: PrintReq) {
+    const buffer = await this.findEventService.printPlanning(param);
+    res.set({
+      // pdf
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=print.pdf`,
+      'Content-Length': buffer.length,
+      // prevent cache
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: 0,
+    });
+    res.end(buffer);
+  }
+
+  @Get('print/calendar')
+  @UseGuards(TokenGuard)
+  async printCalendar(
+    @Res() res,
+    @Query() param: PrintReq,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    const buffer = await this.findEventService.printCalendar(
+      param,
+      identity.id,
+    );
+    res.set({
+      // pdf
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=print.pdf`,
+      'Content-Length': buffer.length,
+      // prevent cache
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: 0,
+    });
+    res.end(buffer);
   }
 }

@@ -37,6 +37,7 @@ export class GetSessionService {
     data.resources = resources;
     data.user = await this.getUser(identity.id);
     data.practitioners = await this.getPractitioners(identity.id, identity.org);
+    data.users = await this.getUsers(identity.id, identity.org);
     return data;
   }
 
@@ -356,5 +357,31 @@ export class GetSessionService {
         userId: In(practitionerIds),
       },
     });
+  }
+
+  // php/session.php(line 123 - 136)
+  async getUsers(userId: number, orgId: number) {
+    const queryBuiler = this.dataSource.createQueryBuilder();
+    const select = `    USR.USR_ID AS id,
+    USR.USR_LASTNAME AS lastname,
+    USR.USR_FIRSTNAME AS firstname,
+    USR.USR_ABBR AS shortname`;
+    queryBuiler
+      .select(select)
+      .from(UserEntity, 'USR')
+      .innerJoin(
+        LicenseEntity,
+        'T_LICENSE_LIC',
+        'USR.USR_ID = T_LICENSE_LIC.USR_ID',
+      )
+      .where(
+        'USR.organization_id = :orgId AND USR.USR_ID != :userId AND USR.USR_ID = T_LICENSE_LIC.USR_ID AND T_LICENSE_LIC.LIC_END >= CURDATE()',
+        {
+          orgId,
+          userId,
+        },
+      )
+      .orderBy('USR.USR_LASTNAME, USR.USR_FIRSTNAME');
+    return await queryBuiler.getRawMany();
   }
 }

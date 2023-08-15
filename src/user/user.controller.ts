@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+  Delete,
+  Res,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -12,8 +23,14 @@ import {
   UpdateTherapeuticParamDto,
 } from './dto/therapeutic.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { PreferenceService } from './services/preference.sevece';
+import { PreferenceService } from './services/preference.service';
 import { TokenDownloadService } from './services/token-download.service';
+import { UnpaidService } from './services/unpaid.service';
+import { UnpaidDto } from './dto/unpaid.dto';
+import { Response } from 'express';
+import { UpdatePassWordSettingDto } from './dto/user-setting.dto';
+import { ErrorCode } from 'src/constants/error';
+import { GetOneActiveRes } from './res/get-active.res';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -23,6 +40,7 @@ export class UserController {
     private userService: UserService,
     private preferenceService: PreferenceService,
     private tokenDownloadService: TokenDownloadService,
+    private unpaidService: UnpaidService,
   ) {}
 
   /**
@@ -69,5 +87,110 @@ export class UserController {
     return {
       token,
     };
+  }
+
+  // File php/user/unpaid/index.php
+  @Get('unpaid/index')
+  @UseGuards(TokenGuard)
+  async getUserUnpaidPatient(@Query() payload: UnpaidDto) {
+    return await this.unpaidService.getUserUnpaidPatient(payload);
+  }
+
+  /**
+   * File: php/third-party/export.php
+   */
+  @Get('unpaid/export')
+  async export(@Res() res: Response, @Query() payload: UnpaidDto) {
+    return await this.unpaidService.getExportQuery(res, payload);
+  }
+  // file settings/securities/password-accounting/index.php
+  @Get('/settings/securities/password-accounting')
+  @UseGuards(TokenGuard)
+  async getPassword(@CurrentUser() userIdentity: UserIdentity) {
+    return await this.userService.getPasswordAccounting(userIdentity.id);
+  }
+
+  // file settings/securities/password-accounting/store.php
+  @UseGuards(TokenGuard)
+  @Post('/settings/securities/password-accounting/create')
+  createPasswordSettings(
+    @Body() PassWordSettingDto: UpdatePassWordSettingDto,
+    @CurrentUser() user: UserIdentity,
+  ) {
+    return this.userService.createPasswordAccounting(
+      user.id,
+      PassWordSettingDto,
+    );
+  }
+
+  // file settings/securities/password-accounting/update.php
+  @UseGuards(TokenGuard)
+  @Post('/settings/securities/password-accounting/update')
+  updatePasswordSettings(
+    @Body() updatePassWordSettingDto: UpdatePassWordSettingDto,
+    @CurrentUser() user: UserIdentity,
+  ) {
+    return this.userService.updatePasswordAccounting(
+      user.id,
+      updatePassWordSettingDto,
+    );
+  }
+
+  // file settings/securities/password-accounting/delete.php
+  @UseGuards(TokenGuard)
+  @Delete('/settings/securities/password-accounting/delete')
+  deletePasswordSettings(
+    @Body() PassWordSettingDto: UpdatePassWordSettingDto,
+    @CurrentUser() user: UserIdentity,
+  ) {
+    return this.userService.deletePasswordAccounting(
+      user.id,
+      PassWordSettingDto,
+    );
+  }
+  //settings/group/users.php
+  //all line
+  @Get('/active')
+  @UseGuards(TokenGuard)
+  async getActiveUser(@CurrentUser() identity: UserIdentity) {
+    try {
+      return await this.userService.getActiveUser(identity.org);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_USER, error);
+    }
+  }
+
+  @Get('/active/:id')
+  @UseGuards(TokenGuard)
+  async getOneActiveUser(
+    @CurrentUser() identity: UserIdentity,
+    @Param('id') id: number,
+  ) {
+    try {
+      return await this.userService.getOneActiveUser(
+        identity.id,
+        id,
+        identity.org,
+      );
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_USER, error);
+    }
+  }
+
+  //settings/group/user.php
+  //all line
+  @Put('/active/:id')
+  @UseGuards(TokenGuard)
+  async updateActiveUser(
+    @CurrentUser() identity: UserIdentity,
+    @Param('id') id: number,
+    @Body() body: GetOneActiveRes,
+  ) {
+    return await this.userService.updateActiveUser(
+      identity.id,
+      id,
+      identity.org,
+      body,
+    );
   }
 }
