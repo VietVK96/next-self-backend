@@ -62,9 +62,8 @@ import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import * as fs from 'fs';
 import * as handlebars from 'handlebars';
-import { isNull } from 'util';
-import { ExceedingEnum } from 'src/constants/act';
-
+import * as dayjs from 'dayjs';
+import { DEFAULT_LOCALE } from 'src/constants/default';
 @Injectable()
 export class FactureServices {
   constructor(
@@ -885,21 +884,38 @@ export class FactureServices {
         path.join(__dirname, '../../../templates/mail/facture/invoice.hbs'),
         'utf-8',
       );
+      handlebars.registerHelper({
+        isset: (v1: any) => {
+          if (Number(v1)) return true;
+          return v1 ? true : false;
+        },
+      });
       const template = handlebars.compile(emailTemplate);
+
       const fullName = [invoice?.user?.lastname, invoice?.user?.firstname].join(
         ' ',
       );
-      const mailBody = template({ fullName, invoice, homePhoneNumber });
+      const date = dayjs(invoice?.date)
+        .locale(DEFAULT_LOCALE)
+        .format('DD MMM YYYY');
+      const mailBody = template({
+        fullName,
+        invoice,
+        homePhoneNumber,
+        date,
+      });
+      console.log(
+        '🚀 ~ file: facture.services.ts:892 ~ FactureServices ~ factureEmail ~ invoice:',
+        invoice,
+      );
 
-      const mail = await this.mailTransportService.sendEmail(identity.id, {
+      await this.mailTransportService.sendEmail(identity.id, {
         from: invoice?.user?.email,
         to: invoice?.patient?.email,
-        subject: `Facture du ${format(
-          new Date(invoice?.date),
-          'dd/MM/yyyy',
-        )} de Dr ${[invoice?.user?.lastname, invoice?.user?.firstname].join(
-          ' ',
-        )} pour ${[
+        subject: `Facture du ${date} de Dr ${[
+          invoice?.user?.lastname,
+          invoice?.user?.firstname,
+        ].join(' ')} pour ${[
           invoice?.patient?.lastname,
           invoice?.patient?.firstname,
         ].join(' ')}`,
