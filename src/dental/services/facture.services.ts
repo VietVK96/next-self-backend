@@ -663,7 +663,7 @@ export class FactureServices {
         //   return;
         // }
         const billLines = await this.billLineRepository.find({
-          where: { id: id || 0 },
+          where: { bilId: id || 0 },
           order: { pos: 'ASC' },
         });
 
@@ -675,12 +675,12 @@ export class FactureServices {
             dentsLigne: billLine?.teeth || '',
             descriptionLigne: billLine?.msg,
             prixLigne: billLine?.amount || 0,
-            name: billLine?.msg.replace(/^[^-]*-\s?/, ''),
+            name: billLine?.msg?.replace(/^[^-]*-\s?/, ''),
             cotation: billLine?.cotation,
             secuAmount: billLine?.secuAmount,
             materials: billLine?.materials,
           };
-          res.details.push(dentail);
+          res?.details?.push(dentail);
         }
         return res;
       } else {
@@ -705,15 +705,6 @@ export class FactureServices {
         },
       });
       const disableColumnByGroup = [158, 181];
-      const modesPaiements = {
-        non_payee: 'Non Payée',
-        carte: 'Carte',
-        espece: 'Espèce',
-        cheque: 'Chèque',
-        virement: 'Virement',
-        prelevement: 'Prélèvement',
-        autre: 'Autre',
-      };
       if (checkId) {
         await this.billRepository.update(id, { lock: 1 } as BillEntity);
       }
@@ -754,7 +745,7 @@ export class FactureServices {
             left: '5mm',
             top: '5mm',
             right: '5mm',
-            bottom: '5mm',
+            bottom: '25mm',
           },
         };
         const pdf = await createPdf(filePath, options, data);
@@ -802,6 +793,11 @@ export class FactureServices {
               0,
             )
           : 0;
+        facture.modePaiement;
+        console.log(
+          '🚀 ~ file: facture.services.ts:806 ~ FactureServices ~ generatePdf ~ facture.modePaiement:',
+          facture.modePaiement,
+        );
         const data = {
           isGroup: disableColumnByGroup.some((e) => e === identity.org),
           duplicata,
@@ -817,7 +813,7 @@ export class FactureServices {
           detailsAmount: detailsAmount.toFixed(2),
           detailsPrixLigne: detailsPrixLigne.toFixed(2),
           billSignatureDoctor: facture.billSignatureDoctor,
-          modesPaiements,
+          modePaiement: facture.modePaiement,
         };
         const options = {
           format: 'A4',
@@ -827,7 +823,7 @@ export class FactureServices {
             left: '5mm',
             top: '5mm',
             right: '5mm',
-            bottom: '5mm',
+            bottom: '25mm',
           },
         };
         const pdfBuffer = await customCreatePdf({
@@ -895,7 +891,7 @@ export class FactureServices {
       );
       const mailBody = template({ fullName, invoice, homePhoneNumber });
 
-      await this.mailTransportService.sendEmail(identity.id, {
+      const mail = await this.mailTransportService.sendEmail(identity.id, {
         from: invoice?.user?.email,
         to: invoice?.patient?.email,
         subject: `Facture du ${format(
@@ -926,13 +922,16 @@ export class FactureServices {
           },
         ],
       });
-
       await this.contactNoteRepository.save({
         conId: contactId,
         message: `Envoi par email de la facture du ${billDateAsString} de ${userLastname} ${userFirstname}`,
       });
       return { message: true };
     } catch (err) {
+      console.log(
+        '🚀 ~ file: facture.services.ts:937 ~ FactureServices ~ factureEmail ~ err:',
+        err,
+      );
       throw new CBadRequestException(`${err?.message}`);
     }
   }
