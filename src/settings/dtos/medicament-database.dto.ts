@@ -10,3 +10,11 @@ export class FindMedicamentDatabaseDto {
   @ApiProperty()
   baseLocation?: number;
 }
+
+export class FindDetailMedicamentDatabaseDto {
+  @ApiProperty()
+  produitId?: number;
+
+  @ApiProperty()
+  patientId?: number;
+}

@@ -21,7 +21,10 @@ import { AccountService } from './services/account.service';
 import { UpdateGoogleCalendarDto } from './dtos/google-calendar.dto';
 import { NotificationService } from './services/notification.service';
 import { MedicamentDatabaseService } from './services/medicament-database.service';
-import { FindMedicamentDatabaseDto } from './dtos/medicament-database.dto';
+import {
+  FindDetailMedicamentDatabaseDto,
+  FindMedicamentDatabaseDto,
+} from './dtos/medicament-database.dto';
 import { AccountWzAgendaSubmitDto } from './dtos/wzagenda.dto';
 
 @ApiBearerAuth()
@@ -171,6 +174,21 @@ export class SettingsController {
     @Query() query: FindMedicamentDatabaseDto,
   ) {
     return await this.medicamentDatabaseService.findMedicamentDatabase(
+      identity.id,
+      query,
+    );
+  }
+
+  //php/bcb/prescription/find.php
+  //all lines
+  @Get('/medicament-database/find/detail')
+  @UseGuards(TokenGuard)
+  async findDetailMedicamentDatabase(
+    @CurrentUser() identity: UserIdentity,
+    @Query() query: FindDetailMedicamentDatabaseDto,
+  ) {
+    return await this.medicamentDatabaseService.findDetailMedicamentDatabase(
+      identity.org,
       identity.id,
       query,
     );
