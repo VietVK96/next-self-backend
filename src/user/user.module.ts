@@ -13,6 +13,8 @@ import { TokenDownloadService } from './services/token-download.service';
 import { JWT_SECRET_DOWNLOAD } from 'src/constants/jwt';
 import { UnpaidService } from './services/unpaid.service';
 import { ContactEntity } from 'src/entities/contact.entity';
+import { ContactUserEntity } from 'src/entities/contact-user.entity';
+import { CreditBalancesService } from './services/credit.balances.service';
 
 @Module({
   imports: [
@@ -21,6 +23,7 @@ import { ContactEntity } from 'src/entities/contact.entity';
       UserPreferenceEntity,
       UserMedicalEntity,
       ContactEntity,
+      ContactUserEntity,
     ]),
     AddressModule,
     JwtModule.register({
@@ -34,6 +37,7 @@ import { ContactEntity } from 'src/entities/contact.entity';
     PreferenceService,
     TokenDownloadService,
     UnpaidService,
+    CreditBalancesService,
   ],
   exports: [PermissionService, UserService, PreferenceService, UnpaidService],
   controllers: [UserController],
