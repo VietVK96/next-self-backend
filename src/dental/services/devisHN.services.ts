@@ -12,7 +12,7 @@ import { UserPreferenceQuotationDisplayOdontogramType } from 'src/entities/user-
 import { UserEntity } from 'src/entities/user.entity';
 import { MailService } from 'src/mail/services/mail.service';
 import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
-import { DevisHNGetInitChampDto } from '../dto/devisHN.dto';
+import { DevisHNGetInitChampDto, DevisHNPdfDto } from '../dto/devisHN.dto';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { ContactEntity } from 'src/entities/contact.entity';
 import * as dayjs from 'dayjs';
@@ -24,6 +24,8 @@ import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
 import { PatientOdontogramService } from 'src/patient/service/patientOdontogram.service';
+import { customCreatePdf } from 'src/common/util/pdf';
+import * as path from 'path';
 
 @Injectable()
 export class DevisServices {
@@ -397,8 +399,8 @@ export class DevisServices {
           where: { id: user.org },
           relations: { logo: true },
         });
-        const logoId = null;
-        const logoFilename = null;
+        let logoId = null;
+        let logoFilename = null;
         let logo = organization?.logo;
         let filename = '',
           extension = '';
@@ -408,6 +410,8 @@ export class DevisServices {
           const dir = await this.configService.get('app.uploadDir');
           logo.fileName = `${dir}/${logo.token}${extension}`;
           logo = await this.uploadRepository.save(logo);
+          logoFilename = logo?.fileName;
+          logoId = logo?.id;
           if (fs.existsSync(filename)) {
             fs.copyFile(`${filename}`, `${logo?.fileName}`, (err) => {
               console.log('-----data-----', err);
@@ -866,5 +870,143 @@ export class DevisServices {
     }
 
     return res;
+  }
+
+  async generatePDF(
+    user: UserIdentity,
+    { no_pdt, duplicate, no_devis }: DevisHNPdfDto,
+  ) {
+    try {
+      const initital = await this.getInitChamps(user, { no_pdt, no_devis });
+      let color = '#FFFFFF';
+      if (initital?.couleur === 'blue') color = '#DDDDFF';
+      else if (initital?.couleur === 'grey') color = '#EEEEEE';
+
+      const prestations = initital?.actes?.map((acte) => {
+        const operation = acte?.typeLigne === 'operation';
+        const ligneSeparation = acte?.typeLigne === 'ligneSeparation';
+        const ligneBlanche = acte?.typeLigne === 'ligneBlanche';
+        return {
+          ...acte,
+          operation,
+          ligneSeparation,
+          ligneBlanche,
+        };
+      });
+      const dataTemp = {
+        color,
+        duplicata: duplicate,
+        label: initital?.titreDevisHN,
+        date: initital?.date_devis,
+        duration: initital?.duree_devis,
+        reference: initital?.reference,
+        amount: initital?.quotationAmount,
+        amount_repaid: initital?.quotationPersonRepayment,
+        description: initital?.infosCompl,
+        doctor: {
+          rpps: initital?.practitionerRpps,
+          details: initital?.identPrat,
+          address_details: initital?.adressePrat,
+          signature: initital?.quotationSignaturePraticien,
+        },
+        patient: {
+          number: `${initital?.customerNumber ?? 0}`?.padStart(6, '0'),
+          lastname: initital?.patientLastname,
+          firstname: initital?.patientFirstname,
+          insee: initital?.patientInsee,
+          details: initital?.identPat,
+          signature: initital?.quotationSignaturePatient,
+          civility: {
+            long_name: initital?.patientCivilityLongName,
+          },
+        },
+        prestations,
+        odontogram: {
+          initial: initital?.schemaInitial,
+          current: initital?.schemaActuel,
+          planned: initital?.schemaDevis,
+        },
+        src: '',
+        width: 0,
+        height: 0,
+      };
+
+      const options = {
+        format: 'A4',
+        displayHeaderFooter: true,
+        headerTemplate: `<div></div>`,
+        footerTemplate: `<div></div>`,
+        margin: {
+          left: '5mm',
+          top: '5mm',
+          right: '5mm',
+          bottom: '5mm',
+        },
+        landscape: false,
+      };
+
+      const files = [];
+
+      const filePath = path.join(
+        process.cwd(),
+        'templates/pdf/devisHN',
+        'devis_hn_standand.hbs',
+      );
+
+      files.push({ path: filePath, data: dataTemp });
+
+      if (initital?.logoFilename && fs.existsSync(initital?.logoFilename)) {
+        const imageBuffer = fs.readFileSync(filePath);
+        const base64Image = imageBuffer.toString('base64');
+        dataTemp.src = base64Image;
+        dataTemp.width = 350;
+        dataTemp.height = 100;
+      }
+
+      if (initital?.paymentScheduleId) {
+        const mail =
+          await this.mailService.findOnePaymentScheduleTemplateByDoctor(
+            initital?.id_user,
+          );
+        const mailContext = await this.mailService.context({
+          doctor_id: initital?.id_user,
+          patient_id: initital?.id_contact,
+          payment_schedule_id: initital?.paymentScheduleId,
+        });
+        const mailConverted = await this.mailService.transform(
+          mail,
+          mailContext,
+        );
+        const pdf = await this.mailService.pdf(mailConverted, {
+          preview: true,
+        });
+        files.push({ type: 'string', data: pdf });
+      }
+
+      if (initital.schemas !== 'none') {
+        const filePathSchemas = path.join(
+          process.cwd(),
+          'templates/pdf/devisHN',
+          'odontogram.hbs',
+        );
+        files.push({ path: filePathSchemas, data: dataTemp });
+      }
+
+      for (const acte of initital?.actes ?? []) {
+        const mail = await this.mailService.find(acte?.id_devisHN_ligne);
+        if (mail?.patient) {
+          const content = await this.mailService.pdf(mail, { preview: true });
+          files.push({ type: 'string', data: content });
+        }
+      }
+
+      return await customCreatePdf({
+        files,
+        options: options,
+        helpers: {},
+      });
+    } catch (err) {
+      throw new CBadRequestException(err);
+    }
   }
 }
