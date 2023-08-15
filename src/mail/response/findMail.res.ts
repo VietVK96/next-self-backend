@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { HeaderFooterInfo, PersonInfoDto } from '../dto/relationClass.dto';
+import { UserEntity } from 'src/entities/user.entity';
 
 export class FindMailRes {
   @ApiProperty()
@@ -46,4 +47,7 @@ export class FindMailRes {
 
   @ApiProperty()
   footer?: HeaderFooterInfo;
+
+  @ApiProperty()
+  user?: UserEntity;
 }

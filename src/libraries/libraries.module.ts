@@ -17,6 +17,7 @@ import { TraceabilityEntity } from 'src/entities/traceability.entity';
 import { LibraryActAttachmentPivotEntity } from 'src/entities/library-act-attachment-pivot.entity';
 import { LibraryActAssociationEntity } from 'src/entities/library-act-association.entity';
 import { LibraryActOdontogramPivotEntity } from 'src/entities/library-act-odontogram-pivot.entity';
+import { LibraryActQuantityTariffEntity } from 'src/entities/library-act-quantity-tariff.entity';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { LibraryActOdontogramPivotEntity } from 'src/entities/library-act-odonto
       LibraryActAssociationEntity,
       LibraryActAttachmentPivotEntity,
       LibraryActOdontogramPivotEntity,
+      LibraryActQuantityTariffEntity,
     ]),
   ],
   controllers: [LibrariesController],

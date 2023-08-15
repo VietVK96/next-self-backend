@@ -1,9 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, In, Not, Repository } from 'typeorm';
+import {
+  And,
+  DataSource,
+  FindOptionsWhere,
+  In,
+  IsNull,
+  LessThanOrEqual,
+  Like,
+  MoreThan,
+  MoreThanOrEqual,
+  Not,
+  Repository,
+} from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   EnregistrerFactureDto,
   FactureEmailDto,
+  FactureFindEventTasksDto,
   PrintPDFDto,
 } from '../dto/facture.dto';
 import { BillEntity } from 'src/entities/bill.entity';
@@ -12,7 +25,10 @@ import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
-import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
+import {
+  DentalEventTaskEntity,
+  EnumDentalEventTaskExceeding,
+} from 'src/entities/dental-event-task.entity';
 import { EventEntity } from 'src/entities/event.entity';
 import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
@@ -29,20 +45,31 @@ import { AddressEntity } from 'src/entities/address.entity';
 import { createPdf } from '@saemhco/nestjs-html-pdf';
 import * as path from 'path';
 import { checkDay } from 'src/common/util/day';
-import { checkId } from 'src/common/util/number';
-import { DetailsRes, InitFactureRes } from '../res/facture.res';
+import { checkBoolean, checkId, checkNumber } from 'src/common/util/number';
+import {
+  AjaxEventTaskRes,
+  AjaxSeancesCaseRes,
+  DetailsRes,
+  InitFactureRes,
+} from '../res/facture.res';
 import { customCreatePdf } from 'src/common/util/pdf';
 import { facturePdfFooter } from '../constant/htmlTemplate';
 import { br2nl } from 'src/common/util/string';
 import { validateEmail } from 'src/common/util/string';
 import { MailService } from 'src/mail/services/mail.service';
-import { format } from 'date-fns';
+import { format, getDayOfYear } from 'date-fns';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { MailTransportService } from 'src/mail/services/mailTransport.service';
+import * as fs from 'fs';
+import * as handlebars from 'handlebars';
+import { isNull } from 'util';
+import { ExceedingEnum } from 'src/constants/act';
 
 @Injectable()
 export class FactureServices {
   constructor(
     private mailService: MailService,
+    private mailTransportService: MailTransportService,
     @InjectRepository(BillEntity)
     private billRepository: Repository<BillEntity>,
     @InjectRepository(BillLineEntity)
@@ -73,16 +100,20 @@ export class FactureServices {
     private contactNoteRepository: Repository<ContactNoteEntity>,
     private dataSource: DataSource,
   ) {}
-  async update(payload: EnregistrerFactureDto) {
+  async requestAjax(payload: EnregistrerFactureDto) {
+    const id_facture = checkId(payload?.id_facture);
+    const id_facture_ligne = checkId(payload?.id_facture_ligne);
+    const user_id = checkId(payload?.user_id);
+    const patient_id = checkId(payload?.patient_id);
     switch (payload.operation) {
       case 'enregistrer': {
         try {
           const idBill = await this.billRepository.findOne({
-            where: { id: payload?.id_facture },
+            where: { id: id_facture || 0 },
           });
           if (idBill) {
             await this.billRepository.save({
-              id: payload?.id_facture,
+              id: id_facture,
               date: payload?.dateFacture,
               name: payload?.titreFacture,
               identPrat: payload?.identPrat,
@@ -106,12 +137,10 @@ export class FactureServices {
       case 'supprimerLigne': {
         try {
           const billlines = await this.billLineRepository.find({
-            where: { id: payload?.id_facture_ligne },
+            where: { id: id_facture_ligne || 0 },
           });
           if (billlines) {
-            return await this.billLineRepository.delete(
-              payload?.id_facture_ligne,
-            );
+            return await this.billLineRepository.delete(id_facture_ligne);
           }
         } catch {
           return "Erreur -5 : Problème durant la suppression d'une ligne de la facture ... ";
@@ -121,7 +150,7 @@ export class FactureServices {
       case 'enregistrerEnteteParDefaut': {
         try {
           const medicalHeader = await this.medicalHeaderRepository.findOne({
-            where: { userId: payload?.user_id },
+            where: { userId: user_id || 0 },
           });
           if (!medicalHeader) {
             const medicalHeaderData = this.medicalHeaderRepository.create({
@@ -148,7 +177,7 @@ export class FactureServices {
         try {
           if (payload?.typeLigne === 'operation') {
             const billLine = await this.billLineRepository.findOne({
-              where: { id: payload?.id_facture_ligne },
+              where: { id: id_facture_ligne || 0 },
             });
             if (!billLine) {
               const dataBillLine = this.billLineRepository.create({
@@ -157,7 +186,7 @@ export class FactureServices {
                 cotation: payload?.cotation,
                 secuAmount: payload?.secuAmount,
                 materials: payload?.materials,
-                bilId: payload?.id_facture,
+                bilId: id_facture,
                 date: payload?.dateLigne,
                 msg: payload?.descriptionLigne,
                 pos: payload?.noSequence,
@@ -166,38 +195,38 @@ export class FactureServices {
               const data = await this.billLineRepository.save(dataBillLine);
               return data.id;
             }
-            await this.billLineRepository.update(payload?.id_facture_ligne, {
+            await this.billLineRepository.update(id_facture_ligne, {
               amount: payload?.prixLigne,
               teeth: payload?.dentsLigne,
               cotation: payload?.cotation,
               secuAmount: payload?.secuAmount,
               materials: payload?.materials,
-              bilId: payload?.id_facture,
+              bilId: id_facture,
               date: payload?.dateLigne,
               msg: payload?.descriptionLigne,
               pos: payload?.noSequence,
               type: payload?.typeLigne,
             });
-            return payload?.id_facture_ligne;
+            return id_facture_ligne;
           } else {
             const billLine = await this.billLineRepository.findOne({
-              where: { id: payload?.id_facture },
+              where: { id: id_facture || 0 },
             });
             if (!billLine) {
               const billLineData = this.billLineRepository.create({
-                bilId: payload?.id_facture_ligne,
+                bilId: id_facture_ligne,
                 pos: payload?.noSequence,
                 type: payload?.typeLigne,
               });
               const data = await this.billLineRepository.save(billLineData);
               return data.id;
             }
-            await this.billLineRepository.update(payload?.id_facture_ligne, {
-              bilId: payload?.id_facture_ligne,
+            await this.billLineRepository.update(id_facture_ligne, {
+              bilId: id_facture_ligne,
               pos: payload?.noSequence,
               type: payload?.typeLigne,
             });
-            return payload?.id_facture_ligne;
+            return id_facture_ligne;
           }
         } catch {
           throw new CBadRequestException(ErrorCode.STATUS_NOT_FOUND);
@@ -206,134 +235,156 @@ export class FactureServices {
 
       case 'seances':
         {
-          if (payload?.displayOnlyActsRealized === 'on') {
-            const dataEventTasks = await this.eventTaskRepository.find({
-              where: {
-                usrId: payload?.user_id,
-                conId: payload?.patient_id,
-                status: 0,
-                amountSaved: null,
-              },
-              relations: ['event', 'dental'],
-            });
-            const dataFilDate = dataEventTasks?.filter((dataEventTask) => {
-              return (
-                new Date(dataEventTask?.date)?.getTime() >=
-                  new Date(payload?.dateDeb).getTime() &&
-                new Date(dataEventTask?.date)?.getTime() <=
-                  new Date(payload?.dateFin).getTime()
-              );
-            });
-            const ngap_keys = await this.ngapKeyRepository.find();
-            const res: { date: string; data: any[] }[] = [];
-            for (const data of dataFilDate) {
-              const current_ngap_key = ngap_keys?.find((key) => {
-                return key?.id === data?.dental?.ngapKeyId;
-              });
-              const exist = res.find((r) => r.date === data.date);
-              const newData = {
-                date: data?.date,
-                name: data?.name,
-                amount: data?.amount,
-                ccamFamily: data?.ccamFamily,
-                teeth: data?.dental?.teeth,
-                secuAmount: data?.dental?.secuAmount,
-                exceeding: data?.dental?.exceeding,
-                type: data?.dental?.type,
-                ccamCode: data?.dental?.ccamCode,
-                coef: data?.dental?.coef,
-                ngapKeyName: current_ngap_key?.name,
-              };
-              if (exist) {
-                exist.data.push(newData);
-              } else {
-                res.push({
-                  date: data.date,
-                  data: [newData],
-                });
-              }
-            }
-            return res;
-          }
-          if (payload?.displayOnlyActsListed) {
-            const dataEventTasks = await this.eventTaskRepository.find({
-              where: {
-                usrId: payload?.user_id,
-                conId: payload?.patient_id,
-                amountSaved: null,
-              },
-              relations: ['event', 'dental'],
-            });
-            const dataFilDate = dataEventTasks?.filter((dataEventTask) => {
-              return (
-                new Date(dataEventTask?.date)?.getTime() >=
-                  new Date(payload?.dateDeb).getTime() &&
-                new Date(dataEventTask?.date)?.getTime() <=
-                  new Date(payload?.dateFin).getTime()
-              );
-            });
-            const ngap_keys = await this.ngapKeyRepository.find();
-            const res: { date: string; data: any[] }[] = [];
-            for (const data of dataFilDate) {
-              const current_ngap_key = ngap_keys?.find((key) => {
-                return key?.id === data?.dental?.ngapKeyId;
-              });
-              const exist = res.find((r) => r.date === data.date);
-              const newData = {
-                date: data?.date,
-                name: data?.name,
-                amount: data?.amount,
-                ccamFamily: data?.ccamFamily,
-                teeth: data?.dental?.teeth,
-                secuAmount: data?.dental?.secuAmount,
-                exceeding: data?.dental?.exceeding,
-                type: data?.dental?.type,
-                ccamCode: data?.dental?.ccamCode,
-                coef: data?.dental?.coef,
-                ngapKeyName: current_ngap_key?.name,
-              };
-              if (exist) {
-                exist.data.push(newData);
-              } else {
-                res.push({
-                  date: data.date,
-                  data: [newData],
-                });
-              }
-            }
-            return res;
-          }
+          try {
+            let eventTasks = await this.findEventTasks(payload);
 
-          if (payload?.displayOnlyProsthesis) {
-            const dataEventTasks = await this.eventTaskRepository.find({
-              where: {
-                usrId: payload?.user_id,
-                conId: payload?.patient_id,
-                amountSaved: null,
-              },
-              relations: ['event', 'dental'],
-            });
-            const dataFilDate = dataEventTasks?.filter((dataEventTask) => {
-              return (
-                new Date(dataEventTask?.date)?.getTime() >=
-                  new Date(payload?.dateDeb).getTime() &&
-                new Date(dataEventTask?.date)?.getTime() <=
-                  new Date(payload?.dateFin).getTime()
-              );
-            });
-            // const ngap_keys = await this.ngapKeyRepository.find();
-            return dataFilDate?.map((data) => {
-              // const current_ngap_key = ngap_keys?.find((key) => {
-              //   return key?.id === data?.dental?.ngapKeyId;
-              // });
-              return {
-                ccamFamily: data?.ccamFamily,
+            if (checkBoolean(payload?.displayOnlyProsthesis)) {
+              eventTasks = eventTasks.filter((eventTask) => {
+                return this.isProsthesis(eventTask?.ccamFamily);
+              });
+            }
+
+            let date = '';
+            let i = 0;
+            const result = eventTasks.reduce((result, eventTask) => {
+              let amoAmount = checkNumber(eventTask?.dental?.secuAmount);
+              let cotation = '';
+
+              switch (eventTask?.dental?.type) {
+                case 'CCAM':
+                  cotation = eventTask?.dental?.ccamCode;
+                  amoAmount = amoAmount * checkNumber(eventTask?.dental?.coef);
+                  break;
+
+                case 'NGAP':
+                  cotation =
+                    ('   ' + (eventTask?.dental?.ngapKey?.name || ''))?.slice(
+                      -3,
+                    ) +
+                    ' ' +
+                    eventTask.dental.coef;
+                  break;
+
+                default:
+                  cotation = 'NPC';
+                  break;
+              }
+
+              if (
+                eventTask?.dental?.exceeding === EnumDentalEventTaskExceeding.N
+              ) {
+                amoAmount = 0;
+              }
+
+              const eTask: AjaxEventTaskRes = {
+                ...eventTask,
+                cotation,
+                date: eventTask?.date,
+                name: eventTask?.name,
+                amount: eventTask?.amount,
+                ccamFamily: eventTask?.ccamFamily,
+                teeth: eventTask?.dental?.teeth,
+                secuAmount: eventTask?.dental?.secuAmount,
+                exceeding: eventTask?.dental?.exceeding,
+                type: eventTask?.dental?.type,
+                ccamCode: eventTask?.dental?.ccamCode,
+                coef: eventTask?.dental?.coef,
+                ngapKeyName: eventTask?.dental?.ngapKey?.name,
               };
-            });
+
+              if (date && eventTask.date === date) {
+                result[i].data.push(eTask);
+              } else {
+                if (date === '') {
+                  result[0] = {
+                    date: eventTask.date,
+                    data: [eTask],
+                  };
+                } else {
+                  result[i + 1] = {
+                    date: eventTask.date,
+                    data: [eTask],
+                  };
+                  i++;
+                }
+              }
+              date = eventTask.date;
+              return result;
+            }, [] as AjaxSeancesCaseRes[]);
+
+            return result;
+          } catch (error) {
+            console.log(
+              '🚀 ~ file: facture.services.ts:342 ~ FactureServices ~ requestAjax ~ error:',
+              error,
+            );
+            throw new CBadRequestException(ErrorCode.NOT_FOUND);
           }
         }
         break;
     }
+  }
+
+  /**
+   * ecoophp/dental/facture/facture_requetes_ajax.php 34 -72
+   * @param payload : FactureFindEventTasksDto
+   * @returns EventTaskEntity[]
+   */
+  async findEventTasks(
+    payload: FactureFindEventTasksDto,
+  ): Promise<EventTaskEntity[]> {
+    const user_id = checkId(payload?.user_id);
+    const patient_id = checkId(payload?.patient_id);
+    const where: FindOptionsWhere<EventTaskEntity> = {
+      usrId: user_id,
+      conId: patient_id,
+      date: And(
+        MoreThanOrEqual(payload?.dateDeb),
+        LessThanOrEqual(payload?.dateFin),
+      ),
+      amountBackup: IsNull(),
+    };
+    if (checkBoolean(payload?.displayOnlyActsRealized)) {
+      where.status = MoreThan(0);
+    }
+    if (checkBoolean(payload?.displayOnlyActsListed)) {
+      where.dental = [
+        { ccamCode: Not(IsNull()) },
+        {
+          ngapKey: {
+            name: Not(IsNull()),
+          },
+        },
+      ];
+    }
+    return await this.eventTaskRepository.find({
+      select: {
+        id: true,
+        date: true,
+        name: true,
+        amount: true,
+        dental: {
+          teeth: true,
+          secuAmount: true,
+          exceeding: true,
+          type: true,
+          ccamCode: true,
+          coef: true,
+          ngapKey: {
+            name: true,
+          },
+        },
+      },
+      relations: {
+        dental: {
+          ngapKey: true,
+        },
+      },
+      where,
+      order: {
+        date: 'ASC',
+      },
+    });
   }
 
   async getInitChamps(
@@ -462,10 +513,10 @@ export class FactureServices {
         const addressEntity = contact?.adrId;
         identPat = contact?.lastname + '' + contact?.firstname;
         const address = await this.addressRepository.findOne({
-          where: { id: addressEntity },
+          where: { id: addressEntity || 0 },
         });
         if (address) {
-          identPat =
+          identPat +=
             '\n' +
             address?.street +
             '\n' +
@@ -497,7 +548,9 @@ export class FactureServices {
           infosCompl,
           modePaiement,
         });
-      } catch {}
+      } catch (err) {
+        throw new CBadRequestException(err);
+      }
     }
   }
 
@@ -529,39 +582,32 @@ export class FactureServices {
     modePaiement: string;
   }) {
     let noFacture: string;
-    const dateFormat = '%Y%j';
     const currentDate = new Date();
     const formattedDate =
-      currentDate.getFullYear().toString() +
-      (currentDate.getMonth() + 1).toString().padStart(2, '0') +
-      currentDate.getDate().toString().padStart(2, '0');
+      currentDate.getFullYear().toString() + getDayOfYear(currentDate);
 
     try {
-      const stm = await this.dataSource.query(
-        `
-      SELECT
-      MAX(T_BILL_BIL.BIL_NBR) AS noFacture
-      FROM T_BILL_BIL
-      WHERE T_BILL_BIL.USR_ID = ?
-      AND T_BILL_BIL.BIL_NBR LIKE CONCAT('u', ?, '-', DATE_FORMAT(NOW(), ?), '-', '%')`,
-        [id_user, id_user, dateFormat],
-      );
-
-      noFacture = stm[0].noFacture;
-      if (noFacture) {
-        noFacture = id_user + '-' + formattedDate + '-00001';
+      const stm = await this.billRepository.findOne({
+        where: {
+          usrId: id_user,
+          nbr: Like(`u${id_user}-${formattedDate}%`),
+        },
+        order: { nbr: 'DESC' },
+      });
+      noFacture = stm?.nbr;
+      if (!noFacture) {
+        noFacture = 'u' + id_user + '-' + formattedDate + '-00001';
       } else {
         noFacture =
           'u' +
           id_user +
           '-' +
-          new Date().toISOString().slice(0, 10).replace(/-/g, '') +
+          formattedDate +
           '-' +
           String(
             Number(noFacture.substring(noFacture.lastIndexOf('-') + 1)) + 1,
           ).padStart(5, '0');
       }
-
       const bill = await this.billRepository.save({
         nbr: noFacture,
         creationDate: dateFacture,
@@ -571,13 +617,13 @@ export class FactureServices {
         identContact: identPat,
         payload: modePaiement,
         infosCompl: infosCompl,
-        id_user: id_user,
+        usrId: id_user,
         conId: contactId,
-        id_devis: id_devis,
-      });
+        dqoId: id_devis !== 0 ? id_devis : null,
+      } as BillEntity);
       return bill;
     } catch (err) {
-      console.error(
+      throw new CBadRequestException(
         '-1002 : Probl&egrave;me durant la création de la facture. Merci de réessayer plus tard.',
       );
     }
@@ -587,7 +633,7 @@ export class FactureServices {
     id = checkId(id);
     try {
       const bill = await this.billRepository.findOne({
-        where: { id, delete: 0 },
+        where: { id: id || 0, delete: 0 },
         relations: ['user', 'patient'],
       });
       if (bill) {
@@ -616,7 +662,7 @@ export class FactureServices {
         //   return;
         // }
         const billLines = await this.billLineRepository.find({
-          where: { id },
+          where: { id: id || 0 },
           order: { pos: 'ASC' },
         });
 
@@ -652,7 +698,7 @@ export class FactureServices {
       const id = checkId(req?.id);
       const duplicata = Boolean(req?.duplicate);
       const invoice = await this.billRepository.findOne({
-        where: { id },
+        where: { id: id || 0 },
         relations: {
           user: true,
         },
@@ -792,6 +838,7 @@ export class FactureServices {
   }
 
   async factureEmail({ id_facture }: FactureEmailDto, identity: UserIdentity) {
+    id_facture = checkId(id_facture);
     try {
       const qb = this.dataSource
         .getRepository(BillEntity)
@@ -799,7 +846,7 @@ export class FactureServices {
       const result = await qb
         .select('bill.date', 'billDate')
         .addSelect('usr.email', 'userEmail')
-        .addSelect('usr.lastnamne', 'userLastname')
+        .addSelect('usr.lastname', 'userLastname')
         .addSelect('usr.firstname', 'userFirstname')
         .addSelect('con.id', 'contactId')
         .addSelect('con.email', 'contactEmail')
@@ -809,6 +856,7 @@ export class FactureServices {
         .innerJoin('bill.contact', 'con')
         .where('bill.id = :id', { id: id_facture })
         .getRawOne();
+
       const billDate = result?.billDate;
       const billDateAsString = format(billDate, 'dd/MM/yyyy');
       const userEmail = result?.userEmail;
@@ -827,13 +875,22 @@ export class FactureServices {
         new Date(billDate),
         'dd_MM_yyyy',
       )}.pdf`;
-      const invoice = await this.billRepository.findOneOrFail({
+      const invoice = await this.billRepository.findOne({
         relations: ['user', 'user.address', 'user.setting', 'patient'],
-        where: { id: id_facture },
+        where: { id: id_facture || 0 },
       });
-
       const homePhoneNumber = invoice?.user?.phoneNumber ?? null;
-      await this.mailService.sendFactureEmail({
+      const emailTemplate = fs.readFileSync(
+        path.join(__dirname, '../../../templates/mail/facture/invoice.hbs'),
+        'utf-8',
+      );
+      const template = handlebars.compile(emailTemplate);
+      const fullName = [invoice?.user?.lastname, invoice?.user?.firstname].join(
+        ' ',
+      );
+      const mailBody = template({ fullName, invoice, homePhoneNumber });
+
+      await this.mailTransportService.sendEmail(identity.id, {
         from: invoice?.user?.email,
         to: invoice?.patient?.email,
         subject: `Facture du ${format(
@@ -845,7 +902,7 @@ export class FactureServices {
           invoice?.patient?.lastname,
           invoice?.patient?.firstname,
         ].join(' ')}`,
-        template: 'mail/facture/invoice.hbs',
+        template: mailBody,
         context: {
           ...invoice,
           creationDate: format(new Date(invoice?.date), 'MMMM dd, yyyy'),
@@ -860,7 +917,7 @@ export class FactureServices {
         attachments: [
           {
             filename: filename,
-            context: null,
+            content: await this.generatePdf({ id: id_facture }, identity),
           },
         ],
       });
@@ -873,5 +930,50 @@ export class FactureServices {
     } catch (err) {
       throw new CBadRequestException(`${err?.message}`);
     }
+  }
+
+  /**
+   * ecoophp/application/Service/CcamFamilyService.php
+   * Retourne si la variable donnée est un code de regroupement de prothèse.
+   *
+   * @param string $family code de regroupement ccam
+   * @return bool
+   */
+  isProsthesis(family: string): boolean {
+    /**
+     * @var array liste des codes de regroupement de prothèses
+     */
+    const PROSTHESIS_FAMILIES = [
+      'BR1',
+      'CM0',
+      'CT0',
+      'CT1',
+      'CZ0',
+      'CZ1',
+      'IC0',
+      'IC1',
+      'ICO',
+      'IMP',
+      'IN1',
+      'INO',
+      'PA0',
+      'PA1',
+      'PAM',
+      'PAR',
+      'PDT',
+      'PF0',
+      'PF1',
+      'PFC',
+      'PFM',
+      'PT0',
+      'RA0',
+      'RE1',
+      'RF0',
+      'RPN',
+      'RS0',
+      'SU0',
+      'SU1',
+    ];
+    return PROSTHESIS_FAMILIES.includes(family);
   }
 }

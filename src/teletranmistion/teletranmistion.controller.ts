@@ -1,4 +1,12 @@
-import { Body, Controller, Param, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { Request } from 'express';
 import { ApiBearerAuth, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { SaveTeletranmistionDto } from './dto/save-teletranmistion.dto';
@@ -8,6 +16,7 @@ import {
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
+import { ConsulterUtlDto } from './dto/user-teletransmission.dto';
 
 @Controller('/teletransmission')
 @ApiTags('Teletransmission')
@@ -38,6 +47,26 @@ external_reference_id
       doctorId,
       payload,
       req.headers['user-agent'] ?? '',
+    );
+  }
+
+  @Post('/account/interfaceage')
+  @UseGuards(TokenGuard)
+  async postInterfaceageActivation(
+    @CurrentUser() identity: UserIdentity,
+    @Body() consulterUtlDto: ConsulterUtlDto,
+  ) {
+    return await this.userTeletranmistionService.postInterfaceageActivation(
+      identity.id,
+      consulterUtlDto,
+    );
+  }
+
+  @Get('/account/interfaceage')
+  @UseGuards(TokenGuard)
+  async getInterfaceageActivation(@CurrentUser() identity: UserIdentity) {
+    return await this.userTeletranmistionService.getInterfaceageActivation(
+      identity.org,
     );
   }
 }

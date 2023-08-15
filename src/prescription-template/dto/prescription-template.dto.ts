@@ -1,5 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+export class SortablePrescriptionTemplateDto {
+  @ApiProperty()
+  name?: string;
+
+  @ApiProperty()
+  id?: number;
+
+  @ApiProperty()
+  position?: number;
+}
 export class CreatePrescriptionTemplateDto {
   @ApiProperty()
   name?: string;

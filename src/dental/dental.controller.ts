@@ -36,6 +36,7 @@ import { ErrorCode } from 'src/constants/error';
 import { QuotationServices } from './services/quotation.service';
 import { QuotationMutualServices } from './services/quotaion-mutual.services';
 import { QuotationMutualInitChampsDto } from './dto/quotatio-mutual.dto';
+import { QuotationInitChampsDto } from './dto/quotation.dto';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -75,7 +76,7 @@ export class DentalController {
   @Post('/facture/facture_requetes_ajax')
   @UseGuards(TokenGuard)
   async update(@Body() payload: EnregistrerFactureDto) {
-    return this.factureServices.update(payload);
+    return this.factureServices.requestAjax(payload);
   }
 
   /// dental/facture/facture_pdf.php
@@ -248,13 +249,24 @@ export class DentalController {
     return this.quotationMutualServices.sendMail(identity);
   }
 
+  // ecoophp/dental/quotation/devis_requetes_ajax.php
   @Post('/quotation/devis_requetes_ajax')
   @UseGuards(TokenGuard)
-  async quotationMutualRequestsAjax(
+  async quotationRequestsAjax(
     @Body() req: QuotationDevisRequestAjaxDto,
     @CurrentUser() identity: UserIdentity,
   ) {
     return this.quotationServices.quotationDevisRequestsAjax(req, identity);
+  }
+
+  // ecoophp/dental/quotation/devis_init_champs.php
+  @Get('/quotation/init')
+  @UseGuards(TokenGuard)
+  async quotationInitChamps(
+    @Query() req: QuotationInitChampsDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.quotationServices.initChamps(req, identity);
   }
 
   @Get('/facture/facture-email')

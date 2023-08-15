@@ -17,7 +17,9 @@ import { TokenGuard, UserIdentity } from 'src/common/decorator/auth.decorator';
 import { AccountSecurityService } from './services/account-security.service';
 import { UpdatePassWordDto } from './dtos/user-setting.dto';
 import { AccountService } from './services/account.service';
+import { UpdateGoogleCalendarDto } from './dtos/google-calendar.dto';
 import { NotificationService } from './services/notification.service';
+import { AccountWzAgendaSubmitDto } from './dtos/wzagenda.dto';
 
 @ApiBearerAuth()
 @ApiTags('Settings')
@@ -116,11 +118,43 @@ export class SettingsController {
     return await this.accountService.fetchAccountWzagenda(identity);
   }
 
+  @Get('/account/interfaceage')
+  @UseGuards(TokenGuard)
+  async fetchAccountPractitioners(@CurrentUser() identity: UserIdentity) {
+    return await this.accountService.fetchAccountPractitioners(identity.org);
+  }
+  //settings/account/google.php
+  @Get('/account/google-calendar')
+  @UseGuards(TokenGuard)
+  async getGoogleCalendar(@CurrentUser() identity: UserIdentity) {
+    return await this.accountService.getGoogleCalendar(identity.id);
+  }
+
+  //settings/account/google.php
+  @Post('/account/google-calendar')
+  @UseGuards(TokenGuard)
+  async updateGoogleCalendar(
+    @CurrentUser() identity: UserIdentity,
+    @Body() body: UpdateGoogleCalendarDto,
+  ) {
+    return await this.accountService.updateGoogleCalendar(identity, body);
+  }
+
   @Get('/notification/historical')
   @UseGuards(TokenGuard)
   async getNotificationHistorical(@CurrentUser() identity: UserIdentity) {
     return await this.notificationService.getNotificationHistorical(
       identity.id,
     );
+  }
+
+  //settings/account/wzagenda-submit.php
+  @Post('/account/wzagenda-submit')
+  @UseGuards(TokenGuard)
+  async wzAgendaSubmit(
+    @CurrentUser() identity: UserIdentity,
+    @Body() body: AccountWzAgendaSubmitDto,
+  ) {
+    return await this.accountService.accountWzAgendaSubmit(identity, body);
   }
 }

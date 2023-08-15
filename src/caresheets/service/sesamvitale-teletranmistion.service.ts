@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import {
   IChangementEta,
+  IConsulterListeCpseRsp,
   IConsulterTeleTrans,
+  IConsulterUtlDetailRsp,
+  IConsulterFacture,
   IListeDateChangementEtat,
   IRecevoirDetailListeRsp,
   IRecevoirRsp,
@@ -89,5 +92,67 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
     const xml = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd"><soapenv:Body><jux:MarquerRsp><xsd:appelMarquerRsp><xsd:listeRsp>${idtRspXml}</xsd:listeRsp></xsd:appelMarquerRsp></jux:MarquerRsp></soapenv:Body></soapenv:Envelope>`;
 
     await this.sendRequest('MarquerRsp', xml);
+  }
+
+  async consulterListeCps(idFitness: string): Promise<IConsulterListeCpseRsp> {
+    const xml = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">
+  <soapenv:Body>
+    <jux:ConsulterListeCps>
+      <xsd:appelConsulterListeCps>
+        <xsd:numFiness>${idFitness}</xsd:numFiness>
+      </xsd:appelConsulterListeCps>
+    </jux:ConsulterListeCps>
+  </soapenv:Body>
+</soapenv:Envelope>`;
+
+    const data = await this.sendRequest<IConsulterListeCpseRsp>(
+      'ConsulterListeCps',
+      xml,
+    );
+
+    return data;
+  }
+
+  async consulterUtlDetail(
+    idFitness: string,
+    nationalIdentifierNumber: string,
+  ): Promise<IConsulterUtlDetailRsp> {
+    const ArchivedValue = false;
+    const idFitnessNumber = idFitness.slice(0, -1);
+    const idNationalIdentifierNumber = nationalIdentifierNumber.slice(0, -1);
+    const isArchivedValue = ArchivedValue.toString();
+    const xml = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">
+  <soapenv:Body>
+    <jux:ConsulterUtlDetail>
+      <xsd:appelConsulterUtlDetail>
+        <xsd:numFacturationSansCle>${idFitnessNumber}</xsd:numFacturationSansCle>
+        <xsd:numIdtNatSansCle>${idNationalIdentifierNumber}</xsd:numIdtNatSansCle>
+        <xsd:estArchive>${isArchivedValue}</xsd:estArchive>
+      </xsd:appelConsulterUtlDetail>
+    </jux:ConsulterUtlDetail>
+  </soapenv:Body>
+</soapenv:Envelope>`;
+    const data = await this.sendRequest<IConsulterUtlDetailRsp>(
+      'ConsulterUtlDetail',
+      xml,
+    );
+    return data;
+  }
+
+  async consulterFacture(idFacture: number): Promise<IConsulterFacture> {
+    const xml = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">
+    <soapenv:Body>
+      <jux:ConsulterFacture>
+        <xsd:appelConsulterFacture>
+          <xsd:idFacture>${idFacture}</xsd:idFacture>
+        </xsd:appelConsulterFacture>
+      </jux:ConsulterFacture>
+    </soapenv:Body>
+  </soapenv:Envelope>`;
+    const data = await this.sendRequest<IConsulterFacture>(
+      'ConsulterFacture',
+      xml,
+    );
+    return data;
   }
 }

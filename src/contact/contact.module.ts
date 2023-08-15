@@ -67,6 +67,8 @@ import { MailController } from './mail.controller';
 import { MailService } from './services/mail.service';
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
 import { OrganizationEntity } from 'src/entities/organization.entity';
+import { ReminderVisitService } from './services/reminderVisit.service';
+import { ReminderVisitController } from './reminderVisit.controller';
 
 @Module({
   controllers: [
@@ -87,6 +89,7 @@ import { OrganizationEntity } from 'src/entities/organization.entity';
     ContraindicationContactController,
     CashingController,
     MailController,
+    ReminderVisitController,
   ],
   providers: [
     UploadService,
@@ -116,6 +119,7 @@ import { OrganizationEntity } from 'src/entities/organization.entity';
     ContraindicationContactService,
     CashingService,
     MailService,
+    ReminderVisitService,
   ],
   imports: [
     TypeOrmModule.forFeature([

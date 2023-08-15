@@ -18,7 +18,7 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { saveGlossaryEntryPayload } from './dto/saveEntry.glossaries.dto';
 import { SaveGlossaryDto } from './dto/save.glossaries.dto';
-import { UpdateGlossaryDto } from './dto/update.glossary.dto';
+import { SortGlossaryDto, UpdateGlossaryDto } from './dto/update.glossary.dto';
 import { UpdateGlossaryEntryDto } from './dto/update.glossaryEntry.dto';
 
 @ApiBearerAuth()
@@ -69,6 +69,12 @@ export class GlossriesController {
   @UseGuards(TokenGuard)
   async deleteGlossary(@Param('id') id: number) {
     return this.glossariesService.deleteGlossary(id);
+  }
+
+  @Put('sortable')
+  @UseGuards(TokenGuard)
+  async sortableContraindications(@Body() payload: SortGlossaryDto[]) {
+    return await this.glossariesService.sortable(payload);
   }
 
   @Post('/:id')

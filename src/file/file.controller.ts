@@ -36,7 +36,7 @@ export class FileController {
    *
    */
   @Get('/download/:id')
-  @UseGuards(TokenGuard)
+  @UseGuards(TokenDownloadGuard)
   async downloadFile(
     @CurrentUser() user: UserIdentity,
     @Param('id') id: number,
@@ -99,7 +99,7 @@ export class FileController {
       streamFile.pipe(res);
     } catch (error) {
       const streamFile = resizeThumbnail(
-        join(process.cwd(), 'front/no_image.png'),
+        join(process.cwd(), 'resources/front/no_image.png'),
         'jpg',
       );
 

@@ -38,3 +38,24 @@ export class DetailsRes {
   secuAmount?: number;
   materials?: string;
 }
+
+export class AjaxSeancesCaseRes {
+  date: string;
+  data: AjaxEventTaskRes[];
+}
+
+export class AjaxEventTaskRes {
+  id?: number;
+  name?: string;
+  date?: string;
+  amount?: number;
+  cotation?: string;
+  ccamFamily?: string;
+  teeth?: string;
+  secuAmount?: number;
+  exceeding?: string;
+  type?: string;
+  ccamCode?: string;
+  coef?: number;
+  ngapKeyName?: string;
+}
