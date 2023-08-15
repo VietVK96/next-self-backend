@@ -33,7 +33,7 @@ export class OrderContextBilling {
 
   jsonSerialize(): any {
     return Object.fromEntries(
-      Object.entries(this).filter(([key, value]) => value !== null),
+      Object.entries(this).filter(([, value]) => value !== null),
     );
   }
 

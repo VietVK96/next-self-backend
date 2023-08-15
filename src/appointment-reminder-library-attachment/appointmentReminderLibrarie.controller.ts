@@ -9,7 +9,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
   TokenGuard,
@@ -17,10 +17,7 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { AppointmentReminderLibrarieService } from './services/AppointmentReminderLibrarie.service';
 import { CreateAppointmentReminderLibrarieQueryDto } from './dto/appointment-reminder-librarie.dto';
-import {
-  AnyFilesInterceptor,
-  FilesInterceptor,
-} from '@nestjs/platform-express';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 
 @ApiBearerAuth()
 @ApiTags('AppointmentReminderLibrarie')
