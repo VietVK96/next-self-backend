@@ -43,7 +43,6 @@ export class CreditBalancesService {
       const queryBuilder: SelectQueryBuilder<ContactUserEntity> =
         this.contactUserRepository.createQueryBuilder('patientBalance');
       queryBuilder.leftJoinAndSelect('patientBalance.patient', 'patient');
-      // queryBuilder.leftJoinAndSelect('patient.user', 'user');
       queryBuilder.where('patientBalance.usr_id = :usr_id', { usr_id: id });
       queryBuilder.andWhere('patientBalance.amount < 0');
 

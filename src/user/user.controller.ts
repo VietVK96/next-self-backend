@@ -23,7 +23,7 @@ import {
   UpdateTherapeuticParamDto,
 } from './dto/therapeutic.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { PreferenceService } from './services/preference.sevece';
+import { PreferenceService } from './services/preference.service';
 import { TokenDownloadService } from './services/token-download.service';
 import { UnpaidService } from './services/unpaid.service';
 import { UnpaidDto } from './dto/unpaid.dto';
