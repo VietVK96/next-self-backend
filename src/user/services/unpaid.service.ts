@@ -374,8 +374,6 @@ export class UnpaidService {
       totalAmount,
     };
 
-    console.log(totalAmount);
-
     const filePath = path.join(process.cwd(), 'templates/unpaid', 'index.hbs');
 
     const files = [{ path: filePath, data }];
