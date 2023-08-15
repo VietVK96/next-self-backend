@@ -98,7 +98,7 @@ export class EmailSettingService {
           .getRepository(EmailAccountEntity)
           .findOne({ where: { USRId: userId } })
       ) {
-        throw new CBadRequestException(ErrorCode.EXISTING_EMAIL);
+        return new CBadRequestException(ErrorCode.EXISTING_EMAIL);
       }
       emailAccount.USRId = userId;
       emailAccount.organizationId = orgId;
@@ -118,8 +118,9 @@ export class EmailSettingService {
         emailOutgoingServer = new EmailOutgoingServerEntity();
       }
       emailOutgoingServer.emailAccountId = savedEmailAccount.id;
-      emailOutgoingServer.hostname = payload.outgoingServer.hostname;
-      emailOutgoingServer.port = payload.outgoingServer.port;
+      emailOutgoingServer.hostname =
+        payload.outgoingServer.hostname || 'smtp.gmail.com';
+      emailOutgoingServer.port = payload.outgoingServer.port || 587;
       emailOutgoingServer.connectionEstablished = 1;
       emailOutgoingServer.username = crypto.DES.encrypt(
         payload.outgoingServer.username,
@@ -160,7 +161,7 @@ export class EmailSettingService {
       await Promise.all(promises);
 
       await queryRunner.commitTransaction();
-      return;
+      return { success: true };
     } catch (e) {
       await queryRunner.rollbackTransaction();
       return new CBadRequestException(ErrorCode.SAVE_FAILED);
@@ -188,6 +189,9 @@ export class EmailSettingService {
         return mailInfo;
       }
       await this.sendMailTest(mailInfo, mailInfo.emailAddress);
+      return {
+        success: true,
+      };
     } catch (e) {
       return new CBadRequestException(ErrorCode.FORBIDDEN);
     }

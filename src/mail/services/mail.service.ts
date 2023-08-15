@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as fs from 'fs';
 import * as handlebars from 'handlebars';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import * as sharp from 'sharp';
 import * as xpath from 'xpath';
 import { differenceInMonths, differenceInYears, format } from 'date-fns';
