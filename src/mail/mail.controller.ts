@@ -8,8 +8,17 @@ import {
   UseGuards,
   Delete,
   Param,
+  UseInterceptors,
+  Req,
+  UploadedFiles,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiHeader,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CreateUpdateMailDto } from './dto/createUpdateMail.dto';
 import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
 import {
@@ -19,6 +28,10 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { ContextMailDto, FindVariableDto } from './dto/findVariable.dto';
 import { TranformDto } from './dto/transform.dto';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { Request } from 'express';
+import { SendMailDto } from './dto/sendMail.dto';
+import { UpdateMailDto } from './dto/mail.dto';
 
 @ApiBearerAuth()
 @Controller('/mails')
@@ -77,6 +90,7 @@ export class MailController {
     return await this.mailService.delete(id);
   }
 
+  // php/mail/transform/php
   @Post('/variable')
   @ApiHeader({
     name: 'X-DoctorId',
@@ -108,5 +122,89 @@ export class MailController {
       contextParam.patient_id = Number(payload.correspondent.id);
     const context = await this.mailService.contextMail(contextParam, docId);
     return await this.mailService.transform(payload, context);
+  }
+
+  // php/mail/send.php
+  @Post('/send')
+  @UseInterceptors(FilesInterceptor('files'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+        contact: {
+          type: 'number',
+        },
+      },
+    },
+  })
+  @UseGuards(TokenGuard)
+  async send(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body() body: SendMailDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return await this.mailService.sendTemplate(identity.id, body, files);
+  }
+  /**
+   *  php/mail/update.php
+   */
+  @UseGuards(TokenGuard)
+  @Post('/update')
+  async update(@Body() payload: UpdateMailDto) {
+    return await this.mailService.update(payload);
+  }
+
+  // php/mail/footers.php 100%
+  @Get('/footers')
+  @UseGuards(TokenGuard)
+  @ApiHeader({
+    name: 'X-DoctorId',
+    description: 'DoctorId',
+  })
+  async footers(
+    @CurrentDoctor() docId: number,
+    @Query('patient_id') patient_id?: number,
+    @Query('correspondent_id') correspondent_id?: number,
+  ) {
+    return await this.mailService.footers({
+      doctor_id: docId,
+      patient_id,
+      correspondent_id,
+    });
+  }
+
+  // php/mail/footers.php 100%
+  @Get('/headers')
+  @UseGuards(TokenGuard)
+  @ApiHeader({
+    name: 'X-DoctorId',
+    description: 'DoctorId',
+  })
+  async headers(
+    @CurrentDoctor() docId: number,
+    @Query('patient_id') patient_id?: number,
+    @Query('correspondent_id') correspondent_id?: number,
+  ) {
+    return await this.mailService.headers({
+      doctor_id: docId,
+      patient_id,
+      correspondent_id,
+    });
+  }
+
+  // php/mail/preview.php
+  @Get('/preview')
+  @UseGuards(TokenGuard)
+  async preview(
+    @Query('id') id: number,
+    @CurrentDoctor() docId: number,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.mailService.preview(id, docId, identity.org);
   }
 }

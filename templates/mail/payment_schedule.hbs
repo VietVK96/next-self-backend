@@ -1,22 +1,23 @@
 <table style="width: 100%; border-collapse: separate;" cellspacing="4" border="0">
     <thead>
         <tr>
-            <th style="width: 70%; padding: 2mm 1mm;">{{ trans("Echéances") }}</th>
-            <th style="width: 30%; padding: 2mm 1mm;">{{ trans("Montants") }}</th>
+            <th style="width: 70%; padding: 2mm 1mm;">Echéances</th>
+            <th style="width: 30%; padding: 2mm 1mm;">Montants</th>
         </tr>
     </thead>
     <tfoot>
         <tr>
-            <th style="width: 70%; text-align: right; padding: 2mm 1mm;">{{ trans("Total") }}</th>
-            <th style="width: 30%; text-align: right; padding: 2mm 1mm;">{{ payment_schedule.amount|localizednumber('currency') }}</th>
+            <th style="width: 70%; text-align: right; padding: 2mm 1mm;">Total</th>
+            <th style="width: 30%; text-align: right; padding: 2mm 1mm;"> {{ payment_schedule.amount}}</th>
         </tr>
     </tfoot>
     <tbody>
-        {% for line in payment_schedule.lines %}
+        {{#each payment_schedule.lines }}
         <tr>
-            <td style="width: 70%; background-color: #F6F6F6; padding: 2mm 1mm;">{{ line.date|localizeddate('short', 'none') }}</td>
-            <td style="width: 30%; background-color: #F6F6F6; text-align: right; padding: 2mm 1mm;">{{ line.amount|localizednumber('currency') }}</td>
+            <td style="width: 70%; background-color: #F6F6F6; padding: 2mm 1mm;"> {{ this.date}}</td>
+            <td style="width: 30%; background-color: #F6F6F6; text-align: right; padding: 2mm 1mm;">{{ this.amount}}
+            </td>
         </tr>
-        {% endfor %}
+        {{/each}}
     </tbody>
 </table>

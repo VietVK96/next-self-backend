@@ -9,6 +9,11 @@ export interface IConsulterTeleTrans {
   etatLotDre?: string;
 }
 
+export interface IConsulterFacture {
+  etatLotFse?: number;
+  etatLotDre?: number;
+}
+
 export interface IListeDateChangementEtat {
   lot?: {
     idLot?: string[];
@@ -75,4 +80,40 @@ export interface IRecevoirRsp {
       fichier?: string[];
     }[];
   }[];
+}
+
+export interface IConsulterListeCpseRsp {
+  erreur?: string[];
+  carteCps?: {
+    idNational?: string[];
+    numNatPs?: string[];
+    fseAutorise?: string[];
+    lotAutorise?: string[];
+    nomPs?: string[];
+    prenomPs?: string[];
+    typeCarte?: string[];
+    finess?: string[];
+    numFiness?: string[];
+  }[];
+}
+
+export interface IConsulterUtlDetailRsp {
+  erreur?: string[];
+  utilisateur?: {
+    idtUtil?: string[];
+    nomPs?: string[];
+    prenomPs?: string[];
+    estArchive?: string[];
+    statut?: IConsulterUtlStatut[];
+  }[];
+}
+
+export interface IConsulterUtlStatut {
+  codeConvention: string[];
+  numIdtNat: string[];
+  numNatPs: string[];
+  nomUtf: string[];
+  numStructure: string[];
+  numFiness: string[];
+  codeSpecialite: string[];
 }

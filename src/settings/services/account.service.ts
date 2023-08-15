@@ -3,7 +3,7 @@ import { ErrorCode } from 'src/constants/error';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Repository, Not } from 'typeorm';
 import { UserEntity } from 'src/entities/user.entity';
 import { SyncWzagendaUserEntity } from 'src/entities/sync-wzagenda-user.entity';
 import { WzagendaRes } from '../res/index.res';
@@ -11,6 +11,14 @@ import { UserService } from 'src/user/services/user.service';
 import { google } from 'googleapis';
 import { UpdateGoogleCalendarDto } from '../dtos/google-calendar.dto';
 import { SuccessResponse } from 'src/common/response/success.res';
+import { AccountStatusEnum } from 'src/enum/account-status.enum';
+import { AccountWzAgendaSubmitDto } from '../dtos/wzagenda.dto';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+import * as https from 'https';
+import { firstValueFrom } from 'rxjs';
+import { parseStringPromise } from 'xml2js';
+import { format } from 'date-fns';
 
 @Injectable()
 export class AccountService {
@@ -20,6 +28,8 @@ export class AccountService {
     private userService: UserService,
     @InjectRepository(SyncWzagendaUserEntity)
     private syncWzagendaUserRepository: Repository<SyncWzagendaUserEntity>,
+    private config: ConfigService,
+    private readonly httpService: HttpService,
     private dataSource: DataSource,
   ) {}
 
@@ -49,6 +59,106 @@ export class AccountService {
     } catch (err) {
       throw new CBadRequestException(ErrorCode?.NOT_FOUND);
     }
+  }
+
+  async accountWzAgendaSubmit(
+    identity: UserIdentity,
+    req: AccountWzAgendaSubmitDto,
+  ): Promise<any> {
+    if (!req?.calendarId) {
+      throw new CBadRequestException(ErrorCode?.NOT_FOUND_CALENDAR_ID);
+    }
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+    <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="https://secure.wz-agenda.net/webservices/3.1/server.php#wzcalendar" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:checkSubscriptionId><is xsi:type="xsd:string">${req?.calendarId}</is></ns1:checkSubscriptionId></SOAP-ENV:Body></SOAP-ENV:Envelope>`;
+    const res = await this.sendRequestWzAgenda<any>(xml);
+    if (res == '0') {
+      throw new CBadRequestException(ErrorCode.CAN_NOT_REQUEST_TO_WZ_AGENDA);
+    }
+    const params: any = {};
+    const wzAgendaUser = await this.syncWzagendaUserRepository.findOne({
+      where: { id: identity?.id },
+    });
+    params.id = identity?.id;
+    return await this.syncWzagendaUserRepository.save({
+      ...params,
+      calendarId: req?.calendarId,
+      lastModified: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+    });
+  }
+
+  private async sendRequestWzAgenda<T>(
+    contents: string,
+    mock?: string,
+  ): Promise<T> {
+    const url = this.config.get<string>('app.wzagenda.wsdl');
+    const headers = {
+      'Content-Type': 'text/xml; charset=utf-8',
+    };
+    const httpsAgent = new https.Agent({
+      rejectUnauthorized: false,
+    });
+
+    let { data } = await firstValueFrom(
+      this.httpService.post(url, contents, {
+        headers,
+        httpsAgent,
+      }),
+    );
+
+    if (mock && mock !== '') {
+      data = mock;
+    }
+    data = data.replaceAll('xsi:nil="true"', '');
+    const resJson = await parseStringPromise(data);
+    if (
+      !resJson ||
+      !resJson['SOAP-ENV:Envelope'] ||
+      !resJson['SOAP-ENV:Envelope']['SOAP-ENV:Body'] ||
+      !resJson['SOAP-ENV:Envelope']['SOAP-ENV:Body'][0] ||
+      !resJson['SOAP-ENV:Envelope']['SOAP-ENV:Body'][0][
+        'ns4:checkSubscriptionIdResponse'
+      ] ||
+      !resJson['SOAP-ENV:Envelope']['SOAP-ENV:Body'][0][
+        'ns4:checkSubscriptionIdResponse'
+      ][0] ||
+      !resJson['SOAP-ENV:Envelope']['SOAP-ENV:Body'][0][
+        'ns4:checkSubscriptionIdResponse'
+      ][0]['success'] ||
+      !resJson['SOAP-ENV:Envelope']['SOAP-ENV:Body'][0][
+        'ns4:checkSubscriptionIdResponse'
+      ][0]['success'][0]
+    ) {
+      throw new CBadRequestException(ErrorCode.CAN_NOT_REQUEST_TO_WZ_AGENDA);
+    }
+    return resJson['SOAP-ENV:Envelope']['SOAP-ENV:Body'][0][
+      'ns4:checkSubscriptionIdResponse'
+    ][0]['success'][0]['_'];
+  }
+
+  async fetchAccountPractitioners(organizationId: number) {
+    const user = await this.userRepository.find({
+      where: {
+        client: Not(AccountStatusEnum.TERMINATED),
+        organizationId,
+      },
+      relations: {
+        medical: true,
+      },
+      order: {
+        lastname: 'ASC',
+        firstname: 'ASC',
+      },
+    });
+    return user
+      .filter((x) => x.medical)
+      .map((y) => {
+        return {
+          id: y?.id,
+          lastname: y?.lastname,
+          firstname: y?.firstname,
+          medical: y?.medical,
+        };
+      });
   }
 
   async getGoogleCalendar(userId: number) {

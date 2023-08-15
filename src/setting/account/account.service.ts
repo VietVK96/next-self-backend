@@ -223,7 +223,12 @@ export class AccountSettingService {
           payload.company_name.trim() !== ''
             ? payload.company_name.trim()
             : null;
-      if (payload.freelance) user.freelance = payload.freelance;
+      if (typeof payload.freelance === 'number')
+        user.freelance = payload.freelance;
+      if (typeof payload.agaMember === 'number')
+        user.agaMember = payload.agaMember;
+      if (typeof payload.droit_permanent_depassement === 'number')
+        user.droitPermanentDepassement = payload.droit_permanent_depassement;
 
       if (user.medical) {
         const medical = user.medical;

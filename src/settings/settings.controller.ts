@@ -22,6 +22,7 @@ import { UpdateGoogleCalendarDto } from './dtos/google-calendar.dto';
 import { NotificationService } from './services/notification.service';
 import { MedicamentDatabaseService } from './services/medicament-database.service';
 import { FindMedicamentDatabaseDto } from './dtos/medicament-database.dto';
+import { AccountWzAgendaSubmitDto } from './dtos/wzagenda.dto';
 
 @ApiBearerAuth()
 @ApiTags('Settings')
@@ -121,6 +122,11 @@ export class SettingsController {
     return await this.accountService.fetchAccountWzagenda(identity);
   }
 
+  @Get('/account/interfaceage')
+  @UseGuards(TokenGuard)
+  async fetchAccountPractitioners(@CurrentUser() identity: UserIdentity) {
+    return await this.accountService.fetchAccountPractitioners(identity.org);
+  }
   //settings/account/google.php
   @Get('/account/google-calendar')
   @UseGuards(TokenGuard)
@@ -168,5 +174,15 @@ export class SettingsController {
       identity.id,
       query,
     );
+  }
+
+  //settings/account/wzagenda-submit.php
+  @Post('/account/wzagenda-submit')
+  @UseGuards(TokenGuard)
+  async wzAgendaSubmit(
+    @CurrentUser() identity: UserIdentity,
+    @Body() body: AccountWzAgendaSubmitDto,
+  ) {
+    return await this.accountService.accountWzAgendaSubmit(identity, body);
   }
 }

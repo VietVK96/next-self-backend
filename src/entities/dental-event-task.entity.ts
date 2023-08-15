@@ -124,7 +124,7 @@ export class DentalEventTaskEntity {
    * @Serializer\Expose
    * @Assert\Choice(callback={"App\Enum\NomenclatureEnum", "getValues"})
    */
-  nomenclature?: EnumDentalEventTaskType;
+  // nomenclature?: EnumDentalEventTaskType;
 
   /**
    * @ORM\Column(name="DET_COEF", type="decimal", precision=10, scale=2, nullable=true)
@@ -146,7 +146,7 @@ export class DentalEventTaskEntity {
    * @Assert\NotNull
    * @Assert\GreaterThan(0)
    */
-  coefficient?: number;
+  // coefficient?: number;
 
   /**
    * @ORM\Column(name="DET_EXCEEDING", type="string", nullable=false)
@@ -180,14 +180,15 @@ export class DentalEventTaskEntity {
     enum: EnumDentalEventTaskComp,
     nullable: true,
   })
-  comp?: EnumDentalEventTaskComp;
+  complement?: EnumDentalEventTaskComp;
+  // comp?: EnumDentalEventTaskComp;
 
   /** File: application\Entity\ActMedical.php
    * @ORM\Column(name="DET_COMP", type="string", length=1, nullable=true)
    * @Serializer\Expose
    * @Assert\Choice({"F", "N", "U"})
    */
-  complement?: EnumDentalEventTaskComp;
+  // complement?: EnumDentalEventTaskComp;
 
   /**
    * @ORM\Column(name="DET_PURCHASE_PRICE", type="float", nullable=false)
@@ -208,7 +209,7 @@ export class DentalEventTaskEntity {
    * @Assert\Type("float")
    * @Assert\NotNull
    */
-  buyingPrice?: number;
+  // buyingPrice?: number;
 
   /**
    * @ORM\Column(name="DET_CCAM_CODE", type="string", length=7, nullable=true)
@@ -226,7 +227,7 @@ export class DentalEventTaskEntity {
    * @Serializer\Expose
    * @Assert\Type("string")
    */
-  cotation?: string;
+  // cotation?: string;
 
   /**
    * @ORM\Column(name="DET_CCAM_OPPOSABLE", type="integer")
@@ -283,7 +284,7 @@ export class DentalEventTaskEntity {
    * @Assert\Type("bool")
    * @Assert\NotNull
    */
-  transmitted?: number;
+  // transmitted?: number;
 
   /**
    * @ORM\Column(name="DET_CCAM_MODIFIER", type="string", length=45, nullable=true)
@@ -301,7 +302,7 @@ export class DentalEventTaskEntity {
    * @Serializer\Expose
    * @Assert\Type("array")
    */
-  modifiers?: string;
+  // modifiers?: string;
 
   /**
    * @ORM\Column(name="exceptional_refund", type="boolean", options={"default": false})
@@ -334,7 +335,7 @@ export class DentalEventTaskEntity {
    * @Assert\Type("float")
    * @Assert\NotNull
    */
-  amoAmount?: number;
+  // amoAmount?: number;
 
   /**
    * @ORM\Column(name="DET_SECU_REPAYMENT", type="float")
@@ -356,7 +357,7 @@ export class DentalEventTaskEntity {
    * @Assert\Type("float")
    * @Assert\NotNull
    */
-  amoRefund?: number;
+  // amoRefund?: number;
 
   /**
    * @ORM\Column(name="DET_MUTUAL_REPAYMENT_TYPE", type="float")
@@ -378,7 +379,7 @@ export class DentalEventTaskEntity {
    * @Assert\NotNull
    * @Assert\GreaterThanOrEqual(1)
    */
-  amcRefundType?: number;
+  // amcRefundType?: number;
 
   /**
    * @ORM\Column(name="DET_MUTUAL_REPAYMENT_RATE", type="float")
@@ -400,7 +401,7 @@ export class DentalEventTaskEntity {
    * @Assert\Type("float")
    * @Assert\NotNull
    */
-  amcRefundRate?: number;
+  // amcRefundRate?: number;
 
   /**
    * @ORM\Column(name="DET_MUTUAL_REPAYMENT", type="float")
@@ -422,7 +423,7 @@ export class DentalEventTaskEntity {
    * @Assert\Type("float")
    * @Assert\NotNull
    */
-  amcRefund?: number;
+  // amcRefund?: number;
 
   /**
    * @ORM\Column(name="DET_MUTUAL_COMPLEMENT", type="float")
@@ -444,7 +445,7 @@ export class DentalEventTaskEntity {
    * @Assert\Type("float")
    * @Assert\NotNull
    */
-  amcComplement?: number;
+  // amcComplement?: number;
 
   /**
    * @ORM\Column(name="DET_PERSON_REPAYMENT", type="float")
@@ -465,7 +466,7 @@ export class DentalEventTaskEntity {
    * @Assert\Type("float")
    * @Assert\NotNull
    */
-  patientRefund?: number;
+  // patientRefund?: number;
 
   /**
    * @ORM\Column(name="DET_PERSON_AMOUNT", type="float")
@@ -487,7 +488,7 @@ export class DentalEventTaskEntity {
    * @Assert\Type("float")
    * @Assert\NotNull
    */
-  patientAmount?: number;
+  // patientAmount?: number;
 
   @Column({
     name: 'DLK_ID',

@@ -28,13 +28,17 @@ export class TariffTypesService {
       name: name,
     });
 
-    if (tariffType.length > 0) {
-      throw new CBadRequestException(ErrorCode.DUPLICATE);
-    }
-
     const listTariff = await this.tariffTypesRepo.find({
       where: { organizationId: identity.org },
     });
+
+    if (tariffType.length > 0 && listTariff.length >= 5) {
+      throw new CBadRequestException(ErrorCode.TOTALERR);
+    }
+
+    if (tariffType.length > 0) {
+      throw new CBadRequestException(ErrorCode.DUPLICATE);
+    }
 
     //TODO: RESEARCH HOW TO EXTRACT MAX_ENTRIES FROM ENTITIES
     const MAX_ENTRIES = 5;
@@ -59,8 +63,18 @@ export class TariffTypesService {
       organizationId: identity.org,
       id,
     });
+
     if (!tariffType) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
+
+    const checkTariffType = await this.tariffTypesRepo.findBy({
+      organizationId: identity.org,
+      name: attrs?.name,
+    });
+
+    if (checkTariffType.length > 0) {
+      throw new CBadRequestException(ErrorCode.DUPLICATE);
     }
 
     Object.assign(tariffType, attrs);

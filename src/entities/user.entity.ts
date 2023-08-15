@@ -35,6 +35,7 @@ import { SendingLogEntity } from './sending-log.entity';
 import { AppointmentReminderLibraryEntity } from './appointment-reminder-library.entity';
 import { MobileSettingEntity } from './mobile-setting.entity';
 import { MobileSubscriptionEntity } from './mobile-subscription.entity';
+import { LettersEntity } from './letters.entity';
 
 /**
  * @ORM\Entity(repositoryClass="\App\Repositories\User")
@@ -914,6 +915,11 @@ export class UserEntity {
     createForeignKeyConstraints: false,
   })
   appointmentReminderLibraries?: AppointmentReminderLibraryEntity[];
+
+  @OneToMany(() => LettersEntity, (e) => e.doctor, {
+    createForeignKeyConstraints: false,
+  })
+  letter?: LettersEntity[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt?: Date;

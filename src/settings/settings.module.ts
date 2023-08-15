@@ -22,6 +22,8 @@ import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { NotificationService } from './services/notification.service';
 import { AccountSecurityService } from './services/account-security.service';
 import { MedicamentDatabaseService } from './services/medicament-database.service';
+import { WzAgendaService } from './services/wzagenda.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -40,6 +42,7 @@ import { MedicamentDatabaseService } from './services/medicament-database.servic
       OrganizationEntity,
     ]),
     UploadModule,
+    HttpModule,
   ],
   controllers: [SettingsController, SettingOrganizationController],
   providers: [
@@ -64,6 +67,7 @@ import { MedicamentDatabaseService } from './services/medicament-database.servic
     OrganizationService,
     PermissionService,
     MedicamentDatabaseService,
+    WzAgendaService,
   ],
   exports: [SettingOrganizationService],
 })

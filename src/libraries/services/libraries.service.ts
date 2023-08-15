@@ -25,6 +25,7 @@ import {
   ActFamiliesSearchDto,
   ActFamiliesStoreDto,
   ActFamiliesUpdateDto,
+  ActsIndexDto,
 } from '../dto/act-families.dto';
 import { ActsStoreDto } from '../dto/library-act.store.dto';
 import { ActsShowDto } from '../dto/library-act.show.dto';
@@ -34,6 +35,7 @@ import { SuccessResponse } from 'src/common/response/success.res';
 import { format, intervalToDuration } from 'date-fns';
 import { LibraryActOdontogramPivotEntity } from 'src/entities/library-act-odontogram-pivot.entity';
 import { checkId } from 'src/common/util/number';
+import { AcFamiliesCopyRes } from '../res/act-families.res';
 
 @Injectable()
 export class LibrariesService {
@@ -1337,5 +1339,50 @@ export class LibrariesService {
     } catch (err) {
       throw new CBadRequestException(ErrorCode.CAN_NOT_DELETE_LIBRARY_ACT);
     }
+  }
+
+  async getAtcsBySearchTermAndOnltUsed(
+    payload: ActsIndexDto,
+  ): Promise<LibraryActEntity[]> {
+    const searchTerm = payload.search_term;
+    const onlyUsed = payload.only_used;
+    const libraryActs = this.dataSource
+      .createQueryBuilder(LibraryActEntity, 'libraryAct')
+      .select([
+        'libraryAct.id',
+        'libraryAct.attachmentCount',
+        'libraryAct.internalReferenceId',
+        'libraryAct.label',
+        'libraryAct.position',
+        'libraryAct.used',
+      ])
+      .innerJoin('libraryAct.quantities', 'libraryActQuantity')
+      .leftJoin('libraryActQuantity.ccam', 'ccam')
+      .where('libraryAct.label LIKE :searchTerm OR ccam.code LIKE :searchTerm')
+      .orderBy('libraryAct.label')
+      .setParameter('searchTerm', `${searchTerm}%`);
+
+    if (onlyUsed) {
+      libraryActs.andWhere('libraryAct.used = :used', { used: true });
+      libraryActs.andWhere('libraryActQuantity.used = :used', { used: true });
+    }
+    return await libraryActs.getMany();
+  }
+
+  async sortableLibraryActFamily(payload: AcFamiliesCopyRes[]) {
+    const ids = payload.map((item) => item.id);
+    let i = 0;
+    for (const id of ids) {
+      try {
+        await this.dataSource
+          .createQueryBuilder()
+          .update(LibraryActFamilyEntity)
+          .set({ position: i })
+          .where({ id })
+          .execute();
+        i++;
+      } catch (error) {}
+    }
+    return;
   }
 }
