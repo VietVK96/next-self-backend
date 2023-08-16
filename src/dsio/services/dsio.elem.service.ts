@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { DsioConfigService } from './dsio.config.service';
 import { DataSource, Repository } from 'typeorm';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import * as customParseFormat from 'dayjs/plugin/customParseFormat';
 import * as utc from 'dayjs/plugin/utc';
 import * as timezonePlugin from 'dayjs/plugin/timezone';
@@ -22,16 +21,15 @@ export class DsioElemService {
   private currentQuery = '';
   private ATE: string[] = []; // tableau des numéro s de téléphne supplémentaire dans MacDent
   private ACA: string;
-  private T_CONTACT_CONTRAINDICATION_COC: Record<string, number[]>;
-  private t_COF: Record<string, number[]>;
+  private T_CONTACT_CONTRAINDICATION_COC: Record<string, number[]> = {};
   private FRQ: duration.Duration;
-  private t_library_family_lfy: Record<string, number>;
-  private t_library_family_task_lft: Record<string, string[]>;
-  private t_dsio_tasks_quantity: Record<string, Record<string, number[]>>;
-  private t_dsio_dental_tasks_quantity: Record<string, boolean>;
+  private t_library_family_lfy: Record<string, number> = {};
+  private t_library_family_task_lft: Record<string, string[]> = {};
+  private t_dsio_tasks_quantity: Record<string, Record<string, number[]>> = {};
+  private t_dsio_dental_tasks_quantity: Record<string, boolean> = {};
   private LFT_POS = 0;
   private LFY_ID = 0;
-  private DLK: Record<string, string>;
+  private DLK: Record<string, string> = {};
   private t_QD: Record<string, string> = {
     ED: 'D',
     EP: 'E',
@@ -44,8 +42,8 @@ export class DsioElemService {
     'DA+ED': 'B',
     'DM+EP': 'C',
   };
-  private T_POSTIT_PTT: Record<string, string>;
-  private medicamentFamilies: Record<string, string>;
+  private T_POSTIT_PTT: Record<string, string> = {};
+  private medicamentFamilies: Record<string, string> = {};
   SDA: string;
   DCD: string;
   private AA1: string;
@@ -158,7 +156,6 @@ export class DsioElemService {
 
   constructor(
     private dataSource: DataSource,
-    private configService: DsioConfigService,
     private contactService: ContactService,
     @InjectRepository(ContactEntity)
     private contactRepo: Repository<ContactEntity>,
@@ -172,10 +169,137 @@ export class DsioElemService {
     private libraryBankRepo: Repository<LibraryBankEntity>,
   ) {}
 
+  init() {
+    this.currentQuery = '';
+    this.ATE = [];
+    this.ACA = null;
+    this.T_CONTACT_CONTRAINDICATION_COC = {};
+    this.FRQ = null;
+    this.t_library_family_lfy = {};
+    this.t_library_family_task_lft = {};
+    this.t_dsio_tasks_quantity = {};
+    this.t_dsio_dental_tasks_quantity = {};
+    this.LFT_POS = 0;
+    this.LFY_ID = 0;
+    this.DLK = {};
+    this.T_POSTIT_PTT = {};
+    this.medicamentFamilies = {};
+    this.SDA = null;
+    this.DCD = null;
+    this.AA1 = null;
+    this.AA2 = null;
+    this.ACP = null;
+    this.AVI = null;
+    this.PTC = null;
+    this.PNO = null;
+    this.PTN = null;
+    this.PTP = null;
+    this.PTG = null;
+    this.PTD = null;
+    this.PTF = null;
+    this.PTB = null;
+    this.AEM = null;
+    this.AMA = null;
+    this.PAL = null;
+    this.PAA = null;
+    this.PAC = null;
+    this.PTM = null;
+    this.PTI = null;
+    this.ATD = null;
+    this.ATM = null;
+    this.ATT = null;
+    this.PCM = null;
+    this.SDE = null;
+    this.SDU = null;
+    this.STA = null;
+    this.SCA = null;
+    this.SCC = null;
+    this.SSA = null;
+    this.SLC = null;
+    this.SLI = null;
+    this.SCO = null;
+    this.SDT = null;
+    this.SRV = null;
+    this.SRE = null;
+    this.SNL = null;
+    this.SCL = null;
+    this.STR = null;
+    this.SNC = null;
+    this.SCM = null;
+    this.SSS = null;
+    this.$DP = null;
+    this.$DE = null;
+    this.$SS = null;
+    this.$LI = null;
+    this.$MP = null;
+    this.$BO = null;
+    this.$BD = null;
+    this.$BB = null;
+    this.$TD = null;
+    this.FCF = null;
+    this.FLI = null;
+    this.FCO = null;
+    this.ALI = null;
+    this.AAB = null;
+    this.AAS = null;
+    this.ADU = null;
+    this.ASA = null;
+    this.ASE = null;
+    this.ACL = null;
+    this.ACV = null;
+    this.ARV = null;
+    this.AZV = null;
+    this.AZI = null;
+    this.ADI = null;
+    this.ACO = null;
+    this.ACE = null;
+    this.AQD = null;
+    this.APA = null;
+    this.NCN = null;
+    this.PC1 = null;
+    this.NCO = null;
+    this.NCL = null;
+    this.NPA = null;
+    this.NGA = null;
+    this.NHA = null;
+    this.NDR = null;
+    this.NBA = null;
+    this.DLI = null;
+    this.MLI = null;
+    this.MAB = null;
+    this.MTX = null;
+    this.ATA = null;
+    this.AQT = null;
+    this.ALC = null;
+    this.ILI = null;
+    this.ICI = null;
+    this.RN1 = null;
+    this.RF1 = null;
+    this.RT1 = null;
+    this.RM1 = null;
+    this.RN2 = null;
+    this.RA1 = null;
+    this.RA2 = null;
+    this.RA3 = null;
+    this.RT2 = null;
+    this.RT3 = null;
+    this.BAB = null;
+    this.BAD = null;
+    this.BCP = null;
+    this.BVI = null;
+    this.BNO = null;
+    this.BCO = null;
+    this.BGU = null;
+    this.BNU = null;
+    this.BRI = null;
+    this.BNB = null;
+  }
+
   /**
    * php/dsio/import_shell.php line 217 -> 249
    */
   construct(bname: string, value: string): DsioElemService {
+    this.init();
     this.setInfo(bname, value);
     return this;
   }
@@ -235,7 +359,15 @@ export class DsioElemService {
    * le fichier DSIO
    * @return number l'identifiant de la nouvelle fiche contact
    */
-  async creatPatient(ar_fam, ar_prat, PTC_SUBST = 0, groupId: number) {
+  async creatPatient(
+    ar_fam: Record<string, number>,
+    ar_prat: Record<number, string>,
+    PTC_SUBST = 0,
+    groupId: number,
+    t_COF: Record<string, number[]>,
+    t_gender_gen: Record<string, number>,
+    t_phone_type_pty: Record<string, number>,
+  ) {
     try {
       let ID_ADR = null;
       /* Enregistrement de l'adresse */
@@ -280,15 +412,11 @@ export class DsioElemService {
       let CON_MSG = '';
 
       /* Importation de la référence patient du fichier DSIO */
-      let PTC: string | number = 'NULL';
-      if (
-        this.hasOwnProperty(this.PTC) &&
-        this.PTC &&
-        !isNaN(Number(this.PTC))
-      ) {
+      let PTC: string | number = null;
+      if (this.hasOwnProperty('PTC') && this.PTC && !isNaN(Number(this.PTC))) {
         /* La référence est un entier, on l'affecte directement au numéro de dossier patient */
         PTC = this.PTC;
-      } else if (this.hasOwnProperty(this.PTC) && this.PTC) {
+      } else if (this.hasOwnProperty('PTC')) {
         // référence de dossier au lieu d'un numéro...
         // On place la référence du dossier dans les commentaires de la fiche patient
         CON_MSG = `Référence DSIO : "${this.PTC}"\n"${CON_MSG}`;
@@ -297,7 +425,7 @@ export class DsioElemService {
       }
 
       // Importation des notes du patient
-      if (this.hasOwnProperty(this.PNO) && this.PNO && this.PNO.length > 0) {
+      if (this.hasOwnProperty('PNO') && this.PNO && this.PNO.length > 0) {
         CON_MSG += '\n' + this.PNO.replace(/\t/g, '\n');
       }
 
@@ -319,8 +447,8 @@ export class DsioElemService {
       }
 
       let PTG = 1;
-      if (this.PTG && this.configService.tGenderGen[this.PTG]) {
-        PTG = this.configService.tGenderGen[this.PTG];
+      if (this.PTG && t_gender_gen[this.PTG]) {
+        PTG = t_gender_gen[this.PTG];
       }
 
       let PTD = null;
@@ -360,9 +488,7 @@ export class DsioElemService {
       }
 
       let patient = new ContactEntity();
-      patient.group = await this.organizationRepo.findOne({
-        where: { id: groupId },
-      });
+      patient.group = this.organizationRepo.create({ id: groupId });
       patient.nbr = +PTC;
       patient.lastname = this.PTN;
       patient.firstname = this.PTP;
@@ -401,10 +527,10 @@ export class DsioElemService {
 
       /* gestion des familles de patients */
       if (this.PTB && this.PTB.length > 0) {
-        if (!this.t_COF[this.PTB]) {
-          this.t_COF[this.PTB] = [CON_ID];
+        if (!t_COF[this.PTB]) {
+          t_COF[this.PTB] = [CON_ID];
         } else {
-          this.t_COF[this.PTB].push(CON_ID);
+          t_COF[this.PTB].push(CON_ID);
         }
       }
 
@@ -427,15 +553,15 @@ export class DsioElemService {
         }
         if (!PTG) {
           if (this.PTI.substr(0, 1) === '1') {
-            PTG = this.configService.tGenderGen['M'];
+            PTG = t_gender_gen['M'];
           } else if (this.PTI.substr(0, 1) === '2') {
-            PTG = this.configService.tGenderGen['Mme'];
+            PTG = t_gender_gen['Mme'];
           } else {
-            PTG = this.configService.tGenderGen['M & Mme'];
+            PTG = t_gender_gen['M & Mme'];
           }
         }
       } else if (!PTG) {
-        PTG = this.configService.tGenderGen['M & Mme'];
+        PTG = t_gender_gen['M & Mme'];
       }
 
       if (this.ATD && this.ATD.length > 0) {
@@ -450,7 +576,7 @@ export class DsioElemService {
         ATD = ATD.substr(0, 15);
         const phoneStm = await this.dataSource.query(
           `INSERT /* LOW_PRIORITY */ INTO T_PHONE_PHO (PTY_ID, PHO_NBR) VALUES (?, ?)`,
-          [this.configService.tPhoneTypePTY['home'], ATD],
+          [t_phone_type_pty['home'], ATD],
         );
         const PHO_ID = phoneStm.insertId;
         await this.dataSource.query(
@@ -471,7 +597,7 @@ export class DsioElemService {
         ATT = ATT.substr(0, 15);
         const phoneStm = await this.dataSource.query(
           `INSERT /* LOW_PRIORITY */ INTO T_PHONE_PHO (PTY_ID, PHO_NBR) VALUES (?, ?)`,
-          [this.configService.tPhoneTypePTY['office'], ATT],
+          [t_phone_type_pty['office'], ATT],
         );
         const PHO_ID = phoneStm.insertId;
         await this.dataSource.query(
@@ -485,7 +611,7 @@ export class DsioElemService {
         for (const PTY_TYPE of ['mobile', 'sms']) {
           const phoneStm = await this.dataSource.query(
             `INSERT /* LOW_PRIORITY */ INTO T_PHONE_PHO (PTY_ID, PHO_NBR) VALUES (?, ?)`,
-            [this.configService.tPhoneTypePTY[PTY_TYPE], ATM],
+            [t_phone_type_pty[PTY_TYPE], ATM],
           );
           const PHO_ID = phoneStm.insertId;
           await this.dataSource.query(
@@ -500,8 +626,8 @@ export class DsioElemService {
           // Téléphones supplémentaires MacDent
           ATE = ATE.replace(/[^0-9\(\)\+]/g, '').substr(0, 15);
           const type = [6, 7].includes(Number(ATE[1]))
-            ? this.configService.tPhoneTypePTY['sms']
-            : this.configService.tPhoneTypePTY['home'];
+            ? t_phone_type_pty['sms']
+            : t_phone_type_pty['home'];
           const phoneStm = await this.dataSource.query(
             `INSERT /* LOW_PRIORITY */ INTO T_PHONE_PHO (PTY_ID,PHO_NBR) VALUES (?, ?)`,
             [type, ATE],
@@ -547,16 +673,14 @@ export class DsioElemService {
     macDent = false,
     agatha = false,
     dentalOnLine = false,
-    groupId: number,
     t_dsio_tasks:
       | Record<string, string>
       | Record<string, Record<string, number>>,
+    ngapKeys: Record<string, number>,
   ) {
     try {
       if (id_prat) {
         const timezone = 'Europe/Paris';
-        const ngapKeys: Record<string, number> =
-          await this.configService.getNgapkeysByGroupId(groupId);
         const ccamStm = 'select id from ccam where code = ?';
 
         let libraryActId = null;
@@ -633,12 +757,12 @@ export class DsioElemService {
             await this.dataSource.query(query, [id_prat, id_pat, SLI, dateDeb]);
           }
         } else {
-          let LFT_ID = 'NULL';
+          let LFT_ID = null;
           if (this.SCC && /^[A-Z]{4}[0-9]{3}$/.test(this.SCC)) {
             LFT_ID = !t_dsio_tasks[this.SCC]
-              ? 'NULL'
+              ? null
               : (t_dsio_tasks[this.SCC] as string);
-            if (LFT_ID === 'NULL') {
+            if (LFT_ID === null) {
               const ccam: CcamEntity = await this.ccamRepo.findOne({
                 where: { code: this.SCC },
               });
@@ -660,9 +784,9 @@ export class DsioElemService {
               }
             }
           } else if (!this.SCA) {
-            LFT_ID = 'NULL';
+            LFT_ID = null;
           } else if (!t_dsio_tasks[this.SCA]) {
-            LFT_ID = 'NULL';
+            LFT_ID = null;
           } else {
             if (t_dsio_tasks[this.SCA]) {
               // Import traditionnel
@@ -688,7 +812,7 @@ export class DsioElemService {
             SLI = this.SLI;
           }
 
-          let DET_TOOTH = 'NULL';
+          let DET_TOOTH = null;
           let DET = false;
           if (this.SDT && /^[0-7][0-8](,[0-7][0-8])*$/.test(this.SDT)) {
             DET = true;
@@ -793,9 +917,9 @@ export class DsioElemService {
                   id_prat,
                   id_pat,
                   SLI.substring(1, 81),
-                  dateDeb !== null ? dateDeb : 'NULL',
+                  dateDeb !== null ? dateDeb : null,
                   'UTC',
-                  dateEnd !== null ? dateEnd : 'NULL',
+                  dateEnd !== null ? dateEnd : null,
                   'UTC',
                   SCL,
                   EVT_STATE,
@@ -830,13 +954,13 @@ export class DsioElemService {
           SCO += this.SCO ? this.SCO.replace(/\t/g, '\n') : ''; // commentaire lié au soin
 
           if (SCO === '') {
-            SCO = 'NULL';
+            SCO = null;
           }
 
-          if (EVT_ID == null || LFT_ID != 'NULL') {
+          if (EVT_ID == null || LFT_ID != null) {
             if (
               SLI ||
-              SCO !== 'NULL' ||
+              SCO !== null ||
               ETK_AMOUNT !== 0 ||
               (this.SLC && this.SLC.length > 0)
             ) {
@@ -848,10 +972,10 @@ export class DsioElemService {
                 .startOf('day')
                 .add(FRQ.asMilliseconds())
                 .format('HH:mm:ss');
-              if (EVT_ID && EVT_ID !== 'NULL') {
+              if (EVT_ID) {
                 ETK_DATE = t_last_rdv['EVT_START']
                   ? `DATE('${t_last_rdv['EVT_START']}')`
-                  : 'NULL';
+                  : null;
                 id_pat = t_last_rdv['CON_ID'] ? t_last_rdv['CON_ID'] : id_pat;
                 id_prat = t_last_rdv['USR_ID'] ? t_last_rdv['USR_ID'] : id_prat;
               }
@@ -907,11 +1031,11 @@ export class DsioElemService {
                   }
                 }
 
-                let ccamId = 'NULL';
-                let ngapKeyId = 'NULL';
-                let CCAM_CODE = 'NULL';
-                let CCAM_MODIFIER = 'NULL';
-                let DET_TYPE = 'NULL';
+                let ccamId = null;
+                let ngapKeyId = null;
+                let CCAM_CODE = null;
+                let CCAM_MODIFIER = null;
+                let DET_TYPE = null;
                 if (this.SLC && /^[A-Z]{4}[0-9]{3}$/.test(this.SLC)) {
                   //sh le 22/09/2017 : dans certains DSIO le code CCAM est placé dans le champ de la lettre clé NGAP
                   this.SCC = this.SLC;
@@ -949,7 +1073,7 @@ export class DsioElemService {
                     }
                     DET = true;
                   } else {
-                    ccamId = 'NULL';
+                    ccamId = null;
                   }
                 }
                 if (DET) {
@@ -1036,9 +1160,9 @@ export class DsioElemService {
           id_prat,
           id_pat,
           SLI.substring(1, 81),
-          dateDeb !== null ? dateDeb : 'NULL',
+          dateDeb !== null ? dateDeb : null,
           'UTC',
-          dateEnd !== null ? dateEnd : 'NULL',
+          dateEnd !== null ? dateEnd : null,
           'UTC',
           this.SCL,
           'dsio',
@@ -1165,7 +1289,7 @@ export class DsioElemService {
           MP = 'virement';
       }
 
-      let SLC_ID = 'NULL';
+      let SLC_ID = null;
       if (MP === 'cheque') {
         let BO = '$BO';
         if (this.$BO && this.$BO.length > 0 && !isNaN(Number(this.$BO))) {
@@ -1373,11 +1497,11 @@ export class DsioElemService {
         const DLT_ROOT_VISIBLE =
           this['ARV'] && this.ARV.length > 0 && this.ARV === 'N' ? 0 : 1;
         const DLT_ZONE_VISIBLE =
-          this['AZV'] && this.AZV.length > 0 ? this.AZV : 'NULL';
+          this['AZV'] && this.AZV.length > 0 ? this.AZV : null;
         const DLT_ZONE_INVISIBLE =
-          this['AZI'] && this.AZI.length > 0 ? this.AZI : 'NULL';
+          this['AZI'] && this.AZI.length > 0 ? this.AZI : null;
         const DLT_TOOTH_DISABLE =
-          this['ADI'] && this.ADI.length > 0 ? this.ADI : 'NULL';
+          this['ADI'] && this.ADI.length > 0 ? this.ADI : null;
         let query = `UPDATE T_LIBRARY_FAMILY_TASK_LFT SET
           DLK_ID=?, LFT_COLOR=?, LFT_CROWN_VISIBLE=?, LFT_ROOT_VISIBLE=?, LFT_ZONE_VISIBLE=?,
           LFT_ZONE_INVISIBLE=?, LFT_TOOTH_DISABLE=?, LFT_TYPE='NGAP'
@@ -1400,7 +1524,7 @@ export class DsioElemService {
         const DLQ_EXCEEDING =
           this.AQD && this.AQD.length > 0 && this.t_QD[this.AQD]
             ? this.t_QD[this.AQD]
-            : 'NULL';
+            : null;
         const DLQ_PURCHASE_PRICE =
           this.APA && this.APA.length > 0
             ? Number(this.APA.replace(',', '.'))
@@ -1575,11 +1699,11 @@ export class DsioElemService {
           const DLT_ROOT_VISIBLE =
             this.ARV && this.ARV.length > 0 && this.ARV === 'N' ? 0 : 1;
           const DLT_ZONE_VISIBLE =
-            this.AZV && this.AZV.length > 0 ? this.AZV : 'NULL';
+            this.AZV && this.AZV.length > 0 ? this.AZV : null;
           const DLT_ZONE_INVISIBLE =
-            this.AZI && this.AZI.length > 0 ? this.AZI : 'NULL';
+            this.AZI && this.AZI.length > 0 ? this.AZI : null;
           const DLT_TOOTH_DISABLE =
-            this.ADI && this.ADI.length > 0 ? this.ADI : 'NULL';
+            this.ADI && this.ADI.length > 0 ? this.ADI : null;
           const query = `UPDATE T_LIBRARY_FAMILY_TASK_LFT SET
             DLK_ID=?, LFT_COLOR=?, LFT_CROWN_VISIBLE=?, LFT_ROOT_VISIBLE=?, LFT_ZONE_VISIBLE=?,
             LFT_ZONE_INVISIBLE=?, LFT_TOOTH_DISABLE=?, LFT_TYPE='NGAP', LFT_ENABLE=1
@@ -1600,7 +1724,7 @@ export class DsioElemService {
           const DLQ_EXCEEDING =
             this.AQD && this.AQD.length > 0 && this.t_QD[this.AQD]
               ? this.t_QD[this.AQD]
-              : 'NULL';
+              : null;
           const DLQ_PURCHASE_PRICE =
             this.APA && this.APA.length > 0 ? this.APA.replace(/,/g, '.') : 0;
 
@@ -1666,7 +1790,7 @@ export class DsioElemService {
         const query = `REPLACE /* LOW_PRIORITY */ INTO T_POSTIT_PTT (
         ${NCL ? 'PTT_COLOR,' : ''}
         ${NPA ? 'PTT_SHARED,' : ''}
-        USR_ID,CON_ID,PTT_MSG) VALUES (
+        USR_ID, CON_ID, PTT_MSG) VALUES (
         ${NCL ? NCL + ',' : ''}
         ${NPA ? NPA + ',' : ''}
         ?,?,?)`;
@@ -1687,7 +1811,7 @@ export class DsioElemService {
       ${PTU_HEIGHT ? 'PTU_HEIGHT,' : ''}
       ${PTU_X ? 'PTU_X,' : ''}
       ${PTU_Y ? 'PTU_Y,' : ''}
-      'PTT_ID,USR_ID) VALUES (
+      PTT_ID, USR_ID) VALUES (
       ${PTU_WIDTH ? PTU_WIDTH + ',' : ''}
       ${PTU_HEIGHT ? PTU_HEIGHT + ',' : ''}
       ${PTU_X ? PTU_X + ',' : ''}
@@ -1830,19 +1954,20 @@ export class DsioElemService {
   /** php/dsio/import_shell.php line 1602 -> 1644
    * Crée un nouveau correspondant du praticien
    */
-  async setCorrespondent(groupId: number) {
+  async setCorrespondent(
+    groupId: number,
+    t_gender_gen: Record<string, number>,
+  ) {
     const LASTNAME = this.RN1 ? this.RN1 : ''; // T_CORRESPONDENT_CPD.CPD_LASTNAME VARCHAR(50)
-    const TYPE = this.RF1 ? this.RF1 : 'NULL'; // T_CORRESPONDENT_CPD.CPD_TYPE VARCHAR(50)
+    const TYPE = this.RF1 ? this.RF1 : null; // T_CORRESPONDENT_CPD.CPD_TYPE VARCHAR(50)
     const GEN_ID =
-      this.RT1 && this.configService.tGenderGen[this.RT1]
-        ? this.configService.tGenderGen[this.RT1]
-        : 'NULL'; // T_CORRESPONDENT_CPD.GEN_ID INT(11)
-    const MAIL = this.RM1 ? this.RM1 : 'NULL'; // T_CORRESPONDENT_CPD.CPD_MAIL VARCHAR(50)
-    const MSG = this.RN2 ? this.RN2.replace(/\t/g, '\n') : 'NULL'; // T_CORRESPONDENT_CPD.CPD_MSG TEXT
+      this.RT1 && t_gender_gen[this.RT1] ? t_gender_gen[this.RT1] : null; // T_CORRESPONDENT_CPD.GEN_ID INT(11)
+    const MAIL = this.RM1 ? this.RM1 : null; // T_CORRESPONDENT_CPD.CPD_MAIL VARCHAR(50)
+    const MSG = this.RN2 ? this.RN2.replace(/\t/g, '\n') : null; // T_CORRESPONDENT_CPD.CPD_MSG TEXT
 
-    const STREET = this.RA1 ? this.RA1.replace(/\t/g, ', ') : 'NULL'; // T_ADDRESS_ADR.ADR_STREET VARCHAR(255)
-    const ZIP_CODE = this.RA2 ? this.RA2 : 'NULL'; // T_ADDRESS_ADR.ADR_ZIP_CODE VARCHAR(6)
-    const CITY = this.RA3 ? this.RA3 : 'NULL'; // T_ADDRESS_ADR.ADR_CITY VARCHAR(255)
+    const STREET = this.RA1 ? this.RA1.replace(/\t/g, ', ') : null; // T_ADDRESS_ADR.ADR_STREET VARCHAR(255)
+    const ZIP_CODE = this.RA2 ? this.RA2 : null; // T_ADDRESS_ADR.ADR_ZIP_CODE VARCHAR(6)
+    const CITY = this.RA3 ? this.RA3 : null; // T_ADDRESS_ADR.ADR_CITY VARCHAR(255)
 
     const RT = {
       1: 'home',
@@ -1936,7 +2061,7 @@ export class DsioElemService {
       const ZIP_CODE = this.BCP ? this.BCP : '';
       const CITY = this.BVI ? this.BVI : '';
 
-      let ADR_ID = 'NULL';
+      let ADR_ID = null;
       if (STREET + ZIP_CODE + CITY !== '') {
         const insertRes = await this.dataSource.query(
           `
