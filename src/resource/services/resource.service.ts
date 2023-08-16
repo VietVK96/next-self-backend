@@ -11,7 +11,6 @@ import { UpdateResourceDto } from '../dto/updateResource.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { SuccessResponse } from 'src/common/response/success.res';
-import { MailerService } from '@nestjs-modules/mailer';
 import { FindAllUsersAndPractitionersDto } from '../dto/findAllUsersAndPractitioners.dto';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
 
