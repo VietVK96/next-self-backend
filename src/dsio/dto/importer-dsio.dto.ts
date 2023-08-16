@@ -15,6 +15,9 @@ export class SectionsDsioDto {
 
 export class ImporterDsioDto {
   @ApiProperty()
+  iduser?: number;
+
+  @ApiProperty()
   pathname?: string;
 
   @ApiProperty()
