@@ -50,6 +50,10 @@ export class MailTransportService {
       emailOutgoingServer.password = decryptedPassword.toString(
         crypto.enc.Utf8,
       );
+      console.log(
+        '??????????????????????????????????????????',
+        emailOutgoingServer,
+      );
 
       const transport = nodemailer.createTransport({
         host: emailOutgoingServer.hostname,
@@ -68,6 +72,7 @@ export class MailTransportService {
   }
 
   async sendEmail(userId: number, data: FactureEmailDataDto) {
+    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', data);
     const transportInstance = await this.createTranspoter(userId);
     if (transportInstance instanceof CBadRequestException)
       return transportInstance;
