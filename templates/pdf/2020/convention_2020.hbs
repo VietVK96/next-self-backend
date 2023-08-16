@@ -48,6 +48,34 @@
         text-align: right;
     }
 
+    input[type=checkbox] + label {
+    display: block;
+    cursor: pointer;
+    }
+
+    input[type=checkbox] {
+    display: none;
+    }
+
+    input[type=checkbox] + label:before {
+    content: "\2610";
+    font-size: 24px;
+    display: inline-block;
+    margin-right: 0.2em;
+    margin-bottom: -0.2em;
+    vertical-align: bottom;
+    transition: .2s;
+    color: #000;
+    }
+
+    input[type=checkbox] + label:active:before {
+    transform: scale(0);
+    }
+
+    input[type=checkbox]:checked + label:before {
+    content: "\2611"
+    }
+
     </style>
 </head>
 <body>
@@ -57,23 +85,23 @@
                 DEVIS POUR LES TRAITEMENTS ET ACTES BUCCO-DENTAIRES FAISANT L'OBJET D'UNE ENTENTE DIRECTE
             </h2>
             <div style="text-align: center;">
-                <p style="font-size: 14px;">conformément aux dispositions de la convention nationale des chirurgiens-dentistes (publiée au JO du 25 août 2018)</p>
+                <p style="font-size: 12px;">conformément aux dispositions de la convention nationale des chirurgiens-dentistes (publiée au JO du 25 août 2018)</p>
             </div>
         </div>
         <div style="text-align: center; margin-bottom: 2mm;">
-            <p style="font-size: 14px;">Ce devis est la propriété du patient ou de son représentant légal. La communication de ce document à un tiers se fait sous sa seule responsabilité. Ce devis est informatif, les montants des honoraires et prises en charge sont définis selon les droits effectifs à la date de réalisation de l'acte. Les soins à tarifs opposables ne sont pas compris dans ce devis.</p>
+            <p style="font-size: 12px;">Ce devis est la propriété du patient ou de son représentant légal. La communication de ce document à un tiers se fait sous sa seule responsabilité. Ce devis est informatif, les montants des honoraires et prises en charge sont définis selon les droits effectifs à la date de réalisation de l'acte. Les soins à tarifs opposables ne sont pas compris dans ce devis.</p>
         </div>
-        <table style="border-collapse: separate; border-spacing: 1mm;">
+        <table style="border-collapse: separate; border-spacing: 1mm; font-size:10pt">
             <tbody>
                 <tr>
                     <td style="width: 50%;">
-                        <div style="margin-bottom: 1mm;">
+                        <div style="margin-bottom: 2mm;">
                             <strong>Identification du chirurgien-dentiste traitant</strong>
                         </div>
-                        <div style="margin-bottom: 1mm;">
-                            Nom et prénom : {{quote.user.fullName}} ( {{#if (isset quote.user.freelance)}} "EI" {{/if}} )
+                        <div style="margin-bottom: 2mm;">
+                            Nom et prénom : {{quote.user.firstname}} {{quote.user.lastname}}{{#if (isset quote.user.freelance)}} ("EI") {{/if}}
                         </div>
-                        <div style="margin-bottom: 1mm;">
+                        <div style="margin-bottom: 2mm;">
                             <table>
                                 <tbody>
                                     <tr>
@@ -81,43 +109,43 @@
                                         <td style="width: 50%; padding: 0; border: 0;">N° ADELI : {{ quote.user.medical.finessNumber }}</td>
                                     </tr>
                                     <tr>
-                                        <td colspan="2" style="padding: 0; border: 0;">N° d'établissement (FINESS) : {{ quote.user.finessNumber }}</td>
+                                        <td colspan="2" style="padding: 0; border: 0;">N° d'établissement (FINESS) : {{ quote.user.finess}}</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                         <div>
-                            Raison sociale et adresse : {{#if (isset quote.user.companyName)}} {{quote.user..organization.name }} {{/if}}
+                            Raison sociale et adresse : {{#if (isset quote.user.companyName)}} {{quote.user.companyName }} {{/if}}
                             <div style="height: 10mm; overflow: hidden; text-overflow: ellipsis;">
-                                {{#if (notEmpty organization.address)}}
+                                {{#if (notEmpty quote.user.group.address)}}
                                 <div>
-                                    {{quote.user..organization.address.street}} {{quote.user..organization.address.street2}} {{quote.user..organization.address.zipCode}} {{quote.user..organization.address.city}} {{quote.user..organization.address.country}}
+                                    {{quote.user.group.address.street}} {{quote.user.group.address.street2}} {{quote.user.group.address.zipCode}} {{quote.user.group.address.city}} {{quote.user.group.address.country}}
                                 </div>
                                 {{/if}}
                             </div>
                         </div>
                     </td>
                     <td style="width: 50%;" rowspan="2">
-                        <div style="margin-bottom: 1mm;">
+                        <div style="margin-bottom: 2mm;">
                             <strong>Identification du patient</strong>
                         </div>
-                        <div style="margin-bottom: 1mm;">
-                            Nom et prénom : {{ quote.patient.lastName }} {{ quote.patient.firstName }}
+                        <div style="margin-bottom: 2mm;">
+                            Nom et prénom : {{ quote.patient.lastname }} {{ quote.patient.firstname }}
                         </div>
-                        <div style="margin-bottom: 1mm;">
-                            Date de naissance : {{ quote.patient.birthDate }}
+                        <div style="margin-bottom: 2mm;">
+                            Date de naissance : {{formatDate quote.patient.birthDate}}
                         </div>
                         <div style="margin-bottom: 5mm;">
                             N° de Sécurité Sociale du patient : {{ insee }}
                         </div>
                         <div style="background-color: #eeeeee; padding: 2mm;">
-                            <div style="margin-bottom: 1mm;">
+                            <div style="margin-bottom: 2mm;">
                                 <em>A remplir par l'assuré si celui-ci souhaite envoyer ce devis à son organisme complémentaire pour connaître son éventuel reste à charge selon son contrat :</em>
                             </div>
-                            <div style="margin-bottom: 1mm;">
+                            <div style="margin-bottom: 2mm;">
                                 Nom de l'organisme complémentaire :
                             </div>
-                            <div style="margin-bottom: 1mm;">
+                            <div style="margin-bottom: 2mm;">
                                 N° de contract ou d'adhérent :
                             </div>
                             <div>
@@ -128,13 +156,13 @@
                 </tr>
                 <tr>
                     <td>
-                        <div style="margin-bottom: 1mm;">
-                            Date du devis : {{ quote.date }}
+                        <div style="margin-bottom: 2mm;">
+                            Date du devis : {{formatDate quote.date}}
                         </div>
-                        <div style="margin-bottom: 1mm;">
-                            Valable jusqu'au  <p>(sous réserve de modification réglementaire) </p> : {{ quote.validUntil }}
+                        <div style="margin-bottom: 2mm;">
+                            Valable jusqu'au  <small>(sous réserve de modification réglementaire) </small> : {{formatDate quote.validUntil}}
                         </div>
-                        <div style="margin-bottom: 1mm;">
+                        <div style="margin-bottom: 2mm;">
                             Ce devis contient <span class="page_count" style="display: inline-block; width: 10mm;"></span> pages indissociables.
                         </div>
                         <div>
@@ -150,32 +178,32 @@
                         <div style="margin-bottom: 2mm;">
                             <strong>Lieu de fabrication du dispositif médical</strong>
                         </div>
-                        <div>
+                        <div style="margin-bottom: 2mm;">
+                            <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if isInEuropean}}checked{{/if}} />
                             <label style="display: inline-block; margin: 0;">
-                                <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if isInEuropean}}checked{{/if}} />
-                                <span style="vertical-align: middle;">au sein de l'Union Européenne</span>
+                                au sein de l'Union Européenne
                             </label>
+                            <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if notInEuropean}}checked{{/if}} />
                             <label style="display: inline-block; margin: 0;">
-                                <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if notInEuropean}}checked{{/if}} />
-                                <span style="vertical-align: middle;">hors Union Européenne</span>
+                                hors Union Européenne
                             </label>
                         </div>
-                        <div>
+                        <div style="margin-bottom: 2mm;">
+                            <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if (isset quote.placeOfSubcontracting)}}checked{{/if}} />
                             <label style="display: inline-block; margin: 0;">
-                                <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if (isset quote.placeOfSubcontracting)}}checked{{/if}} />
-                                <span style="vertical-align: middle;">sans sous-traitance du fabricant</span>
+                                sans sous-traitance du fabricant
                             </label>
+                            <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if (isset quote.placeOfSubcontracting)}}checked{{/if}} />
                             <label style="display: inline-block; margin: 0;">
-                                <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if (isset quote.placeOfSubcontracting)}}checked{{/if}} />
-                                <span style="vertical-align: middle;">avec une partie de la réalisation du fabricant sous traitée :</span>
+                                avec une partie de la réalisation du fabricant sous traitée :
                             </label>
+                            <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if isInEuropean}}checked{{/if}} />
                             <label style="display: inline-block; margin: 0;">
-                                <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if isInEuropean}}checked{{/if}} />
-                                <span style="vertical-align: middle;">au sein de l'Union Européenne</span>
+                                au sein de l'Union Européenne
                             </label>
+                            <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if notInEuropean}}checked{{/if}} />
                             <label style="display: inline-block; margin: 0;">
-                                <input type="checkbox" style="vertical-align: middle; margin: 0;" {{#if notInEuropean}}checked{{/if}} />
-                                <span style="vertical-align: middle;">hors Union Européenne</span>
+                                hors Union Européenne
                             </label>
                         </div>
                         <div>
@@ -185,12 +213,12 @@
                 </tr>
                 <tr>
                     <td colspan="2">
-                        <div style="margin-bottom: 2mm;">
+                        <div style="margin-bottom: 2mm; ">
                             <strong>Légende explicative du devis</strong>
                         </div>
                         <div>
                             <div>
-                                <table style="margin-bottom: 2mm;">
+                                <table style="margin-bottom: 2mm; font-size: 10pt;">
                                     <tbody>
                                         <tr>
                                             <th style="vertical-align: top; width: 25%;" rowspan="2">** Matériaux et normes</th>
@@ -203,15 +231,15 @@
                                         </tr>
                                         <tr>
                                             <td style="text-align: center; width: 5%;">4</td>
-                                            <td style="vertical-align: top;">Céramique céramométallique NF EN ISO 6872 2015</td>
+                                            <td style="vertical-align: top;">Céramique céramométallique NF EN ISO <br/>6872 2015</td>
                                             <td style="text-align: center; width: 5%;">5</td>
-                                            <td style="vertical-align: top;">Polymères de base NF EN ISO 20795:1:2013</td>
+                                            <td style="vertical-align: top;">Polymères de base NF EN ISO <br/>20795:1:2013</td>
                                             <td style="text-align: center; width: 5%;">6</td>
-                                            <td style="vertical-align: top;">Dents artificielles NF EN ISO 22112 2017</td>
+                                            <td style="vertical-align: top;">Dents artificielles NF EN ISO <br/>22112 2017</td>
                                         </tr>
                                     </tbody>
                                 </table>
-                                <table style="margin-bottom: 2mm;">
+                                <table style="margin-bottom: 2mm; font-size: 10pt;">
                                     <tbody>
                                         <tr>
                                             <th style="vertical-align: top; width: 25%;" rowspan="4">**** Paniers</th>
@@ -264,36 +292,36 @@
         <div style="page-break-after: always;">
         </div>
     </div>
-    <div id="header">
-        <table style="border-collapse: separate; border-spacing: 1mm;">
+    <div id="header" style="color: gray;">
+        <table style="border-collapse: separate; border-spacing: 1mm; font-size:9pt; color: gray;">
             <tbody>
                 <tr>
                     <td style="width: 50%;">
-                        <div style="margin-bottom: 1mm;">
+                        <div style="margin-bottom: 2mm;">
                             <strong>Identification du chirurgien-dentiste traitant</strong>
                         </div>
-                        <table>
+                        <table style="color: gray; font-size:9pt">
                             <tbody>
                                 <tr>
                                     <td style="width: 50%; padding: 0; border: 0;">Identification RPPS : {{ quote.user.medical.rppsNumber }}</td>
                                     <td style="width: 50%; padding: 0; border: 0;">N° ADELI : {{ quote.user.medical.finessNumber }}</td>
                                 </tr>
                                 <tr>
-                                    <td colspan="2" style="padding: 0; border: 0;">N° d'établissement (FINESS) : {{ quote.user.finessNumber }}</td>
+                                    <td colspan="2" style="padding: 0; border: 0;">N° d'établissement (FINESS) : {{ quote.user.finess }}</td>
                                 </tr>
                             </tbody>
                         </table>
                     </td>
                     <td style="width: 50%;">
-                        <div style="margin-bottom: 1mm;">
+                        <div style="margin-bottom: 2mm;">
                             <strong>Identification du patient</strong>
                         </div>
-                        <div style="margin-bottom: 1mm;">
+                        <div style="margin-bottom: 2mm;">
                             <div style="float: right;">
-                                Date de naissance : {{ quote.patient.birthDate}}
+                                Date de naissance : {{formatDate quote.patient.birthDate}}
                             </div>
                             <div>
-                                Nom et prénom : {{ quote.patient.lastName }} {{ quote.patient.firstName }}
+                                Nom et prénom : {{ quote.patient.lastname }} {{ quote.patient.firstname }}
                             </div>
                         </div>
                         <div>
@@ -571,7 +599,47 @@
     </table>
     {{#if (isset quote.displayNotice)}}
     <div style="page-break-before: always;"></div>
-    <div style="padding: 1mm; margin-bottom: 2mm; font-size: 9pt;">
+    <div style="padding: 1mm; margin-bottom: 2mm; font-size: 12pt;">
+        <div id="header" style=" margin-bottom:10mm">
+            <table style="color: gray; border-collapse: separate; border-spacing: 1mm; font-size:10pt">
+                <tbody>
+                    <tr>
+                        <td style="width: 50%;">
+                            <div style="margin-bottom: 2mm;">
+                                <strong>Identification du chirurgien-dentiste traitant</strong>
+                            </div>
+                            <table style="color: gray; font-size: 9pt">
+                                <tbody>
+                                    <tr>
+                                        <td style="width: 50%; padding: 0; border: 0;">Identification RPPS : {{ quote.user.medical.rppsNumber }}</td>
+                                        <td style="width: 50%; padding: 0; border: 0;">N° ADELI : {{ quote.user.medical.finessNumber }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="padding: 0; border: 0;">N° d'établissement (FINESS) : {{ quote.user.finess }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                        <td style="width: 50%;">
+                            <div style="margin-bottom: 2mm;">
+                                <strong>Identification du patient</strong>
+                            </div>
+                            <div style="margin-bottom: 2mm;">
+                                <div style="float: right;">
+                                    Date de naissance : {{formatDate quote.patient.birthDate}}
+                                </div>
+                                <div>
+                                    Nom et prénom : {{ quote.patient.lastname }} {{ quote.patient.firstname }}
+                                </div>
+                            </div>
+                            <div>
+                                N° de Sécurité Sociale du patient : {{insee}}
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
         <div style="margin-bottom: 2mm;">
             <strong>NOTICE EXPLICATIVE</strong>
         </div>

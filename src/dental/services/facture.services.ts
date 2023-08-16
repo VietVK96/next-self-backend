@@ -54,7 +54,7 @@ import {
 } from '../res/facture.res';
 import { customCreatePdf } from 'src/common/util/pdf';
 import { facturePdfFooter } from '../constant/htmlTemplate';
-import { br2nl } from 'src/common/util/string';
+import { br2nl, nl2br } from 'src/common/util/string';
 import { validateEmail } from 'src/common/util/string';
 import { MailService } from 'src/mail/services/mail.service';
 import { format, getDayOfYear } from 'date-fns';
@@ -313,10 +313,6 @@ export class FactureServices {
 
             return result;
           } catch (error) {
-            console.log(
-              '🚀 ~ file: facture.services.ts:342 ~ FactureServices ~ requestAjax ~ error:',
-              error,
-            );
             throw new CBadRequestException(ErrorCode.NOT_FOUND);
           }
         }
@@ -754,7 +750,7 @@ export class FactureServices {
           toUpperCase: function (str: string) {
             return str.toUpperCase();
           },
-          nl2br: br2nl,
+          nl2br: nl2br,
           formatDentsLigne: function formatDentsLigne(
             dentsLigne: string | number,
           ) {
@@ -793,10 +789,6 @@ export class FactureServices {
             )
           : 0;
         facture.modePaiement;
-        console.log(
-          '🚀 ~ file: facture.services.ts:806 ~ FactureServices ~ generatePdf ~ facture.modePaiement:',
-          facture.modePaiement,
-        );
         const data = {
           isGroup: disableColumnByGroup.some((e) => e === identity.org),
           duplicata,

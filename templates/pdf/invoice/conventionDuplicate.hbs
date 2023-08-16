@@ -197,7 +197,7 @@
             <tr class="{{#if (isEqual @index detailsLength)}}last{{/if}}">
                 <td class="col1">{{this.dateLigne}}</td>
                 <td class="col2">{{formatDentsLigne this.dentsLigne}}</td>
-                <td class="col3">{{br2nl this.descriptionLigne}}</td>
+                <td class="col3">{{{br2nl this.descriptionLigne}}}</td>
                 {{#unless isGroup}}
                 <td class="col4">{{formatNumber this.secuAmount}}</td>
                 {{/unless}}

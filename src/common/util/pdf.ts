@@ -39,7 +39,9 @@ export const customCreatePdf = async ({
         return argsExceptLast.some(Boolean);
       },
       isset: (v1: any) => {
-        if (Number(v1)) return true;
+        if (Number(v1) || Number(v1 === 0)) {
+          return true;
+        }
         return v1 ? true : false;
       },
       notIsset: (v1: any) => {
@@ -54,7 +56,9 @@ export const customCreatePdf = async ({
         }
       },
       isEmpty: (v1: any) => {
-        if (!v1) return true;
+        if (!v1) {
+          return true;
+        }
         if (Array?.isArray(v1) || typeof v1 === 'string') {
           return v1.length === 0;
         }

@@ -7,7 +7,12 @@ import { EventEntity } from 'src/entities/event.entity';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
 import { UserEntity } from 'src/entities/user.entity';
-import { br2nl, checkEmpty } from 'src/common/util/string';
+import {
+  br2nl,
+  checkEmpty,
+  generateFullName,
+  validateEmail,
+} from 'src/common/util/string';
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
 import { format, getDayOfYear, getYear } from 'date-fns';
 import { ContactEntity } from 'src/entities/contact.entity';
@@ -42,6 +47,10 @@ import { TherapeuticAlternatives0Res } from '../res/therapeuticAlternative.res';
 import { CcamCmuCodificationEntity } from 'src/entities/ccam-cmu-codification.entity';
 import { parseJson } from 'src/common/util/json';
 import { UserUserSettingRes } from 'src/auth/reponse/session.res';
+import { MailTransportService } from 'src/mail/services/mailTransport.service';
+import * as fs from 'fs';
+import * as handlebars from 'handlebars';
+import * as dayjs from 'dayjs';
 @Injectable()
 export class QuotesServices {
   constructor(
@@ -72,7 +81,83 @@ export class QuotesServices {
     private paymentPlanService: PaymentScheduleService,
     private therapeuticAlternativeService: TherapeuticAlternativeService,
     private contactService: ContactService,
+    private mailTransportService: MailTransportService,
   ) {}
+  //ecoophp/dental/quotes/convention-2020/devis_email.php
+  async sendMail(id: number, identity: UserIdentity) {
+    try {
+      id = checkId(id);
+      const data = await this.dentalQuotationRepository.findOne({
+        where: {
+          id: id || 0,
+        },
+        relations: {
+          user: {
+            setting: true,
+            address: true,
+          },
+          contact: true,
+          treatmentPlan: true,
+        },
+      });
+
+      if (
+        !validateEmail(data?.user?.email) ||
+        !validateEmail(data?.contact?.email)
+      ) {
+        throw new CBadRequestException(
+          'Veuillez renseigner une adresse email valide dans la fiche patient',
+        );
+      }
+
+      const date = dayjs(data.date).locale('fr').format('DD MMM YYYY');
+      const filename = `Devis_${dayjs(data.date).format('YYYYMMDD')}.pdf`;
+      const emailTemplate = fs.readFileSync(
+        path.join(process.cwd(), 'templates/mail', 'quote.hbs'),
+        'utf-8',
+      );
+      const userFullName = generateFullName(
+        data?.user?.firstname,
+        data?.user?.lastname,
+      );
+
+      // get template
+      handlebars.registerHelper({
+        isset: (v1: any) => {
+          if (Number(v1)) return true;
+          return v1 ? true : false;
+        },
+      });
+      const template = handlebars.compile(emailTemplate);
+      const mailBody = template({ data, date, userFullName });
+
+      const subject = `Devis du ${date} de Dr ${userFullName} pour ${generateFullName(
+        data?.contact?.firstname,
+        data?.contact?.lastname,
+      )}`;
+      await this.mailTransportService.sendEmail(identity.id, {
+        from: data.user.email,
+        to: data.contact.email,
+        subject,
+        template: mailBody,
+        context: {
+          quote: data,
+        },
+        attachments: [
+          {
+            filename: filename,
+            content: await this.generatePdf({ id }),
+          },
+        ],
+      });
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
+    }
+  }
 
   /**
    *
@@ -896,12 +981,6 @@ export class QuotesServices {
    * Line: 23-92
    */
   async generatePdf(req: PrintPDFDto) {
-    /**
-     * TODO this
-     * $filter = $container->get('doctrine.orm.default_entity_manager')->getFilters()->enable('soft-deleteable');
-     * $filter->disableForEntity(LibraryAct::class);
-     * $filter->disableForEntity(LibraryActQuantity::class);
-     */
     try {
       const id = checkId(req?.id);
       const quote = await this.dentalQuotationRepository.findOne({
@@ -919,6 +998,9 @@ export class QuotesServices {
           user: {
             medical: true,
             setting: true,
+            group: {
+              address: true,
+            },
           },
           patient: {
             amcs: true,
@@ -979,6 +1061,7 @@ export class QuotesServices {
         therapeuticAlternatives,
         isPrintAdditional,
       };
+      console.log(data);
 
       const filePath = path.join(
         process.cwd(),
@@ -992,6 +1075,12 @@ export class QuotesServices {
         },
       ];
 
+      const helpers = {
+        formatDate: (date: string) => {
+          return checkDay(date, 'DD/MM/YYYY');
+        },
+      };
+
       const options = {
         format: 'A4',
         displayHeaderFooter: true,
@@ -1001,11 +1090,10 @@ export class QuotesServices {
           left: '5mm',
           top: '5mm',
           right: '5mm',
-          bottom: '5mm',
+          bottom: '10mm',
         },
       };
-
-      return customCreatePdf({ files, options });
+      return customCreatePdf({ files, options, helpers });
     } catch (error) {
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }

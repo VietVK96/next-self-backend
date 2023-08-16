@@ -339,6 +339,12 @@ export class QuotationMutualServices {
     );
   }
 
+  /**
+   * ecoophp/dental/quotation-mutual/devis_email.php
+   * @param id
+   * @param identity
+   * @returns
+   */
   async sendMail(id: number, identity: UserIdentity): Promise<SuccessResponse> {
     try {
       id = checkId(id);
@@ -366,7 +372,7 @@ export class QuotationMutualServices {
       }
 
       const date = dayjs(data.date).locale('fr').format('DD MMM YYYY');
-      const filename = `Devis_${date}.pdf`;
+      const filename = `Devis_${dayjs(data.date).format('YYYYMMDD')}.pdf`;
       const emailTemplate = fs.readFileSync(
         path.join(process.cwd(), 'templates/mail', 'quote.hbs'),
         'utf-8',
@@ -395,7 +401,9 @@ export class QuotationMutualServices {
         to: data.contact.email,
         subject,
         template: mailBody,
-        context: {},
+        context: {
+          quote: data,
+        },
         attachments: [
           {
             filename: filename,
