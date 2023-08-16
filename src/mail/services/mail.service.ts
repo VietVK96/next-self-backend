@@ -1520,7 +1520,6 @@ export class MailService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      console.log('headerId', headerId, footerId);
       const res = await queryRunner.query(
         `
         UPDATE T_LETTERS_LET
