@@ -86,11 +86,11 @@ export class PatientOdontogramService {
   }
 
   async getInitialPrestation(conId: number): Promise<EventTaskEntity[] | null> {
-    const result = await this.antecedentPrestationRepository.findOne({
+    const result = await this.antecedentPrestationRepository.find({
       where: {
         conId,
-        teeth: Not(null),
-        libraryActId: Not(null),
+        teeth: Not(IsNull()),
+        libraryActId: Not(IsNull()),
       },
       select: ['libraryActId', 'libraryActQuantityId', 'teeth'],
       order: {
@@ -98,24 +98,42 @@ export class PatientOdontogramService {
       },
     });
     if (!result) return null;
-    return [
-      {
-        libraryActId: result.libraryActId,
-        libraryActQuantityId: result.libraryActQuantityId,
-        dental: {
-          teeth: result.teeth,
-          ccamCode: null,
-        },
-      },
-    ];
+    return result?.map(
+      (element) =>
+        ({
+          libraryActId: element.libraryActId,
+          libraryActQuantityId: element.libraryActQuantityId,
+          dental: {
+            teeth: element.teeth,
+            ccamCode: null,
+          },
+        } as EventTaskEntity),
+    );
   }
 
   async getCurrent(request: OdontogramCurrentDto) {
     try {
-      const evenTasks = await this.getCurrentPrestation(request?.patientId);
-      return this.odontogramRunStatus(evenTasks);
+      const evenTasks: EventTaskEntity[] = [];
+      switch (request?.type) {
+        case 'planned': {
+          const planned = await this.getTreatmentPlanPrestation(
+            request?.patientId,
+          );
+          evenTasks.push(...planned);
+        }
+        case 'current': {
+          const current = await this.getCurrentPrestation(request?.patientId);
+          evenTasks.push(...current);
+        }
+        case 'initial': {
+          const init = await this.getInitialPrestation(request?.patientId);
+          evenTasks?.push(...init);
+        }
+      }
+
+      return await this.odontogramRunStatus(evenTasks);
     } catch (err) {
-      console.log('-----data-----', err);
+      throw new CBadRequestException(err);
     }
   }
 
@@ -133,7 +151,7 @@ export class PatientOdontogramService {
         relations: ['dental'],
         order: { createdAt: 'ASC' },
       });
-      return this.odontogramRunStatus(evenTasks);
+      return await this.odontogramRunStatus(evenTasks);
     } catch (error) {
       throw new CBadRequestException(error);
     }
@@ -153,32 +171,45 @@ export class PatientOdontogramService {
       zone: string[];
       color: string;
     }[] = [];
+
     for (const evenTask of evenTasks) {
-      const rgx = new RegExp(`/^HBQK(?!(002))/i`);
-      const displayXray = rgx.test(evenTask?.dental?.ccamCode);
-      const teethsNumber = evenTask?.dental?.teeth?.split(',');
+      const displayXray = /^HBQK(?!002)/i.test(evenTask?.dental?.ccamCode);
+      const teethsNumber = changeSectorNumberToTooth(
+        evenTask?.dental?.teeth,
+      )?.split(',');
       const libraryActQuantityId = evenTask?.libraryActQuantityId;
       const libraryActId = evenTask?.libraryActId;
+      if (!teethsNumber?.length) continue;
 
-      let library_odontograms = await this.dataSource
-        .createQueryBuilder(LibraryOdontogramEntity, 'LO')
-        .select()
-        .innerJoin('library_act_quantity_odontogram', 'LAQO')
-        .where('LO.id = LAQO.library_odontogram_id')
-        .andWhere('LAQO.library_act_quantity_id = :libraryActQuantityId', {
-          libraryActQuantityId,
-        })
-        .getMany();
+      let library_odontograms = await this.libraryOdontogramRepository.find({
+        relations: {
+          libraryActQuantities: true,
+        },
+        where: {
+          libraryActQuantities: {
+            id: libraryActQuantityId,
+          },
+        },
+      });
 
       if (!library_odontograms.length) {
-        library_odontograms = await this.dataSource
-          .createQueryBuilder(LibraryOdontogramEntity, 'LO')
-          .select()
-          .innerJoin('library_act_odontogram', 'LAO')
-          .where('LO.id = LAO.library_odontogram_id')
-          .andWhere('LAO.library_act_id IN (:libraryActId)', { libraryActId })
-          .getMany();
+        library_odontograms = await this.libraryOdontogramRepository.find({
+          relations: {
+            libraryActs: true,
+          },
+          where: {
+            libraryActs: {
+              id: libraryActId,
+            },
+          },
+        });
       }
+      if (!library_odontograms?.length) continue;
+
+      const nullablesRank = library_odontograms?.filter(
+        (odontogram) => odontogram?.rankOfTooth === null,
+      );
+      if (nullablesRank?.length) library_odontograms = nullablesRank;
       for (const odontogram of library_odontograms) {
         const color = odontogram?.color;
         const visibleCrown = odontogram?.visibleCrown;
