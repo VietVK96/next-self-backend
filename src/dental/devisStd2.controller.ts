@@ -29,7 +29,6 @@ export class DevisStd2Controller {
         payload,
         identity,
       );
-
       res.set({
         // pdf
         'Content-Type': 'application/pdf',
@@ -54,5 +53,15 @@ export class DevisStd2Controller {
     @Query() params: DevisStd2Dto,
   ) {
     return await this.devisStd2Services.getInitChamps(params, identity);
+  }
+
+  // ecoophp/dental/devisStd2/devisStd2_email.php
+  @Get('/devisStd2/devisStd2_email')
+  @UseGuards(TokenGuard)
+  async sendMail(
+    @Query('id') id: number,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.devisStd2Services.sendMail(id, identity);
   }
 }

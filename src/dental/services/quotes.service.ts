@@ -51,6 +51,7 @@ import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import * as fs from 'fs';
 import * as handlebars from 'handlebars';
 import * as dayjs from 'dayjs';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 @Injectable()
 export class QuotesServices {
   constructor(
@@ -77,6 +78,8 @@ export class QuotesServices {
     private lettersRepository: Repository<LettersEntity>,
     @InjectRepository(CcamUnitPriceEntity)
     private ccamUnitPriceRepository: Repository<CcamUnitPriceEntity>,
+    @InjectRepository(ContactNoteEntity)
+    private contactNoteRepo: Repository<ContactNoteEntity>,
     private mailService: MailService,
     private paymentPlanService: PaymentScheduleService,
     private therapeuticAlternativeService: TherapeuticAlternativeService,
@@ -151,6 +154,20 @@ export class QuotesServices {
         ],
       });
 
+      if (data?.treatmentPlan?.id) {
+        await this.planPlfRepository.save({
+          ...data.treatmentPlan,
+          sentToPatient: 1,
+          sendingDateToPatient: dayjs().format('YYYY-MM-DD'),
+        });
+      }
+
+      await this.contactNoteRepo.save({
+        userId: data.userId,
+        conId: data.contactId,
+        date: dayjs().format('YYYY-MM-DD'),
+        message: `Envoi par email du devis du ${date}`,
+      });
       return {
         success: true,
       };

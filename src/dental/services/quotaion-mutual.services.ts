@@ -413,14 +413,14 @@ export class QuotationMutualServices {
       });
 
       if (data?.treatmentPlan?.id) {
-        this.planPlfRepo.save({
+        await this.planPlfRepo.save({
           ...data.treatmentPlan,
           sentToPatient: 1,
           sendingDateToPatient: dayjs().format('YYYY-MM-DD'),
         });
       }
 
-      this.contactNoteRepo.save({
+      await this.contactNoteRepo.save({
         conId: data.contactId,
         message: `Envoi par email du devis du ${date} de ${data.user.lastname} ${data.user.firstname}`,
       });

@@ -80,6 +80,6 @@ export function validateEmail(email: string) {
 export function generateFullName(firstname: string, lastname: string): string {
   firstname = firstname ? firstname : '';
   lastname = lastname ? lastname : '';
-  const fullname = firstname + ' ' + lastname;
+  const fullname = lastname + ' ' + firstname;
   return fullname.trim();
 }

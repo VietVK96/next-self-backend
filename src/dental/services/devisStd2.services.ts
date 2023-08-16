@@ -21,16 +21,19 @@ import * as path from 'path';
 import { DevisStd2ActesRes, DevisStd2InitRes } from '../res/devisStd2.res';
 import { checkDay, customDayOfYear } from 'src/common/util/day';
 import * as dayjs from 'dayjs';
-import { toFixed } from 'src/common/util/number';
+import { checkId, toFixed } from 'src/common/util/number';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { DevisStd2Dto } from '../dto/devisStd2.dto';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { BillEntity } from 'src/entities/bill.entity';
-import { br2nl } from 'src/common/util/string';
+import { br2nl, generateFullName, validateEmail } from 'src/common/util/string';
 import { StringHelper } from 'src/common/util/string-helper';
 import { DOMParser, XMLSerializer } from 'xmldom';
 import { PatientOdontogramService } from 'src/patient/service/patientOdontogram.service';
 import * as fs from 'fs';
+import * as handlebars from 'handlebars';
+import { MailTransportService } from 'src/mail/services/mailTransport.service';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 @Injectable()
 export class DevisStd2Services {
   constructor(
@@ -52,11 +55,103 @@ export class DevisStd2Services {
     private userPreferenceQuotationRepository: Repository<UserPreferenceQuotationEntity>,
     @InjectRepository(ContactEntity)
     private contactRepository: Repository<ContactEntity>, //event
+    @InjectRepository(ContactNoteEntity)
+    private contactNoteRepo: Repository<ContactNoteEntity>,
     private dataSource: DataSource,
     private paymentScheduleService: PaymentScheduleService,
     private patientOdontogramService: PatientOdontogramService,
+    private mailTransportService: MailTransportService,
   ) {}
 
+  // ecoophp/dental/devisStd2/devisStd2_email
+  async sendMail(id: number, identity: UserIdentity) {
+    try {
+      id = checkId(id);
+      const data = await this.dentalQuotationRepository.findOne({
+        where: {
+          id: id || 0,
+        },
+        relations: {
+          user: {
+            setting: true,
+            address: true,
+          },
+          contact: true,
+          treatmentPlan: true,
+        },
+      });
+
+      if (
+        !validateEmail(data?.user?.email) ||
+        !validateEmail(data?.contact?.email)
+      ) {
+        throw new CBadRequestException(
+          'Veuillez renseigner une adresse email valide dans la fiche patient',
+        );
+      }
+
+      const date = dayjs(data.date).locale('fr').format('DD MMM YYYY');
+      const filename = `Devis_${dayjs(data.date).format('YYYY_MM_DD')}.pdf`;
+      const emailTemplate = fs.readFileSync(
+        path.join(process.cwd(), 'templates/mail', 'quote.hbs'),
+        'utf-8',
+      );
+      const userFullName = generateFullName(
+        data?.user?.firstname,
+        data?.user?.lastname,
+      );
+
+      // get template
+      handlebars.registerHelper({
+        isset: (v1: any) => {
+          if (Number(v1)) return true;
+          return v1 ? true : false;
+        },
+      });
+      const template = handlebars.compile(emailTemplate);
+      const mailBody = template({ data, date, userFullName });
+
+      const subject = `Devis du ${date} de Dr ${userFullName} pour ${generateFullName(
+        data?.contact?.firstname,
+        data?.contact?.lastname,
+      )}`;
+      await this.mailTransportService.sendEmail(identity.id, {
+        from: data.user.email,
+        to: data.contact.email,
+        subject,
+        template: mailBody,
+        context: {
+          quote: data,
+        },
+        attachments: [
+          {
+            filename: filename,
+            content: await this.generatePdf({ id }, identity),
+          },
+        ],
+      });
+
+      if (data?.treatmentPlan?.id) {
+        await this.planPlfRepository.save({
+          ...data.treatmentPlan,
+          sentToPatient: 1,
+          sendingDateToPatient: dayjs().format('YYYY-MM-DD'),
+        });
+      }
+
+      await this.contactNoteRepo.save({
+        conId: data.contactId,
+        message: `Envoi par email du devis du ${date} de ${data.user.lastname} ${data.user.firstname}`,
+      });
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
+    }
+  }
+  // ecoophp/dental/devisStd2/devisStd2_init_champs.php
   async getInitChamps(
     req: DevisStd2Dto,
     identity?: UserIdentity,
@@ -448,7 +543,7 @@ export class DevisStd2Services {
       try {
         const dataDENTALQUOTATIONS = await this.dataSource.query(
           `
-          SELECT DQO.USR_ID as id_user,
+         SELECT DQO.USR_ID as id_user,
                    DQO.PLF_ID as id_pdt,
                    DQO.CON_ID as ident_pat,
                    DQO.DQO_SCHEMES as schemassss,
@@ -514,27 +609,33 @@ export class DevisStd2Services {
                    DQA.DQA_RSS as rss, 
                    DQA.DQA_ROC as roc
                FROM T_DENTAL_QUOTATION_ACT_DQA DQA
-               WHERE DQA.DQO_ID = " . ? . "
+               WHERE DQA.DQO_ID = ?
                ORDER BY DQA.DQA_POS ASC, DQA.DQA_ID ASC
           `,
           [req?.no_devis],
         );
+        console.log(
+          '🚀 ~ file: devisStd2.services.ts:617 ~ DevisStd2Services ~ dataActes:',
+          dataActes,
+        );
         const actes: DevisStd2ActesRes[] = [];
-        for (const dataActe of dataActes) {
-          if (
-            dataActe?.typeLigne === null &&
-            dataActe?.typeLigne === undefined
-          ) {
+        dataActes.forEach((dataActe) => {
+          if (!dataActe?.typeLigne) {
             dataActe.typeLigne = 'operation';
           }
-          actes.push({ ...dataActes });
-        }
+          actes.push(dataActe);
+        });
+
+        console.log(
+          '🚀 ~ file: devisStd2.services.ts:618 ~ DevisStd2Services ~ actes:',
+          actes,
+        );
         result = {
           ...result,
           id_user: dataDENTALQUOTATION?.id_user,
           id_pdt: dataDENTALQUOTATION?.id_pdt,
-          schemas: dataDENTALQUOTATION?.schemas
-            ? dataDENTALQUOTATION?.schemas
+          schemas: dataDENTALQUOTATION?.schemassss
+            ? dataDENTALQUOTATION?.schemassss
             : 'both',
           couleur,
           userPreferenceQuotationColor: couleur,
@@ -584,8 +685,12 @@ export class DevisStd2Services {
       //  Taux de remboursement sécu par défaut si le taux de remboursement sécu
       //  du patient est vide
       const contactEntity = await this.contactRepository.findOne({
-        where: { id: req?.id_contact },
+        where: { id: result?.id_contact || 0 },
       });
+      console.log(
+        '🚀 ~ file: devisStd2.services.ts:686 ~ DevisStd2Services ~ contactEntity?.socialSecurityReimbursementRate:',
+        contactEntity?.socialSecurityReimbursementRate,
+      );
       result.socialSecurityReimbursementRate =
         contactEntity?.socialSecurityReimbursementRate
           ? toFixed(contactEntity?.socialSecurityReimbursementRate)
@@ -653,12 +758,15 @@ export class DevisStd2Services {
         ar_acte.nrss = prixLigne - rss;
         if (Math.abs(nrss) < 0.01) ar_acte.nrss = 0;
         ar_acte.roc = 0;
-
+        console.log(
+          '🚀 ~ file: devisStd2.services.ts:752 ~ DevisStd2Services ~ result?.actes.map ~ ar_acte:',
+          ar_acte,
+        );
         result.total_prixvente += ar_acte.prixvente;
         result.total_prestation += ar_acte.prestation;
         result.total_charges += ar_acte.charges;
         result.total_prixLigne += ar_acte.prixLigne;
-        result.total_rss += ar_acte.rss;
+        result.total_rss += rss;
         result.total_nrss += ar_acte.nrss;
         result.details.push(ar_acte);
 
@@ -704,6 +812,7 @@ export class DevisStd2Services {
           });
         }
       });
+      // console.log("🚀 ~ file: devisStd2.services.ts:802 ~ DevisStd2Services ~ result?.actes.map ~ result?.actes:", result?.actes)
       result.odontogramType = 'adult';
     } catch (error) {
       throw new CBadRequestException(error.message);
@@ -771,6 +880,7 @@ export class DevisStd2Services {
     return result;
   }
 
+  //ecoophp/dental/devisStd2/devisStd2_pdf.php
   async generatePdf(req: PrintPDFDto, identity: UserIdentity) {
     try {
       const initData = await this.getInitChamps(
@@ -822,6 +932,7 @@ export class DevisStd2Services {
     }
   }
 
+  // ecoophp/dental/devisStd2/devisStd2_corps1.php
   corps1(data: DevisStd2InitRes, pdf: boolean): PdfTemplateFile {
     data.etatBucco =
       !data?.etatBucco && !pdf
@@ -845,6 +956,8 @@ export class DevisStd2Services {
       path: filePath,
     };
   }
+
+  //ecoophp/dental/devisStd2/devisStd2_corps2.php
   corps2(data: DevisStd2InitRes, pdf: boolean): PdfTemplateFile {
     if (!data?.infosCompl && !pdf) {
       data.infosCompl = '\n\n';
@@ -864,6 +977,8 @@ export class DevisStd2Services {
       path: filePath,
     };
   }
+
+  // ecoophp/dental/devisStd2/devisStd2_corps3.php
   corps3(data: DevisStd2InitRes, pdf: boolean): PdfTemplateFile {
     const filePath = path.join(
       process.cwd(),
