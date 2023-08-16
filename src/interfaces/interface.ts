@@ -1,3 +1,5 @@
+import { ContactUserEntity } from 'src/entities/contact-user.entity';
+
 interface PaymentInterface {
   id: number;
   patient_id: number;
@@ -95,6 +97,48 @@ interface ItemResponse {
   className: string;
 }
 
+interface IPatientBalances {
+  current_page_number?: number;
+
+  custom_parameters?: {
+    query: {
+      id: number;
+      page: number;
+      per_page: number;
+      direction: string;
+      sort: string;
+    };
+  };
+
+  items?: ContactUserEntity[];
+
+  num_item_per_page?: number;
+
+  paginator_options?: PaginatorOptions;
+
+  range?: number;
+
+  total_count?: number;
+}
+
+interface PaginatorOptions {
+  defaultSortDirection?: string;
+
+  defaultSortFieldName?: string;
+
+  distinct?: boolean;
+
+  filterFieldParameterName?: string;
+
+  filterValueParameterName?: string;
+
+  pageParameterName?: string;
+
+  sortDirectionParameterName?: string;
+
+  sortFieldParameterName?: string;
+}
+
 export {
   PaymentInterface,
   PatientStatement,
@@ -105,4 +149,5 @@ export {
   Extras,
   Options,
   ItemResponse,
+  IPatientBalances,
 };
