@@ -36,14 +36,14 @@ export class MailTransportService {
       const emailOutgoingServer = await this.dataSource
         .getRepository(EmailOutgoingServerEntity)
         .findOne({ where: { emailAccountId: email.id } });
-      const decryptedUserName = crypto.DES.decrypt(
+      const decryptedUserName = crypto.AES.decrypt(
         emailOutgoingServer.username,
         env.SECRET_KEY_EMAIL,
       );
       emailOutgoingServer.username = decryptedUserName.toString(
         crypto.enc.Utf8,
       );
-      const decryptedPassword = crypto.DES.decrypt(
+      const decryptedPassword = crypto.AES.decrypt(
         emailOutgoingServer.password,
         env.SECRET_KEY_EMAIL,
       );
