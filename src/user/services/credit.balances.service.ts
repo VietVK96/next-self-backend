@@ -6,7 +6,7 @@ import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 import { CreditBalancesDto } from '../dto/credit-balances.dto';
-import { BordereauxIndexRes } from 'src/bordereaux/response/bordereaux.res';
+import { IPatientBalances } from 'src/interfaces/interface';
 
 @Injectable()
 export class CreditBalancesService {
@@ -25,8 +25,8 @@ export class CreditBalancesService {
    */
   async getPatientBalances(
     payload: CreditBalancesDto,
-  ): Promise<BordereauxIndexRes> {
-    const { id, page, per_page } = payload;
+  ): Promise<IPatientBalances> {
+    const { id, page, per_page, direction, sort } = payload;
 
     const filterParams: string[] = Array.isArray(payload?.filterParams)
       ? payload?.filterParams
@@ -83,10 +83,17 @@ export class CreditBalancesService {
         offSet,
         offSet + per_page,
       );
-      const data = {
+      const data: IPatientBalances = {
         current_page_number: page,
-        custom_parameters: { sorted: true },
-        extra: { total_amount: pagination.length },
+        custom_parameters: {
+          query: {
+            id: id,
+            page: page,
+            per_page: per_page,
+            direction: direction,
+            sort: sort,
+          },
+        },
         items: dataPaging,
         num_item_per_page: per_page,
         paginator_options: {
