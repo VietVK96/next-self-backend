@@ -37,12 +37,20 @@ export class AntecedentPrestationController {
     return this.antecedentPrestationService.findAll(payload, identity.org);
   }
 
+  /**
+   * php/antecedentPrestation/save.php
+   *
+   */
   @Post()
   @UseGuards(TokenGuard)
   async createAntecedentPrestation(@Body() payload: SaveStructDto) {
     return this.antecedentPrestationService.save(payload);
   }
 
+  /**
+   * php/antecedentPrestation/save.php
+   *
+   */
   @Put()
   @UseGuards(TokenGuard)
   async updateAntecedentPrestation(@Body() payload: SaveStructDto) {

@@ -1,16 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EnumLibraryActQuantityExceeding } from 'src/entities/library-act-quantity.entity';
-import { EnumLibraryActNomenclature } from '../../entities/library-act.entity';
-import {
-  IsArray,
-  IsBoolean,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-  IsString,
-  MaxLength,
-  ValidateNested,
-} from 'class-validator';
 
 export class ActsShowDto {
   @ApiProperty({

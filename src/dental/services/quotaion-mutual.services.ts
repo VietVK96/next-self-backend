@@ -25,9 +25,6 @@ import { ContactEntity } from 'src/entities/contact.entity';
 import { AddressEntity } from 'src/entities/address.entity';
 import { GenderEntity } from 'src/entities/gender.entity';
 import { StringHelper } from 'src/common/util/string-helper';
-import { EventTaskEntity } from 'src/entities/event-task.entity';
-import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
-import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
 import { checkDay, customDayOfYear } from 'src/common/util/day';
 import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
 import { BillEntity } from 'src/entities/bill.entity';
@@ -336,7 +333,7 @@ export class QuotationMutualServices {
   }
 
   async sendMail(identity: UserIdentity) {
-    await this.mailService.sendTest();
+    await this.mailService.sendTest(identity.id);
   }
 
   // dental/quotation-mutual/devis_pdf.php 45-121

@@ -345,3 +345,11 @@ export class DevisHNGetInitChampDto {
   })
   no_devis?: number;
 }
+
+export class DevisHNPdfDto extends DevisHNGetInitChampDto {
+  @ApiProperty({
+    name: 'duplicate',
+    required: false,
+  })
+  duplicate?: boolean;
+}
