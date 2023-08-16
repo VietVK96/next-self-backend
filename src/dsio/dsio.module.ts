@@ -7,7 +7,6 @@ import { ImporterService } from './services/importer.service';
 import { DsioService } from './services/dsio.service';
 import { CommandModule } from 'src/command/command.module';
 import { DsioElemService } from './services/dsio.elem.service';
-import { DsioConfigService } from './services/dsio.config.service';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { CcamEntity } from 'src/entities/ccam.entity';
@@ -39,7 +38,6 @@ import { LettersEntity } from 'src/entities/letters.entity';
     ImporterService,
     DsioService,
     DsioElemService,
-    DsioConfigService,
     LetterImporterService,
   ],
 })

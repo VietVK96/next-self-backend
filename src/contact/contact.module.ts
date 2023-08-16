@@ -157,6 +157,6 @@ import { ReminderVisitController } from './reminderVisit.controller';
     PatientModule,
     UploadModule,
   ],
-  exports: [ContactService],
+  exports: [ContactService, ContactPaymentService],
 })
 export class ContactModule {}

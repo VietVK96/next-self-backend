@@ -60,6 +60,7 @@ import { TherapeuticAlternativeService } from './services/therapeuticAlternative
 import { CcamEntity } from 'src/entities/ccam.entity';
 import { CcamUnitPriceEntity } from 'src/entities/ccamunitprice.entity';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
+import { ContactModule } from 'src/contact/contact.module';
 
 @Module({
   imports: [
@@ -110,6 +111,7 @@ import { MailTransportService } from 'src/mail/services/mailTransport.service';
       CcamUnitPriceEntity,
     ]),
     PaymentSchedulesModule,
+    ContactModule,
   ],
   controllers: [DentalController, DevisHNController],
   providers: [
