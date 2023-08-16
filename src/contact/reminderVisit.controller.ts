@@ -1,13 +1,17 @@
 import { ApiBasicAuth, ApiTags } from '@nestjs/swagger';
 import { ReminderVisitService } from './services/reminderVisit.service';
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
 import {
   CurrentUser,
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
-import { ReminderVisitQuery } from './dto/reminderVisit.dto';
+import {
+  ReminderVisitPrintQuery,
+  ReminderVisitQuery,
+} from './dto/reminderVisit.dto';
 import { ReminderVisitRes } from './response/reminder-visit.res';
+import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
 
 @ApiBasicAuth()
 @Controller('/reminder-visit')
@@ -30,5 +34,32 @@ export class ReminderVisitController {
       identity.org,
       params,
     );
+  }
+
+  /**
+   * php/contact/reminderVisit/print.php
+   * 15-300
+   */
+  @Get('/print')
+  @UseGuards(TokenDownloadGuard)
+  async print(
+    @Res() res,
+    @CurrentUser() identity: UserIdentity,
+    @Query() params: ReminderVisitPrintQuery,
+  ) {
+    const buffer = await this.reminderVisitService.print(
+      identity.id,
+      identity.org,
+      params,
+    );
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=print.pdf`,
+      'Content-Length': buffer?.length,
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: 0,
+    });
+    res.end(buffer);
   }
 }

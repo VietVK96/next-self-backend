@@ -38,6 +38,10 @@ export class ContactService {
     @InjectRepository(ContactEntity)
     private contactRepository: Repository<ContactEntity>,
     private contactPaymentService: ContactPaymentService,
+    @InjectRepository(PatientAmoEntity)
+    private patientAmoRepo: Repository<PatientAmoEntity>,
+    @InjectRepository(PatientAmcEntity)
+    private patientAmcRepo: Repository<PatientAmcEntity>,
   ) {}
 
   async verifyByIdAndGroupId(id: number, orgId: number): Promise<boolean> {
@@ -290,27 +294,19 @@ count(CON_ID) as countId,COD_TYPE as codType
   }
 
   async findAmos(id: number) {
-    const queryBuiler = this.dataSource.createQueryBuilder();
-    const qr = queryBuiler
-      .select('*')
-      .from(PatientAmoEntity, 'amo')
-      .where(`patient_id = :id`, {
-        id,
-      });
-
-    return qr.getRawMany();
+    return await this.patientAmoRepo.find({
+      where: {
+        patientId: id,
+      },
+    });
   }
 
   async findAmcs(id: number) {
-    const queryBuiler = this.dataSource.createQueryBuilder();
-    const qr = queryBuiler
-      .select('*')
-      .from(PatientAmcEntity, 'amc')
-      .where(`patient_id = :id`, {
-        id,
-      });
-
-    return qr.getRawMany();
+    return await this.patientAmcRepo.find({
+      where: {
+        patientId: id,
+      },
+    });
   }
 
   async findLibraryLink(id: number): Promise<{

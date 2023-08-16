@@ -1,0 +1,27 @@
+
+<div>
+{{#if odontogram.initial}}
+<div class="odontogram">
+    <div class="label">{{ trans("Schéma initial") }}</div>
+    <div class="content">
+        <img src="{{ odontogram.initial }}" style="height: 55mm;"  />
+    </div>
+</div>
+{{/if}}
+{{#if  odontogram.current}}
+<div class="odontogram">
+    <div class="label">{{ trans("Schéma actuel") }}</div>
+    <div class="content">
+        <img src="{{ odontogram.current }}" style="height: 55mm;" />
+    </div>
+</div>
+{{/if}}
+{{#if  odontogram.planned}}
+<div class="odontogram">
+    <div class="label">{{ trans("Schéma à venir") }}</div>
+    <div class="content">
+        <img src="{{ odontogram.planned }}" style="height: 55mm;" />
+    </div>
+</div>
+{{/if}}
+</div>

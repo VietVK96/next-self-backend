@@ -31,6 +31,8 @@ import { Response } from 'express';
 import { UpdatePassWordSettingDto } from './dto/user-setting.dto';
 import { ErrorCode } from 'src/constants/error';
 import { GetOneActiveRes } from './res/get-active.res';
+import { CreditBalancesService } from './services/credit.balances.service';
+import { CreditBalancesDto } from './dto/credit-balances.dto';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -41,6 +43,7 @@ export class UserController {
     private preferenceService: PreferenceService,
     private tokenDownloadService: TokenDownloadService,
     private unpaidService: UnpaidService,
+    private creditBalancesService: CreditBalancesService,
   ) {}
 
   /**
@@ -192,5 +195,16 @@ export class UserController {
       identity.org,
       body,
     );
+  }
+
+  /**
+   * File : php/user/credit-balances/index.php 100%
+   * @param payload
+   * @returns
+   */
+  @Get('credit-balances/index')
+  @UseGuards(TokenGuard)
+  getCreditBalances(@Query() payload: CreditBalancesDto) {
+    return this.creditBalancesService.getPatientBalances(payload);
   }
 }

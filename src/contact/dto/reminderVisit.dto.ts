@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-interface ConditionItem {
+export interface ConditionItem {
   [key: string]: string;
 }
 
@@ -12,7 +12,7 @@ export class ReminderVisitPhone {
   phoneNumber?: number;
 }
 
-export class ReminderVisitItem {
+export class ReminderVisitItemDto {
   id?: number;
   number?: number;
   lastname?: string;
@@ -22,6 +22,7 @@ export class ReminderVisitItem {
   dateOfLastReminder?: string;
   dateOfLastVisit?: string;
   dateOfNextReminder?: string;
+  phone?: number;
 }
 
 export class ReminderVisitQuery {
@@ -31,6 +32,14 @@ export class ReminderVisitQuery {
   @ApiProperty()
   rp?: number;
 
+  @ApiProperty()
+  conditions?: Array<ConditionItem>;
+
+  @ApiProperty()
+  user?: number;
+}
+
+export class ReminderVisitPrintQuery {
   @ApiProperty()
   conditions?: Array<ConditionItem>;
 

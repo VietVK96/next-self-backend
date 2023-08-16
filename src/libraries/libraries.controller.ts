@@ -82,11 +82,8 @@ export class LibrariesController {
    */
   @Post('act-families/copy/:id')
   @UseGuards(TokenGuard)
-  async copyActFamily(
-    @Param('id') id: number,
-    @CurrentUser() identity: UserIdentity,
-  ): Promise<any> {
-    return await this.librariesService.copyActFamily(id, identity);
+  async copyActFamily(@Param('id') id: number): Promise<any> {
+    return await this.librariesService.copyActFamily(id);
   }
 
   /**
@@ -117,9 +114,8 @@ export class LibrariesController {
   @UseGuards(TokenGuard)
   async showActFamilies(
     @Param('id') id: number,
-    @CurrentUser() identity: UserIdentity,
   ): Promise<LibraryActFamilyEntity> {
-    return await this.librariesService.showActFamily(id, identity);
+    return await this.librariesService.showActFamily(id);
   }
 
   /**
@@ -128,7 +124,7 @@ export class LibrariesController {
   @Post('acts/copy/:id')
   @UseGuards(TokenGuard)
   async actsIndex(
-    @CurrentUser() identity,
+    @CurrentUser() identity: UserIdentity,
     @Param('id') id: number,
   ): Promise<any> {
     return await this.librariesService.actsCopy(id, identity);

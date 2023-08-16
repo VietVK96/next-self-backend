@@ -28,6 +28,12 @@ export class OdontogramCurrentDto {
     required: true,
   })
   patientId: number;
+
+  @ApiProperty({
+    required: false,
+    default: 'current',
+  })
+  type: string;
 }
 
 export class TreatmentPlanOdontogramDto {

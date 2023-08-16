@@ -71,12 +71,12 @@ export class ResourceService {
       });
 
       const {
-        archivedAt,
-        organizationId,
-        createdAt,
-        updatedAt,
-        useDefaultColor,
-        free,
+        // archivedAt,
+        // organizationId,
+        // createdAt,
+        // updatedAt,
+        // useDefaultColor,
+        // free,
         ...rest
       } = getResource;
 
