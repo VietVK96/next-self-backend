@@ -90,7 +90,7 @@ export class AmountDueService {
       );
 
       if (usrIds && usrIds.length > 0) {
-        usrIds.forEach(async (item) => {
+        for (const item of usrIds) {
           // Récupération des actes
           await this.dataSource.query(
             `
@@ -222,7 +222,7 @@ export class AmountDueService {
           } finally {
             await queryRunner.release();
           }
-        });
+        }
       }
 
       /**

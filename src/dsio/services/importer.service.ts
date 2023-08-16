@@ -1,9 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { ImporterDsioDto } from '../dto/importer-dsio.dto';
-import dayjs from 'dayjs';
-import * as utc from 'dayjs/plugin/utc';
-import * as timezone from 'dayjs/plugin/timezone';
 import * as fs from 'fs';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { DsioService } from './dsio.service';
@@ -33,10 +30,6 @@ export class ImporterService {
     try {
       const filename = importerDsioDto.pathname;
 
-      dayjs.extend(utc);
-      dayjs.extend(timezone);
-      dayjs.tz('Europe/Paris');
-
       // Récupération du groupe de travail
       const TRIGGER_CHECKS = 'FALSE';
       const groupId = orgId;
@@ -47,11 +40,54 @@ export class ImporterService {
       const utf8 = true;
 
       // Gestion des familles patients
-      const t_COF = [];
+      const t_COF: Record<string, number[]> = {};
+
+      // php/dsio/import_shell.php line 63 -> 69
+      // Récupération des types de téléphones
+      const t_phone_type_pty: Record<string, number> = {};
+      const phoneTypeResult: { PTY_NAME: string; PTY_ID: number }[] =
+        await this.dataSource.query(
+          'select PTY_NAME, PTY_ID from T_PHONE_TYPE_PTY',
+        );
+      phoneTypeResult.forEach((item) => {
+        t_phone_type_pty[item.PTY_NAME] = item.PTY_ID;
+      });
+
+      // php/dsio/import_shell.php line 71 -> 86
+      // Récupération des genres
+      const t_gender_gen: Record<string, number> = {};
+      const genderResult: { GEN_NAME: string; GEN_ID: number }[] =
+        await this.dataSource.query('select * from `T_GENDER_GEN`');
+      genderResult.forEach((item) => {
+        t_gender_gen[item.GEN_NAME] = item.GEN_ID; // M, Mme, Mlle, M & Mme, Dr, Pr, Me
+      });
+
+      t_gender_gen['Mr'] = 1;
+      t_gender_gen['M.'] = 1;
+      t_gender_gen['Msieur'] = 1;
+      t_gender_gen['Monsieur'] = 1;
+      t_gender_gen['Madame'] = 2;
+      t_gender_gen['Mademoiselle'] = 4;
+      t_gender_gen['Melle'] = 4;
+      t_gender_gen['Melle.'] = 4;
+      t_gender_gen['Mlle.'] = 4;
 
       // Lien entre actes et bibliothèque d'actes
-      const t_dsio_tasks = {};
-      const LFT_ASSOCIATED_ACTS = {};
+      const t_dsio_tasks:
+        | Record<string, string>
+        | Record<string, Record<string, number>> = {};
+      const LFT_ASSOCIATED_ACTS: Record<string, string> = {};
+
+      // Récupération des lettres clés
+      const ngapKeys: Record<string, number> = {};
+      const ngapKeyResult: { name: string; id: number }[] =
+        await this.dataSource.query(
+          'select * from ngap_key where organization_id = ?',
+          [groupId],
+        );
+      ngapKeyResult.forEach((item) => {
+        ngapKeys[item.name] = item.id;
+      });
 
       // php/dsio/import_shell.php line 2755 -> 2814
       // Lancement de l'importation
@@ -66,7 +102,6 @@ export class ImporterService {
         "SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL'",
       );
 
-      const dsio = {};
       try {
         await this.dsioService.construct(
           filename,
@@ -86,6 +121,10 @@ export class ImporterService {
           utf8,
           LFT_ASSOCIATED_ACTS,
           t_dsio_tasks,
+          t_COF,
+          t_gender_gen,
+          t_phone_type_pty,
+          ngapKeys,
         );
 
         // Mise à jour du numéro de dossier patient max.
@@ -101,14 +140,15 @@ export class ImporterService {
           [groupId],
         );
 
+        const tCOFLength = Object.keys(t_COF).length;
         let i = 0;
-        for (const family of t_COF) {
+        for (const family of Object.values(t_COF)) {
           fs.writeFileSync(
             `${filename}.json`,
             JSON.stringify({
               status: 1,
               action: 'Traitement des familles des patients',
-              prc: (100 * i++) / t_COF.length,
+              prc: (100 * i++) / tCOFLength,
             }),
           );
 
@@ -126,8 +166,7 @@ export class ImporterService {
           }
         }
       } catch (error) {
-        fs.writeFileSync(`${filename}.err`, JSON.stringify(dsio));
-        fs.writeFileSync(`${filename}.exc`, error);
+        fs.writeFileSync(`${filename}.exc`, JSON.stringify(error.message));
         // @TODO: mail("support@ecoodentist.com", "Erreur d'import DSIO", "Erreur lors de l'import DSIO du fichier " . $filename . " a la ligne " . $dsio->noline . "\n" . file_get_contents($filename . ".json") . "\n\n$e");
         fs.writeFileSync(
           `${filename}.json`,
@@ -166,7 +205,8 @@ export class ImporterService {
         }),
       );
     } catch (error) {
-      throw new CBadRequestException(error);
+      console.log(error?.response?.msg || error?.sqlMessage);
+      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
   }
 }
