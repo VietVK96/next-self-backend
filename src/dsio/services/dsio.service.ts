@@ -4,9 +4,8 @@ import { ImporterDsioDto } from '../dto/importer-dsio.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as readline from 'readline';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import * as duration from 'dayjs/plugin/duration';
-import { execSync } from 'child_process';
 import { AmountDueService } from 'src/command/services/amount.due.services';
 import { DsioElemService } from './dsio.elem.service';
 
@@ -30,16 +29,16 @@ export class DsioService {
   private Id_pat = 0; // Id dans C&W
   private Id_Family_Tasks = 0; // Id d'une famille de tâche
   private ar_pat: Record<string, number> = {}; // tableau [Id_DSIO] => Id_C&W pour les patients
-  private ar_prat: number[] | { [key: number]: string } = []; // tableau [Id_DSIO] => Id_C&W pour les praticiens
-  private ar_agn = {}; // tableau [Id_DSIO] => id_ecoo pour les ressources d'agenda
-  private ar_fam = {}; // tableau [Id_DSIO] => Id_C&W pour les familles
+  private ar_prat: { [key: number]: string } = []; // tableau [Id_DSIO] => Id_C&W pour les praticiens
+  private ar_agn: Record<number, string> = {}; // tableau [Id_DSIO] => id_ecoo pour les ressources d'agenda
+  private ar_fam: Record<string, number> = {}; // tableau [Id_DSIO] => Id_C&W pour les familles
   private curObj: DsioElemService = null; // DSIO_ELEM
   private FRQ: duration.Duration;
   private HMD: string;
   private HMF: string;
   private HAD: string;
   private HAF: string;
-  private AR_HRDV: Record<string, Record<string, string>>;
+  private AR_HRDV: Record<string, Record<string, string>> = {};
   private section = {
     A: "Détection du type d'agrément",
     B: 'Référencement des Professionnels de Santé',
@@ -72,6 +71,34 @@ export class DsioService {
     this.curObj = dsioElemService;
   }
 
+  init() {
+    this.currentQuery = null;
+    this.pathname = '';
+    this.filesize = null;
+    this.handle = null;
+    this.json = null;
+    this.debut = 0;
+    this.ESC = 'A';
+    this.PC1 = null;
+    this.Id_prat = 0;
+    this.Id_prat_defaut = 0;
+    this.Id_agn = 0;
+    this.PTC = '';
+    this.Id_pat = 0;
+    this.Id_Family_Tasks = 0;
+    this.ar_pat = {};
+    this.ar_prat = {};
+    this.ar_agn = {};
+    this.ar_fam = {};
+    this.curObj = null;
+    this.FRQ = null;
+    this.HMD = null;
+    this.HMF = null;
+    this.HAD = null;
+    this.HAF = null;
+    this.AR_HRDV = {};
+  }
+
   // php/dsio/import_shell.php line 1753 -> 1780
   async construct(
     pathname: string,
@@ -85,10 +112,9 @@ export class DsioService {
     HAF: string,
   ) {
     try {
+      this.init();
       this.pathname = pathname;
       if (fs.existsSync(pathname)) {
-        const fileCheck = execSync(`file -i ${pathname}`);
-        utf8 = fileCheck.toString().includes('utf-8');
         this.filesize = fs.statSync(pathname).size;
         this.handle = fs.createReadStream(pathname);
         this.json = fs.createWriteStream(`${pathname}.json`);
@@ -118,7 +144,6 @@ export class DsioService {
       }
 
       fs.writeFileSync(`${pathname}.prop`, JSON.stringify(payload));
-      fs.writeFileSync(`${pathname}.prop`, JSON.stringify(this));
     } catch (error) {
       throw error;
     }
@@ -194,17 +219,17 @@ export class DsioService {
    * Récupère une nouvelle ligne du fichier DSIO et met à jour l'état
    * d'avancement.
    */
-  async getLine(buffer: string, utf8: boolean) {
+  getLine(buffer: string, utf8: boolean, linePos: number) {
     try {
       /* On est pas encore à la fin du fichier */
       // @TODO set_time_limit(30);
       const rapport = {
         status: 1,
         action: this.section[this.ESC],
-        prc: ((100 * this.handle.bytesRead) / this.filesize).toFixed(2),
+        prc: ((100 * linePos) / this.filesize).toFixed(2),
         noline: ++this.noline,
         line: buffer,
-        time: Date.now() - this.debut,
+        time: Date.now() * 1000 - this.debut,
       };
 
       fs.writeFileSync(this.json.path, JSON.stringify(rapport), { flag: 'w' });
@@ -233,11 +258,16 @@ export class DsioService {
   async newSection(
     bname: string,
     groupId: number,
+    linePos: number,
     patient_number: number,
     LFT_ASSOCIATED_ACTS: Record<string, string>,
     t_dsio_tasks:
       | Record<string, string>
       | Record<string, Record<string, number>>,
+    t_COF: Record<string, number[]>,
+    t_gender_gen: Record<string, number>,
+    t_phone_type_pty: Record<string, number>,
+    ngapKeys: Record<string, number>,
   ) {
     try {
       const TRIGGER_CHECKS = 'FALSE';
@@ -247,23 +277,39 @@ export class DsioService {
         case 'A':
           break;
         case 'B':
-          await this.newPrat('PN1', '', groupId, t_dsio_tasks); // on est à la fin de B
+          await this.newPrat(
+            'PN1',
+            '',
+            groupId,
+            t_dsio_tasks,
+            t_gender_gen,
+            ngapKeys,
+          ); // on est à la fin de B
           break;
         case 'C': // on est à la fin de C
-          await this.newPat('PTN', '', groupId, t_dsio_tasks);
+          await this.newPat(
+            'PTN',
+            '',
+            groupId,
+            t_dsio_tasks,
+            t_COF,
+            t_gender_gen,
+            t_phone_type_pty,
+            ngapKeys,
+          );
           break;
         case 'D':
         case 'P':
-          await this.chPat('', groupId, t_dsio_tasks); // on est à la fin de D
+          await this.chPat('', groupId, t_dsio_tasks, t_gender_gen, ngapKeys); // on est à la fin de D
           break;
         case 'E':
-          await this.chPat('', groupId, t_dsio_tasks); // on est à la fin de E
+          await this.chPat('', groupId, t_dsio_tasks, t_gender_gen, ngapKeys); // on est à la fin de E
           const rapport = {
             status: 1,
             action: 'Calcul des montants dus',
-            prc: ((100 * this.handle.bytesRead) / this.filesize).toFixed(2),
+            prc: ((100 * linePos) / this.filesize).toFixed(2),
             noline: this.noline,
-            time: Date.now() - this.debut,
+            time: Date.now() * 1000 - this.debut,
           };
           fs.writeFileSync(`${this.pathname}.json`, JSON.stringify(rapport));
 
@@ -276,7 +322,7 @@ export class DsioService {
           );
           break;
         case 'F':
-          await this.chPat('', groupId, t_dsio_tasks); // on est à la fin de F
+          await this.chPat('', groupId, t_dsio_tasks, t_gender_gen, ngapKeys); // on est à la fin de F
           break;
         default: {
           if (this.importEtendu || this.actesMacDent) {
@@ -307,7 +353,13 @@ export class DsioService {
                 break;
               case 'J': // on est à la fin de J
                 if (this.curObj != null) {
-                  await this.chPat('', groupId, t_dsio_tasks);
+                  await this.chPat(
+                    '',
+                    groupId,
+                    t_dsio_tasks,
+                    t_gender_gen,
+                    ngapKeys,
+                  );
                 } else {
                   this.curObj = null;
                 }
@@ -338,7 +390,7 @@ export class DsioService {
                     break;
                   case 'N': // on est à la fin de N
                     if (this.curObj != null) {
-                      await this.curObj.setCorrespondent(groupId);
+                      await this.curObj.setCorrespondent(groupId, t_gender_gen);
                     }
                     this.curObj = null;
                     break;
@@ -350,7 +402,13 @@ export class DsioService {
                     break;
                   default: // On ne devrait jamais passer par là
                     if (this.curObj != null) {
-                      await this.chPat('', groupId, t_dsio_tasks);
+                      await this.chPat(
+                        '',
+                        groupId,
+                        t_dsio_tasks,
+                        t_gender_gen,
+                        ngapKeys,
+                      );
                     }
                     return false;
                 }
@@ -384,16 +442,16 @@ export class DsioService {
     ];
 
     try {
-      queries.forEach(async (query) => {
+      for (const query of queries) {
         const table = query[0];
         const field = query[1];
         const where = query[2];
 
-        const res: { ADR_ID: number }[] = await this.dataSource.query(
+        const res = await this.dataSource.query(
           `select ${field}, ADR_ID from ${table} where ${where}=${groupId}`,
         );
         if (res && res.length > 0) {
-          res.forEach(async (row) => {
+          for (const row of res) {
             if (!row.ADR_ID) {
               // Il n'existe pas d'enregistrement d'adresse donc on le crée
               const newAdd = await this.dataSource.query(
@@ -405,9 +463,9 @@ export class DsioService {
               );
             }
             ar_adr_ids.push(row.ADR_ID);
-          });
+          }
         }
-      });
+      }
 
       const ADR_ID = ar_adr_ids.join(',');
       bname = bname.substring(2);
@@ -447,13 +505,15 @@ export class DsioService {
     t_dsio_tasks:
       | Record<string, string>
       | Record<string, Record<string, number>>,
+    t_gender_gen: Record<string, number>,
+    ngapKeys: Record<string, number>,
   ) {
     try {
       if (!this.esc('B')) {
         return;
       }
       if (bname === 'PN1') {
-        await this.chPrat('', groupId, t_dsio_tasks); // Nouveau praticien
+        await this.chPrat('', groupId, t_dsio_tasks, t_gender_gen, ngapKeys); // Nouveau praticien
         this.PC1 = '';
         this.Id_prat = 0;
         this.Id_agn = 0;
@@ -481,6 +541,8 @@ export class DsioService {
     t_dsio_tasks:
       | Record<string, string>
       | Record<string, Record<string, number>>,
+    t_gender_gen: Record<string, number>,
+    ngapKeys: Record<string, number>,
   ) {
     try {
       if (this.curObj) {
@@ -505,8 +567,8 @@ export class DsioService {
               this.actesMacDent,
               this.actesAgatha,
               this.actesDentalOnLine,
-              groupId,
               t_dsio_tasks,
+              ngapKeys,
             );
           }
           this.curObj = null;
@@ -529,20 +591,20 @@ export class DsioService {
           }
           this.curObj.setInfo('PTC', this.Id_pat + '');
           if (Array.isArray(ar_ptt_user)) {
-            ar_ptt_user.forEach(async (Id_ptt_user) => {
+            for (const Id_ptt_user of ar_ptt_user) {
               this.curObj.setInfo('PC1', Id_ptt_user + '');
               await this.curObj.setPostit();
-            });
+            }
           } else {
-            Object.keys(ar_ptt_user).forEach(async (key) => {
+            for (const key of Object.keys(ar_ptt_user)) {
               this.curObj.setInfo('PC1', ar_ptt_user[key]);
               await this.curObj.setPostit();
-            });
+            }
           }
         } else if (this.esc('N') && this.Id_prat) {
           // enregistrement d'un nouveau correspondant
           this.curObj.setInfo('PC1', `${this.Id_prat}`);
-          await this.curObj.setCorrespondent(groupId);
+          await this.curObj.setCorrespondent(groupId, t_gender_gen);
         } else if (this.esc('O') && this.Id_prat) {
           // enregistrement d'un nouveau correspondant
           this.curObj.setInfo('PC1', this.Id_prat + '');
@@ -570,6 +632,10 @@ export class DsioService {
     t_dsio_tasks:
       | Record<string, string>
       | Record<string, Record<string, number>>,
+    t_COF: Record<string, number[]>,
+    t_gender_gen: Record<string, number>,
+    t_phone_type_pty: Record<string, number>,
+    ngapKeys: Record<string, number>,
   ) {
     try {
       if (!this.esc('C')) {
@@ -584,12 +650,15 @@ export class DsioService {
             this.ar_prat,
             Object.keys(this.ar_pat).length + 1,
             groupId,
+            t_COF,
+            t_gender_gen,
+            t_phone_type_pty,
           ); // ID du patient créé.
           this.curObj = null; // Libération de la mémoire
         }
 
         // On prépare le suivant
-        this.chPat('', groupId, t_dsio_tasks);
+        await this.chPat('', groupId, t_dsio_tasks, t_gender_gen, ngapKeys);
         if (value) {
           this.curObj = this.dsioElemService.construct(bname, value);
         }
@@ -621,9 +690,11 @@ export class DsioService {
     t_dsio_tasks:
       | Record<string, string>
       | Record<string, Record<string, number>>,
+    t_gender_gen: Record<string, number>,
+    ngapKeys: Record<string, number>,
   ) {
     try {
-      this.chPrat('', groupId, t_dsio_tasks);
+      await this.chPrat('', groupId, t_dsio_tasks, t_gender_gen, ngapKeys);
       if (IDSIO && !this.ar_pat[IDSIO]) {
         const conIds: { CON_ID: number }[] = await this.dataSource.query(
           `SELECT CON_ID from T_CONTACT_CON where organization_id = ? and CON_NBR = ? order by CON_ID asc limit 1`,
@@ -651,6 +722,8 @@ export class DsioService {
     t_dsio_tasks:
       | Record<string, string>
       | Record<string, Record<string, number>>,
+    t_gender_gen: Record<string, number>,
+    ngapKeys: Record<string, number>,
   ) {
     try {
       if (!this.esc('D') && !this.esc('P')) {
@@ -670,9 +743,9 @@ export class DsioService {
           this.Id_agn = this.ar_agn[value] ? this.ar_agn[value] : 0;
         }
       } else if (bname === 'PTC') {
-        await this.chPat(value, groupId, t_dsio_tasks);
+        await this.chPat(value, groupId, t_dsio_tasks, t_gender_gen, ngapKeys);
       } else if (bname === 'PC1') {
-        await this.chPrat(value, groupId, t_dsio_tasks);
+        await this.chPrat(value, groupId, t_dsio_tasks, t_gender_gen, ngapKeys);
       } else {
         if (bname === 'PR1') {
           this.Id_agn = this.ar_agn[value] ? this.ar_agn[value] : 0;
@@ -695,6 +768,8 @@ export class DsioService {
     t_dsio_tasks:
       | Record<string, string>
       | Record<string, Record<string, number>>,
+    t_gender_gen: Record<string, number>,
+    ngapKeys: Record<string, number>,
   ) {
     try {
       if (!this.esc('J')) {
@@ -704,10 +779,10 @@ export class DsioService {
         this.curObj = this.dsioElemService.construct(bname, value);
       }
       if (bname == 'PTC') {
-        await this.chPat(value, groupId, t_dsio_tasks);
+        await this.chPat(value, groupId, t_dsio_tasks, t_gender_gen, ngapKeys);
         this.curObj = this.dsioElemService.construct(bname, value);
       } else if (bname == 'PC1') {
-        await this.chPrat(value, groupId, t_dsio_tasks);
+        await this.chPrat(value, groupId, t_dsio_tasks, t_gender_gen, ngapKeys);
         this.curObj = this.dsioElemService.construct(bname, value);
         this.curObj.setInfo('PTC', `${this.Id_pat}`);
       } else {
@@ -729,6 +804,8 @@ export class DsioService {
     t_dsio_tasks:
       | Record<string, string>
       | Record<string, Record<string, number>>,
+    t_gender_gen: Record<string, number>,
+    ngapKeys: Record<string, number>,
   ) {
     try {
       if (!this.esc('E')) {
@@ -743,9 +820,9 @@ export class DsioService {
             !value || !this.ar_prat[value] ? 0 : this.ar_prat[value];
         }
       } else if (bname === 'PTC') {
-        await this.chPat(value, groupId, t_dsio_tasks);
+        await this.chPat(value, groupId, t_dsio_tasks, t_gender_gen, ngapKeys);
       } else if (bname === 'PC1') {
-        await this.chPrat(value, groupId, t_dsio_tasks);
+        await this.chPrat(value, groupId, t_dsio_tasks, t_gender_gen, ngapKeys);
       } else {
         this.curObj.setInfo(bname, value);
       }
@@ -765,6 +842,8 @@ export class DsioService {
     t_dsio_tasks:
       | Record<string, string>
       | Record<string, Record<string, number>>,
+    t_gender_gen: Record<string, number>,
+    ngapKeys: Record<string, number>,
   ) {
     try {
       if (!this.esc('F')) {
@@ -779,9 +858,9 @@ export class DsioService {
             !value || !this.ar_prat[value] ? 0 : this.ar_prat[value];
         }
       } else if (bname === 'PTC') {
-        await this.chPat(value, groupId, t_dsio_tasks);
+        await this.chPat(value, groupId, t_dsio_tasks, t_gender_gen, ngapKeys);
       } else if (bname === 'PC1') {
-        await this.chPrat(value, groupId, t_dsio_tasks);
+        await this.chPrat(value, groupId, t_dsio_tasks, t_gender_gen, ngapKeys);
       } else {
         this.curObj.setInfo(bname, value);
       }
@@ -794,7 +873,7 @@ export class DsioService {
    * Permet d'affecter une valeur pour une balise à l'enregistrement d'une famille
    * en court de définition.
    */
-  newFamily(bname: string, value: string, groupId: number) {
+  async newFamily(bname: string, value: string, groupId: number) {
     try {
       if (!this.esc('H')) {
         return;
@@ -802,7 +881,7 @@ export class DsioService {
       if (this.curObj == null) {
         this.curObj = this.dsioElemService.construct(bname, value);
       } else if (bname == 'FLI') {
-        this.chFam(groupId);
+        await this.chFam(groupId);
         this.curObj = this.dsioElemService.construct(bname, value);
       } else {
         this.curObj.setInfo(bname, value);
@@ -937,7 +1016,7 @@ export class DsioService {
       | Record<string, Record<string, number>>,
   ) {
     try {
-      Object.entries(LFT_ASSOCIATED_ACTS).forEach(async ([LFT_ID, assoc]) => {
+      for (const [LFT_ID, assoc] of Object.entries(LFT_ASSOCIATED_ACTS)) {
         const t_assocs: (string | boolean)[] = assoc.split(',');
         for (let i = 0; i < t_assocs.length; i++) {
           if (t_dsio_tasks[t_assocs[i] as string]) {
@@ -949,15 +1028,15 @@ export class DsioService {
           }
         }
 
-        assoc = t_assocs.filter(Boolean).join(',');
-        if (assoc.localeCompare(LFT_ID)) {
+        const assocTmp = t_assocs.filter(Boolean).join(',');
+        if (assocTmp.localeCompare(LFT_ID)) {
           const query = `UPDATE T_LIBRARY_FAMILY_TASK_LFT
           SET LFT_ASSOCIATED_ACTS = ?
           WHERE LFT_ID = ?
           AND GRP_ID = ?`;
-          await this.dataSource.query(query, [assoc, LFT_ID, groupId]);
+          await this.dataSource.query(query, [assocTmp, LFT_ID, groupId]);
         }
-      });
+      }
     } catch (error) {
       throw error;
     }
@@ -1077,7 +1156,12 @@ export class DsioService {
   }
 
   // php/dsio/import_shell.php line 2582 -> 2596
-  async newCorrespondent(bname: string, value: string, groupId: number) {
+  async newCorrespondent(
+    bname: string,
+    value: string,
+    groupId: number,
+    t_gender_gen: Record<string, number>,
+  ) {
     try {
       if (!this.esc('N')) {
         return;
@@ -1085,7 +1169,7 @@ export class DsioService {
 
       if (bname === 'RN1') {
         if (this.curObj != null) {
-          await this.curObj.setCorrespondent(groupId); // Enregistrement du correspndant précédent
+          await this.curObj.setCorrespondent(groupId, t_gender_gen); // Enregistrement du correspndant précédent
         }
         this.curObj = this.dsioElemService.construct(bname, value);
       } else if (bname === 'PC1') {
@@ -1132,6 +1216,10 @@ export class DsioService {
       | Record<string, string>
       | Record<string, Record<string, number>>,
     LFT_ASSOCIATED_ACTS: Record<string, string>,
+    t_COF: Record<string, number[]>,
+    t_gender_gen: Record<string, number>,
+    t_phone_type_pty: Record<string, number>,
+    ngapKeys: Record<string, number>,
   ) {
     try {
       const bname = buffer.substring(1, 4);
@@ -1150,19 +1238,56 @@ export class DsioService {
       }
 
       if (this.esc('B')) {
-        await this.newPrat(bname, value, groupId, t_dsio_tasks);
+        await this.newPrat(
+          bname,
+          value,
+          groupId,
+          t_dsio_tasks,
+          t_gender_gen,
+          ngapKeys,
+        );
       } else if (this.esc('C')) {
-        await this.newPat(bname, value, groupId, t_dsio_tasks);
+        await this.newPat(
+          bname,
+          value,
+          groupId,
+          t_dsio_tasks,
+          t_COF,
+          t_gender_gen,
+          t_phone_type_pty,
+          ngapKeys,
+        );
       } else if (this.esc('D') || this.esc('P')) {
-        await this.newActe(bname, value, groupId, t_dsio_tasks);
+        await this.newActe(
+          bname,
+          value,
+          groupId,
+          t_dsio_tasks,
+          t_gender_gen,
+          ngapKeys,
+        );
       } else if (this.esc('E')) {
-        await this.newPaiement(bname, value, groupId, t_dsio_tasks);
+        await this.newPaiement(
+          bname,
+          value,
+          groupId,
+          t_dsio_tasks,
+          t_gender_gen,
+          ngapKeys,
+        );
       } else if (this.esc('F')) {
         // Serge le 28/06/2013
-        await this.newAmountDue(bname, value, groupId, t_dsio_tasks);
+        await this.newAmountDue(
+          bname,
+          value,
+          groupId,
+          t_dsio_tasks,
+          t_gender_gen,
+          ngapKeys,
+        );
       } else if (this.esc('H')) {
         // Serge le 01/07/2013
-        this.newFamily(bname, value, groupId); // Alimentation d'une nouvelle famille d'actes
+        await this.newFamily(bname, value, groupId); // Alimentation d'une nouvelle famille d'actes
       } else if (this.esc('I')) {
         // Serge le 04/07/2013
         await this.newFamilyTask(
@@ -1173,7 +1298,14 @@ export class DsioService {
           groupId,
         ); // Alimentation d'un nouvel acte de la bibliothèque
       } else if (this.esc('J')) {
-        await this.newPostit(bname, value, groupId, t_dsio_tasks); // Alimentation d'un nouveau postit
+        await this.newPostit(
+          bname,
+          value,
+          groupId,
+          t_dsio_tasks,
+          t_gender_gen,
+          ngapKeys,
+        ); // Alimentation d'un nouveau postit
       } else if (this.esc('K')) {
         await this.newCI(bname, value, groupId, max_CON_NBR); // Alimentation d'une nouvelle famille de médicaments
       } else if (this.esc('L')) {
@@ -1181,7 +1313,7 @@ export class DsioService {
       } else if (this.esc('M')) {
         await this.newMed(bname, value, groupId); // Alimentation d'un
       } else if (this.esc('N')) {
-        await this.newCorrespondent(bname, value, groupId); // Alimentation d'un nouveau correspondant
+        await this.newCorrespondent(bname, value, groupId, t_gender_gen); // Alimentation d'un nouveau correspondant
       } else if (this.esc('O')) {
         await this.newBnq(bname, Number(value), groupId); // Alimentation d'un nouveau compte bancaire
       }
@@ -1201,14 +1333,19 @@ export class DsioService {
     t_dsio_tasks:
       | Record<string, string>
       | Record<string, Record<string, number>>,
+    t_COF: Record<string, number[]>,
+    t_gender_gen: Record<string, number>,
+    t_phone_type_pty: Record<string, number>,
+    ngapKeys: Record<string, number>,
   ) {
     try {
-      this.debut = new Date().getTime();
+      this.debut = Date.now() * 1000;
       const rl = readline.createInterface({
         input: this.handle,
         crlfDelay: Infinity,
       });
 
+      let linePos = 0;
       let buffer = '';
       mainLoop: for await (buffer of rl) {
         if (fs.existsSync(path.join(__dirname, 'STOP'))) {
@@ -1220,19 +1357,25 @@ export class DsioService {
           }
           // reconnect(1)
         }
-        this.getLine(buffer, utf8);
+        linePos += Buffer.from(buffer).length + 1;
+        this.getLine(buffer, utf8, linePos);
 
         if (buffer) {
           switch (buffer[0]) {
             case String.fromCharCode(27): // on est en train de changer de section
               if (
-                !this.newSection(
+                !(await this.newSection(
                   buffer[1],
+                  linePos,
                   groupId,
                   payload.patient_number,
                   LFT_ASSOCIATED_ACTS,
                   t_dsio_tasks,
-                )
+                  t_COF,
+                  t_gender_gen,
+                  t_phone_type_pty,
+                  ngapKeys,
+                ))
               ) {
                 fs.writeFileSync(
                   `${filename}.json`,
@@ -1246,12 +1389,16 @@ export class DsioService {
               }
               break;
             case '#': // une balise d'un enregistrement à créer
-              this.checkDiezLine(
+              await this.checkDiezLine(
                 buffer,
                 payload.patient_number ?? 0,
                 groupId,
                 t_dsio_tasks,
                 LFT_ASSOCIATED_ACTS,
+                t_COF,
+                t_gender_gen,
+                t_phone_type_pty,
+                ngapKeys,
               );
               break;
             default:
@@ -1290,7 +1437,7 @@ export class DsioService {
         prc: 99.99,
         noline: ++this.noline,
         line: buffer,
-        time: Date.now() - this.debut,
+        time: Date.now() * 1000 - this.debut,
       };
       fs.writeFileSync(this.json.path, JSON.stringify(rapport));
       this.json = null;
@@ -1302,15 +1449,14 @@ export class DsioService {
           await this.curObj.insertMedicament(groupId);
         } else if (this.esc('N')) {
           /* Il faut enregistrer un dernier correspondant */
-          await this.curObj.setCorrespondent(groupId);
+          await this.curObj.setCorrespondent(groupId, t_gender_gen);
         } else if (this.esc('O')) {
           /* Il faut enregistrer un dernier compte bancaire */
           await this.curObj.setBnq(this.Id_prat, groupId);
         }
       }
     } catch (error) {
-      fs.writeFileSync(`${filename}.err`, JSON.stringify(this));
-      fs.writeFileSync(`${filename}.exc`, JSON.stringify(error));
+      fs.writeFileSync(`${filename}.exc`, JSON.stringify(error.message));
       // @TODO mail("support@ecoodentist.com", "Erreur d'import DSIO", "Erreur lors de l'import DSIO du fichier " . this.pathname);
       const returnJson = JSON.stringify({
         status: -3,
