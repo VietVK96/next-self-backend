@@ -1,3 +1,6 @@
+/**
+ * application/Enum/ThirdPartyStatusEnum.php
+ */
 export class ThirdPartyStatusEnum {
   public static WAITING = 'WTN';
   public static INCOMPLETE = 'INK';

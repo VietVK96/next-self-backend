@@ -24,9 +24,14 @@ import { TherapeuticAlternativeService } from './services/therapeuticAlternative
 import { listEntities } from 'src/entities';
 import { DevisServices } from './services/devisHN.services';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
+import { ContactModule } from 'src/contact/contact.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature(listEntities), PaymentSchedulesModule],
+  imports: [
+    TypeOrmModule.forFeature(listEntities),
+    PaymentSchedulesModule,
+    ContactModule,
+  ],
   controllers: [DentalController, DevisHNController],
   providers: [
     OrdonnancesServices,
