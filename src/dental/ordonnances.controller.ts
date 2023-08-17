@@ -16,7 +16,7 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { OrdonnancesServices } from './services/ordonnances.services';
 import { OrdonnancesDto } from './dto/ordonnances.dto';
-import { EnregistrerFactureDto, PrintPDFDto } from './dto/facture.dto';
+import { PrintPDFDto } from './dto/facture.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 
@@ -25,7 +25,6 @@ import { ErrorCode } from 'src/constants/error';
 @ApiTags('Dental')
 export class OrdonnancesController {
   constructor(private ordonnancesServices: OrdonnancesServices) {}
-
   /**
    * php/dental/quotation/delete.php -> full file
    * delete quotation
@@ -46,12 +45,6 @@ export class OrdonnancesController {
       patientId,
       identity,
     );
-  }
-
-  @Post('/ordonnances/ordo_email')
-  @UseGuards(TokenGuard)
-  async mail(@Body() payload: EnregistrerFactureDto) {
-    return this.ordonnancesServices.getMail(payload);
   }
 
   @Get('/ordonnances/ordo_pdf')
@@ -81,5 +74,15 @@ export class OrdonnancesController {
     } catch (error) {
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
     }
+  }
+
+  // ecoophp/dental/ordonnances/ordo_email.php
+  @Get('/ordonnances/ordo_email')
+  @UseGuards(TokenGuard)
+  async sendMail(
+    @Query('id') id: number,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.ordonnancesServices.sendMail(id, identity);
   }
 }

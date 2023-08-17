@@ -52,7 +52,7 @@ export function nl2br(str: string, replaceMode?: string, isXhtml?: boolean) {
  * @return {string} Filtered text
  */
 export function br2nl(str: string, replaceMode?: string) {
-  const replaceStr = replaceMode ? '\n' : '';
+  const replaceStr = replaceMode ? replaceMode : '\n';
   if (!str) return '';
   // Includes <br>, <BR>, <br />, </br>
   return str.replace(/<\s*\/?br\s*[\/]?>/gi, replaceStr);

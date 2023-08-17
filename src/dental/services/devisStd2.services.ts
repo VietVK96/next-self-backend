@@ -614,10 +614,6 @@ export class DevisStd2Services {
           `,
           [req?.no_devis],
         );
-        console.log(
-          '🚀 ~ file: devisStd2.services.ts:617 ~ DevisStd2Services ~ dataActes:',
-          dataActes,
-        );
         const actes: DevisStd2ActesRes[] = [];
         dataActes.forEach((dataActe) => {
           if (!dataActe?.typeLigne) {
@@ -625,11 +621,6 @@ export class DevisStd2Services {
           }
           actes.push(dataActe);
         });
-
-        console.log(
-          '🚀 ~ file: devisStd2.services.ts:618 ~ DevisStd2Services ~ actes:',
-          actes,
-        );
         result = {
           ...result,
           id_user: dataDENTALQUOTATION?.id_user,
@@ -687,10 +678,6 @@ export class DevisStd2Services {
       const contactEntity = await this.contactRepository.findOne({
         where: { id: result?.id_contact || 0 },
       });
-      console.log(
-        '🚀 ~ file: devisStd2.services.ts:686 ~ DevisStd2Services ~ contactEntity?.socialSecurityReimbursementRate:',
-        contactEntity?.socialSecurityReimbursementRate,
-      );
       result.socialSecurityReimbursementRate =
         contactEntity?.socialSecurityReimbursementRate
           ? toFixed(contactEntity?.socialSecurityReimbursementRate)
