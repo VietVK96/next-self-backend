@@ -714,8 +714,6 @@ export class FindEventService {
         };
       });
 
-      console.log(newEvents);
-
       const data = {
         events: newEvents,
         eventLenght: newEvents?.length,
