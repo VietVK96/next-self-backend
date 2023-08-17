@@ -27,7 +27,6 @@ import { GenderEntity } from 'src/entities/gender.entity';
 import { StringHelper } from 'src/common/util/string-helper';
 import { checkDay, customDayOfYear } from 'src/common/util/day';
 import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
-import { BillEntity } from 'src/entities/bill.entity';
 import { QuotationMutualInitByRes } from '../res/quotatio-mutual.res';
 import { LibraryActQuantityEntity } from 'src/entities/library-act-quantity.entity';
 import { QuotationMutualPdfFooter } from '../constant/htmlTemplate';
@@ -679,12 +678,6 @@ export class QuotationMutualServices {
       }
 
       total_honoraires = +total_honoraires.toFixed(2);
-      // total_prixvente = +total_prixvente.toFixed(2);
-      // total_prestation = +total_prestation.toFixed(2);
-      // total_charges = +total_charges.toFixed(2);
-      // total_rss = +total_rss.toFixed(2);
-      // total_nrss = +total_nrss.toFixed(2);
-
       total_secuAmount = +total_secuAmount.toFixed(2);
       total_secuRepayment = +total_secuRepayment.toFixed(2);
       total_mutualRepayment = +total_mutualRepayment.toFixed(2);
@@ -702,6 +695,10 @@ export class QuotationMutualServices {
         total_mutualComplement,
         total_personAmount,
         date_signature,
+        total_prixvente,
+        total_prestation,
+        total_charges,
+        total_nrss,
       };
     } catch (error) {
       throw new CBadRequestException(ErrorCode?.NOT_FOUND);

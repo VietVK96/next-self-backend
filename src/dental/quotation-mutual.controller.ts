@@ -13,7 +13,6 @@ import {
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
-import { OrdonnancesServices } from './services/ordonnances.services';
 import { PrintPDFDto } from './dto/facture.dto';
 import { DevisRequestAjaxDto } from './dto/devis_request_ajax.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';

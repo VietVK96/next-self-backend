@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { UserEntity } from 'src/entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UnpaidDto } from '../dto/unpaid.dto';
+import { UnpaidDto, printUnpaidDto } from '../dto/unpaid.dto';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
@@ -12,6 +12,17 @@ import { format } from 'date-fns';
 import { Parser } from 'json2csv';
 import { Response } from 'express';
 import { ErrorCode } from 'src/constants/error';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { customCreatePdf } from 'src/common/util/pdf';
+import * as path from 'path';
+import * as dayjs from 'dayjs';
+import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
+import { LettersEntity } from 'src/entities/letters.entity';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { DocumentMailService } from 'src/mail/services/document.mail.service';
+import { TranformVariableParam } from 'src/mail/dto/transformVariable.dto';
+import { CONFIGURATION } from 'src/constants/configuration';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 @Injectable()
 export class UnpaidService {
   constructor(
@@ -20,6 +31,15 @@ export class UnpaidService {
     private userRepository: Repository<UserEntity>,
     @InjectRepository(ContactEntity)
     private patientRepository: Repository<ContactEntity>,
+    @InjectRepository(ContactUserEntity)
+    private patientBalanceRepo: Repository<ContactUserEntity>,
+    @InjectRepository(UserPreferenceEntity)
+    private userPreferenceRepo: Repository<UserPreferenceEntity>,
+    @InjectRepository(LettersEntity)
+    private mailRepo: Repository<LettersEntity>,
+    @InjectRepository(ContactNoteEntity)
+    private contactNoteRepo: Repository<ContactNoteEntity>,
+    private documentMailService: DocumentMailService,
   ) {}
 
   async getUserUnpaid(payload: UnpaidDto) {
@@ -295,5 +315,238 @@ export class UnpaidService {
       (!medical?.serviceAmoEndDate ||
         now.getTime() <= new Date(medical?.serviceAmoEndDate).getTime())
     );
+  }
+
+  /**
+   * File php/user/unpaid/print.php 100%
+   *
+   */
+  async printUnpaid(identity: UserIdentity, param?: printUnpaidDto) {
+    const queryBuilder = this.patientBalanceRepo
+      .createQueryBuilder('patientBalance')
+      .innerJoinAndSelect('patientBalance.patient', 'patient')
+      .leftJoinAndSelect('patient.phones', 'phone')
+      .andWhere('patientBalance.usrId = :user', { user: identity.id })
+      .andWhere('patientBalance.amount < 0');
+
+    for (let i = 0; i < param.filterParam?.length; i++) {
+      switch (param.filterParam?.[i]) {
+        case 'patientBalance.amount':
+          queryBuilder.andWhere('patientBalance.amount <= :amount', {
+            amount: param.filterValue?.[i],
+          });
+          break;
+        case 'patientBalance.relaunchLevel':
+          queryBuilder.andWhere(
+            'patientBalance.relaunchLevel >= :relaunchLevel',
+            {
+              relaunchLevel: param.filterValue?.[i],
+            },
+          );
+          break;
+        case 'patientBalance.visitDate':
+          const arrDate = param.filterValue?.[i].toString().split(';');
+          if (arrDate.length > 0 && arrDate?.[0]) {
+            queryBuilder.andWhere('patientBalance.visitDate >= :startDate', {
+              startDate: arrDate?.[0],
+            });
+          }
+          if (arrDate.length > 1 && arrDate?.[1]) {
+            queryBuilder.andWhere('patientBalance.visitDate <= :endDate', {
+              endDate: arrDate?.[1],
+            });
+          }
+          break;
+      }
+    }
+
+    if (param?.sort)
+      queryBuilder.addOrderBy(
+        unpaidSort[param?.sort],
+        param?.direction.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
+      );
+
+    const res = await queryBuilder.getMany();
+
+    const totalAmount = res.reduce(
+      (totalAmount, item) => totalAmount + Number(item.amount),
+      0,
+    );
+
+    const currencyObj = await this.userPreferenceRepo.findOneOrFail({
+      select: ['currency'],
+      where: {
+        usrId: identity.id,
+      },
+    });
+
+    const data = {
+      patientBalances: res,
+      currency: currencyObj?.currency,
+      totalAmount,
+    };
+
+    const filePath = path.join(process.cwd(), 'templates/unpaid', 'index.hbs');
+
+    const files = [{ path: filePath, data }];
+
+    const options = {
+      format: 'A4',
+      displayHeaderFooter: true,
+      landscape: true,
+      margin: {
+        left: '10mm',
+        top: '20mm',
+        right: '10mm',
+        bottom: '20mm',
+      },
+
+      headerTemplate: `<div style="width:100%;margin-left:10mm"><span style="font-size: 8px;">${dayjs(
+        new Date(),
+      ).format(
+        'M/D/YY, hh:mm A',
+      )}</span><span style="font-size: 8px;margin-right:40mm; float: right;">Impayés</span></div>`,
+      footerTemplate: `
+        <div style="width: 100%;margin-right:10mm; font-size: 8px; display: flex; justify-content: space-between">
+          <span style="margin-left: 10mm">${process.env.HOST}/index#unpaid</span>
+          <div>
+            <span class="pageNumber"></span>
+            <span>/</span>
+            <span class="totalPages"></span>
+          </div>
+        </div>
+      `,
+    };
+
+    const helpers = {
+      dateShort: (date) => (date ? dayjs(date).format('DD/MM/YYYY') : ''),
+    };
+
+    return await customCreatePdf({ files, options, helpers });
+  }
+
+  /**
+   * File php/user/unpaid/relaunch.php 100%
+   *
+   */
+  async relaunchUnpaid(identity: UserIdentity, param: printUnpaidDto) {
+    const queryBuilder = this.patientBalanceRepo
+      .createQueryBuilder('patientBalance')
+      .innerJoinAndSelect('patientBalance.patient', 'patient')
+      .leftJoinAndSelect('patient.phones', 'phone')
+      .andWhere('patientBalance.usrId = :user', { user: identity.id })
+      .andWhere('patientBalance.amount > 0');
+    for (let i = 0; i < param.filterParam?.length; i++) {
+      switch (param.filterParam?.[i]) {
+        case 'patientBalance.id':
+          const formatIds = Array.isArray(param?.filterValue[i])
+            ? (param?.filterValue[i] as string[]).join(',')
+            : [];
+
+          queryBuilder.andWhere(`patientBalance.id IN (${formatIds})`);
+          break;
+        case 'patientBalance.amount':
+          queryBuilder.andWhere('patientBalance.amount >= :amount', {
+            amount: param?.filterValue[i],
+          });
+          break;
+        case 'patientBalance.relaunchLevel':
+          queryBuilder.andWhere(
+            'patientBalance.relaunchLevel >= :relaunchLevel',
+            {
+              relaunchLevel: param.filterValue?.[i],
+            },
+          );
+          break;
+        case 'patientBalance.visitDate':
+          const arrDate = param.filterValue?.[i]?.toString().split(';');
+          if (arrDate.length > 0 && arrDate?.[0]) {
+            queryBuilder.andWhere('patientBalance.visitDate >= :startDate', {
+              startDate: arrDate?.[0],
+            });
+          }
+          if (arrDate.length > 1 && arrDate?.[1]) {
+            queryBuilder.andWhere('patientBalance.visitDate <= :endDate', {
+              endDate: arrDate?.[1],
+            });
+          }
+          break;
+      }
+    }
+
+    if (param?.sort)
+      queryBuilder.addOrderBy(
+        unpaidSort[param?.sort],
+        param?.direction.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
+      );
+
+    const patientBalances = await queryBuilder.getMany();
+
+    const responses: any = [];
+
+    for (const patientBalance of patientBalances) {
+      const updatePatientBalance = {
+        ...patientBalance,
+        relaunchLevel: patientBalance.relaunchLevel + 1,
+        relaunchDate: dayjs(new Date()).format('YYYY/MM/DD'),
+      };
+
+      const mailName =
+        CONFIGURATION.setting.MAIL_UNPAID_NAME +
+        ' ' +
+        updatePatientBalance.relaunchLevel;
+
+      try {
+        const qr = await this.mailRepo
+          .createQueryBuilder('mail')
+          .select('mail.msg')
+          .leftJoin('mail.user', 'user')
+          .andWhere('mail.title = :title', { title: mailName })
+          .andWhere('mail.patient IS NULL')
+          .andWhere('(mail.user IS NULL OR mail.usrId = :user)', {
+            user: identity.id,
+          })
+          .addOrderBy('user.id', 'DESC')
+          .getOne();
+
+        const message = !qr
+          ? `Impossible d'imprimer le courrier ${mailName} pour le patient ${
+              patientBalance.patient.lastname +
+              ' ' +
+              patientBalance.patient.firstname
+            }.`
+          : qr.msg;
+        const mailParam: TranformVariableParam = {
+          message: message,
+          groupId: identity.org,
+          practitionerId: identity.id,
+          patientId: patientBalance.patient.id,
+        };
+
+        const response = await this.documentMailService.transformVariable(
+          mailParam,
+        );
+        responses.push(
+          '<div style="page-break-after: always;">' + response + '</div>',
+        );
+
+        if (qr) {
+          const patientNode = new ContactNoteEntity();
+          patientNode.userId = identity.id;
+          patientNode.conId = patientBalance.patient.id;
+          patientNode.date = dayjs(new Date()).format('YYYY-MM-DD');
+          patientNode.message = `Impossible d'imprimer le courrier ${mailName} pour le patient {${
+            patientBalance.patient.lastname +
+            ' ' +
+            patientBalance.patient.firstname
+          }}`;
+          await this.patientBalanceRepo.save(updatePatientBalance);
+          await this.contactNoteRepo.save(patientNode);
+        }
+      } catch (err) {
+        throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+      }
+    }
+    return responses;
   }
 }

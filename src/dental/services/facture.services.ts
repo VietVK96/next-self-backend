@@ -103,7 +103,6 @@ export class FactureServices {
     const id_facture = checkId(payload?.id_facture);
     const id_facture_ligne = checkId(payload?.id_facture_ligne);
     const user_id = checkId(payload?.user_id);
-    const patient_id = checkId(payload?.patient_id);
     switch (payload.operation) {
       case 'enregistrer': {
         try {
@@ -399,7 +398,6 @@ export class FactureServices {
     const id_user = userID;
     // const medical_entete_id = 0;
     const id_devis = 0;
-    const id_contact = 0;
     const dateFacture = new Date().toISOString().split('T')[0];
     // const noFacture: string;
     // const details: string[];
