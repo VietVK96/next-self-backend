@@ -60,7 +60,7 @@ export class DevisHNController {
     return await this.devisService.getInitChamps(user, params);
   }
 
-  @Get('devisHN/pdf')
+  @Get('devisHN/devisHN_pdf')
   @UseGuards(TokenGuard)
   async devisHNGetPDF(
     @Res() res,

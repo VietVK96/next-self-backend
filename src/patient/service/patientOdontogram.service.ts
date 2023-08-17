@@ -294,14 +294,15 @@ export class PatientOdontogramService {
   ): Promise<PatientOdontogramStyleRes | null> {
     let styles: PatientOdontogramStyleRes = {};
     let eventTasks: EventTaskEntity[] = [];
-    if (status === 'planned') {
-      eventTasks = await this.getTreatmentPlanPrestation(conId);
-    }
-    if (status === 'current') {
-      eventTasks = await this.getCurrentPrestation(conId);
-    }
-    if (status === 'initial') {
-      eventTasks = await this.getInitialPrestation(conId);
+    switch (status) {
+      case 'planned':
+        eventTasks = await this.getTreatmentPlanPrestation(conId);
+      case 'current':
+        const e = await this.getCurrentPrestation(conId);
+        eventTasks = [...e, ...eventTasks];
+      case 'initial':
+        const f = await this.getInitialPrestation(conId);
+        eventTasks = [...f, ...eventTasks];
     }
 
     if (eventTasks) {
@@ -309,6 +310,7 @@ export class PatientOdontogramService {
         const teethsNumber = changeSectorNumberToTooth(
           eventTask?.dental?.teeth,
         );
+
         const displayXray = /^HBQK(?!(002))/i.test(eventTask?.dental?.ccamCode); // radiographie autre qu'une panoramique
 
         //* ecoophp/application/Services/Contact/Odontogram.php 148 - 182
@@ -325,7 +327,6 @@ export class PatientOdontogramService {
         if (!odontograms.length) {
           odontograms = await this.findByLibraryActId(eventTask?.libraryActId);
         }
-        odontograms;
         if (!odontograms.length) {
           continue;
         }
@@ -418,17 +419,17 @@ export class PatientOdontogramService {
     while (temp) {
       // Affiche ou masque l'icone de radiographie.
       if (displayXray) {
-        styles[`"X_${temp}"`] = 'opacity: 1;';
+        styles[`X_${temp}`] = 'opacity: 1;';
       }
 
       // Applique le style pour masquer la couronne.
-      if (displayCrown) {
+      if (!displayCrown) {
         styles[`C_${temp}`] =
           'fill-opacity: 1; fill: #FFF; opacity: 1; stroke: #FFF;';
       }
 
       // Applique le style pour masquer la racine.
-      if (displayRoot) {
+      if (!displayRoot) {
         styles[`R_${temp}`] =
           'fill-opacity: 1; fill: #FFF; opacity: 1; stroke: #FFF;';
       }

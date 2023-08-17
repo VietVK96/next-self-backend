@@ -72,10 +72,6 @@ export class MailTransportService {
 
       return transport;
     } catch (e) {
-      console.log(
-        '🚀 ~ file: mailTransport.service.ts:75 ~ MailTransportService ~ e:',
-        e,
-      );
       return new CBadRequestException(ErrorCode.FORBIDDEN);
     }
   }
@@ -98,11 +94,6 @@ export class MailTransportService {
       if (result.rejected.length !== 0)
         return new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
       return { success: true };
-    } catch (error) {
-      console.log(
-        '🚀 ~ file: mailTransport.service.ts:90 ~ MailTransportService ~ sendEmail ~ error:',
-        error,
-      );
-    }
+    } catch (error) {}
   }
 }

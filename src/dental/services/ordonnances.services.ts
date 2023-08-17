@@ -291,7 +291,6 @@ export class OrdonnancesServices {
         imgFinessNumber,
         imgRppsNumber,
       };
-      console.log('---aaa', data.adresse);
 
       const filePath = path.join(
         process.cwd(),

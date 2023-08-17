@@ -1078,7 +1078,6 @@ export class QuotesServices {
         therapeuticAlternatives,
         isPrintAdditional,
       };
-      console.log(data);
 
       const filePath = path.join(
         process.cwd(),

@@ -614,6 +614,7 @@ export class DevisStd2Services {
           `,
           [req?.no_devis],
         );
+
         const actes: DevisStd2ActesRes[] = [];
         dataActes.forEach((dataActe) => {
           if (!dataActe?.typeLigne) {
@@ -621,6 +622,7 @@ export class DevisStd2Services {
           }
           actes.push(dataActe);
         });
+
         result = {
           ...result,
           id_user: dataDENTALQUOTATION?.id_user,
@@ -745,10 +747,6 @@ export class DevisStd2Services {
         ar_acte.nrss = prixLigne - rss;
         if (Math.abs(nrss) < 0.01) ar_acte.nrss = 0;
         ar_acte.roc = 0;
-        console.log(
-          '🚀 ~ file: devisStd2.services.ts:752 ~ DevisStd2Services ~ result?.actes.map ~ ar_acte:',
-          ar_acte,
-        );
         result.total_prixvente += ar_acte.prixvente;
         result.total_prestation += ar_acte.prestation;
         result.total_charges += ar_acte.charges;
@@ -799,7 +797,6 @@ export class DevisStd2Services {
           });
         }
       });
-      // console.log("🚀 ~ file: devisStd2.services.ts:802 ~ DevisStd2Services ~ result?.actes.map ~ result?.actes:", result?.actes)
       result.odontogramType = 'adult';
     } catch (error) {
       throw new CBadRequestException(error.message);
@@ -817,6 +814,10 @@ export class DevisStd2Services {
         function setImagePath(xml: string): string {
           const parser = new DOMParser();
           const domDocument = parser.parseFromString(xml, 'image/svg+xml');
+          const texts = domDocument.getElementsByTagName('tspan');
+          for (let i = 0; i < texts.length; i++) {
+            texts[i].setAttribute('style', 'opacity:0');
+          }
           const svg = domDocument.getElementsByTagName('svg')[0];
           const node = domDocument.getElementsByTagName('image')[0];
           svg.setAttribute('height', '269');
