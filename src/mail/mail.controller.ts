@@ -9,7 +9,6 @@ import {
   Delete,
   Param,
   UseInterceptors,
-  Req,
   UploadedFiles,
 } from '@nestjs/common';
 import {
@@ -29,15 +28,19 @@ import {
 import { ContextMailDto, FindVariableDto } from './dto/findVariable.dto';
 import { TranformDto } from './dto/transform.dto';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { Request } from 'express';
 import { SendMailDto } from './dto/sendMail.dto';
 import { UpdateMailDto } from './dto/mail.dto';
+import { TranformVariableParam } from './dto/transformVariable.dto';
+import { DocumentMailService } from './services/document.mail.service';
 
 @ApiBearerAuth()
 @Controller('/mails')
 @ApiTags('Mail')
 export class MailController {
-  constructor(private readonly mailService: MailService) {}
+  constructor(
+    private readonly mailService: MailService,
+    private documentMailService: DocumentMailService,
+  ) {}
 
   /**
    * php/mail/findAll.php 100%
@@ -80,8 +83,11 @@ export class MailController {
    */
   @UseGuards(TokenGuard)
   @Post('/duplicate')
-  async duplicate(@Body() payload: CreateUpdateMailDto) {
-    return await this.mailService.duplicate(payload);
+  async duplicate(
+    @Body() payload: CreateUpdateMailDto,
+    @CurrentDoctor() docId: number,
+  ) {
+    return await this.mailService.duplicate(payload, docId);
   }
 
   @UseGuards(TokenGuard)

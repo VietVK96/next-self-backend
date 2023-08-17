@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { Response } from 'express';
 import {
   CurrentUser,
   TokenGuard,
@@ -308,11 +309,7 @@ export class DentalController {
    */
   @Get('/quotes/convention-2020/devis_pdf')
   @UseGuards(TokenGuard)
-  async quotesDevisPdf(
-    @Res() res,
-    @Query() req: PrintPDFDto,
-    @CurrentUser() identity: UserIdentity,
-  ) {
+  async quotesDevisPdf(@Res() res: Response, @Query() req: PrintPDFDto) {
     try {
       const buffer = await this.quotesServices.generatePdf(req);
 

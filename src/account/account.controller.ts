@@ -23,7 +23,7 @@ export class AccountController {
 
   //settings/account/certificate.php
   //all line
-  //THIS FUNCTION WAS CONFIRM BY CLIENT IS NOT USING ANYMORE
+  //THIS FUNCTION WAS CONFIRMED BY CLIENT IS NOT USING ANYMORE
   // @Post('/certificate')
   // @Header('Cache-Control', 'none')
   // @UseGuards(TokenGuard)

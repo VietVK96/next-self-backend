@@ -1,13 +1,7 @@
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
-import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository, Not } from 'typeorm';
-import { UserEntity } from 'src/entities/user.entity';
-import { SyncWzagendaUserEntity } from 'src/entities/sync-wzagenda-user.entity';
-import { WzagendaRes } from '../res/index.res';
-import { UserService } from 'src/user/services/user.service';
+import { DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import * as https from 'https';

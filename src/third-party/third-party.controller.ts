@@ -39,7 +39,7 @@ export class ThirdPartyController {
   }
 
   /**
-   * File: php/third-party/export.php
+   * File: php/third-party/update.php
    */
   @Post('update')
   @UseGuards(TokenGuard)
