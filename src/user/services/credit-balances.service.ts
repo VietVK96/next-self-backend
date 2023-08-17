@@ -38,11 +38,11 @@ export class CreditBalancesService {
       switch (param.filterParam?.[i]) {
         case 'patientBalance.amount':
           queryBuilder.andWhere('patientBalance.amount >= :amount', {
-            amount: param.filtervalue?.[i],
+            amount: param.filterValue?.[i],
           });
           break;
         case 'patientBalance.visitDate':
-          const arrDate = param.filtervalue?.[i].split(';');
+          const arrDate = param.filterValue?.[i].toString().split(';');
           if (arrDate.length > 0 && arrDate?.[0]) {
             queryBuilder.andWhere('patientBalance.visitDate >= :startDate', {
               startDate: arrDate?.[0],
@@ -57,9 +57,9 @@ export class CreditBalancesService {
       }
     }
 
-    if (param?.sorts)
+    if (param?.sort)
       queryBuilder.addOrderBy(
-        unpaidSort[param?.sorts],
+        unpaidSort[param?.sort],
         param?.direction.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
       );
 
@@ -145,11 +145,11 @@ export class CreditBalancesService {
         switch (param.filterParam?.[i]) {
           case 'patientBalance.amount':
             queryBuilder.andWhere('patientBalance.amount >= :amount', {
-              amount: param.filtervalue?.[i],
+              amount: param.filterValue?.[i],
             });
             break;
           case 'patientBalance.visitDate':
-            const arrDate = param.filtervalue?.[i].split(';');
+            const arrDate = param.filterValue?.[i].toString().split(';');
             if (arrDate.length > 0 && arrDate?.[0]) {
               queryBuilder.andWhere('patientBalance.visitDate >= :startDate', {
                 startDate: arrDate?.[0],
@@ -164,9 +164,9 @@ export class CreditBalancesService {
         }
       }
 
-      if (param?.sorts)
+      if (param?.sort)
         queryBuilder.addOrderBy(
-          unpaidSort[param?.sorts],
+          unpaidSort[param?.sort],
           param?.direction.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
         );
 

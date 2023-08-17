@@ -20,6 +20,7 @@ import { PhoneEntity } from 'src/entities/phone.entity';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { MailTransportService } from './services/mailTransport.service';
 import { EmailAccountEntity } from 'src/entities/email-account.entity';
+import { DocumentMailService } from './services/document.mail.service';
 
 @Module({
   imports: [
@@ -47,7 +48,8 @@ import { EmailAccountEntity } from 'src/entities/email-account.entity';
     ContactService,
     PaymentScheduleService,
     MailTransportService,
+    DocumentMailService,
   ],
-  exports: [MailService],
+  exports: [MailService, DocumentMailService],
 })
 export class MailModule {}
