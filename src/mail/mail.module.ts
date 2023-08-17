@@ -10,6 +10,7 @@ import { PaymentScheduleService } from 'src/payment-schedule/services/payment-sc
 import { listEntities } from 'src/entities';
 import { MailTransportService } from './services/mailTransport.service';
 import { ContactModule } from 'src/contact/contact.module';
+import { DocumentMailService } from './services/document.mail.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature(listEntities), ContactModule],
@@ -22,7 +23,8 @@ import { ContactModule } from 'src/contact/contact.module';
     ContactService,
     PaymentScheduleService,
     MailTransportService,
+    DocumentMailService,
   ],
-  exports: [MailService],
+  exports: [MailService, DocumentMailService],
 })
 export class MailModule {}

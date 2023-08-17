@@ -27,15 +27,20 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { ContextMailDto, FindVariableDto } from './dto/findVariable.dto';
 import { TranformDto } from './dto/transform.dto';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { SendMailDto } from './dto/sendMail.dto';
 import { UpdateMailDto } from './dto/mail.dto';
+import { TranformVariableParam } from './dto/transformVariable.dto';
+import { DocumentMailService } from './services/document.mail.service';
 
 @ApiBearerAuth()
 @Controller('/mails')
 @ApiTags('Mail')
 export class MailController {
-  constructor(private readonly mailService: MailService) {}
+  constructor(
+    private readonly mailService: MailService,
+    private documentMailService: DocumentMailService,
+  ) {}
 
   /**
    * php/mail/findAll.php 100%
