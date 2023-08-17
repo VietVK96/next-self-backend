@@ -4,7 +4,7 @@ import { DsioImporterService } from './services/dsio-importer.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ImporterService } from './services/importer.service';
-import { DsioService } from './services/dsio.service';
+import { ImportDsioService } from './services/import-dsio.service';
 import { CommandModule } from 'src/command/command.module';
 import { DsioElemService } from './services/dsio.elem.service';
 import { ContactEntity } from 'src/entities/contact.entity';
@@ -16,6 +16,9 @@ import { LibraryBankEntity } from 'src/entities/library-bank.entity';
 import { LetterImporterService } from './services/letter-importer.service';
 import { UserEntity } from 'src/entities/user.entity';
 import { LettersEntity } from 'src/entities/letters.entity';
+import { AmountDsioService } from './services/amount-dsio.service';
+import { HandleDsioService } from './services/handle-dsio.service';
+import { PreDataDsioService } from './services/pre-data-dsio.service';
 
 @Module({
   imports: [
@@ -36,9 +39,12 @@ import { LettersEntity } from 'src/entities/letters.entity';
   providers: [
     DsioImporterService,
     ImporterService,
-    DsioService,
+    ImportDsioService,
     DsioElemService,
     LetterImporterService,
+    HandleDsioService,
+    AmountDsioService,
+    PreDataDsioService,
   ],
 })
 export class DsioModule {}

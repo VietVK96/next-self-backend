@@ -3,7 +3,8 @@ import { DataSource } from 'typeorm';
 import { ImporterDsioDto } from '../dto/importer-dsio.dto';
 import * as fs from 'fs';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { DsioService } from './dsio.service';
+import { ImportDsioService } from './import-dsio.service';
+import { HandleDsioService } from './handle-dsio.service';
 
 /**
  * php/dsio/import_shell.php
@@ -12,7 +13,8 @@ import { DsioService } from './dsio.service';
 export class ImporterService {
   constructor(
     private dataSource: DataSource,
-    private dsioService: DsioService,
+    private dsioService: ImportDsioService,
+    private handleDsioService: HandleDsioService,
   ) {}
 
   /**
@@ -103,7 +105,7 @@ export class ImporterService {
       );
 
       try {
-        await this.dsioService.construct(
+        await this.handleDsioService.construct(
           filename,
           importerDsioDto,
           groupId,
@@ -114,7 +116,7 @@ export class ImporterService {
           HAD,
           HAF,
         );
-        await this.dsioService.import(
+        await this.dsioService.importShell(
           filename,
           importerDsioDto,
           groupId,
