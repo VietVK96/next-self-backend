@@ -422,6 +422,7 @@ export class BordereauxService {
         relations: [
           'libraryBank',
           'cashings',
+          'cashings.contact',
           'libraryBank.user',
           'libraryBank.group',
           'libraryBank.address',
@@ -452,6 +453,8 @@ export class BordereauxService {
         slipCheck: slipCheck.length > 0 ? slipCheck[0] : {},
       };
 
+      console.log(slipCheck[0]);
+
       const files: PdfTemplateFile[] = [
         {
           data,
@@ -464,6 +467,8 @@ export class BordereauxService {
           return dayjs(date).locale('fr').format('dddd D MMMM YYYY');
         },
         count: (arr) => arr.length,
+        checkPaymentChoice: (paymentChoice: string) =>
+          paymentChoice !== 'cheque',
       };
 
       return customCreatePdf({ files, options, helpers });
