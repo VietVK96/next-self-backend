@@ -435,7 +435,7 @@ export class UnpaidService {
       .innerJoinAndSelect('patientBalance.patient', 'patient')
       .leftJoinAndSelect('patient.phones', 'phone')
       .andWhere('patientBalance.usrId = :user', { user: identity.id })
-      .andWhere('patientBalance.amount < 0');
+      .andWhere('patientBalance.amount > 0');
     for (let i = 0; i < param.filterParam?.length; i++) {
       switch (param.filterParam?.[i]) {
         case 'patientBalance.id':
@@ -446,7 +446,7 @@ export class UnpaidService {
           queryBuilder.andWhere(`patientBalance.id IN (${formatIds})`);
           break;
         case 'patientBalance.amount':
-          queryBuilder.andWhere('patientBalance.amount <= :amount', {
+          queryBuilder.andWhere('patientBalance.amount >= :amount', {
             amount: param?.filterValue[i],
           });
           break;
