@@ -6,7 +6,6 @@ import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ImporterService } from './services/importer.service';
 import { ImportDsioService } from './services/import-dsio.service';
 import { CommandModule } from 'src/command/command.module';
-import { DsioElemService } from './services/dsio.elem.service';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { CcamEntity } from 'src/entities/ccam.entity';
@@ -19,6 +18,11 @@ import { LettersEntity } from 'src/entities/letters.entity';
 import { AmountDsioService } from './services/amount-dsio.service';
 import { HandleDsioService } from './services/handle-dsio.service';
 import { PreDataDsioService } from './services/pre-data-dsio.service';
+import { ActDsioElemService } from './services/act-dsio.elem.service';
+import { InitDsioElemService } from './services/init-dsio.elem.service';
+import { LibraryDsioElemService } from './services/library-dsio.elem.service';
+import { PaymentDsioElemService } from './services/payment-dsio.elem.service';
+import { MedicaDsioElemService } from './services/medica-dsio.elem.service';
 
 @Module({
   imports: [
@@ -37,11 +41,15 @@ import { PreDataDsioService } from './services/pre-data-dsio.service';
   ],
   controllers: [DsioController],
   providers: [
-    DsioImporterService,
     ImporterService,
-    ImportDsioService,
-    DsioElemService,
+    DsioImporterService,
     LetterImporterService,
+    InitDsioElemService,
+    MedicaDsioElemService,
+    ActDsioElemService,
+    LibraryDsioElemService,
+    PaymentDsioElemService,
+    ImportDsioService,
     HandleDsioService,
     AmountDsioService,
     PreDataDsioService,

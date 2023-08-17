@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as readline from 'readline';
 import { HandleDsioService } from './handle-dsio.service';
 import { AmountDsioService } from './amount-dsio.service';
+import { MedicaDsioElemService } from './medica-dsio.elem.service';
 
 /**
  * php/dsio/import_shell.php line 1697 ->
@@ -14,6 +15,7 @@ export class ImportDsioService {
   constructor(
     private handleDsioService: HandleDsioService,
     private amountDsioService: AmountDsioService,
+    private medicaDsioElemService: MedicaDsioElemService,
   ) {}
 
   // php/dsio/import_shell.php line 2665 -> 2751
@@ -143,16 +145,16 @@ export class ImportDsioService {
       if (this.handleDsioService.curObj != null) {
         if (this.handleDsioService.esc('M')) {
           /* Il faut enregistrer un dernier médicament */
-          await this.handleDsioService.curObj.insertMedicament(groupId);
+          await this.medicaDsioElemService.insertMedicament(groupId);
         } else if (this.handleDsioService.esc('N')) {
           /* Il faut enregistrer un dernier correspondant */
-          await this.handleDsioService.curObj.setCorrespondent(
+          await this.medicaDsioElemService.setCorrespondent(
             groupId,
             t_gender_gen,
           );
         } else if (this.handleDsioService.esc('O')) {
           /* Il faut enregistrer un dernier compte bancaire */
-          await this.handleDsioService.curObj.setBnq(
+          await this.medicaDsioElemService.setBnq(
             this.handleDsioService.Id_prat,
             groupId,
           );

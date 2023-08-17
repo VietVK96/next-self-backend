@@ -1,17 +1,23 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { HandleDsioService } from './handle-dsio.service';
-import { DsioElemService } from './dsio.elem.service';
 import { PreDataDsioService } from './pre-data-dsio.service';
 import { DataSource } from 'typeorm';
+import { InitDsioElemService } from './init-dsio.elem.service';
+import { PaymentDsioElemService } from './payment-dsio.elem.service';
+import { LibraryDsioElemService } from './library-dsio.elem.service';
+import { MedicaDsioElemService } from './medica-dsio.elem.service';
 
 @Injectable()
 export class AmountDsioService {
   constructor(
     @Inject(forwardRef(() => HandleDsioService))
     private handleDsioService: HandleDsioService,
-    private dsioElemService: DsioElemService,
     private preDateDsioService: PreDataDsioService,
     private dataSource: DataSource,
+    private initDsioElemService: InitDsioElemService,
+    private paymentDsioElemService: PaymentDsioElemService,
+    private libraryDsioElemService: LibraryDsioElemService,
+    private medicaDsioElemService: MedicaDsioElemService,
   ) {}
 
   /** php/dsio/import_shell.php line 2316 -> 2334
@@ -33,10 +39,8 @@ export class AmountDsioService {
         return;
       }
       if (this.handleDsioService.curObj == null) {
-        this.handleDsioService.curObj = this.dsioElemService.construct(
-          bname,
-          value,
-        );
+        this.handleDsioService.curObj = true;
+        this.initDsioElemService.construct(bname, value);
         if (bname === 'PTC') {
           this.handleDsioService.Id_pat =
             !value || !this.handleDsioService.ar_pat[value]
@@ -65,7 +69,7 @@ export class AmountDsioService {
           ngapKeys,
         );
       } else {
-        this.handleDsioService.curObj.setInfo(bname, value);
+        this.initDsioElemService.setInfo(bname, value);
       }
     } catch (error) {
       throw error;
@@ -82,18 +86,14 @@ export class AmountDsioService {
         return;
       }
       if (this.handleDsioService.curObj == null) {
-        this.handleDsioService.curObj = this.dsioElemService.construct(
-          bname,
-          value,
-        );
+        this.handleDsioService.curObj = true;
+        this.initDsioElemService.construct(bname, value);
       } else if (bname == 'FLI') {
         await this.chFam(groupId);
-        this.handleDsioService.curObj = this.dsioElemService.construct(
-          bname,
-          value,
-        );
+        this.handleDsioService.curObj = true;
+        this.initDsioElemService.construct(bname, value);
       } else {
-        this.handleDsioService.curObj.setInfo(bname, value);
+        this.initDsioElemService.setInfo(bname, value);
       }
     } catch (error) {
       throw error;
@@ -107,7 +107,7 @@ export class AmountDsioService {
   async chFam(groupId: number) {
     try {
       if (this.handleDsioService.curObj != null) {
-        await this.handleDsioService.curObj.setLibraryFamily(groupId);
+        await this.paymentDsioElemService.setLibraryFamily(groupId);
         this.handleDsioService.curObj = null;
       }
     } catch (error) {
@@ -137,10 +137,8 @@ export class AmountDsioService {
         this.handleDsioService.Id_Family_Tasks = Number(value);
       }
       if (this.handleDsioService.curObj == null) {
-        this.handleDsioService.curObj = this.dsioElemService.construct(
-          bname,
-          value,
-        );
+        this.handleDsioService.curObj = true;
+        this.initDsioElemService.construct(bname, value);
       } else if (bname === 'FCF') {
         await this.chLibAct(
           bname,
@@ -158,7 +156,7 @@ export class AmountDsioService {
           groupId,
         );
       } else {
-        this.handleDsioService.curObj.setInfo(bname, value);
+        this.initDsioElemService.setInfo(bname, value);
       }
     } catch (error) {
       throw error;
@@ -180,24 +178,19 @@ export class AmountDsioService {
   ) {
     try {
       if (this.handleDsioService.actesMacDent) {
-        await this.handleDsioService.curObj.setLibraryMact(
-          t_dsio_tasks,
-          groupId,
-        );
+        await this.libraryDsioElemService.setLibraryMact(t_dsio_tasks, groupId);
       } else {
-        await this.handleDsioService.curObj.setLibraryAct(
+        await this.paymentDsioElemService.setLibraryAct(
           t_dsio_tasks,
           LFT_ASSOCIATED_ACTS,
           groupId,
         );
       }
       if (bname !== null) {
-        this.handleDsioService.curObj = this.dsioElemService.construct(
-          bname,
-          value,
-        );
+        this.handleDsioService.curObj = true;
+        this.initDsioElemService.construct(bname, value);
         if (bname !== 'FCF') {
-          this.handleDsioService.curObj.setInfo(
+          this.initDsioElemService.setInfo(
             'FCF',
             this.handleDsioService.Id_Family_Tasks + '',
           );
@@ -277,16 +270,14 @@ export class AmountDsioService {
 
       if (bname === 'ICI') {
         if (this.handleDsioService.curObj != null) {
-          await this.handleDsioService.curObj.insertContraindication(groupId); // enregistrement de la contre-indication précédente
+          await this.libraryDsioElemService.insertContraindication(groupId); // enregistrement de la contre-indication précédente
         } else {
           await this.deleteContraindications(groupId, max_CON_NBR); // première contre-indication => on supprime celles par défaut dans e.coo
         }
-        this.handleDsioService.curObj = this.dsioElemService.construct(
-          bname,
-          value,
-        );
+        this.handleDsioService.curObj = true;
+        this.initDsioElemService.construct(bname, value);
       } else {
-        this.handleDsioService.curObj.setInfo(bname, value);
+        this.initDsioElemService.setInfo(bname, value);
       }
     } catch (error) {
       throw error;
@@ -322,16 +313,14 @@ export class AmountDsioService {
 
       if (bname === 'DLI') {
         if (this.handleDsioService.curObj != null) {
-          await this.handleDsioService.curObj.insertMedicamentFamily(groupId); // enregistrement de la contre-indication précédente
+          await this.medicaDsioElemService.insertMedicamentFamily(groupId); // enregistrement de la contre-indication précédente
         } else {
           await this.deleteMedicamentFamilies(groupId); // première famille on supprime celles par défaut dans e.coo
         }
-        this.handleDsioService.curObj = this.dsioElemService.construct(
-          bname,
-          value,
-        );
+        this.handleDsioService.curObj = true;
+        this.initDsioElemService.construct(bname, value);
       } else {
-        this.handleDsioService.curObj.setInfo(bname, value);
+        this.initDsioElemService.setInfo(bname, value);
       }
     } catch (error) {
       throw error;
@@ -363,25 +352,21 @@ export class AmountDsioService {
 
       if (['DCD', 'MCM'].includes(bname)) {
         if (this.handleDsioService.curObj != null) {
-          await this.handleDsioService.curObj.insertMedicament(groupId); // enregistrement de la contre-indication précédente
+          await this.medicaDsioElemService.insertMedicament(groupId); // enregistrement de la contre-indication précédente
         }
         if (bname === 'MCM') {
           // nouveau médicament de la même famille
-          const DCD = this.handleDsioService.curObj.DCD;
-          this.handleDsioService.curObj = this.dsioElemService.construct(
-            'DCD',
-            DCD,
-          );
-          this.handleDsioService.curObj.setInfo(bname, value);
+          const DCD = this.initDsioElemService.DCD;
+          this.handleDsioService.curObj = true;
+          this.initDsioElemService.construct('DCD', DCD);
+          this.initDsioElemService.setInfo(bname, value);
         } else {
           // nouveau médicaent dans une nouvelle famille
-          this.handleDsioService.curObj = this.dsioElemService.construct(
-            bname,
-            value,
-          );
+          this.handleDsioService.curObj = true;
+          this.initDsioElemService.construct(bname, value);
         }
       } else {
-        this.handleDsioService.curObj.setInfo(bname, value);
+        this.initDsioElemService.setInfo(bname, value);
       }
     } catch (error) {
       throw error;
@@ -402,22 +387,20 @@ export class AmountDsioService {
 
       if (bname === 'RN1') {
         if (this.handleDsioService.curObj != null) {
-          await this.handleDsioService.curObj.setCorrespondent(
+          await this.medicaDsioElemService.setCorrespondent(
             groupId,
             t_gender_gen,
           ); // Enregistrement du correspndant précédent
         }
-        this.handleDsioService.curObj = this.dsioElemService.construct(
-          bname,
-          value,
-        );
+        this.handleDsioService.curObj = true;
+        this.initDsioElemService.construct(bname, value);
       } else if (bname === 'PC1') {
         value = this.handleDsioService.Id_prat =
           !value || !this.handleDsioService.ar_prat[value]
             ? 0
             : this.handleDsioService.ar_prat[value];
       }
-      this.handleDsioService.curObj.setInfo(bname, value);
+      this.initDsioElemService.setInfo(bname, value);
     } catch (error) {
       throw error;
     }
@@ -432,7 +415,7 @@ export class AmountDsioService {
 
       if (bname === 'PC1') {
         if (this.handleDsioService.curObj != null) {
-          await this.handleDsioService.curObj.setBnq(
+          await this.medicaDsioElemService.setBnq(
             this.handleDsioService.Id_prat,
             groupId,
           ); // Enregistrement du correspndant précédent
@@ -442,12 +425,10 @@ export class AmountDsioService {
             ? 0
             : +this.handleDsioService.ar_prat[value];
         value = this.handleDsioService.Id_prat;
-        this.handleDsioService.curObj = this.dsioElemService.construct(
-          bname,
-          value.toString(),
-        );
+        this.handleDsioService.curObj = true;
+        this.initDsioElemService.construct(bname, value.toString());
       }
-      this.handleDsioService.curObj.setInfo(bname, `${value}`);
+      this.initDsioElemService.setInfo(bname, `${value}`);
     } catch (error) {
       throw error;
     }

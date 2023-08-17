@@ -5,9 +5,11 @@ import { DataSource } from 'typeorm';
 import { ImporterDsioDto } from '../dto/importer-dsio.dto';
 import * as fs from 'fs';
 import { AmountDueService } from 'src/command/services/amount.due.services';
-import { DsioElemService } from './dsio.elem.service';
 import { PreDataDsioService } from './pre-data-dsio.service';
 import { AmountDsioService } from './amount-dsio.service';
+import { LibraryDsioElemService } from './library-dsio.elem.service';
+import { PaymentDsioElemService } from './payment-dsio.elem.service';
+import { MedicaDsioElemService } from './medica-dsio.elem.service';
 
 @Injectable()
 export class HandleDsioService {
@@ -29,7 +31,7 @@ export class HandleDsioService {
   ar_prat: { [key: number]: string } = {}; // tableau [Id_DSIO] => Id_C&W pour les praticiens
   ar_agn: Record<number, string> = {}; // tableau [Id_DSIO] => id_ecoo pour les ressources d'agenda
   ar_fam: Record<string, number> = {}; // tableau [Id_DSIO] => Id_C&W pour les familles
-  curObj: DsioElemService = null; // DSIO_ELEM
+  curObj: boolean = null; // DSIO_ELEM
   FRQ: duration.Duration;
   HMD: string;
   HMF: string;
@@ -65,6 +67,9 @@ export class HandleDsioService {
     private amountDueService: AmountDueService,
     private preDataDsioService: PreDataDsioService,
     private amountDsioService: AmountDsioService,
+    private libraryDsioElemService: LibraryDsioElemService,
+    private paymentDsioElemService: PaymentDsioElemService,
+    private medicaDsioElemService: MedicaDsioElemService,
   ) {}
 
   init() {
@@ -352,9 +357,12 @@ export class HandleDsioService {
                 if (this.curObj != null) {
                   // Il faut enregistrer un dernier acte
                   if (this.actesMacDent) {
-                    await this.curObj.setLibraryMact(t_dsio_tasks, groupId);
+                    await this.libraryDsioElemService.setLibraryMact(
+                      t_dsio_tasks,
+                      groupId,
+                    );
                   } else {
-                    await this.curObj.setLibraryAct(
+                    await this.paymentDsioElemService.setLibraryAct(
                       t_dsio_tasks,
                       LFT_ASSOCIATED_ACTS,
                       groupId,
@@ -390,31 +398,43 @@ export class HandleDsioService {
                 switch (this.ESC) {
                   case 'K': //on est à la fin de K
                     if (this.curObj != null) {
-                      await this.curObj.insertContraindication(groupId);
+                      await this.libraryDsioElemService.insertContraindication(
+                        groupId,
+                      );
                     }
                     this.curObj = null;
                     break;
                   case 'L': // on est à la fin de L
                     if (this.curObj != null) {
-                      await this.curObj.insertMedicamentFamily(groupId);
+                      await this.medicaDsioElemService.insertMedicamentFamily(
+                        groupId,
+                      );
                     }
                     this.curObj = null;
                     break;
                   case 'M': // on est à la fin de M
                     if (this.curObj != null) {
-                      await this.curObj.insertMedicament(groupId);
+                      await this.medicaDsioElemService.insertMedicament(
+                        groupId,
+                      );
                     }
                     this.curObj = null;
                     break;
                   case 'N': // on est à la fin de N
                     if (this.curObj != null) {
-                      await this.curObj.setCorrespondent(groupId, t_gender_gen);
+                      await this.medicaDsioElemService.setCorrespondent(
+                        groupId,
+                        t_gender_gen,
+                      );
                     }
                     this.curObj = null;
                     break;
                   case 'O': // on est à la fin de O
                     if (this.curObj != null) {
-                      await this.curObj.setBnq(this.Id_prat, groupId);
+                      await this.medicaDsioElemService.setBnq(
+                        this.Id_prat,
+                        groupId,
+                      );
                     }
                     this.curObj = null;
                     break;

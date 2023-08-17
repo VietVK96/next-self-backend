@@ -1,16 +1,24 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { HandleDsioService } from './handle-dsio.service';
 import * as dayjs from 'dayjs';
-import { DsioElemService } from './dsio.elem.service';
 import { DataSource } from 'typeorm';
+import { InitDsioElemService } from './init-dsio.elem.service';
+import { ActDsioElemService } from './act-dsio.elem.service';
+import { PaymentDsioElemService } from './payment-dsio.elem.service';
+import { LibraryDsioElemService } from './library-dsio.elem.service';
+import { MedicaDsioElemService } from './medica-dsio.elem.service';
 
 @Injectable()
 export class PreDataDsioService {
   constructor(
     @Inject(forwardRef(() => HandleDsioService))
     private handleDsioService: HandleDsioService,
-    private dsioElemService: DsioElemService,
     private dataSource: DataSource,
+    private initDsioElemService: InitDsioElemService,
+    private actDsioElemService: ActDsioElemService,
+    private paymentDsioElemService: PaymentDsioElemService,
+    private libraryDsioElemService: LibraryDsioElemService,
+    private medicaDsioElemService: MedicaDsioElemService,
   ) {}
 
   /** php/dsio/import_shell.php line 2081 -> 2105
@@ -74,32 +82,27 @@ export class PreDataDsioService {
         ) {
           // enregistrement du nouvel acte/rdv
           if (
-            !this.handleDsioService.curObj.SDA ||
-            this.handleDsioService.curObj.SDA === '00000000' ||
-            !dayjs(this.handleDsioService.curObj.SDA).isValid()
+            !this.initDsioElemService.SDA ||
+            this.initDsioElemService.SDA === '00000000' ||
+            !dayjs(this.initDsioElemService.SDA).isValid()
           ) {
-            this.handleDsioService.curObj.setInfo('SDA', '19700101');
+            this.initDsioElemService.setInfo('SDA', '19700101');
           }
-          this.handleDsioService.curObj.setInfo(
-            'FRQ',
-            this.handleDsioService.FRQ,
-          );
+          this.initDsioElemService.setInfo('FRQ', this.handleDsioService.FRQ);
           if (this.handleDsioService.Id_agn) {
             const id_prat = !this.handleDsioService.Id_prat
               ? this.handleDsioService.Id_prat_defaut
               : this.handleDsioService.Id_prat;
-            await this.handleDsioService.curObj.creatRdv(
+            await this.actDsioElemService.creatRdv(
               this.handleDsioService.Id_agn,
               id_prat,
               this.handleDsioService.Id_pat,
             );
           } else {
-            await this.handleDsioService.curObj.creatActe(
+            await this.actDsioElemService.creatActe(
               this.handleDsioService.Id_prat,
               this.handleDsioService.Id_pat,
-              this.handleDsioService.getNewHRDV(
-                this.handleDsioService.curObj.SDA,
-              ),
+              this.handleDsioService.getNewHRDV(this.initDsioElemService.SDA),
               this.handleDsioService.actesMacDent,
               this.handleDsioService.actesAgatha,
               this.handleDsioService.actesDentalOnLine,
@@ -114,7 +117,7 @@ export class PreDataDsioService {
           this.handleDsioService.Id_pat
         ) {
           // enregistrement du nouveau paiement
-          await this.handleDsioService.curObj.creatPaiement(
+          await this.paymentDsioElemService.creatPaiement(
             this.handleDsioService.Id_prat,
             this.handleDsioService.Id_pat,
           );
@@ -126,11 +129,8 @@ export class PreDataDsioService {
         ) {
           // Serge le 28/06/2013)
           // mise à jour du montant dû du patient
-          this.handleDsioService.curObj.setInfo(
-            'FRQ',
-            this.handleDsioService.FRQ,
-          );
-          await this.handleDsioService.curObj.setAmountDue(
+          this.initDsioElemService.setInfo('FRQ', this.handleDsioService.FRQ);
+          await this.paymentDsioElemService.setAmountDue(
             this.handleDsioService.Id_prat,
             this.handleDsioService.Id_pat,
           );
@@ -145,19 +145,19 @@ export class PreDataDsioService {
           } else {
             ar_ptt_user = this.handleDsioService.ar_prat;
           }
-          this.handleDsioService.curObj.setInfo(
+          this.initDsioElemService.setInfo(
             'PTC',
             this.handleDsioService.Id_pat + '',
           );
           if (Array.isArray(ar_ptt_user)) {
             for (const Id_ptt_user of ar_ptt_user) {
-              this.handleDsioService.curObj.setInfo('PC1', Id_ptt_user + '');
-              await this.handleDsioService.curObj.setPostit();
+              this.initDsioElemService.setInfo('PC1', Id_ptt_user + '');
+              await this.libraryDsioElemService.setPostit();
             }
           } else {
             for (const key of Object.keys(ar_ptt_user)) {
-              this.handleDsioService.curObj.setInfo('PC1', ar_ptt_user[key]);
-              await this.handleDsioService.curObj.setPostit();
+              this.initDsioElemService.setInfo('PC1', ar_ptt_user[key]);
+              await this.libraryDsioElemService.setPostit();
             }
           }
         } else if (
@@ -165,11 +165,11 @@ export class PreDataDsioService {
           this.handleDsioService.Id_prat
         ) {
           // enregistrement d'un nouveau correspondant
-          this.handleDsioService.curObj.setInfo(
+          this.initDsioElemService.setInfo(
             'PC1',
             `${this.handleDsioService.Id_prat}`,
           );
-          await this.handleDsioService.curObj.setCorrespondent(
+          await this.medicaDsioElemService.setCorrespondent(
             groupId,
             t_gender_gen,
           );
@@ -178,11 +178,11 @@ export class PreDataDsioService {
           this.handleDsioService.Id_prat
         ) {
           // enregistrement d'un nouveau correspondant
-          this.handleDsioService.curObj.setInfo(
+          this.initDsioElemService.setInfo(
             'PC1',
             this.handleDsioService.Id_prat + '',
           );
-          await this.handleDsioService.curObj.setBnq(
+          await this.medicaDsioElemService.setBnq(
             this.handleDsioService.Id_prat,
             groupId,
           );
@@ -223,7 +223,7 @@ export class PreDataDsioService {
         if (this.handleDsioService.PTC) {
           // On enregistre d'abord le précédent et on récupère l'ID de l'enregistrement
           this.handleDsioService.ar_pat[this.handleDsioService.PTC] =
-            await this.handleDsioService.curObj.creatPatient(
+            await this.initDsioElemService.creatPatient(
               this.handleDsioService.ar_fam,
               this.handleDsioService.ar_prat,
               Object.keys(this.handleDsioService.ar_pat).length + 1,
@@ -238,19 +238,15 @@ export class PreDataDsioService {
         // On prépare le suivant
         await this.chPat('', groupId, t_dsio_tasks, t_gender_gen, ngapKeys);
         if (value) {
-          this.handleDsioService.curObj = this.dsioElemService.construct(
-            bname,
-            value,
-          );
+          this.handleDsioService.curObj = true;
+          this.initDsioElemService.construct(bname, value);
         }
       } else {
         if (!this.handleDsioService.curObj) {
-          this.handleDsioService.curObj = this.dsioElemService.construct(
-            bname,
-            value,
-          );
+          this.handleDsioService.curObj = true;
+          this.initDsioElemService.construct(bname, value);
         } else {
-          this.handleDsioService.curObj.setInfo(bname, value);
+          this.initDsioElemService.setInfo(bname, value);
         }
         if (bname === 'PTC') {
           this.handleDsioService.PTC = value;
@@ -320,12 +316,10 @@ export class PreDataDsioService {
         return;
       }
       if (this.handleDsioService.curObj == null) {
-        this.handleDsioService.curObj = this.dsioElemService.construct(
-          bname,
-          value,
-        );
+        this.handleDsioService.curObj = true;
+        this.initDsioElemService.construct(bname, value);
         if (this.handleDsioService.esc('P')) {
-          this.handleDsioService.curObj.setInfo('STA', 'P');
+          this.initDsioElemService.setInfo('STA', 'P');
         }
         if (bname === 'PTC') {
           this.handleDsioService.Id_pat =
@@ -352,7 +346,7 @@ export class PreDataDsioService {
             ? this.handleDsioService.ar_agn[value]
             : 0;
         }
-        this.handleDsioService.curObj.setInfo(bname, value);
+        this.initDsioElemService.setInfo(bname, value);
       }
     } catch (error) {
       throw error;
@@ -378,29 +372,23 @@ export class PreDataDsioService {
         return;
       }
       if (this.handleDsioService.curObj == null) {
-        this.handleDsioService.curObj = this.dsioElemService.construct(
-          bname,
-          value,
-        );
+        this.handleDsioService.curObj = true;
+        this.initDsioElemService.construct(bname, value);
       }
       if (bname == 'PTC') {
         await this.chPat(value, groupId, t_dsio_tasks, t_gender_gen, ngapKeys);
-        this.handleDsioService.curObj = this.dsioElemService.construct(
-          bname,
-          value,
-        );
+        this.handleDsioService.curObj = true;
+        this.initDsioElemService.construct(bname, value);
       } else if (bname == 'PC1') {
         await this.chPrat(value, groupId, t_dsio_tasks, t_gender_gen, ngapKeys);
-        this.handleDsioService.curObj = this.dsioElemService.construct(
-          bname,
-          value,
-        );
-        this.handleDsioService.curObj.setInfo(
+        this.handleDsioService.curObj = true;
+        this.initDsioElemService.construct(bname, value);
+        this.initDsioElemService.setInfo(
           'PTC',
           `${this.handleDsioService.Id_pat}`,
         );
       } else {
-        this.handleDsioService.curObj.setInfo(bname, value);
+        this.initDsioElemService.setInfo(bname, value);
       }
     } catch (error) {
       throw error;
@@ -426,10 +414,8 @@ export class PreDataDsioService {
         return;
       }
       if (this.handleDsioService.curObj == null) {
-        this.handleDsioService.curObj = this.dsioElemService.construct(
-          bname,
-          value,
-        );
+        this.handleDsioService.curObj = true;
+        this.initDsioElemService.construct(bname, value);
         if (bname === 'PTC') {
           this.handleDsioService.Id_pat =
             !value || !this.handleDsioService.ar_pat[value]
@@ -446,7 +432,7 @@ export class PreDataDsioService {
       } else if (bname === 'PC1') {
         await this.chPrat(value, groupId, t_dsio_tasks, t_gender_gen, ngapKeys);
       } else {
-        this.handleDsioService.curObj.setInfo(bname, value);
+        this.initDsioElemService.setInfo(bname, value);
       }
     } catch (error) {
       throw error;
