@@ -453,8 +453,6 @@ export class BordereauxService {
         slipCheck: slipCheck.length > 0 ? slipCheck[0] : {},
       };
 
-      console.log(slipCheck[0]);
-
       const files: PdfTemplateFile[] = [
         {
           data,
