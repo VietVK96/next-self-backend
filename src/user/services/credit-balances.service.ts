@@ -37,12 +37,12 @@ export class CreditBalancesService {
       .innerJoinAndSelect('patientBalance.patient', 'patient')
       .leftJoinAndSelect('patient.phones', 'phone')
       .andWhere('patientBalance.usrId = :user', { user: identity.id })
-      .andWhere('patientBalance.amount >= 0');
+      .andWhere('patientBalance.amount < 0');
 
     for (let i = 0; i < param.filterParam?.length; i++) {
       switch (param.filterParam?.[i]) {
         case 'patientBalance.amount':
-          queryBuilder.andWhere('patientBalance.amount >= :amount', {
+          queryBuilder.andWhere('patientBalance.amount <= :amount', {
             amount: param.filterValue?.[i],
           });
           break;
@@ -144,12 +144,12 @@ export class CreditBalancesService {
         .innerJoinAndSelect('patientBalance.patient', 'patient')
         .leftJoinAndSelect('patient.phones', 'phone')
         .andWhere('patientBalance.usrId = :user', { user: identity.id })
-        .andWhere('patientBalance.amount >= 0');
+        .andWhere('patientBalance.amount < 0');
 
       for (let i = 0; i < param.filterParam?.length; i++) {
         switch (param.filterParam?.[i]) {
           case 'patientBalance.amount':
-            queryBuilder.andWhere('patientBalance.amount >= :amount', {
+            queryBuilder.andWhere('patientBalance.amount <= :amount', {
               amount: param.filterValue?.[i],
             });
             break;
