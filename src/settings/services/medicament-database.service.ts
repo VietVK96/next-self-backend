@@ -297,13 +297,18 @@ export class MedicamentDatabaseService {
                   profilPatient?.lstPathologiesAMM.include(excipient?.id) ||
                   profilPatient?.lstPathologiesCIM10.include(excipient?.id))
               ) {
-                infos[0].produitResult.substituableExcipient.push(excipient);
+                infos[0]?.produitResult?.substituableExcipient?.push(excipient);
               }
             }
           }
         }
       }
 
+      if (!infos) {
+        return {
+          lstPosologies: [],
+        };
+      }
       infos[0].produitResult['lstPosologies'] = [];
       const posologieCompleteRes =
         await claudeBernard?.getPosologieCompleteAsync({
