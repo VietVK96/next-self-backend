@@ -177,7 +177,7 @@ export class CcamEntity {
     length: 255,
     nullable: true,
   })
-  modifiers?: number;
+  modifiers?: string;
 
   /**
    * @ORM\Column(name="repayable_on_condition", type="boolean", options={"default": false})

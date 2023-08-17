@@ -64,7 +64,7 @@ export class AccountService {
   async accountWzAgendaSubmit(
     identity: UserIdentity,
     req: AccountWzAgendaSubmitDto,
-  ): Promise<any> {
+  ): Promise<SyncWzagendaUserEntity> {
     if (!req?.calendarId) {
       throw new CBadRequestException(ErrorCode?.NOT_FOUND_CALENDAR_ID);
     }
@@ -74,10 +74,14 @@ export class AccountService {
     if (res == '0') {
       throw new CBadRequestException(ErrorCode.CAN_NOT_REQUEST_TO_WZ_AGENDA);
     }
-    const params: any = {};
-    const wzAgendaUser = await this.syncWzagendaUserRepository.findOne({
-      where: { id: identity?.id },
-    });
+    // Why use any ?
+    const params: {
+      id?: number;
+    } = {};
+    // Do wzAgendaUser used any more?
+    // const wzAgendaUser = await this.syncWzagendaUserRepository.findOne({
+    //   where: { id: identity?.id },
+    // });
     params.id = identity?.id;
     return await this.syncWzagendaUserRepository.save({
       ...params,

@@ -236,7 +236,7 @@ export class ActsService {
           }
           groupBy[dateKey].push(act);
         });
-        for (const [_, raws] of Object.entries(groupBy)) {
+        for (const [, raws] of Object.entries(groupBy)) {
           const collectionFilteredByFamilyCode = raws.filter(
             (act) =>
               act?.medical?.ccam &&
