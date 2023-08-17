@@ -211,13 +211,4 @@ export class MailController {
   ) {
     return this.mailService.preview(id, docId, identity.org);
   }
-
-  /**
-   * File: application/Services/Document/Mail.php
-   */
-  @Get('/tranform-var')
-  @UseGuards(TokenGuard)
-  async tranformVariable(@Query() param: TranformVariableParam) {
-    return await this.documentMailService.transformVariable(param);
-  }
 }
