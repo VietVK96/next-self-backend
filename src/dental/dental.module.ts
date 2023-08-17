@@ -31,6 +31,7 @@ import { OrdonnancesController } from './ordonnances.controller';
 import { QuotationController } from 'src/contact/quotation.controller';
 import { QuotesController } from './quotes.controller';
 import { QuotationService } from 'src/contact/services/quotation.service';
+import { ContactPaymentService } from 'src/contact/services/contact.payment.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature(listEntities), PaymentSchedulesModule],
@@ -66,6 +67,7 @@ import { QuotationService } from 'src/contact/services/quotation.service';
     UserService,
     QuotationServices,
     QuotationService,
+    ContactPaymentService,
   ],
 })
 export class DentalModule {}
