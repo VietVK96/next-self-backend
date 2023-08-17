@@ -136,11 +136,11 @@ export function changeSectorNumberToTooth(
   type = 'adult',
   separator = ',',
 ): string {
-  sectors = Array.isArray(sectors) ? sectors : sectors.split(/[^0-9]+/);
-  let sector = sectors.join(separator);
-  for (const num in initSectors[type]) {
-    const teethTemp = initSectors[type][num].join(separator);
-    sector = sector.replace(num, teethTemp);
-  }
-  return sector;
+  sectors = Array.isArray(sectors) ? sectors : sectors.split(separator);
+  const initSectorsInType =
+    type === 'adult' ? initSectors?.adult : initSectors?.child;
+  const res = sectors?.map((sector) => {
+    return initSectorsInType?.[`${sector}`]?.join(',') ?? sector;
+  });
+  return res?.join(',');
 }
