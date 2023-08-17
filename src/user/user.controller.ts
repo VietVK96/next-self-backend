@@ -33,6 +33,7 @@ import { ErrorCode } from 'src/constants/error';
 import { GetOneActiveRes } from './res/get-active.res';
 import * as dayjs from 'dayjs';
 import { CreditBalancesService } from './services/credit-balances.service';
+import { CreditBalancesDto } from './dto/credit-balances.dto';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -276,5 +277,15 @@ export class UserController {
     @Query() param: printUnpaidDto,
   ) {
     return await this.unpaidService.relaunchUnpaid(identity, param);
+  }
+  /**
+   * File : php/user/credit-balances/index.php 100%
+   * @param payload
+   * @returns
+   */
+  @Get('credit-balances/index')
+  @UseGuards(TokenGuard)
+  getCreditBalances(@Query() payload: CreditBalancesDto) {
+    return this.creditBalancesService.getPatientBalances(payload);
   }
 }

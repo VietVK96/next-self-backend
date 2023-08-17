@@ -9,7 +9,6 @@ import {
   Delete,
   Param,
   UseInterceptors,
-  Req,
   UploadedFiles,
 } from '@nestjs/common';
 import {
@@ -84,8 +83,11 @@ export class MailController {
    */
   @UseGuards(TokenGuard)
   @Post('/duplicate')
-  async duplicate(@Body() payload: CreateUpdateMailDto) {
-    return await this.mailService.duplicate(payload);
+  async duplicate(
+    @Body() payload: CreateUpdateMailDto,
+    @CurrentDoctor() docId: number,
+  ) {
+    return await this.mailService.duplicate(payload, docId);
   }
 
   @UseGuards(TokenGuard)

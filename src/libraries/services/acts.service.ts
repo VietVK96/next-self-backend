@@ -22,10 +22,13 @@ export class LibraryActsService {
       where,
       relations: {
         quantities: {
+          tariffs: true,
           ccam: {
             conditions: true,
             family: {},
+            unitPrices: true,
           },
+          ngapKey: true,
         },
       },
     });
