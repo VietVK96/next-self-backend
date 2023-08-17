@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as dayjs from 'dayjs';
 import { unpaidSort } from 'src/constants/unpaid';
 import { customCreatePdf } from 'src/common/util/pdf';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,6 +13,9 @@ import { Response } from 'express';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { Parser } from 'json2csv';
+import { IPatientBalances } from 'src/interfaces/interface';
+import { CreditBalancesDto } from '../dto/credit-balances.dto';
+import { UserEntity } from 'src/entities/user.entity';
 
 @Injectable()
 export class CreditBalancesService {
@@ -21,6 +24,8 @@ export class CreditBalancesService {
     private patientBalanceRepo: Repository<ContactUserEntity>,
     @InjectRepository(UserPreferenceEntity)
     private userPreferenceRepo: Repository<UserPreferenceEntity>,
+    @InjectRepository(UserEntity)
+    private userRepository: Repository<UserEntity>,
   ) {}
 
   /**
@@ -38,11 +43,11 @@ export class CreditBalancesService {
       switch (param.filterParam?.[i]) {
         case 'patientBalance.amount':
           queryBuilder.andWhere('patientBalance.amount >= :amount', {
-            amount: param.filtervalue?.[i],
+            amount: param.filterValue?.[i],
           });
           break;
         case 'patientBalance.visitDate':
-          const arrDate = param.filtervalue?.[i].split(';');
+          const arrDate = param.filterValue?.[i].toString().split(';');
           if (arrDate.length > 0 && arrDate?.[0]) {
             queryBuilder.andWhere('patientBalance.visitDate >= :startDate', {
               startDate: arrDate?.[0],
@@ -57,9 +62,9 @@ export class CreditBalancesService {
       }
     }
 
-    if (param?.sorts)
+    if (param?.sort)
       queryBuilder.addOrderBy(
-        unpaidSort[param?.sorts],
+        unpaidSort[param?.sort],
         param?.direction.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
       );
 
@@ -145,11 +150,11 @@ export class CreditBalancesService {
         switch (param.filterParam?.[i]) {
           case 'patientBalance.amount':
             queryBuilder.andWhere('patientBalance.amount >= :amount', {
-              amount: param.filtervalue?.[i],
+              amount: param.filterValue?.[i],
             });
             break;
           case 'patientBalance.visitDate':
-            const arrDate = param.filtervalue?.[i].split(';');
+            const arrDate = param.filterValue?.[i].toString().split(';');
             if (arrDate.length > 0 && arrDate?.[0]) {
               queryBuilder.andWhere('patientBalance.visitDate >= :startDate', {
                 startDate: arrDate?.[0],
@@ -164,9 +169,9 @@ export class CreditBalancesService {
         }
       }
 
-      if (param?.sorts)
+      if (param?.sort)
         queryBuilder.addOrderBy(
-          unpaidSort[param?.sorts],
+          unpaidSort[param?.sort],
           param?.direction.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
         );
 
@@ -200,6 +205,104 @@ export class CreditBalancesService {
       res.status(200).send(data);
     } catch (err) {
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  /**
+   * File : php/user/credit-balances/index.php 100%
+   * @param payload
+   * @returns
+   */
+  async getPatientBalances(
+    payload: CreditBalancesDto,
+  ): Promise<IPatientBalances> {
+    const { id, page, per_page, direction, sort } = payload;
+
+    const filterParams: string[] = Array.isArray(payload?.filterParams)
+      ? payload?.filterParams
+      : [payload?.filterParams] || [];
+    const filterValues: string[] = Array.isArray(payload?.filterValues)
+      ? payload?.filterValues
+      : [payload?.filterValues] || [];
+    try {
+      const user: UserEntity = await this.userRepository.findOne({
+        where: { id: id },
+      });
+
+      if (!user) {
+        throw new CBadRequestException(ErrorCode.NOT_FOUND_DOCTOR);
+      }
+
+      const queryBuilder: SelectQueryBuilder<ContactUserEntity> =
+        this.patientBalanceRepo.createQueryBuilder('patientBalance');
+      queryBuilder.leftJoinAndSelect('patientBalance.patient', 'patient');
+      queryBuilder.where('patientBalance.usr_id = :usr_id', { usr_id: id });
+      queryBuilder.andWhere('patientBalance.amount < 0');
+
+      filterParams.map((filterParam, index) => {
+        const filterValue = filterValues[index];
+        switch (filterParam) {
+          case 'patientBalance.amount':
+            queryBuilder.andWhere('patientBalance.amount <= :amount', {
+              amount: filterValue,
+            });
+            break;
+          case 'patientBalance.visitDate':
+            const period = filterValue.split(';');
+            if (period[0]) {
+              queryBuilder.andWhere('patientBalance.lastCare >= :visitDate1', {
+                visitDate1: period[0],
+              });
+            }
+            if (period[1]) {
+              queryBuilder.andWhere('patientBalance.lastCare <= :visitDate2', {
+                visitDate2: period[1],
+              });
+            }
+            break;
+          default:
+            break;
+        }
+      });
+      const pagination: ContactUserEntity[] = await queryBuilder
+        .select()
+        .getMany();
+
+      const offSet = (page - 1) * per_page;
+      const dataPaging: ContactUserEntity[] = pagination.slice(
+        offSet,
+        offSet + per_page,
+      );
+      const data: IPatientBalances = {
+        current_page_number: page,
+        custom_parameters: {
+          query: {
+            id: id,
+            page: page,
+            per_page: per_page,
+            direction: direction,
+            sort: sort,
+          },
+        },
+        items: dataPaging,
+        num_item_per_page: per_page,
+        paginator_options: {
+          pageParameterName: 'page',
+          sortFieldParameterName: 'sort',
+          sortDirectionParameterName: 'direction',
+          filterFieldParameterName: 'filterParam',
+          filterValueParameterName: 'filterValue',
+          distinct: false,
+          defaultSortFieldName: 'patientBalance.visitDate',
+          defaultSortDirection: 'desc',
+        },
+        range: 5,
+        total_count: dataPaging?.length,
+      };
+
+      return data;
+    } catch (e) {
+      throw new CBadRequestException(ErrorCode.QUERY_REPOSITORY_ERROR);
     }
   }
 }

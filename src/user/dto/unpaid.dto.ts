@@ -45,7 +45,7 @@ export class printUnpaidDto {
   @ApiProperty({
     required: false,
   })
-  sorts?: string;
+  sort?: string;
 
   @ApiProperty({
     required: false,
@@ -55,5 +55,5 @@ export class printUnpaidDto {
   @ApiProperty({
     required: false,
   })
-  filtervalue?: string[];
+  filterValue: (string | string[])[];
 }

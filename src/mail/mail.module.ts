@@ -9,6 +9,8 @@ import { ContactService } from 'src/contact/services/contact.service';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { listEntities } from 'src/entities';
 import { MailTransportService } from './services/mailTransport.service';
+import { EmailAccountEntity } from 'src/entities/email-account.entity';
+import { DocumentMailService } from './services/document.mail.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature(listEntities)],
@@ -21,7 +23,8 @@ import { MailTransportService } from './services/mailTransport.service';
     ContactService,
     PaymentScheduleService,
     MailTransportService,
+    DocumentMailService,
   ],
-  exports: [MailService],
+  exports: [MailService, DocumentMailService],
 })
 export class MailModule {}

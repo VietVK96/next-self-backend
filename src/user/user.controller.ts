@@ -266,6 +266,18 @@ export class UserController {
       res,
     );
   }
+
+  /**
+   *php/user/unpaid/relaunch.php 100%
+   */
+  @Get('unpaid/relaunch')
+  @UseGuards(TokenGuard)
+  async relaunchUnpaid(
+    @CurrentUser() identity: UserIdentity,
+    @Query() param: printUnpaidDto,
+  ) {
+    return await this.unpaidService.relaunchUnpaid(identity, param);
+  }
   /**
    * File : php/user/credit-balances/index.php 100%
    * @param payload
