@@ -67,6 +67,8 @@ import { AccountModule } from './account/account.module';
 import { StorageModule } from './storage/storage.module';
 import { WorkstationModule } from './workstation/workstation.module';
 import { ConversationsModule } from './conversations/conversations.module';
+import { DsioModule } from './dsio/dsio.module';
+import { CommandModule } from './command/command.module';
 import { AppointmentReminderLibrarieModule } from './appointment-reminder-library-attachment/appointmentReminderLibrarie.module';
 import { SettingModule } from './setting/setting.module';
 import { BordereauxModule } from './bordereaux/bordereaux.module';
@@ -191,6 +193,8 @@ const importsModules = [
   StorageModule,
   WorkstationModule,
   ConversationsModule,
+  DsioModule,
+  CommandModule,
   AppointmentReminderLibrarieModule,
   SettingModule,
   AccountModule,
