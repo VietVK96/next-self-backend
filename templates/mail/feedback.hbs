@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feed Back</title>
+</head>
+
+<body>
+  <p>Un message a été envoyé depuis l'application e.cooDentist.</p>
+  <p>--------------------------------------------------------------------------</p>
+  <p>
+    eporteur: #{{ user.id }} {{ user.lastName }} {{ user.firstName }}<br />
+    Adresse mail: {{ user.email }}
+    Numéro de téléphone: {{ user.homePhoneNumber }}<br />
+    Type de message: {{ feedback.type }}<br />
+    Navigateur: {{ server.HTTP_USER_AGENT }}<br />
+  <p>--------------------------------------------------------------------------</p>
+    {{ feedback.message|raw }}
+   
+  </p>
+</body>
+
+</html>
