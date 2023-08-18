@@ -49,7 +49,7 @@ export class DsioImporterService {
         }
 
         this.letterImporterService
-          .letterImport(user, importerDsioDto.pathname)
+          .letterImport(user, pathname)
           .catch((error) => {
             console.log('letterImport', error);
           });
