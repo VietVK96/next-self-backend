@@ -21,6 +21,7 @@ import { AddressService } from 'src/address/service/address.service';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { NotificationService } from './services/notification.service';
 import { AccountSecurityService } from './services/account-security.service';
+import { MedicamentDatabaseService } from './services/medicament-database.service';
 import { WzAgendaService } from './services/wzagenda.service';
 import { HttpModule } from '@nestjs/axios';
 
@@ -65,6 +66,7 @@ import { HttpModule } from '@nestjs/axios';
     ConfigService,
     OrganizationService,
     PermissionService,
+    MedicamentDatabaseService,
     WzAgendaService,
   ],
   exports: [SettingOrganizationService],
