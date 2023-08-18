@@ -36,16 +36,17 @@ export class MailTransportService {
       const emailOutgoingServer = await this.dataSource
         .getRepository(EmailOutgoingServerEntity)
         .findOne({ where: { emailAccountId: email.id } });
-      const decryptedUserName = crypto.AES.decrypt(
+      const decryptedUserName = crypto.DES.decrypt(
         emailOutgoingServer.username,
-        env.SECRET_KEY_EMAIL,
+        env.SECRET_KEY_EMAIL || 'dental',
       );
+
       emailOutgoingServer.username = decryptedUserName.toString(
         crypto.enc.Utf8,
       );
-      const decryptedPassword = crypto.AES.decrypt(
+      const decryptedPassword = crypto.DES.decrypt(
         emailOutgoingServer.password,
-        env.SECRET_KEY_EMAIL,
+        env.SECRET_KEY_EMAIL || 'dental',
       );
       emailOutgoingServer.password = decryptedPassword.toString(
         crypto.enc.Utf8,
@@ -53,11 +54,11 @@ export class MailTransportService {
 
       const transport = nodemailer.createTransport({
         host: emailOutgoingServer.hostname,
-        secure: false,
+
         port: emailOutgoingServer.port,
         auth: {
-          pass: emailOutgoingServer.password,
           user: emailOutgoingServer.username,
+          pass: emailOutgoingServer.password,
         },
       });
 
@@ -68,21 +69,23 @@ export class MailTransportService {
   }
 
   async sendEmail(userId: number, data: FactureEmailDataDto) {
-    const transportInstance = await this.createTranspoter(userId);
-    if (transportInstance instanceof CBadRequestException)
-      return transportInstance;
+    try {
+      const transportInstance = await this.createTranspoter(userId);
+      if (transportInstance instanceof CBadRequestException)
+        return transportInstance;
 
-    const mailOptions = {
-      from: data?.from,
-      to: data?.to,
-      subject: data?.subject,
-      html: data?.template,
-      attachments: data?.attachments,
-    };
+      const mailOptions = {
+        from: data?.from,
+        to: data?.to,
+        subject: data?.subject,
+        html: data?.template,
+        attachments: data?.attachments,
+      };
 
-    const result = await transportInstance.sendMail(mailOptions);
-    if (result.rejected.length !== 0)
-      return new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
-    return { success: true };
+      const result = await transportInstance.sendMail(mailOptions);
+      if (result.rejected.length !== 0)
+        return new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
+      return { success: true };
+    } catch (error) {}
   }
 }

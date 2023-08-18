@@ -7,12 +7,6 @@
 >
   <div class="body">
 {{#if duplicata}} <header><span style="color: red; font-size: 14pt;">DUPLICATA</span></header> {{/if}}
-  <input type='hidden' name='id_user' value='{{id_user}}' />
-  {{#if pdf}}
-    <div id='identPat'>{{adresse_pat}}</div>
-  {{else}}
-    <textarea id='identPat' name='identPat'>{{adresse_pat}}</textarea>
-  {{/if}}
   <H1>
     Bilan odontologique initial
   </H1>
@@ -21,11 +15,7 @@
     {{date_devis}}
   </div>
   <H2>Votre etat bucco dentaire :</H2>
-  {{#if pdf}}
-    <pre class='etatBucco'>{{etatBucco}}</pre>
-  {{else}}
-    <textarea class='etatBucco' name='etatBucco'>{{etatBucco}}</textarea>
-  {{/if}}
+  <pre class='etatBucco'>{{etatBucco}}</pre>
   <br />
   Voici le détail de votre état bucco-dentaire, tel que nous l’avons examiné
   lors de notre premier rendez-vous.<br />

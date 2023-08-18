@@ -22,7 +22,7 @@ import {
 } from 'src/common/util/number';
 import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
 import { EventEntity } from 'src/entities/event.entity';
-import { br2nl, generateFullName } from 'src/common/util/string';
+import { br2nl, generateFullName, validateEmail } from 'src/common/util/string';
 import * as dayjs from 'dayjs';
 import { checkDay, customDayOfYear } from 'src/common/util/day';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
@@ -35,6 +35,11 @@ import {
 import { LibraryActQuantityEntity } from 'src/entities/library-act-quantity.entity';
 import { LibraryActEntity } from 'src/entities/library-act.entity';
 import { StringHelper } from 'src/common/util/string-helper';
+import * as path from 'path';
+import * as handlebars from 'handlebars';
+import * as fs from 'fs';
+import { MailTransportService } from 'src/mail/services/mailTransport.service';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 
 @Injectable()
 export class QuotationServices {
@@ -48,16 +53,111 @@ export class QuotationServices {
     @InjectRepository(OrganizationEntity)
     private organizationRepository: Repository<OrganizationEntity>,
     @InjectRepository(PlanPlfEntity)
-    private planRepo: Repository<PlanPlfEntity>,
+    private planPlfRepository: Repository<PlanPlfEntity>,
     @InjectRepository(EventEntity)
     private eventRepo: Repository<EventEntity>,
     @InjectRepository(LibraryActQuantityEntity)
     private libraryActQuantityRepo: Repository<LibraryActQuantityEntity>,
     @InjectRepository(LibraryActEntity)
     private libraryActRepo: Repository<LibraryActEntity>,
+    @InjectRepository(DentalQuotationEntity)
+    private dentalQuotationRepository: Repository<DentalQuotationEntity>,
+    @InjectRepository(ContactNoteEntity)
+    private contactNoteRepo: Repository<ContactNoteEntity>,
     private paymentScheduleService: PaymentScheduleService,
     private dataSource: DataSource,
+    private mailTransportService: MailTransportService,
   ) {}
+
+  async sendMail(id: number, identity: UserIdentity) {
+    try {
+      id = checkId(id);
+      const data = await this.dentalQuotationRepository.findOne({
+        where: {
+          id: id || 0,
+        },
+        relations: {
+          user: {
+            setting: true,
+            address: true,
+          },
+          contact: true,
+          treatmentPlan: true,
+        },
+      });
+
+      if (
+        !validateEmail(data?.user?.email) ||
+        !validateEmail(data?.contact?.email)
+      ) {
+        throw new CBadRequestException(
+          'Veuillez renseigner une adresse email valide dans la fiche patient',
+        );
+      }
+
+      const date = dayjs(data.date).locale('fr').format('DD MMM YYYY');
+      const filename = `Devis${dayjs(data.date).format('YYYYMMDD')}.pdf`;
+      const emailTemplate = fs.readFileSync(
+        path.join(process.cwd(), 'templates/mail', 'quote.hbs'),
+        'utf-8',
+      );
+      const userFullName = generateFullName(
+        data?.user?.firstname,
+        data?.user?.lastname,
+      );
+
+      // get template
+      handlebars.registerHelper({
+        isset: (v1: any) => {
+          if (Number(v1)) return true;
+          return v1 ? true : false;
+        },
+      });
+      const template = handlebars.compile(emailTemplate);
+      const mailBody = template({ data, date, userFullName });
+
+      const subject = `Devis du ${date} de Dr ${userFullName} pour ${generateFullName(
+        data?.contact?.firstname,
+        data?.contact?.lastname,
+      )}`;
+      await this.mailTransportService.sendEmail(identity.id, {
+        from: data.user.email,
+        to: data.contact.email,
+        subject,
+        template: mailBody,
+        context: {
+          quote: data,
+        },
+        // attachments: [
+        //   {
+        //     filename: filename,
+        //     content: await this.generatePdf({ id }, identity),
+        //   },
+        // ],
+      });
+
+      if (data?.treatmentPlan?.id) {
+        await this.planPlfRepository.save({
+          ...data.treatmentPlan,
+          sentToPatient: 1,
+          sendingDateToPatient: dayjs().format('YYYY-MM-DD'),
+        });
+      }
+
+      await this.contactNoteRepo.save({
+        conId: data.contactId,
+        userId: data.userId,
+        date: dayjs().format('YYYY-MM-DD'),
+        message: `Envoi par email du devis du ${date} de ${data.user.lastname} ${data.user.firstname}`,
+      });
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
+    }
+  }
 
   // dental/quotation/quotation_requetes_ajax.php (line 7 - 270)
   async quotationDevisRequestsAjax(
@@ -458,7 +558,7 @@ export class QuotationServices {
       // 2013-10-30 Sébastien BORDAT
       // Récupération de l'entité représentant le plan de traitement
       // en vérifiant qu'il appartient bien au groupe connecté
-      const plan = await this.planRepo
+      const plan = await this.planPlfRepository
         .createQueryBuilder('plf')
         .leftJoinAndSelect('plf.events', 'plv')
         .leftJoinAndSelect('plv.event', 'evt')
@@ -763,7 +863,7 @@ export class QuotationServices {
       result.date_acceptation = '';
 
       // Gestion de l'échéancier
-      const paymentScheduleStatement = await this.planRepo.findOne({
+      const paymentScheduleStatement = await this.planPlfRepository.findOne({
         where: {
           id: result.id_pdt,
         },

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { TranformVariableParam } from '../dto/transformVariable.dto';
-import * as dayjs from 'dayjs';
 import { format } from 'date-fns';
 import Handlebars from 'handlebars';
 

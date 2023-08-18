@@ -52,7 +52,7 @@ export function nl2br(str: string, replaceMode?: string, isXhtml?: boolean) {
  * @return {string} Filtered text
  */
 export function br2nl(str: string, replaceMode?: string) {
-  const replaceStr = replaceMode ? '\n' : '';
+  const replaceStr = replaceMode ? replaceMode : '\n';
   if (!str) return '';
   // Includes <br>, <BR>, <br />, </br>
   return str.replace(/<\s*\/?br\s*[\/]?>/gi, replaceStr);
@@ -80,6 +80,6 @@ export function validateEmail(email: string) {
 export function generateFullName(firstname: string, lastname: string): string {
   firstname = firstname ? firstname : '';
   lastname = lastname ? lastname : '';
-  const fullname = firstname + ' ' + lastname;
+  const fullname = lastname + ' ' + firstname;
   return fullname.trim();
 }
