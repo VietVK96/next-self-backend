@@ -97,7 +97,6 @@ export class PatientOdontogramService {
         createdAt: 'ASC',
       },
     });
-    if (!result) return null;
     return result?.map(
       (element) =>
         ({

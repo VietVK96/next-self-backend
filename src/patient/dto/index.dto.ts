@@ -42,3 +42,28 @@ export class PatientThirdPartyDto {
   @ApiProperty({ isArray: true, type: String, required: false })
   filterValue?: string[];
 }
+
+export class PatientActsDependenciesDto {
+  @ApiProperty({ required: false })
+  quote_id?: number;
+
+  @ApiProperty()
+  status?: number;
+
+  @ApiProperty({
+    name: 'teethNumbers[]',
+  })
+  teethNumbers?: number[];
+
+  @ApiProperty()
+  library_act_id?: number;
+
+  @ApiProperty()
+  patient_id?: number;
+
+  @ApiProperty({ required: false })
+  grid?: number;
+
+  @ApiProperty({ required: false })
+  check_parent?: boolean;
+}
