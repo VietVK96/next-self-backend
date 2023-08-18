@@ -32,6 +32,7 @@ import { customCreatePdf } from 'src/common/util/pdf';
 import * as path from 'path';
 import * as dayjs from 'dayjs';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ThirdPartyService {
@@ -60,6 +61,7 @@ export class ThirdPartyService {
     private cashingRepository: Repository<CashingEntity>,
     @InjectRepository(UserPreferenceEntity)
     private userPreferenceRepo: Repository<UserPreferenceEntity>,
+    private configService: ConfigService,
   ) {}
 
   async getCaresheet(payload: ThirdPartyDto) {
@@ -635,7 +637,9 @@ export class ThirdPartyService {
       )}</span><span style="font-size: 8px;margin-right:40mm; float: right;">Suivi des tiers payants Tiers payants</span></div>`,
       footerTemplate: `
         <div style="width: 100%;margin-right:10mm; font-size: 8px; display: flex; justify-content: space-between">
-          <span style="margin-left: 10mm">${process.env.HOST}/index#third-party</span>
+          <span style="margin-left: 10mm">${this.configService.get(
+            'app.host',
+          )}/index#third-party</span>
           <div>
             <span class="pageNumber"></span>
             <span>/</span>
