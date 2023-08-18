@@ -109,9 +109,15 @@ export class TagService {
       if (!currentTag) throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
     const color = {
-      background: payload.color.background,
-      foreground: '#000000',
+      background: payload?.color?.background ?? '#e0e0e0',
+      foreground: payload?.color?.foreground ?? '#000000',
     };
+    const checkTitle = await this.tagRepository.findOne({
+      where: { title: payload?.title, organizationId: organization_id },
+    });
+    if (checkTitle) {
+      throw new CBadRequestException(ErrorCode.TAG_TITLE_ALREADY_USED);
+    }
     const newTag: TagEntity = {
       ...currentTag,
       title: payload.title,

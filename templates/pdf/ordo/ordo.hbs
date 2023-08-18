@@ -86,13 +86,13 @@
 <header>
   <table style="width: 100%;">
     <tr>
-      <td style="width: 50%; vertical-align: top;">
-        <strong>{{ident_prat}}</strong>
+      <td style="width: 50%; vertical-align: top; font-size: 11pt;">
+        <strong>{{{ident_prat}}}</strong>
         <br />
-        {{adresse}}
+        {{{adresse}}}
       </td>
-      <td style="width: 50%; text-align: right; vertical-align: top;">
-        {{complement_entete}}
+      <td style="width: 50%; text-align: right; vertical-align: top; font-size: 9pt;">
+        {{{complement_entete}}}
       </td>
     </tr>
   </table>
@@ -136,7 +136,7 @@
     {{else}}
     <span class="original">original</span>
     {{/if}}
-    Ordonnance du {{../date_ordonnance}} pour {{../ident_patient}}
+    Ordonnance du {{../date_ordonnance}} pour {{{../ident_patient}}}
   </h1>
   <ul class="prescriptions">
     {{{../prescriptions}}}
@@ -146,7 +146,7 @@
   </div>
   {{#if ../hasComment}}
   <div style="margin-bottom: 20px;">
-    {{../comment}}
+    {{{../comment}}}
   </div>
   {{/if}}
   <table style="width: 100%">

@@ -58,7 +58,7 @@ export class BordereauxController {
   }
 
   /**
-   * File php/bordereaux/show.php 100%
+   * File php/bordereaux/print.php 100%
    *
    * @param id
    * @returns

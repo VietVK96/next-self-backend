@@ -11,6 +11,7 @@ export class BcbController {
   constructor(private readonly bcbServices: BcbServices) {}
 
   // php/bcb/findAll.php full file
+  //same as file in src/settings/settings.controller.ts -> @Get('/medicament-database/find')
   @Post()
   @UseGuards(TokenGuard)
   async findAll(@Body() payload: BcbDto) {

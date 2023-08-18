@@ -54,7 +54,7 @@ import {
 } from '../res/facture.res';
 import { customCreatePdf } from 'src/common/util/pdf';
 import { facturePdfFooter } from '../constant/htmlTemplate';
-import { br2nl } from 'src/common/util/string';
+import { br2nl, nl2br } from 'src/common/util/string';
 import { validateEmail } from 'src/common/util/string';
 import { MailService } from 'src/mail/services/mail.service';
 import { format, getDayOfYear } from 'date-fns';
@@ -62,9 +62,8 @@ import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import * as fs from 'fs';
 import * as handlebars from 'handlebars';
-import { isNull } from 'util';
-import { ExceedingEnum } from 'src/constants/act';
-
+import * as dayjs from 'dayjs';
+import { DEFAULT_LOCALE } from 'src/constants/default';
 @Injectable()
 export class FactureServices {
   constructor(
@@ -104,7 +103,6 @@ export class FactureServices {
     const id_facture = checkId(payload?.id_facture);
     const id_facture_ligne = checkId(payload?.id_facture_ligne);
     const user_id = checkId(payload?.user_id);
-    const patient_id = checkId(payload?.patient_id);
     switch (payload.operation) {
       case 'enregistrer': {
         try {
@@ -314,10 +312,6 @@ export class FactureServices {
 
             return result;
           } catch (error) {
-            console.log(
-              '🚀 ~ file: facture.services.ts:342 ~ FactureServices ~ requestAjax ~ error:',
-              error,
-            );
             throw new CBadRequestException(ErrorCode.NOT_FOUND);
           }
         }
@@ -404,7 +398,6 @@ export class FactureServices {
     const id_user = userID;
     // const medical_entete_id = 0;
     const id_devis = 0;
-    const id_contact = 0;
     const dateFacture = new Date().toISOString().split('T')[0];
     // const noFacture: string;
     // const details: string[];
@@ -655,6 +648,7 @@ export class FactureServices {
             bill?.contact?.lastname + ' ' + bill?.contact?.firstname,
           contactBirthday: checkDay(bill?.contact?.birthday),
           contactInsee: bill?.contact?.insee + '' + bill?.contact?.inseeKey,
+          details: [],
         };
 
         // if (!pdf && bill.lock) {
@@ -662,7 +656,7 @@ export class FactureServices {
         //   return;
         // }
         const billLines = await this.billLineRepository.find({
-          where: { id: id || 0 },
+          where: { bilId: id || 0 },
           order: { pos: 'ASC' },
         });
 
@@ -674,12 +668,12 @@ export class FactureServices {
             dentsLigne: billLine?.teeth || '',
             descriptionLigne: billLine?.msg,
             prixLigne: billLine?.amount || 0,
-            name: billLine?.msg.replace(/^[^-]*-\s?/, ''),
+            name: billLine?.msg?.replace(/^[^-]*-\s?/, ''),
             cotation: billLine?.cotation,
             secuAmount: billLine?.secuAmount,
             materials: billLine?.materials,
           };
-          res.details.push(dentail);
+          res?.details?.push(dentail);
         }
         return res;
       } else {
@@ -687,7 +681,7 @@ export class FactureServices {
           '-3003 : Problème durant le rapatriement des informations de la facture ...',
         );
       }
-    } catch {
+    } catch (e) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
   }
@@ -704,15 +698,6 @@ export class FactureServices {
         },
       });
       const disableColumnByGroup = [158, 181];
-      const modesPaiements = {
-        non_payee: 'Non Payée',
-        carte: 'Carte',
-        espece: 'Espèce',
-        cheque: 'Chèque',
-        virement: 'Virement',
-        prelevement: 'Prélèvement',
-        autre: 'Autre',
-      };
       if (checkId) {
         await this.billRepository.update(id, { lock: 1 } as BillEntity);
       }
@@ -753,7 +738,7 @@ export class FactureServices {
             left: '5mm',
             top: '5mm',
             right: '5mm',
-            bottom: '5mm',
+            bottom: '25mm',
           },
         };
         const pdf = await createPdf(filePath, options, data);
@@ -763,7 +748,7 @@ export class FactureServices {
           toUpperCase: function (str: string) {
             return str.toUpperCase();
           },
-          nl2br: br2nl,
+          nl2br: nl2br,
           formatDentsLigne: function formatDentsLigne(
             dentsLigne: string | number,
           ) {
@@ -777,7 +762,10 @@ export class FactureServices {
             }
             return dentsLigneChunk.join('\n');
           },
-          formatNumber: (n: number) => n.toFixed(2),
+          formatNumber: (n: number) => {
+            return Number(n).toFixed(2);
+          },
+          br2nl: br2nl,
         };
 
         const filePath = path.join(
@@ -787,16 +775,18 @@ export class FactureServices {
         );
         const detailsAmount = facture?.details
           ? facture?.details.reduce(
-              (accumulator, item) => accumulator + item?.secuAmount,
+              (accumulator, item) =>
+                accumulator + checkNumber(item?.secuAmount),
               0,
             )
           : 0;
         const detailsPrixLigne = facture?.details
           ? facture?.details.reduce(
-              (prixLigne, item) => prixLigne + item?.prixLigne,
+              (prixLigne, item) => prixLigne + checkNumber(item?.prixLigne),
               0,
             )
           : 0;
+        facture.modePaiement;
         const data = {
           isGroup: disableColumnByGroup.some((e) => e === identity.org),
           duplicata,
@@ -812,7 +802,7 @@ export class FactureServices {
           detailsAmount: detailsAmount.toFixed(2),
           detailsPrixLigne: detailsPrixLigne.toFixed(2),
           billSignatureDoctor: facture.billSignatureDoctor,
-          modesPaiements,
+          modePaiement: facture.modePaiement,
         };
         const options = {
           format: 'A4',
@@ -822,7 +812,7 @@ export class FactureServices {
             left: '5mm',
             top: '5mm',
             right: '5mm',
-            bottom: '5mm',
+            bottom: '25mm',
           },
         };
         const pdfBuffer = await customCreatePdf({
@@ -884,21 +874,34 @@ export class FactureServices {
         path.join(__dirname, '../../../templates/mail/facture/invoice.hbs'),
         'utf-8',
       );
+      handlebars.registerHelper({
+        isset: (v1: any) => {
+          if (Number(v1)) return true;
+          return v1 ? true : false;
+        },
+      });
       const template = handlebars.compile(emailTemplate);
+
       const fullName = [invoice?.user?.lastname, invoice?.user?.firstname].join(
         ' ',
       );
-      const mailBody = template({ fullName, invoice, homePhoneNumber });
+      const date = dayjs(invoice?.date)
+        .locale(DEFAULT_LOCALE)
+        .format('DD MMM YYYY');
+      const mailBody = template({
+        fullName,
+        invoice,
+        homePhoneNumber,
+        date,
+      });
 
       await this.mailTransportService.sendEmail(identity.id, {
         from: invoice?.user?.email,
         to: invoice?.patient?.email,
-        subject: `Facture du ${format(
-          new Date(invoice?.date),
-          'dd/MM/yyyy',
-        )} de Dr ${[invoice?.user?.lastname, invoice?.user?.firstname].join(
-          ' ',
-        )} pour ${[
+        subject: `Facture du ${date} de Dr ${[
+          invoice?.user?.lastname,
+          invoice?.user?.firstname,
+        ].join(' ')} pour ${[
           invoice?.patient?.lastname,
           invoice?.patient?.firstname,
         ].join(' ')}`,
@@ -921,7 +924,6 @@ export class FactureServices {
           },
         ],
       });
-
       await this.contactNoteRepository.save({
         conId: contactId,
         message: `Envoi par email de la facture du ${billDateAsString} de ${userLastname} ${userFirstname}`,

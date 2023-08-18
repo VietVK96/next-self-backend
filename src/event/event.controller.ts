@@ -99,8 +99,9 @@ export class EventController {
   async saveAgenda(
     @Body() payload: SaveAgendaDto,
     @CurrentUser() identity: UserIdentity,
+    @CurrentDoctor() doctorId: number,
   ) {
-    return this.saveEventService.saveAgenda(identity.id, payload);
+    return this.saveEventService.saveAgenda(identity.id, payload, doctorId);
   }
 
   // php/event/delete.php -> line: 23 -> 121

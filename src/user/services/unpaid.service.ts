@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UserEntity } from 'src/entities/user.entity';
-import { DataSource, MoreThan, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UnpaidDto, printUnpaidDto } from '../dto/unpaid.dto';
 import { ContactEntity } from 'src/entities/contact.entity';
@@ -21,9 +21,9 @@ import { LettersEntity } from 'src/entities/letters.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { DocumentMailService } from 'src/mail/services/document.mail.service';
 import { TranformVariableParam } from 'src/mail/dto/transformVariable.dto';
-import { isString } from 'util';
 import { CONFIGURATION } from 'src/constants/configuration';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class UnpaidService {
   constructor(
@@ -41,6 +41,7 @@ export class UnpaidService {
     @InjectRepository(ContactNoteEntity)
     private contactNoteRepo: Repository<ContactNoteEntity>,
     private documentMailService: DocumentMailService,
+    private configService: ConfigService,
   ) {}
 
   async getUserUnpaid(payload: UnpaidDto) {
@@ -380,6 +381,7 @@ export class UnpaidService {
         usrId: identity.id,
       },
     });
+
     const data = {
       patientBalances: res,
       currency: currencyObj?.currency,
@@ -408,7 +410,9 @@ export class UnpaidService {
       )}</span><span style="font-size: 8px;margin-right:40mm; float: right;">Impayés</span></div>`,
       footerTemplate: `
         <div style="width: 100%;margin-right:10mm; font-size: 8px; display: flex; justify-content: space-between">
-          <span style="margin-left: 10mm">${process.env.HOST}/index#unpaid</span>
+          <span style="margin-left: 10mm">${this.configService.get(
+            'app.host',
+          )}/index#unpaid</span>
           <div>
             <span class="pageNumber"></span>
             <span>/</span>
@@ -435,7 +439,7 @@ export class UnpaidService {
       .innerJoinAndSelect('patientBalance.patient', 'patient')
       .leftJoinAndSelect('patient.phones', 'phone')
       .andWhere('patientBalance.usrId = :user', { user: identity.id })
-      .andWhere('patientBalance.amount < 0');
+      .andWhere('patientBalance.amount > 0');
     for (let i = 0; i < param.filterParam?.length; i++) {
       switch (param.filterParam?.[i]) {
         case 'patientBalance.id':
@@ -446,7 +450,7 @@ export class UnpaidService {
           queryBuilder.andWhere(`patientBalance.id IN (${formatIds})`);
           break;
         case 'patientBalance.amount':
-          queryBuilder.andWhere('patientBalance.amount <= :amount', {
+          queryBuilder.andWhere('patientBalance.amount >= :amount', {
             amount: param?.filterValue[i],
           });
           break;

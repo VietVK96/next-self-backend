@@ -16,6 +16,7 @@ import { Parser } from 'json2csv';
 import { IPatientBalances } from 'src/interfaces/interface';
 import { CreditBalancesDto } from '../dto/credit-balances.dto';
 import { UserEntity } from 'src/entities/user.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CreditBalancesService {
@@ -26,6 +27,7 @@ export class CreditBalancesService {
     private userPreferenceRepo: Repository<UserPreferenceEntity>,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
+    private configService: ConfigService,
   ) {}
 
   /**
@@ -113,7 +115,9 @@ export class CreditBalancesService {
       )}</span><span style="font-size: 8px;margin-right:40mm; float: right;">Dossiers créditeurs</span></div>`,
       footerTemplate: `
         <div style="width: 100%;margin-right:10mm; font-size: 8px; display: flex; justify-content: space-between">
-          <span style="margin-left: 10mm">${process.env.HOST}/index#credit-balances</span>
+          <span style="margin-left: 10mm">${this.configService.get(
+            'app.host',
+          )}/index#credit-balances</span>
           <div>
             <span class="pageNumber"></span>
             <span>/</span>

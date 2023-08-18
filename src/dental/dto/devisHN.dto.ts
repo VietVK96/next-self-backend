@@ -348,6 +348,11 @@ export class DevisHNGetInitChampDto {
 
 export class DevisHNPdfDto extends DevisHNGetInitChampDto {
   @ApiProperty({
+    name: 'id',
+    required: false,
+  })
+  id?: number;
+  @ApiProperty({
     name: 'duplicate',
     required: false,
   })
