@@ -20,18 +20,23 @@ import * as dayjs from 'dayjs';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
 import { EventEntity } from 'src/entities/event.entity';
-import { nl2br } from 'src/common/util/string';
+import { generateFullName, nl2br, validateEmail } from 'src/common/util/string';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { AddressEntity } from 'src/entities/address.entity';
 import { GenderEntity } from 'src/entities/gender.entity';
 import { StringHelper } from 'src/common/util/string-helper';
 import { checkDay, customDayOfYear } from 'src/common/util/day';
 import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
-import { BillEntity } from 'src/entities/bill.entity';
 import { QuotationMutualInitByRes } from '../res/quotatio-mutual.res';
 import { LibraryActQuantityEntity } from 'src/entities/library-act-quantity.entity';
 import { QuotationMutualPdfFooter } from '../constant/htmlTemplate';
 import * as path from 'path';
+import * as fs from 'fs';
+import * as handlebars from 'handlebars';
+import { MailTransportService } from 'src/mail/services/mailTransport.service';
+import { SuccessResponse } from 'src/common/response/success.res';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+
 @Injectable()
 export class QuotationMutualServices {
   constructor(
@@ -52,13 +57,14 @@ export class QuotationMutualServices {
     private eventRepo: Repository<EventEntity>,
     @InjectRepository(UserPreferenceQuotationEntity)
     private userPreferenceQuotationRepo: Repository<UserPreferenceQuotationEntity>,
-    @InjectRepository(DentalQuotationActEntity)
-    private dentalQuotationActRepo: Repository<DentalQuotationActEntity>,
-    @InjectRepository(BillEntity)
-    private billRepo: Repository<BillEntity>,
+    @InjectRepository(ContactNoteEntity)
+    private contactNoteRepo: Repository<ContactNoteEntity>,
+    @InjectRepository(PlanPlfEntity)
+    private planPlfRepo: Repository<PlanPlfEntity>,
     @InjectRepository(LibraryActQuantityEntity)
     private libraryActQuantityRepo: Repository<LibraryActQuantityEntity>,
     private paymentScheduleService: PaymentScheduleService,
+    private mailTransportService: MailTransportService,
     private dataSource: DataSource,
   ) {}
 
@@ -332,8 +338,97 @@ export class QuotationMutualServices {
     );
   }
 
-  async sendMail(identity: UserIdentity) {
-    await this.mailService.sendTest(identity.id);
+  /**
+   * ecoophp/dental/quotation-mutual/devis_email.php
+   * @param id
+   * @param identity
+   * @returns
+   */
+  async sendMail(id: number, identity: UserIdentity): Promise<SuccessResponse> {
+    try {
+      id = checkId(id);
+      const data = await this.dentalQuotationRepository.findOne({
+        where: {
+          id: id || 0,
+        },
+        relations: {
+          user: {
+            setting: true,
+            address: true,
+          },
+          contact: true,
+          treatmentPlan: true,
+        },
+      });
+
+      if (
+        !validateEmail(data?.user?.email) ||
+        !validateEmail(data?.contact?.email)
+      ) {
+        throw new CBadRequestException(
+          'Veuillez renseigner une adresse email valide dans la fiche patient',
+        );
+      }
+
+      const date = dayjs(data.date).locale('fr').format('DD MMM YYYY');
+      const filename = `Devis_${dayjs(data.date).format('YYYYMMDD')}.pdf`;
+      const emailTemplate = fs.readFileSync(
+        path.join(process.cwd(), 'templates/mail', 'quote.hbs'),
+        'utf-8',
+      );
+      const userFullName = generateFullName(
+        data?.user?.firstname,
+        data?.user?.lastname,
+      );
+
+      // get template
+      handlebars.registerHelper({
+        isset: (v1: any) => {
+          if (Number(v1)) return true;
+          return v1 ? true : false;
+        },
+      });
+      const template = handlebars.compile(emailTemplate);
+      const mailBody = template({ data, date, userFullName });
+
+      const subject = `Devis du ${date} de Dr ${userFullName} pour ${generateFullName(
+        data?.contact?.firstname,
+        data?.contact?.lastname,
+      )}`;
+      await this.mailTransportService.sendEmail(identity.id, {
+        from: data.user.email,
+        to: data.contact.email,
+        subject,
+        template: mailBody,
+        context: {
+          quote: data,
+        },
+        attachments: [
+          {
+            filename: filename,
+            content: await this.generatePdf({ id }, identity),
+          },
+        ],
+      });
+
+      if (data?.treatmentPlan?.id) {
+        await this.planPlfRepo.save({
+          ...data.treatmentPlan,
+          sentToPatient: 1,
+          sendingDateToPatient: dayjs().format('YYYY-MM-DD'),
+        });
+      }
+
+      await this.contactNoteRepo.save({
+        conId: data.contactId,
+        message: `Envoi par email du devis du ${date} de ${data.user.lastname} ${data.user.firstname}`,
+      });
+      return {
+        success: true,
+      };
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
+    }
   }
 
   // dental/quotation-mutual/devis_pdf.php 45-121
@@ -414,7 +509,7 @@ export class QuotationMutualServices {
           left: '5mm',
           top: '5mm',
           right: '5mm',
-          bottom: '5mm',
+          bottom: '25mm',
         },
         landscape: true,
       };
@@ -583,12 +678,6 @@ export class QuotationMutualServices {
       }
 
       total_honoraires = +total_honoraires.toFixed(2);
-      // total_prixvente = +total_prixvente.toFixed(2);
-      // total_prestation = +total_prestation.toFixed(2);
-      // total_charges = +total_charges.toFixed(2);
-      // total_rss = +total_rss.toFixed(2);
-      // total_nrss = +total_nrss.toFixed(2);
-
       total_secuAmount = +total_secuAmount.toFixed(2);
       total_secuRepayment = +total_secuRepayment.toFixed(2);
       total_mutualRepayment = +total_mutualRepayment.toFixed(2);
@@ -606,6 +695,10 @@ export class QuotationMutualServices {
         total_mutualComplement,
         total_personAmount,
         date_signature,
+        total_prixvente,
+        total_prestation,
+        total_charges,
+        total_nrss,
       };
     } catch (error) {
       throw new CBadRequestException(ErrorCode?.NOT_FOUND);

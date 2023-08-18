@@ -319,7 +319,7 @@ export class MailService {
       [id],
     );
 
-    if (mails.lenght === 0) {
+    if (mails.length === 0) {
       throw new CBadRequestException(`Le champ ${id} est invalide.`);
     }
 

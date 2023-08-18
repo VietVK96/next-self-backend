@@ -38,9 +38,6 @@ export class SaveAgendaDto {
   eventId?: string;
 
   @ApiProperty()
-  practitionerId?: string;
-
-  @ApiProperty()
   resourceId?: string;
 
   @ApiProperty()

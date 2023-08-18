@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { add, format, startOfMonth } from 'date-fns';
+import { add, startOfMonth } from 'date-fns';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { customDayOfYear } from 'src/common/util/day';
-import { validateEmail } from 'src/common/util/string';
+import { generateFullName, validateEmail } from 'src/common/util/string';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { PlanEventEntity } from 'src/entities/plan-event.entity';
 import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
@@ -26,6 +26,13 @@ import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.enti
 import { PatientOdontogramService } from 'src/patient/service/patientOdontogram.service';
 import { customCreatePdf } from 'src/common/util/pdf';
 import * as path from 'path';
+import * as handlebars from 'handlebars';
+import { checkId } from 'src/common/util/number';
+import { ErrorCode } from 'src/constants/error';
+import { MailTransportService } from 'src/mail/services/mailTransport.service';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { DOMParser, XMLSerializer } from 'xmldom';
+import { generateBarcode } from 'src/common/util/image';
 
 @Injectable()
 export class DevisServices {
@@ -50,42 +57,102 @@ export class DevisServices {
     private organizationRepository: Repository<OrganizationEntity>,
     @InjectRepository(UploadEntity)
     private uploadRepository: Repository<UploadEntity>,
+    @InjectRepository(ContactNoteEntity)
+    private contactNoteRepo: Repository<ContactNoteEntity>,
     private dataSource: DataSource,
+    private mailTransportService: MailTransportService,
   ) {}
 
   // dental/devisHN/devisHN_email.php (line 1 - 91)
-  async devisHNEmail(req: any) {
-    const qb = this.dataSource
-      .getRepository(DentalQuotationEntity)
-      .createQueryBuilder('dqo');
-    const result = await qb
-      .select('dqo.date', 'quotationDate')
-      .addSelect('dqo.reference', 'quotationReference')
-      .addSelect('dqo.email', 'userEmail')
-      .addSelect('dqo.lastnamne', 'userLastname')
-      .addSelect('dqo.firstname', 'userFirstname')
-      .innerJoin('dqo.user', 'usr')
-      .innerJoin('dqo.contact', 'con')
-      .where('dqo.id = :id', { id: req?.no_devis })
-      .getRawOne();
+  async sendMail(id: number, identity: UserIdentity) {
+    try {
+      id = checkId(id);
+      const data = await this.dentalQuotationRepository.findOne({
+        where: {
+          id: id || 0,
+        },
+        relations: {
+          user: {
+            setting: true,
+            address: true,
+          },
+          contact: true,
+          treatmentPlan: true,
+        },
+      });
 
-    const quotationDate = result?.quotationDate;
-    const quotationDateAsString = format(quotationDate, 'dd/MM/yyyy');
-    const quotationReference = result?.quotationReference;
-    const userEmail = result?.userEmail;
-    const userLastname = result?.userLastname;
-    const userFirstname = result?.userFirstname;
-    const contactId = result?.contactId;
-    const contactEmail = result?.contactEmail;
-    if (!validateEmail(userEmail) || !validateEmail(contactEmail)) {
-      throw new CBadRequestException(
-        'Veuillez renseigner une adresse email valide dans la fiche patient',
+      if (
+        !validateEmail(data?.user?.email) ||
+        !validateEmail(data?.contact?.email)
+      ) {
+        throw new CBadRequestException(
+          'Veuillez renseigner une adresse email valide dans la fiche patient',
+        );
+      }
+
+      const date = dayjs(data.date).locale('fr').format('DD MMM YYYY');
+      const filename = `Devis_${data.reference ? data.reference : ''}.pdf`;
+      const emailTemplate = fs.readFileSync(
+        path.join(process.cwd(), 'templates/mail', 'quote.hbs'),
+        'utf-8',
       );
+      const userFullName = generateFullName(
+        data?.user?.firstname,
+        data?.user?.lastname,
+      );
+
+      // get template
+      handlebars.registerHelper({
+        isset: (v1: any) => {
+          if (Number(v1)) return true;
+          return v1 ? true : false;
+        },
+      });
+      const template = handlebars.compile(emailTemplate);
+      const mailBody = template({ data, date, userFullName });
+
+      const subject = `Devis du ${date} de Dr ${userFullName} pour ${generateFullName(
+        data?.contact?.firstname,
+        data?.contact?.lastname,
+      )}`;
+      await this.mailTransportService.sendEmail(identity.id, {
+        from: data.user.email,
+        to: data.contact.email,
+        subject,
+        template: mailBody,
+        context: {
+          quote: data,
+        },
+        attachments: [
+          {
+            filename: filename,
+            content: await this.generatePDF(identity, { no_devis: id }),
+          },
+        ],
+      });
+
+      if (data?.treatmentPlan?.id) {
+        await this.planRepository.save({
+          ...data.treatmentPlan,
+          sentToPatient: 1,
+          sendingDateToPatient: dayjs().format('YYYY-MM-DD'),
+        });
+      }
+
+      await this.contactNoteRepo.save({
+        conId: data.contactId,
+        message: `Envoi par email du devis ${data.reference}.`,
+      });
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
     }
-    const filename = `Devis_${quotationReference}.pdf`;
-    const sendByEmail = true;
   }
 
+  // ecoophp/dental/devisHN/devisHN_init_champs.php
   async getInitChamps(
     user: UserIdentity,
     { no_pdt, no_devis }: DevisHNGetInitChampDto,
@@ -291,7 +358,8 @@ export class DevisServices {
         const patientCivilityName = currentPatient?.civilite;
         let nom_prenom_patient = currentPatient?.nom_prenom_patient;
         if (patientCivilityName !== null)
-          nom_prenom_patient = patientCivilityName + ' ' + nom_prenom_patient;
+          nom_prenom_patient =
+            patientCivilityName + ' ' + (nom_prenom_patient || '');
         const INSEE = currentPatient?.INSEE;
         const date_de_naissance_patient =
           currentPatient?.birthday !== null
@@ -682,7 +750,7 @@ export class DevisServices {
               : dentalQuotations?.date_acceptation,
           identPrat: dentalQuotations?.ident_prat,
           adressePrat: dentalQuotations?.addr_prat,
-          id_contact: dentalQuotations?.ident_prat,
+          id_contact: dentalQuotations?.ident_pat,
           nom_prenom_patient: dentalQuotations?.nom_prenom_patient,
           date_de_naissance_patient:
             dentalQuotations?.date_de_naissance_patient === '00/00/0000'
@@ -759,7 +827,7 @@ export class DevisServices {
       res.noFacture = noFacture;
 
       let identPat = res?.nom_prenom_patient;
-      if (res?.INSEE) {
+      if (res?.INSEE && res?.INSEE !== 'null') {
         identPat += `\n${res?.INSEE}`;
       }
       if (res?.date_de_naissance_patient) {
@@ -825,22 +893,55 @@ export class DevisServices {
       /**
        * if (isset($pdf)) {... todo ...} svg
        */
-
-      const schemaInitial = await this.odotogramService?.show({
-        name: 'adult',
-        status: 'initial',
-        conId: contactEntity?.id,
-      });
-      const schemaActuel = await this.odotogramService?.show({
-        name: 'adult',
-        status: 'current',
-        conId: contactEntity?.id,
-      });
-      const schemaDevis = await this.odotogramService?.show({
-        name: 'adult',
-        status: 'planned',
-        conId: contactEntity?.id,
-      });
+      if (res?.schemas != 'none') {
+        const imgPath = path.join(
+          process.cwd(),
+          'resources/svg/odontogram',
+          'background_adult.png',
+        );
+        const img = fs.readFileSync(imgPath);
+        const imageBase = img.toString('base64');
+        function setImagePath(xml: string): string {
+          const parser = new DOMParser();
+          const domDocument = parser.parseFromString(xml, 'image/svg+xml');
+          const texts = domDocument.getElementsByTagName('tspan');
+          for (let i = 0; i < texts.length; i++) {
+            texts[i].setAttribute('style', 'opacity:0');
+          }
+          const svg = domDocument.getElementsByTagName('svg')[0];
+          const node = domDocument.getElementsByTagName('image')[0];
+          svg.setAttribute('height', '269');
+          svg.setAttribute('width', '643');
+          node.setAttribute(
+            'xlink:href',
+            'data:image/jpeg;base64,' + imageBase,
+          );
+          const serializer = new XMLSerializer();
+          return serializer.serializeToString(domDocument);
+        }
+        if (res.schemas === 'three') {
+          const init = await this.odotogramService?.show({
+            name: 'adult',
+            status: 'initial',
+            conId: contactEntity?.id,
+          });
+          res.schemaInitial = setImagePath(init);
+        }
+        res.schemaActuel = setImagePath(
+          await this.odotogramService?.show({
+            name: 'adult',
+            status: 'current',
+            conId: contactEntity?.id,
+          }),
+        );
+        res.schemaDevis = setImagePath(
+          await this.odotogramService?.show({
+            name: 'adult',
+            status: 'planned',
+            conId: contactEntity?.id,
+          }),
+        );
+      }
       total_rss =
         Math.round((total_rss / socialSecurityReimbursementRate) * 100) / 100;
       const date_signature = dayjs().format('DD/MM/YYYY');
@@ -860,9 +961,6 @@ export class DevisServices {
         nb_lignes,
         nb_max_lignes_page,
         nb_max_lignes_page_annexe,
-        schemaInitial,
-        schemaActuel,
-        schemaDevis,
         date_signature,
       };
     } catch (error) {
@@ -874,10 +972,17 @@ export class DevisServices {
 
   async generatePDF(
     user: UserIdentity,
-    { no_pdt, duplicate, no_devis }: DevisHNPdfDto,
+    { no_pdt, duplicate, id }: DevisHNPdfDto,
   ) {
+    const no_devis = checkId(id);
     try {
       const initital = await this.getInitChamps(user, { no_pdt, no_devis });
+      const quote = await this.dentalQuotationRepository.findOne({
+        where: { id: checkId(no_devis) || 0 },
+        relations: {
+          attachments: true,
+        },
+      });
       let color = '#FFFFFF';
       if (initital?.couleur === 'blue') color = '#DDDDFF';
       else if (initital?.couleur === 'grey') color = '#EEEEEE';
@@ -893,6 +998,12 @@ export class DevisServices {
           ligneBlanche,
         };
       });
+      const imgRppsNumber = await generateBarcode({
+        text: initital?.practitionerRpps,
+        scaleX: 4,
+        scaleY: 1,
+      });
+      initital?.identPat;
       const dataTemp = {
         color,
         duplicata: duplicate,
@@ -904,6 +1015,7 @@ export class DevisServices {
         amount_repaid: initital?.quotationPersonRepayment,
         description: initital?.infosCompl,
         doctor: {
+          imgRppsNumber,
           rpps: initital?.practitionerRpps,
           details: initital?.identPrat,
           address_details: initital?.adressePrat,
@@ -992,11 +1104,13 @@ export class DevisServices {
         files.push({ path: filePathSchemas, data: dataTemp });
       }
 
-      for (const acte of initital?.actes ?? []) {
-        const mail = await this.mailService.find(acte?.id_devisHN_ligne);
-        if (mail?.patient) {
-          const content = await this.mailService.pdf(mail, { preview: true });
-          files.push({ type: 'string', data: content });
+      if (quote?.attachments?.length) {
+        for (const attachment of quote?.attachments) {
+          const mail = await this.mailService.find(attachment?.id);
+          if (mail?.patient) {
+            const content = await this.mailService.pdf(mail, { preview: true });
+            files.push({ type: 'string', data: content });
+          }
         }
       }
 

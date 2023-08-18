@@ -727,7 +727,6 @@ export class LibrariesService {
         }
         const libraryActChildIds =
           libraryAct.associations?.map((e) => e.libraryActChildId) || [];
-        console.log(libraryActChildIds);
 
         if (libraryActChildIds.length) {
           await this.libraryActAssociationRepo.softDelete({

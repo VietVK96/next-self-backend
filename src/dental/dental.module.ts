@@ -8,11 +8,10 @@ import { PermissionService } from 'src/user/services/permission.service';
 import { AddressService } from 'src/address/service/address.service';
 import { DevisStd2Services } from './services/devisStd2.services';
 import { DevisHNController } from './devisHN.controller';
-import { DentalController } from './dental.controller';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import { CorrespondentService } from 'src/correspondent/services/correspondent.service';
 import { OrdonnancesServices } from './services/ordonnances.services';
-import { DevisHNServices } from './services/devisRequestAjax.service';
+import { DevisHNServices } from './services/devisHNRequestAjax.service';
 import { FactureServices } from './services/facture.services';
 import { UserService } from 'src/user/services/user.service';
 import { ConfigService } from '@nestjs/config';
@@ -24,36 +23,51 @@ import { TherapeuticAlternativeService } from './services/therapeuticAlternative
 import { listEntities } from 'src/entities';
 import { DevisServices } from './services/devisHN.services';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
-import { ContactModule } from 'src/contact/contact.module';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { QuotationMutualController } from './quotation-mutual.controller';
+import { DevisStd2Controller } from './devisStd2.controller';
+import { FactureController } from './facture.controller';
+import { OrdonnancesController } from './ordonnances.controller';
+import { QuotationController } from 'src/contact/quotation.controller';
+import { QuotesController } from './quotes.controller';
+import { QuotationService } from 'src/contact/services/quotation.service';
+import { ContactPaymentService } from 'src/contact/services/contact.payment.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature(listEntities),
-    PaymentSchedulesModule,
-    ContactModule,
+  imports: [TypeOrmModule.forFeature(listEntities), PaymentSchedulesModule],
+  controllers: [
+    DevisHNController,
+    DevisStd2Controller,
+    FactureController,
+    OrdonnancesController,
+    QuotationMutualController,
+    QuotationController,
+    QuotesController,
   ],
-  controllers: [DentalController, DevisHNController],
   providers: [
-    OrdonnancesServices,
-    FactureServices,
-    QuotationMutualServices,
-    MailService,
-    UserService,
-    PatientService,
     AddressService,
-    ContactService,
-    DevisHNServices,
-    PermissionService,
-    PaymentScheduleService,
-    CorrespondentService,
-    DevisStd2Services,
-    QuotationServices,
     ConfigService,
-    PatientOdontogramService,
-    QuotesServices,
+    ContactService,
+    ContactNoteEntity,
+    CorrespondentService,
+    DevisHNServices,
     DevisServices,
-    TherapeuticAlternativeService,
+    DevisStd2Services,
+    FactureServices,
+    MailService,
     MailTransportService,
+    OrdonnancesServices,
+    PatientOdontogramService,
+    PatientService,
+    PaymentScheduleService,
+    PermissionService,
+    QuotationMutualServices,
+    QuotesServices,
+    TherapeuticAlternativeService,
+    UserService,
+    QuotationServices,
+    QuotationService,
+    ContactPaymentService,
   ],
 })
 export class DentalModule {}
