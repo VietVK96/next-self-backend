@@ -109,6 +109,8 @@ export class FactureServices {
           const idBill = await this.billRepository.findOne({
             where: { id: id_facture || 0 },
           });
+          console.log(idBill);
+
           if (idBill) {
             await this.billRepository.save({
               id: id_facture,
@@ -125,10 +127,12 @@ export class FactureServices {
             });
             return 'Facture enregistrée correctement';
           } else {
-            return 'Bill does not exist';
+            throw new CBadRequestException('Bill does not exist');
           }
         } catch {
-          return 'Erreur -3 : Problème durant la sauvegarde de la facture ... ';
+          throw new CBadRequestException(
+            'Erreur -3 : Problème durant la sauvegarde de la facture ... ',
+          );
         }
       }
 
