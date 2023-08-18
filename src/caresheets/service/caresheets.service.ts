@@ -4,6 +4,7 @@ import { DataSource, Repository, In } from 'typeorm';
 import { format, isAfter, isBefore, subWeeks } from 'date-fns';
 import { create } from 'xmlbuilder2';
 import axios from 'axios';
+import * as AdmZip from 'adm-zip';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { UserEntity } from 'src/entities/user.entity';
@@ -86,6 +87,18 @@ const helpersCaresheetPdf = {
       </tbody>
     </table>`;
     return str;
+  },
+};
+const optionsCaresheetPdf = {
+  format: 'A4',
+  displayHeaderFooter: true,
+  headerTemplate: '<div></div>',
+  footerTemplate: '<div></div>',
+  margin: {
+    left: '10mm',
+    top: '25mm',
+    right: '10mm',
+    bottom: '15mm',
   },
 };
 @Injectable()
@@ -236,7 +249,7 @@ export class ActsService {
           }
           groupBy[dateKey].push(act);
         });
-        for (const [_, raws] of Object.entries(groupBy)) {
+        for (const [, raws] of Object.entries(groupBy)) {
           const collectionFilteredByFamilyCode = raws.filter(
             (act) =>
               act?.medical?.ccam &&
@@ -1188,57 +1201,44 @@ export class ActsService {
     }
   }
 
-  async print(userId: number, ids: Array<number>, duplicata?: boolean) {
-    const options = {
-      format: 'A4',
-      displayHeaderFooter: true,
-      headerTemplate: '<div></div>',
-      footerTemplate: '<div></div>',
-      margin: {
-        left: '10mm',
-        top: '25mm',
-        right: '10mm',
-        bottom: '15mm',
-      },
-    };
-    const pdfMerger = new PDFMerger();
-    for (const id of ids) {
-      const caresheet = await this.fseRepository.findOne({
-        where: { id },
-        relations: [
-          'actMedicals',
-          'actMedicals.act',
-          'actMedicals.ccam',
-          'actMedicals.ngapKey',
-          'patient',
-          'patient.medical',
-          'patient.medical.policyHolder',
-        ],
-      });
-
-      const filePath = path.join(
-        process.cwd(),
-        'templates/pdf/caresheets',
-        'duplicata.hbs',
-      );
-      const data = {
-        caresheet,
-        duplicata,
-      };
-      const pdf = await customCreatePdf({
-        files: [{ path: filePath, data }],
-        options,
-        helpers: helpersCaresheetPdf,
-      });
-
-      await pdfMerger.add(pdf);
-    }
-
-    const user = await this.userRepository.findOne({
-      where: { id: userId },
-      relations: ['medical', 'medical.specialtyCode'],
+  async getCaresheetFileById(
+    id: number,
+    duplicata?: boolean,
+  ): Promise<{ file: Buffer; name: string }> {
+    const caresheet = await this.fseRepository.findOne({
+      where: { id },
+      relations: [
+        'actMedicals',
+        'actMedicals.act',
+        'actMedicals.ccam',
+        'actMedicals.ngapKey',
+        'patient',
+        'patient.medical',
+        'patient.medical.policyHolder',
+      ],
     });
 
+    const filePath = path.join(
+      process.cwd(),
+      'templates/pdf/caresheets',
+      'duplicata.hbs',
+    );
+    const data = {
+      caresheet,
+      duplicata,
+    };
+    const pdf = await customCreatePdf({
+      files: [{ path: filePath, data }],
+      options: optionsCaresheetPdf,
+      helpers: helpersCaresheetPdf,
+    });
+    return {
+      file: pdf,
+      name: `${caresheet.nbr}.pdf`,
+    };
+  }
+
+  async getListLotByIds(ids: Array<number>): Promise<LotEntity[]> {
     const queryBuilder = this.lotRepository
       .createQueryBuilder('lot')
       .distinct()
@@ -1248,23 +1248,67 @@ export class ActsService {
       .where('caresheets.id IN (:id)', { id: ids });
 
     const lots = await queryBuilder.getMany();
+    return lots;
+  }
+
+  async getLotFile(
+    lot: LotEntity,
+    user: UserEntity,
+  ): Promise<{ file: Buffer; name: string }> {
+    const filePath = path.join(
+      process.cwd(),
+      'templates/pdf/lot',
+      'bordereau_teletransmission.hbs',
+    );
+    const data = {
+      lot,
+      user,
+    };
+    const pdf = await customCreatePdf({
+      files: [{ path: filePath, data }],
+      options: optionsCaresheetPdf,
+      helpers: helpersCaresheetPdf,
+    });
+    return {
+      file: pdf,
+      name: `${lot.number}.pdf`,
+    };
+  }
+
+  async print(userId: number, ids: Array<number>, duplicata?: boolean) {
+    const pdfMerger = new PDFMerger();
+    for (const id of ids) {
+      const { file } = await this.getCaresheetFileById(id, duplicata);
+      await pdfMerger.add(file);
+    }
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['medical', 'medical.specialtyCode'],
+    });
+    const lots: LotEntity[] = await this.getListLotByIds(ids);
     for (const lot of lots) {
-      const filePath = path.join(
-        process.cwd(),
-        'templates/pdf/lot',
-        'bordereau_teletransmission.hbs',
-      );
-      const data = {
-        lot,
-        user,
-      };
-      const pdf = await customCreatePdf({
-        files: [{ path: filePath, data }],
-        options,
-        helpers: helpersCaresheetPdf,
-      });
-      await pdfMerger.add(pdf);
+      const { file } = await this.getLotFile(lot, user);
+      await pdfMerger.add(file);
     }
     return await pdfMerger.saveAsBuffer();
+  }
+
+  async download(userId: number, ids: Array<number>, duplicata?: boolean) {
+    const zip = new AdmZip();
+
+    for (const id of ids) {
+      const { file, name } = await this.getCaresheetFileById(id, duplicata);
+      zip.addFile(name, file);
+    }
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['medical', 'medical.specialtyCode'],
+    });
+    const lots: LotEntity[] = await this.getListLotByIds(ids);
+    for (const lot of lots) {
+      const { file, name } = await this.getLotFile(lot, user);
+      zip.addFile(name, file);
+    }
+    return zip.toBuffer();
   }
 }

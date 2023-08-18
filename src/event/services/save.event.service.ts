@@ -128,7 +128,11 @@ export class SaveEventService {
 
   // file php/event/save.php full file
   // create and update calendar
-  async saveAgenda(userId: number, payload: SaveAgendaDto) {
+  async saveAgenda(
+    userId: number,
+    payload: SaveAgendaDto,
+    practitionerId: number,
+  ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -144,11 +148,9 @@ export class SaveEventService {
     const rrule = payload?.rrule;
     const hasRecurrEvents = checkNumber(payload?.hasRecurrEvents);
     const scp = payload?.scp;
-    const practitionerId = checkId(payload?.practitionerId);
     const resourceId = checkId(payload?.resourceId);
     const contactId = checkId(payload?.contactId);
     const reminders = payload?.reminders;
-
     let eventId = payload.eventId;
     const eventTypeId = checkId(payload.eventTypeId) || null;
     const _private = payload.private;
@@ -158,7 +160,7 @@ export class SaveEventService {
     let eventStatus = 0;
     let eventLateness = 0;
     try {
-      const countStatement: { count: number } = await queryRunner.query(
+      const countStatement: { count: number }[] = await queryRunner.query(
         `
       SELECT COUNT(*) as count
         FROM T_CONTACT_CON
@@ -166,8 +168,8 @@ export class SaveEventService {
           AND deleted_at IS NOT NULL`,
         [contactId],
       );
-      if (countStatement.count) {
-        throw new CBadRequestException(
+      if (Number(countStatement[0].count) !== 0) {
+        return new CBadRequestException(
           `Le patient a été supprimé. Veuillez restaurer le patient avant de créer / modifier un rendez-vous.`,
         );
       }
@@ -346,7 +348,7 @@ export class SaveEventService {
               );
             const dates = occurrenceStatement.map((date) => date.evo_date);
 
-            const [_eventOccurrence, eventResult] = await Promise.all([
+            const [, eventResult] = await Promise.all([
               queryRunner.query(
                 `
               UPDATE event_occurrence_evo
@@ -396,7 +398,7 @@ export class SaveEventService {
               await Promise.all(batch);
             }
           } else {
-            const [_eventOccurrence, eventResult] = await Promise.all([
+            const [, eventResult] = await Promise.all([
               queryRunner.query(
                 `UPDATE event_occurrence_evo
               SET evo_exception = 1
@@ -443,7 +445,7 @@ export class SaveEventService {
         //     '%datetime%' => $formatter->format($datetime)
         // ]);
         const message = `Patient en retard au rendez-vous du ${date}`;
-        queryRunner.query(
+        await queryRunner.query(
           `INSERT INTO T_CONTACT_NOTE_CNO (user_id, CON_ID, CNO_DATE, CNO_MESSAGE)
         VALUES (?, ?, CURRENT_TIMESTAMP, ?)`,
           [practitionerId, contactId, message],
@@ -503,7 +505,7 @@ export class SaveEventService {
         const promiseArr = [];
         for (const reminder of reminders) {
           const reminderId = checkId(reminder?.id);
-          const reminderNbr = reminder['nbr'];
+          const reminderNbr = reminder?.nbr;
           const reminderTypeId = checkId(reminder?.reminderTypeId);
           const reminderReceiverId = checkId(reminder?.reminderReceiverId);
           const reminderUnitId = checkId(reminder?.reminderUnitId);
@@ -539,6 +541,7 @@ export class SaveEventService {
         await Promise.all(promiseArr);
       }
       await queryRunner.commitTransaction();
+      return { success: true };
     } catch (e) {
       await queryRunner.rollbackTransaction();
       throw new CBadRequestException(ErrorCode.SAVE_FAILED);

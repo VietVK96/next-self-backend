@@ -6,6 +6,7 @@ import { ResourceController } from './resource.controller';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { UserResourceEntity } from 'src/entities/user-resource.entity';
 import { UserEntity } from 'src/entities/user.entity';
+import { MailTransportService } from 'src/mail/services/mailTransport.service';
 
 @Module({
   imports: [
@@ -17,6 +18,6 @@ import { UserEntity } from 'src/entities/user.entity';
     ]),
   ],
   controllers: [ResourceController],
-  providers: [ResourceService],
+  providers: [ResourceService, MailTransportService],
 })
 export class ResourceModule {}

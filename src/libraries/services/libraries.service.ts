@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
@@ -32,7 +32,6 @@ import { ActsShowDto } from '../dto/library-act.show.dto';
 import { LettersEntity } from 'src/entities/letters.entity';
 import { LibraryActAttachmentPivotEntity } from 'src/entities/library-act-attachment-pivot.entity';
 import { SuccessResponse } from 'src/common/response/success.res';
-import { format, intervalToDuration } from 'date-fns';
 import { LibraryActOdontogramPivotEntity } from 'src/entities/library-act-odontogram-pivot.entity';
 import { checkId } from 'src/common/util/number';
 import { AcFamiliesCopyRes } from '../res/act-families.res';
@@ -173,7 +172,7 @@ export class LibrariesService {
    * php/libraries/act-families/copy.php done
    *
    */
-  async copyActFamily(id: number, identity: UserIdentity): Promise<any> {
+  async copyActFamily(id: number): Promise<any> {
     try {
       const oldLibraryActFamily = await this.libraryActFamilyRepo.findOne({
         where: { id },
@@ -208,10 +207,7 @@ export class LibrariesService {
   /**
    * php/libraries/act-families/acts/index.php 100%
    */
-  async showActFamily(
-    id: number,
-    identity: UserIdentity,
-  ): Promise<LibraryActFamilyEntity> {
+  async showActFamily(id: number): Promise<LibraryActFamilyEntity> {
     return await this.libraryActFamilyRepo.findOne({ where: { id } });
   }
 
@@ -731,7 +727,6 @@ export class LibrariesService {
         }
         const libraryActChildIds =
           libraryAct.associations?.map((e) => e.libraryActChildId) || [];
-        console.log(libraryActChildIds);
 
         if (libraryActChildIds.length) {
           await this.libraryActAssociationRepo.softDelete({

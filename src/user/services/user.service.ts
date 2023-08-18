@@ -21,6 +21,7 @@ import { GetOneActiveRes } from '../res/get-active.res';
 import { PrivilegeEntity } from 'src/entities/privilege.entity';
 import { EventTypeEntity } from 'src/entities/event-type.entity';
 import { AppointmentReminderLibraryEntity } from 'src/entities/appointment-reminder-library.entity';
+import { checkId } from 'src/common/util/number';
 @Injectable()
 export class UserService {
   constructor(
@@ -34,6 +35,7 @@ export class UserService {
 
   // application/Services/User.php 153 -> 207
   async find(id: number) {
+    id = checkId(id);
     const queryBuiler = this.dataSource.createQueryBuilder();
     const select = `
     USR.USR_ID AS id,
@@ -75,14 +77,17 @@ export class UserService {
       )
       .leftJoin(UserTypeEntity, 'UST', 'UST.UST_ID = USR.UST_ID')
       .leftJoin(UserMedicalEntity, 'UMD', 'UMD.user_id = USR.USR_ID')
-      .where('USR.USR_ID = :id', { id });
+      .where('USR.USR_ID = :id', { id: id || 0 });
     const user = await q.getRawOne();
-    const address = await this.addressService.find(user.address_id);
+    if (!user?.id) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND_USER);
+    }
+    const address = await this.addressService.find(user?.address_id);
 
     // for get eventType and reminders when create appointment
     const eventTypes = await this.dataSource.manager.find(EventTypeEntity, {
       where: {
-        userId: user.id,
+        userId: user?.id,
       },
     });
     const appointmentReminderLibraries = await this.dataSource.manager.find(
@@ -534,7 +539,7 @@ export class UserService {
                 .getRepository(PrivilegeEntity)
                 .findOne({
                   where: {
-                    usrId: userEntity?.id,
+                    usrId: targetUserEntity?.id,
                     usrWithId: practitionerId,
                   },
                 });

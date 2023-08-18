@@ -11,8 +11,8 @@ import { UpdateResourceDto } from '../dto/updateResource.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { SuccessResponse } from 'src/common/response/success.res';
-import { MailerService } from '@nestjs-modules/mailer';
 import { FindAllUsersAndPractitionersDto } from '../dto/findAllUsersAndPractitioners.dto';
+import { MailTransportService } from 'src/mail/services/mailTransport.service';
 
 @Injectable()
 export class ResourceService {
@@ -25,8 +25,8 @@ export class ResourceService {
     private organizationRepository: Repository<OrganizationEntity>,
     @InjectRepository(UserResourceEntity)
     private userResourceRepository: Repository<UserResourceEntity>,
+    private readonly mailerService: MailTransportService,
     private readonly dataSource: DataSource,
-    private mailerService: MailerService,
   ) {}
 
   async findAll(organizationId: number): Promise<ResourceEntity[]> {
@@ -71,12 +71,12 @@ export class ResourceService {
       });
 
       const {
-        archivedAt,
-        organizationId,
-        createdAt,
-        updatedAt,
-        useDefaultColor,
-        free,
+        // archivedAt,
+        // organizationId,
+        // createdAt,
+        // updatedAt,
+        // useDefaultColor,
+        // free,
         ...rest
       } = getResource;
 
@@ -206,15 +206,14 @@ export class ResourceService {
      * /settings/resource/store.php 63->71
      */
     const creator = `${currentUser.lastname} ${currentUser.firstname}`;
-    await this.mailerService.sendMail({
-      to: 'datpham0108@gmail.com',
-      subject: 'Agenda supplémentaire',
-      template: 'mail/resource_create.hbs',
-      context: {
-        name: res.name,
-        creator,
-      },
-    });
+    try {
+      await this.mailerService.sendEmail(identity.id, {
+        from: 'noreply@ecoodentist.com',
+        to: 'admin@dentalviamedilor.com',
+        subject: 'Agenda supplémentaire',
+        template: `Un agenda supplémentaire ${res.name} a été créé par ${creator}.`,
+      });
+    } catch (error) {}
 
     return {
       success: true,

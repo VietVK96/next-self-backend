@@ -23,7 +23,6 @@ import { FindAllStructDto } from '../dto/findAll.contact.dto';
 import { FindPaymentRes, GetExtrasRes } from '../response/cashing.res';
 import { SlipCheckEntity } from 'src/entities/slip-check.entity';
 import * as dayjs from 'dayjs';
-import { DEFAULT_LOCALE } from 'src/constants/locale';
 import * as path from 'path';
 import { createPdf } from '@saemhco/nestjs-html-pdf';
 import { checkDay } from 'src/common/util/day';
@@ -34,6 +33,7 @@ import {
   PaymentInterface,
   SlipCheck,
 } from '../../interfaces/interface';
+import { DEFAULT_LOCALE } from 'src/constants/default';
 
 dayjs.locale(DEFAULT_LOCALE);
 @Injectable()

@@ -5,10 +5,12 @@
   backright='0mm'
   backbottom='0mm'
   backleft='0mm'
-  style="page-break-before: always;"
+  style="page-break-before: always; width: 100%;"
 >
- <div class="body" >
-{{#if duplicata}} <header><span style="color: red; font-size: 14pt;">DUPLICATA</span></header> {{/if}}
+ <div class="body" style="width: 100%;" >
+    {{#if duplicata}} 
+      <header><span style="color: red; font-size: 14pt;">DUPLICATA</span></header> 
+    {{/if}}
     <H2>II. Montant des honoraires :</H2>
     <P style="font-weight: bold;">Les honoraires correspondant à l'ensemble du traitement ci-dessus sont de 
       <span id="totalHono">{{total_prixLigne}}</span> €. (hors soins et radios)
@@ -69,5 +71,33 @@
     </P>
     <P>&nbsp;</P>
     <P>Fait en double exemplaire à {{#if hasAdresse_prat}} {{adresse_prat}} {{/if}}, le {{datedevisStd2}}</P>
+    <table id="signature">
+      <tbody>
+          <tr>
+              <td style="text-align: left;">
+                Signature du praticien <br/>
+                {{identPrat}}
+              </td>
+              <td style="text-align: right;">
+                  Signature du patient « bon pour accord »
+              </td>
+          </tr>
+          <tr>
+              <td style="width: 100%; height: 5mm;" colspan="2"></td>
+          </tr>
+          <tr>
+              <td id="quotationSignaturePraticien" style="width: 50%; text-align: center;">
+                {{#if (isset quotationSignaturePraticien)}}
+                  <img src="{{quotationSignaturePraticien}}" class="signaturePraticien" style="max-height: 150px;" />
+                {{/if}}
+              </td>
+              <td id="quotationSignaturePatient" style="width: 50%; text-align: center;">
+                {{#if (isset quotationSignaturePatient)}}
+                  <img src="{{quotationSignaturePatient}}" class="signaturePatient" style="max-height: 150px;" />
+                {{/if}}
+              </td>
+          </tr>
+      </tbody>
+    </table>
   </div>
 </page>

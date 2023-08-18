@@ -27,6 +27,12 @@ import {
 } from 'src/entities/cashing.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
 import { ActsService } from 'src/caresheets/service/caresheets.service';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { customCreatePdf } from 'src/common/util/pdf';
+import * as path from 'path';
+import * as dayjs from 'dayjs';
+import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ThirdPartyService {
@@ -53,6 +59,9 @@ export class ThirdPartyService {
     private cashingContactRepository: Repository<CashingContactEntity>,
     @InjectRepository(CashingEntity)
     private cashingRepository: Repository<CashingEntity>,
+    @InjectRepository(UserPreferenceEntity)
+    private userPreferenceRepo: Repository<UserPreferenceEntity>,
+    private configService: ConfigService,
   ) {}
 
   async getCaresheet(payload: ThirdPartyDto) {
@@ -494,5 +503,156 @@ export class ThirdPartyService {
     }
     const data = await this.actsService.show(caresheet.id);
     return data;
+  }
+
+  /**
+   * File: php/third-party/print.php 100%
+   *
+   */
+  async printThirdParty(identity: UserIdentity, payload: ThirdPartyDto) {
+    const queryBuilder = this.fseRepository
+      .createQueryBuilder('caresheet')
+      .innerJoinAndSelect('caresheet.patient', 'patient')
+      .where('caresheet.usrId = :usrId', { usrId: identity.id })
+      .andWhere('caresheet.tiersPayant = true');
+
+    payload.filterParam?.forEach((param, index) => {
+      const valueParam = payload.filterValue[index];
+      switch (param) {
+        case 'caresheet.creationDate':
+          queryBuilder.andWhere('caresheet.FSE_DATE = :creationDate', {
+            creationDate: valueParam,
+          });
+          break;
+        case 'caresheet.number':
+          queryBuilder.andWhere('caresheet.nbr = LPAD(:number, 9, 0)', {
+            number: valueParam,
+          });
+          break;
+        case 'caresheet.tiersPayantStatus':
+          queryBuilder.andWhere(
+            'caresheet.tiersPayantStatus = :tiersPayantStatus',
+            { tiersPayantStatus: valueParam },
+          );
+          break;
+        case 'amo.libelle':
+          queryBuilder.innerJoin(
+            ThirdPartyAmoEntity,
+            'thirdPartyAmo',
+            'thirdPartyAmo.caresheetId = caresheet.id',
+          );
+          queryBuilder.innerJoin(
+            AmoEntity,
+            'amo',
+            'thirdPartyAmo.amoId = amo.id',
+          );
+          queryBuilder.andWhere('amo.libelle LIKE :amoLibelle', {
+            amoLibelle: `${valueParam}%`,
+          });
+          break;
+        case 'amc.libelle':
+          queryBuilder.innerJoin(
+            ThirdPartyAmcEntity,
+            'thirdPartyAmc',
+            'thirdPartyAmc.caresheetId = caresheet.id',
+          );
+          queryBuilder.innerJoin(
+            AmcEntity,
+            'amc',
+            'thirdPartyAmc.amcId = amc.id',
+          );
+          queryBuilder.andWhere('amc.libelle LIKE :amcLibelle', {
+            amcLibelle: `${valueParam}%`,
+          });
+          break;
+      }
+    });
+
+    const sortList = payload?.sort?.split('+') ?? [];
+    for (const sortItem of sortList) {
+      const sort = thirdPartySort[sortItem];
+      queryBuilder.addOrderBy(
+        sort,
+        payload.direction?.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
+      );
+    }
+    const caresheets = await queryBuilder.getMany();
+
+    const newCaresheets = caresheets.map((item) => {
+      return {
+        ...item,
+        thirdPartyAmountRemaining:
+          item.thirdPartyAmount - item.thirdPartyAmountPaid,
+      };
+    });
+
+    let thirdPartyAmountTotal = 0;
+    let thirdPartyAmountPaidTotal = 0;
+    let thirdPartyAmountRemainingTotal = 0;
+    for (const key of newCaresheets) {
+      thirdPartyAmountTotal += +key.thirdPartyAmount;
+      thirdPartyAmountPaidTotal += +key.thirdPartyAmountPaid;
+      thirdPartyAmountRemainingTotal += +key.thirdPartyAmountRemaining;
+    }
+
+    const currencyObj = await this.userPreferenceRepo.findOneOrFail({
+      select: ['currency'],
+      where: {
+        usrId: identity.id,
+      },
+    });
+
+    const data = {
+      user: identity,
+      caresheets: newCaresheets,
+      currency: currencyObj?.currency,
+      thirdPartyAmountTotal,
+      thirdPartyAmountPaidTotal,
+      thirdPartyAmountRemainingTotal,
+    };
+
+    const filePath = path.join(
+      process.cwd(),
+      'templates/third-party',
+      'index.hbs',
+    );
+
+    const files = [{ path: filePath, data }];
+
+    const options = {
+      format: 'A4',
+      displayHeaderFooter: true,
+      landscape: true,
+      margin: {
+        left: '10mm',
+        top: '20mm',
+        right: '10mm',
+        bottom: '20mm',
+      },
+
+      headerTemplate: `<div style="width:100%;margin-left:10mm"><span style="font-size: 8px;">${dayjs(
+        new Date(),
+      ).format(
+        'M/D/YY, hh:mm A',
+      )}</span><span style="font-size: 8px;margin-right:40mm; float: right;">Suivi des tiers payants Tiers payants</span></div>`,
+      footerTemplate: `
+        <div style="width: 100%;margin-right:10mm; font-size: 8px; display: flex; justify-content: space-between">
+          <span style="margin-left: 10mm">${this.configService.get(
+            'app.host',
+          )}/index#third-party</span>
+          <div>
+            <span class="pageNumber"></span>
+            <span>/</span>
+            <span class="totalPages"></span>
+          </div>
+        </div>
+      `,
+    };
+
+    const helpers = {
+      dateShort: (date) => (date ? dayjs(date).format('DD/MM/YYYY') : ''),
+    };
+
+    return await customCreatePdf({ files, options, helpers });
   }
 }

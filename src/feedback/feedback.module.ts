@@ -4,7 +4,6 @@ import { FeedbackController } from './feedback.controller';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from 'src/entities/user.entity';
-import { MailService } from 'src/mail/services/mail.service';
 import { PatientService } from 'src/patient/service/patient.service';
 import { MailModule } from 'src/mail/mail.module';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
@@ -21,33 +20,10 @@ import { AmcEntity } from 'src/entities/amc.entity';
 import { PhoneEntity } from 'src/entities/phone.entity';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { EmailAccountEntity } from 'src/entities/email-account.entity';
+import { ContactPaymentService } from 'src/contact/services/contact.payment.service';
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      UserEntity,
-      LettersEntity,
-      ContactEntity,
-      ContactUserEntity,
-      ThirdPartyAmcEntity,
-      ThirdPartyAmoEntity,
-      AmoEntity,
-      AmcEntity,
-      PhoneEntity,
-      CorrespondentEntity,
-      EmailAccountEntity,
-    ]),
-    MailModule,
-  ],
+  imports: [TypeOrmModule.forFeature([UserEntity]), MailModule],
   controllers: [FeedbackController],
-  providers: [
-    FeedbackService,
-    MailTransportService,
-    MailService,
-    PatientService,
-    PaymentScheduleService,
-    PermissionService,
-    AddressService,
-    ContactService,
-  ],
+  providers: [FeedbackService, MailTransportService],
 })
 export class FeedbackModule {}
