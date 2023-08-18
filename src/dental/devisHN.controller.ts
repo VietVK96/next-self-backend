@@ -60,6 +60,9 @@ export class DevisHNController {
     return await this.devisService.getInitChamps(user, params);
   }
 
+  /**
+   * dental/devisHN/devisHN_pdf.php
+   */
   @Get('devisHN/devisHN_pdf')
   @UseGuards(TokenGuard)
   async devisHNGetPDF(
@@ -84,5 +87,14 @@ export class DevisHNController {
     } catch (error) {
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
     }
+  }
+
+  @Get('/devisHN/devisHN_email')
+  @UseGuards(TokenGuard)
+  async sendMail(
+    @Query('id') id: number,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.devisService.sendMail(id, identity);
   }
 }

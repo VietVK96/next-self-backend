@@ -25,16 +25,17 @@ import { ErrorCode } from 'src/constants/error';
 @ApiTags('Dental')
 export class OrdonnancesController {
   constructor(private ordonnancesServices: OrdonnancesServices) {}
+
   /**
    * php/dental/quotation/delete.php -> full file
    * delete quotation
    */
-
   @Post('/ordonnances/ordo_requetes_ajax')
   @UseGuards(TokenGuard)
   async store(@Body() payload: OrdonnancesDto) {
     return this.ordonnancesServices.update(payload);
   }
+
   @Get('/ordonnances/medical/:patientId')
   @UseGuards(TokenGuard)
   async getMedical(

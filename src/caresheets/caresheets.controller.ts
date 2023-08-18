@@ -107,4 +107,26 @@ export class CaresheetsController {
     });
     res.end(buffer);
   }
+
+  //ecoophp/php/caresheets/quittance.php
+  @Get('/quittance')
+  @UseGuards(TokenDownloadGuard)
+  async quittance(
+    @Res() res,
+    @CurrentUser() identity: UserIdentity,
+    @Query('id') ids?: Array<number>,
+    @Query('duplicata') duplicata?: boolean,
+  ) {
+    // TODO Create service quittance
+    const buffer = await this.service.print(identity.id, ids, duplicata);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=print.pdf`,
+      'Content-Length': buffer?.length,
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: 0,
+    });
+    res.end(buffer);
+  }
 }
