@@ -11,13 +11,13 @@
   <p>Un message a été envoyé depuis l'application e.cooDentist.</p>
   <p>--------------------------------------------------------------------------</p>
   <p>
-    eporteur: #{{ user.id }} {{ user.lastName }} {{ user.firstName }}<br />
+    eporteur: #{{ user.id }} {{ user.lastname }} {{ user.firstname }}<br />
     Adresse mail: {{ user.email }}
-    Numéro de téléphone: {{ user.homePhoneNumber }}<br />
+    Numéro de téléphone: {{ user.phoneNumber }}<br />
     Type de message: {{ feedback.type }}<br />
     Navigateur: {{ server.HTTP_USER_AGENT }}<br />
   <p>--------------------------------------------------------------------------</p>
-    {{ feedback.message|raw }}
+    {{ feedback.message }}
    
   </p>
 </body>

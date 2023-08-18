@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-// import { ErrorCode } from 'src/constants/error';
 import { Repository } from 'typeorm';
 import { UserEntity } from 'src/entities/user.entity';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
@@ -24,7 +23,7 @@ export class FeedbackService {
     reateFeedback: CreateFeedbackDto,
     currentUser: UserIdentity,
     request,
-  ) {
+  ): Promise<{ message: string }> {
     const { type, message } = reateFeedback;
     let errorMessage = '';
 
@@ -51,13 +50,29 @@ export class FeedbackService {
       const subject = `[e.cooDentist][${type.toUpperCase()}] Message envoyé par ${
         user.lastname + user.firstname
       }`;
-      const fullName = [user?.lastname, user?.firstname].join(' ');
       const templateFile = fs.readFileSync(
-        path.resolve(__dirname, '../../templates/mail/mailTemplate.hbs'),
+        path.resolve(__dirname, '../../templates/mail/feedback.hbs'),
         'utf-8',
       );
       const template = handlebars.compile(templateFile);
-      const mailBody = template({ fullName, user });
+      const mailBody = template({
+        user,
+        feedback: {
+          type,
+          message,
+        },
+        server: request.server,
+      });
+
+      console.log('template', mailBody, {
+        user,
+        feedback: {
+          type,
+          message,
+        },
+        server: request.server,
+      });
+
       const context = {
         server: request.server,
         user,
@@ -89,15 +104,16 @@ export class FeedbackService {
         context: context,
       };
 
-      return this.mailTransportService.sendEmail(currentUser.id, email);
+      const sentMail = await this.mailTransportService.sendEmail(
+        currentUser.id,
+        email,
+      );
 
       return {
         message:
           'Le message a bien \u00e9t\u00e9 envoy\u00e9 au service concern\u00e9. 123',
       };
     } catch (error) {
-      console.log(107, error);
-
       throw new CBadRequestException(errorMessage);
     }
   }
