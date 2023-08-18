@@ -86,6 +86,9 @@ export class CreateUpdateBankDto {
   bankOfGroup?: number;
 
   @ApiProperty()
+  usrId?: number;
+
+  @ApiProperty()
   abbr?: string;
 
   @ApiProperty({
