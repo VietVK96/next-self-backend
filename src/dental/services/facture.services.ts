@@ -25,12 +25,7 @@ import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
-import {
-  DentalEventTaskEntity,
-  EnumDentalEventTaskExceeding,
-} from 'src/entities/dental-event-task.entity';
-import { EventEntity } from 'src/entities/event.entity';
-import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
+import { EnumDentalEventTaskExceeding } from 'src/entities/dental-event-task.entity';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import {
   EnumPrivilegeTypeType,
@@ -40,7 +35,6 @@ import { UserEntity } from 'src/entities/user.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { StringHelper } from 'src/common/util/string-helper';
 import { ContactEntity } from 'src/entities/contact.entity';
-import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { AddressEntity } from 'src/entities/address.entity';
 import { createPdf } from '@saemhco/nestjs-html-pdf';
 import * as path from 'path';
@@ -77,12 +71,6 @@ export class FactureServices {
     private medicalHeaderRepository: Repository<MedicalHeaderEntity>,
     @InjectRepository(EventTaskEntity)
     private eventTaskRepository: Repository<EventTaskEntity>,
-    @InjectRepository(DentalEventTaskEntity)
-    private dentalEventTaskRepository: Repository<DentalEventTaskEntity>, //dental
-    @InjectRepository(EventEntity)
-    private eventRepository: Repository<EventEntity>, //event
-    @InjectRepository(NgapKeyEntity)
-    private ngapKeyRepository: Repository<NgapKeyEntity>, //ngap_key
     @InjectRepository(PrivilegeEntity)
     private privilegeRepository: Repository<PrivilegeEntity>,
     @InjectRepository(UserEntity)
@@ -91,8 +79,6 @@ export class FactureServices {
     private userPreferenceRepository: Repository<UserPreferenceEntity>,
     @InjectRepository(ContactEntity)
     private contactRepository: Repository<ContactEntity>,
-    @InjectRepository(DentalQuotationEntity)
-    private dentalQuotationRepository: Repository<DentalQuotationEntity>,
     @InjectRepository(AddressEntity)
     private addressRepository: Repository<AddressEntity>,
     @InjectRepository(ContactNoteEntity)
@@ -120,10 +106,11 @@ export class FactureServices {
               identPat: payload?.identPat,
               modePaiement: payload?.modePaiement,
               infosCompl: payload?.infosCompl,
-              amount: payload?.amount,
-              secuAmount: payload?.secuAmount,
+              amount: payload?.amount || 0,
+              secuAmount: payload?.secuAmount || 0,
               signatureDoctor: payload?.signatureDoctor,
-              template: payload?.template,
+              template: payload?.template || 1,
+              delete: 0,
             });
             return 'Facture enregistrée correctement';
           } else {
