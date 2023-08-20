@@ -26,7 +26,6 @@ import * as handlebars from 'handlebars';
 import * as dayjs from 'dayjs';
 import * as fs from 'fs';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
-import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 
 @Injectable()

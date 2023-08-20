@@ -1518,7 +1518,7 @@ export class MailService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const res = await queryRunner.query(
+      await queryRunner.query(
         `
         UPDATE T_LETTERS_LET
         SET header_id = ?,

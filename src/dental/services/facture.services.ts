@@ -31,11 +31,9 @@ import {
   PrivilegeEntity,
 } from 'src/entities/privilege.entity';
 import { UserEntity } from 'src/entities/user.entity';
-import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { StringHelper } from 'src/common/util/string-helper';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { AddressEntity } from 'src/entities/address.entity';
-import { createPdf } from '@saemhco/nestjs-html-pdf';
 import * as path from 'path';
 import { checkDay } from 'src/common/util/day';
 import { checkBoolean, checkId, checkNumber } from 'src/common/util/number';
@@ -49,7 +47,6 @@ import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
 import { facturePdfFooter, facturePdfFooter1 } from '../constant/htmlTemplate';
 import { br2nl, nl2br } from 'src/common/util/string';
 import { validateEmail } from 'src/common/util/string';
-import { MailService } from 'src/mail/services/mail.service';
 import { format, getDayOfYear } from 'date-fns';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
