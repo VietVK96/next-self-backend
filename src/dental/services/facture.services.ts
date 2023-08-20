@@ -46,8 +46,8 @@ import {
   DetailsRes,
   InitFactureRes,
 } from '../res/facture.res';
-import { customCreatePdf } from 'src/common/util/pdf';
-import { facturePdfFooter } from '../constant/htmlTemplate';
+import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
+import { facturePdfFooter, facturePdfFooter1 } from '../constant/htmlTemplate';
 import { br2nl, nl2br } from 'src/common/util/string';
 import { validateEmail } from 'src/common/util/string';
 import { MailService } from 'src/mail/services/mail.service';
@@ -58,6 +58,7 @@ import * as fs from 'fs';
 import * as handlebars from 'handlebars';
 import * as dayjs from 'dayjs';
 import { DEFAULT_LOCALE } from 'src/constants/default';
+import { features } from 'process';
 @Injectable()
 export class FactureServices {
   constructor(
@@ -95,7 +96,6 @@ export class FactureServices {
           const idBill = await this.billRepository.findOne({
             where: { id: id_facture || 0 },
           });
-          console.log(idBill);
 
           if (idBill) {
             await this.billRepository.save({
@@ -236,13 +236,11 @@ export class FactureServices {
             let date = '';
             let i = 0;
             const result = eventTasks.reduce((result, eventTask) => {
-              let amoAmount = checkNumber(eventTask?.dental?.secuAmount);
               let cotation = '';
 
               switch (eventTask?.dental?.type) {
                 case 'CCAM':
                   cotation = eventTask?.dental?.ccamCode;
-                  amoAmount = amoAmount * checkNumber(eventTask?.dental?.coef);
                   break;
 
                 case 'NGAP':
@@ -257,12 +255,6 @@ export class FactureServices {
                 default:
                   cotation = 'NPC';
                   break;
-              }
-
-              if (
-                eventTask?.dental?.exceeding === EnumDentalEventTaskExceeding.N
-              ) {
-                amoAmount = 0;
               }
 
               const eTask: AjaxEventTaskRes = {
@@ -380,28 +372,15 @@ export class FactureServices {
     const withs = userId;
     const userID = identity?.id as number;
     const groupID = identity?.org;
-    // const disableColumnByGroup = [158, 181];
-    // const colonneDate = true;
     let userIds: number[];
 
     const id_facture = 0;
     const id_societe = 0;
     const id_user = userID;
-    // const medical_entete_id = 0;
     const id_devis = 0;
     const dateFacture = new Date().toISOString().split('T')[0];
-    // const noFacture: string;
-    // const details: string[];
     const infosCompl = '';
     const modePaiement = 'Non Payee';
-
-    // let billSignatureDoctor = '';
-    // let billAmount = 0;
-    // let billSecuAmount = 0;
-    // let billTemplate = 1;
-    // let contactFullname = '';
-    // let contactBirthday = '';
-    // let contactInsee = '';
 
     if (withs !== null) {
       const type = EnumPrivilegeTypeType.NONE;
@@ -430,13 +409,6 @@ export class FactureServices {
       );
     }
 
-    const userSignature = user?.signature;
-    const userPreferenceEntity = await this.userPreferenceRepository.findOne({
-      where: { usrId: userID },
-    });
-    const userPreferenceBillDisplayTooltip =
-      userPreferenceEntity?.billDisplayTooltip;
-    const userPreferenceBillTemplate = userPreferenceEntity?.billTemplate;
     let identPrat = user?.lastname + user?.firstname + '\nChirurgien Dentiste';
     let adressePrat = '';
     let titreFacture = encodeURIComponent(
@@ -462,7 +434,6 @@ export class FactureServices {
       userId: userID,
     });
     if (medicalHeader) {
-      const medicalEnteteId = medicalHeader?.id;
       identPrat =
         medicalHeader?.identPrat !== null
           ? StringHelper.br2nl(medicalHeader?.identPrat, '')
@@ -495,7 +466,7 @@ export class FactureServices {
           where: { id: contactId, organizationId: groupID },
         });
         const addressEntity = contact?.adrId;
-        identPat = contact?.lastname + '' + contact?.firstname;
+        identPat = contact?.lastname + ' ' + contact?.firstname;
         const address = await this.addressRepository.findOne({
           where: { id: addressEntity || 0 },
         });
@@ -594,13 +565,13 @@ export class FactureServices {
       }
       const bill = await this.billRepository.save({
         nbr: noFacture,
-        creationDate: dateFacture,
+        date: dateFacture,
         identPrat: identPrat,
-        adressePrat: adressePrat,
+        addrPrat: adressePrat,
         name: titreFacture,
         identContact: identPat,
-        payload: modePaiement,
-        infosCompl: infosCompl,
+        payment: modePaiement,
+        info: infosCompl,
         usrId: id_user,
         conId: contactId,
         dqoId: id_devis !== 0 ? id_devis : null,
@@ -620,6 +591,7 @@ export class FactureServices {
         where: { id: id || 0, delete: 0 },
         relations: ['user', 'patient'],
       });
+
       if (bill) {
         const res: InitFactureRes = {
           noFacture: bill?.nbr || '',
@@ -636,16 +608,17 @@ export class FactureServices {
           billTemplate: bill?.template || 1,
           userNumeroFacturant: bill?.user?.numeroFacturant || '',
           contactFullname:
-            bill?.contact?.lastname + ' ' + bill?.contact?.firstname,
-          contactBirthday: checkDay(bill?.contact?.birthday),
-          contactInsee: bill?.contact?.insee + '' + bill?.contact?.inseeKey,
+            bill?.patient?.lastname ||
+            '' + ' ' + bill?.patient?.firstname ||
+            '',
+          contactBirthday: checkDay(bill?.patient?.birthday),
+          contactInsee:
+            (bill?.patient?.insee || '') +
+            ' ' +
+            (bill?.patient?.inseeKey || ''),
           details: [],
         };
 
-        // if (!pdf && bill.lock) {
-        //   window.location.href = 'facture_pdf.php?id_facture=' + id_facture;
-        //   return;
-        // }
         const billLines = await this.billLineRepository.find({
           where: { bilId: id || 0 },
           order: { pos: 'ASC' },
@@ -692,31 +665,34 @@ export class FactureServices {
       if (checkId) {
         await this.billRepository.update(id, { lock: 1 } as BillEntity);
       }
-
       const facture = await this.initFacture(id);
+
       if (facture.billTemplate === 2) {
         const checkModePaiement =
           ['virement', 'prelevement', 'autre']?.findIndex(
             (e) => e === facture?.modePaiement,
           ) != -1;
-        const data = {
-          duplicata,
-          date: facture?.dateFacture,
-          nbr: facture?.noFacture,
-          identPrat: facture?.identPrat,
-          adressePrat: facture?.adressePrat,
-          identPat: facture?.identPat,
-          billAmount: facture?.billAmount,
-          billSecuAmount: facture?.billSecuAmount,
-          userNumeroFacturant: facture?.userNumeroFacturant,
-          contactFullname: facture?.contactFullname,
-          contactBirthday: facture?.contactBirthday,
-          contactInsee: facture?.contactInsee,
-          prestations: facture.details,
-          modePaiement: facture.modePaiement,
-          signature: facture.billSignatureDoctor,
-          checkModePaiement,
-        };
+        function generateData(details: DetailsRes[]) {
+          return {
+            duplicata,
+            date: checkDay(facture?.dateFacture, 'DD/MM/YYYY'),
+            nbr: facture?.noFacture,
+            identPrat: nl2br(facture?.identPrat),
+            adressePrat: nl2br(facture?.adressePrat),
+            identPat: facture?.identPat,
+            billAmount: facture?.billAmount,
+            billSecuAmount: facture?.billSecuAmount,
+            userNumeroFacturant: facture?.userNumeroFacturant,
+            contactFullname: facture?.contactFullname,
+            contactBirthday: facture?.contactBirthday,
+            contactInsee: facture.contactInsee,
+            prestations: details,
+            modePaiement: facture.modePaiement,
+            signature: facture.billSignatureDoctor,
+            checkModePaiement,
+          };
+        }
+
         const filePath = path.join(
           process.cwd(),
           'templates/pdf/invoice',
@@ -725,21 +701,42 @@ export class FactureServices {
         const options = {
           format: 'A4',
           displayHeaderFooter: true,
+          footerTemplate: facturePdfFooter1(),
           margin: {
             left: '5mm',
             top: '5mm',
             right: '5mm',
-            bottom: '25mm',
+            bottom: '5mm',
           },
         };
-        const pdf = await createPdf(filePath, options, data);
-        return pdf;
+        let files: PdfTemplateFile[] = [];
+        facture.details = facture?.details?.filter(
+          (e) => e.typeLigne === 'operation',
+        );
+        const pageCount = Math.ceil(facture?.details?.length / 9);
+        if (!pageCount) {
+          files = [{ path: filePath, data: generateData(facture?.details) }];
+        } else {
+          for (let i = 0; i < pageCount; i++) {
+            files.push({
+              data: generateData(facture?.details.splice(0, 9)),
+              path: filePath,
+            });
+          }
+        }
+        const helpers = {
+          formatDate: (date: string) => checkDay(date, 'DD/MM/YYYY'),
+        };
+        const pdfBuffer = await customCreatePdf({
+          files,
+          options,
+          helpers,
+        });
+        return pdfBuffer;
       } else {
         const helpers = {
-          toUpperCase: function (str: string) {
-            return str.toUpperCase();
-          },
           nl2br: nl2br,
+          br2nl: br2nl,
           formatDentsLigne: function formatDentsLigne(
             dentsLigne: string | number,
           ) {
@@ -756,7 +753,7 @@ export class FactureServices {
           formatNumber: (n: number) => {
             return Number(n).toFixed(2);
           },
-          br2nl: br2nl,
+          formatDate: (date: string) => checkDay(date, 'DD/MM/YYYY'),
         };
 
         const filePath = path.join(
@@ -778,23 +775,27 @@ export class FactureServices {
             )
           : 0;
         facture.modePaiement;
-        const data = {
-          isGroup: disableColumnByGroup.some((e) => e === identity.org),
-          duplicata,
-          date: facture?.dateFacture,
-          nbr: facture?.noFacture,
-          identPrat: facture?.identPrat,
-          adressePrat: facture?.adressePrat,
-          identPat: facture?.identPat,
-          contactInsee: facture?.contactInsee,
-          details: facture?.details,
-          infosCompl: facture?.infosCompl,
-          detailsLength: facture.details?.length - 1,
-          detailsAmount: detailsAmount.toFixed(2),
-          detailsPrixLigne: detailsPrixLigne.toFixed(2),
-          billSignatureDoctor: facture.billSignatureDoctor,
-          modePaiement: facture.modePaiement,
-        };
+
+        function generateData(details: DetailsRes[]) {
+          return {
+            isGroup: disableColumnByGroup.some((e) => e === identity.org),
+            duplicata,
+            date: checkDay(facture?.dateFacture, 'DD/MM/YYYY'),
+            nbr: facture?.noFacture,
+            identPrat: nl2br(facture?.identPrat),
+            adressePrat: nl2br(facture?.adressePrat),
+            identPat: facture?.identPat,
+            contactInsee: facture?.contactInsee,
+            details: details,
+            infosCompl: facture?.infosCompl,
+            detailsLength: facture.details?.length - 1,
+            detailsAmount: detailsAmount.toFixed(2),
+            detailsPrixLigne: detailsPrixLigne.toFixed(2),
+            billSignatureDoctor: facture.billSignatureDoctor,
+            modePaiement: facture.modePaiement,
+          };
+        }
+
         const options = {
           format: 'A4',
           displayHeaderFooter: true,
@@ -803,11 +804,24 @@ export class FactureServices {
             left: '5mm',
             top: '5mm',
             right: '5mm',
-            bottom: '25mm',
+            bottom: '10mm',
           },
         };
+        let files: PdfTemplateFile[] = [];
+        const pageCount = Math.ceil(facture?.details?.length / 9);
+        if (!pageCount) {
+          files = [{ path: filePath, data: generateData(facture?.details) }];
+        } else {
+          for (let i = 0; i < pageCount; i++) {
+            files.push({
+              data: generateData(facture?.details.splice(0, 9)),
+              path: filePath,
+            });
+          }
+        }
+
         const pdfBuffer = await customCreatePdf({
-          files: [{ path: filePath, data }],
+          files,
           options,
           helpers,
         });

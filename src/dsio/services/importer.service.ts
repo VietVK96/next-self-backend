@@ -207,7 +207,6 @@ export class ImporterService {
         }),
       );
     } catch (error) {
-      console.log(error?.response?.msg || error?.sqlMessage);
       throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
   }
