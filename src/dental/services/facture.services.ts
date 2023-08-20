@@ -25,7 +25,6 @@ import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
-import { EnumDentalEventTaskExceeding } from 'src/entities/dental-event-task.entity';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import {
   EnumPrivilegeTypeType,
@@ -58,11 +57,9 @@ import * as fs from 'fs';
 import * as handlebars from 'handlebars';
 import * as dayjs from 'dayjs';
 import { DEFAULT_LOCALE } from 'src/constants/default';
-import { features } from 'process';
 @Injectable()
 export class FactureServices {
   constructor(
-    private mailService: MailService,
     private mailTransportService: MailTransportService,
     @InjectRepository(BillEntity)
     private billRepository: Repository<BillEntity>,
@@ -76,8 +73,6 @@ export class FactureServices {
     private privilegeRepository: Repository<PrivilegeEntity>,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-    @InjectRepository(UserPreferenceEntity)
-    private userPreferenceRepository: Repository<UserPreferenceEntity>,
     @InjectRepository(ContactEntity)
     private contactRepository: Repository<ContactEntity>,
     @InjectRepository(AddressEntity)
