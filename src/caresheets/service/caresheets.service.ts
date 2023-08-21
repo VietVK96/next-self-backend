@@ -1078,42 +1078,30 @@ export class ActsService {
           break;
 
         case 'lot.number':
-          queryBuilder
-            .select('lot')
-            .innerJoin('caresheet.lots', 'lot')
-            .andWhere('lot.number = LPAD(:lotNumber, 3, 0)', {
-              lotNumber: filterValue,
-            });
+          queryBuilder.andWhere('lot.number = LPAD(:lotNumber, 3, 0)', {
+            lotNumber: filterValue,
+          });
           break;
 
         case 'fseStatus.id':
-          queryBuilder
-            .addSelect('fseStatus')
-            .innerJoin('caresheet.fseStatus', 'fseStatus')
-            .andWhere('fseStatus.id = :fseStatus', {
-              fseStatus: filterValue,
-            });
+          queryBuilder.andWhere('fseStatus.id = :fseStatus', {
+            fseStatus: filterValue,
+          });
           break;
 
         case 'dreStatus.id':
-          queryBuilder
-            .addSelect('dreStatus')
-            .innerJoin('caresheet.dreStatus', 'dreStatus')
-            .andWhere('dreStatus.id = :dreStatus', {
-              dreStatus: filterValue,
-            });
+          queryBuilder.andWhere('dreStatus.id = :dreStatus', {
+            dreStatus: filterValue,
+          });
           break;
 
         case 'patient.fullName':
-          queryBuilder
-            .addSelect('patient')
-            .innerJoin('caresheet.patient', 'patient')
-            .andWhere(
-              'patient.lastName LIKE :patient OR patient.firstName LIKE :patient',
-              {
-                patient: `%${filterValue}%`,
-              },
-            );
+          queryBuilder.andWhere(
+            'patient.lastname LIKE :patient OR patient.firstname LIKE :patient',
+            {
+              patient: `%${filterValue}%`,
+            },
+          );
           break;
       }
     }

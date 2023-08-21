@@ -135,7 +135,7 @@ export class CaresheetsController {
    * 15-84
    */
 
-  @Get('/dowload')
+  @Get('/download')
   @UseGuards(TokenGuard)
   async download(
     @Res() res,
