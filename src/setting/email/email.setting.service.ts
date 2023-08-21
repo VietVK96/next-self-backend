@@ -7,10 +7,10 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { ErrorCode } from 'src/constants/error';
 import { EmailOutgoingServerEntity } from 'src/entities/email-outgoing-server.entity';
 import { SaveEmailDto } from './dto/saveEmail.setting.dto';
-import * as crypto from 'crypto-js';
 import { env } from 'process';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as nodemailer from 'nodemailer';
+import { HaliteEncryptorHelper } from 'src/common/lib/halite/encryptor.helper';
 
 @Injectable()
 export class EmailSettingService {
@@ -51,24 +51,16 @@ export class EmailSettingService {
           where: { emailAccountId: emailId },
         });
 
+      const halite = new HaliteEncryptorHelper(process.env.HALITE_KEY);
+
+      const decryptedUserName = halite.decrypt(emailOutgoingServer.username);
+      emailOutgoingServer.username = decryptedUserName;
       if (withPassword) {
-        const decryptedPassword = crypto.AES.decrypt(
-          emailOutgoingServer.password,
-          env.SECRET_KEY_EMAIL,
-        );
-        emailOutgoingServer.password = decryptedPassword.toString(
-          crypto.enc.Utf8,
-        );
+        const decryptedPassword = halite.decrypt(emailOutgoingServer.password);
+        emailOutgoingServer.password = decryptedPassword;
       } else {
         delete emailOutgoingServer.password;
       }
-      const decryptedUserName = crypto.AES.decrypt(
-        emailOutgoingServer.username,
-        env.SECRET_KEY_EMAIL,
-      );
-      emailOutgoingServer.username = decryptedUserName.toString(
-        crypto.enc.Utf8,
-      );
 
       return {
         ...email,
@@ -121,14 +113,17 @@ export class EmailSettingService {
         payload.outgoingServer.hostname || 'smtp.gmail.com';
       emailOutgoingServer.port = payload.outgoingServer.port || 587;
       emailOutgoingServer.connectionEstablished = 1;
-      emailOutgoingServer.username = crypto.AES.encrypt(
+
+      const halite = new HaliteEncryptorHelper(process.env.HALITE_KEY);
+      emailOutgoingServer.username = halite.encrypt(
         payload.outgoingServer.username,
-        env.SECRET_KEY_EMAIL,
-      ).toString();
-      emailOutgoingServer.password = crypto.AES.encrypt(
-        payload.outgoingServer.password,
-        env.SECRET_KEY_EMAIL,
-      ).toString();
+      );
+      if (!emailId && payload?.outgoingServer?.password) {
+        emailOutgoingServer.password = halite.encrypt(
+          payload.outgoingServer.password,
+        );
+      }
+
       await queryRunner.manager
         .getRepository(EmailOutgoingServerEntity)
         .save(emailOutgoingServer);
