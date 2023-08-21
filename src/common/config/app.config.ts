@@ -22,4 +22,5 @@ export default registerAs('app', () => ({
       process?.env?.WZAGENDA_END_POINT ||
       `https://secure.wz-agenda.net/webservices/3.1/server.php#wzcalendar`,
   },
+  haliteKey: process?.env?.HALITE_KEY || '', // DATABASE_ENCRYPTION_KEY in php
 }));

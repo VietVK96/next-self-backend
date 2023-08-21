@@ -74,6 +74,7 @@ import { SettingModule } from './setting/setting.module';
 import { BordereauxModule } from './bordereaux/bordereaux.module';
 import { TraceabilityModule } from './traceability/traceability.module';
 import { FeedbackModule } from './feedback/feedback.module';
+import { AdvanceSearchModule } from './advanced-search/advanced-search.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -202,6 +203,7 @@ const importsModules = [
   BordereauxModule,
   TraceabilityModule,
   FeedbackModule,
+  AdvanceSearchModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {
