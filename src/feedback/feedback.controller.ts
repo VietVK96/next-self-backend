@@ -1,4 +1,11 @@
-import { Controller, Post, Body, Request, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Request,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { FeedbackService } from './feedback.service';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import {
@@ -14,13 +21,18 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 export class FeedbackController {
   constructor(private readonly feedbackService: FeedbackService) {}
 
+  // File: php/feedback.php 100%
   @Post()
   @UseGuards(TokenGuard)
   create(
-    @Request() request,
     @Body() createFeedbackDto: CreateFeedbackDto,
     @CurrentUser() user: UserIdentity,
+    @Req() req: Request,
   ) {
-    return this.feedbackService.sendFeedback(createFeedbackDto, user, request);
+    return this.feedbackService.sendFeedback(
+      createFeedbackDto,
+      user,
+      req.headers['user-agent'] ?? '',
+    );
   }
 }

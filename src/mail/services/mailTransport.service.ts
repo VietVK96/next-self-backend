@@ -76,7 +76,7 @@ export class MailTransportService {
 
       const mailOptions = {
         from: data?.from,
-        to: 'queesca@gmail.com',
+        to: data?.to,
         subject: data?.subject,
         html: data?.template,
         attachments: data?.attachments,
