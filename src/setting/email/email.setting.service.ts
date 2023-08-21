@@ -7,7 +7,6 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { ErrorCode } from 'src/constants/error';
 import { EmailOutgoingServerEntity } from 'src/entities/email-outgoing-server.entity';
 import { SaveEmailDto } from './dto/saveEmail.setting.dto';
-import { env } from 'process';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as nodemailer from 'nodemailer';
 import { HaliteEncryptorHelper } from 'src/common/lib/halite/encryptor.helper';
@@ -54,12 +53,14 @@ export class EmailSettingService {
       const halite = new HaliteEncryptorHelper(process.env.HALITE_KEY);
 
       const decryptedUserName = halite.decrypt(emailOutgoingServer.username);
-      emailOutgoingServer.username = decryptedUserName;
+      if (emailOutgoingServer?.username)
+        emailOutgoingServer.username = decryptedUserName;
       if (withPassword) {
         const decryptedPassword = halite.decrypt(emailOutgoingServer.password);
-        emailOutgoingServer.password = decryptedPassword;
+        if (emailOutgoingServer?.password)
+          emailOutgoingServer.password = decryptedPassword;
       } else {
-        delete emailOutgoingServer.password;
+        delete emailOutgoingServer?.password;
       }
 
       return {
