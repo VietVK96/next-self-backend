@@ -481,19 +481,6 @@ export class QuotationMutualServices {
           };
         }
       }
-      const quote = await this.dentalQuotationRepository.findOne({
-        where: { id },
-        relations: {
-          attachments: true,
-        },
-      });
-      // Insertion des pièces jointes au PDF du devis.
-      // if (quote && quote?.attachments) {
-      //   quote?.attachments.map(async (attachment) => {
-      //     const mail = await this.mailService.find(attachment?.id);
-      //     content += await this.mailService.pdf(mail, { preview: true });
-      //   });
-      // }
 
       const filePath = path.join(
         process.cwd(),

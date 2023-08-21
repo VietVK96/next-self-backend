@@ -611,7 +611,6 @@ export class MailService {
 
   // application/Services/Mail.php => 429 -> 445
   async transform(inputs: any, context: any, signature?: any) {
-    console.log('transform', inputs);
     inputs.body = await this.render(
       inputs?.body.replace(/[|].*?}/, '}'),
       context,
@@ -1519,7 +1518,7 @@ export class MailService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const res = await queryRunner.query(
+      await queryRunner.query(
         `
         UPDATE T_LETTERS_LET
         SET header_id = ?,
@@ -1640,8 +1639,6 @@ export class MailService {
       await page.setContent(`<div style="padding: 30px;">${htmlContent}</div>`);
 
       const pdfBuffer = await page.pdf();
-      console.log('pdfBuffer', pdfBuffer);
-
       // @TODO
       // Mail::pdf($mailConverted, array('filename' => $mailDirname));
 
