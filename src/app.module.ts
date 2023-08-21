@@ -227,9 +227,6 @@ if (process.env.LOGSTACK_ENABLE === 'true') {
     }),
   );
 }
-
-console.log(join(__dirname, '..', 'resources'));
-
 @Module({
   imports: importsModules,
 })

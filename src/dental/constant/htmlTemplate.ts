@@ -17,6 +17,9 @@ export const facturePdfFooter = (show: boolean) => {
   `;
 };
 
+export const facturePdfFooter1 = () =>
+  `<div style='width:100%; text-align: right; font-size:5pt;  display:flex; justify-content: flex-end;'><i>Page <span class="pageNumber"></span>/<span class="totalPages" style="margin-right:7mm"></span></i></div>`;
+
 export const QuotationMutualPdfFooter = (reference: string) => {
   return `
   <div style="width:100%; display:flex; gap: 5px;justify-content: space-between;font-size: 10px; margin-right:5mm; margin-left:5mm">
