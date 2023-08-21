@@ -627,10 +627,6 @@ export class TaskService {
         }
       }
     } catch (error) {
-      console.log(
-        '🚀 ~ file: task.service.ts:632 ~ TaskService ~ updateEventTaskPatch ~ error:',
-        error,
-      );
       throw new CBadRequestException(ErrorCode.CANNOT_UPDATE_EVENT);
     }
   }

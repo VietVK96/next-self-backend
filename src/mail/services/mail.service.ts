@@ -2,7 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as fs from 'fs';
 import * as handlebars from 'handlebars';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import * as sharp from 'sharp';
 import * as xpath from 'xpath';
 import { format } from 'date-fns';
@@ -259,25 +259,26 @@ export class MailService {
   }
 
   // php/mail/store.php
-  async duplicate(payload: CreateUpdateMailDto): Promise<CreateUpdateMailRes> {
+  async duplicate(
+    payload: CreateUpdateMailDto,
+    doctorId?: number,
+  ): Promise<CreateUpdateMailRes> {
     const qr = await this.lettersRepo.query(
       `INSERT INTO T_LETTERS_LET
       ( USR_ID, header_id, footer_id, LET_TITLE, LET_MSG, footer_content, 
-        footer_height, LET_TYPE, height, favorite, created_at, updated_at) 
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+        footer_height, LET_TYPE, height, favorite) 
+        VALUES (?,?,?,?,?,?,?,?,?,?)`,
       [
-        payload?.doctor === null ? null : payload?.doctor,
+        doctorId ? doctorId : null,
         payload?.header === null ? null : payload?.header,
         payload?.footer === null ? null : payload?.footer,
         payload?.title,
         payload?.body,
         payload?.footer_content,
-        payload?.footer_height,
+        payload?.footer_height || 20,
         payload?.type,
-        payload?.height,
-        payload?.favorite,
-        payload?.created_at,
-        payload?.updated_at,
+        payload?.height || 20,
+        payload?.favorite || 0,
       ],
     );
     const mail = {
@@ -318,7 +319,7 @@ export class MailService {
       [id],
     );
 
-    if (mails.lenght === 0) {
+    if (mails.length === 0) {
       throw new CBadRequestException(`Le champ ${id} est invalide.`);
     }
 
@@ -616,14 +617,14 @@ export class MailService {
       signature,
     );
     if (inputs?.header) {
-      inputs.header.body = this.render(
+      inputs.header.body = await this.render(
         inputs?.header.body.replace(/[|].*?}/, '}'),
         context,
         signature,
       );
     }
     if (inputs?.footer) {
-      inputs.footer.body = this.render(
+      inputs.footer.body = await this.render(
         inputs?.footer?.body.replace(/[|].*?}/, '}'),
         context,
         {},
@@ -1517,7 +1518,7 @@ export class MailService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const res = await queryRunner.query(
+      await queryRunner.query(
         `
         UPDATE T_LETTERS_LET
         SET header_id = ?,
@@ -1638,8 +1639,6 @@ export class MailService {
       await page.setContent(`<div style="padding: 30px;">${htmlContent}</div>`);
 
       const pdfBuffer = await page.pdf();
-      console.log('pdfBuffer', pdfBuffer);
-
       // @TODO
       // Mail::pdf($mailConverted, array('filename' => $mailDirname));
 

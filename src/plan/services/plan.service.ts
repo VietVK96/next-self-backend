@@ -653,10 +653,10 @@ export class PlanService {
 
             let teeth = dental?.teeth;
             if (Array.isArray(teeth)) {
-              teeth = teeth.join();
+              teeth = teeth.join(',');
             }
 
-            teeth = teeth.trim() === '' ? teeth.trim() : null;
+            teeth = teeth.trim() ? teeth.trim() : null;
             if (dental?.code === 'HBQK002' && teeth.length === 0) {
               teeth = '00';
             }
@@ -666,7 +666,7 @@ export class PlanService {
               dental?.ccam_id ?? null,
               dental?.ngap_key_id ?? null,
               dental?.dental_material_id ?? null,
-              teeth.length === 0 ? null : teeth,
+              teeth?.length === 0 ? null : teeth,
               dental?.type,
               dental?.coef,
               this._empty(dental?.exceeding) ? null : dental?.exceeding,
@@ -757,7 +757,7 @@ export class PlanService {
       if (queryRunner.isTransactionActive) {
         queryRunner.rollbackTransaction();
       }
-      throw error;
+      throw new CBadRequestException(error);
     }
   }
   /**
@@ -1243,7 +1243,7 @@ export class PlanService {
         throw new BadRequestException('unknown action');
       }
     } catch (error) {
-      return error;
+      throw new CBadRequestException(error);
     }
   }
 }

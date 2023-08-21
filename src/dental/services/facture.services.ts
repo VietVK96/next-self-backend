@@ -25,24 +25,15 @@ import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
-import {
-  DentalEventTaskEntity,
-  EnumDentalEventTaskExceeding,
-} from 'src/entities/dental-event-task.entity';
-import { EventEntity } from 'src/entities/event.entity';
-import { NgapKeyEntity } from 'src/entities/ngapKey.entity';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import {
   EnumPrivilegeTypeType,
   PrivilegeEntity,
 } from 'src/entities/privilege.entity';
 import { UserEntity } from 'src/entities/user.entity';
-import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { StringHelper } from 'src/common/util/string-helper';
 import { ContactEntity } from 'src/entities/contact.entity';
-import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { AddressEntity } from 'src/entities/address.entity';
-import { createPdf } from '@saemhco/nestjs-html-pdf';
 import * as path from 'path';
 import { checkDay } from 'src/common/util/day';
 import { checkBoolean, checkId, checkNumber } from 'src/common/util/number';
@@ -52,23 +43,20 @@ import {
   DetailsRes,
   InitFactureRes,
 } from '../res/facture.res';
-import { customCreatePdf } from 'src/common/util/pdf';
-import { facturePdfFooter } from '../constant/htmlTemplate';
-import { br2nl } from 'src/common/util/string';
+import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
+import { facturePdfFooter, facturePdfFooter1 } from '../constant/htmlTemplate';
+import { br2nl, nl2br } from 'src/common/util/string';
 import { validateEmail } from 'src/common/util/string';
-import { MailService } from 'src/mail/services/mail.service';
 import { format, getDayOfYear } from 'date-fns';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import * as fs from 'fs';
 import * as handlebars from 'handlebars';
-import { isNull } from 'util';
-import { ExceedingEnum } from 'src/constants/act';
-
+import * as dayjs from 'dayjs';
+import { DEFAULT_LOCALE } from 'src/constants/default';
 @Injectable()
 export class FactureServices {
   constructor(
-    private mailService: MailService,
     private mailTransportService: MailTransportService,
     @InjectRepository(BillEntity)
     private billRepository: Repository<BillEntity>,
@@ -78,22 +66,12 @@ export class FactureServices {
     private medicalHeaderRepository: Repository<MedicalHeaderEntity>,
     @InjectRepository(EventTaskEntity)
     private eventTaskRepository: Repository<EventTaskEntity>,
-    @InjectRepository(DentalEventTaskEntity)
-    private dentalEventTaskRepository: Repository<DentalEventTaskEntity>, //dental
-    @InjectRepository(EventEntity)
-    private eventRepository: Repository<EventEntity>, //event
-    @InjectRepository(NgapKeyEntity)
-    private ngapKeyRepository: Repository<NgapKeyEntity>, //ngap_key
     @InjectRepository(PrivilegeEntity)
     private privilegeRepository: Repository<PrivilegeEntity>,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-    @InjectRepository(UserPreferenceEntity)
-    private userPreferenceRepository: Repository<UserPreferenceEntity>,
     @InjectRepository(ContactEntity)
     private contactRepository: Repository<ContactEntity>,
-    @InjectRepository(DentalQuotationEntity)
-    private dentalQuotationRepository: Repository<DentalQuotationEntity>,
     @InjectRepository(AddressEntity)
     private addressRepository: Repository<AddressEntity>,
     @InjectRepository(ContactNoteEntity)
@@ -104,13 +82,13 @@ export class FactureServices {
     const id_facture = checkId(payload?.id_facture);
     const id_facture_ligne = checkId(payload?.id_facture_ligne);
     const user_id = checkId(payload?.user_id);
-    const patient_id = checkId(payload?.patient_id);
     switch (payload.operation) {
       case 'enregistrer': {
         try {
           const idBill = await this.billRepository.findOne({
             where: { id: id_facture || 0 },
           });
+
           if (idBill) {
             await this.billRepository.save({
               id: id_facture,
@@ -120,17 +98,20 @@ export class FactureServices {
               identPat: payload?.identPat,
               modePaiement: payload?.modePaiement,
               infosCompl: payload?.infosCompl,
-              amount: payload?.amount,
-              secuAmount: payload?.secuAmount,
+              amount: payload?.amount || 0,
+              secuAmount: payload?.secuAmount || 0,
               signatureDoctor: payload?.signatureDoctor,
-              template: payload?.template,
+              template: payload?.template || 1,
+              delete: 0,
             });
             return 'Facture enregistrée correctement';
           } else {
-            return 'Bill does not exist';
+            throw new CBadRequestException('Bill does not exist');
           }
         } catch {
-          return 'Erreur -3 : Problème durant la sauvegarde de la facture ... ';
+          throw new CBadRequestException(
+            'Erreur -3 : Problème durant la sauvegarde de la facture ... ',
+          );
         }
       }
 
@@ -247,13 +228,11 @@ export class FactureServices {
             let date = '';
             let i = 0;
             const result = eventTasks.reduce((result, eventTask) => {
-              let amoAmount = checkNumber(eventTask?.dental?.secuAmount);
               let cotation = '';
 
               switch (eventTask?.dental?.type) {
                 case 'CCAM':
                   cotation = eventTask?.dental?.ccamCode;
-                  amoAmount = amoAmount * checkNumber(eventTask?.dental?.coef);
                   break;
 
                 case 'NGAP':
@@ -268,12 +247,6 @@ export class FactureServices {
                 default:
                   cotation = 'NPC';
                   break;
-              }
-
-              if (
-                eventTask?.dental?.exceeding === EnumDentalEventTaskExceeding.N
-              ) {
-                amoAmount = 0;
               }
 
               const eTask: AjaxEventTaskRes = {
@@ -314,10 +287,6 @@ export class FactureServices {
 
             return result;
           } catch (error) {
-            console.log(
-              '🚀 ~ file: facture.services.ts:342 ~ FactureServices ~ requestAjax ~ error:',
-              error,
-            );
             throw new CBadRequestException(ErrorCode.NOT_FOUND);
           }
         }
@@ -395,29 +364,15 @@ export class FactureServices {
     const withs = userId;
     const userID = identity?.id as number;
     const groupID = identity?.org;
-    // const disableColumnByGroup = [158, 181];
-    // const colonneDate = true;
     let userIds: number[];
 
     const id_facture = 0;
     const id_societe = 0;
     const id_user = userID;
-    // const medical_entete_id = 0;
     const id_devis = 0;
-    const id_contact = 0;
     const dateFacture = new Date().toISOString().split('T')[0];
-    // const noFacture: string;
-    // const details: string[];
     const infosCompl = '';
     const modePaiement = 'Non Payee';
-
-    // let billSignatureDoctor = '';
-    // let billAmount = 0;
-    // let billSecuAmount = 0;
-    // let billTemplate = 1;
-    // let contactFullname = '';
-    // let contactBirthday = '';
-    // let contactInsee = '';
 
     if (withs !== null) {
       const type = EnumPrivilegeTypeType.NONE;
@@ -446,13 +401,6 @@ export class FactureServices {
       );
     }
 
-    const userSignature = user?.signature;
-    const userPreferenceEntity = await this.userPreferenceRepository.findOne({
-      where: { usrId: userID },
-    });
-    const userPreferenceBillDisplayTooltip =
-      userPreferenceEntity?.billDisplayTooltip;
-    const userPreferenceBillTemplate = userPreferenceEntity?.billTemplate;
     let identPrat = user?.lastname + user?.firstname + '\nChirurgien Dentiste';
     let adressePrat = '';
     let titreFacture = encodeURIComponent(
@@ -478,7 +426,6 @@ export class FactureServices {
       userId: userID,
     });
     if (medicalHeader) {
-      const medicalEnteteId = medicalHeader?.id;
       identPrat =
         medicalHeader?.identPrat !== null
           ? StringHelper.br2nl(medicalHeader?.identPrat, '')
@@ -511,7 +458,7 @@ export class FactureServices {
           where: { id: contactId, organizationId: groupID },
         });
         const addressEntity = contact?.adrId;
-        identPat = contact?.lastname + '' + contact?.firstname;
+        identPat = contact?.lastname + ' ' + contact?.firstname;
         const address = await this.addressRepository.findOne({
           where: { id: addressEntity || 0 },
         });
@@ -610,13 +557,13 @@ export class FactureServices {
       }
       const bill = await this.billRepository.save({
         nbr: noFacture,
-        creationDate: dateFacture,
+        date: dateFacture,
         identPrat: identPrat,
-        adressePrat: adressePrat,
+        addrPrat: adressePrat,
         name: titreFacture,
         identContact: identPat,
-        payload: modePaiement,
-        infosCompl: infosCompl,
+        payment: modePaiement,
+        info: infosCompl,
         usrId: id_user,
         conId: contactId,
         dqoId: id_devis !== 0 ? id_devis : null,
@@ -636,6 +583,7 @@ export class FactureServices {
         where: { id: id || 0, delete: 0 },
         relations: ['user', 'patient'],
       });
+
       if (bill) {
         const res: InitFactureRes = {
           noFacture: bill?.nbr || '',
@@ -652,17 +600,19 @@ export class FactureServices {
           billTemplate: bill?.template || 1,
           userNumeroFacturant: bill?.user?.numeroFacturant || '',
           contactFullname:
-            bill?.contact?.lastname + ' ' + bill?.contact?.firstname,
-          contactBirthday: checkDay(bill?.contact?.birthday),
-          contactInsee: bill?.contact?.insee + '' + bill?.contact?.inseeKey,
+            bill?.patient?.lastname ||
+            '' + ' ' + bill?.patient?.firstname ||
+            '',
+          contactBirthday: checkDay(bill?.patient?.birthday),
+          contactInsee:
+            (bill?.patient?.insee || '') +
+            ' ' +
+            (bill?.patient?.inseeKey || ''),
+          details: [],
         };
 
-        // if (!pdf && bill.lock) {
-        //   window.location.href = 'facture_pdf.php?id_facture=' + id_facture;
-        //   return;
-        // }
         const billLines = await this.billLineRepository.find({
-          where: { id: id || 0 },
+          where: { bilId: id || 0 },
           order: { pos: 'ASC' },
         });
 
@@ -674,12 +624,12 @@ export class FactureServices {
             dentsLigne: billLine?.teeth || '',
             descriptionLigne: billLine?.msg,
             prixLigne: billLine?.amount || 0,
-            name: billLine?.msg.replace(/^[^-]*-\s?/, ''),
+            name: billLine?.msg?.replace(/^[^-]*-\s?/, ''),
             cotation: billLine?.cotation,
             secuAmount: billLine?.secuAmount,
             materials: billLine?.materials,
           };
-          res.details.push(dentail);
+          res?.details?.push(dentail);
         }
         return res;
       } else {
@@ -687,7 +637,7 @@ export class FactureServices {
           '-3003 : Problème durant le rapatriement des informations de la facture ...',
         );
       }
-    } catch {
+    } catch (e) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
   }
@@ -704,43 +654,37 @@ export class FactureServices {
         },
       });
       const disableColumnByGroup = [158, 181];
-      const modesPaiements = {
-        non_payee: 'Non Payée',
-        carte: 'Carte',
-        espece: 'Espèce',
-        cheque: 'Chèque',
-        virement: 'Virement',
-        prelevement: 'Prélèvement',
-        autre: 'Autre',
-      };
       if (checkId) {
         await this.billRepository.update(id, { lock: 1 } as BillEntity);
       }
-
       const facture = await this.initFacture(id);
+
       if (facture.billTemplate === 2) {
         const checkModePaiement =
           ['virement', 'prelevement', 'autre']?.findIndex(
             (e) => e === facture?.modePaiement,
           ) != -1;
-        const data = {
-          duplicata,
-          date: facture?.dateFacture,
-          nbr: facture?.noFacture,
-          identPrat: facture?.identPrat,
-          adressePrat: facture?.adressePrat,
-          identPat: facture?.identPat,
-          billAmount: facture?.billAmount,
-          billSecuAmount: facture?.billSecuAmount,
-          userNumeroFacturant: facture?.userNumeroFacturant,
-          contactFullname: facture?.contactFullname,
-          contactBirthday: facture?.contactBirthday,
-          contactInsee: facture?.contactInsee,
-          prestations: facture.details,
-          modePaiement: facture.modePaiement,
-          signature: facture.billSignatureDoctor,
-          checkModePaiement,
-        };
+        function generateData(details: DetailsRes[]) {
+          return {
+            duplicata,
+            date: checkDay(facture?.dateFacture, 'DD/MM/YYYY'),
+            nbr: facture?.noFacture,
+            identPrat: nl2br(facture?.identPrat),
+            adressePrat: nl2br(facture?.adressePrat),
+            identPat: facture?.identPat,
+            billAmount: facture?.billAmount,
+            billSecuAmount: facture?.billSecuAmount,
+            userNumeroFacturant: facture?.userNumeroFacturant,
+            contactFullname: facture?.contactFullname,
+            contactBirthday: facture?.contactBirthday,
+            contactInsee: facture.contactInsee,
+            prestations: details,
+            modePaiement: facture.modePaiement,
+            signature: facture.billSignatureDoctor,
+            checkModePaiement,
+          };
+        }
+
         const filePath = path.join(
           process.cwd(),
           'templates/pdf/invoice',
@@ -749,6 +693,7 @@ export class FactureServices {
         const options = {
           format: 'A4',
           displayHeaderFooter: true,
+          footerTemplate: facturePdfFooter1(),
           margin: {
             left: '5mm',
             top: '5mm',
@@ -756,14 +701,34 @@ export class FactureServices {
             bottom: '5mm',
           },
         };
-        const pdf = await createPdf(filePath, options, data);
-        return pdf;
+        let files: PdfTemplateFile[] = [];
+        facture.details = facture?.details?.filter(
+          (e) => e.typeLigne === 'operation',
+        );
+        const pageCount = Math.ceil(facture?.details?.length / 9);
+        if (!pageCount) {
+          files = [{ path: filePath, data: generateData(facture?.details) }];
+        } else {
+          for (let i = 0; i < pageCount; i++) {
+            files.push({
+              data: generateData(facture?.details.splice(0, 9)),
+              path: filePath,
+            });
+          }
+        }
+        const helpers = {
+          formatDate: (date: string) => checkDay(date, 'DD/MM/YYYY'),
+        };
+        const pdfBuffer = await customCreatePdf({
+          files,
+          options,
+          helpers,
+        });
+        return pdfBuffer;
       } else {
         const helpers = {
-          toUpperCase: function (str: string) {
-            return str.toUpperCase();
-          },
-          nl2br: br2nl,
+          nl2br: nl2br,
+          br2nl: br2nl,
           formatDentsLigne: function formatDentsLigne(
             dentsLigne: string | number,
           ) {
@@ -777,7 +742,10 @@ export class FactureServices {
             }
             return dentsLigneChunk.join('\n');
           },
-          formatNumber: (n: number) => n.toFixed(2),
+          formatNumber: (n: number) => {
+            return Number(n).toFixed(2);
+          },
+          formatDate: (date: string) => checkDay(date, 'DD/MM/YYYY'),
         };
 
         const filePath = path.join(
@@ -787,33 +755,39 @@ export class FactureServices {
         );
         const detailsAmount = facture?.details
           ? facture?.details.reduce(
-              (accumulator, item) => accumulator + item?.secuAmount,
+              (accumulator, item) =>
+                accumulator + checkNumber(item?.secuAmount),
               0,
             )
           : 0;
         const detailsPrixLigne = facture?.details
           ? facture?.details.reduce(
-              (prixLigne, item) => prixLigne + item?.prixLigne,
+              (prixLigne, item) => prixLigne + checkNumber(item?.prixLigne),
               0,
             )
           : 0;
-        const data = {
-          isGroup: disableColumnByGroup.some((e) => e === identity.org),
-          duplicata,
-          date: facture?.dateFacture,
-          nbr: facture?.noFacture,
-          identPrat: facture?.identPrat,
-          adressePrat: facture?.adressePrat,
-          identPat: facture?.identPat,
-          contactInsee: facture?.contactInsee,
-          details: facture?.details,
-          infosCompl: facture?.infosCompl,
-          detailsLength: facture.details?.length - 1,
-          detailsAmount: detailsAmount.toFixed(2),
-          detailsPrixLigne: detailsPrixLigne.toFixed(2),
-          billSignatureDoctor: facture.billSignatureDoctor,
-          modesPaiements,
-        };
+        facture.modePaiement;
+
+        function generateData(details: DetailsRes[]) {
+          return {
+            isGroup: disableColumnByGroup.some((e) => e === identity.org),
+            duplicata,
+            date: checkDay(facture?.dateFacture, 'DD/MM/YYYY'),
+            nbr: facture?.noFacture,
+            identPrat: nl2br(facture?.identPrat),
+            adressePrat: nl2br(facture?.adressePrat),
+            identPat: facture?.identPat,
+            contactInsee: facture?.contactInsee,
+            details: details,
+            infosCompl: facture?.infosCompl,
+            detailsLength: facture.details?.length - 1,
+            detailsAmount: detailsAmount.toFixed(2),
+            detailsPrixLigne: detailsPrixLigne.toFixed(2),
+            billSignatureDoctor: facture.billSignatureDoctor,
+            modePaiement: facture.modePaiement,
+          };
+        }
+
         const options = {
           format: 'A4',
           displayHeaderFooter: true,
@@ -822,11 +796,24 @@ export class FactureServices {
             left: '5mm',
             top: '5mm',
             right: '5mm',
-            bottom: '5mm',
+            bottom: '10mm',
           },
         };
+        let files: PdfTemplateFile[] = [];
+        const pageCount = Math.ceil(facture?.details?.length / 9);
+        if (!pageCount) {
+          files = [{ path: filePath, data: generateData(facture?.details) }];
+        } else {
+          for (let i = 0; i < pageCount; i++) {
+            files.push({
+              data: generateData(facture?.details.splice(0, 9)),
+              path: filePath,
+            });
+          }
+        }
+
         const pdfBuffer = await customCreatePdf({
-          files: [{ path: filePath, data }],
+          files,
           options,
           helpers,
         });
@@ -884,21 +871,34 @@ export class FactureServices {
         path.join(__dirname, '../../../templates/mail/facture/invoice.hbs'),
         'utf-8',
       );
+      handlebars.registerHelper({
+        isset: (v1: any) => {
+          if (Number(v1)) return true;
+          return v1 ? true : false;
+        },
+      });
       const template = handlebars.compile(emailTemplate);
+
       const fullName = [invoice?.user?.lastname, invoice?.user?.firstname].join(
         ' ',
       );
-      const mailBody = template({ fullName, invoice, homePhoneNumber });
+      const date = dayjs(invoice?.date)
+        .locale(DEFAULT_LOCALE)
+        .format('DD MMM YYYY');
+      const mailBody = template({
+        fullName,
+        invoice,
+        homePhoneNumber,
+        date,
+      });
 
       await this.mailTransportService.sendEmail(identity.id, {
         from: invoice?.user?.email,
         to: invoice?.patient?.email,
-        subject: `Facture du ${format(
-          new Date(invoice?.date),
-          'dd/MM/yyyy',
-        )} de Dr ${[invoice?.user?.lastname, invoice?.user?.firstname].join(
-          ' ',
-        )} pour ${[
+        subject: `Facture du ${date} de Dr ${[
+          invoice?.user?.lastname,
+          invoice?.user?.firstname,
+        ].join(' ')} pour ${[
           invoice?.patient?.lastname,
           invoice?.patient?.firstname,
         ].join(' ')}`,
@@ -921,7 +921,6 @@ export class FactureServices {
           },
         ],
       });
-
       await this.contactNoteRepository.save({
         conId: contactId,
         message: `Envoi par email de la facture du ${billDateAsString} de ${userLastname} ${userFirstname}`,

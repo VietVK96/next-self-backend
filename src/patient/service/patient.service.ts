@@ -1,11 +1,29 @@
 import { Injectable, Logger, NotAcceptableException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { endOfDay, format } from 'date-fns';
 import { Workbook } from 'exceljs';
 import { Response } from 'express';
 import { Parser } from 'json2csv';
+import { AddressService } from 'src/address/service/address.service';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { ErrorCode } from 'src/constants/error';
+import { ContactService } from 'src/contact/services/contact.service';
+import { AmcEntity } from 'src/entities/amc.entity';
+import { AmoEntity } from 'src/entities/amo.entity';
+import { ContactUserEntity } from 'src/entities/contact-user.entity';
+import { FseEntity } from 'src/entities/fse.entity';
+import { GenderEntity } from 'src/entities/gender.entity';
+import {
+  EnumLibraryActNomenclature,
+  LibraryActEntity,
+} from 'src/entities/library-act.entity';
+import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
+import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
+import { UploadEntity } from 'src/entities/upload.entity';
 import { UserEntity } from 'src/entities/user.entity';
+import { PermissionService } from 'src/user/services/permission.service';
 import { DataSource, Repository } from 'typeorm';
 import {
   addressFormatter,
@@ -15,22 +33,12 @@ import {
 import { AddressEntity } from '../../entities/address.entity';
 import { ContactEntity } from '../../entities/contact.entity';
 import { PhoneEntity } from '../../entities/phone.entity';
-import { PatientExportDto, PatientThirdPartyDto } from '../dto/index.dto';
-import { GenderEntity } from 'src/entities/gender.entity';
-import { AddressService } from 'src/address/service/address.service';
-import { ContactService } from 'src/contact/services/contact.service';
-import { UploadEntity } from 'src/entities/upload.entity';
-import { ContactUserEntity } from 'src/entities/contact-user.entity';
-import { FseEntity } from 'src/entities/fse.entity';
-import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
-import { AmoEntity } from 'src/entities/amo.entity';
-import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
-import { AmcEntity } from 'src/entities/amc.entity';
-import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
+import {
+  PatientActsDependenciesDto,
+  PatientExportDto,
+  PatientThirdPartyDto,
+} from '../dto/index.dto';
 import { PatientThirdPartyRes } from '../reponse/index.res';
-import { format } from 'date-fns';
-import { PermissionService } from 'src/user/services/permission.service';
-import { UserIdentity } from 'src/common/decorator/auth.decorator';
 
 const TypeFile = {
   EXCEL: 'xlsx',
@@ -60,6 +68,8 @@ export class PatientService {
     private amoRepository: Repository<AmoEntity>,
     @InjectRepository(AmcEntity)
     private amcRepository: Repository<AmcEntity>,
+    @InjectRepository(LibraryActEntity)
+    private libraryActRepository: Repository<LibraryActEntity>,
   ) {}
 
   async getExportQuery(res: Response, request: PatientExportDto): Promise<any> {
@@ -610,5 +620,366 @@ export class PatientService {
       ORDER BY
         T_EVENT_EVT.EVT_START
       LIMIT 1`);
+  }
+
+  async getAtcsDependencies(request: PatientActsDependenciesDto) {
+    const {
+      library_act_id,
+      patient_id,
+      quote_id,
+      status,
+      teethNumbers,
+      grid = 13,
+      check_parent = true,
+    } = request;
+    const patient = await this.patientRepository.findOne({
+      where: { id: patient_id },
+      relations: {
+        amcs: true,
+        medical: true,
+      },
+    });
+    const currentDate = endOfDay(new Date());
+    const libraryAct = await this.libraryActRepository.findOne({
+      where: { id: library_act_id },
+      relations: {
+        quantities: {
+          ccam: {
+            unitPrices: true,
+            material: true,
+            family: {
+              panier: true,
+            },
+            dependencies: true,
+          },
+        },
+      },
+    });
+    const libraryActQuantities = libraryAct.quantities;
+    const libraryActQuantitiesFiltered = libraryActQuantities?.filter(
+      (quantity) => quantity.numberOfTeeth === teethNumbers?.length,
+    );
+    if (libraryAct?.nomenclature === EnumLibraryActNomenclature.NGAP) {
+      if (
+        libraryActQuantities?.length === 1 ||
+        libraryActQuantitiesFiltered.length === 0
+      ) {
+        return libraryActQuantities[0]?.id;
+      } else if (libraryActQuantitiesFiltered?.length === 1) {
+        return libraryActQuantitiesFiltered[0]?.id;
+      } else {
+        return {
+          multiple_choice: true,
+          items: [
+            {
+              label: 'Actes à choisir',
+              values: libraryActQuantitiesFiltered?.map((quantity) => ({
+                id: quantity?.id,
+                amount: quantity?.amount,
+                label: quantity?.label,
+              })),
+            },
+          ],
+        };
+      }
+    }
+
+    if (libraryActQuantities?.length === 1) {
+      const libraryActQuantity = libraryActQuantities[0];
+      const ccamUnitPrice = libraryActQuantity?.ccam?.unitPrices?.find(
+        (unitPrices) => {
+          return (
+            unitPrices.grid === grid &&
+            new Date(unitPrices?.createdOn)?.getTime() <= currentDate?.getTime()
+          );
+        },
+      );
+      if (ccamUnitPrice && ccamUnitPrice?.unitPrice === 0) {
+        return {
+          id: libraryActQuantity?.id,
+          dental_material_id: libraryActQuantity?.ccam?.material?.id,
+          ccam_panier_code: libraryActQuantity?.ccam?.family?.panier?.code,
+        };
+      }
+    }
+
+    if (libraryActQuantitiesFiltered?.length === 0) {
+      if (
+        libraryActQuantities?.length === 1 &&
+        libraryActQuantities[0]?.numberOfTeeth === 0
+      ) {
+        const libraryActQuantity = libraryActQuantities[0];
+        return {
+          id: libraryActQuantity.id,
+          dental_material_id: libraryActQuantity?.ccam?.material?.id,
+          teeth_numbers: [],
+          ccam_panier_code: libraryActQuantity?.ccam?.family?.panier?.code,
+        };
+      }
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND);
+    }
+
+    if (libraryActQuantitiesFiltered?.length === 1) {
+      const libraryActQuantity = libraryActQuantitiesFiltered[0];
+      return {
+        id: libraryActQuantity.id,
+        dental_material_id: libraryActQuantity?.ccam?.material?.id,
+        ccam_panier_code: libraryActQuantity?.ccam?.family?.panier?.code,
+      };
+    }
+
+    const libraryActQuantitiesFilteredByForbiddenTeeth =
+      libraryActQuantitiesFiltered?.filter((quantity) => {
+        /**todo */
+        return !teethNumbers?.some((teeth) =>
+          quantity?.ccam?.forbiddenTeeth?.includes(`${teeth}`),
+        );
+      });
+
+    if (libraryActQuantitiesFilteredByForbiddenTeeth.length === 0) {
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND);
+    }
+
+    if (libraryActQuantitiesFilteredByForbiddenTeeth.length === 1) {
+      const libraryActQuantity =
+        libraryActQuantitiesFilteredByForbiddenTeeth[0];
+      return {
+        id: libraryActQuantity.id,
+        dental_material_id: libraryActQuantity?.ccam?.material?.id,
+        ccam_panier_code: libraryActQuantity?.ccam?.family?.panier?.code,
+      };
+    }
+
+    if (check_parent) {
+      const libraryActQuantityIds =
+        libraryActQuantitiesFilteredByForbiddenTeeth?.map((laq) => laq?.id);
+      const inQuery = libraryActQuantityIds?.join(',');
+      const conditions: string[] = [];
+      if (teethNumbers?.length) {
+        conditions.push(`T_DENTAL_EVENT_TASK_DET.DET_TOOTH REGEXP ?`);
+      } else {
+        conditions.push('T_DENTAL_EVENT_TASK_DET.DET_TOOTH IS NULL');
+      }
+
+      if (quote_id) {
+        conditions.push('T_PLAN_PLF.PLF_ID = ?');
+      } else if (status === 0) {
+        conditions.push(
+          '(T_PLAN_PLF.PLF_ID IS NULL OR T_PLAN_PLF.PLF_ACCEPTED_ON IS NOT NULL)',
+        );
+      } else if (status === 1) {
+        conditions.push('T_EVENT_TASK_ETK.ETK_STATE > 0');
+      }
+
+      const query = `
+      SELECT
+      id,
+      parent_id,
+      dental_material_id,
+      dental_material_equivalent,
+      ccam_panier_code
+      FROM (
+          SELECT
+              library_act_quantity.id,
+              T_DENTAL_EVENT_TASK_DET.ETK_ID AS parent_id,
+              T_DENTAL_EVENT_TASK_DET.dental_material_id,
+              IFNULL(T_DENTAL_EVENT_TASK_DET.dental_material_id = ccam.dental_material_id, 0) AS dental_material_equivalent,
+              T_EVENT_TASK_ETK.ETK_DATE,
+              T_EVENT_TASK_ETK.created_at,
+              ccam_panier.code AS ccam_panier_code
+          FROM library_act_quantity
+          JOIN ccam
+          JOIN ccam_dependence
+          JOIN ccam AS ccam2
+          JOIN ccam_family ON ccam2.ccam_family_id = ccam_family.id
+          LEFT JOIN ccam_panier ON ccam_family.ccam_panier_id = ccam_panier.id
+          JOIN T_DENTAL_EVENT_TASK_DET
+          JOIN T_EVENT_TASK_ETK
+          LEFT OUTER JOIN T_EVENT_EVT ON T_EVENT_EVT.EVT_ID = T_EVENT_TASK_ETK.EVT_ID
+          LEFT OUTER JOIN T_PLAN_EVENT_PLV ON T_PLAN_EVENT_PLV.EVT_ID = T_EVENT_EVT.EVT_ID
+          LEFT OUTER JOIN T_PLAN_PLF ON T_PLAN_PLF.PLF_ID = T_PLAN_EVENT_PLV.PLF_ID
+          WHERE library_act_quantity.id IN (${inQuery})
+            AND library_act_quantity.ccam_id = ccam.id
+            AND ccam.id = ccam_dependence.ccam_parent_id
+            AND ccam_dependence.ccam_child_id = ccam2.id
+            AND ccam2.id = T_DENTAL_EVENT_TASK_DET.ccam_id
+            AND T_DENTAL_EVENT_TASK_DET.ETK_ID = T_EVENT_TASK_ETK.ETK_ID
+            AND T_EVENT_TASK_ETK.parent_id IS NULL
+            AND T_EVENT_TASK_ETK.deleted_at IS NULL
+            AND T_EVENT_TASK_ETK.CON_ID = ?
+            AND ${conditions.join('AND')}
+          UNION
+          SELECT
+              library_act_quantity.id,
+              T_DENTAL_EVENT_TASK_DET.ETK_ID AS parent_id,
+              T_DENTAL_EVENT_TASK_DET.dental_material_id,
+              IFNULL(T_DENTAL_EVENT_TASK_DET.dental_material_id = ccam.dental_material_id, 0) AS dental_material_equivalent,
+              T_EVENT_TASK_ETK.ETK_DATE,
+              T_EVENT_TASK_ETK.created_at,
+              ccam_panier.code AS ccam_panier_code
+          FROM library_act_quantity
+          JOIN ccam
+          JOIN ccam_dependence
+          JOIN ccam AS ccam2
+          JOIN ccam_family ON ccam2.ccam_family_id = ccam_family.id
+          LEFT JOIN ccam_panier ON ccam_family.ccam_panier_id = ccam_panier.id
+          JOIN T_DENTAL_EVENT_TASK_DET
+          JOIN T_EVENT_TASK_ETK
+          LEFT OUTER JOIN T_EVENT_EVT ON T_EVENT_EVT.EVT_ID = T_EVENT_TASK_ETK.EVT_ID
+          LEFT OUTER JOIN T_PLAN_EVENT_PLV ON T_PLAN_EVENT_PLV.EVT_ID = T_EVENT_EVT.EVT_ID
+          LEFT OUTER JOIN T_PLAN_PLF ON T_PLAN_PLF.PLF_ID = T_PLAN_EVENT_PLV.PLF_ID
+          WHERE library_act_quantity.id IN (${inQuery})
+            AND library_act_quantity.ccam_id = ccam.id
+            AND ccam.id = ccam_dependence.ccam_child_id
+            AND ccam_dependence.ccam_parent_id = ccam2.id
+            AND ccam2.id = T_DENTAL_EVENT_TASK_DET.ccam_id
+            AND T_DENTAL_EVENT_TASK_DET.ETK_ID = T_EVENT_TASK_ETK.ETK_ID
+            AND T_EVENT_TASK_ETK.parent_id IS NULL
+            AND T_EVENT_TASK_ETK.deleted_at IS NULL
+            AND T_EVENT_TASK_ETK.CON_ID = ?
+            AND ${conditions.join('AND')}
+      ) AS t1
+      ORDER BY t1.ETK_DATE DESC, t1.created_at DESC`;
+
+      const parameters: string[] = [
+        ...(libraryActQuantityIds + ''),
+        patient?.id + '',
+      ];
+      if (teethNumbers?.length) {
+        parameters?.push(teethNumbers?.join('|'));
+      }
+      if (quote_id) {
+        parameters?.push(`${quote_id}`);
+      }
+
+      const dependencies = await this.dataSource.query(query, parameters);
+      if (dependencies?.length) {
+        const dependence = dependencies?.filter(
+          (d) => d?.dental_material_equivalent,
+        )?.[0];
+        if (dependence) {
+          return {
+            id: dependence?.id,
+            parent_id: dependence?.parent_id,
+            dental_material_id: dependence?.dental_material_id,
+            ccam_panier_code: dependence?.dependence,
+          };
+        }
+
+        const libraryActQuantitiesFilteredByForbiddenTeethDependence =
+          libraryActQuantitiesFilteredByForbiddenTeeth?.filter(
+            (libraryActQuantity) => {
+              return dependencies?.some(
+                (dependence) => dependence?.id === libraryActQuantity?.id,
+              );
+            },
+          );
+        if (
+          libraryActQuantitiesFilteredByForbiddenTeethDependence?.length === 1
+        ) {
+          const libraryActQuantity =
+            libraryActQuantitiesFilteredByForbiddenTeethDependence[0];
+          return {
+            id: libraryActQuantity.id,
+            dental_material_id: libraryActQuantity?.ccam?.material?.id,
+            ccam_panier_code: libraryActQuantity?.ccam?.family?.panier?.code,
+            parent_id: dependencies?.[0]?.parent_id,
+          };
+        }
+      }
+    }
+
+    const isCmu = (patient: ContactEntity) => {
+      const amcs = patient?.amcs?.find((amcs) => {
+        const startTime = new Date(amcs?.startDate)?.getTime();
+        const endTime = new Date(amcs?.endDate)?.getTime();
+        return (
+          currentDate?.getTime() >= startTime &&
+          currentDate?.getTime() <= endTime
+        );
+      });
+
+      if (amcs) return amcs?.isCmu;
+      if (patient?.medical) {
+        const medical = patient?.medical;
+        return (
+          ['11', '12', '13', '14']?.includes(medical?.serviceAmoCode) &&
+          (medical?.serviceAmoStartDate === null ||
+            new Date(medical?.serviceAmoStartDate)?.getTime() <=
+              currentDate?.getTime()) &&
+          (medical?.serviceAmoEndDate === null ||
+            new Date(medical?.serviceAmoEndDate)?.getTime() >=
+              currentDate?.getTime())
+        );
+      }
+    };
+    const patientIsCmu = isCmu(patient);
+    if (
+      !libraryActQuantitiesFilteredByForbiddenTeeth?.some(
+        (quantity) => quantity?.ccam?.dependencies?.length,
+      )
+    ) {
+      return {
+        multiple_choice: true,
+        items: [
+          {
+            label: 'Sélectionnez le matériau',
+            values: libraryActQuantitiesFilteredByForbiddenTeeth?.map(
+              (quantity) => {
+                return {
+                  id: quantity?.id,
+                  label: quantity?.label,
+                  amount: quantity?.amount,
+                  dental_material_id: quantity?.ccam?.material?.id,
+                  ccam_panier_label: quantity?.ccam?.family?.panier?.label,
+                  ccam_panier_color: quantity?.ccam?.family?.panier?.color,
+                  ccam_panier_code: quantity?.ccam?.family?.panier?.code,
+                  is_cmu: patientIsCmu,
+                };
+              },
+            ),
+          },
+        ],
+      };
+    }
+    return {
+      multiple_choice: true,
+      items: [
+        {
+          label: 'Sélectionnez le matériau de la prothèse',
+          values: libraryActQuantitiesFilteredByForbiddenTeeth?.map(
+            (quantity) => {
+              return {
+                id: quantity?.id,
+                label: quantity?.label,
+                amount: quantity?.amount,
+                dental_material_id: quantity?.ccam?.material?.id,
+                ccam_panier_label: quantity?.ccam?.family?.panier?.label,
+                ccam_panier_color: quantity?.ccam?.family?.panier?.color,
+                ccam_panier_code: quantity?.ccam?.family?.panier?.code,
+                is_cmu: patientIsCmu,
+              };
+            },
+          ),
+        },
+        {
+          label: 'Sélectionnez le panier',
+          values: libraryActQuantitiesFilteredByForbiddenTeeth?.map(
+            (quantity) => {
+              return {
+                id: quantity?.id,
+                label: quantity?.label,
+                amount: quantity?.amount,
+                dental_material_id: quantity?.ccam?.material?.id,
+                ccam_panier_label: quantity?.ccam?.family?.panier?.label,
+                ccam_panier_color: quantity?.ccam?.family?.panier?.color,
+                ccam_panier_code: quantity?.ccam?.family?.panier?.code,
+                is_cmu: patientIsCmu,
+              };
+            },
+          ),
+        },
+      ],
+    };
   }
 }

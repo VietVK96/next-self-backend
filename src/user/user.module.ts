@@ -13,6 +13,12 @@ import { TokenDownloadService } from './services/token-download.service';
 import { JWT_SECRET_DOWNLOAD } from 'src/constants/jwt';
 import { UnpaidService } from './services/unpaid.service';
 import { ContactEntity } from 'src/entities/contact.entity';
+import { ContactUserEntity } from 'src/entities/contact-user.entity';
+import { CreditBalancesService } from './services/credit-balances.service';
+import { LettersEntity } from 'src/entities/letters.entity';
+import { DocumentMailService } from 'src/mail/services/document.mail.service';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -20,6 +26,9 @@ import { ContactEntity } from 'src/entities/contact.entity';
       UserPreferenceEntity,
       UserMedicalEntity,
       ContactEntity,
+      ContactUserEntity,
+      LettersEntity,
+      ContactNoteEntity,
     ]),
     AddressModule,
     JwtModule.register({
@@ -33,8 +42,16 @@ import { ContactEntity } from 'src/entities/contact.entity';
     PreferenceService,
     TokenDownloadService,
     UnpaidService,
+    CreditBalancesService,
+    DocumentMailService,
   ],
-  exports: [PermissionService, UserService, PreferenceService, UnpaidService],
+  exports: [
+    PermissionService,
+    UserService,
+    PreferenceService,
+    UnpaidService,
+    CreditBalancesService,
+  ],
   controllers: [UserController],
 })
 export class UserModule {}

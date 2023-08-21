@@ -1,37 +1,138 @@
 <head>
   <title>Bordereau de remise {{slipCheck.number}}</title>
-  <style>
+ <style>
 
-    @page { margin: 5mm; padding: 0; } body { font-family: Arial; font-size:
-    12px; } table { width: 100%; border-collapse: collapse; } header {
-    margin-bottom: 5mm; } header table th.titleColumn { width: 50%; } header
-    table th.numberTextColumn, header table th.numberColumn { width: 25%;
-    text-align: right; } div.accountOwner { margin-bottom: 5mm; } div.bankRib {
-    width: 55%; background-color: #eeeeee; margin-bottom: 10mm; } div.bankRib
-    table { border-collapse: separate; border-spacing: 2mm; } div.bankRib table
-    td { white-space: nowrap; } div.bankInformation { margin-bottom: 10mm; }
-    div.bankInformation table td { width: 50%; vertical-align: top; }
-    div.currency { width: 45%; background-color: #eeeeee; margin-bottom: 2mm;
-    text-align: center; } div.currency > div { padding: 2mm; } div.payments
-    table thead th, div.payments table tbody td { border: solid 0.1pt #000000; }
-    div.payments table th, div.payments table td { padding: 2mm; } div.payments
-    table th.payerColumn, div.payments table td.payerColumn { width: 45%; }
-    div.payments table th.amountColumn, div.payments table td.amountColumn {
-    width: 15%; } div.payments table td.amountColumn { text-align: right; }
-    div.payments table th.checkNumberColumn, div.payments table
-    td.checkNumberColumn, div.payments table th.checkBankColumn, div.payments
-    table td.checkBankColumn { width: 20%; } div.payments table
-    td.paymentChoiceCount { text-align: right; } div.payments.noCheckColumn
-    table th.payerColumn, div.payments.noCheckColumn table td.payerColumn {
-    width: 85%; } div.payments.noCheckColumn table th.checkNumberColumn,
+    @page {
+        margin: 5mm;
+        padding: 0;
+    }
+
+    body {
+        font-family: Arial;
+        font-size: 12px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    header {
+        margin-bottom: 5mm;
+    }
+
+    header table th.titleColumn {
+        width: 50%;
+    }
+
+    header table th.numberTextColumn,
+    header table th.numberColumn {
+        width: 25%;
+        text-align: right;
+    }
+
+    div.accountOwner {
+        margin-bottom: 5mm;
+    }
+
+    div.bankRib {
+      
+        width: 45%;
+        background-color: #eeeeee;
+        margin-bottom: 10mm;
+    }
+
+    div.bankRib table {
+        font-size: 12px;
+        border-collapse: separate;
+        border-spacing: 2mm;
+    }
+
+    div.bankRib table td {
+        white-space: nowrap;
+    }
+
+    div.bankInformation {
+        margin-bottom: 10mm;
+    }
+
+    div.bankInformation table td {
+        width: 50%;
+        vertical-align: top;
+    }
+
+    div.currency {
+        width: 45%;
+        background-color: #eeeeee;
+        margin-bottom: 2mm;
+        text-align: center;
+    }
+
+    div.currency > div {
+        padding: 2mm;
+    }
+
+    div.payments table thead th,
+    div.payments table tbody td {
+        border: solid 0.1pt #000000;
+    }
+
+    div.payments table th,
+    div.payments table td {
+        padding: 2mm;
+    }
+
+    div.payments table th.payerColumn,
+    div.payments table td.payerColumn {
+        width: 45%;
+    }
+
+    div.payments table th.amountColumn,
+    div.payments table td.amountColumn {
+        width: 15%;
+    }
+
+    div.payments table td.amountColumn {
+        text-align: right;
+    }
+
+    div.payments table th.checkNumberColumn,
+    div.payments table td.checkNumberColumn,
+    div.payments table th.checkBankColumn,
+    div.payments table td.checkBankColumn {
+        width: 20%;
+    }
+
+    div.payments table td.paymentChoiceCount {
+        text-align: right;
+    }
+
+    div.payments.noCheckColumn table th.payerColumn,
+    div.payments.noCheckColumn table td.payerColumn {
+        width: 85%;
+    }
+
+    div.payments.noCheckColumn table th.checkNumberColumn,
     div.payments.noCheckColumn table td.checkNumberColumn,
     div.payments.noCheckColumn table th.checkBankColumn,
-    div.payments.noCheckColumn table td.checkBankColumn { display: none; }
-    div.paymentDetails table td { padding: 2mm; } div.paymentDetails table
-    td.amountTotalTitleColumn { text-align: right; } div.paymentDetails table
-    td.amountTotalColumn { width: 15%; text-align: right; }
+    div.payments.noCheckColumn table td.checkBankColumn {
+        display: none;
+    }
 
-  </style>
+    div.paymentDetails table td {
+        padding: 2mm;
+    }
+
+    div.paymentDetails table td.amountTotalTitleColumn {
+        text-align: right;
+    }
+
+    div.paymentDetails table td.amountTotalColumn {
+        width: 15%;
+        text-align: right;
+    }
+
+    </style>
 </head>
 <body>
   <header>
@@ -51,7 +152,6 @@
     </div>
     <div>
       Docteur:
-
       {{#if (isEmpty slipCheck.libraryBank.user)}}
         {{slipCheck.libraryBank.group.name}}
       {{else}}
@@ -124,9 +224,7 @@
       <strong> Versement en {{slipCheck.libraryBank.currency}}</strong>
     </div>
   </div>
-  <div
-    class="payments {% if bordereau.paymentChoice is not same as(constant('App\\Enum\\PaymentMethodEnum::CHEQUE')) %}noCheckColumn{% endif %}"
-  >
+  <div class="payments {{#if (checkPaymentChoice slipCheck.paymentChoice)}} noCheckColumn {{/if}}">
     <table>
       <thead>
         <tr>
@@ -139,7 +237,7 @@
       <tbody>
         {{#each slipCheck.cashings}}
           <tr>
-            <td class='payerColumn' colspan='2'>{{this.label}}</td>
+            <td class='payerColumn' colspan='2'>{{#if this.debtor}} {{this.debtor}} {{else}} {{this.contact.lastname}} {{this.contact.firstname}}{{/if}}</td>
             <td class='checkBankColumn'>{{this.checkBank}}</td>
             <td class='checkNumberColumn'>{{this.checkNumber}}</td>
             <td class='amountColumn'>{{this.amount}}
@@ -149,15 +247,17 @@
       </tbody>
     </table>
   </div>
-  <div class="paymentDetails">
-        <table>
-            <tbody>
-                <tr>
-                    <td class="paymentChoiceColumn">{{count slipCheck.cashings }} {{slipCheck.paymentChoice}}</td>
-                    <td class="amountTotalTitleColumn">Montant total de la remise :</td>
-                    <td class="amountTotalColumn">{{ slipCheck.amount }} {{slipCheck.libraryBank.currency }}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+  <div class='paymentDetails'>
+    <table>
+      <tbody>
+        <tr>
+          <td class='paymentChoiceColumn'>{{count slipCheck.cashings}}
+            {{slipCheck.paymentChoice}}</td>
+          <td class='amountTotalTitleColumn'>Montant total de la remise :</td>
+          <td class='amountTotalColumn'>{{slipCheck.amount}}
+            {{slipCheck.libraryBank.currency}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </body>

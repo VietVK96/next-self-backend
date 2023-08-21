@@ -7,8 +7,6 @@ import {
 import { DataSource, FindOptionsWhere, In, Repository } from 'typeorm';
 import { DevisRequestAjaxDto } from '../dto/devisHN.dto';
 import * as dayjs from 'dayjs';
-import { DEFAULT_LOCALE } from 'src/constants/locale';
-
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import {
   DentalQuotationActEntity,
@@ -19,6 +17,7 @@ import { MailService } from 'src/mail/services/mail.service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { UserEntity } from 'src/entities/user.entity';
+import { DEFAULT_LOCALE } from 'src/constants/default';
 @Injectable()
 export class DevisHNServices {
   constructor(

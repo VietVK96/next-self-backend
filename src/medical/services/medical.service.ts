@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as dayjs from 'dayjs';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { DEFAULT_LOCALE } from 'src/constants/locale';
+import { DEFAULT_LOCALE } from 'src/constants/default';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
 import { DataSource, Repository } from 'typeorm';

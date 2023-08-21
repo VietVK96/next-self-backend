@@ -44,7 +44,7 @@
 
     /* Informations praticien + patient */
     #informations {
-        margin-bottom: 4mm;
+        margin-bottom: 0mm;
     }
 
     #informations table {
@@ -121,230 +121,238 @@
     }
 
 </style>
-<div>
-  <div id='header'>
-    <h1>NOTE D'HONORAIRES</h1>
-    (Les soins &agrave; tarifs opposables ne sont pas compris)
-    {{#if duplicata}}
-      <div id='duplicata'>DUPLICATA</div>
-    {{/if}}
-  </div>
-  <div id='informations'>
-    <table cellspacing='4' border='0'>
-      <col style='width: 50%;' />
-      <col style='width: 50%;' />
-      <tbody>
-        <tr>
-          <td rowspan='2'>
-            <div style='margin-bottom: 2mm;'>A remplir par le
-              chirurgien-dentiste</div>
-            <div style='margin-bottom: 2mm;'>Identification du
-              chirurgien-dentiste traitant</div>
-            <div>Identification RPPS : {{userNumeroFacturant}}</div>
-            <div
-              style='height: 21mm; padding: 2mm 0; overflow: hidden;'
-            >{{{identPrat}}} </div>
-            <div>Identification de la structure</div>
-            <div>(Raison sociale et adresse du cabinet ou de l'établissement)</div>
-            <div
-              style='height: 21mm; padding: 2mm 0; overflow: hidden;'
-            >{{{adressePrat}}}</div>
-            <div>N° de la structure (AM, FINESS ou SIRET) :
-              ...................................</div>
-          </td>
-          <td>
-            <div style='margin-bottom: 2mm;'>A remplir par le
-              chirurgien-dentiste</div>
-            <div style='margin-bottom: 4mm;'>Identification du patient</div>
-            <div style='margin-bottom: 4mm;'>Nom et prénom :
-              {{contactFullname}}</div>
-            <div style='margin-bottom: 4mm;'>Date de naissance :
-              {{contactBirthday}}</div>
-            <div>N° de Sécurité sociale de l'assuré : {{contactInsee}}</div>
-          </td>
-        </tr>
-        <tr>
-          <td style='background-color: #EEE;'>
-            <div style='margin-bottom: 2mm;'>A remplir par l'assuré</div>
-            <div style='margin-bottom: 4mm;'>Identification de l'assurance
-              complémentaire</div>
-            <div style='margin-bottom: 4mm;'>Nom de la complémentaire :
-              ..............................................</div>
-            <div style='margin-bottom: 4mm;'>N° de contrat ou d'adhérent :
-              .............................................</div>
-            <div>Adresse électronique de l'assuré :
-              .....................................</div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-<div class="caption">Description détaillée des actes effectués</div>
-<table id="prestations">
-  <col style="width: 10%;" />
-  <col style="width: 11%;" />
-  <col style="width: 30%;" />
-  <col style="width: 10%;" />
-  <col style="width: 12%;" />
-  <col style="width: 12%;" />
-  <col style="width: 15%;" />
-  <thead>
-    <tr>
-      <th>Date de réalisation des actes</th>
-      <th>N° dent ou Localisation</th>
-      <th>Libellé de l'acte ou libellé Orthodontique</th>
-      <th>Matériaux utilisés</th>
-      <th>Code CCAM ou pour l'orthodontie cotation NGAP</th>
-      <th>Montant des honoraires</th>
-      <th>Montant de<br />remboursement<br />Assurance<br />Maladie<br />obligatoire ou<br />NR</th>
-    </tr>
-  </thead>
-  <tbody>
-    {{#each prestations}}
-      {{#if (eq typeLigne "operation")}}
-        <tr>
-          <td class="align-center">{{ dateLigne }}</td>
-          <td class="align-center">{{ dentsLigne }}</td>
-          <td>{{ name }}</td>
-          <td class="align-center">{{ materials }}</td>
-          <td class="align-center">{{ cotation }}</td>
-          <td class="align-right">{{ prixLigne }}</td>
-          <td class="align-right">
-            {{#if (or (eq secuAmount 0) (eq (typeof secuAmount) "undefined"))}}
-              NR
-            {{else}}
-              {{ secuAmount }}
-            {{/if}}
-          </td>
-        </tr>
+<div style="position: relative; height: 100%;">
+  <div>
+    <div id='header'>
+      <h1>NOTE D'HONORAIRES</h1>
+      (Les soins &agrave; tarifs opposables ne sont pas compris)
+      {{#if duplicata}}
+        <div id='duplicata'>DUPLICATA</div>
       {{/if}}
-    {{/each}}
-  </tbody>
-  <tfoot>
-    <tr>
-      <td colspan="5" class="align-right">Total &euro;</td>
-      <td class="align-right">{{ billAmount }}</td>
-      <td class="align-right">{{ billSecuAmount }}</td>
-    </tr>
-  </tfoot>
-</table>
-<div style="position: fixed; bottom:0;left:0">
-      <div id="materiaux">
-    <table>
-        <col style="width: 10%;" />
-        <col style="width: 90%;" />
+    </div>
+    <div id='informations'>
+      <table cellspacing='4' border='0'>
+        <col style='width: 50%;' />
+        <col style='width: 50%;' />
         <tbody>
-            <tr>
-                <td style="text-align: center; border-top: solid 1px #000; border-left: solid 1px #000; border-bottom: solid 1px #000;">
-                    Matériaux et normes
-                </td>
-                <td style="padding: 0;">
-                    <table class="hasBorder">
-                        <col style="width: 4%;" />
-                        <col style="width: 21%;" />
-                        <col style="width: 4%;" />
-                        <col style="width: 21%;" />
-                        <col style="width: 4%;" />
-                        <col style="width: 21%;" />
-                        <col style="width: 4%;" />
-                        <col style="width: 21%;" />
-                        <tbody>
-                            <tr>
-                                <td class="align-center">1</td>
-                                <td>Alliage précieux NF EN ISO 22674 3/2007</td>
-                                <td class="align-center">2</td>
-                                <td>Alliage semi précieux NF EN ISO 22674 3/2007</td>
-                                <td class="align-center">3</td>
-                                <td>Alliage non précieux CoCr - NF EN ISO 22674 3/2007</td>
-                                <td class="align-center">4</td>
-                                <td>Alliage non précieux NiCR - NF EN ISO 22674 3/2007</td>
-                            </tr>
-                            <tr>
-                                <td class="align-center">5</td>
-                                <td>Résine Base NF EN ISO 1567 2000</td>
-                                <td class="align-center">6</td>
-                                <td>Résine Dent NF EN ISO 22112 2005</td>
-                                <td class="align-center">7</td>
-                                <td>Céramo-métallique NF EN ISO 9693 2000</td>
-                                <td class="align-center">8</td>
-                                <td>Céramo dentaire NF EN ISO 6872 1999</td>
-                            </tr>
-                            <tr>
-                                <td class="align-center">9</td>
-                                <td>Autres...</td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
+          <tr>
+            <td rowspan='2'>
+              <div style='margin-bottom: 2mm;'>A remplir par le
+                chirurgien-dentiste</div>
+              <div style='margin-bottom: 2mm;'>Identification du
+                chirurgien-dentiste traitant</div>
+              <div>Identification RPPS : {{userNumeroFacturant}}</div>
+              <div
+                style='height: 21mm; padding: 2mm 0; overflow: hidden;'
+              >{{{identPrat}}} </div>
+              <div>Identification de la structure</div>
+              <div>(Raison sociale et adresse du cabinet ou de l'établissement)</div>
+              <div
+                style='height: 21mm; padding: 2mm 0; overflow: hidden;'
+              >{{{adressePrat}}}</div>
+              <div>N° de la structure (AM, FINESS ou SIRET) :<br />
+                ...................................</div>
+            </td>
+            <td>
+              <div style='margin-bottom: 2mm;'>A remplir par le
+                chirurgien-dentiste</div>
+              <div style='margin-bottom: 4mm;'>Identification du patient</div>
+              <div style='margin-bottom: 4mm;'>Nom et prénom :
+                {{contactFullname}}</div>
+              <div style='margin-bottom: 4mm;'>Date de naissance :
+                {{contactBirthday}}</div>
+              <div>N° de Sécurité sociale de l'assuré : {{contactInsee}}</div>
+            </td>
+          </tr>
+          <tr>
+            <td style='background-color: #EEE;'>
+              <div style='margin-bottom: 2mm;'>A remplir par l'assuré</div>
+              <div style='margin-bottom: 4mm;'>Identification de l'assurance
+                complémentaire</div>
+              <div style='margin-bottom: 4mm;'>Nom de la complémentaire :
+                ..............................................</div>
+              <div style='margin-bottom: 4mm;'>N° de contrat ou d'adhérent :
+                .............................................</div>
+              <div>Adresse électronique de l'assuré :
+                .....................................</div>
+            </td>
+          </tr>
         </tbody>
-    </table>
-</div>
-<div id="footer">
-    <div style="margin-bottom: 4mm;">Règlement :</div>
-    <div>Montant réglé par le patient : {{ billAmount }} &euro;</div>
-    <div style="margin-bottom: 4mm;">
-        <table>
-            <tbody>
-                <tr>
-                    <td>Mode de paiement:</td>
-                    <td>
-                        <label>
-                            <input type="checkbox" 
-                                {{#if (eq modePaiement "espece")}}
-                                    checked="checked"
-                                {{/if}}
-                            /> Espèces
-                        </label>
-                        <label>
-                            <input type="checkbox" 
-                                {{#if (eq modePaiement "cheque")}}
-                                    checked="checked"
-                                {{/if}}
-                            /> Chèques
-                        </label>
-                        <label>
-                            <input type="checkbox" 
-                                {{#if (eq modePaiement "carte")}}
-                                    checked="checked"
-                                {{/if}}
-                            /> Carte bancaire
-                        </label>
-                    </td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td>
-                        <label>
-                            <input type="checkbox" {{#if checkModePaiement}} checked="checked" {{/if}} /> Autres :
-                            {{#if (eq modePaiement "virement")}}
-                                Virement
-                            {{else}}
-                                {{#if (eq modePaiement "prelevement")}}
-                                    Prélèvement
-                                {{else}}
-                                    ..........................................
-                                {{/if}}
-                            {{/if}}
-                        </label>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+      </table>
     </div>
-    <div>Date : {{ date }}</div>
-    <div>Signature et cachet du chirurgien-dentiste</div>
-    {{#if signature}}
-    <div>
-        <img src="{{ signature }}" />
+  </div>
+  <div class="caption">Description détaillée des actes effectués</div>
+  <table id="prestations">
+    <col style="width: 10%;" />
+    <col style="width: 11%;" />
+    <col style="width: 30%;" />
+    <col style="width: 10%;" />
+    <col style="width: 12%;" />
+    <col style="width: 12%;" />
+    <col style="width: 15%;" />
+    <thead>
+      <tr>
+        <th>Date de réalisation des actes</th>
+        <th>N° dent ou Localisation</th>
+        <th>Libellé de l'acte ou libellé Orthodontique</th>
+        <th>Matériaux utilisés</th>
+        <th>Code CCAM ou pour l'orthodontie cotation NGAP</th>
+        <th>Montant des honoraires</th>
+        <th>Montant de<br />remboursement<br />Assurance<br />Maladie<br />obligatoire ou<br />NR</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each prestations}}
+        {{#if (eq typeLigne "operation")}}
+          <tr>
+            <td class="align-center">{{formatDate dateLigne }}</td>
+            <td class="align-center">{{ dentsLigne }}</td>
+            <td>{{{ name }}}</td>
+            <td class="align-center">{{ materials }}</td>
+            <td class="align-center">{{ cotation }}</td>
+            <td class="align-right">{{ prixLigne }}</td>
+            <td class="align-right">
+              {{#if secuAmount}}
+                {{#if (eq secuAmount '0.00')}}
+                  NR
+                {{else}}
+                  {{secuAmount}}
+                {{/if}}
+              {{else}}
+                NR
+              {{/if}}
+            </td>
+          </tr>
+        {{/if}}
+      {{/each}}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="5" class="align-right">Total &euro;</td>
+        <td class="align-right">{{ billAmount }}</td>
+        <td class="align-right">{{ billSecuAmount }}</td>
+      </tr>
+    </tfoot>
+  </table>
+  <div style="position:absolute ; bottom: 0">
+    <div id="materiaux">
+      <table>
+          <col style="width: 10%;" />
+          <col style="width: 90%;" />
+          <tbody>
+              <tr>
+                  <td style="text-align: center; border-top: solid 1px #000; border-left: solid 1px #000; border-bottom: solid 1px #000;">
+                      Matériaux et normes
+                  </td>
+                  <td style="padding: 0;">
+                      <table class="hasBorder">
+                          <col style="width: 4%;" />
+                          <col style="width: 21%;" />
+                          <col style="width: 4%;" />
+                          <col style="width: 21%;" />
+                          <col style="width: 4%;" />
+                          <col style="width: 21%;" />
+                          <col style="width: 4%;" />
+                          <col style="width: 21%;" />
+                          <tbody>
+                              <tr>
+                                  <td class="align-center">1</td>
+                                  <td>Alliage précieux NF EN ISO 22674 3/2007</td>
+                                  <td class="align-center">2</td>
+                                  <td>Alliage semi précieux NF EN ISO 22674 3/2007</td>
+                                  <td class="align-center">3</td>
+                                  <td>Alliage non précieux CoCr - NF EN ISO 22674 3/2007</td>
+                                  <td class="align-center">4</td>
+                                  <td>Alliage non précieux NiCR - NF EN ISO 22674 3/2007</td>
+                              </tr>
+                              <tr>
+                                  <td class="align-center">5</td>
+                                  <td>Résine Base NF EN ISO 1567 2000</td>
+                                  <td class="align-center">6</td>
+                                  <td>Résine Dent NF EN ISO 22112 2005</td>
+                                  <td class="align-center">7</td>
+                                  <td>Céramo-métallique NF EN ISO 9693 2000</td>
+                                  <td class="align-center">8</td>
+                                  <td>Céramo dentaire NF EN ISO 6872 1999</td>
+                              </tr>
+                              <tr>
+                                  <td class="align-center">9</td>
+                                  <td>Autres...</td>
+                                  <td></td>
+                                  <td></td>
+                                  <td></td>
+                                  <td></td>
+                                  <td></td>
+                                  <td></td>
+                              </tr>
+                          </tbody>
+                      </table>
+                  </td>
+              </tr>
+          </tbody>
+      </table>
     </div>
-    {{/if}}
+    <div id="footer">
+      <div style="margin-bottom: 4mm;">Règlement :</div>
+      <div>Montant réglé par le patient : {{ billAmount }} &euro;</div>
+      <div style="margin-bottom: 4mm;">
+          <table>
+              <tbody>
+                  <tr>
+                      <td>Mode de paiement:</td>
+                      <td>
+                          <label>
+                              <input type="checkbox"
+                                  {{#if (eq modePaiement "espece")}}
+                                      checked="checked"
+                                  {{/if}}
+                              /> Espèces
+                          </label>
+                          <label>
+                              <input type="checkbox"
+                                  {{#if (eq modePaiement "cheque")}}
+                                      checked="checked"
+                                  {{/if}}
+                              /> Chèques
+                          </label>
+                          <label>
+                              <input type="checkbox"
+                                  {{#if (eq modePaiement "carte")}}
+                                      checked="checked"
+                                  {{/if}}
+                              /> Carte bancaire
+                          </label>
+                      </td>
+                  </tr>
+                  <tr>
+                      <td></td>
+                      <td>
+                          <label>
+                              <input type="checkbox" {{#if checkModePaiement}} checked="checked" {{/if}} /> Autres :
+                              {{#if (eq modePaiement "virement")}}
+                                  Virement
+                              {{else}}
+                                  {{#if (eq modePaiement "prelevement")}}
+                                      Prélèvement
+                                  {{else}}
+                                      ..........................................
+                                  {{/if}}
+                              {{/if}}
+                          </label>
+                      </td>
+                  </tr>
+              </tbody>
+          </table>
+      </div>
+      <div>Date : {{ date }}</div>
+      <div>Signature et cachet du chirurgien-dentiste</div>
+      {{#if signature}}
+      <div>
+          <img src="{{ signature }}" />
+      </div>
+      {{/if}}
+  </div>
+  </div>
+  <div style="page-break-after: always;"></div>
 </div>
-</div>
+

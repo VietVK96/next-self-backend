@@ -13,6 +13,7 @@ import { LibraryBankEntity } from 'src/entities/library-bank.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
 import { CashingEntity } from 'src/entities/cashing.entity';
 import { CaresheetsModule } from 'src/caresheets/caresheets.module';
+import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -26,6 +27,7 @@ import { CaresheetsModule } from 'src/caresheets/caresheets.module';
       LibraryBankEntity,
       CashingContactEntity,
       CashingEntity,
+      UserPreferenceEntity,
     ]),
     CaresheetsModule,
   ],

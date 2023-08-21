@@ -30,12 +30,16 @@ import { TranformDto } from './dto/transform.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { SendMailDto } from './dto/sendMail.dto';
 import { UpdateMailDto } from './dto/mail.dto';
+import { DocumentMailService } from './services/document.mail.service';
 
 @ApiBearerAuth()
 @Controller('/mails')
 @ApiTags('Mail')
 export class MailController {
-  constructor(private readonly mailService: MailService) {}
+  constructor(
+    private readonly mailService: MailService,
+    private documentMailService: DocumentMailService,
+  ) {}
 
   /**
    * php/mail/findAll.php 100%
@@ -78,8 +82,11 @@ export class MailController {
    */
   @UseGuards(TokenGuard)
   @Post('/duplicate')
-  async duplicate(@Body() payload: CreateUpdateMailDto) {
-    return await this.mailService.duplicate(payload);
+  async duplicate(
+    @Body() payload: CreateUpdateMailDto,
+    @CurrentDoctor() docId: number,
+  ) {
+    return await this.mailService.duplicate(payload, docId);
   }
 
   @UseGuards(TokenGuard)

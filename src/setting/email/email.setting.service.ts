@@ -52,7 +52,7 @@ export class EmailSettingService {
         });
 
       if (withPassword) {
-        const decryptedPassword = crypto.DES.decrypt(
+        const decryptedPassword = crypto.AES.decrypt(
           emailOutgoingServer.password,
           env.SECRET_KEY_EMAIL,
         );
@@ -62,7 +62,7 @@ export class EmailSettingService {
       } else {
         delete emailOutgoingServer.password;
       }
-      const decryptedUserName = crypto.DES.decrypt(
+      const decryptedUserName = crypto.AES.decrypt(
         emailOutgoingServer.username,
         env.SECRET_KEY_EMAIL,
       );
@@ -97,7 +97,7 @@ export class EmailSettingService {
           .getRepository(EmailAccountEntity)
           .findOne({ where: { USRId: userId } })
       ) {
-        throw new CBadRequestException(ErrorCode.EXISTING_EMAIL);
+        return new CBadRequestException(ErrorCode.EXISTING_EMAIL);
       }
       emailAccount.USRId = userId;
       emailAccount.organizationId = orgId;
@@ -117,14 +117,15 @@ export class EmailSettingService {
         emailOutgoingServer = new EmailOutgoingServerEntity();
       }
       emailOutgoingServer.emailAccountId = savedEmailAccount.id;
-      emailOutgoingServer.hostname = payload.outgoingServer.hostname;
-      emailOutgoingServer.port = payload.outgoingServer.port;
+      emailOutgoingServer.hostname =
+        payload.outgoingServer.hostname || 'smtp.gmail.com';
+      emailOutgoingServer.port = payload.outgoingServer.port || 587;
       emailOutgoingServer.connectionEstablished = 1;
-      emailOutgoingServer.username = crypto.DES.encrypt(
+      emailOutgoingServer.username = crypto.AES.encrypt(
         payload.outgoingServer.username,
         env.SECRET_KEY_EMAIL,
       ).toString();
-      emailOutgoingServer.password = crypto.DES.encrypt(
+      emailOutgoingServer.password = crypto.AES.encrypt(
         payload.outgoingServer.password,
         env.SECRET_KEY_EMAIL,
       ).toString();
@@ -159,7 +160,7 @@ export class EmailSettingService {
       await Promise.all(promises);
 
       await queryRunner.commitTransaction();
-      return;
+      return { success: true };
     } catch (e) {
       await queryRunner.rollbackTransaction();
       return new CBadRequestException(ErrorCode.SAVE_FAILED);
@@ -187,6 +188,9 @@ export class EmailSettingService {
         return mailInfo;
       }
       await this.sendMailTest(mailInfo, mailInfo.emailAddress);
+      return {
+        success: true,
+      };
     } catch (e) {
       return new CBadRequestException(ErrorCode.FORBIDDEN);
     }

@@ -6,24 +6,26 @@ type BwipOptionsProps = {
   scale?: number;
   height?: number;
   width?: number;
+  scaleX?: number;
+  scaleY?: number;
   includetext?: boolean;
   textxalign?: string;
   rotate?: 'N' | 'R' | 'L' | 'I';
-  padding?: string;
-  paddingwidth?: string;
-  paddingheight?: string;
-  paddingtop?: string;
-  paddingleft?: string;
-  paddingbottom?: string;
-  paddingright?: string;
-  backgroundcolor?: string;
+  padding?: number;
+  paddingwidth?: number;
+  paddingheight?: number;
+  paddingtop?: number;
+  paddingleft?: number;
+  paddingbottom?: number;
+  paddingright?: number;
+  backgroundcolor?: number;
 };
 
 export const generateBarcode = async (options: BwipOptionsProps) => {
   options = {
     bcid: 'code128',
-    scale: 1.5,
-    height: 10,
+    scaleX: 3,
+    scaleY: 1,
     includetext: false,
     ...options,
   };

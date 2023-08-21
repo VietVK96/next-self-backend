@@ -13,15 +13,15 @@ import {
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
+import { DevisServices } from './services/devisHN.services';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
+import { DevisHNServices } from './services/devisHNRequestAjax.service';
 import {
   DevisHNGetInitChampDto,
   DevisHNPdfDto,
   DevisRequestAjaxDto,
 } from './dto/devisHN.dto';
-import { DevisHNServices } from './services/devisRequestAjax.service';
-import { DevisServices } from './services/devisHN.services';
-import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { ErrorCode } from 'src/constants/error';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -60,7 +60,10 @@ export class DevisHNController {
     return await this.devisService.getInitChamps(user, params);
   }
 
-  @Get('devisHN/pdf')
+  /**
+   * dental/devisHN/devisHN_pdf.php
+   */
+  @Get('devisHN/devisHN_pdf')
   @UseGuards(TokenGuard)
   async devisHNGetPDF(
     @Res() res,
@@ -84,5 +87,14 @@ export class DevisHNController {
     } catch (error) {
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
     }
+  }
+
+  @Get('/devisHN/devisHN_email')
+  @UseGuards(TokenGuard)
+  async sendMail(
+    @Query('id') id: number,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.devisService.sendMail(id, identity);
   }
 }
