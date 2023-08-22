@@ -73,6 +73,7 @@ import { AppointmentReminderLibrarieModule } from './appointment-reminder-librar
 import { SettingModule } from './setting/setting.module';
 import { BordereauxModule } from './bordereaux/bordereaux.module';
 import { TraceabilityModule } from './traceability/traceability.module';
+import { AddressBookModule } from './address-books/address-books.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -200,6 +201,7 @@ const importsModules = [
   AccountModule,
   BordereauxModule,
   TraceabilityModule,
+  AddressBookModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {
