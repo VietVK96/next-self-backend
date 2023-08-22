@@ -49,7 +49,8 @@ export class FileController {
 
       res.setHeader('Content-Type', mimeType);
       res.setHeader('Content-Disposition', disposition);
-      res.sendFile(join(__dirname, '..', '..', path));
+      // don't use __dirname because path is full path of the file
+      res.sendFile(path);
     } catch (error) {
       throw new CBadRequestException('file not found', error);
     }
