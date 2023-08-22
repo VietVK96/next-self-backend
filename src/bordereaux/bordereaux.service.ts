@@ -482,14 +482,17 @@ export class BordereauxService {
   /**
    *  File php/bordereaux/store.php
    */
-  async store(identity: UserIdentity, payload: BordereauxStoreDto) {
+  async store(
+    identity: UserIdentity,
+    payload: BordereauxStoreDto,
+  ): Promise<SlipCheckEntity> {
     const bank = await this.libraryBankRepository.findOne({
       where: { id: payload.bank_id },
     });
 
     if (
       !(await this.permissionService.hasPermission(
-        'PERMISSION_PAIEMENT',
+        PerCode.PERMISSION_PAIEMENT,
         6,
         identity.id,
         identity.id,
@@ -506,7 +509,7 @@ export class BordereauxService {
         .map((item) => `'${item}'`)
         .join(',');
 
-      const amounts = await this.dataSource.query(
+      const amounts: { totalAmount: number }[] = await this.dataSource.query(
         `SELECT SUM(payment.CSG_AMOUNT) as totalAmount
        FROM T_CASHING_CSG payment 
        WHERE payment.CSG_ID IN (${formatPaymentId}) 
@@ -525,7 +528,7 @@ export class BordereauxService {
       slipcheck.amount = amounts?.length > 0 ? amounts[0].totalAmount : null;
       slipcheck.label = `bordereau de remise de ${payload.payment_id.length} ${payload.payment_choice}`;
 
-      const newSlipchecks = await this.slipCheckRepository.save(slipcheck);
+      const newSlipcheck = await this.slipCheckRepository.save(slipcheck);
 
       const payments = await this.cashingRepository.find({
         where: {
@@ -537,14 +540,14 @@ export class BordereauxService {
       const updatePayments = payments.map((item) => {
         return {
           ...item,
-          slcId: newSlipchecks.id,
+          slcId: newSlipcheck.id,
           bank,
         };
       });
 
       await this.cashingRepository.save(updatePayments);
 
-      return newSlipchecks;
+      return newSlipcheck;
     } catch (err) {
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
