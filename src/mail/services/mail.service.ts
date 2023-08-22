@@ -1675,7 +1675,7 @@ export class MailService {
 
       const fullName = [mail?.user?.lastname, mail?.user?.firstname].join(' ');
       const emailTemplate = fs.readFileSync(
-        path.join(__dirname, '../../../templates/mail/mailTemplate.hbs'),
+        path.join(__dirname, '../../../templates/mail/feedback.hbs'),
         'utf-8',
       );
       const template = handlebars.compile(emailTemplate);
