@@ -258,8 +258,8 @@ export class FindEventService {
       const bgeventsFinalResult = bgevents.map((item) => {
         return {
           ...item,
-          start_date: dayjs(item?.start_date).format('YYYY-MM-DDTHH:mm:ss.sZ'),
-          end_date: dayjs(item?.end_date).format('YYYY-MM-DDTHH:mm:ss.sZ'),
+          start_date: dayjs(item?.start_date).format('YYYY-MM-DDTHH:mm:ss.s'),
+          end_date: dayjs(item?.end_date).format('YYYY-MM-DDTHH:mm:ss.s'),
         };
       });
       return {
