@@ -73,6 +73,7 @@ import { AppointmentReminderLibrarieModule } from './appointment-reminder-librar
 import { SettingModule } from './setting/setting.module';
 import { BordereauxModule } from './bordereaux/bordereaux.module';
 import { TraceabilityModule } from './traceability/traceability.module';
+import { AddressBookModule } from './address-books/address-books.module';
 import { AdvanceSearchModule } from './advanced-search/advanced-search.module';
 
 const importsModules = [
@@ -201,6 +202,7 @@ const importsModules = [
   AccountModule,
   BordereauxModule,
   TraceabilityModule,
+  AddressBookModule,
   AdvanceSearchModule,
 ];
 
