@@ -136,6 +136,11 @@ export class FindContactService {
       );
     // Start $searchCriteria = new \App\Services\SearchCriteria($connection, $fields, $conditions);
     if (request?.conditions && request?.conditions.length > 0) {
+      for (const condition of request?.conditions) {
+        if (condition?.value?.length < 2) {
+          return [];
+        }
+      }
       qr = this.addWhere(qr, request?.conditions);
     }
     qr.andWhere('CON.CON_ID <> :id', {
