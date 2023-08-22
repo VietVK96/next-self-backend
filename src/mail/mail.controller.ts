@@ -57,6 +57,7 @@ export class MailController {
     @Query('search') search?: string,
     @Query('pageIndex') pageIndex?: number,
     @Query('practitionerId') practitionerId?: string,
+    @Query('orderBy') orderBy?: string,
   ) {
     return await this.mailService.findAll(
       draw,
@@ -65,6 +66,7 @@ export class MailController {
       identity.org,
       search,
       practitionerId,
+      orderBy,
     );
   }
 
