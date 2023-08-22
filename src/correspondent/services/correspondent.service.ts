@@ -11,7 +11,6 @@ import {
   LookUpRes,
   findAllCorrRes,
 } from '../response/find.correspondent.res';
-import { UserEntity } from 'src/entities/user.entity';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { Response } from 'express';
 import { Parser } from 'json2csv';
