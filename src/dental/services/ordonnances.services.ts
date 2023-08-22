@@ -8,7 +8,7 @@ import { ErrorCode } from 'src/constants/error';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
-import { EnregistrerFactureDto, PrintPDFDto } from '../dto/facture.dto';
+import { PrintPDFDto } from '../dto/facture.dto';
 import { checkBoolean, checkId } from 'src/common/util/number';
 import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
 import { UserEntity } from 'src/entities/user.entity';
@@ -23,11 +23,9 @@ import {
 import { checkDay } from 'src/common/util/day';
 import { generateBarcode } from 'src/common/util/image';
 import * as handlebars from 'handlebars';
-import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import * as dayjs from 'dayjs';
 import * as fs from 'fs';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
-import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 
 @Injectable()
@@ -41,8 +39,6 @@ export class OrdonnancesServices {
     private userRepository: Repository<UserEntity>,
     @InjectRepository(MedicalOrderEntity)
     private medicalOrderRepo: Repository<MedicalOrderEntity>,
-    @InjectRepository(PlanPlfEntity)
-    private planPlfRepository: Repository<PlanPlfEntity>,
     @InjectRepository(ContactNoteEntity)
     private contactNoteRepo: Repository<ContactNoteEntity>,
     private mailTransportService: MailTransportService,

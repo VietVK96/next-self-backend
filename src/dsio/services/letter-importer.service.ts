@@ -34,7 +34,7 @@ export class LetterImporterService {
     const fileName = pathname;
     const dirName = path.dirname(fileName);
     const nameFile = path.basename(fileName, path.extname(fileName));
-    const jsonFileName = `${dirName}/${nameFile}.json`;
+    const jsonFileName = path.join(dirName, `${nameFile}.json`);
     const handle = await fsPromises.open(jsonFileName, 'w');
     const logger = async (
       handle: fsPromises.FileHandle,

@@ -19,10 +19,11 @@ import { ErrorCode } from 'src/constants/error';
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { SaveSmsShareDto } from './dto/notification.dto';
 import { SuccessResponse } from 'src/common/response/success.res';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class NotificationSettingService {
-  constructor(private dataSource: DataSource) {}
+  constructor(private dataSource: DataSource, private config: ConfigService) {}
 
   //application/Entities/Address.php
   //application/Entities/AddressEntity.php
@@ -58,8 +59,12 @@ export class NotificationSettingService {
     return smsCount;
   }
 
-  async find(userId: number, request: Request): Promise<FindNotificationRes> {
-    const url = request.headers.origin + request.url;
+  async find(
+    userId: number,
+    request: Request,
+    host: string,
+  ): Promise<FindNotificationRes> {
+    const url = `${request.protocol}://${host}${request.originalUrl}`;
     if (!userId) throw new CBadRequestException(ErrorCode.FORBIDDEN);
     const user = await this.dataSource.getRepository(UserEntity).findOne({
       where: { id: userId },
@@ -161,9 +166,9 @@ export class NotificationSettingService {
     );
 
     const monetico = new Monetico(
-      process.env.MONETICO_COMPANY_CODE,
-      process.env.MONETICO_EPT_CODE,
-      process.env.MONETICO_SECURITY_KEY,
+      this.config.get<string>('app.monetico.companyCode'),
+      this.config.get<string>('app.monetico.eptCode'),
+      this.config.get<string>('app.monetico.securityCode'),
     );
 
     products.push({

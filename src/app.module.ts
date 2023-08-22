@@ -74,6 +74,7 @@ import { SettingModule } from './setting/setting.module';
 import { BordereauxModule } from './bordereaux/bordereaux.module';
 import { TraceabilityModule } from './traceability/traceability.module';
 import { AddressBookModule } from './address-books/address-books.module';
+import { AdvanceSearchModule } from './advanced-search/advanced-search.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -202,6 +203,7 @@ const importsModules = [
   BordereauxModule,
   TraceabilityModule,
   AddressBookModule,
+  AdvanceSearchModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {
@@ -227,9 +229,6 @@ if (process.env.LOGSTACK_ENABLE === 'true') {
     }),
   );
 }
-
-console.log(join(__dirname, '..', 'resources'));
-
 @Module({
   imports: importsModules,
 })

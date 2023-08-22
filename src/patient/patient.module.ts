@@ -26,6 +26,7 @@ import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { AntecedentPrestationEntity } from 'src/entities/antecedentprestation.entity';
 import { LibraryOdontogramEntity } from 'src/entities/library-odontogram.entity';
+import { LibraryActEntity } from 'src/entities/library-act.entity';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { LibraryOdontogramEntity } from 'src/entities/library-odontogram.entity'
       DentalEventTaskEntity,
       AntecedentPrestationEntity,
       LibraryOdontogramEntity,
+      LibraryActEntity,
     ]),
     forwardRef(() => ContactModule),
   ],

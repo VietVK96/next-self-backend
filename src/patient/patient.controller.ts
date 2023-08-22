@@ -8,7 +8,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { PatientService } from './service/patient.service';
-import { PatientExportDto, PatientThirdPartyDto } from './dto/index.dto';
+import {
+  PatientActsDependenciesDto,
+  PatientExportDto,
+  PatientThirdPartyDto,
+} from './dto/index.dto';
 import { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
@@ -57,5 +61,15 @@ export class PatientController {
   @UseGuards(TokenGuard)
   async findAllContraindications(@Param('id') id: number) {
     return this.patientService.findAllContraindications(id);
+  }
+
+  /**
+   * php/patients/acts/dependencies/index.php
+   */
+
+  @Get('/atcs/dependencies')
+  @UseGuards(TokenGuard)
+  async getAtcsDependencies(@Query() request: PatientActsDependenciesDto) {
+    return await this.patientService.getAtcsDependencies(request);
   }
 }

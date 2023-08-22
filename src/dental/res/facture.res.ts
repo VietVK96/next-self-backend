@@ -13,7 +13,6 @@ export class InitFactureRes {
   infosCompl?: string;
   details?: DetailsRes[];
   pdf?: string;
-
   billSignatureDoctor?: string;
   billAmount?: number;
   billSecuAmount?: number;
@@ -22,7 +21,6 @@ export class InitFactureRes {
   contactFullname?: string;
   contactBirthday?: string;
   contactInsee?: string;
-
   groupId?: number;
 }
 
