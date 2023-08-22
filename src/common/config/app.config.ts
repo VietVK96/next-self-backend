@@ -22,5 +22,18 @@ export default registerAs('app', () => ({
       process?.env?.WZAGENDA_END_POINT ||
       `https://secure.wz-agenda.net/webservices/3.1/server.php#wzcalendar`,
   },
-  haliteKey: process?.env?.HALITE_KEY || '', // DATABASE_ENCRYPTION_KEY in php
+  haliteKey: process?.env?.HALITE_KEY || '', // DATABASE_ENCRYPTION_KEY in php,
+  monetico: {
+    companyCode: process?.env?.MONETICO_COMPANY_CODE || `ECOODENTIST`,
+    eptCode: process?.env?.MONETICO_EPT_CODE || `6290886`,
+    securityCode:
+      process?.env?.MONETICO_SECURITY_KEY ||
+      `FF23C97BA6B760A6E3BBE298DA18415334558D92`,
+  },
+  claudeBernard: {
+    wdsl:
+      process?.env?.CLAUDE_BERNARD_END_POINT ||
+      'https://www.bcbdexther.fr/wsdl/BCBDexther-integrateurs-full.wsdl',
+    codeEditeur: process?.env?.CLAUDE_BERNARD_CODE_EDITEUR || 'ECOODENTIST',
+  },
 }));
