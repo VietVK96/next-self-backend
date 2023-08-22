@@ -11,7 +11,6 @@ import { PhoneEntity } from 'src/entities/phone.entity';
 import { DataSource, InsertResult, Repository, UpdateResult } from 'typeorm';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ContactDetailDto } from '../dto/contact-detail.dto';
-import { isNumber } from 'class-validator';
 import { PolicyHolderEntity } from 'src/entities/policy-holder.entity';
 import { ContactService } from './contact.service';
 import { ContactDetailRes } from '../response/contact-detail.res';
