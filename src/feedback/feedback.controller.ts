@@ -6,7 +6,7 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { FeedbackService } from './feedback.service';
+import { FeedbackService } from './services/feedback.service';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import {
   CurrentUser,
