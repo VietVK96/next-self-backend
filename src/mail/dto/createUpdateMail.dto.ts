@@ -36,4 +36,10 @@ export class CreateUpdateMailDto {
 
   @ApiProperty()
   footer?: number;
+
+  @ApiProperty()
+  patientId?: number;
+
+  @ApiProperty()
+  correspondentId: number;
 }
