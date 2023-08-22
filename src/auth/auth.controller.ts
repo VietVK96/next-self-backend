@@ -75,12 +75,16 @@ export class AuthController {
     };
     const data = new HaliteEncryptorHelper(key);
     const v = data.decrypt(input.inputEnc);
+    const x = data.decrypt(
+      'MUIEADk/AuYxS+JBXAApxnodxhGP0xBScbq/i9EWm//iGMnHpteryDEqWjnN9wc8ZNHw/3dmWSXtpxBOZiW59Kx9GXIQlsKHvuzB/vj5u+unSFC7JMRiMp2JX30g1VYkRUnOuBbTATXs40gPau6FGI/rYwZEjbFtDyqgT+2FaBnLbJoQ/jrecVWc<ENC>',
+    );
     const encode = data.encrypt(input.inputCheck);
     const decode = data.decrypt(encode);
     return {
       decode: {
         input: input.inputEnc,
         output: v,
+        x,
       },
       encode: {
         input: input.inputCheck,

@@ -23,6 +23,7 @@ import { InitDsioElemService } from './services/init-dsio.elem.service';
 import { LibraryDsioElemService } from './services/library-dsio.elem.service';
 import { PaymentDsioElemService } from './services/payment-dsio.elem.service';
 import { MedicaDsioElemService } from './services/medica-dsio.elem.service';
+import { PercentService } from './services/percent.service';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { MedicaDsioElemService } from './services/medica-dsio.elem.service';
     HandleDsioService,
     AmountDsioService,
     PreDataDsioService,
+    PercentService,
   ],
 })
 export class DsioModule {}

@@ -67,7 +67,13 @@ export class MailService {
     groupId: number,
     search: string,
     practitionerId: string,
+    orderBy?: string,
   ): Promise<FindAllMailRes> {
+    const hasLeadingDash = orderBy && orderBy.startsWith('-');
+    const usableOrderBy = hasLeadingDash
+      ? orderBy.substring(1)
+      : orderBy ?? 'title';
+    const direction = hasLeadingDash ? 'DESC' : 'ASC';
     if (!search) search = '';
     const pageSize = 100;
     const doctors: PersonInfoDto[] = await this.dataSource.query(`SELECT
@@ -98,7 +104,7 @@ export class MailService {
                 T_LETTERS_LET.USR_ID IS NULL OR
                 T_LETTERS_LET.USR_ID = ?
             )
-        ORDER BY favorite DESC`,
+        ORDER BY favorite DESC, ${usableOrderBy} ${direction}`,
         [search, docId],
       );
       for (const iterator of mails) {
@@ -162,6 +168,7 @@ export class MailService {
       recordsFiltered: pageIndex === -1 ? mails.length : mailPaging.length,
       totalData: mails.length,
       data: mailPaging,
+      orderBy: orderBy,
     };
   }
 
@@ -265,11 +272,13 @@ export class MailService {
   ): Promise<CreateUpdateMailRes> {
     const qr = await this.lettersRepo.query(
       `INSERT INTO T_LETTERS_LET
-      ( USR_ID, header_id, footer_id, LET_TITLE, LET_MSG, footer_content, 
+      ( USR_ID, CON_ID, CPD_ID, header_id, footer_id, LET_TITLE, LET_MSG, footer_content, 
         footer_height, LET_TYPE, height, favorite) 
-        VALUES (?,?,?,?,?,?,?,?,?,?)`,
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
         doctorId ? doctorId : null,
+        payload?.patientId ? payload.patientId : null,
+        payload?.correspondentId ? payload.correspondentId : null,
         payload?.header === null ? null : payload?.header,
         payload?.footer === null ? null : payload?.footer,
         payload?.title,

@@ -11,7 +11,6 @@ import {
   LookUpRes,
   findAllCorrRes,
 } from '../response/find.correspondent.res';
-import { UserEntity } from 'src/entities/user.entity';
 import { CorrespondentEntity } from 'src/entities/correspondent.entity';
 import { Response } from 'express';
 import { Parser } from 'json2csv';
@@ -20,6 +19,7 @@ import {
   dateFormatter,
   inseeFormatter,
 } from '../../common/formatter/index';
+import { PermissionService } from 'src/user/services/permission.service';
 
 @Injectable()
 export class CorrespondentService {
@@ -30,6 +30,7 @@ export class CorrespondentService {
     private readonly phoneRepo: Repository<PhoneEntity>,
     @InjectRepository(CorrespondentEntity)
     private readonly corresRepo: Repository<CorrespondentEntity>,
+    private permissionService: PermissionService,
   ) {}
 
   async lookUp(groupId: number, term: string): Promise<LookUpRes[]> {
@@ -390,14 +391,15 @@ GROUP BY CPD.CPD_ID ${sort}`,
 
   async delete(userId: number, id: number) {
     const queryRunner = this.connection.createQueryRunner();
-    const checkRoleDelete = await queryRunner.manager
-      .createQueryBuilder()
-      .select(`USR_PERMISSION_DELETE`)
-      .from(UserEntity, 'USR')
-      .where(`USR.USR_ID = :userId`, { userId })
-      .getRawOne();
-    if (checkRoleDelete.USR_PERMISSION_DELETE < 8)
+
+    const hasPermission = await this.permissionService.hasPermission(
+      'PERMISSION_DELETE',
+      8,
+      userId,
+    );
+    if (!hasPermission) {
       throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
+    }
     const correspondentDelete = await this.corresRepo.findOne({
       where: { id },
     });

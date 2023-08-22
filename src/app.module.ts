@@ -74,6 +74,7 @@ import { SettingModule } from './setting/setting.module';
 import { BordereauxModule } from './bordereaux/bordereaux.module';
 import { TraceabilityModule } from './traceability/traceability.module';
 import { FeedbackModule } from './feedback/feedback.module';
+import { AddressBookModule } from './address-books/address-books.module';
 import { AdvanceSearchModule } from './advanced-search/advanced-search.module';
 
 const importsModules = [
@@ -203,6 +204,7 @@ const importsModules = [
   BordereauxModule,
   TraceabilityModule,
   FeedbackModule,
+  AddressBookModule,
   AdvanceSearchModule,
 ];
 

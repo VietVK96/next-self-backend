@@ -62,7 +62,12 @@ export class ImportServices {
           let filename = dirFile;
 
           // File recovery if upload file is archived
-          if (file.mimetype === 'application/zip') {
+          if (
+            file.mimetype === 'application/zip' ||
+            file.mimetype === 'application/x-zip-compressed' ||
+            file.mimetype === 'application/x-zip' ||
+            file.mimetype === 'multipart/x-zip'
+          ) {
             const zip = new AdmZip(filename);
             const zipEntries = zip.getEntries();
             const firstEntry = zipEntries[0];

@@ -28,6 +28,7 @@ import { OrganizationSubscriptionEntity } from './organization-subcription.entit
 import { TagEntity } from './tag.entity';
 import { TariffTypeEntity } from './tariff-type.entity';
 import { WorkstationEntity } from './workstation.entity';
+import { SlipCheckEntity } from './slip-check.entity';
 
 /**
  * @ORM\Entity
@@ -375,6 +376,11 @@ export class OrganizationEntity {
     createForeignKeyConstraints: false,
   })
   bankChecks?: BankCheckEntity[];
+
+  @OneToMany(() => SlipCheckEntity, (e) => e.organization, {
+    createForeignKeyConstraints: false,
+  })
+  slipChecks?: SlipCheckEntity[];
 
   /**
    * @ORM\OneToMany(targetEntity="Contraindication", mappedBy="organization")
