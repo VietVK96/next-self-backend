@@ -28,10 +28,9 @@ import { QuotationMutualController } from './quotation-mutual.controller';
 import { DevisStd2Controller } from './devisStd2.controller';
 import { FactureController } from './facture.controller';
 import { OrdonnancesController } from './ordonnances.controller';
-import { QuotationController } from 'src/contact/quotation.controller';
 import { QuotesController } from './quotes.controller';
-import { QuotationService } from 'src/contact/services/quotation.service';
 import { ContactPaymentService } from 'src/contact/services/contact.payment.service';
+import { QuotationController } from './quotation.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature(listEntities), PaymentSchedulesModule],
@@ -66,7 +65,6 @@ import { ContactPaymentService } from 'src/contact/services/contact.payment.serv
     TherapeuticAlternativeService,
     UserService,
     QuotationServices,
-    QuotationService,
     ContactPaymentService,
   ],
 })

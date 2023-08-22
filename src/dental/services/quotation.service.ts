@@ -6,8 +6,15 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { UserEntity } from 'src/entities/user.entity';
 import { QuotationDevisRequestAjaxDto } from '../dto/devis_request_ajax.dto';
-import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
-import { QuotationInitChampsDto } from '../dto/quotation.dto';
+import {
+  UserPreferenceQuotationDisplayAnnexeType,
+  UserPreferenceQuotationDisplayOdontogramType,
+  UserPreferenceQuotationEntity,
+} from 'src/entities/user-preference-quotation.entity';
+import {
+  PreferenceQuotationDto,
+  QuotationInitChampsDto,
+} from '../dto/quotation.dto';
 import { ErrorCode } from 'src/constants/error';
 import {
   QuotationInitActeRes,
@@ -40,6 +47,10 @@ import * as handlebars from 'handlebars';
 import * as fs from 'fs';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { SuccessResponse } from 'src/common/response/success.res';
+import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-request.exception';
+import { PerCode } from 'src/constants/permissions';
+import { PermissionService } from 'src/user/services/permission.service';
 
 @Injectable()
 export class QuotationServices {
@@ -67,6 +78,7 @@ export class QuotationServices {
     private paymentScheduleService: PaymentScheduleService,
     private dataSource: DataSource,
     private mailTransportService: MailTransportService,
+    private permissionService: PermissionService,
   ) {}
 
   async sendMail(id: number, identity: UserIdentity) {
@@ -740,7 +752,7 @@ export class QuotationServices {
               CON.CON_LASTNAME AS patient_lastname,
               CON.CON_FIRSTNAME AS patient_firstname,
               T_GENDER_GEN.GEN_NAME AS patient_civility_name,
-              CON.CON_BIRTHDAY as birthda,
+              CON.CON_BIRTHDAY as birthday,
               CON.ADR_ID,
               CON.CON_MAIL as email,
               CONCAT(ADR.ADR_STREET, '\n', ADR.ADR_ZIP_CODE, ' ', ADR.ADR_CITY) as address,
@@ -1163,6 +1175,164 @@ export class QuotationServices {
       return result;
     } catch (error) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
+  }
+
+  async findQuotationByID(id: number) {
+    return await this.dentalQuotationRepository.find({
+      where: { id: id },
+      relations: {
+        logo: true,
+        user: true,
+        contact: true,
+        patient: true,
+        planification: true,
+        treatmentPlan: true,
+        acts: true,
+        paymentPlan: true,
+        attachments: true,
+      },
+    });
+  }
+
+  async deleteQuotation(
+    identity: UserIdentity,
+    id: number,
+  ): Promise<SuccessResponse> {
+    if (
+      !this.permissionService.hasPermission(
+        PerCode.PERMISSION_DELETE,
+        8,
+        identity.id,
+      )
+    ) {
+      throw new CForbiddenRequestException(ErrorCode.FORBIDDEN);
+    }
+    const quotation = await this.findQuotationByID(id);
+
+    if (
+      !quotation ||
+      !quotation[0] ||
+      !quotation[0].user ||
+      quotation[0].user.organizationId != identity.org
+    ) {
+      throw new CBadRequestException(ErrorCode.DELETE_UNSUCCESSFUL);
+    }
+
+    const deleteQuotation = await this.dentalQuotationRepository.delete(id);
+    if (deleteQuotation.affected === 0) {
+      throw new CBadRequestException(ErrorCode.DELETE_UNSUCCESSFUL);
+    }
+
+    return {
+      success: true,
+    };
+  }
+
+  async patchPreferenceQuotation(
+    id: number,
+    identity: UserIdentity,
+    payload: PreferenceQuotationDto,
+  ): Promise<SuccessResponse> {
+    try {
+      const queryBuilder = this.dataSource
+        .getRepository(UserEntity)
+        .createQueryBuilder('usr');
+      const user: UserEntity = await queryBuilder
+        .leftJoinAndSelect('usr.userPreferenceQuotation', 'upq')
+        .where('usr.id = :id', { id: id })
+        .andWhere('usr.group = :groupId', { groupId: identity.org })
+        .getRawOne();
+      let userPreferenceQuotation =
+        await this.userPreferenceQuotationRepository.findOne({
+          where: {
+            usrId: id,
+          },
+        });
+
+      if (!userPreferenceQuotation) {
+        const userPreferenceQuotationNew: UserPreferenceQuotationEntity = {
+          usrId: user?.id,
+        };
+        userPreferenceQuotation =
+          await this.userPreferenceQuotationRepository.save(
+            userPreferenceQuotationNew,
+          );
+      }
+      // Assuming payload.value is a number
+      const valuePayload = `${payload.value}`;
+
+      switch (payload.name) {
+        case 'color':
+          userPreferenceQuotation.color = `${payload.value}`;
+        case 'placeOfManufacture':
+          userPreferenceQuotation.placeOfManufacture = Number(payload.value);
+        case 'placeOfManufactureLabel':
+          userPreferenceQuotation.placeOfManufactureLabel = `${payload.value}`;
+        case 'withSubcontracting':
+          userPreferenceQuotation.withSubcontracting = Number(payload.value);
+        case 'placeOfSubcontracting':
+          userPreferenceQuotation.placeOfSubcontracting = Number(payload.value);
+        case 'placeOfSubcontractingLabel':
+          userPreferenceQuotation.placeOfSubcontractingLabel = `${payload.value}`;
+        case 'displayOdontogram':
+          let displayOdontogram: UserPreferenceQuotationDisplayOdontogramType;
+          if (valuePayload === 'none') {
+            displayOdontogram =
+              UserPreferenceQuotationDisplayOdontogramType.NONE;
+          } else if (valuePayload === 'both') {
+            displayOdontogram =
+              UserPreferenceQuotationDisplayOdontogramType.BOTH;
+          } else if (valuePayload === 'three') {
+            displayOdontogram =
+              UserPreferenceQuotationDisplayOdontogramType.THREEE;
+          } else {
+            throw new CBadRequestException(
+              'value not value: none, both or three',
+            );
+          }
+          userPreferenceQuotation.displayOdontogram = displayOdontogram;
+        case 'displayAnnexe':
+          let displayAnnexe: UserPreferenceQuotationDisplayAnnexeType;
+          if (valuePayload === 'none') {
+            displayAnnexe = UserPreferenceQuotationDisplayAnnexeType.NONE;
+          } else if (valuePayload === 'both') {
+            displayAnnexe = UserPreferenceQuotationDisplayAnnexeType.BOTH;
+          } else if (valuePayload === 'only') {
+            displayAnnexe = UserPreferenceQuotationDisplayAnnexeType.ONLY;
+          } else {
+            throw new CBadRequestException(
+              'value not value: none, both or only',
+            );
+          }
+          userPreferenceQuotation.displayAnnexe = displayAnnexe;
+        case 'displayNotice':
+          userPreferenceQuotation.displayNotice = Number(payload.value);
+        case 'displayTooltip':
+          userPreferenceQuotation.displayTooltip = Number(payload.value);
+        case 'displayDuplicata':
+          userPreferenceQuotation.displayDuplicata = Number(payload.value);
+        case 'treatment_timeline':
+          userPreferenceQuotation.treatmentTimeline = Number(payload.value);
+      }
+      console.log(
+        '🚀 ~ file: quotation.service.ts:1317 ~ QuotationServices ~ userPreferenceQuotation:',
+        userPreferenceQuotation,
+      );
+
+      await this.userPreferenceQuotationRepository.save(
+        userPreferenceQuotation,
+      );
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      console.log(
+        '🚀 ~ file: quotation.service.ts:1331 ~ QuotationServices ~ error:',
+        error,
+      );
+      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
   }
 }
