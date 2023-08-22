@@ -10,6 +10,7 @@ import { FindAllMailDto } from './dto/findAll.mail.contact';
 export class MailController {
   constructor(private mailService: MailService) {}
 
+  // php/contact/mail/findAll.php
   @Post('/findAll')
   @UseGuards(TokenGuard)
   async findAll(@Body() payload: FindAllMailDto) {
