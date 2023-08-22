@@ -265,11 +265,13 @@ export class MailService {
   ): Promise<CreateUpdateMailRes> {
     const qr = await this.lettersRepo.query(
       `INSERT INTO T_LETTERS_LET
-      ( USR_ID, header_id, footer_id, LET_TITLE, LET_MSG, footer_content, 
+      ( USR_ID, CON_ID, CPD_ID, header_id, footer_id, LET_TITLE, LET_MSG, footer_content, 
         footer_height, LET_TYPE, height, favorite) 
-        VALUES (?,?,?,?,?,?,?,?,?,?)`,
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
         doctorId ? doctorId : null,
+        payload?.patientId ? payload.patientId : null,
+        payload?.correspondentId ? payload.correspondentId : null,
         payload?.header === null ? null : payload?.header,
         payload?.footer === null ? null : payload?.footer,
         payload?.title,
