@@ -10,10 +10,15 @@ import * as crypto from 'crypto-js';
 import * as nodemailer from 'nodemailer';
 import { env } from 'process';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
+import { ConfigService } from '@nestjs/config';
+import { HaliteEncryptorHelper } from 'src/common/lib/halite/encryptor.helper';
 
 @Injectable()
 export class MailTransportService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private dataSource: DataSource,
+    private configService: ConfigService,
+  ) {}
 
   async createTranspoter(
     userId: number,
@@ -36,22 +41,16 @@ export class MailTransportService {
       const emailOutgoingServer = await this.dataSource
         .getRepository(EmailOutgoingServerEntity)
         .findOne({ where: { emailAccountId: email.id } });
-      const decryptedUserName = crypto.DES.decrypt(
-        emailOutgoingServer.username,
-        env.SECRET_KEY_EMAIL || 'dental',
-      );
 
-      emailOutgoingServer.username = decryptedUserName.toString(
-        crypto.enc.Utf8,
-      );
-      const decryptedPassword = crypto.DES.decrypt(
-        emailOutgoingServer.password,
-        env.SECRET_KEY_EMAIL || 'dental',
-      );
-      emailOutgoingServer.password = decryptedPassword.toString(
-        crypto.enc.Utf8,
-      );
+      const key = this.configService.get<string>('app.haliteKey');
+      const encryptFactory = new HaliteEncryptorHelper(key);
 
+      emailOutgoingServer.username = encryptFactory.decrypt(
+        emailOutgoingServer?.username,
+      );
+      emailOutgoingServer.password = encryptFactory.decrypt(
+        emailOutgoingServer?.password,
+      );
       const transport = nodemailer.createTransport({
         host: emailOutgoingServer.hostname,
 
