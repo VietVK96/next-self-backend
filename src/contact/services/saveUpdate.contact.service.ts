@@ -71,7 +71,10 @@ export class SaveUpdateContactService {
         }
       }
 
-      if (!isNumber(reqBody?.social_security_reimbursement_rate)) {
+      if (
+        reqBody?.social_security_reimbursement_rate &&
+        isNaN(Number(reqBody?.social_security_reimbursement_rate))
+      ) {
         reqBody.social_security_reimbursement_rate = null;
       }
 
@@ -282,7 +285,10 @@ export class SaveUpdateContactService {
         address.id = resultAddress?.raw?.insertId;
       }
 
-      if (!isNumber(reqBody?.social_security_reimbursement_rate)) {
+      if (
+        reqBody?.social_security_reimbursement_rate &&
+        isNaN(Number(reqBody?.social_security_reimbursement_rate))
+      ) {
         reqBody.social_security_reimbursement_rate = null;
       }
 
