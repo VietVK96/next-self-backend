@@ -7,10 +7,12 @@ import { UserEntity } from 'src/entities/user.entity';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import * as handlebars from 'handlebars';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateFeedbackDto } from './dto/create-feedback.dto';
+import { CreateFeedbackDto } from '../dto/create-feedback.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ErrorCode } from 'src/constants/error';
+import { ConfigService } from '@nestjs/config';
+import { FactureEmailDataDto } from 'src/dental/dto/facture.dto';
 
 @Injectable()
 export class FeedbackService {
@@ -18,13 +20,14 @@ export class FeedbackService {
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
     private mailTransportService: MailTransportService,
+    private configService: ConfigService,
   ) {}
 
   async sendFeedback(
     reateFeedback: CreateFeedbackDto,
     currentUser: UserIdentity,
-    userAgent,
-  ): Promise<{ message: string }> {
+    userAgent: string,
+  ): Promise<{ success: boolean }> {
     const { type, message } = reateFeedback;
     let errorMessage = '';
 
@@ -49,7 +52,10 @@ export class FeedbackService {
       throw new CBadRequestException(ErrorCode.NOT_FOUND_DOCTOR);
     }
 
-    const mailTo: string[] = [];
+    const mailTo: string[] = this.configService.get<string[]>(
+      `mailFeedBack.${type}`,
+      [],
+    );
 
     const subject = `[e.cooDentist][${type.toUpperCase()}] Message envoyé par ${
       user.lastname + user.firstname
@@ -77,21 +83,7 @@ export class FeedbackService {
       },
     };
 
-    switch (type) {
-      case 'suggestion':
-        mailTo.push('eng@dentalviamedilor.com');
-        mailTo.push('sales@dentalviamedilor.com');
-        mailTo.push('formation@dentalviamedilor.com');
-        break;
-      case 'commercial':
-        mailTo.push('sales@dentalviamedilor.com');
-        break;
-      case 'administratif':
-        mailTo.push('admin@dentalviamedilor.com');
-        break;
-    }
-
-    const email = {
+    const email: FactureEmailDataDto = {
       from: user.email,
       to: mailTo,
       subject: subject,
@@ -102,8 +94,7 @@ export class FeedbackService {
     try {
       await this.mailTransportService.sendEmail(currentUser.id, email);
       return {
-        message:
-          'Le message a bien \u00e9t\u00e9 envoy\u00e9 au service concern\u00e9. 123',
+        success: true,
       };
     } catch (error) {
       throw new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);

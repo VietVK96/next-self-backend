@@ -15,6 +15,7 @@ import {
 import { ContactEntity } from 'src/entities/contact.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ContraindicationEntity } from 'src/entities/contraindication.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class MedicamentDatabaseService {
@@ -22,6 +23,7 @@ export class MedicamentDatabaseService {
     private dataSource: DataSource,
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
+    private config: ConfigService,
   ) {}
 
   private _generateKey(codeEditeur: string, idPS: string) {
@@ -45,17 +47,16 @@ export class MedicamentDatabaseService {
   }
 
   async connnectMedicamentDatabase(userId: number) {
-    const wsdlUrl =
-      'https://www.bcbdexther.fr/wsdl/BCBDexther-integrateurs-full.wsdl';
+    const wsdlUrl = this.config.get<string>('app.claudeBernard.wdsl');
     const user = await this.userRepo.findOne({ where: { id: userId } });
     const claudeBernardLicence = user?.bcbLicense;
     const claudeBernard = await soap.createClientAsync(wsdlUrl);
     const resultTest = await claudeBernard?.testConnexionAsync({
       key: {
-        codeEditeur: process.env.CLAUDE_BERNARD_CODE_EDITEUR,
+        codeEditeur: this.config.get<string>('app.claudeBernard.codeEditeur'),
         idPS: claudeBernardLicence,
         secretEditeur: this._generateKey(
-          process.env.CLAUDE_BERNARD_CODE_EDITEUR,
+          this.config.get<string>('app.claudeBernard.codeEditeur'),
           claudeBernardLicence,
         ),
       },
@@ -74,20 +75,22 @@ export class MedicamentDatabaseService {
   ): Promise<
     FindMedicamentDatabaseContraindicationRes[] | FindMedicamentDatabaseRes[]
   > {
-    const wsdlUrl =
-      'https://www.bcbdexther.fr/wsdl/BCBDexther-integrateurs-full.wsdl';
+    const wsdlUrl = this.config.get<string>('app.claudeBernard.wdsl');
     const user = await this.userRepo.findOne({ where: { id: userId } });
     const claudeBernardLicence = user?.bcbLicense;
-    const claudeBernard = await soap.createClientAsync(wsdlUrl);
-    const resultTest = await claudeBernard.testConnexionAsync({
+    const keyClaudeBernard = {
       key: {
-        codeEditeur: process.env.CLAUDE_BERNARD_CODE_EDITEUR,
+        codeEditeur: this.config.get<string>('app.claudeBernard.codeEditeur'),
         idPS: claudeBernardLicence,
         secretEditeur: this._generateKey(
-          process.env.CLAUDE_BERNARD_CODE_EDITEUR,
+          this.config.get<string>('app.claudeBernard.codeEditeur'),
           claudeBernardLicence,
         ),
       },
+    };
+    const claudeBernard = await soap.createClientAsync(wsdlUrl);
+    const resultTest = await claudeBernard.testConnexionAsync({
+      ...keyClaudeBernard,
     });
 
     if (resultTest[0]?.result?.statutConnexion < 1) {
@@ -97,14 +100,7 @@ export class MedicamentDatabaseService {
     }
 
     const claudeBernardSearchResult = await claudeBernard?.rechercheBCBAsync({
-      key: {
-        codeEditeur: process.env.CLAUDE_BERNARD_CODE_EDITEUR,
-        idPS: claudeBernardLicence,
-        secretEditeur: this._generateKey(
-          process.env.CLAUDE_BERNARD_CODE_EDITEUR,
-          claudeBernardLicence,
-        ),
-      },
+      ...keyClaudeBernard,
       query: query?.query,
       type: query?.type ?? 53248,
       baseLocation: query?.baseLocation ?? 2,
@@ -140,20 +136,22 @@ export class MedicamentDatabaseService {
   ) {
     const { produitId, patientId } = query;
     try {
-      const wsdlUrl =
-        'https://www.bcbdexther.fr/wsdl/BCBDexther-integrateurs-full.wsdl';
+      const wsdlUrl = this.config.get<string>('app.claudeBernard.wdsl');
       const user = await this.userRepo.findOne({ where: { id: userId } });
       const claudeBernardLicence = user?.bcbLicense;
-      const claudeBernard = await soap.createClientAsync(wsdlUrl);
-      const resultTest = await claudeBernard.testConnexionAsync({
+      const keyClaudeBernard = {
         key: {
-          codeEditeur: process.env.CLAUDE_BERNARD_CODE_EDITEUR,
+          codeEditeur: this.config.get<string>('app.claudeBernard.codeEditeur'),
           idPS: claudeBernardLicence,
           secretEditeur: this._generateKey(
-            process.env.CLAUDE_BERNARD_CODE_EDITEUR,
+            this.config.get<string>('app.claudeBernard.codeEditeur'),
             claudeBernardLicence,
           ),
         },
+      };
+      const claudeBernard = await soap.createClientAsync(wsdlUrl);
+      const resultTest = await claudeBernard.testConnexionAsync({
+        ...keyClaudeBernard,
       });
 
       if (resultTest[0]?.result?.statutConnexion < 1) {
@@ -162,14 +160,7 @@ export class MedicamentDatabaseService {
         );
       }
       const infos = await claudeBernard?.getInformationProduitParamAsync({
-        key: {
-          codeEditeur: process.env.CLAUDE_BERNARD_CODE_EDITEUR,
-          idPS: claudeBernardLicence,
-          secretEditeur: this._generateKey(
-            process.env.CLAUDE_BERNARD_CODE_EDITEUR,
-            claudeBernardLicence,
-          ),
-        },
+        ...keyClaudeBernard,
         idProduit: produitId,
         mode: 0,
         param: {
@@ -268,14 +259,7 @@ export class MedicamentDatabaseService {
 
         const rechercheEquivalentsRes =
           await claudeBernard?.rechercheEquivalentsAsync({
-            key: {
-              codeEditeur: process.env.CLAUDE_BERNARD_CODE_EDITEUR,
-              idPS: claudeBernardLicence,
-              secretEditeur: this._generateKey(
-                process.env.CLAUDE_BERNARD_CODE_EDITEUR,
-                claudeBernardLicence,
-              ),
-            },
+            ...keyClaudeBernard,
             idProduit: produitId,
           });
 
@@ -312,14 +296,7 @@ export class MedicamentDatabaseService {
       infos[0].produitResult['lstPosologies'] = [];
       const posologieCompleteRes =
         await claudeBernard?.getPosologieCompleteAsync({
-          key: {
-            codeEditeur: process.env.CLAUDE_BERNARD_CODE_EDITEUR,
-            idPS: claudeBernardLicence,
-            secretEditeur: this._generateKey(
-              process.env.CLAUDE_BERNARD_CODE_EDITEUR,
-              claudeBernardLicence,
-            ),
-          },
+          ...keyClaudeBernard,
           ...posologieCompleteParamters,
         });
       const posologieComplete = posologieCompleteRes[0]?.searchResult;

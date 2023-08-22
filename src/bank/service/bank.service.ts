@@ -246,6 +246,7 @@ export class BankService {
         .data;
 
       const {
+        usrId,
         bankOfGroup,
         abbr,
         name,
@@ -266,14 +267,22 @@ export class BankService {
           libraryBankEntity.organizationId = organizationId;
           if (!bankOfGroup) libraryBankEntity.usrId = userId;
         } else {
-          libraryBankEntity = await this.libraryBankRepo.findOne({
-            where: { id: id || 0, usrId: userId },
-            relations: { address: true, user: true },
-          });
+          if (usrId === null) {
+            libraryBankEntity = await this.libraryBankRepo.findOne({
+              where: { id: id || 0 },
+              relations: { address: true },
+            });
+          } else {
+            libraryBankEntity = await this.libraryBankRepo.findOne({
+              where: { id: id || 0, usrId: userId },
+              relations: { address: true, user: true },
+            });
+          }
+
           if (!libraryBankEntity) {
             throw new CBadRequestException(ErrorCode.NOT_FOUND);
           }
-          if (!libraryBankEntity?.user?.admin) {
+          if (libraryBankEntity?.user && !libraryBankEntity?.user?.admin) {
             throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
           }
           addressEntity = libraryBankEntity.address;

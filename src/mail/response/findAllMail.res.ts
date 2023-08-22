@@ -16,4 +16,7 @@ export class FindAllMailRes {
 
   @ApiProperty()
   data?: FindAllMailDto[];
+
+  @ApiProperty()
+  orderBy?: string;
 }

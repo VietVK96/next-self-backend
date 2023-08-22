@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { FeedbackService } from './feedback.service';
+import { FeedbackService } from './services/feedback.service';
 import { FeedbackController } from './feedback.controller';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import { TypeOrmModule } from '@nestjs/typeorm';

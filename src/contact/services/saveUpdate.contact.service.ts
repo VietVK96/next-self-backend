@@ -11,7 +11,6 @@ import { PhoneEntity } from 'src/entities/phone.entity';
 import { DataSource, InsertResult, Repository, UpdateResult } from 'typeorm';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ContactDetailDto } from '../dto/contact-detail.dto';
-import { isNumber } from 'class-validator';
 import { PolicyHolderEntity } from 'src/entities/policy-holder.entity';
 import { ContactService } from './contact.service';
 import { ContactDetailRes } from '../response/contact-detail.res';
@@ -71,7 +70,10 @@ export class SaveUpdateContactService {
         }
       }
 
-      if (!isNumber(reqBody?.social_security_reimbursement_rate)) {
+      if (
+        reqBody?.social_security_reimbursement_rate &&
+        isNaN(Number(reqBody?.social_security_reimbursement_rate))
+      ) {
         reqBody.social_security_reimbursement_rate = null;
       }
 
@@ -282,7 +284,10 @@ export class SaveUpdateContactService {
         address.id = resultAddress?.raw?.insertId;
       }
 
-      if (!isNumber(reqBody?.social_security_reimbursement_rate)) {
+      if (
+        reqBody?.social_security_reimbursement_rate &&
+        isNaN(Number(reqBody?.social_security_reimbursement_rate))
+      ) {
         reqBody.social_security_reimbursement_rate = null;
       }
 

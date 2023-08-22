@@ -55,6 +55,7 @@ async function bootstrap() {
     const options = new DocumentBuilder()
       .setTitle('API backend user')
       .setDescription('API Server')
+      .addServer(configService.get<string>('app.swaggerApi'))
       .setVersion('dev')
       .addBearerAuth()
       .build();

@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { NotificationSettingService } from './notification.setting.service';
 import {
@@ -18,8 +26,16 @@ export class NotificationSettingController {
 
   @Get('')
   @UseGuards(TokenGuard)
-  async find(@CurrentUser() identity: UserIdentity, @Req() request: Request) {
-    return await this.notificationSettingService.find(identity.id, request);
+  async find(
+    @CurrentUser() identity: UserIdentity,
+    @Req() request: Request,
+    @Headers('host') host: string,
+  ) {
+    return await this.notificationSettingService.find(
+      identity.id,
+      request,
+      host,
+    );
   }
 
   @Get('message')

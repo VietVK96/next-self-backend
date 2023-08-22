@@ -96,14 +96,20 @@ export class AccountSettingService {
     };
   }
 
-  async findMyInformation(userId: number): Promise<{
-    user: UserEntity;
-    specialtyCodes: SpecialtyCodeEntity[];
-  }> {
-    const user = await this.dataSource.getRepository(UserEntity).findOneOrFail({
+  async findMyInformation(userId: number): Promise<
+    | {
+        user: UserEntity;
+        specialtyCodes: SpecialtyCodeEntity[];
+      }
+    | CBadRequestException
+  > {
+    const user = await this.dataSource.getRepository(UserEntity).findOne({
       where: { id: userId },
       relations: { address: true, medical: true, amo: true, setting: true },
     });
+
+    if (!user) return new CBadRequestException(ErrorCode.NOT_FOUND_USER);
+
     delete user.password;
     delete user.passwordAccounting;
     delete user.passwordHash;

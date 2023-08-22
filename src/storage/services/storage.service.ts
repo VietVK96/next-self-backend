@@ -65,8 +65,9 @@ export class StorageService {
     let storageSpacePackCollection = await this.getListByGroup(organizationId);
 
     const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
     await queryRunner.startTransaction();
-    const storageSpaces = body.storageSpaces;
+    const storageSpaces = body?.storageSpaces;
     for (const [index, storageSpace] of storageSpaces.entries()) {
       const quantity = storageSpace?.quantity;
       let storageSpacePack = null;
@@ -105,7 +106,7 @@ export class StorageService {
       const context = {
         fullname: user?.lastname + ' ' + user?.firstname,
         total: 0,
-        now: dayjs().format('MM-DD-YYYY  HH:mm:ss'),
+        now: dayjs().format('MM-DD-YYYY HH:mm:ss'),
         email: user?.email,
       };
 
