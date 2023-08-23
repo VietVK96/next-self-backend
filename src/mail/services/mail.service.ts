@@ -1846,11 +1846,7 @@ export class MailService {
     }
   }
 
-  async preview(
-    id: number,
-    doctorId: number,
-    groupId: number,
-  ): Promise<string | CBadRequestException> {
+  async preview(id: number, doctorId: number, groupId: number) {
     try {
       const doctor = await this.dataSource.getRepository(UserEntity).findOne({
         where: { id: doctorId },
@@ -2019,11 +2015,9 @@ export class MailService {
       context['payment_schedule'] = mailBody;
       const mail = await this.findById(id);
       if (mail instanceof CNotFoundRequestException) return mail;
-      const mailConverted = await this.transform(mail, context, null, true);
       //  @TODO
       // Mail::pdf($mailConverted);
-      if (mailConverted?.body) return mailConverted.body;
-      return '';
+      return await this.transform(mail, context, null, true);
     } catch (err) {
       return new CBadRequestException(ErrorCode.FORBIDDEN);
     }

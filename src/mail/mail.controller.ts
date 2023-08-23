@@ -119,7 +119,7 @@ export class MailController {
   async transform(
     @Body() payload: TranformDto,
     @CurrentDoctor() docId: number,
-  ) {
+  ): Promise<TranformDto> {
     const contextParam: ContextMailDto = {};
     if (payload?.patient?.id)
       contextParam.patient_id = Number(payload.patient.id);
@@ -209,7 +209,7 @@ export class MailController {
     @Query('id') id: number,
     @CurrentDoctor() docId: number,
     @CurrentUser() identity: UserIdentity,
-  ) {
+  ): Promise<TranformDto> {
     return this.mailService.preview(id, docId, identity.org);
   }
 }
