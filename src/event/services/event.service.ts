@@ -210,13 +210,13 @@ export class EventService {
         const sheet = book.addWorksheet('Sheet1');
 
         sheet.columns = [
-          { header: 'Agenda', key: 'lastName' },
-          { header: 'Date', key: 'firstName' },
-          { header: 'Heure', key: 'email' },
-          { header: 'Durée', key: 'categoryName' },
-          { header: 'Motif de consultation', key: 'phoneNumber' },
-          { header: 'Nom', key: 'address' },
-          { header: 'Prénom', key: 'observation' },
+          { header: 'Agenda', key: 'resourceName' },
+          { header: 'Date', key: 'date' },
+          { header: 'Heure', key: 'startDatetime' },
+          { header: 'Durée', key: 'duration' },
+          { header: 'Motif de consultation', key: 'title' },
+          { header: 'Nom', key: 'lastname' },
+          { header: 'Prénom', key: 'firstname' },
           { header: 'Numéro de dossier', key: 'number' },
           { header: 'Commentaire', key: 'observation' },
         ];
