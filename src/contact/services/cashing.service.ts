@@ -21,7 +21,6 @@ import { ContactEntity } from 'src/entities/contact.entity';
 import { LibraryBankEntity } from 'src/entities/library-bank.entity';
 import { FindAllStructDto } from '../dto/findAll.contact.dto';
 import { FindPaymentRes, GetExtrasRes } from '../response/cashing.res';
-import { SlipCheckEntity } from 'src/entities/slip-check.entity';
 import * as dayjs from 'dayjs';
 import * as path from 'path';
 import { createPdf } from '@saemhco/nestjs-html-pdf';
