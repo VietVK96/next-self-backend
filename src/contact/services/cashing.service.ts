@@ -439,89 +439,108 @@ export class CashingService {
       options?.offset && Number.isInteger(options?.offset)
         ? +options?.offset
         : 0;
-    const beneficiaryQueryBuilder = this.dataSource.createQueryBuilder();
-    const selectBeneficiaries = `
-          CON.CON_ID AS id,
-          CON.CON_LASTNAME AS lastname,
-          CON.CON_FIRSTNAME AS firstname,
-          CSC.CSC_AMOUNT AS amount,
-          CSC.amount_care,
-          CSC.amount_prosthesis`;
-    const qrBeneficiaries = beneficiaryQueryBuilder
-      .select(selectBeneficiaries)
-      .from(CashingContactEntity, 'CSC')
-      .innerJoin(ContactEntity, 'CON');
-
-    const slipCheckQueryBuilder = this.dataSource.createQueryBuilder();
-    const selectSlipCheck = `
-          SLC.SLC_ID AS id,
-          SLC.SLC_NBR AS number,
-          SLC.SLC_DATE AS date,
-          SLC.label,
-          SLC.amount,
-          LBK.LBK_NAME AS bank_name`;
-    const qrSlipCheck = slipCheckQueryBuilder
-      .select(selectSlipCheck)
-      .from(SlipCheckEntity, 'SLC')
-      .innerJoin(LibraryBankEntity, 'LBK');
-
-    const paymentQueryBuilder = this.dataSource.createQueryBuilder();
-    const selectPayments = `
-      CSG.CSG_ID AS id,
-      CSG.CON_ID AS patient_id,
-      CSG.LBK_ID AS bank_id,
-      CSG.SLC_ID AS slip_check_id,
-      CSG.CSG_DATE AS date,
-      CSG.CSG_PAYMENT_DATE AS paymentDate,
-      CSG.CSG_PAYMENT AS payment,
-      CSG.CSG_TYPE AS type,
-      CSG.CSG_AMOUNT AS amount,
-      CSG.amount_care,
-      CSG.amount_prosthesis,
-      CSG.CSG_DEBTOR AS debtor
-    `;
-    let qrPayment = paymentQueryBuilder
-      .select(selectPayments)
-      .from(CashingEntity, 'CSG')
-      .leftJoin(CashingContactEntity, 'CSC', 'CSC.CSG_ID = CSG.CSG_ID')
-      .leftJoin(ContactEntity, 'CON', 'CON.CON_ID = CSC.CON_ID')
-      .leftJoin(LibraryBankEntity, 'LBK', 'LBK.LBK_ID = CSG.LBK_ID');
+    let where: string;
     if (conditions && conditions.length > 0) {
-      qrPayment = this.findContactService.addWhere(qrPayment, conditions);
+      where = this.conditionsToSQL(conditions);
     }
-    qrPayment
-      .andWhere('CSG.USR_ID = :id', { id: doctorId })
-      .groupBy('CSG.CSG_ID')
-      .orderBy(`${orderBy} ${order}, CSG.created_at DESC`)
-      .limit(limit)
-      .offset(offset);
-    const payments = await qrPayment.getRawMany();
+
+    const patientStatement = `
+    SELECT
+        T_CONTACT_CON.CON_ID AS id,
+        T_CONTACT_CON.CON_NBR AS number,
+        T_CONTACT_CON.CON_LASTNAME AS lastname,
+        T_CONTACT_CON.CON_FIRSTNAME AS firstname
+    FROM T_CONTACT_CON
+    WHERE T_CONTACT_CON.CON_ID = ?`;
+
+    const beneficiariesStatement = `
+    SELECT
+        T_CONTACT_CON.CON_ID AS id,
+        T_CONTACT_CON.CON_LASTNAME AS lastname,
+        T_CONTACT_CON.CON_FIRSTNAME AS firstname,
+        T_CASHING_CONTACT_CSC.CSC_AMOUNT AS amount,
+        T_CASHING_CONTACT_CSC.amount_care,
+        T_CASHING_CONTACT_CSC.amount_prosthesis
+    FROM T_CASHING_CONTACT_CSC
+    JOIN T_CONTACT_CON
+    WHERE T_CASHING_CONTACT_CSC.CSG_ID = ?
+      AND T_CASHING_CONTACT_CSC.CON_ID = T_CONTACT_CON.CON_ID`;
+
+    const slipCheckStatement = `
+    SELECT
+        T_SLIP_CHECK_SLC.SLC_ID AS id,
+        T_SLIP_CHECK_SLC.SLC_NBR AS number,
+        T_SLIP_CHECK_SLC.SLC_DATE AS date,
+        T_SLIP_CHECK_SLC.label,
+        T_SLIP_CHECK_SLC.amount,
+        T_LIBRARY_BANK_LBK.LBK_NAME AS bank_name
+    FROM T_SLIP_CHECK_SLC
+    JOIN T_LIBRARY_BANK_LBK
+    WHERE T_SLIP_CHECK_SLC.SLC_ID = ?
+      AND T_SLIP_CHECK_SLC.LBK_ID = T_LIBRARY_BANK_LBK.LBK_ID`;
+
+    const bankStatement = `
+    SELECT
+        T_LIBRARY_BANK_LBK.LBK_ID AS id,
+        T_LIBRARY_BANK_LBK.LBK_ACCOUNTING_CODE AS accounting_code,
+        T_LIBRARY_BANK_LBK.third_party_account,
+        T_LIBRARY_BANK_LBK.product_account
+    FROM T_LIBRARY_BANK_LBK
+    WHERE T_LIBRARY_BANK_LBK.LBK_ID = ?`;
+
+    const statement = `
+    SELECT
+        T_CASHING_CSG.CSG_ID AS id,
+        T_CASHING_CSG.CON_ID AS patient_id,
+        T_CASHING_CSG.LBK_ID AS bank_id,
+        T_CASHING_CSG.SLC_ID AS slip_check_id,
+        T_CASHING_CSG.CSG_DATE AS date,
+        T_CASHING_CSG.CSG_PAYMENT_DATE AS paymentDate,
+        T_CASHING_CSG.CSG_PAYMENT AS payment,
+        T_CASHING_CSG.CSG_TYPE AS type,
+        T_CASHING_CSG.CSG_AMOUNT AS amount,
+        T_CASHING_CSG.amount_care,
+        T_CASHING_CSG.amount_prosthesis,
+        T_CASHING_CSG.CSG_DEBTOR AS debtor
+    FROM T_CASHING_CSG
+    LEFT OUTER JOIN T_CASHING_CONTACT_CSC ON T_CASHING_CONTACT_CSC.CSG_ID = T_CASHING_CSG.CSG_ID
+    LEFT OUTER JOIN T_CONTACT_CON ON T_CONTACT_CON.CON_ID = T_CASHING_CONTACT_CSC.CON_ID
+    LEFT OUTER JOIN T_LIBRARY_BANK_LBK ON T_LIBRARY_BANK_LBK.LBK_ID = T_CASHING_CSG.LBK_ID
+    WHERE T_CASHING_CSG.USR_ID = ${doctorId}
+      ${where}
+    GROUP BY T_CASHING_CSG.CSG_ID
+    ORDER BY ${orderBy} ${order}, T_CASHING_CSG.created_at DESC
+    LIMIT ${limit}
+    OFFSET ${offset}`;
+
+    const payments = await this.dataSource.query(statement);
+
     const result: FindPaymentRes[] = [];
     for (const payment of payments) {
-      const patient = await this.contactRepo.findOne({
-        where: { id: payment.patient_id },
-      });
-      const beneficiaries = await qrBeneficiaries
-        .where('CSC.CSG_ID = :id', { id: payment.id })
-        .andWhere('CSC.CON_ID = CON.CON_ID')
-        .getRawMany();
-      const bank = await this.libraryBankRepo.findOne({
-        where: { id: payment.bank_id },
-      });
-      const slipCheck = await qrSlipCheck
-        .where('SLC.SLC_ID = :id', { id: payment.slip_check_id })
-        .andWhere('SLC.LBK_ID = LBK.LBK_ID')
-        .getRawOne();
+      const patient = await this.dataSource.query(patientStatement, [
+        payment?.patient_id,
+      ]);
+      const beneficiaries = await this.dataSource.query(
+        beneficiariesStatement,
+        [payment?.id],
+      );
+      const bank = await this.dataSource.query(bankStatement, [
+        payment?.bank_id,
+      ]);
+      const slipCheck = await this.dataSource.query(slipCheckStatement, [
+        payment?.slip_check_id,
+      ]);
+
       const paymentDate = checkDay(payment?.paymentDate);
       const date = checkDay(payment?.date);
       result.push({
         ...payment,
         paymentDate,
         date,
-        patient,
+        patient: patient[0],
         beneficiaries,
-        bank,
-        slipCheck,
+        bank: bank[0],
+        slipCheck: slipCheck[0],
       });
 
       return result;
@@ -536,55 +555,63 @@ export class CashingService {
    * @return array
    */
   async findByPatient(patientId: number): Promise<FindPaymentRes[]> {
-    const beneficiaryQueryBuilder = this.dataSource.createQueryBuilder();
-    const selectBeneficiaries = `
-          CON.CON_ID AS id,
-          CON.CON_LASTNAME AS lastname,
-          CON.CON_FIRSTNAME AS firstname,
-          CSC.CSC_AMOUNT AS amount,
-          CSC.amount_care,
-          CSC.amount_prosthesis`;
-    const qrBeneficiaries = beneficiaryQueryBuilder
-      .select(selectBeneficiaries)
-      .from(CashingContactEntity, 'CSC')
-      .innerJoin(ContactEntity, 'CON');
+    const patientStatement = `
+    SELECT
+        T_CONTACT_CON.CON_ID AS id,
+        T_CONTACT_CON.CON_NBR AS number,
+        T_CONTACT_CON.CON_LASTNAME AS lastname,
+        T_CONTACT_CON.CON_FIRSTNAME AS firstname
+    FROM T_CONTACT_CON
+    WHERE T_CONTACT_CON.CON_ID = ?`;
 
-    const paymentQueryBuilder = this.dataSource.createQueryBuilder();
-    const selectPayments = `
-      CSG.CSG_ID AS id,
-      CSG.CON_ID AS patient_id,
-      CSG.CSG_DATE AS date,
-      CSG.CSG_PAYMENT_DATE AS paymentDate,
-      CSG.CSG_PAYMENT AS payment,
-      CSG.CSG_TYPE AS type,
-      CSG.CSG_AMOUNT AS amount,
-      CSG.amount_care,
-      CSG.amount_prosthesis,
-      CSG.CSG_DEBTOR AS debtor
-    `;
-    const payments = await paymentQueryBuilder
-      .select(selectPayments)
-      .from(CashingContactEntity, 'CSC')
-      .innerJoin(CashingEntity, 'CSG')
-      .where('CSC.CON_ID = :id', { id: patientId })
-      .andWhere('CSC.CSG_ID = CSG.CSG_ID')
-      .getRawMany();
+    const beneficiariesStatement = `
+     SELECT
+        T_CONTACT_CON.CON_ID AS id,
+        T_CONTACT_CON.CON_LASTNAME AS lastname,
+        T_CONTACT_CON.CON_FIRSTNAME AS firstname,
+        T_CASHING_CONTACT_CSC.CSC_AMOUNT AS amount,
+        T_CASHING_CONTACT_CSC.amount_care,
+        T_CASHING_CONTACT_CSC.amount_prosthesis
+    FROM T_CASHING_CONTACT_CSC
+    JOIN T_CONTACT_CON
+    WHERE T_CASHING_CONTACT_CSC.CSG_ID = ?
+        AND T_CASHING_CONTACT_CSC.CON_ID = T_CONTACT_CON.CON_ID`;
+
+    const statement = `
+    SELECT
+        T_CASHING_CSG.CSG_ID AS id,
+        T_CASHING_CSG.CON_ID AS patient_id,
+        T_CASHING_CSG.CSG_DATE AS date,
+        T_CASHING_CSG.CSG_PAYMENT_DATE AS paymentDate,
+        T_CASHING_CSG.CSG_PAYMENT AS payment,
+        T_CASHING_CSG.CSG_TYPE AS type,
+        T_CASHING_CSG.CSG_AMOUNT AS amount,
+        T_CASHING_CSG.amount_care,
+        T_CASHING_CSG.amount_prosthesis,
+        T_CASHING_CSG.CSG_DEBTOR AS debtor
+    FROM T_CASHING_CONTACT_CSC
+    JOIN T_CASHING_CSG
+    WHERE T_CASHING_CONTACT_CSC.CON_ID = ${patientId}
+      AND T_CASHING_CONTACT_CSC.CSG_ID = T_CASHING_CSG.CSG_ID`;
+
+    const payments = await this.dataSource.query(statement);
+
     const results: FindPaymentRes[] = [];
     for (const payment of payments) {
-      const patient = await this.contactRepo.findOne({
-        where: { id: patientId },
-      });
-      const beneficiaries = await qrBeneficiaries
-        .where('CSC.CSG_ID = :id', { id: payment.id })
-        .andWhere('CSC.CON_ID = CON.CON_ID')
-        .getRawMany();
+      const patient = await this.dataSource.query(patientStatement, [
+        payment?.patient_id,
+      ]);
+      const beneficiaries = await this.dataSource.query(
+        beneficiariesStatement,
+        [payment?.id],
+      );
       const paymentDate = checkDay(payment?.paymentDate);
       const date = checkDay(payment?.date);
       results.push({
         ...payment,
         paymentDate,
         date,
-        patient,
+        patient: patient[0],
         beneficiaries,
       });
     }
