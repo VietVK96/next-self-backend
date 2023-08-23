@@ -10,6 +10,7 @@ import { DevisStd2Dto } from './dto/devisStd2.dto';
 import { PrintPDFDto } from './dto/facture.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
+import type { Response } from 'express';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -20,7 +21,7 @@ export class DevisStd2Controller {
   @Get('/devisStd2/devisStd2_pdf')
   @UseGuards(TokenGuard)
   async getDevisStd2Pdf(
-    @Res() res,
+    @Res() res: Response,
     @Query() payload: PrintPDFDto,
     @CurrentUser() identity: UserIdentity,
   ) {

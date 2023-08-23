@@ -34,6 +34,7 @@ import * as fs from 'fs';
 import * as handlebars from 'handlebars';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class DevisStd2Services {
   constructor(
@@ -61,6 +62,7 @@ export class DevisStd2Services {
     private paymentScheduleService: PaymentScheduleService,
     private patientOdontogramService: PatientOdontogramService,
     private mailTransportService: MailTransportService,
+    private configService: ConfigService,
   ) {}
 
   // ecoophp/dental/devisStd2/devisStd2_email
@@ -92,8 +94,11 @@ export class DevisStd2Services {
 
       const date = dayjs(data.date).locale('fr').format('DD MMM YYYY');
       const filename = `Devis_${dayjs(data.date).format('YYYY_MM_DD')}.pdf`;
+      const tempFolder = this.configService.get<string>(
+        'app.mail.folderTemplate',
+      );
       const emailTemplate = fs.readFileSync(
-        path.join(process.cwd(), 'templates/mail', 'quote.hbs'),
+        path.join(tempFolder, 'mail/quote.hbs'),
         'utf-8',
       );
       const userFullName = generateFullName(
@@ -119,10 +124,10 @@ export class DevisStd2Services {
         from: data.user.email,
         to: data.contact.email,
         subject,
-        template: mailBody,
-        context: {
-          quote: data,
-        },
+        html: mailBody,
+        // context: {
+        //   quote: data,
+        // },
         attachments: [
           {
             filename: filename,

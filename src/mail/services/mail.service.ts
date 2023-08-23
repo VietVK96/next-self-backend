@@ -1686,8 +1686,8 @@ export class MailService {
         from: doctor.email,
         to: mailTo,
         subject: subject,
-        template: mailBody,
-        context: mail,
+        html: mailBody,
+        // context: mail,
         attachments: [
           {
             filename: mailFilename,

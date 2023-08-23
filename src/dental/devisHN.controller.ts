@@ -7,6 +7,7 @@ import {
   Query,
   Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -66,7 +67,7 @@ export class DevisHNController {
   @Get('devisHN/devisHN_pdf')
   @UseGuards(TokenGuard)
   async devisHNGetPDF(
-    @Res() res,
+    @Res() res: Response,
     @CurrentUser() user: UserIdentity,
     @Query() params: DevisHNPdfDto,
   ) {

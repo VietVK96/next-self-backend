@@ -1,28 +1,25 @@
 import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import type { Response } from 'express';
 import {
   CurrentUser,
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { ContactPdfService } from './services/contact.pdf.service';
-import { ContactService } from './services/contact.service';
 import { ContactPdfDto } from './dto/contact.pdf.dto';
 
 @ApiBearerAuth()
 @Controller('/contact')
 @ApiTags('Contact')
 export class ContactPdfController {
-  constructor(
-    private contactPdfService: ContactPdfService,
-    private contactService: ContactService,
-  ) {}
+  constructor(private contactPdfService: ContactPdfService) {}
 
   // File: php/contact/appointment/print.php
   @Get('appointment/print')
   @UseGuards(TokenGuard)
   async getContactAppointmentPdf(
-    @Res() res,
+    @Res() res: Response,
     @CurrentUser() identity: UserIdentity,
     @Query('id') id?: number,
     @Query('nextEvents') nextEvents?: number,
@@ -52,7 +49,7 @@ export class ContactPdfController {
   @Get('fs-verso-pdf/print')
   @UseGuards(TokenGuard)
   async getFsVersoPdf(
-    @Res() res,
+    @Res() res: Response,
     @CurrentUser() identity: UserIdentity,
     @Query('person') person?: number,
   ) {
@@ -76,7 +73,7 @@ export class ContactPdfController {
   @Get('print')
   @UseGuards(TokenGuard)
   async getContactPdf(
-    @Res() res,
+    @Res() res: Response,
     @CurrentUser() identity: UserIdentity,
     @Query() param?: ContactPdfDto,
   ) {

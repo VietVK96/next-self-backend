@@ -51,6 +51,7 @@ import { SuccessResponse } from 'src/common/response/success.res';
 import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-request.exception';
 import { PerCode } from 'src/constants/permissions';
 import { PermissionService } from 'src/user/services/permission.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class QuotationServices {
@@ -79,6 +80,7 @@ export class QuotationServices {
     private dataSource: DataSource,
     private mailTransportService: MailTransportService,
     private permissionService: PermissionService,
+    private configService: ConfigService,
   ) {}
 
   async sendMail(id: number, identity: UserIdentity) {
@@ -108,9 +110,12 @@ export class QuotationServices {
       }
 
       const date = dayjs(data.date).locale('fr').format('DD MMM YYYY');
-      const filename = `Devis${dayjs(data.date).format('YYYYMMDD')}.pdf`;
+      // const filename = `Devis${dayjs(data.date).format('YYYYMMDD')}.pdf`;
+      const tempFolder = this.configService.get<string>(
+        'app.mail.folderTemplate',
+      );
       const emailTemplate = fs.readFileSync(
-        path.join(process.cwd(), 'templates/mail', 'quote.hbs'),
+        path.join(tempFolder, 'mail/quote.hbs'),
         'utf-8',
       );
       const userFullName = generateFullName(
@@ -136,10 +141,10 @@ export class QuotationServices {
         from: data.user.email,
         to: data.contact.email,
         subject,
-        template: mailBody,
-        context: {
-          quote: data,
-        },
+        html: mailBody,
+        // context: {
+        //   quote: data,
+        // },
         // attachments: [
         //   {
         //     filename: filename,

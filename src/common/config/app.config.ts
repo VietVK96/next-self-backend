@@ -37,4 +37,8 @@ export default registerAs('app', () => ({
       'https://www.bcbdexther.fr/wsdl/BCBDexther-integrateurs-full.wsdl',
     codeEditeur: process?.env?.CLAUDE_BERNARD_CODE_EDITEUR || 'ECOODENTIST',
   },
+  mail: {
+    folderTemplate:
+      process?.env?.MAIL_FOLDER_TEMPLATE || process.cwd() + '/templates/',
+  },
 }));

@@ -10,7 +10,10 @@ export default registerAs('mailFeedBack', () => {
   const administratif: string[] = (
     process.env?.MAIL_FEED_BACK_ADMINISTRATIF ?? ''
   ).split(',');
+  const hotlineMail: string =
+    process.env?.MAIL_FEED_BACK ?? 'support@dentalviamedilor.com';
   return {
+    hotlineMail,
     suggestion,
     commercial,
     administratif,
