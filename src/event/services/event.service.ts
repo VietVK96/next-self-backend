@@ -17,7 +17,7 @@ import { DeteleEventDto } from '../dto/delete.event.dto';
 import { ResourceEntity } from 'src/entities/resource.entity';
 import * as dayjs from 'dayjs';
 import { Parser } from 'json2csv';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { Workbook } from 'exceljs';
 
 @Injectable()
@@ -156,7 +156,7 @@ export class EventService {
   }
 
   async export(
-    res,
+    res: Response,
     resources: number[],
     datetime1: string,
     datetime2: string,

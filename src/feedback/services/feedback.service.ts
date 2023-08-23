@@ -56,15 +56,22 @@ export class FeedbackService {
       `mailFeedBack.${type}`,
       [],
     );
+    const hotlineMail = this.configService.get<string>(
+      'mailFeedBack.hotlineMail',
+    );
+    mailTo.push(hotlineMail);
 
     const subject = `[e.cooDentist][${type.toUpperCase()}] Message envoyé par ${
       user.lastname + user.firstname
     }`;
-    const templateFile = fs.readFileSync(
-      path.resolve(__dirname, '../../templates/mail/feedback.hbs'),
+    const tempFolder = this.configService.get<string>(
+      'app.mail.folderTemplate',
+    );
+    const emailTemplate = fs.readFileSync(
+      path.join(tempFolder, 'mail/feedback.hbs'),
       'utf-8',
     );
-    const template = handlebars.compile(templateFile);
+    const template = handlebars.compile(emailTemplate);
     const mailBody = template({
       user,
       feedback: {

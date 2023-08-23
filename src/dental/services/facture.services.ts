@@ -54,6 +54,7 @@ import * as fs from 'fs';
 import * as handlebars from 'handlebars';
 import * as dayjs from 'dayjs';
 import { DEFAULT_LOCALE } from 'src/constants/default';
+import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class FactureServices {
   constructor(
@@ -77,7 +78,9 @@ export class FactureServices {
     @InjectRepository(ContactNoteEntity)
     private contactNoteRepository: Repository<ContactNoteEntity>,
     private dataSource: DataSource,
+    private configService: ConfigService,
   ) {}
+
   async requestAjax(payload: EnregistrerFactureDto) {
     const id_facture = checkId(payload?.id_facture);
     const id_facture_ligne = checkId(payload?.id_facture_ligne);
@@ -867,8 +870,11 @@ export class FactureServices {
         where: { id: id_facture || 0 },
       });
       const homePhoneNumber = invoice?.user?.phoneNumber ?? null;
+      const tempFolder = this.configService.get<string>(
+        'app.mail.folderTemplate',
+      );
       const emailTemplate = fs.readFileSync(
-        path.join(__dirname, '../../../templates/mail/facture/invoice.hbs'),
+        path.join(tempFolder, 'mail/facture/invoice.hbs'),
         'utf-8',
       );
       handlebars.registerHelper({
@@ -902,18 +908,18 @@ export class FactureServices {
           invoice?.patient?.lastname,
           invoice?.patient?.firstname,
         ].join(' ')}`,
-        template: mailBody,
-        context: {
-          ...invoice,
-          creationDate: format(new Date(invoice?.date), 'MMMM dd, yyyy'),
-          homePhoneNumber: `(${homePhoneNumber.slice(
-            0,
-            2,
-          )}) ${homePhoneNumber.slice(2, 4)} ${homePhoneNumber.slice(
-            4,
-            6,
-          )} ${homePhoneNumber.slice(6, 8)} ${homePhoneNumber.slice(8)}`,
-        },
+        html: mailBody,
+        // context: {
+        //   ...invoice,
+        //   creationDate: format(new Date(invoice?.date), 'MMMM dd, yyyy'),
+        //   homePhoneNumber: `(${homePhoneNumber.slice(
+        //     0,
+        //     2,
+        //   )}) ${homePhoneNumber.slice(2, 4)} ${homePhoneNumber.slice(
+        //     4,
+        //     6,
+        //   )} ${homePhoneNumber.slice(6, 8)} ${homePhoneNumber.slice(8)}`,
+        // },
         attachments: [
           {
             filename: filename,

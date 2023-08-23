@@ -23,7 +23,7 @@ import { EventService } from './services/event.service';
 import { DeteleEventDto } from './dto/delete.event.dto';
 import { SaveAgendaDto } from './dto/saveAgenda.event.dto';
 import { PrintReq } from './dto/printEvent.dto';
-import Response from 'express';
+import type { Response } from 'express';
 
 @Controller('event')
 @ApiTags('Event')
@@ -121,7 +121,7 @@ export class EventController {
    */
   @Get('/print/planning')
   @UseGuards(TokenGuard)
-  async printPlanning(@Res() res, @Query() param: PrintReq) {
+  async printPlanning(@Res() res: Response, @Query() param: PrintReq) {
     const buffer = await this.findEventService.printPlanning(param);
     res.set({
       // pdf
@@ -142,7 +142,7 @@ export class EventController {
   @Get('print/calendar')
   @UseGuards(TokenGuard)
   async printCalendar(
-    @Res() res,
+    @Res() res: Response,
     @Query() param: PrintReq,
     @CurrentUser() identity: UserIdentity,
   ) {
