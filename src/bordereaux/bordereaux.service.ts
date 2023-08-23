@@ -550,8 +550,6 @@ export class BordereauxService {
         };
       });
 
-      console.log(updatePayments);
-
       await this.cashingRepository.save(updatePayments);
 
       return newSlipcheck;
