@@ -17,12 +17,16 @@ class Patient {
 }
 
 class HeaderFooterInfo {
+  @ApiProperty()
   id?: number;
 
+  @ApiProperty()
   title?: string;
 
+  @ApiProperty()
   body?: number;
 
+  @ApiProperty()
   height?: number;
 }
 

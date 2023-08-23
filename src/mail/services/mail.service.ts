@@ -619,24 +619,32 @@ export class MailService {
   }
 
   // application/Services/Mail.php => 429 -> 445
-  async transform(inputs: any, context: any, signature?: any) {
+  async transform(
+    inputs: any,
+    context: any,
+    signature?: any,
+    isPreview?: boolean,
+  ) {
     inputs.body = await this.render(
       inputs?.body.replace(/[|].*?}/, '}'),
       context,
       signature,
+      isPreview,
     );
     if (inputs?.header) {
       inputs.header.body = await this.render(
         inputs?.header.body.replace(/[|].*?}/, '}'),
         context,
         signature,
+        isPreview,
       );
     }
     if (inputs?.footer) {
       inputs.footer.body = await this.render(
         inputs?.footer?.body.replace(/[|].*?}/, '}'),
         context,
-        {},
+        signature,
+        isPreview,
       );
       inputs.footer_content = inputs?.footer?.body;
       inputs.footer_height = inputs?.footer?.height;
@@ -706,7 +714,12 @@ export class MailService {
   }
 
   // application/Services/Mail.php=> 454 -> 489
-  async render(message: string, context: any, signature?: any) {
+  async render(
+    message: string,
+    context: any,
+    signature?: any,
+    isPreview?: boolean,
+  ) {
     const errParser = `</span></span></span><span style="vertical-align: inherit;"><span style="vertical-align: inherit;"><span style="vertical-align: inherit;">`;
     while (message.includes(errParser)) {
       message = message.replace(errParser, '');
@@ -724,7 +737,8 @@ export class MailService {
       });
     });
 
-    let content = Handlebars.compile(message)(context);
+    let content = message;
+    if (isPreview) content = Handlebars.compile(message)(context);
 
     // Replace the signature for the practitioner if it exists in the context
     if (context.praticien?.signature) {
@@ -1839,11 +1853,7 @@ export class MailService {
     }
   }
 
-  async preview(
-    id: number,
-    doctorId: number,
-    groupId: number,
-  ): Promise<string | CBadRequestException> {
+  async preview(id: number, doctorId: number, groupId: number) {
     try {
       const doctor = await this.dataSource.getRepository(UserEntity).findOne({
         where: { id: doctorId },
@@ -2012,11 +2022,9 @@ export class MailService {
       context['payment_schedule'] = mailBody;
       const mail = await this.findById(id);
       if (mail instanceof CNotFoundRequestException) return mail;
-      const mailConverted = await this.transform(mail, context);
       //  @TODO
       // Mail::pdf($mailConverted);
-      if (mailConverted?.body) return mailConverted.body;
-      return '';
+      return await this.transform(mail, context, null, true);
     } catch (err) {
       return new CBadRequestException(ErrorCode.FORBIDDEN);
     }
