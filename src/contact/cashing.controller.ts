@@ -1,4 +1,5 @@
 import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -7,7 +8,6 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { CashingService } from './services/cashing.service';
 import { CashingPrintDto } from './dto/cashing.dto';
-import { Response } from 'express';
 import { ConditionsDto } from './dto/condition.dto';
 @ApiBearerAuth()
 @Controller('/cashing')
@@ -18,7 +18,7 @@ export class CashingController {
   // php/cashing/print.php
   @Get('/print')
   @UseGuards(TokenGuard)
-  async print(@Res() res, @Query() payload: CashingPrintDto) {
+  async print(@Res() res: Response, @Query() payload: CashingPrintDto) {
     const buffer = await this.service.print(payload);
 
     res.set({

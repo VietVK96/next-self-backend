@@ -7,6 +7,7 @@ import {
   UseGuards,
   Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { BordereauxService } from './bordereaux.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
@@ -65,7 +66,7 @@ export class BordereauxController {
    */
   @Get('print/:id')
   @UseGuards(TokenGuard)
-  async printPdf(@Res() res, @Param('id') id: number) {
+  async printPdf(@Res() res: Response, @Param('id') id: number) {
     const buffer = await this.bordereauxService.printPdf(id);
     res.set({
       // pdf

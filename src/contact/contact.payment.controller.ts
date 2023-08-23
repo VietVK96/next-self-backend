@@ -9,6 +9,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -93,7 +94,7 @@ export class ContactPaymentController {
   @Get('/payment/receipt')
   @UseGuards(TokenGuard)
   async receipt(
-    @Res() res,
+    @Res() res: Response,
     @Query() payload: ReceiptDto,
     @CurrentUser() identity: UserIdentity,
   ) {
