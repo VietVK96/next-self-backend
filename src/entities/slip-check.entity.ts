@@ -11,6 +11,7 @@ import {
 import { LibraryBankEntity } from './library-bank.entity';
 import { CashingEntity } from './cashing.entity';
 import { UserEntity } from './user.entity';
+import { OrganizationEntity } from './organization.entity';
 
 export enum EnumSlipCheckPaymentChoice {
   ESPECE = 'espece',
@@ -42,11 +43,11 @@ export class SlipCheckEntity {
    * @ORM\Column(name="SLC_NBR", type="integer")
    * @var integer Numéro du bordereau de remise de chèques.
    */
-  @Column({
-    name: 'SLC_NBR',
-    default: 1,
-  })
-  nbr?: number;
+  // @Column({
+  //   name: 'SLC_NBR',
+  //   default: 1,
+  // })
+  // nbr?: number;
 
   /**
    * @ORM\Column(name="SLC_DATE", type="date")
@@ -163,6 +164,23 @@ export class SlipCheckEntity {
   })
   user?: UserEntity;
 
+  /**
+   * @ORM\ManyToOne(targetEntity="Organization")
+   * @ORM\JoinColumn(name="organization_id", referencedColumnName="GRP_ID")
+   */
+  @Column({
+    name: 'organization_id',
+    type: 'int',
+    width: 11,
+  })
+  organizationId?: number;
+  @ManyToOne(() => UserEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'organization_id',
+  })
+  organization?: OrganizationEntity;
   /**
    * @ORM\ManyToOne(targetEntity="Bank")
    * @ORM\JoinColumn(name="LBK_ID", referencedColumnName="LBK_ID")

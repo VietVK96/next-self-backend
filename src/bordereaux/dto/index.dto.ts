@@ -22,3 +22,14 @@ export class BordereauxDto {
   @ApiProperty({ isArray: true, type: String, required: false })
   filterValue?: string[];
 }
+
+export class BordereauxStoreDto {
+  @ApiProperty()
+  bank_id?: number;
+
+  @ApiProperty()
+  payment_choice?: string;
+
+  @ApiProperty()
+  payment_id?: number[];
+}

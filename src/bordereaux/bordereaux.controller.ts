@@ -6,6 +6,8 @@ import {
   Query,
   UseGuards,
   Res,
+  Post,
+  Body,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { BordereauxService } from './bordereaux.service';
@@ -15,7 +17,7 @@ import {
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
-import { BordereauxDto } from './dto/index.dto';
+import { BordereauxDto, BordereauxStoreDto } from './dto/index.dto';
 
 @Controller('bordereaux')
 @ApiTags('Bordereaux')
@@ -46,6 +48,7 @@ export class BordereauxController {
   async getUserBank(@Query('id') id: number) {
     return await this.bordereauxService.getUserBank(id);
   }
+
   /**
    * File php/bordereaux/show.php 100%
    *
@@ -92,5 +95,19 @@ export class BordereauxController {
   @UseGuards(TokenGuard)
   delete(@Query('id') id: number, @CurrentUser() user: UserIdentity) {
     return this.bordereauxService.delete(id, user);
+  }
+
+  /**
+   * File php/bordereaux/store.php 100%
+   *
+   */
+  @Post('store')
+  @ApiBearerAuth()
+  @UseGuards(TokenGuard)
+  store(
+    @CurrentUser() identity: UserIdentity,
+    @Body() payload: BordereauxStoreDto,
+  ) {
+    return this.bordereauxService.store(identity, payload);
   }
 }
