@@ -155,6 +155,7 @@ export class ThirdPartyService {
       );
     }
     const queryResult: FseEntity[] = await queryBuilder.getRawMany();
+
     return queryResult;
   }
 
@@ -281,6 +282,7 @@ export class ThirdPartyService {
       select: ['id', 'status', 'caresheetId', 'amoId'],
       relations: ['amo'],
     });
+
     const rows = [];
     for (const caresheet of caresheets) {
       const thirdPartyAmo = thirdPartyAmos.find(
@@ -578,11 +580,27 @@ export class ThirdPartyService {
     }
     const caresheets = await queryBuilder.getMany();
 
+    const thirdPartyAmcs = await this.thirdPartyAmcRepository.find({
+      select: ['id', 'status', 'caresheetId', 'amcId'],
+      relations: ['amc'],
+    });
+
+    const thirdPartyAmos = await this.thirdPartyAmoRepository.find({
+      select: ['id', 'status', 'caresheetId', 'amoId'],
+      relations: ['amo'],
+    });
+
     const newCaresheets = caresheets.map((item) => {
       return {
         ...item,
         thirdPartyAmountRemaining:
           item.thirdPartyAmount - item.thirdPartyAmountPaid,
+        thirdPartyAmo: thirdPartyAmos.find(
+          (tpamo) => tpamo?.caresheetId === item?.id,
+        ),
+        thirdPartyAmc: thirdPartyAmcs.find(
+          (tpamc) => tpamc?.caresheetId === item?.id,
+        ),
       };
     });
 
