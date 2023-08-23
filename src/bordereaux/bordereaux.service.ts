@@ -421,19 +421,21 @@ export class BordereauxService {
    *  File php/bordereaux/print.php
    */
   async printPdf(id: number) {
+    const slipCheck = await this.slipCheckRepository.find({
+      relations: [
+        'libraryBank',
+        'cashings',
+        'cashings.contact',
+        'libraryBank.user',
+        'libraryBank.group',
+        'libraryBank.address',
+      ],
+      where: { id: id },
+    });
+    if (slipCheck.length === 0) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND_SLIPCHECK);
+    }
     try {
-      const slipCheck = await this.slipCheckRepository.find({
-        relations: [
-          'libraryBank',
-          'cashings',
-          'cashings.contact',
-          'libraryBank.user',
-          'libraryBank.group',
-          'libraryBank.address',
-        ],
-        where: { id: id },
-      });
-
       const filePath = path?.join(
         process.cwd(),
         'templates/bordereaux',
@@ -525,7 +527,10 @@ export class BordereauxService {
       slipcheck.paymentChoice =
         EnumSlipCheckPaymentChoice[payload.payment_choice.toLocaleUpperCase()];
       slipcheck.paymentCount = payload.payment_id.length;
-      slipcheck.amount = amounts?.length > 0 ? amounts[0].totalAmount : null;
+      slipcheck.amount =
+        amounts?.length > 0 && amounts?.[0].totalAmount
+          ? amounts[0].totalAmount
+          : 0;
       slipcheck.label = `bordereau de remise de ${payload.payment_id.length} ${payload.payment_choice}`;
 
       const newSlipcheck = await this.slipCheckRepository.save(slipcheck);
@@ -533,7 +538,7 @@ export class BordereauxService {
       const payments = await this.cashingRepository.find({
         where: {
           id: In(payload.payment_id),
-          usrId: identity.id,
+          usrId: payload.user_id,
         },
       });
 
@@ -544,6 +549,8 @@ export class BordereauxService {
           bank,
         };
       });
+
+      console.log(updatePayments);
 
       await this.cashingRepository.save(updatePayments);
 

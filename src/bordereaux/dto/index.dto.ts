@@ -25,6 +25,9 @@ export class BordereauxDto {
 
 export class BordereauxStoreDto {
   @ApiProperty()
+  user_id?: number;
+
+  @ApiProperty()
   bank_id?: number;
 
   @ApiProperty()
