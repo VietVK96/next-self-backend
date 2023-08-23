@@ -19,6 +19,7 @@ import { OrdonnancesDto } from './dto/ordonnances.dto';
 import { PrintPDFDto } from './dto/facture.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
+import type { Response } from 'express';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -51,7 +52,7 @@ export class OrdonnancesController {
   @Get('/ordonnances/ordo_pdf')
   @UseGuards(TokenGuard)
   async getOrdoPdf(
-    @Res() res,
+    @Res() res: Response,
     @Query() payload: PrintPDFDto,
     @CurrentUser() identity: UserIdentity,
   ) {
