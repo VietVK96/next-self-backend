@@ -44,6 +44,7 @@ import {
   ContactDocumentEntity,
   EnumContactDocumentType,
 } from 'src/entities/contact-document.entity';
+import { checkId } from 'src/common/util/number';
 
 @Injectable()
 export class ContactPaymentService {
@@ -441,7 +442,14 @@ export class ContactPaymentService {
       if (data.beneficiaries && Array.isArray(data.beneficiaries)) {
         beneficiaries = data.beneficiaries.filter((e) => e.pivot.amount);
       }
-      const payment = await this.repo.findOneByOrFail({ id: data?.id });
+      const payment = await this.repo.findOne({
+        where: {
+          id: checkId(data?.id) || 0,
+        },
+        relations: {
+          payees: true,
+        },
+      });
       if (payment) {
         const paymentTemp: CashingEntity = {
           id: payment.id,
@@ -460,6 +468,14 @@ export class ContactPaymentService {
           checkBank: checkBank,
         };
 
+        const beneficiariesId = beneficiaries?.map((e) => e?.id) || [];
+        const removeBeneficiariesId = payment?.payees?.reduce((a, payee) => {
+          if (!beneficiariesId.includes(payee.id)) {
+            return [...a, payee.id];
+          }
+        }, [] as number[]);
+
+        this.cashingContactRepo.delete(removeBeneficiariesId);
         const insertPayment = await this.repo.save(paymentTemp);
         const paymentPayees: CashingContactEntity[] = beneficiaries.map(
           (beneficiary) => {
