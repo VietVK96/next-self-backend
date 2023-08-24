@@ -17,8 +17,6 @@ import { PatientModule } from 'src/patient/patient.module';
 import { PermissionService } from 'src/user/services/permission.service';
 import { FamilyController } from './family.controller';
 import { FamilyService } from './services/family.service';
-import { QuotationController } from './quotation.controller';
-import { QuotationService } from './services/quotation.service';
 import { UserModule } from 'src/user/user.module';
 import { DocumentServices } from './services/document.service';
 import { DocumentController } from './document.controller';
@@ -54,7 +52,6 @@ import { ReminderVisitController } from './reminderVisit.controller';
     TaskController,
     NoteController,
     FamilyController,
-    QuotationController,
     DocumentController,
     UploadController,
     ContactPdfController,
@@ -81,7 +78,6 @@ import { ReminderVisitController } from './reminderVisit.controller';
     TaskService,
     PermissionService,
     FamilyService,
-    QuotationService,
     DocumentServices,
     OrganizationService,
     UploadService,

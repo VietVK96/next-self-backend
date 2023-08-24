@@ -87,6 +87,13 @@ export class QuotationInitChampsRes {
   nb_max_lignes_annexe_pageN: number;
   odontogramType: string;
   date_signature: string;
+  initSchemas: odontogramStyleRes;
+  currentSchemas: odontogramStyleRes;
+  planSchemas: odontogramStyleRes;
+}
+
+export class odontogramStyleRes {
+  [key: string]: string;
 }
 
 export class QuotationInitActeRes {
