@@ -222,7 +222,7 @@ export class DevisServices {
     AND reference LIKE CONCAT(?, ?, '%')`,
       [currentUser.id, year, dayOfYear],
     );
-    random = Number(random?.[0] ?? '0') + 1;
+    random = Number(random[0]?.reference ? random[0]?.reference : '0') + 1;
     const paddedRandom = random.toString().padStart(5, '0');
     const reference = `${year}${dayOfYear}-${paddedRandom}`;
     let res;
