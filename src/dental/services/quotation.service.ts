@@ -52,6 +52,7 @@ import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-requ
 import { PerCode } from 'src/constants/permissions';
 import { PermissionService } from 'src/user/services/permission.service';
 import { ConfigService } from '@nestjs/config';
+import { PatientOdontogramService } from 'src/patient/service/patientOdontogram.service';
 
 @Injectable()
 export class QuotationServices {
@@ -81,6 +82,7 @@ export class QuotationServices {
     private mailTransportService: MailTransportService,
     private permissionService: PermissionService,
     private configService: ConfigService,
+    private patientOdontogramService: PatientOdontogramService,
   ) {}
 
   async sendMail(id: number, identity: UserIdentity) {
@@ -535,6 +537,18 @@ export class QuotationServices {
       result.nb_max_lignes_annexe_page1 = 15;
       result.nb_max_lignes_annexe_pageN = 30;
       result.odontogramType = 'adult';
+      result.initSchemas = await this.patientOdontogramService.run(
+        'initial',
+        result?.id_contact,
+      );
+      result.currentSchemas = await this.patientOdontogramService.run(
+        'current',
+        result?.id_contact,
+      );
+      result.planSchemas = await this.patientOdontogramService.run(
+        'planned',
+        result?.id_contact,
+      );
 
       result.total_honoraires = toFixed(result?.total_honoraires);
       result.total_prixvente = toFixed(result?.total_prixvente);
@@ -1320,10 +1334,6 @@ export class QuotationServices {
         case 'treatment_timeline':
           userPreferenceQuotation.treatmentTimeline = Number(payload.value);
       }
-      console.log(
-        '🚀 ~ file: quotation.service.ts:1317 ~ QuotationServices ~ userPreferenceQuotation:',
-        userPreferenceQuotation,
-      );
 
       await this.userPreferenceQuotationRepository.save(
         userPreferenceQuotation,
@@ -1333,10 +1343,6 @@ export class QuotationServices {
         success: true,
       };
     } catch (error) {
-      console.log(
-        '🚀 ~ file: quotation.service.ts:1331 ~ QuotationServices ~ error:',
-        error,
-      );
       throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
   }
