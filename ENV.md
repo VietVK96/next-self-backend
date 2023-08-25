@@ -71,12 +71,34 @@ Steps to get configs
     ``````
 
 ### Credential for using Google calendar service
-```
-GOOGLE_CLIENT_ID=340536610100-pm89o884nqfaija6in6qe7kvq9dr61f0.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=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
-CLIENT_SIDE=http://localhost:5173
-emailTest=fcmanutd1878@gmail.com
-```
+1. Login [Google Console Project](https://console.developers.google.com/project)
+2. Create project
+  ![image](https://github.com/giangdt1215/wecleverss/assets/14262924/a33a7869-83b8-43e1-99f5-56564c4ef234)
+  ![image](https://github.com/giangdt1215/wecleverss/assets/14262924/dd53a65d-0320-42f6-9e23-f1af1d11d8fc)
+3. When create process done, click **Select Project**
+  ![image](https://github.com/giangdt1215/wecleverss/assets/14262924/d99f0520-4de9-41e5-a2dc-2828c8933ea7)
+4. Select **APIs & Services**  -> **Enabled APIs & services**
+  ![image](https://github.com/giangdt1215/wecleverss/assets/14262924/fadf1720-3e7d-43e4-b163-5431987d8972)
+5. Select **ENABLE APIS AND SERVICES** to add api
+  ![image](https://github.com/giangdt1215/wecleverss/assets/14262924/c1a00ba9-c352-4f0f-b17d-553c8175b8eb)
+6. Search service. For example: Calendar
+  ![image](https://github.com/giangdt1215/wecleverss/assets/14262924/76575f02-33e8-45c0-81d0-45d6ef71948d)
+7. Select service then click **Enable**
+  ![image](https://github.com/giangdt1215/wecleverss/assets/14262924/456d1db0-70b4-47fd-9162-76bd4cd59155)
+8. After enable service successfully, click **Credentials**
+9. Select **Create credentials** -> **Oauth client ID**
+  ![image](https://github.com/giangdt1215/wecleverss/assets/14262924/59405eb2-edad-4373-88bb-e50c8da4b66a)
+10. Choose **Application Type**, fill the name then click **Create**
+  ![image](https://github.com/giangdt1215/wecleverss/assets/14262924/37038688-c085-47a9-a52c-d374a39a3cc6)
+11. After create oauth2 credential, we have the information like this:
+  ![image](https://github.com/giangdt1215/wecleverss/assets/14262924/41eb0235-319c-4c73-963c-978e09cb066a)
+12. We can fill the **Client ID** and **Client Secret** in env file:
+  ```
+  GOOGLE_CLIENT_ID=584971720532-nkrki9dsfse1as5lmbckk7nevs2ih40u7r87.apps.googleusercontent.com
+  GOOGLE_CLIENT_SECRET=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tp6P7c
+  CLIENT_SIDE=http://localhost:5173
+  emailTest=fcmanutd1878@gmail.com
+  ```
 
 ### The provided Claude Bernard service config by client
 CLAUDE_BERNARD_CODE_EDITEUR=ECOODENTIST
