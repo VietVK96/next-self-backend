@@ -74,13 +74,7 @@ export class SaveAgendaDto {
   created_at?: string;
 
   @ApiProperty()
-  resourceName?: string;
-
-  @ApiProperty()
-  practitionerLastname?: string;
-
-  @ApiProperty()
-  practitionerFirstname?: string;
+  practitionerId?: number;
 
   @ApiProperty()
   avatar_id?: number;
