@@ -77,7 +77,7 @@ export class PlanService {
     const plans: findOnePlanRes[] = await this.dataSource.query(planQuery, [
       id,
     ]);
-    plan = plans[0];
+    plan = plans?.[0];
     if (!this._empty(plan)) {
       plan.displayBill = false;
       plan.bill = null;
@@ -314,7 +314,6 @@ export class PlanService {
 
   //File /application/Services/Plan.php, line 377-924
   async _save(data: any, groupId: number) {
-    const queryRunner = this.dataSource.createQueryRunner();
     const events = [];
     const options = {
       id: 0,
@@ -342,197 +341,177 @@ export class PlanService {
       throw new BadRequestException();
     }
 
-    try {
-      await queryRunner.startTransaction();
-      if (this._empty(options?.acceptedOn) && options?.type === 'plan') {
-        options.acceptedOn = Date.now();
-      }
+    return await this.dataSource.transaction(async (manager) => {
+      try {
+        if (this._empty(options?.acceptedOn) && options?.type === 'plan') {
+          options.acceptedOn = Date.now();
+        }
 
-      const insertPlanQuery = `
-        INSERT INTO T_PLAN_PLF (PLF_ID, organization_id, user_id, patient_id, payment_schedule_id, PLF_NAME, PLF_TYPE, PLF_ACCEPTED_ON, PLF_AMOUNT, PLF_MUTUAL_CEILING, PLF_PERSON_REPAYMENT, PLF_PERSON_AMOUNT) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-        payment_schedule_id = VALUES(payment_schedule_id),
-        PLF_NAME = VALUES(PLF_NAME),
-        PLF_TYPE = VALUES(PLF_TYPE),
-        PLF_ACCEPTED_ON = VALUES(PLF_ACCEPTED_ON),
-        PLF_AMOUNT = VALUES(PLF_AMOUNT),
-        PLF_MUTUAL_CEILING = VALUES(PLF_MUTUAL_CEILING),
-        PLF_PERSON_REPAYMENT = VALUES(PLF_PERSON_REPAYMENT),
-        PLF_PERSON_AMOUNT = VALUES(PLF_PERSON_AMOUNT)`;
+        const insertPlanQuery = `
+          INSERT INTO T_PLAN_PLF (PLF_ID, organization_id, user_id, patient_id, payment_schedule_id, PLF_NAME, PLF_TYPE, PLF_ACCEPTED_ON, PLF_AMOUNT, PLF_MUTUAL_CEILING, PLF_PERSON_REPAYMENT, PLF_PERSON_AMOUNT) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE
+          payment_schedule_id = VALUES(payment_schedule_id),
+          PLF_NAME = VALUES(PLF_NAME),
+          PLF_TYPE = VALUES(PLF_TYPE),
+          PLF_ACCEPTED_ON = VALUES(PLF_ACCEPTED_ON),
+          PLF_AMOUNT = VALUES(PLF_AMOUNT),
+          PLF_MUTUAL_CEILING = VALUES(PLF_MUTUAL_CEILING),
+          PLF_PERSON_REPAYMENT = VALUES(PLF_PERSON_REPAYMENT),
+          PLF_PERSON_AMOUNT = VALUES(PLF_PERSON_AMOUNT)`;
 
-      const planNew = await queryRunner.query(insertPlanQuery, [
-        options.id,
-        groupId,
-        options?.user_id,
-        options?.patient_id,
-        options?.payment_schedule?.id ?? null,
-        options?.name,
-        options?.type,
-        options?.acceptedOn,
-        options?.amount,
-        options?.mutualCeiling,
-        options?.amount_repaid,
-        options?.amount_to_be_paid,
-      ]);
-
-      if (this._empty(options?.id)) {
-        options.id = planNew.insertId;
-      }
-      if (!this._empty(options?.acceptedOn)) {
-        const updateDeltaQuery = `
-        UPDATE T_DENTAL_QUOTATION_DQO
-				SET DQO_DATE_ACCEPT = ?
-				WHERE PLF_ID = ?
-				AND DQO_DATE_ACCEPT IS NULL`;
-        await queryRunner.query(updateDeltaQuery, [
+        const planNew = await manager.query(insertPlanQuery, [
+          options.id,
+          groupId,
+          options?.user_id,
+          options?.patient_id,
+          options?.payment_schedule?.id ?? null,
+          options?.name,
+          options?.type,
           options?.acceptedOn,
-          options?.id,
+          options?.amount,
+          options?.mutualCeiling,
+          options?.amount_repaid,
+          options?.amount_to_be_paid,
         ]);
-      }
-      for (const [key, eventRoot] of options?.events?.entries()) {
-        let event = eventRoot;
-        const tasks = [];
-        event = {
-          id: 0,
-          name: null,
-          start: null,
-          end: null,
-          user: null,
-          event_type: null,
-          color: {
-            background: -12303,
-            foreground: -3840,
-          },
-          plan: {
-            pos: 1,
-            duration: '00:30:00',
-            delay: 7,
-          },
-          tasks: [],
-          ...event,
-        };
 
-        const color = event?.color?.background ?? event?.color;
-
-        const insertEvents = await queryRunner.query(
-          `
-        INSERT INTO T_EVENT_EVT (EVT_ID, USR_ID, CON_ID, event_type_id, EVT_NAME, EVT_START, EVT_END, EVT_COLOR)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-        USR_ID = VALUES(USR_ID),
-        CON_ID = VALUES(CON_ID),
-        event_type_id = VALUES(event_type_id),
-        EVT_NAME = VALUES(EVT_NAME),
-        EVT_START = VALUES(EVT_START),
-        EVT_END = VALUES(EVT_END),
-        EVT_COLOR = VALUES(EVT_COLOR)`,
-          [
-            event?.id,
-            event?.user?.id,
-            options?.patient_id,
-            event?.event_type?.id ?? null,
-            event?.name ?? null,
-            event?.start ?? null,
-            event?.end ?? null,
-            color,
-          ],
-        );
-
-        if (this._empty(event?.id)) {
-          event.id = insertEvents.insertId;
-          await queryRunner.query(
-            `
-          INSERT INTO T_REMINDER_RMD (USR_ID, EVT_ID, RMT_ID, RMR_ID, RMU_ID, appointment_reminder_library_id, RMD_NBR)
-          SELECT USR_ID, ?, RMT_ID, RMR_ID, RMU_ID, RML_ID, RML_NBR
-          FROM T_REMINDER_LIBRARY_RML
-          WHERE USR_ID = ?`,
-            [event?.id, event?.user?.id],
-          );
+        if (this._empty(options?.id)) {
+          options.id = planNew.insertId;
         }
-
-        await queryRunner.query(
-          `
-        INSERT IGNORE INTO event_occurrence_evo (evo_id, evt_id, resource_id, evo_date)
-        SELECT evo.evo_id, EVT.EVT_ID, EVT.resource_id, DATE(EVT.EVT_START)
-        FROM T_EVENT_EVT EVT
-        LEFT OUTER JOIN event_occurrence_evo evo ON evo.evt_id = EVT.EVT_ID
-        WHERE EVT.EVT_ID = ?`,
-          [event?.id],
-        );
-
-        let duration = event?.plan?.duration;
-        if (!/^\d{2}:\d{2}(:\d{2})?$/.test(duration)) {
-          duration = '00:30:00';
+        if (!this._empty(options?.acceptedOn)) {
+          const updateDeltaQuery = `
+          UPDATE T_DENTAL_QUOTATION_DQO
+          SET DQO_DATE_ACCEPT = ?
+          WHERE PLF_ID = ?
+          AND DQO_DATE_ACCEPT IS NULL`;
+          await manager.query(updateDeltaQuery, [
+            options?.acceptedOn,
+            options?.id,
+          ]);
         }
-
-        await queryRunner.query(
-          `
-        INSERT INTO T_PLAN_EVENT_PLV (EVT_ID, PLF_ID, PLV_POS, PLV_DELAY, duration)
-        VALUES (?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-        PLF_ID = VALUES(PLF_ID),
-        PLV_POS = VALUES(PLV_POS),
-        PLV_DELAY = VALUES(PLV_DELAY),
-        duration = VALUES(duration)`,
-          [event?.id, options?.id, key, event?.plan?.delay, duration],
-        );
-
-        for (const [key, taskRoot] of event?.tasks?.entries()) {
-          let task = taskRoot;
-          task = {
+        for (const [key, eventRoot] of options?.events?.entries()) {
+          let event = eventRoot;
+          const tasks = [];
+          event = {
             id: 0,
-            name: '',
-            pos: 0,
-            duration: '00:00:00',
-            amount: 0,
-            color: -12303,
-            qty: 1,
-            ccam_family: null,
-            dental: null,
-            ...task,
+            name: null,
+            start: null,
+            end: null,
+            user: null,
+            event_type: null,
+            color: {
+              background: -12303,
+              foreground: -3840,
+            },
+            plan: {
+              pos: 1,
+              duration: '00:30:00',
+              delay: 7,
+            },
+            tasks: [],
+            ...event,
           };
 
-          const insertEventTask = await queryRunner.query(
+          const color = event?.color?.background ?? event?.color;
+
+          const insertEvents = await manager.query(
             `
-          INSERT INTO T_EVENT_TASK_ETK (ETK_ID, USR_ID, CON_ID, EVT_ID, library_act_id, library_act_quantity_id, parent_id, ETK_NAME, ETK_DATE, ETK_POS, ETK_DURATION, ETK_AMOUNT, ETK_COLOR, ETK_QTY, ccam_family)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO T_EVENT_EVT (EVT_ID, USR_ID, CON_ID, event_type_id, EVT_NAME, EVT_START, EVT_END, EVT_COLOR)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
           ON DUPLICATE KEY UPDATE
-          EVT_ID = VALUES(EVT_ID),
-          library_act_id = VALUES(library_act_id),
-          library_act_quantity_id = VALUES(library_act_quantity_id),
-          parent_id = VALUES(parent_id),
-          ETK_NAME = VALUES(ETK_NAME),
-          ETK_POS = VALUES(ETK_POS),
-          ETK_DURATION = VALUES(ETK_DURATION),
-          ETK_AMOUNT = VALUES(ETK_AMOUNT),
-          ETK_COLOR = VALUES(ETK_COLOR),
-          ETK_QTY = VALUES(ETK_QTY),
-          ccam_family = VALUES(ccam_family)`,
+          USR_ID = VALUES(USR_ID),
+          CON_ID = VALUES(CON_ID),
+          event_type_id = VALUES(event_type_id),
+          EVT_NAME = VALUES(EVT_NAME),
+          EVT_START = VALUES(EVT_START),
+          EVT_END = VALUES(EVT_END),
+          EVT_COLOR = VALUES(EVT_COLOR)`,
             [
-              task?.id,
+              event?.id,
               event?.user?.id,
               options?.patient_id,
-              event?.id,
-              task?.library_act_id ?? null,
-              task?.library_act_quantity_id ?? null,
-              task?.parent_id ?? null,
-              task?.name,
+              event?.event_type?.id ?? null,
+              event?.name ?? null,
               event?.start ?? null,
-              key,
-              task?.duration,
-              task?.amount,
-              task?.color,
-              task?.qty,
-              task?.ccam_family,
+              event?.end ?? null,
+              color,
             ],
           );
 
-          if (this._empty(task?.id)) {
-            task.id = insertEventTask?.insertId;
-            const act = await queryRunner.manager.findOneOrFail(
-              EventTaskEntity,
-              {
+          if (this._empty(event?.id)) {
+            event.id = insertEvents.insertId;
+            await manager.query(
+              `
+            INSERT INTO T_REMINDER_RMD (USR_ID, EVT_ID, RMT_ID, RMR_ID, RMU_ID, appointment_reminder_library_id, RMD_NBR)
+            SELECT USR_ID, ?, RMT_ID, RMR_ID, RMU_ID, RML_ID, RML_NBR
+            FROM T_REMINDER_LIBRARY_RML
+            WHERE USR_ID = ?`,
+              [event?.id, event?.user?.id],
+            );
+          }
+
+          await manager.query(
+            `
+          INSERT IGNORE INTO event_occurrence_evo (evo_id, evt_id, resource_id, evo_date)
+          SELECT evo.evo_id, EVT.EVT_ID, EVT.resource_id, DATE(EVT.EVT_START)
+          FROM T_EVENT_EVT EVT
+          LEFT OUTER JOIN event_occurrence_evo evo ON evo.evt_id = EVT.EVT_ID
+          WHERE EVT.EVT_ID = ?`,
+            [event?.id],
+          );
+
+          let duration = event?.plan?.duration;
+          if (!/^\d{2}:\d{2}(:\d{2})?$/.test(duration)) {
+            duration = '00:30:00';
+          }
+
+          await manager.query(
+            `
+          INSERT INTO T_PLAN_EVENT_PLV (EVT_ID, PLF_ID, PLV_POS, PLV_DELAY, duration)
+          VALUES (?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE
+          PLF_ID = VALUES(PLF_ID),
+          PLV_POS = VALUES(PLV_POS),
+          PLV_DELAY = VALUES(PLV_DELAY),
+          duration = VALUES(duration)`,
+            [event?.id, options?.id, key, event?.plan?.delay, duration],
+          );
+
+          for (const [key, taskRoot] of event?.tasks?.entries()) {
+            let task = taskRoot;
+            task = {
+              id: 0,
+              name: '',
+              pos: 0,
+              duration: '00:00:00',
+              amount: 0,
+              color: -12303,
+              qty: 1,
+              ccam_family: null,
+              dental: null,
+              ...task,
+            };
+
+            const insertEventTaskk = await manager.save(EventTaskEntity, {
+              libraryActId: task?.library_act_id ?? null,
+              libraryActQuantityId: task?.library_act_quantity_id,
+              usrId: event?.user?.id,
+              conId: options?.patient_id,
+              evtId: event?.id,
+              parentId: task?.parent_id ?? null,
+              name: task?.name,
+              date: event?.start ?? null,
+              position: key,
+              duration: task?.duration,
+              amount: task?.amount,
+              color: task?.color,
+              qty: task?.qty,
+              ccamFamily: task?.ccam_family,
+            } as EventTaskEntity);
+
+            if (this._empty(task?.id)) {
+              task.id = insertEventTaskk?.id;
+              const act = await manager.findOne(EventTaskEntity, {
                 where: { id: task?.id },
                 relations: {
                   libraryActQuantity: {
@@ -541,224 +520,220 @@ export class PlanService {
                   },
                   traceabilities: true,
                 },
-              },
-            );
-            const libraryActQuantity = act?.libraryActQuantity;
-            if (libraryActQuantity) {
-              let traceabilityStatus = TraceabilityStatusEnum.NONE;
-              const traceabilities = [...libraryActQuantity?.traceabilities];
+              });
+              const libraryActQuantity = act?.libraryActQuantity;
+              if (libraryActQuantity) {
+                let traceabilityStatus = TraceabilityStatusEnum.NONE;
+                const traceabilities = [...libraryActQuantity?.traceabilities];
 
-              if (libraryActQuantity?.traceabilityMerged)
-                traceabilities.concat(libraryActQuantity?.act?.traceabilities);
-              if (traceabilities.length > 0) {
-                traceabilityStatus = TraceabilityStatusEnum.UNFILLED;
-                for (const traceability of traceabilities) {
-                  if (
-                    !act.traceabilities.some((x) => {
-                      return x.id === traceability.id;
-                    })
-                  ) {
-                    act.traceabilities.push(traceability);
-                    traceability.act = act;
-                  }
-                  if (traceability.reference) {
-                    traceabilityStatus = TraceabilityStatusEnum.FILLED;
+                if (libraryActQuantity?.traceabilityMerged)
+                  traceabilities.concat(
+                    libraryActQuantity?.act?.traceabilities,
+                  );
+                if (traceabilities.length > 0) {
+                  traceabilityStatus = TraceabilityStatusEnum.UNFILLED;
+                  for (const traceability of traceabilities) {
+                    if (
+                      !act.traceabilities.some((x) => {
+                        return x.id === traceability.id;
+                      })
+                    ) {
+                      act.traceabilities.push(traceability);
+                      traceability.act = act;
+                    }
+                    if (traceability.reference) {
+                      traceabilityStatus = TraceabilityStatusEnum.FILLED;
+                    }
                   }
                 }
+
+                act.traceabilityStatus = traceabilityStatus;
+
+                await manager.save(EventTaskEntity, act);
+              }
+            }
+
+            if (!this._empty(task?.dental)) {
+              const dental = {
+                ald: 0,
+                type: null,
+                teeth: [],
+                coef: 1,
+                comp: null,
+                key: null,
+                purchasePrice: 0,
+                ccamCode: null,
+                ccamOpposable: 0,
+                ccamNPC: 0,
+                ccamNR: 0,
+                ccamTelem: 1,
+                ccamModifier: null,
+                secuAmount: 0,
+                secuRepayment: 0,
+                mutualRepaymentType: 0,
+                mutualRepaymentRate: 0,
+                mutualRepayment: 0,
+                mutualComplement: 0,
+                personRepayment: 0,
+                personAmount: 0,
+                ...task.dental,
+              };
+
+              const sql = `
+                INSERT INTO T_DENTAL_EVENT_TASK_DET (
+                    ETK_ID,
+                    ccam_id,
+                    ngap_key_id,
+                    dental_material_id,
+                    DET_TOOTH,
+                    DET_TYPE,
+                    DET_COEF,
+                    DET_EXCEEDING,
+                    DET_CODE,
+                    DET_COMP,
+                    DET_PURCHASE_PRICE,
+                    DET_CCAM_CODE,
+                    DET_CCAM_OPPOSABLE,
+                    DET_CCAM_TELEM,
+                    DET_CCAM_MODIFIER,
+                    exceptional_refund,
+                    DET_SECU_AMOUNT,
+                    DET_SECU_REPAYMENT,
+                    DET_MUTUAL_REPAYMENT_TYPE,
+                    DET_MUTUAL_REPAYMENT_RATE,
+                    DET_MUTUAL_REPAYMENT,
+                    DET_MUTUAL_COMPLEMENT,
+                    DET_PERSON_REPAYMENT,
+                    DET_PERSON_AMOUNT
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                ccam_id = VALUES(ccam_id),
+                ngap_key_id = VALUES(ngap_key_id),
+                dental_material_id = VALUES(dental_material_id),
+                DET_TOOTH = VALUES(DET_TOOTH),
+                DET_TYPE = VALUES(DET_TYPE),
+                DET_COEF = VALUES(DET_COEF),
+                DET_EXCEEDING = VALUES(DET_EXCEEDING),
+                DET_CODE = VALUES(DET_CODE),
+                DET_COMP = VALUES(DET_COMP),
+                DET_PURCHASE_PRICE = VALUES(DET_PURCHASE_PRICE),
+                DET_CCAM_CODE = VALUES(DET_CCAM_CODE),
+                DET_CCAM_OPPOSABLE = VALUES(DET_CCAM_OPPOSABLE),
+                DET_CCAM_TELEM = VALUES(DET_CCAM_TELEM),
+                DET_CCAM_MODIFIER = VALUES(DET_CCAM_MODIFIER),
+                exceptional_refund = VALUES(exceptional_refund),
+                DET_SECU_AMOUNT = VALUES(DET_SECU_AMOUNT),
+                DET_SECU_REPAYMENT = VALUES(DET_SECU_REPAYMENT),
+                DET_MUTUAL_REPAYMENT_TYPE = VALUES(DET_MUTUAL_REPAYMENT_TYPE),
+                DET_MUTUAL_REPAYMENT_RATE = VALUES(DET_MUTUAL_REPAYMENT_RATE),
+                DET_MUTUAL_REPAYMENT = VALUES(DET_MUTUAL_REPAYMENT),
+                DET_MUTUAL_COMPLEMENT = VALUES(DET_MUTUAL_COMPLEMENT),
+                DET_PERSON_REPAYMENT = VALUES(DET_PERSON_REPAYMENT),
+                DET_PERSON_AMOUNT = VALUES(DET_PERSON_AMOUNT)`;
+              let teeth = dental?.teeth;
+              if (Array.isArray(teeth)) {
+                teeth = teeth.join(',');
               }
 
-              act.traceabilityStatus = traceabilityStatus;
+              teeth = teeth.trim() ? teeth.trim() : null;
+              if (dental?.code === 'HBQK002' && teeth.length === 0) {
+                teeth = '00';
+              }
 
-              await this.dataSource.manager.save(EventTaskEntity, act);
+              await manager.query(sql, [
+                task?.id,
+                dental?.ccam_id ?? null,
+                dental?.ngap_key_id ?? null,
+                dental?.dental_material_id ?? null,
+                teeth?.length === 0 ? null : teeth,
+                dental?.type,
+                dental?.coef,
+                this._empty(dental?.exceeding) ? null : dental?.exceeding,
+                this._empty(dental?.code) ? null : dental?.code,
+                this._empty(dental?.comp) ? null : dental?.comp,
+                !dental?.purchasePrice || dental?.purchasePrice === ''
+                  ? 0
+                  : dental?.purchasePrice,
+                dental?.ccamCode,
+                !dental?.ccamOpposable || dental?.ccamOpposable === ''
+                  ? 0
+                  : dental?.ccamOpposable,
+                dental?.ccamTelem,
+                dental?.ccamModifier,
+                dental?.exceptional_refund,
+                dental?.secuAmount,
+                dental?.secuRepayment,
+                dental?.mutualRepaymentType,
+                dental?.mutualRepaymentRate,
+                dental?.mutualRepayment,
+                dental?.mutualComplement,
+                dental?.personRepayment,
+                dental?.personAmount,
+              ]);
             }
+            tasks.push(task?.id);
           }
 
-          if (!this._empty(task?.dental)) {
-            const dental = {
-              ald: 0,
-              type: null,
-              teeth: [],
-              coef: 1,
-              comp: null,
-              key: null,
-              purchasePrice: 0,
-              ccamCode: null,
-              ccamOpposable: 0,
-              ccamNPC: 0,
-              ccamNR: 0,
-              ccamTelem: 1,
-              ccamModifier: null,
-              secuAmount: 0,
-              secuRepayment: 0,
-              mutualRepaymentType: 0,
-              mutualRepaymentRate: 0,
-              mutualRepayment: 0,
-              mutualComplement: 0,
-              personRepayment: 0,
-              personAmount: 0,
-              ...task.dental,
-            };
-
+          if (tasks.length > 0) {
+            const listTask = tasks.join();
             const sql = `
-              INSERT INTO T_DENTAL_EVENT_TASK_DET (
-                  ETK_ID,
-                  ccam_id,
-                  ngap_key_id,
-                  dental_material_id,
-                  DET_TOOTH,
-                  DET_TYPE,
-                  DET_COEF,
-                  DET_EXCEEDING,
-                  DET_CODE,
-                  DET_COMP,
-                  DET_PURCHASE_PRICE,
-                  DET_CCAM_CODE,
-                  DET_CCAM_OPPOSABLE,
-                  DET_CCAM_TELEM,
-                  DET_CCAM_MODIFIER,
-                  exceptional_refund,
-                  DET_SECU_AMOUNT,
-                  DET_SECU_REPAYMENT,
-                  DET_MUTUAL_REPAYMENT_TYPE,
-                  DET_MUTUAL_REPAYMENT_RATE,
-                  DET_MUTUAL_REPAYMENT,
-                  DET_MUTUAL_COMPLEMENT,
-                  DET_PERSON_REPAYMENT,
-                  DET_PERSON_AMOUNT
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-              ON DUPLICATE KEY UPDATE
-              ccam_id = VALUES(ccam_id),
-              ngap_key_id = VALUES(ngap_key_id),
-              dental_material_id = VALUES(dental_material_id),
-              DET_TOOTH = VALUES(DET_TOOTH),
-              DET_TYPE = VALUES(DET_TYPE),
-              DET_COEF = VALUES(DET_COEF),
-              DET_EXCEEDING = VALUES(DET_EXCEEDING),
-              DET_CODE = VALUES(DET_CODE),
-              DET_COMP = VALUES(DET_COMP),
-              DET_PURCHASE_PRICE = VALUES(DET_PURCHASE_PRICE),
-              DET_CCAM_CODE = VALUES(DET_CCAM_CODE),
-              DET_CCAM_OPPOSABLE = VALUES(DET_CCAM_OPPOSABLE),
-              DET_CCAM_TELEM = VALUES(DET_CCAM_TELEM),
-              DET_CCAM_MODIFIER = VALUES(DET_CCAM_MODIFIER),
-              exceptional_refund = VALUES(exceptional_refund),
-              DET_SECU_AMOUNT = VALUES(DET_SECU_AMOUNT),
-              DET_SECU_REPAYMENT = VALUES(DET_SECU_REPAYMENT),
-              DET_MUTUAL_REPAYMENT_TYPE = VALUES(DET_MUTUAL_REPAYMENT_TYPE),
-              DET_MUTUAL_REPAYMENT_RATE = VALUES(DET_MUTUAL_REPAYMENT_RATE),
-              DET_MUTUAL_REPAYMENT = VALUES(DET_MUTUAL_REPAYMENT),
-              DET_MUTUAL_COMPLEMENT = VALUES(DET_MUTUAL_COMPLEMENT),
-              DET_PERSON_REPAYMENT = VALUES(DET_PERSON_REPAYMENT),
-              DET_PERSON_AMOUNT = VALUES(DET_PERSON_AMOUNT)`;
-
-            let teeth = dental?.teeth;
-            if (Array.isArray(teeth)) {
-              teeth = teeth.join(',');
-            }
-
-            teeth = teeth.trim() ? teeth.trim() : null;
-            if (dental?.code === 'HBQK002' && teeth.length === 0) {
-              teeth = '00';
-            }
-
-            await queryRunner.query(sql, [
-              task?.id,
-              dental?.ccam_id ?? null,
-              dental?.ngap_key_id ?? null,
-              dental?.dental_material_id ?? null,
-              teeth?.length === 0 ? null : teeth,
-              dental?.type,
-              dental?.coef,
-              this._empty(dental?.exceeding) ? null : dental?.exceeding,
-              this._empty(dental?.code) ? null : dental?.code,
-              this._empty(dental?.comp) ? null : dental?.comp,
-              !dental?.purchasePrice || dental?.purchasePrice === ''
-                ? 0
-                : dental?.purchasePrice,
-              dental?.ccamCode,
-              !dental?.ccamOpposable || dental?.ccamOpposable === ''
-                ? 0
-                : dental?.ccamOpposable,
-              dental?.ccamTelem,
-              dental?.ccamModifier,
-              dental?.exceptional_refund,
-              dental?.secuAmount,
-              dental?.secuRepayment,
-              dental?.mutualRepaymentType,
-              dental?.mutualRepaymentRate,
-              dental?.mutualRepayment,
-              dental?.mutualComplement,
-              dental?.personRepayment,
-              dental?.personAmount,
-            ]);
+              DELETE ETK, DET
+              FROM T_EVENT_TASK_ETK ETK
+              LEFT OUTER JOIN T_DENTAL_EVENT_TASK_DET DET ON DET.ETK_ID = ETK.ETK_ID
+              WHERE ETK.EVT_ID = ${event?.id}
+              AND ETK.ETK_ID NOT IN (${listTask})`;
+            await manager.query(sql);
           }
-          tasks.push(task?.id);
+
+          events.push(event?.id);
         }
 
-        if (tasks.length > 0) {
-          const listTask = tasks.join();
-          const sql = `
-            DELETE ETK, DET
-            FROM T_EVENT_TASK_ETK ETK
-            LEFT OUTER JOIN T_DENTAL_EVENT_TASK_DET DET ON DET.ETK_ID = ETK.ETK_ID
-            WHERE ETK.EVT_ID = ${event?.id}
-            AND ETK.ETK_ID NOT IN (${listTask})`;
-          await queryRunner.query(sql);
-        }
-
-        events.push(event?.id);
-      }
-
-      if (events.length > 0) {
-        const eventStatement = `
-        SELECT
-          EVT_ID
-        FROM T_PLAN_EVENT_PLV
-        WHERE PLF_ID = ?
-          AND EVT_ID NOT IN (${events.join()})`;
-        const eventResult = await queryRunner.query(eventStatement, [
-          options?.id,
-        ]);
-        const eventsId = eventResult.map((item) => item.EVT_ID);
-        for (const eventId of eventsId) {
-          await queryRunner.query(`
-          DELETE T_PLAN_EVENT_PLV
+        if (events.length > 0) {
+          const eventStatement = `
+          SELECT
+            EVT_ID
           FROM T_PLAN_EVENT_PLV
-          JOIN T_EVENT_EVT
-          WHERE T_EVENT_EVT.EVT_ID = ${eventId}
-          AND T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID`);
+          WHERE PLF_ID = ?
+            AND EVT_ID NOT IN (${events.join()})`;
+          const eventResult = await manager.query(eventStatement, [
+            options?.id,
+          ]);
+          const eventsId = eventResult.map((item) => item.EVT_ID);
+          for (const eventId of eventsId) {
+            await manager.query(`
+            DELETE T_PLAN_EVENT_PLV
+            FROM T_PLAN_EVENT_PLV
+            JOIN T_EVENT_EVT
+            WHERE T_EVENT_EVT.EVT_ID = ${eventId}
+            AND T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID`);
 
-          await queryRunner.query(`
-          DELETE T_DENTAL_EVENT_TASK_DET
-          FROM T_DENTAL_EVENT_TASK_DET
-          JOIN T_EVENT_TASK_ETK
-          WHERE T_EVENT_TASK_ETK.EVT_ID = ${eventId}
-          AND T_EVENT_TASK_ETK.ETK_ID = T_DENTAL_EVENT_TASK_DET.ETK_ID`);
+            await manager.query(`
+            DELETE T_DENTAL_EVENT_TASK_DET
+            FROM T_DENTAL_EVENT_TASK_DET
+            JOIN T_EVENT_TASK_ETK
+            WHERE T_EVENT_TASK_ETK.EVT_ID = ${eventId}
+            AND T_EVENT_TASK_ETK.ETK_ID = T_DENTAL_EVENT_TASK_DET.ETK_ID`);
 
-          await queryRunner.query(`
-          DELETE T_EVENT_TASK_ETK
-          FROM T_EVENT_TASK_ETK
-          WHERE T_EVENT_TASK_ETK.EVT_ID = ${eventId}`);
+            await manager.query(`
+            DELETE T_EVENT_TASK_ETK
+            FROM T_EVENT_TASK_ETK
+            WHERE T_EVENT_TASK_ETK.EVT_ID = ${eventId}`);
 
-          await queryRunner.query(`
-          DELETE FROM event_occurrence_evo
-          WHERE evt_id = ${eventId}`);
+            await manager.query(`
+            DELETE FROM event_occurrence_evo
+            WHERE evt_id = ${eventId}`);
 
-          await queryRunner.query(`
-          DELETE T_EVENT_EVT
-          FROM T_EVENT_EVT
-          WHERE T_EVENT_EVT.EVT_ID = ${eventId}`);
+            await manager.query(`
+            DELETE T_EVENT_EVT
+            FROM T_EVENT_EVT
+            WHERE T_EVENT_EVT.EVT_ID = ${eventId}`);
+          }
         }
+        return options?.id;
+      } catch (error) {
+        throw new CBadRequestException(error);
       }
-
-      await queryRunner.commitTransaction();
-      return this._getPlan(options?.id, groupId);
-    } catch (error) {
-      if (queryRunner.isTransactionActive) {
-        queryRunner.rollbackTransaction();
-      }
-      throw new CBadRequestException(error);
-    }
+    });
   }
   /**
    * File: /contact/plans/findAll.php, line 23->94
@@ -1190,7 +1165,7 @@ export class PlanService {
                   id: null,
                 },
               );
-              const currentDental = await this.dataSource.manager.findOneOrFail(
+              const currentDental = await this.dataSource.manager.findOne(
                 DentalEventTaskEntity,
                 {
                   where: {
@@ -1226,7 +1201,7 @@ export class PlanService {
     try {
       const { action } = request;
       if (action === 'save') {
-        const plan = await this._save(body, identity.org);
+        const planId = await this._save(body, identity.org);
         // const patientId = plan?.patient_id
         // const accessType = !request?.id ? 1: 2
 
@@ -1238,7 +1213,7 @@ export class PlanService {
         //   case 'quotation':
         //     Ids\Log:: write('Devis', $patientId, $accessType);
         //     break;
-        return plan;
+        return await this._getPlan(planId, identity.org);
       } else {
         throw new BadRequestException('unknown action');
       }
