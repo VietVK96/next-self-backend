@@ -52,6 +52,7 @@ import * as fs from 'fs';
 import * as handlebars from 'handlebars';
 import * as dayjs from 'dayjs';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class QuotesServices {
   constructor(
@@ -85,6 +86,7 @@ export class QuotesServices {
     private therapeuticAlternativeService: TherapeuticAlternativeService,
     private contactService: ContactService,
     private mailTransportService: MailTransportService,
+    private configService: ConfigService,
   ) {}
   //ecoophp/dental/quotes/convention-2020/devis_email.php
   async sendMail(id: number, identity: UserIdentity) {
@@ -115,8 +117,11 @@ export class QuotesServices {
 
       const date = dayjs(data.date).locale('fr').format('DD MMM YYYY');
       const filename = `Devis_${dayjs(data.date).format('YYYYMMDD')}.pdf`;
+      const tempFolder = this.configService.get<string>(
+        'app.mail.folderTemplate',
+      );
       const emailTemplate = fs.readFileSync(
-        path.join(process.cwd(), 'templates/mail', 'quote.hbs'),
+        path.join(tempFolder, 'mail/quote.hbs'),
         'utf-8',
       );
       const userFullName = generateFullName(
@@ -142,10 +147,10 @@ export class QuotesServices {
         from: data.user.email,
         to: data.contact.email,
         subject,
-        template: mailBody,
-        context: {
-          quote: data,
-        },
+        html: mailBody,
+        // context: {
+        //   quote: data,
+        // },
         attachments: [
           {
             filename: filename,

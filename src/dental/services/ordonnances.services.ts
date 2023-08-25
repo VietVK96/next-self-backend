@@ -27,6 +27,7 @@ import * as dayjs from 'dayjs';
 import * as fs from 'fs';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class OrdonnancesServices {
@@ -42,6 +43,7 @@ export class OrdonnancesServices {
     @InjectRepository(ContactNoteEntity)
     private contactNoteRepo: Repository<ContactNoteEntity>,
     private mailTransportService: MailTransportService,
+    private configService: ConfigService,
   ) {}
 
   //ecoophp/dental/ordonnances/ordo_email.php
@@ -75,8 +77,11 @@ export class OrdonnancesServices {
       const filename = `Ordonnance_${dayjs(data.date).format(
         'DD_MM_YYYY',
       )}.pdf`;
+      const tempFolder = this.configService.get<string>(
+        'app.mail.folderTemplate',
+      );
       const emailTemplate = fs.readFileSync(
-        path.join(process.cwd(), 'templates/mail', 'quote.hbs'),
+        path.join(tempFolder, 'mail/quote.hbs'),
         'utf-8',
       );
       const userFullName = generateFullName(
@@ -102,10 +107,10 @@ export class OrdonnancesServices {
         from: data.user.email,
         to: data.contact.email,
         subject,
-        template: mailBody,
-        context: {
-          quote: data,
-        },
+        html: mailBody,
+        // context: {
+        //   quote: data,
+        // },
         attachments: [
           {
             filename: filename,
@@ -142,7 +147,7 @@ export class OrdonnancesServices {
           where: { userId: payload?.user_id },
         });
         if (!medicalHeader) {
-          await this.medicalHeaderRepository.create({
+          const medicalHeaderCreate = this.medicalHeaderRepository.create({
             userId: payload?.user_id,
             msg: payload?.header_msg,
             address: payload?.address,
@@ -150,6 +155,7 @@ export class OrdonnancesServices {
             height: payload?.header_height,
             format: payload?.format,
           });
+          await this.medicalHeaderRepository.save(medicalHeaderCreate);
         }
         await this.medicalHeaderRepository.save({
           userId: payload?.user_id,

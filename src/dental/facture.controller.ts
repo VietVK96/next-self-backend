@@ -7,6 +7,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -39,7 +40,7 @@ export class FactureController {
   @Get('/facture/facture_pdf')
   @UseGuards(TokenGuard)
   async getPdf(
-    @Res() res,
+    @Res() res: Response,
     @Query() payload: PrintPDFDto,
     @CurrentUser() identity: UserIdentity,
   ) {

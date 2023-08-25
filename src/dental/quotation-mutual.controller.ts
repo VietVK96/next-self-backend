@@ -19,6 +19,7 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { ErrorCode } from 'src/constants/error';
 import { QuotationMutualServices } from './services/quotaion-mutual.services';
 import { QuotationMutualInitChampsDto } from './dto/quotatio-mutual.dto';
+import type { Response } from 'express';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -39,7 +40,7 @@ export class QuotationMutualController {
   @Get('/quotation-mutual/devis_pdf')
   @UseGuards(TokenGuard)
   async devisPdf(
-    @Res() res,
+    @Res() res: Response,
     @Query() req: PrintPDFDto,
     @CurrentUser() identity: UserIdentity,
   ) {

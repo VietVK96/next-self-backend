@@ -57,7 +57,7 @@ export class ThirdPartyController {
   @Get('print')
   @UseGuards(TokenGuard)
   async print(
-    @Res() res,
+    @Res() res: Response,
     @Query() payload: ThirdPartyDto,
     @CurrentUser() identity: UserIdentity,
   ) {
