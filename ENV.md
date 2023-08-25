@@ -58,8 +58,8 @@ Steps to get configs
 1. Login to MailTrap [mailtrap.io](https://mailtrap.io)
 2. Click Email Testing -> Inbox
 3. On SMTP Settings tab, click **Show Credentials**  
-4. We have the mailtrap credential information like image below:
-![image](https://github.com/giangdt1215/wecleverss/assets/14262924/c5ce1d25-4b6c-47a4-93bd-b3e5fabc0f53)
+4. We have the mailtrap credential information like image below:  
+  ![image](https://github.com/giangdt1215/wecleverss/assets/14262924/c5ce1d25-4b6c-47a4-93bd-b3e5fabc0f53)
 5. From this credential information above, we can set the credential into env file like this:
   
     ```
