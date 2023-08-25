@@ -128,11 +128,7 @@ export class SaveEventService {
 
   // file php/event/save.php full file
   // create and update calendar
-  async saveAgenda(
-    userId: number,
-    payload: SaveAgendaDto,
-    practitionerId: number,
-  ) {
+  async saveAgenda(userId: number, payload: SaveAgendaDto, doctorId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -156,6 +152,9 @@ export class SaveEventService {
     const _private = payload.private;
     const dates = payload.dates ? payload.dates.split(',') : [];
     const exdates = payload.exdates ? payload.exdates.split(',') : [];
+    const practitionerId = payload?.practitionerId
+      ? checkId(payload?.practitionerId)
+      : doctorId;
 
     let eventStatus = 0;
     let eventLateness = 0;
