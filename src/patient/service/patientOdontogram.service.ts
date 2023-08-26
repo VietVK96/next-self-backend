@@ -138,18 +138,39 @@ export class PatientOdontogramService {
 
   async getTreatmentPlanOdontogram(request: TreatmentPlanOdontogramDto) {
     try {
-      const eventTaskByTreatments = await this.getTreatmentPlanPrestation(
-        request?.treatment_plan_id,
+      const eventTaskByTreatments = await this.dataSource.query(`
+          SELECT
+          T_EVENT_TASK_ETK.library_act_id,
+          T_EVENT_TASK_ETK.library_act_quantity_id,
+          T_DENTAL_EVENT_TASK_DET.DET_TOOTH AS teeth,
+          T_DENTAL_EVENT_TASK_DET.DET_CCAM_CODE AS ccamCode
+      FROM T_PLAN_PLF
+      JOIN T_PLAN_EVENT_PLV
+      JOIN T_EVENT_EVT
+      JOIN T_EVENT_TASK_ETK
+      JOIN T_DENTAL_EVENT_TASK_DET
+      WHERE T_PLAN_PLF.PLF_ID = ${request?.treatment_plan_id}
+        AND T_PLAN_PLF.PLF_ID = T_PLAN_EVENT_PLV.PLF_ID
+        AND T_PLAN_EVENT_PLV.EVT_ID = T_EVENT_EVT.EVT_ID
+        AND T_EVENT_EVT.EVT_ID = T_EVENT_TASK_ETK.EVT_ID
+        AND T_EVENT_TASK_ETK.deleted_at IS NULL
+        AND T_EVENT_TASK_ETK.library_act_id IS NOT NULL
+        AND T_EVENT_TASK_ETK.ETK_ID = T_DENTAL_EVENT_TASK_DET.ETK_ID
+        AND T_DENTAL_EVENT_TASK_DET.DET_TOOTH IS NOT NULL
+        AND T_DENTAL_EVENT_TASK_DET.DET_TOOTH != ''
+      ORDER BY T_EVENT_TASK_ETK.ETK_DATE, T_EVENT_TASK_ETK.created_at
+      `);
+      const evenTasks = eventTaskByTreatments?.map(
+        (element) =>
+          ({
+            libraryActId: element.library_act_id,
+            libraryActQuantityId: element.library_act_quantity_id,
+            dental: {
+              teeth: element.teeth,
+              ccamCode: element?.ccamCode,
+            },
+          } as EventTaskEntity),
       );
-
-      const ids = eventTaskByTreatments?.map((task) => task?.id);
-      const evenTasks = await this.eventTaskRepository.find({
-        where: {
-          id: In(ids),
-        },
-        relations: ['dental'],
-        order: { createdAt: 'ASC' },
-      });
       return await this.odontogramRunStatus(evenTasks);
     } catch (error) {
       throw new CBadRequestException(error);
