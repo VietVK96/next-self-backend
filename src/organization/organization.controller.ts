@@ -42,4 +42,14 @@ export class OrganizationController {
       throw new CBadRequestException('error get about organization', error);
     }
   }
+
+  /**
+   * Additional api to optimize performance
+   */
+
+  @Get('settings')
+  @UseGuards(TokenGuard)
+  async getSettingsObservation(@CurrentUser() identity: UserIdentity) {
+    return await this.organizationService.getSettingsObservation(identity.org);
+  }
 }
