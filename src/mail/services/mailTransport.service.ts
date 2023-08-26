@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
-import { FactureEmailDataDto } from 'src/dental/dto/facture.dto';
 import { EmailAccountEntity } from 'src/entities/email-account.entity';
 import { EmailOutgoingServerEntity } from 'src/entities/email-outgoing-server.entity';
 import { UserEntity } from 'src/entities/user.entity';

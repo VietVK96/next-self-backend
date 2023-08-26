@@ -26,7 +26,6 @@ import { PrintPDFDto } from './dto/facture.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { Response } from 'express';
 import { ErrorCode } from 'src/constants/error';
-import { identity } from 'rxjs';
 
 @ApiBearerAuth()
 @Controller('/dental')
