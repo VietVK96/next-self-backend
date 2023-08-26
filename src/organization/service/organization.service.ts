@@ -156,4 +156,15 @@ export class OrganizationService {
       };
     }
   }
+
+  /**
+   * Additional api to optimize performance
+   */
+  async getSettingsObservation(organizationId: number) {
+    const res = await this.organizationRepo.findOneOrFail({
+      select: ['settings'],
+      where: { id: organizationId },
+    });
+    return res;
+  }
 }
