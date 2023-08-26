@@ -60,6 +60,7 @@ import { PatientOdontogramService } from 'src/patient/service/patientOdontogram.
 import { ContactEntity } from 'src/entities/contact.entity';
 import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
 import { PrintPDFDto } from '../dto/facture.dto';
+import { DOMParser, XMLSerializer } from 'xmldom';
 
 @Injectable()
 export class QuotationServices {
@@ -153,6 +154,10 @@ export class QuotationServices {
 
       return customCreatePdf({ files, options });
     } catch (error) {
+      console.log(
+        '🚀 ~ file: quotation.service.ts:156 ~ QuotationServices ~ generatePdf ~ error:',
+        error,
+      );
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
@@ -400,10 +405,6 @@ export class QuotationServices {
         success: true,
       };
     } catch (error) {
-      console.log(
-        '🚀 ~ file: quotation.service.ts:189 ~ QuotationServices ~ sendMail ~ error:',
-        error,
-      );
       throw new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
     }
   }
@@ -906,10 +907,6 @@ export class QuotationServices {
         userPreferenceQuotation.placeOfManufactureLabel;
       result.userPreferenceQuotationDisplayOdontogram =
         userPreferenceQuotation.displayOdontogram;
-      console.log(
-        '🚀 ~ file: quotation.service.ts:685 ~ QuotationServices ~ userPreferenceQuotation.displayOdontogram:',
-        userPreferenceQuotation.displayOdontogram,
-      );
       result.userPreferenceQuotationDisplayDetails =
         userPreferenceQuotation.displayAnnexe;
       result.userPreferenceQuotationDisplayNotice =
@@ -1431,10 +1428,6 @@ export class QuotationServices {
     identity: UserIdentity,
     payload: PreferenceQuotationDto,
   ): Promise<SuccessResponse> {
-    console.log(
-      '🚀 ~ file: quotation.service.ts:1206 ~ QuotationServices ~ payload:',
-      payload,
-    );
     try {
       const queryBuilder = this.dataSource
         .getRepository(UserEntity)
@@ -1499,10 +1492,6 @@ export class QuotationServices {
             );
           }
           userPreferenceQuotation.displayOdontogram = displayOdontogram;
-          console.log(
-            '🚀 ~ file: quotation.service.ts:1274 ~ QuotationServices ~ userPreferenceQuotation.displayOdontogram:',
-            userPreferenceQuotation.displayOdontogram,
-          );
           break;
         case 'displayAnnexe':
           let displayAnnexe: UserPreferenceQuotationDisplayAnnexeType;
@@ -1536,7 +1525,6 @@ export class QuotationServices {
       const result = await this.userPreferenceQuotationRepository.save(
         userPreferenceQuotation,
       );
-      console.log(result);
 
       return {
         success: true,
