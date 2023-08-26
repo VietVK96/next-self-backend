@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
@@ -21,6 +22,11 @@ import {
   PreferenceQuotationDto,
   QuotationInitChampsDto,
 } from './dto/quotation.dto';
+import { PrintPDFDto } from './dto/facture.dto';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { Response } from 'express';
+import { ErrorCode } from 'src/constants/error';
+import { identity } from 'rxjs';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -69,7 +75,7 @@ export class QuotationController {
   @UseGuards(TokenGuard)
   async patchPreferenceQuotation(
     @CurrentUser() identity: UserIdentity,
-    @Param('payload') payload: PreferenceQuotationDto,
+    @Body() payload: PreferenceQuotationDto,
     @Param('id') id: number,
   ): Promise<any> {
     return await this.quotationServices.patchPreferenceQuotation(
@@ -87,5 +93,32 @@ export class QuotationController {
     @CurrentUser() identity: UserIdentity,
   ) {
     return this.quotationServices.sendMail(id, identity);
+  }
+
+  //ecoophp/dental/quotation/devis_pdf.php
+  @Get('/quotation/devis_html')
+  @UseGuards(TokenGuard)
+  async quotationDevisPdf(
+    @Res() res: Response,
+    @Query() req: PrintPDFDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    try {
+      const buffer = await this.quotationServices.generatePdf(req, identity);
+
+      res.set({
+        // pdf
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Length': buffer.length,
+        // prevent cache
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    }
   }
 }

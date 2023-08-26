@@ -80,7 +80,7 @@ export class DevisRequestAjaxDto {
     name: 'dispo',
     required: false,
   })
-  dispo?: string;
+  dispo?: number;
 
   @ApiProperty({
     name: 'dispo_desc',
@@ -104,7 +104,7 @@ export class DevisRequestAjaxDto {
     name: 'placeOfManufacture',
     required: true,
   })
-  placeOfManufacture?: string;
+  placeOfManufacture?: number;
 
   @ApiProperty({
     name: 'placeOfManufactureLabel',
@@ -205,13 +205,13 @@ export class DevisRequestAjaxDto {
     name: 'quotationWithSubcontracting',
     required: false,
   })
-  quotationWithSubcontracting?: string;
+  quotationWithSubcontracting?: number;
 
   @ApiProperty({
     name: 'quotationPlaceOfSubcontracting',
     required: false,
   })
-  quotationPlaceOfSubcontracting?: string;
+  quotationPlaceOfSubcontracting?: number;
 
   @ApiProperty({
     name: 'quotationPlaceOfSubcontractingLabel',
@@ -233,7 +233,7 @@ export class QuotationDevisRequestAjaxDto extends IntersectionType(
     name: 'displayNotice',
     required: false,
   })
-  displayNotice?: string;
+  displayNotice?: number;
 }
 
 export class Convention2020RequestAjaxDto {
