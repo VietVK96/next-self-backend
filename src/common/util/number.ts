@@ -14,7 +14,7 @@ export const toFixed = (
 };
 
 export function checkBoolean(
-  value: string | number | null | undefined,
+  value: string | number | null | undefined | boolean,
 ): boolean {
   if (typeof value === 'string' && value === 'false') return false;
   return value ? true : false;

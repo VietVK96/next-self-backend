@@ -1,0 +1,312 @@
+<page style="page-break-after: always; width: 285mm; size: 285mm">
+  <div class='header'>
+    <h1 class='main-title'>
+      DEVIS
+      {{#if duplicata}}
+        <span
+          style='color: red; font-size: 14pt; margin-left: 5mm; text-transform: uppercase;'
+        >
+          duplicata
+        </span>
+      {{/if}}
+    </h1>
+    <p style='font-size: 13pt'>
+      pour traitements et actes bucco-dentaires pouvant faire l'objet d'une
+      entente directe
+    </p>
+    <p style='font-size: 8pt'>
+      Les soins à tarifs opposables ne sont pas compris dans ce devis
+    </p>
+    <p class='last-title'>
+      Ce devis est la propriété du patient, sa communication à un tiers se fait
+      sous sa seule responsabilité.
+    </p>
+  </div>
+  <div class='ident'>
+    <div class='col-1'>
+      <div class='ident_prat' style="height: fit-content;">
+        <span style='font-style: italic'>Identification du Chirurgien-dentiste
+          traitant<br />(avec numéro ADELI/FINESS) :</span>
+        <div class='textarea'>
+          {{{nl2br ident_prat}}}
+        </div>
+      </div>
+      <div class='ident_dev'>
+        <div class='form'>
+          <div>
+            Date d'établissement du devis :
+            <span class='input' style='width: 180px'>
+              {{date_devis}}
+            </span>
+          </div>
+          <div>
+            Durée de validité du devis :
+            <span class='input' style='width: 199px'>
+              {{duree_devis}}
+            </span>
+          </div>
+        </div>
+        <div class='form'>
+          <div style='font-style: italic; font-weight: normal'>
+            Identification du patient :
+            <span class='input' style='width: 215px'>
+              {{ident_pat}}
+            </span>
+          </div>
+          <div>
+            Nom et prénom :
+            <span class='input' style='width: 250px'>
+              {{nom_prenom_patient}}
+            </span>
+          </div>
+          <div>
+            Date de naissance :
+            <span class='input' style='width: 240px'>
+              {{#if date_de_naissance_patient}}
+                {{date_de_naissance_patient}}
+              {{else}}
+                &nbsp;
+              {{/if}}
+            </span>
+          </div>
+          <div>
+            N° INSEE de l'assuré :
+            <span class='input' style='width: 220px'>
+              {{INSEE}}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class='donnees_admin'>
+        <h2 class='title'>
+          À remplir par l'assuré si celui-ci souhaite envoyer ce devis à son
+          organisme complémentaire :
+        </h2>
+        <div class='info'>
+          <span style='width: 110px'>Adresse de l'assuré</span>
+          <div class='dot' style='width: 490px'></div>
+        </div>
+        <div class='info'>
+          <div class='dot' style='width: 230px'></div>
+          <span style='width: 140px; text-align: center'>Téléphone de l'assuré</span>
+          <div class='dot' style='width: 230px'></div>
+        </div>
+        <div class='info'>
+          <span style='width: 190px'>Nom de l'organisme destinataire</span>
+          <div class='dot' style='width: 410px'></div>
+        </div>
+        <div class='info'>
+          <span style='width: 170px'>N° de contrat ou d'adhérent</span>
+          <div class='dot' style='width: 430px'></div>
+        </div>
+      </div>
+
+      <div class='donnees_admin dispo'>
+        <p>Dispositions particulières :</p>
+        <div>
+          <span class='select {{#unless dispo}}selected{{/unless}}'>NON</span>
+          <span class='select {{#if dispo}}selected{{/if}}'>OUI (lesquelles ?)</span>
+        </div>
+        <span class='input' style='width: 280px; margin-left: 6px'>{{dispo_desc}}</span>
+      </div>
+    </div>
+    <div class='col-2'>
+      <div class='preference'>
+        <p class='title'>Lieu de fabrication du dispositif :</p>
+        <div class='item'>
+          <input type='checkbox' {{#if isInFranceManuFacture}}checked="checked"{{/if}}/>
+          <label>en France </label>
+          <input type='checkbox'  {{#if isInEUManuFacture}}checked="checked"{{/if}}/>
+          <label>au sein de l'UE,EEE,Suisse</label>
+        </div>
+        <div class='item'>
+          <input type='checkbox' {{#if isOutsideEUManuFacture}}checked="checked"{{/if}}/>
+          <label>hors UE, pays : </label>
+          <span class='input' style='width: 120px'>
+            {{quotationPlaceOfManufactureLabel}}
+          </span>
+        </div>
+
+        <div class='item' style='padding: 5px 0'>
+          <input type='checkbox' {{#if isWithOutSubContracting}}checked="checked"{{/if}}/>
+          <label>sans sous-traitance du fabricant</label>
+        </div>
+
+        <div class='item'>
+          <input type='checkbox' {{#if isPartialSubContracting}}checked="checked"{{/if}}/>
+          <label>avec sous-traitance partielle du fabricant</label>
+        </div>
+        <div class='item'>
+          <input type='checkbox' {{#if isInFranceSubContracting}}checked="checked"{{/if}}/>
+          <label>en France </label>
+          <input type='checkbox' {{#if isInEUSubContracting}}checked="checked"{{/if}} />
+          <label>au sein de l'UE,EEE,Suisse</label>
+        </div>
+        <div class='item'>
+          <input type='checkbox' {{#if isOutsideEUSubContracting}}checked="checked"{{/if}}/>
+          <label>hors UE, pays : </label>
+          <span class='input' style='width: 120px'>{{quotationPlaceOfSubcontractingLabel}}</span>
+        </div>
+      </div>
+
+      <div class='material'>
+        <h2 class='title'>Matériaux et normes :</h2>
+        <div class='item odd'>
+          <span class='no'>1</span><span class='content'>Alliage précieux<br
+            />NF EN ISO 22674 3/2007</span>
+        </div>
+        <div class='item'>
+          <span class='no'>2</span><span class='content'>Alliage semi-précieux<br
+            />NF EN ISO 22674 3/2007</span>
+        </div>
+        <div class='item odd'>
+          <span class='no'>3</span><span class='content'>Alliage non précieux
+            CoCr<br />NF EN ISO 22674 3/2007</span>
+        </div>
+        <div class='item'>
+          <span class='no'>4</span><span class='content'>Alliage non précieux
+            NiCr<br />NF EN ISO 22674 3/2007</span>
+        </div>
+        <div class='item odd'>
+          <span class='no'>5</span><span class='content'>Résine Base<br />NF EN
+            ISO 1567 2000</span>
+        </div>
+        <div class='item'>
+          <span class='no'>6</span><span class='content'>Résine Dent<br />NF EN
+            ISO 22112 2005</span>
+        </div>
+        <div class='item odd'>
+          <span class='no'>7</span><span class='content'>Céramo-métallique<br
+            />NF EN ISO 9693 2000</span>
+        </div>
+        <div class='item'>
+          <span class='no'>8</span><span class='content'>Céramique dentaire NF
+            EN ISO<br />
+            6872 1999</span>
+        </div>
+      </div>
+
+      <div class='description'>
+        <h2 class='title'>Description du traitement proposé :</h2>
+        <div class='textarea' style='min-height: 65px'>{{description}}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class='details'>
+    <h3
+      class='title border-b border-black text-[#818284] text-[12px] text-center font-bold py-[5px]'
+    >
+      Description précise et détaillée des actes :
+    </h3>
+    <div class='details-head'>
+      <div style='width: 5%' class='w-[5%]'>
+        Localisation<br />ou N° dent
+      </div>
+      <div style='width: 27%' class='item'>
+        Nature de l'acte<br />ou libellé CCAM
+      </div>
+      <div style='width: 4.4%' class='item'>Matériaux<br />utilisés</div>
+      <div style='width: 6.4%' class='item'>
+        Code CCAM ou<br />pour l'orthodontie<br />cotation NGAP
+      </div>
+      <div style='width: 8.2%' class='item'>
+        (A)<br />Prix de vente<br />Dispositif Médical<br />sur Mesure*
+      </div>
+      <div style='width: 8.2%' class='item'>
+        (B1)<br />Montant des prest.<br />de soins
+      </div>
+      <div style='width: 8.2%' class='item'>
+        (B2)<br />Charges de<br />structure
+      </div>
+      <div style='width: 8.2%' class='item'>
+        (C=A+B1+B2)<br />Montant des<br />honoraires
+      </div>
+      <div style='width: 8.2%' class='item'>
+        (D)<br />Base<br />remboursement<br />AMO
+      </div>
+      <div style='width: 8.2%' class='item'>
+        (E=C-D)<br />Montant non<br />remboursable par<br />l'AMO
+      </div>
+      <div style='width: 8.2%' class='item'>
+        Réservé<br />à l'organisme<br />complémentaire
+      </div>
+    </div>
+    <div style="width: 100%;" class="details-body">
+      {{#each ar_details}}
+        {{#if this.id_devis_acte}}
+          <div class='details-tr'>
+            <div style='width: 5%; border:none;' class="item">{{this.localisation}}</div>
+            <div style='width: 27%; text-align: left' class='item'>{{this.libelle}}</div>
+            <div style='width: 4.4%; text-align: center' class='item'>{{this.materiau}}</div>
+            <div style='width: 6.4%; text-align: center' class='item'>{{this.cotation}}</div>
+            <div style='width: 8.2%' class='item'>{{formatAmount this.prixvente}}</div>
+            <div style='width: 8.2%' class='item'>{{formatAmount this.prestation}}</div>
+            <div style='width: 8.2%' class='item'>{{formatAmount this.charges}}</div>
+            <div style='width: 8.2%' class='item'>{{formatAmount this.honoraires}}</div>
+            <div style='width: 8.2%' class='item'>{{formatAmount this.rss}}</div>
+            <div style='width: 8.2%' class='item'>{{formatAmount this.nrss}}</div>
+            <div style='width: 8.2%' class='item'>{{this.roc}}</div>
+          </div>
+        {{else}}
+          <div class='details-tr'>
+            <div style='width: 5%; border:none;' class="item">{{this.localisation}}</div>
+            <div style='width: 27%; text-align: left' class='item'>{{this.libelle}}</div>
+            <div style='width: 4.4%; text-align: center' class='item'>{{this.materiau}}</div>
+            <div style='width: 6.4%; text-align: center' class='item'>{{this.cotation}}</div>
+            <div style='width: 8.2%; color: transparent' class='item'>a</div>
+            <div style='width: 8.2%' class='item'></div>
+            <div style='width: 8.2%' class='item'></div>
+            <div style='width: 8.2%' class='item'></div>
+            <div style='width: 8.2%' class='item'></div>
+            <div style='width: 8.2%' class='item'></div>
+            <div style='width: 8.2%' class='item'></div>
+          </div>
+        {{/if}}
+      {{/each}}
+    </div>
+    <div class='details-footer'>
+      <div
+        style='width: 42.8%; background-color: #cacbcd; border-left: none'
+        class='item'
+      >
+        TOTAL (in euros) -&gt;
+      </div>
+      <div class='item'>{{formatAmount total_prixvente}}</div>
+      <div class='item'>{{formatAmount total_prestation}}</div>
+      <div class='item'>{{formatAmount total_charges}}</div>
+      <div class='item'>{{formatAmount total_honoraires}}</div>
+      <div class='item'>{{formatAmount total_rss}}</div>
+      <div class='item'>{{formatAmount total_nrss}}</div>
+      <div class='item'></div>
+    </div>
+  </div>
+
+  <div class='total page1'>
+    <p class='italic' style='color: #00529e'>
+      Le patient reconnaît avoir eu la possibilité du choix de son traitement.
+    </p>
+    <div style='width: 50%'>Total des honoraires : {{quotationAmount}} €</div>
+  </div>
+
+  <div class='page-footer'>
+    <div>
+      <p>Date et signature du patient ou du responsable légal :</p>
+      {{#if quotationSignaturePatient}}
+        <img
+          style='position: absolute; width: {{quotationSignaturePatient.width}}px; height: {{quotationSignaturePatient.height}}px; left: 30%; bottom: 0;'
+          src='{{quotationSignaturePatient.src}}'
+        />
+      {{/if}}
+    </div>
+    <div>
+      <p>Signature du Chirurgien-dentiste :</p>
+      {{#if quotationSignaturePraticien}}
+        <img
+          style='position: absolute; width: {{quotationSignaturePraticien.width}}px; height: {{quotationSignaturePraticien.height}}px; left: 70%; bottom: 0;'
+          src='{{quotationSignaturePraticien.src}}'
+        />
+      {{/if}}
+    </div>
+  </div>
+</page>
