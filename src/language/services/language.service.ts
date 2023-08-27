@@ -7,7 +7,7 @@ import { join } from 'path';
 import { parseJson } from 'src/common/util/json';
 import * as flat from 'flat';
 import { LocaleConfig } from '../interface/laguage.interface';
-import FastGlob from 'fast-glob';
+import { globSync } from 'fast-glob';
 import { extract } from '@formatjs/cli-lib';
 import { exec } from 'child_process';
 
@@ -28,6 +28,7 @@ export class LanguageService {
     };
     await sheets.spreadsheets.values.update(resource);
   }
+
   async updateLang() {
     const folderFrontend = this.configService.get<string>('app.folderFrontend');
     if (!folderFrontend || folderFrontend === '') {
@@ -43,7 +44,7 @@ export class LanguageService {
       auth,
     });
 
-    const files = FastGlob.globSync(`./src/**/*.{tsx,ts}`, {
+    const files = globSync(`./src/**/*.{tsx,ts}`, {
       ignore: ['src/**/*.d.ts'],
     });
     const dlExtract = parseJson<Record<string, any>>(await extract(files, {}));
@@ -173,14 +174,13 @@ export class LanguageService {
       await sheets.spreadsheets.values.update(resource);
     }
 
-    exec('./deploy.sh', { cwd: folderFrontend }, function (err) {
-      if (err) {
-        console.log(err);
-        this.updateStatus(localeConfig.sheetRootId, sheets, 'error');
-        return;
-      }
+    try {
+      await exec('./deploy.sh', { cwd: folderFrontend });
       this.updateStatus(localeConfig.sheetRootId, sheets, 'done');
-    });
+    } catch (e) {
+      console.error(e);
+      this.updateStatus(localeConfig.sheetRootId, sheets, 'error');
+    }
     console.log('localeConfig', localeConfig);
     return localeConfig;
   }
