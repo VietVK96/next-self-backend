@@ -73,5 +73,8 @@ async function bootstrap() {
       process.version,
     );
   });
+  process.on('unhandledRejection', (e) => {
+    console.log('unhandledRejection', e);
+  });
 }
 bootstrap();

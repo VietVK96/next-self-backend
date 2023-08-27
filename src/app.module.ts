@@ -76,6 +76,9 @@ import { TraceabilityModule } from './traceability/traceability.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { AddressBookModule } from './address-books/address-books.module';
 import { AdvanceSearchModule } from './advanced-search/advanced-search.module';
+import { BullModule } from '@nestjs/bull';
+import { async } from 'rxjs';
+import { LanguageModule } from './language/language.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -111,6 +114,19 @@ const importsModules = [
     },
     isGlobal: true,
   }),
+  BullModule.registerQueueAsync({
+    imports: [ConfigModule],
+    inject: [ConfigService],
+    useFactory: (c: ConfigService) => {
+      const config = c.get<IRedisConfig>('redis');
+      return {
+        redis: config.host,
+        port: config.port,
+        password: config.password,
+        username: config.username,
+      };
+    },
+  }),
   MailerModule.forRootAsync({
     imports: [ConfigModule],
     useFactory: async (config: ConfigService) => ({
@@ -136,6 +152,7 @@ const importsModules = [
     }),
     inject: [ConfigService],
   }),
+  LanguageModule,
   EntityModule,
   ContactModule,
   AuthModule,
