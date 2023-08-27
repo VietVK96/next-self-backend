@@ -77,7 +77,6 @@ import { FeedbackModule } from './feedback/feedback.module';
 import { AddressBookModule } from './address-books/address-books.module';
 import { AdvanceSearchModule } from './advanced-search/advanced-search.module';
 import { BullModule } from '@nestjs/bull';
-import { async } from 'rxjs';
 import { LanguageModule } from './language/language.module';
 
 const importsModules = [
