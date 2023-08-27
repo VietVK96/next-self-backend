@@ -41,4 +41,5 @@ export default registerAs('app', () => ({
     folderTemplate:
       process?.env?.MAIL_FOLDER_TEMPLATE || process.cwd() + '/templates/',
   },
+  folderFrontend: process.env?.FRONTEND_FOLDER ?? '',
 }));
