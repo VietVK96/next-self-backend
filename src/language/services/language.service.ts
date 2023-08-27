@@ -176,8 +176,10 @@ export class LanguageService {
     exec('./deploy.sh', { cwd: folderFrontend }, function (err) {
       if (err) {
         console.log(err);
+        this.updateStatus(localeConfig.sheetRootId, sheets, 'error');
         return;
       }
+      this.updateStatus(localeConfig.sheetRootId, sheets, 'done');
     });
     console.log('localeConfig', localeConfig);
     return localeConfig;
