@@ -99,5 +99,5 @@ export class UpdateMyInformationDto {
 
   @ApiProperty()
   @IsNumber()
-  signature_automatic: number;
+  signature_automatic?: number;
 }
