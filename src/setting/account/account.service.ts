@@ -13,6 +13,7 @@ import { SIGNATURE } from 'src/constants/users';
 import { PrivilegeEntity } from 'src/entities/privilege.entity';
 import { AmoEntity } from 'src/entities/amo.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
+import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 
 @Injectable()
 export class AccountSettingService {
@@ -241,6 +242,7 @@ export class AccountSettingService {
         medical.rppsNumber = payload?.medical?.rpps_number
           ? payload.medical.rpps_number
           : null;
+        await queryRunner.manager.save(UserMedicalEntity, medical);
         delete user.medical;
       }
 
