@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { UserEntity } from 'src/entities/user.entity';
 
 class OutgoingServerDto {
   @ApiProperty()
@@ -25,7 +26,7 @@ export class SaveEmailDto {
   replyToAddress?: string;
 
   @ApiProperty()
-  subscribers?: number[];
+  subscribers?: UserEntity[];
 
   @ApiProperty()
   outgoingServer?: OutgoingServerDto;
