@@ -330,7 +330,7 @@ export class FindContactService {
       firstNamePhonetic: result?.firstNamePhonetic,
       profession: result?.profession,
       email: result?.email,
-      birthday: result?.birthDate,
+      birthday: result?.birthday,
       birthDateLunar: result?.birthDateLunar,
       birthOrder: result?.birthOrder,
       quality: result?.quality,
