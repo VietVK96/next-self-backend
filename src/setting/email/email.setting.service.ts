@@ -40,6 +40,9 @@ export class EmailSettingService {
     try {
       const email = await this.emailAccountRepo.findOne({
         where: { id: emailId },
+        relations: {
+          subscribers: true,
+        },
       });
       if (!email) return new CBadRequestException(ErrorCode.NOT_FOUND);
       delete email.MAX_ENTRIES;
@@ -62,6 +65,10 @@ export class EmailSettingService {
       } else {
         delete emailOutgoingServer?.password;
       }
+
+      email.subscribers = email.subscribers.map((user) => {
+        return { id: user?.id };
+      });
 
       return {
         ...email,
@@ -130,22 +137,22 @@ export class EmailSettingService {
         .save(emailOutgoingServer);
 
       const promises = [];
-      if (payload?.subscribers && payload?.subscribers.length > 0) {
+      if (payload?.subscribers) {
         await queryRunner.query(
           `DELETE FROM email_account_subscriber WHERE email_account_id = ?`,
           [emailId],
         );
-        for (const userId of payload?.subscribers) {
+        for (const user of payload?.subscribers) {
           if (
             await this.dataSource
               .getRepository(UserEntity)
-              .findOne({ where: { id: userId } })
+              .findOne({ where: { id: user.id } })
           ) {
             promises.push(
               queryRunner.query(
                 `INSERT INTO email_account_subscriber (email_account_id, user_id)
             VALUES (? , ?)`,
-                [savedEmailAccount.id, userId],
+                [savedEmailAccount.id, user.id],
               ),
             );
           } else {

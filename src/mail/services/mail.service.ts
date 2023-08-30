@@ -969,7 +969,7 @@ export class MailService {
           nextAppointmentTitle,
         };
       }
-      if (patient.birthDate) {
+      if (patient.birthday) {
         const birthday = new Date(context['contact']['birthday']);
         const currentDate = new Date();
         const ageInMilliseconds =
