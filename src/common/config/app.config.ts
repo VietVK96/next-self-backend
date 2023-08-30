@@ -42,4 +42,7 @@ export default registerAs('app', () => ({
       process?.env?.MAIL_FOLDER_TEMPLATE || process.cwd() + '/templates/',
   },
   folderFrontend: process.env?.FRONTEND_FOLDER ?? '',
+  countries: {
+    url: process?.env?.COUNTRIES_URL ?? 'https://restcountries.com/v3.1/all',
+  },
 }));
