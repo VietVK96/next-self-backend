@@ -482,6 +482,7 @@ export class UserService {
       if (!targetUserEntity) {
         throw new CBadRequestException(ErrorCode.NOT_FOUND);
       }
+
       const targetUserTypeEntity = targetUserEntity.type;
 
       let privilegeTargetEntity: PrivilegeEntity;
@@ -567,18 +568,16 @@ export class UserService {
             privilegeProfessionalEntity.permissionAccounting =
               permissionAccounting;
             privilegeProfessionalEntity.enable = enable;
-
             await transaction.manager
               .getRepository(PrivilegeEntity)
               .save(privilegeProfessionalEntity);
           }
         }
-
-        await transaction.commitTransaction();
-        return {
-          success: true,
-        };
       }
+      await transaction.commitTransaction();
+      return {
+        success: true,
+      };
     } catch (error) {
       await transaction.rollbackTransaction();
       throw new CBadRequestException(error?.message);
