@@ -12,6 +12,8 @@ import { DataSource, Not, Repository } from 'typeorm';
 import * as fs from 'fs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AccountStatusEnum } from 'src/enum/account-status.enum';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class OrganizationService {
@@ -41,7 +43,7 @@ export class OrganizationService {
       },
     });
 
-    return user.filter((x) => x.medical);
+    return user.filter((x) => x?.medical);
   }
 
   async hasStorageSpace(groupId: number, size?: number): Promise<boolean> {
@@ -141,20 +143,21 @@ export class OrganizationService {
   }
 
   async getCurrentOrganization(organizationId: number) {
-    if (organizationId) {
-      const currentOrganization = await this.organizationRepo.findOneOrFail({
-        where: { id: organizationId },
-        relations: { address: true, logo: true },
-      });
-      const practitioners = await this._getPractitioners(organizationId);
-      const modeDesynchronise = practitioners.every(
-        (x) => x.setting.sesamVitaleModeDesynchronise,
-      );
-      return {
-        organization: currentOrganization,
-        modeDesynchronise,
-      };
+    if (!organizationId) {
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
+    const currentOrganization = await this.organizationRepo.findOne({
+      where: { id: organizationId },
+      relations: { address: true, logo: true },
+    });
+    const practitioners = await this._getPractitioners(organizationId);
+    const modeDesynchronise = practitioners.every(
+      (x) => x?.preference?.sesamVitaleModeDesynchronise,
+    );
+    return {
+      organization: currentOrganization,
+      modeDesynchronise,
+    };
   }
 
   /**
