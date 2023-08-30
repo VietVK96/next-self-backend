@@ -10,6 +10,9 @@ import { UserService } from 'src/user/services/user.service';
 import { AddressService } from 'src/address/service/address.service';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { OrganizationEntity } from 'src/entities/organization.entity';
+import { OrganizationSubscriptionEntity } from 'src/entities/organization-subcription.entity';
+import { PlanEntity } from 'src/entities/plan.entity';
+import { OrganizationSubscriptionService } from './service/organizationSubscription.service';
 
 @Module({
   imports: [
@@ -19,6 +22,8 @@ import { OrganizationEntity } from 'src/entities/organization.entity';
       TagEntity,
       UserMedicalEntity,
       OrganizationEntity,
+      OrganizationSubscriptionEntity,
+      PlanEntity,
     ]),
   ],
   controllers: [OrganizationController],
@@ -27,6 +32,7 @@ import { OrganizationEntity } from 'src/entities/organization.entity';
     PermissionService,
     UserService,
     AddressService,
+    OrganizationSubscriptionService,
   ],
   exports: [],
 })
