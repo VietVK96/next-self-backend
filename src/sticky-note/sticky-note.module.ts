@@ -2,11 +2,13 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StickyNoteEntity } from 'src/entities/sticky-note.entity';
 import { StickyNoteController } from './sticky-note.controller';
-import { StickyNoteService } from './sticky-note.service';
+import { StickyNoteService } from './services/sticky-note.service';
+import { FsdStickyNoteController } from './fsd.stickyNote.controller';
+import { FsdSticktNoteService } from './services/fsd.stickyNote.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([StickyNoteEntity])],
-  controllers: [StickyNoteController],
-  providers: [StickyNoteService],
+  controllers: [StickyNoteController, FsdStickyNoteController],
+  providers: [StickyNoteService, FsdSticktNoteService],
 })
 export class StickyNoteModule {}
