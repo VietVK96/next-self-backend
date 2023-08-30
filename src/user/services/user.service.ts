@@ -22,6 +22,8 @@ import { PrivilegeEntity } from 'src/entities/privilege.entity';
 import { EventTypeEntity } from 'src/entities/event-type.entity';
 import { AppointmentReminderLibraryEntity } from 'src/entities/appointment-reminder-library.entity';
 import { checkId } from 'src/common/util/number';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { UpdateUserSmsDto } from '../dto/user-sms.dto';
 @Injectable()
 export class UserService {
   constructor(
@@ -582,5 +584,43 @@ export class UserService {
       await transaction.rollbackTransaction();
       throw new CBadRequestException(error?.message);
     }
+  }
+  async findAll(user: UserIdentity) {
+    const users = await this.userRepository.find({
+      where: {
+        organizationId: user.org,
+      },
+      relations: {
+        sms: true,
+      },
+    });
+    return users?.map((user) => {
+      return {
+        id: user?.id,
+        fullName: `${user?.lastname} ${user?.firstname}`,
+        sms: user?.sms,
+      };
+    });
+  }
+
+  async updateUserSms(payload: UpdateUserSmsDto) {
+    if (!payload?.users?.length) {
+      return [];
+    }
+    for (const user of payload?.users) {
+      const userSms = await this.dataSource.manager.findOne(UserSmsEntity, {
+        where: { usrId: user?.id },
+      });
+      if (userSms) {
+        userSms.quantity = user?.sms?.quantity;
+        user.sms = await this.dataSource.manager.save(UserSmsEntity, userSms);
+      } else {
+        user.sms = await this.dataSource.manager.save(UserSmsEntity, {
+          quantity: user?.sms?.quantity,
+          usrId: user?.id,
+        } as UserSmsEntity);
+      }
+    }
+    return payload.users;
   }
 }

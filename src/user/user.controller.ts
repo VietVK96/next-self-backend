@@ -34,6 +34,7 @@ import * as dayjs from 'dayjs';
 import { CreditBalancesService } from './services/credit-balances.service';
 import { CreditBalancesDto } from './dto/credit-balances.dto';
 import type { Response } from 'express';
+import { UpdateUserSmsDto } from './dto/user-sms.dto';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -287,5 +288,24 @@ export class UserController {
   @UseGuards(TokenGuard)
   getCreditBalances(@Query() payload: CreditBalancesDto) {
     return this.creditBalancesService.getPatientBalances(payload);
+  }
+
+  /**
+   * /fsd/users/sms.php?organization_id=1 line 46
+   */
+  @Get('find-all-sms')
+  @UseGuards(TokenGuard)
+  findAll(@CurrentUser() user: UserIdentity) {
+    return this.userService.findAll(user);
+  }
+
+  /**
+   * /fsd/users/sms.php?organization_id=1
+   * line 14-43
+   */
+  @Post('update-sms')
+  @UseGuards(TokenGuard)
+  updateSMS(@Body() users: UpdateUserSmsDto) {
+    return this.userService.updateUserSms(users);
   }
 }
