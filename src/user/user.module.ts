@@ -18,6 +18,8 @@ import { CreditBalancesService } from './services/credit-balances.service';
 import { LettersEntity } from 'src/entities/letters.entity';
 import { DocumentMailService } from 'src/mail/services/document.mail.service';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { UserConnectionEntity } from 'src/entities/user-connection.entity';
+import { UserConnectionService } from './services/user-connection.service';
 
 @Module({
   imports: [
@@ -29,6 +31,7 @@ import { ContactNoteEntity } from 'src/entities/contact-note.entity';
       ContactUserEntity,
       LettersEntity,
       ContactNoteEntity,
+      UserConnectionEntity,
     ]),
     AddressModule,
     JwtModule.register({
@@ -44,6 +47,7 @@ import { ContactNoteEntity } from 'src/entities/contact-note.entity';
     UnpaidService,
     CreditBalancesService,
     DocumentMailService,
+    UserConnectionService,
   ],
   exports: [
     PermissionService,
