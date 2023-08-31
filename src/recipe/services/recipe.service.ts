@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { QueryParamsDto } from '../dto/query-recipe.dto';
-import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { DataSource } from 'typeorm';
