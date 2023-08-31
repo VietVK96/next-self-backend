@@ -8,7 +8,7 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { DeleteStickyNoteDto } from './dto/delete.sticky-note.dto';
 import { FindAllStickyNoteDto } from './dto/findAll.sticky-note.dto';
-import { StickyNoteService } from './services/sticky-note.service';
+import { StickyNoteService } from './services/stickyNote.service';
 
 @ApiBearerAuth()
 @ApiTags('StickyNote')
