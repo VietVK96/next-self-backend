@@ -13,10 +13,15 @@ import { SIGNATURE } from 'src/constants/users';
 import { PrivilegeEntity } from 'src/entities/privilege.entity';
 import { AmoEntity } from 'src/entities/amo.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
+import { UserMedicalEntity } from 'src/entities/user-medical.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AccountSettingService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private dataSource: DataSource,
+    private configService: ConfigService,
+  ) {}
 
   async find(userId: number): Promise<FindAccountRes> {
     const users = await this.dataSource.query(
@@ -166,7 +171,7 @@ export class AccountSettingService {
         const address = user.address;
         if (address) {
           const countries = (
-            await axios.get('https://restcountries.com/v3.1/all')
+            await axios.get(this.configService.get<string>('app.countries.url'))
           ).data;
 
           address.street = street;
@@ -241,6 +246,7 @@ export class AccountSettingService {
         medical.rppsNumber = payload?.medical?.rpps_number
           ? payload.medical.rpps_number
           : null;
+        await queryRunner.manager.save(UserMedicalEntity, medical);
         delete user.medical;
       }
 

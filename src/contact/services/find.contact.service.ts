@@ -136,15 +136,20 @@ export class FindContactService {
       );
     // Start $searchCriteria = new \App\Services\SearchCriteria($connection, $fields, $conditions);
     if (request?.conditions && request?.conditions.length > 0) {
+      for (const condition of request?.conditions) {
+        if (condition?.value?.length < 2) {
+          return [];
+        }
+      }
       qr = this.addWhere(qr, request?.conditions);
     }
-    qr.andWhere('CON.CON_ID <> :id', {
+    qr.andWhere('CON.organization_id = :id', {
       id: organizationId,
     });
+    qr.andWhere('CON.deleted_at IS NULL');
     qr.addGroupBy('CON.CON_ID');
     qr.addOrderBy('CON.CON_LASTNAME , CON.CON_FIRSTNAME', 'ASC');
     const contacts: FindAllContactRes[] = await qr.getRawMany();
-
     const conIds = contacts.map((a) => a.id);
 
     /**

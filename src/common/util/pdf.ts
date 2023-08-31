@@ -1,6 +1,7 @@
 import puppeteer from 'puppeteer';
 import * as hbs from 'handlebars';
 import * as fs from 'fs';
+import { nl2br } from './string';
 
 export type HandlebarsHelpers = {
   [key: string]: hbs.HelperDelegate;
@@ -72,6 +73,10 @@ export const customCreatePdf = async ({
       isEqual: (v1: any, v2: any) => {
         return v1 === v2;
       },
+      nl2br: nl2br,
+      formatAmount: (e: number) => {
+        return Number(e) ? Number(e).toFixed(2) : '0.00';
+      },
     });
 
     if (helpers) {
@@ -99,7 +104,6 @@ export const customCreatePdf = async ({
       ...options,
     });
     await browser.close();
-    // process.exit();
     return buffer;
   } catch (e) {
     console.log(e);

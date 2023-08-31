@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -7,7 +18,14 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { QuotationDevisRequestAjaxDto } from './dto/devis_request_ajax.dto';
 import { QuotationServices } from './services/quotation.service';
-import { QuotationInitChampsDto } from './dto/quotation.dto';
+import {
+  PreferenceQuotationDto,
+  QuotationInitChampsDto,
+} from './dto/quotation.dto';
+import { PrintPDFDto } from './dto/facture.dto';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { Response } from 'express';
+import { ErrorCode } from 'src/constants/error';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -33,5 +51,73 @@ export class QuotationController {
     @CurrentUser() identity: UserIdentity,
   ) {
     return this.quotationServices.initChamps(req, identity);
+  }
+
+  /**
+   * php/dental/quotation/delete.php -> full file
+   * delete quotation
+   */
+  @Delete('/quotation/:id')
+  @UseGuards(TokenGuard)
+  async deleteNote(
+    @CurrentUser() identity: UserIdentity,
+    @Param('id') id: number,
+  ): Promise<any> {
+    return await this.quotationServices.deleteQuotation(identity, id);
+  }
+
+  /**
+   * /php/user/preference/quotation/patch.php -> full file
+   * patch preference quotation
+   */
+  @Patch('/preference/quotation/:id')
+  @UseGuards(TokenGuard)
+  async patchPreferenceQuotation(
+    @CurrentUser() identity: UserIdentity,
+    @Body() payload: PreferenceQuotationDto,
+    @Param('id') id: number,
+  ): Promise<any> {
+    return await this.quotationServices.patchPreferenceQuotation(
+      id,
+      identity,
+      payload,
+    );
+  }
+
+  // ecoophp/dental/quotation/devis_email.php
+  @Get('/quotation/devis_email')
+  @UseGuards(TokenGuard)
+  async sendMail(
+    @Query('id') id: number,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.quotationServices.sendMail(id, identity);
+  }
+
+  //ecoophp/dental/quotation/devis_pdf.php
+  @Get('/quotation/devis_html')
+  @UseGuards(TokenGuard)
+  async quotationDevisPdf(
+    @Res() res: Response,
+    @Query() req: PrintPDFDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    try {
+      const buffer = await this.quotationServices.generatePdf(req, identity);
+
+      res.set({
+        // pdf
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Length': buffer.length,
+        // prevent cache
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    }
   }
 }

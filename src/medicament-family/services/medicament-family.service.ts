@@ -26,7 +26,9 @@ export class MedicamentFamilyService {
     }
     const organization = await this.organizationRepo.findOne({
       where: { id: organizationId },
-      relations: { medicamentFamilies: { medicaments: true } },
+      relations: {
+        medicamentFamilies: { medicaments: { contraindications: true } },
+      },
     });
     if (!organization) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);

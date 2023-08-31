@@ -7,10 +7,13 @@ import * as path from 'path';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
 import { ErrorCode } from 'src/constants/error';
-import { SlipCheckEntity } from 'src/entities/slip-check.entity';
+import {
+  EnumSlipCheckPaymentChoice,
+  SlipCheckEntity,
+} from 'src/entities/slip-check.entity';
 import { UserEntity } from 'src/entities/user.entity';
-import { DataSource, IsNull, Repository } from 'typeorm';
-import { BordereauxDto } from './dto/index.dto';
+import { DataSource, In, IsNull, Repository } from 'typeorm';
+import { BordereauxDto, BordereauxStoreDto } from './dto/index.dto';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { bordereauSort } from 'src/constants/bordereau';
 import { PaymentMethodEnum } from 'src/enum/payment-method.enum';
@@ -413,23 +416,26 @@ export class BordereauxService {
 
     return { success: true };
   }
+
   /**
    *  File php/bordereaux/print.php
    */
   async printPdf(id: number) {
+    const slipCheck = await this.slipCheckRepository.find({
+      relations: [
+        'libraryBank',
+        'cashings',
+        'cashings.contact',
+        'libraryBank.user',
+        'libraryBank.group',
+        'libraryBank.address',
+      ],
+      where: { id: id },
+    });
+    if (slipCheck.length === 0) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND_SLIPCHECK);
+    }
     try {
-      const slipCheck = await this.slipCheckRepository.find({
-        relations: [
-          'libraryBank',
-          'cashings',
-          'cashings.contact',
-          'libraryBank.user',
-          'libraryBank.group',
-          'libraryBank.address',
-        ],
-        where: { id: id },
-      });
-
       const filePath = path?.join(
         process.cwd(),
         'templates/bordereaux',
@@ -466,11 +472,88 @@ export class BordereauxService {
         },
         count: (arr) => arr.length,
         checkPaymentChoice: (paymentChoice: string) =>
-          paymentChoice !== 'cheque',
+          paymentChoice !== EnumSlipCheckPaymentChoice.CHEQUE,
       };
 
       return customCreatePdf({ files, options, helpers });
     } catch {
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  /**
+   *  File php/bordereaux/store.php
+   */
+  async store(
+    identity: UserIdentity,
+    payload: BordereauxStoreDto,
+  ): Promise<SlipCheckEntity> {
+    const bank = await this.libraryBankRepository.findOne({
+      where: { id: payload.bank_id },
+    });
+
+    if (
+      !(await this.permissionService.hasPermission(
+        PerCode.PERMISSION_PAIEMENT,
+        6,
+        identity.id,
+        identity.id,
+      ))
+    ) {
+      throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
+    }
+
+    if (payload.payment_id.length === 0) {
+      throw new CBadRequestException(ErrorCode.BORDEREAU_PAYMENT_IS_EMPTY);
+    }
+    try {
+      const formatPaymentId = payload.payment_id
+        .map((item) => `'${item}'`)
+        .join(',');
+
+      const amounts: { totalAmount: number }[] = await this.dataSource.query(
+        `SELECT SUM(payment.CSG_AMOUNT) as totalAmount
+       FROM T_CASHING_CSG payment 
+       WHERE payment.CSG_ID IN (${formatPaymentId}) 
+        AND payment.USR_ID = ?`,
+        [identity.id],
+      );
+
+      const slipcheck = new SlipCheckEntity();
+      slipcheck.organizationId = identity.org;
+      slipcheck.userId = identity.id;
+      slipcheck.bank = bank;
+      slipcheck.number = bank.slipCheckNbr;
+      slipcheck.paymentChoice =
+        EnumSlipCheckPaymentChoice[payload.payment_choice.toLocaleUpperCase()];
+      slipcheck.paymentCount = payload.payment_id.length;
+      slipcheck.amount =
+        amounts?.length > 0 && amounts?.[0].totalAmount
+          ? amounts[0].totalAmount
+          : 0;
+      slipcheck.label = `bordereau de remise de ${payload.payment_id.length} ${payload.payment_choice}`;
+
+      const newSlipcheck = await this.slipCheckRepository.save(slipcheck);
+
+      const payments = await this.cashingRepository.find({
+        where: {
+          id: In(payload.payment_id),
+          usrId: payload.user_id,
+        },
+      });
+
+      const updatePayments = payments.map((item) => {
+        return {
+          ...item,
+          slcId: newSlipcheck.id,
+          bank,
+        };
+      });
+
+      await this.cashingRepository.save(updatePayments);
+
+      return newSlipcheck;
+    } catch (err) {
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }

@@ -92,8 +92,11 @@ export class DevisServices {
 
       const date = dayjs(data.date).locale('fr').format('DD MMM YYYY');
       const filename = `Devis_${data.reference ? data.reference : ''}.pdf`;
+      const tempFolder = this.configService.get<string>(
+        'app.mail.folderTemplate',
+      );
       const emailTemplate = fs.readFileSync(
-        path.join(process.cwd(), 'templates/mail', 'quote.hbs'),
+        path.join(tempFolder, 'mail/quote.hbs'),
         'utf-8',
       );
       const userFullName = generateFullName(
@@ -119,10 +122,10 @@ export class DevisServices {
         from: data.user.email,
         to: data.contact.email,
         subject,
-        template: mailBody,
-        context: {
-          quote: data,
-        },
+        html: mailBody,
+        // context: {
+        //   quote: data,
+        // },
         attachments: [
           {
             filename: filename,
@@ -213,11 +216,13 @@ export class DevisServices {
     const dayOfYear = customDayOfYear(dayjs());
     let random = await this.dataSource.query(
       `
-    SELECT IFNULL(SUBSTRING(MAX(reference), -5), 0) reference FROM T_DENTAL_QUOTATION_DQO WHERE USR_ID = ? AND reference LIKE CONCAT(?, ?, '%')`,
+    SELECT IFNULL(SUBSTRING(MAX(reference), -5), 0) reference
+    FROM T_DENTAL_QUOTATION_DQO
+    WHERE USR_ID = ? 
+    AND reference LIKE CONCAT(?, ?, '%')`,
       [currentUser.id, year, dayOfYear],
     );
-
-    random = Number(random?.[0]?.reference ?? '0') + 1;
+    random = Number(random[0]?.reference ? random[0]?.reference : '0') + 1;
     const paddedRandom = random.toString().padStart(5, '0');
     const reference = `${year}${dayOfYear}-${paddedRandom}`;
     let res;
@@ -280,22 +285,16 @@ export class DevisServices {
         if (medicalHeader) {
           medical_entete_id = medicalHeader?.id;
           identPrat = medicalHeader?.identPrat
-            ? medicalHeader.identPrat?.replace(
-                new RegExp('#<br(s)*/?>#i'),
-                'PHP_EOL',
-              )
+            ? medicalHeader.identPrat?.replace(/<br\s*[\/]?>/gi, '\n')
             : identPrat;
           adressePrat = medicalHeader?.address
-            ? medicalHeader.address?.replace(
-                new RegExp('#<br(s)*/?>#i'),
-                'PHP_EOL',
-              )
+            ? medicalHeader.address?.replace(/<br\s*[\/]?>/gi, '\n')
             : adressePrat;
           infosCompl =
             medicalHeader.dentalQuotationMessage !== null
               ? medicalHeader.dentalQuotationMessage.replace(
-                  new RegExp('#<br(s)*/?>#i'),
-                  'PHP_EOL',
+                  /<br\s*[\/]?>/gi,
+                  '\n',
                 )
               : infosCompl;
           titreDevisHN = medicalHeader.nameQuotHN ?? titreDevisHN;

@@ -27,13 +27,15 @@ import { PreferenceService } from './services/preference.service';
 import { TokenDownloadService } from './services/token-download.service';
 import { UnpaidService } from './services/unpaid.service';
 import { UnpaidDto, printUnpaidDto } from './dto/unpaid.dto';
-import { Response } from 'express';
 import { UpdatePassWordSettingDto } from './dto/user-setting.dto';
 import { ErrorCode } from 'src/constants/error';
 import { GetOneActiveRes } from './res/get-active.res';
 import * as dayjs from 'dayjs';
 import { CreditBalancesService } from './services/credit-balances.service';
 import { CreditBalancesDto } from './dto/credit-balances.dto';
+import type { Response } from 'express';
+import { UpdateUserSmsDto } from './dto/user-sms.dto';
+import { UserConnectionService } from './services/user-connection.service';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -45,6 +47,7 @@ export class UserController {
     private tokenDownloadService: TokenDownloadService,
     private unpaidService: UnpaidService,
     private creditBalancesService: CreditBalancesService,
+    private userConnectionService: UserConnectionService,
   ) {}
 
   /**
@@ -201,7 +204,7 @@ export class UserController {
   @Get('unpaid/print')
   @UseGuards(TokenGuard)
   async printUnpaid(
-    @Res() res,
+    @Res() res: Response,
     @CurrentUser() identity: UserIdentity,
     @Query() param?: printUnpaidDto,
   ) {
@@ -227,7 +230,7 @@ export class UserController {
   @Get('credit-balances/print')
   @UseGuards(TokenGuard)
   async printCreditBalances(
-    @Res() res,
+    @Res() res: Response,
     @CurrentUser() identity: UserIdentity,
     @Query() param?: printUnpaidDto,
   ) {
@@ -287,5 +290,41 @@ export class UserController {
   @UseGuards(TokenGuard)
   getCreditBalances(@Query() payload: CreditBalancesDto) {
     return this.creditBalancesService.getPatientBalances(payload);
+  }
+
+  /**
+   * /fsd/users/sms.php?organization_id=1 line 46
+   */
+  @Get('find-all-sms')
+  @UseGuards(TokenGuard)
+  findAll(@CurrentUser() user: UserIdentity) {
+    return this.userService.findAll(user);
+  }
+
+  /**
+   * /fsd/users/sms.php?organization_id=1
+   * line 14-43
+   */
+  @Post('update-sms')
+  @UseGuards(TokenGuard)
+  updateSMS(@Body() users: UpdateUserSmsDto) {
+    return this.userService.updateUserSms(users);
+  }
+
+  /**
+   * ecoophp/fsd/users/connections.php
+   */
+  @Get('user-connections')
+  @UseGuards(TokenGuard)
+  async findLastConnectionsOfUser(
+    @Query('userId') userId: number,
+    @Query('page') page?: number,
+    @Query('maxPerPage') maxPerPage?: number,
+  ) {
+    return this.userConnectionService.findLastConnectionsOfUser(
+      userId,
+      page,
+      maxPerPage,
+    );
   }
 }

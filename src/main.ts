@@ -55,6 +55,7 @@ async function bootstrap() {
     const options = new DocumentBuilder()
       .setTitle('API backend user')
       .setDescription('API Server')
+      .addServer(configService.get<string>('app.swaggerApi'))
       .setVersion('dev')
       .addBearerAuth()
       .build();
@@ -71,6 +72,9 @@ async function bootstrap() {
       '. Node version: ',
       process.version,
     );
+  });
+  process.on('unhandledRejection', (e) => {
+    console.log('unhandledRejection', e);
   });
 }
 bootstrap();

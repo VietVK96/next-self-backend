@@ -1,19 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
-import { FactureEmailDataDto } from 'src/dental/dto/facture.dto';
 import { EmailAccountEntity } from 'src/entities/email-account.entity';
 import { EmailOutgoingServerEntity } from 'src/entities/email-outgoing-server.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { DataSource } from 'typeorm';
-import * as crypto from 'crypto-js';
 import * as nodemailer from 'nodemailer';
-import { env } from 'process';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
+import { ConfigService } from '@nestjs/config';
+import { HaliteEncryptorHelper } from 'src/common/lib/halite/encryptor.helper';
+import Mail from 'nodemailer/lib/mailer';
 
 @Injectable()
 export class MailTransportService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private dataSource: DataSource,
+    private configService: ConfigService,
+  ) {}
 
   async createTranspoter(
     userId: number,
@@ -36,22 +39,16 @@ export class MailTransportService {
       const emailOutgoingServer = await this.dataSource
         .getRepository(EmailOutgoingServerEntity)
         .findOne({ where: { emailAccountId: email.id } });
-      const decryptedUserName = crypto.DES.decrypt(
-        emailOutgoingServer.username,
-        env.SECRET_KEY_EMAIL || 'dental',
-      );
 
-      emailOutgoingServer.username = decryptedUserName.toString(
-        crypto.enc.Utf8,
-      );
-      const decryptedPassword = crypto.DES.decrypt(
-        emailOutgoingServer.password,
-        env.SECRET_KEY_EMAIL || 'dental',
-      );
-      emailOutgoingServer.password = decryptedPassword.toString(
-        crypto.enc.Utf8,
-      );
+      const key = this.configService.get<string>('app.haliteKey');
+      const encryptFactory = new HaliteEncryptorHelper(key);
 
+      emailOutgoingServer.username = encryptFactory.decrypt(
+        emailOutgoingServer?.username,
+      );
+      emailOutgoingServer.password = encryptFactory.decrypt(
+        emailOutgoingServer?.password,
+      );
       const transport = nodemailer.createTransport({
         host: emailOutgoingServer.hostname,
 
@@ -68,23 +65,17 @@ export class MailTransportService {
     }
   }
 
-  async sendEmail(userId: number, data: FactureEmailDataDto) {
+  async sendEmail(userId: number, data: Mail.Options) {
     try {
       const transportInstance = await this.createTranspoter(userId);
-      if (transportInstance instanceof CBadRequestException)
+      if (transportInstance instanceof CBadRequestException) {
         return transportInstance;
+      }
 
-      const mailOptions = {
-        from: data?.from,
-        to: data?.to,
-        subject: data?.subject,
-        html: data?.template,
-        attachments: data?.attachments,
-      };
-
-      const result = await transportInstance.sendMail(mailOptions);
-      if (result.rejected.length !== 0)
+      const result = await transportInstance.sendMail(data);
+      if (result.rejected.length !== 0) {
         return new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
+      }
       return { success: true };
     } catch (error) {}
   }

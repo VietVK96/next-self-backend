@@ -17,6 +17,7 @@ import { CaresheetsDto } from './dto/index.dto';
 import { ActsService } from './service/caresheets.service';
 import { CaresheetStatusRes } from './reponse/index.res';
 import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
+import type { Response } from 'express';
 
 @ApiBearerAuth()
 @ApiTags('Caresheets')
@@ -91,7 +92,7 @@ export class CaresheetsController {
   @Get('/print')
   @UseGuards(TokenDownloadGuard)
   async print(
-    @Res() res,
+    @Res() res: Response,
     @CurrentUser() identity: UserIdentity,
     @Query('id') ids?: Array<number>,
     @Query('duplicata') duplicata?: boolean,
@@ -112,7 +113,7 @@ export class CaresheetsController {
   @Get('/quittance')
   @UseGuards(TokenDownloadGuard)
   async quittance(
-    @Res() res,
+    @Res() res: Response,
     @CurrentUser() identity: UserIdentity,
     @Query('id') ids?: Array<number>,
     @Query('duplicata') duplicata?: boolean,
@@ -135,10 +136,10 @@ export class CaresheetsController {
    * 15-84
    */
 
-  @Get('/dowload')
+  @Get('/download')
   @UseGuards(TokenGuard)
   async download(
-    @Res() res,
+    @Res() res: Response,
     @CurrentUser() identity: UserIdentity,
     @Query('id') ids?: Array<number>,
     @Query('duplicata') duplicata?: boolean,

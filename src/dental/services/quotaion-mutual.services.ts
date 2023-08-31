@@ -36,6 +36,7 @@ import * as handlebars from 'handlebars';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import { SuccessResponse } from 'src/common/response/success.res';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class QuotationMutualServices {
@@ -66,6 +67,7 @@ export class QuotationMutualServices {
     private paymentScheduleService: PaymentScheduleService,
     private mailTransportService: MailTransportService,
     private dataSource: DataSource,
+    private configService: ConfigService,
   ) {}
 
   // dental/quotation-mutual/devis_requetes_ajax.php (line 7 - 270)
@@ -372,8 +374,11 @@ export class QuotationMutualServices {
 
       const date = dayjs(data.date).locale('fr').format('DD MMM YYYY');
       const filename = `Devis_${dayjs(data.date).format('YYYYMMDD')}.pdf`;
+      const tempFolder = this.configService.get<string>(
+        'app.mail.folderTemplate',
+      );
       const emailTemplate = fs.readFileSync(
-        path.join(process.cwd(), 'templates/mail', 'quote.hbs'),
+        path.join(tempFolder, 'mail/quote.hbs'),
         'utf-8',
       );
       const userFullName = generateFullName(
@@ -399,10 +404,10 @@ export class QuotationMutualServices {
         from: data.user.email,
         to: data.contact.email,
         subject,
-        template: mailBody,
-        context: {
-          quote: data,
-        },
+        html: mailBody,
+        // context: {
+        //   quote: data,
+        // },
         attachments: [
           {
             filename: filename,

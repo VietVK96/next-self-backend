@@ -22,6 +22,8 @@ import { PrivilegeEntity } from 'src/entities/privilege.entity';
 import { EventTypeEntity } from 'src/entities/event-type.entity';
 import { AppointmentReminderLibraryEntity } from 'src/entities/appointment-reminder-library.entity';
 import { checkId } from 'src/common/util/number';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { UpdateUserSmsDto } from '../dto/user-sms.dto';
 @Injectable()
 export class UserService {
   constructor(
@@ -188,75 +190,66 @@ export class UserService {
     id: number,
     updatePassWordSettingDto: UpdatePassWordSettingDto,
   ): Promise<SuccessResponse> {
-    try {
-      const userFind = await this.userRepository.findOneOrFail({
-        where: { id: id },
-      });
+    const userFind = await this.userRepository.findOneOrFail({
+      where: { id: id },
+    });
 
-      const { password, confirmation_password } = updatePassWordSettingDto;
+    const { password, confirmation_password } = updatePassWordSettingDto;
 
-      if (password !== confirmation_password) {
-        throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
-      }
-
-      const newPassword = phpPassword.hash(password);
-      userFind.passwordAccounting = newPassword;
-      await this.userRepository.save(userFind);
-
-      return {
-        success: true,
-      };
-    } catch (err) {
-      throw new BadRequestException(err);
+    if (password !== confirmation_password) {
+      throw new CBadRequestException(ErrorCode.CONFIRM_PASSWORD_NOT_CORRECT);
     }
+    const newPassword = phpPassword.hash(password);
+    userFind.passwordAccounting = newPassword;
+    await this.userRepository.save(userFind);
+
+    return {
+      success: true,
+    };
   }
 
   async updatePasswordAccounting(
     id: number,
     updatePassWordSettingDto: UpdatePassWordSettingDto,
   ): Promise<SuccessResponse> {
-    try {
-      const userFind = await this.userRepository.findOneOrFail({
-        where: { id: id },
-      });
-      const { old_password, password, confirmation_password } =
-        updatePassWordSettingDto;
+    const userFind = await this.userRepository.findOneOrFail({
+      where: { id: id },
+    });
+    const { old_password, password, confirmation_password } =
+      updatePassWordSettingDto;
 
-      if (!userFind.passwordAccounting) {
-        const shasum = crypto.createHash('sha1');
-        const passwordHash = shasum.update(old_password).digest('hex');
+    if (!userFind.passwordAccounting) {
+      const shasum = crypto.createHash('sha1');
+      const passwordHash = shasum.update(old_password).digest('hex');
 
-        if (passwordHash !== userFind.passwordAccounting) {
-          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
-        }
+      if (passwordHash !== userFind.passwordAccounting) {
+        throw new CBadRequestException(ErrorCode.INVALID_ACCOUNTING_PASSWORD);
+      }
 
+      if (password !== confirmation_password) {
+        throw new CBadRequestException(ErrorCode.CONFIRM_PASSWORD_NOT_CORRECT);
+      }
+
+      const newPassword = phpPassword.hash(password);
+      userFind.passwordAccounting = newPassword;
+      await this.userRepository.save(userFind);
+      return { success: true };
+    } else {
+      if (!phpPassword.verify(old_password, userFind.passwordAccounting)) {
+        throw new CBadRequestException(ErrorCode.INVALID_ACCOUNTING_PASSWORD);
+      }
+      if (phpPassword.needsRehash(password, 'PASSWORD_DEFAULT', { cost: 10 })) {
         if (password !== confirmation_password) {
-          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
+          throw new CBadRequestException(
+            ErrorCode.CONFIRM_PASSWORD_NOT_CORRECT,
+          );
         }
 
         const newPassword = phpPassword.hash(password);
         userFind.passwordAccounting = newPassword;
         await this.userRepository.save(userFind);
         return { success: true };
-      } else {
-        if (!phpPassword.verify(old_password, userFind.passwordAccounting)) {
-          throw new CBadRequestException(ErrorCode.CAN_NOT_LOGIN);
-        }
-        if (
-          phpPassword.needsRehash(password, 'PASSWORD_DEFAULT', { cost: 10 })
-        ) {
-          if (password !== confirmation_password) {
-            throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
-          }
-
-          const newPassword = phpPassword.hash(password);
-          userFind.passwordAccounting = newPassword;
-          await this.userRepository.save(userFind);
-          return { success: true };
-        }
       }
-    } catch (err) {
-      throw new BadRequestException(err);
     }
   }
 
@@ -264,43 +257,34 @@ export class UserService {
     id: number,
     updatePassWordSettingDto: UpdatePassWordSettingDto,
   ): Promise<SuccessResponse> {
-    try {
-      const userFind = await this.userRepository.findOneOrFail({
-        where: { id: id },
-      });
-
-      const { password } = updatePassWordSettingDto;
-
-      if (!userFind.passwordAccounting) {
-        const shasum = crypto.createHash('sha1');
-        const passwordHash = shasum.update(password).digest('hex');
-        if (passwordHash !== userFind.passwordAccounting) {
-          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
-        }
-
+    const userFind = await this.userRepository.findOneOrFail({
+      where: { id: id },
+    });
+    const { password } = updatePassWordSettingDto;
+    if (!userFind.passwordAccounting) {
+      const shasum = crypto.createHash('sha1');
+      const passwordHash = shasum.update(password).digest('hex');
+      if (passwordHash !== userFind.passwordAccounting) {
+        throw new CBadRequestException(ErrorCode.INVALID_ACCOUNTING_PASSWORD);
+      }
+      const newPassword = null;
+      userFind.passwordAccounting = newPassword;
+      await this.userRepository.save(userFind);
+      return {
+        success: true,
+      };
+    } else {
+      if (!phpPassword.verify(password, userFind.passwordAccounting)) {
+        throw new CBadRequestException(ErrorCode.INVALID_ACCOUNTING_PASSWORD);
+      }
+      if (phpPassword.needsRehash(password, 'PASSWORD_DEFAULT', { cost: 10 })) {
         const newPassword = null;
         userFind.passwordAccounting = newPassword;
         await this.userRepository.save(userFind);
         return {
           success: true,
         };
-      } else {
-        if (!phpPassword.verify(password, userFind.passwordAccounting)) {
-          throw new CBadRequestException(ErrorCode.CAN_NOT_LOGIN);
-        }
-        if (
-          phpPassword.needsRehash(password, 'PASSWORD_DEFAULT', { cost: 10 })
-        ) {
-          const newPassword = null;
-          userFind.passwordAccounting = newPassword;
-          await this.userRepository.save(userFind);
-          return {
-            success: true,
-          };
-        }
       }
-    } catch (err) {
-      throw new BadRequestException(err);
     }
   }
 
@@ -482,6 +466,7 @@ export class UserService {
       if (!targetUserEntity) {
         throw new CBadRequestException(ErrorCode.NOT_FOUND);
       }
+
       const targetUserTypeEntity = targetUserEntity.type;
 
       let privilegeTargetEntity: PrivilegeEntity;
@@ -567,21 +552,57 @@ export class UserService {
             privilegeProfessionalEntity.permissionAccounting =
               permissionAccounting;
             privilegeProfessionalEntity.enable = enable;
-
             await transaction.manager
               .getRepository(PrivilegeEntity)
               .save(privilegeProfessionalEntity);
           }
         }
-
-        await transaction.commitTransaction();
-        return {
-          success: true,
-        };
       }
+      await transaction.commitTransaction();
+      return {
+        success: true,
+      };
     } catch (error) {
       await transaction.rollbackTransaction();
       throw new CBadRequestException(error?.message);
     }
+  }
+  async findAll(user: UserIdentity) {
+    const users = await this.userRepository.find({
+      where: {
+        organizationId: user.org,
+      },
+      relations: {
+        sms: true,
+      },
+    });
+    return users?.map((user) => {
+      return {
+        id: user?.id,
+        fullName: `${user?.lastname} ${user?.firstname}`,
+        sms: user?.sms,
+      };
+    });
+  }
+
+  async updateUserSms(payload: UpdateUserSmsDto) {
+    if (!payload?.users?.length) {
+      return [];
+    }
+    for (const user of payload?.users) {
+      const userSms = await this.dataSource.manager.findOne(UserSmsEntity, {
+        where: { usrId: user?.id },
+      });
+      if (userSms) {
+        userSms.quantity = user?.sms?.quantity;
+        user.sms = await this.dataSource.manager.save(UserSmsEntity, userSms);
+      } else {
+        user.sms = await this.dataSource.manager.save(UserSmsEntity, {
+          quantity: user?.sms?.quantity,
+          usrId: user?.id,
+        } as UserSmsEntity);
+      }
+    }
+    return payload.users;
   }
 }

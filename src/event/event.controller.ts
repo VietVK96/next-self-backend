@@ -23,6 +23,7 @@ import { EventService } from './services/event.service';
 import { DeteleEventDto } from './dto/delete.event.dto';
 import { SaveAgendaDto } from './dto/saveAgenda.event.dto';
 import { PrintReq } from './dto/printEvent.dto';
+import type { Response } from 'express';
 
 @Controller('event')
 @ApiTags('Event')
@@ -115,9 +116,12 @@ export class EventController {
     return await this.eventService.detete(id, identity.org, payload);
   }
 
+  /**
+   * php/event/print-planning.php + php/event/print-planningnotes.php
+   */
   @Get('/print/planning')
   @UseGuards(TokenGuard)
-  async printPlanning(@Res() res, @Query() param: PrintReq) {
+  async printPlanning(@Res() res: Response, @Query() param: PrintReq) {
     const buffer = await this.findEventService.printPlanning(param);
     res.set({
       // pdf
@@ -132,10 +136,13 @@ export class EventController {
     res.end(buffer);
   }
 
+  /**
+   * php/event/print-calendar.php
+   */
   @Get('print/calendar')
   @UseGuards(TokenGuard)
   async printCalendar(
-    @Res() res,
+    @Res() res: Response,
     @Query() param: PrintReq,
     @CurrentUser() identity: UserIdentity,
   ) {
@@ -154,5 +161,28 @@ export class EventController {
       Expires: 0,
     });
     res.end(buffer);
+  }
+
+  @Get('export')
+  @UseGuards(TokenGuard)
+  /**
+   * php/event/export.php
+   */
+  async export(
+    @Res() res: Response,
+    @Query('resources') resources: number[],
+    @Query('datetime1') datetime1: string,
+    @Query('datetime2') datetime2: string,
+    @Query('format') format: string,
+    @Query('range') range: number,
+  ) {
+    return await this.eventService.export(
+      res,
+      resources,
+      datetime1,
+      datetime2,
+      format,
+      range,
+    );
   }
 }

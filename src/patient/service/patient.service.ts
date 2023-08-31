@@ -664,9 +664,9 @@ export class PatientService {
         libraryActQuantities?.length === 1 ||
         libraryActQuantitiesFiltered.length === 0
       ) {
-        return libraryActQuantities[0]?.id;
+        return { id: libraryActQuantities[0]?.id };
       } else if (libraryActQuantitiesFiltered?.length === 1) {
-        return libraryActQuantitiesFiltered[0]?.id;
+        return { id: libraryActQuantities[0]?.id };
       } else {
         return {
           multiple_choice: true,

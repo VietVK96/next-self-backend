@@ -255,9 +255,16 @@ export class FindEventService {
        ORDER BY start_date ASC, end_date ASC`,
         [this.getStartDay(startDate), this.getEndDay(endDate)],
       );
+      const bgeventsFinalResult = bgevents.map((item) => {
+        return {
+          ...item,
+          start_date: dayjs(item?.start_date).format('YYYY-MM-DDTHH:mm:ss.s'),
+          end_date: dayjs(item?.end_date).format('YYYY-MM-DDTHH:mm:ss.s'),
+        };
+      });
       return {
         events,
-        bgevents,
+        bgevents: bgeventsFinalResult,
         memos,
       };
     } catch {

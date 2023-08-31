@@ -6,8 +6,15 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { UserEntity } from 'src/entities/user.entity';
 import { QuotationDevisRequestAjaxDto } from '../dto/devis_request_ajax.dto';
-import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
-import { QuotationInitChampsDto } from '../dto/quotation.dto';
+import {
+  UserPreferenceQuotationDisplayAnnexeType,
+  UserPreferenceQuotationDisplayOdontogramType,
+  UserPreferenceQuotationEntity,
+} from 'src/entities/user-preference-quotation.entity';
+import {
+  PreferenceQuotationDto,
+  QuotationInitChampsDto,
+} from '../dto/quotation.dto';
 import { ErrorCode } from 'src/constants/error';
 import {
   QuotationInitActeRes,
@@ -25,7 +32,11 @@ import { EventEntity } from 'src/entities/event.entity';
 import { br2nl, generateFullName, validateEmail } from 'src/common/util/string';
 import * as dayjs from 'dayjs';
 import { checkDay, customDayOfYear } from 'src/common/util/day';
-import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
+import {
+  DentalQuotationEntity,
+  EnumDentalQuotationDetails,
+  EnumDentalQuotationSchemes,
+} from 'src/entities/dental-quotation.entity';
 import { inseeFormatter } from 'src/common/formatter';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
 import {
@@ -40,6 +51,16 @@ import * as handlebars from 'handlebars';
 import * as fs from 'fs';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { SuccessResponse } from 'src/common/response/success.res';
+import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-request.exception';
+import { PerCode } from 'src/constants/permissions';
+import { PermissionService } from 'src/user/services/permission.service';
+import { ConfigService } from '@nestjs/config';
+import { PatientOdontogramService } from 'src/patient/service/patientOdontogram.service';
+import { ContactEntity } from 'src/entities/contact.entity';
+import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
+import { PrintPDFDto } from '../dto/facture.dto';
+import { DOMParser, XMLSerializer } from 'xmldom';
 
 @Injectable()
 export class QuotationServices {
@@ -64,11 +85,237 @@ export class QuotationServices {
     private dentalQuotationRepository: Repository<DentalQuotationEntity>,
     @InjectRepository(ContactNoteEntity)
     private contactNoteRepo: Repository<ContactNoteEntity>,
+    @InjectRepository(ContactEntity)
+    private contactRepo: Repository<ContactEntity>,
     private paymentScheduleService: PaymentScheduleService,
     private dataSource: DataSource,
     private mailTransportService: MailTransportService,
+    private permissionService: PermissionService,
+    private configService: ConfigService,
+    private patientOdontogramService: PatientOdontogramService,
   ) {}
 
+  #max_line = 9;
+
+  //ecoophp/dental/quotation/devis_pdf.php
+  async generatePdf(req: PrintPDFDto, identity: UserIdentity) {
+    try {
+      const initData = await this.initChamps(
+        { id_devis: req?.id, pdf: true },
+        identity,
+      );
+      const tempFolder = this.configService.get<string>(
+        'app.mail.folderTemplate',
+      );
+      const filePath = path.join(tempFolder, 'pdf/quotation/style.hbs');
+
+      // cut ar_details
+      const pageCount = Math.ceil(initData.ar_details.length / this.#max_line);
+      const listDetails: QuotationInitActeRes[][] = [];
+      if (pageCount) {
+        for (let i = 0; i < pageCount; i++) {
+          listDetails.push(initData.ar_details.splice(0, this.#max_line));
+        }
+      }
+
+      const files: PdfTemplateFile[] = [{ data: {}, path: filePath }];
+      if (initData?.details !== 'only') {
+        listDetails.forEach((details) => {
+          files.push(
+            this.page1({ ...initData, ar_details: details }, tempFolder, req),
+          );
+        });
+      }
+      if (initData?.userPreferenceQuotationDisplayNotice) {
+        files.push(this.pageNotice(tempFolder));
+      }
+      if (initData?.details !== 'none') {
+        listDetails.forEach((details) => {
+          files.push(
+            this.page2({ ...initData, ar_details: details }, tempFolder),
+          );
+        });
+      }
+      if (initData?.userPreferenceQuotationDisplayOdontogram !== 'none') {
+        files.push(await this.pageDiagram(initData, tempFolder));
+      }
+
+      const options = {
+        format: 'A4',
+        displayHeaderFooter: true,
+        footerTemplate: '',
+        margin: {
+          left: '5mm',
+          top: '5mm',
+          right: '5mm',
+          bottom: '5mm',
+        },
+      };
+
+      return customCreatePdf({ files, options });
+    } catch (error) {
+      console.log(
+        '🚀 ~ file: quotation.service.ts:156 ~ QuotationServices ~ generatePdf ~ error:',
+        error,
+      );
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
+    }
+  }
+
+  page1(
+    data: QuotationInitChampsRes,
+    tempFolder: string,
+    req: PrintPDFDto,
+  ): PdfTemplateFile {
+    const filePath = path.join(tempFolder, 'pdf/quotation/corp1.hbs');
+    const duplicata = checkBoolean(req?.duplicate);
+    data.ar_details = data?.ar_details.filter((e) => {
+      return e.id_devis_acte;
+    });
+    return {
+      data: this.formatData(data, duplicata),
+      path: filePath,
+    };
+  }
+
+  page2(data: QuotationInitChampsRes, tempFolder: string): PdfTemplateFile {
+    const filePath = path.join(tempFolder, 'pdf/quotation/corp2.hbs');
+    data.ar_details = data?.ar_details.filter((e) => {
+      return e.id_devis_acte;
+    });
+    return {
+      data: this.formatData(data, false),
+      path: filePath,
+    };
+  }
+
+  async pageDiagram(
+    data: QuotationInitChampsRes,
+    tempFolder: string,
+  ): Promise<PdfTemplateFile> {
+    const filePath = path.join(tempFolder, 'pdf/quotation/diagram.hbs');
+    const imgPath = path.join(
+      process.cwd(),
+      'resources/svg/odontogram',
+      'background_adult.png',
+    );
+    const img = fs.readFileSync(imgPath);
+    const imageBase = img.toString('base64');
+    function setImagePath(xml: string): string {
+      const parser = new DOMParser();
+      const domDocument = parser.parseFromString(xml, 'image/svg+xml');
+      const texts = domDocument.getElementsByTagName('tspan');
+      for (let i = 0; i < texts.length; i++) {
+        texts[i].setAttribute('style', 'opacity:0');
+      }
+      const svg = domDocument.getElementsByTagName('svg')[0];
+      const node = domDocument.getElementsByTagName('image')[0];
+      svg.setAttribute('height', '269');
+      svg.setAttribute('width', '643');
+      node.setAttribute('xlink:href', 'data:image/jpeg;base64,' + imageBase);
+      const serializer = new XMLSerializer();
+      return serializer.serializeToString(domDocument);
+    }
+
+    const schemaInitial =
+      data?.schemas === 'three'
+        ? setImagePath(
+            await this.patientOdontogramService.show({
+              conId: data?.id_contact,
+              name: data?.odontogramType,
+              status: 'initial',
+            }),
+          )
+        : null;
+    const schemaActuel = setImagePath(
+      await this.patientOdontogramService.show({
+        conId: data?.id_contact,
+        name: data?.odontogramType,
+        status: 'current',
+      }),
+    );
+    // Schéma actuel.
+    const schemaPlan = setImagePath(
+      await this.patientOdontogramService.show({
+        conId: data?.id_contact,
+        name: data?.odontogramType,
+        status: 'planned',
+      }),
+    );
+
+    return {
+      data: {
+        schemaInitial,
+        schemaActuel,
+        schemaPlan,
+      },
+      path: filePath,
+    };
+  }
+
+  pageNotice(tempFolder: string): PdfTemplateFile {
+    const filePath = path.join(tempFolder, 'pdf/quotation/notice.hbs');
+    return {
+      data: {},
+      path: filePath,
+    };
+  }
+
+  formatData(data: QuotationInitChampsRes, duplicata: boolean) {
+    data.ar_details = this.generateEmptyDetails(data?.ar_details);
+    return {
+      ...data,
+      duplicata,
+      date_devis: checkDay(data?.date_devis, 'DD/MM/YYYY'),
+      date_de_naissance_patient: checkDay(
+        data?.date_de_naissance_patient,
+        'DD/MM/YYYY',
+      ),
+      isInFranceManuFacture: [1, 3, 5, 7].includes(
+        data?.quotationPlaceOfManufacture,
+      ),
+      isInEUManuFacture: [2, 3, 6, 7].includes(
+        data?.quotationPlaceOfManufacture,
+      ),
+      isOutsideEUManuFacture: [4, 5, 6, 7].includes(
+        data?.quotationPlaceOfManufacture,
+      ),
+      isWithOutSubContracting: [1, 3].includes(
+        data?.quotationWithSubcontracting,
+      ),
+      isPartialSubContracting: [2, 3].includes(
+        data?.quotationWithSubcontracting,
+      ),
+      isInFranceSubContracting: [1, 3, 5, 7].includes(
+        data?.quotationPlaceOfManufacture,
+      ),
+      isInEUSubContracting: [2, 3, 6, 7].includes(
+        data?.quotationPlaceOfManufacture,
+      ),
+      isOutsideEUSubContracting: [4, 5, 6, 7].includes(
+        data?.quotationPlaceOfManufacture,
+      ),
+    };
+  }
+
+  generateEmptyDetails(details: QuotationInitActeRes[]) {
+    const length = details.length;
+    if (length === this.#max_line) return details;
+    const firstEmptyDetail: QuotationInitActeRes = {
+      localisation: '########',
+      libelle: '################ FIN DU DEVIS  #################',
+      materiau: '#####',
+      cotation: '########',
+      remboursable: '########',
+    };
+    details.push(firstEmptyDetail);
+    for (let i = 0; i < this.#max_line - length - 1; i++) {
+      details.push({});
+    }
+    return details;
+  }
+
+  //ecoophp/dental/quotation/devis_email.php
   async sendMail(id: number, identity: UserIdentity) {
     try {
       id = checkId(id);
@@ -97,8 +344,11 @@ export class QuotationServices {
 
       const date = dayjs(data.date).locale('fr').format('DD MMM YYYY');
       const filename = `Devis${dayjs(data.date).format('YYYYMMDD')}.pdf`;
+      const tempFolder = this.configService.get<string>(
+        'app.mail.folderTemplate',
+      );
       const emailTemplate = fs.readFileSync(
-        path.join(process.cwd(), 'templates/mail', 'quote.hbs'),
+        path.join(tempFolder, 'mail/quote.hbs'),
         'utf-8',
       );
       const userFullName = generateFullName(
@@ -124,16 +374,16 @@ export class QuotationServices {
         from: data.user.email,
         to: data.contact.email,
         subject,
-        template: mailBody,
-        context: {
-          quote: data,
-        },
-        // attachments: [
-        //   {
-        //     filename: filename,
-        //     content: await this.generatePdf({ id }, identity),
-        //   },
-        // ],
+        html: mailBody,
+        // context: {
+        //   quote: data,
+        // },
+        attachments: [
+          {
+            filename: filename,
+            content: await this.generatePdf({ id }, identity),
+          },
+        ],
       });
 
       if (data?.treatmentPlan?.id) {
@@ -164,210 +414,154 @@ export class QuotationServices {
     req: QuotationDevisRequestAjaxDto,
     identity: UserIdentity,
   ) {
-    const {
-      operation,
-      ident_prat,
-      id_pdt,
-      ident_pat,
-      schemes,
-      details,
-      nom_prenom_patient,
-      duree_devis,
-      adresse_pat,
-      tel,
-      organisme,
-      contrat,
-      ref,
-      dispo,
-      dispo_desc,
-      description,
-      placeOfManufacture,
-      placeOfManufactureLabel,
-      withSubcontracting,
-      placeOfSubcontracting,
-      placeOfSubcontractingLabel,
-      displayNotice,
-      signaturePatient,
-      signaturePraticien,
-      date_devis,
-      date_de_naissance_patient,
-      materiau,
-      id_devis_ligne,
-      quotationPlaceOfManufacture,
-      quotationPlaceOfManufactureLabel,
-      // quotationWithSubcontracting,
-      // quotationPlaceOfSubcontracting,
-      // quotationPlaceOfSubcontractingLabel,
-      date_acceptation,
-    } = req;
-    const idUser = identity?.id;
-    const birthday = date_de_naissance_patient;
+    try {
+      {
+        const idUser = checkId(identity?.id);
+        const birthday = req?.date_de_naissance_patient;
 
-    let { insee, id_devis } = req;
-    id_devis = id_devis ?? 0;
-    if (operation === 'enregistrer') {
-      try {
-        let acceptedAt = date_acceptation;
-        if (!acceptedAt) {
-          acceptedAt = null;
-        } else {
-          await this.dataSource.query(
-            `
-          UPDATE T_PLAN_PLF
-          JOIN T_DENTAL_QUOTATION_DQO
-          SET PLF_ACCEPTED_ON = ?
-          WHERE T_PLAN_PLF.PLF_ACCEPTED_ON IS NULL
-            AND T_PLAN_PLF.PLF_ID = T_DENTAL_QUOTATION_DQO.PLF_ID
-            AND T_DENTAL_QUOTATION_DQO.DQO_ID = ?
-        `,
-            [acceptedAt, id_devis],
-          );
-        }
-        if (insee !== null) {
-          insee = insee.replace(/\s/g, '');
-        }
-        const inputParameters = [
-          idUser,
-          id_pdt,
-          ident_pat,
-          schemes,
-          details,
-          acceptedAt,
-          ident_prat,
-          nom_prenom_patient,
-          birthday,
-          insee,
-          duree_devis,
-          adresse_pat,
-          tel,
-          organisme,
-          contrat,
-          ref,
-          dispo,
-          dispo_desc,
-          description,
-          date_devis,
-          placeOfManufacture,
-          placeOfManufactureLabel,
-          withSubcontracting,
-          placeOfSubcontracting,
-          placeOfSubcontractingLabel,
-          displayNotice,
-          signaturePatient ?? null,
-          signaturePraticien ?? null,
-        ];
+        let { insee, id_devis } = req;
+        id_devis = id_devis ?? 0;
+        if (req?.operation === 'enregistrer') {
+          try {
+            let acceptedAt = req?.date_acceptation;
+            if (!acceptedAt) {
+              acceptedAt = null;
+            } else {
+              await this.dataSource.query(
+                `
+              UPDATE T_PLAN_PLF
+              JOIN T_DENTAL_QUOTATION_DQO
+              SET PLF_ACCEPTED_ON = ?
+              WHERE T_PLAN_PLF.PLF_ACCEPTED_ON IS NULL
+                AND T_PLAN_PLF.PLF_ID = T_DENTAL_QUOTATION_DQO.PLF_ID
+                AND T_DENTAL_QUOTATION_DQO.DQO_ID = ?
+            `,
+                [acceptedAt, id_devis],
+              );
+            }
+            if (insee !== null) {
+              insee = insee.replace(/\s/g, '');
+            }
 
-        await this.dataSource.query(
-          `
-          UPDATE T_DENTAL_QUOTATION_DQO DQO
-          SET DQO.USR_ID = ?,
-            DQO.PLF_ID = ?,
-            DQO.CON_ID = ?,
-            DQO.DQO_SCHEMES = ?,
-            DQO.DQO_DETAILS = ?,
-            DQO.DQO_DATE_ACCEPT = ?,
-            DQO.DQO_IDENT_PRAT = ?,
-            DQO.DQO_IDENT_CONTACT = ?,
-            DQO.DQO_BIRTHDAY = ?,
-            DQO.DQO_INSEE = ?,
-            DQO.DQO_DURATION = ?,
-            DQO.DQO_ADDRESS = ?,
-            DQO.DQO_TEL = ?,
-            DQO.DQO_ORGANISM = ?,
-            DQO.DQO_CONTRACT = ?,
-            DQO.DQO_REF = ?,
-            DQO.DQO_DISPO = ?,
-            DQO.DQO_DISPO_MSG = ?,
-            DQO.DQO_MSG = ?,
-            DQO.DQO_DATE = ?,
-            DQO.DQO_PLACE_OF_MANUFACTURE = ?,
-            DQO.DQO_PLACE_OF_MANUFACTURE_LABEL = ?,
-            DQO.DQO_WITH_SUBCONTRACTING = ?,
-            DQO.DQO_PLACE_OF_SUBCONTRACTING = ?,
-            DQO.DQO_PLACE_OF_SUBCONTRACTING_LABEL = ?,
-            DQO.DQO_DISPLAY_NOTICE = ?,
-            DQO.DQO_SIGNATURE_PATIENT = ?,
-            DQO.DQO_SIGNATURE_PRATICIEN = ?
-          WHERE DQO_ID = ?
-        `,
-          inputParameters,
-        );
+            const newDentalQuotation: DentalQuotationEntity = {
+              id: id_devis,
+              userId: idUser,
+              planificationId: req?.id_pdt,
+              schemes: EnumDentalQuotationSchemes[req?.schemes?.toUpperCase()],
+              details: EnumDentalQuotationDetails[req?.details?.toUpperCase()],
+              dateAccept: acceptedAt || null,
+              identPrat: req?.ident_prat,
+              identContact: req?.nom_prenom_patient,
+              birthday: birthday || null,
+              insee: insee || null,
+              duration: req?.duree_devis,
+              address: req?.adresse_pat,
+              tel: req?.tel || null,
+              organism: req?.organisme || null,
+              contract: req?.contrat || null,
+              ref: req?.ref || null,
+              dispo: req?.dispo,
+              dispoMsg: req?.dispo_desc || null,
+              msg: req?.description || null,
+              date: req?.date_devis || null,
+              placeOfManufacture: req?.placeOfManufacture || null,
+              placeOfManufactureLabel: req?.placeOfManufactureLabel || '',
+              placeOfSubcontracting: req?.placeOfSubcontracting || null,
+              placeOfSubcontractingLabel: req?.placeOfSubcontractingLabel || '',
+              displayNotice: req?.displayNotice || 0,
+              signaturePatient: req?.signaturePatient || null,
+              signaturePraticien: req?.signaturePraticien || null,
+            };
 
-        let medicalHeader = await this.medicalHeaderRepository.findOne({
-          where: { userId: identity?.id },
-        });
-        if (!(medicalHeader instanceof MedicalHeaderEntity)) {
+            if (
+              await this.contactRepo.findOne({
+                where: { id: checkId(req?.ident_pat) || 0 },
+              })
+            ) {
+              newDentalQuotation.contactId = checkId(req?.ident_pat);
+            }
+            await this.dentalQuotationRepository.save(newDentalQuotation);
+
+            let medicalHeader = await this.medicalHeaderRepository.findOne({
+              where: { userId: identity?.id },
+            });
+            if (!(medicalHeader instanceof MedicalHeaderEntity)) {
+              const user = await this.userRepository.findOne({
+                where: { id: identity?.id },
+              });
+              medicalHeader = new MedicalHeaderEntity();
+              medicalHeader.user = user;
+            }
+            medicalHeader.identPratQuot = req?.ident_prat;
+            await this.medicalHeaderRepository.save(medicalHeader);
+
+            return 'Devis enregistré correctement';
+          } catch (err) {
+            throw new CBadRequestException(
+              `Erreur -3 : Problème durant la sauvegarde du devis ... ${err?.message}`,
+            );
+          }
+        } else if (req?.operation === 'enregistrerActe') {
+          try {
+            const dentalQuotationActId = req?.id_devis_ligne;
+            const dentalQuotationActMateriaux = req?.materiau;
+            await this.dataSource.query(
+              `UPDATE T_DENTAL_QUOTATION_ACT_DQA
+              SET DQA_MATERIAL = ?
+              WHERE DQA_ID = ?`,
+              [dentalQuotationActId, dentalQuotationActMateriaux],
+            );
+            return `Acte de devis enregistré correctement`;
+          } catch (err) {
+            throw new CBadRequestException(
+              `Erreur -4 : Problème durant la sauvegarde d'un acte du devis ... ${err?.message}`,
+            );
+          }
+        } else if (req?.operation === 'checkNoFacture') {
+          try {
+            const data = await this.dataSource.query(`
+              SELECT 
+                BIL.BIL_ID as id_facture,
+                BIL.BIL_NBR as noFacture 
+              FROM T_BILL_BIL BIL 
+              WHERE BIL.BIL_ID = " . ${id_devis}       
+            `);
+
+            return JSON.stringify(data);
+          } catch (err) {
+            throw new CBadRequestException(
+              `Erreur -5 : Problème durant la récupération du numéro de facture ... ${err?.message}`,
+            );
+          }
+        } else if (req?.operation === 'saveUserPreferenceQuotation') {
           const user = await this.userRepository.findOne({
-            where: { id: identity?.id },
+            where: {
+              id: idUser || 0,
+              organizationId: identity?.org || 0,
+            },
+            relations: {
+              userPreferenceQuotation: true,
+            },
           });
-          medicalHeader = new MedicalHeaderEntity();
-          medicalHeader.user = user;
+          const quotation = user.userPreferenceQuotation;
+          if (!(quotation instanceof UserPreferenceQuotationEntity)) {
+            await this.userPreferenceQuotationRepository.save({ user: user });
+          }
+          quotation.placeOfManufacture = req?.quotationPlaceOfManufacture;
+          quotation.placeOfManufactureLabel =
+            req?.quotationPlaceOfManufactureLabel;
+          quotation.withSubcontracting = req?.quotationWithSubcontracting;
+          quotation.placeOfSubcontracting = req?.quotationPlaceOfSubcontracting;
+          quotation.placeOfSubcontractingLabel =
+            req?.quotationPlaceOfSubcontractingLabel;
+          await this.userPreferenceQuotationRepository.save(quotation);
         }
-        medicalHeader.identPratQuot = ident_prat;
-        await this.medicalHeaderRepository.save(medicalHeader);
 
-        return 'Devis enregistré correctement';
-      } catch (err) {
-        throw new CBadRequestException(
-          `Erreur -3 : Problème durant la sauvegarde du devis ... ${err?.message}`,
-        );
+        return `Erreur -2`;
       }
-    } else if (operation === 'enregistrerActe') {
-      try {
-        const dentalQuotationActId = id_devis_ligne;
-        const dentalQuotationActMateriaux = materiau;
-        await this.dataSource.query(
-          `UPDATE T_DENTAL_QUOTATION_ACT_DQA
-          SET DQA_MATERIAL = ?
-          WHERE DQA_ID = ?`,
-          [dentalQuotationActId, dentalQuotationActMateriaux],
-        );
-        return `Acte de devis enregistré correctement`;
-      } catch (err) {
-        throw new CBadRequestException(
-          `Erreur -4 : Problème durant la sauvegarde d'un acte du devis ... ${err?.message}`,
-        );
-      }
-    } else if (operation === 'checkNoFacture') {
-      try {
-        const data = await this.dataSource.query(`
-          SELECT 
-            BIL.BIL_ID as id_facture,
-            BIL.BIL_NBR as noFacture 
-          FROM T_BILL_BIL BIL 
-          WHERE BIL.BIL_ID = " . ${id_devis}       
-        `);
-
-        return JSON.stringify(data);
-      } catch (err) {
-        throw new CBadRequestException(
-          `Erreur -5 : Problème durant la récupération du numéro de facture ... ${err?.message}`,
-        );
-      }
-    } else if (operation === 'saveUserPreferenceQuotation') {
-      const queryBuilder = this.dataSource
-        .getRepository(UserEntity)
-        .createQueryBuilder('usr');
-      const user = await queryBuilder
-        .leftJoin('usr.group', 'group')
-        .leftJoin('usr.userPreferenceQuotation', 'upq')
-        .addSelect('uqp')
-        .where('usr.id = :id', { id: idUser })
-        .andWhere('usr.group.id = :groupId', { groupId: identity?.org })
-        .getOne();
-      const quotation = user.userPreferenceQuotation;
-      if (!(quotation instanceof UserPreferenceQuotationEntity)) {
-        await this.userPreferenceQuotationRepository.save({ user: user });
-      }
-      quotation.placeOfManufacture = quotationPlaceOfManufacture;
-      quotation.placeOfManufactureLabel = quotationPlaceOfManufactureLabel;
-      quotation.withSubcontracting = withSubcontracting;
-      quotation.placeOfSubcontracting = placeOfSubcontracting;
-      quotation.placeOfSubcontractingLabel = placeOfSubcontractingLabel;
-      await this.userPreferenceQuotationRepository.save(quotation);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.CANNOT_UPDATE);
     }
-
-    return `Erreur -2`;
   }
 
   // ecoophp/dental/quotation/devis_init_champs.php
@@ -518,6 +712,18 @@ export class QuotationServices {
       result.nb_max_lignes_annexe_page1 = 15;
       result.nb_max_lignes_annexe_pageN = 30;
       result.odontogramType = 'adult';
+      result.initSchemas = await this.patientOdontogramService.run(
+        'initial',
+        result?.id_contact,
+      );
+      result.currentSchemas = await this.patientOdontogramService.run(
+        'current',
+        result?.id_contact,
+      );
+      result.planSchemas = await this.patientOdontogramService.run(
+        'planned',
+        result?.id_contact,
+      );
 
       result.total_honoraires = toFixed(result?.total_honoraires);
       result.total_prixvente = toFixed(result?.total_prixvente);
@@ -740,7 +946,7 @@ export class QuotationServices {
               CON.CON_LASTNAME AS patient_lastname,
               CON.CON_FIRSTNAME AS patient_firstname,
               T_GENDER_GEN.GEN_NAME AS patient_civility_name,
-              CON.CON_BIRTHDAY as birthda,
+              CON.CON_BIRTHDAY as birthday,
               CON.ADR_ID,
               CON.CON_MAIL as email,
               CONCAT(ADR.ADR_STREET, '\n', ADR.ADR_ZIP_CODE, ' ', ADR.ADR_CITY) as address,
@@ -1060,8 +1266,8 @@ export class QuotationServices {
         throw new CBadRequestException("Ce devis n'existe pas ... ");
       }
       const dentalQuotation = dentalQuotations[0];
-      result.schemas = dentalQuotation?.schemas
-        ? dentalQuotation?.schemas
+      result.schemas = dentalQuotation?.dqo_schemas
+        ? dentalQuotation?.dqo_schemas
         : 'none';
       result.details = dentalQuotation?.details
         ? dentalQuotation?.details
@@ -1163,6 +1369,168 @@ export class QuotationServices {
       return result;
     } catch (error) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
+    }
+  }
+
+  async findQuotationByID(id: number) {
+    return await this.dentalQuotationRepository.find({
+      where: { id: id },
+      relations: {
+        logo: true,
+        user: true,
+        contact: true,
+        patient: true,
+        planification: true,
+        treatmentPlan: true,
+        acts: true,
+        paymentPlan: true,
+        attachments: true,
+      },
+    });
+  }
+
+  async deleteQuotation(
+    identity: UserIdentity,
+    id: number,
+  ): Promise<SuccessResponse> {
+    if (
+      !this.permissionService.hasPermission(
+        PerCode.PERMISSION_DELETE,
+        8,
+        identity.id,
+      )
+    ) {
+      throw new CForbiddenRequestException(ErrorCode.FORBIDDEN);
+    }
+    const quotation = await this.findQuotationByID(id);
+
+    if (
+      !quotation ||
+      !quotation[0] ||
+      !quotation[0].user ||
+      quotation[0].user.organizationId != identity.org
+    ) {
+      throw new CBadRequestException(ErrorCode.DELETE_UNSUCCESSFUL);
+    }
+
+    const deleteQuotation = await this.dentalQuotationRepository.delete(id);
+    if (deleteQuotation.affected === 0) {
+      throw new CBadRequestException(ErrorCode.DELETE_UNSUCCESSFUL);
+    }
+
+    return {
+      success: true,
+    };
+  }
+
+  async patchPreferenceQuotation(
+    id: number,
+    identity: UserIdentity,
+    payload: PreferenceQuotationDto,
+  ): Promise<SuccessResponse> {
+    try {
+      const queryBuilder = this.dataSource
+        .getRepository(UserEntity)
+        .createQueryBuilder('usr');
+      const user: UserEntity = await queryBuilder
+        .leftJoinAndSelect('usr.userPreferenceQuotation', 'upq')
+        .where('usr.id = :id', { id: id })
+        .andWhere('usr.group = :groupId', { groupId: identity.org })
+        .getRawOne();
+      let userPreferenceQuotation =
+        await this.userPreferenceQuotationRepository.findOne({
+          where: {
+            usrId: id,
+          },
+        });
+
+      if (!userPreferenceQuotation) {
+        const userPreferenceQuotationNew: UserPreferenceQuotationEntity = {
+          usrId: user?.id,
+        };
+        userPreferenceQuotation =
+          await this.userPreferenceQuotationRepository.save(
+            userPreferenceQuotationNew,
+          );
+      }
+      // Assuming payload.value is a number
+      const valuePayload = `${payload.value}`;
+
+      switch (payload.name) {
+        case 'color':
+          userPreferenceQuotation.color = `${payload.value}`;
+          break;
+        case 'placeOfManufacture':
+          userPreferenceQuotation.placeOfManufacture = Number(payload.value);
+          break;
+        case 'placeOfManufactureLabel':
+          userPreferenceQuotation.placeOfManufactureLabel = `${payload.value}`;
+          break;
+        case 'withSubcontracting':
+          userPreferenceQuotation.withSubcontracting = Number(payload.value);
+          break;
+        case 'placeOfSubcontracting':
+          userPreferenceQuotation.placeOfSubcontracting = Number(payload.value);
+          break;
+        case 'placeOfSubcontractingLabel':
+          userPreferenceQuotation.placeOfSubcontractingLabel = `${payload.value}`;
+          break;
+        case 'displayOdontogram':
+          let displayOdontogram: UserPreferenceQuotationDisplayOdontogramType;
+          if (valuePayload === 'none') {
+            displayOdontogram =
+              UserPreferenceQuotationDisplayOdontogramType.NONE;
+          } else if (valuePayload === 'both') {
+            displayOdontogram =
+              UserPreferenceQuotationDisplayOdontogramType.BOTH;
+          } else if (valuePayload === 'three') {
+            displayOdontogram =
+              UserPreferenceQuotationDisplayOdontogramType.THREEE;
+          } else {
+            throw new CBadRequestException(
+              'value not value: none, both or three',
+            );
+          }
+          userPreferenceQuotation.displayOdontogram = displayOdontogram;
+          break;
+        case 'displayAnnexe':
+          let displayAnnexe: UserPreferenceQuotationDisplayAnnexeType;
+          if (valuePayload === 'none') {
+            displayAnnexe = UserPreferenceQuotationDisplayAnnexeType.NONE;
+          } else if (valuePayload === 'both') {
+            displayAnnexe = UserPreferenceQuotationDisplayAnnexeType.BOTH;
+          } else if (valuePayload === 'only') {
+            displayAnnexe = UserPreferenceQuotationDisplayAnnexeType.ONLY;
+          } else {
+            throw new CBadRequestException(
+              'value not value: none, both or only',
+            );
+          }
+          userPreferenceQuotation.displayAnnexe = displayAnnexe;
+          break;
+        case 'displayNotice':
+          userPreferenceQuotation.displayNotice = Number(payload.value);
+          break;
+        case 'displayTooltip':
+          userPreferenceQuotation.displayTooltip = Number(payload.value);
+          break;
+        case 'displayDuplicata':
+          userPreferenceQuotation.displayDuplicata = Number(payload.value);
+          break;
+        case 'treatment_timeline':
+          userPreferenceQuotation.treatmentTimeline = Number(payload.value);
+          break;
+      }
+
+      const result = await this.userPreferenceQuotationRepository.save(
+        userPreferenceQuotation,
+      );
+
+      return {
+        success: true,
+      };
+    } catch (error) {
+      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
   }
 }

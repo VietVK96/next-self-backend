@@ -1,6 +1,7 @@
 import { ApiBasicAuth, ApiTags } from '@nestjs/swagger';
 import { ReminderVisitService } from './services/reminderVisit.service';
 import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
+import type { Response } from 'express';
 import {
   CurrentUser,
   TokenGuard,
@@ -43,7 +44,7 @@ export class ReminderVisitController {
   @Get('/print')
   @UseGuards(TokenDownloadGuard)
   async print(
-    @Res() res,
+    @Res() res: Response,
     @CurrentUser() identity: UserIdentity,
     @Query() params: ReminderVisitPrintQuery,
   ) {

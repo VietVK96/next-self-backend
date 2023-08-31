@@ -6,7 +6,10 @@ import {
   Query,
   UseGuards,
   Res,
+  Post,
+  Body,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { BordereauxService } from './bordereaux.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
@@ -14,7 +17,7 @@ import {
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
-import { BordereauxDto } from './dto/index.dto';
+import { BordereauxDto, BordereauxStoreDto } from './dto/index.dto';
 
 @Controller('bordereaux')
 @ApiTags('Bordereaux')
@@ -45,6 +48,7 @@ export class BordereauxController {
   async getUserBank(@Query('id') id: number) {
     return await this.bordereauxService.getUserBank(id);
   }
+
   /**
    * File php/bordereaux/show.php 100%
    *
@@ -65,7 +69,7 @@ export class BordereauxController {
    */
   @Get('print/:id')
   @UseGuards(TokenGuard)
-  async printPdf(@Res() res, @Param('id') id: number) {
+  async printPdf(@Res() res: Response, @Param('id') id: number) {
     const buffer = await this.bordereauxService.printPdf(id);
     res.set({
       // pdf
@@ -91,5 +95,19 @@ export class BordereauxController {
   @UseGuards(TokenGuard)
   delete(@Query('id') id: number, @CurrentUser() user: UserIdentity) {
     return this.bordereauxService.delete(id, user);
+  }
+
+  /**
+   * File php/bordereaux/store.php 100%
+   *
+   */
+  @Post('store')
+  @ApiBearerAuth()
+  @UseGuards(TokenGuard)
+  store(
+    @CurrentUser() identity: UserIdentity,
+    @Body() payload: BordereauxStoreDto,
+  ) {
+    return this.bordereauxService.store(identity, payload);
   }
 }

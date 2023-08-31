@@ -211,7 +211,7 @@ export class ResourceService {
         from: 'noreply@ecoodentist.com',
         to: 'admin@dentalviamedilor.com',
         subject: 'Agenda supplémentaire',
-        template: `Un agenda supplémentaire ${res.name} a été créé par ${creator}.`,
+        html: `Un agenda supplémentaire ${res.name} a été créé par ${creator}.`,
       });
     } catch (error) {}
 

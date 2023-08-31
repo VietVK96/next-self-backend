@@ -1,6 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNumber, IsString, MaxLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsEmail,
+  IsNumber,
+  IsString,
+  MaxLength,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
 
+class MedicalStruct {
+  @ApiProperty()
+  @MinLength(11)
+  @MaxLength(11)
+  rpps_number?: string;
+}
 export class UpdateMyInformationDto {
   @ApiProperty()
   @IsString()
@@ -29,9 +43,9 @@ export class UpdateMyInformationDto {
   faxNumber?: string;
 
   @ApiProperty()
-  medical?: {
-    rpps_number?: string;
-  };
+  @ValidateNested()
+  @Type(() => MedicalStruct)
+  medical?: MedicalStruct;
 
   @ApiProperty()
   @IsString()
@@ -85,5 +99,5 @@ export class UpdateMyInformationDto {
 
   @ApiProperty()
   @IsNumber()
-  signature_automatic: number;
+  signature_automatic?: number;
 }
