@@ -19,10 +19,7 @@ export class RecipeController {
    */
   @Get()
   @UseGuards(TokenGuard)
-  findAll(
-    @Query() queryParams: QueryParamsDto,
-    @CurrentUser() user: UserIdentity,
-  ) {
-    return this.recipeService.findAll(queryParams, user);
+  findAll(@Query() queryParams: QueryParamsDto) {
+    return this.recipeService.findAll(queryParams);
   }
 }

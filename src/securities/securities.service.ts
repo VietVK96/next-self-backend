@@ -33,18 +33,18 @@ export class SecuritiesService {
       if (!user.passwordHash) {
         const shasum = crypto.createHash('sha1');
         const passwordHash = shasum.update(password).digest('hex');
-        if (passwordHash !== user.password) {
-          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
+        if (passwordHash !== user.passwordAccounting) {
+          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD_ACCOUNTING);
         }
       } else {
-        if (!phpPassword.verify(password, user.password)) {
-          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
+        if (!phpPassword.verify(password, user.passwordAccounting)) {
+          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD_ACCOUNTING);
         }
       }
 
       return { password_verified: true };
     } catch (e) {
-      throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
+      throw new CBadRequestException(ErrorCode.INVALID_PASSWORD_ACCOUNTING);
     }
   }
 
@@ -57,6 +57,7 @@ export class SecuritiesService {
         where: { id: id },
       });
       if (userFind) return { confirm_password: !!userFind?.passwordAccounting };
+      throw new CBadRequestException(ErrorCode.NOT_FOUND_USER);
     } catch (err) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }

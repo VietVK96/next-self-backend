@@ -37,4 +37,7 @@ export class QueryParamsDto {
     ],
   })
   conditions: ConditionDto[];
+
+  @ApiProperty({ required: true })
+  user: number;
 }
