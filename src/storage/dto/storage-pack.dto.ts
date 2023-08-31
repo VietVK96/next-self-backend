@@ -9,3 +9,11 @@ export class UpdateStoragePackQuantity {
   @ApiProperty()
   quantity?: number;
 }
+
+export class UsersStorageDto {
+  @ApiProperty()
+  confirm: string;
+
+  @ApiProperty()
+  quantities: number[];
+}

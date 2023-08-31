@@ -8,6 +8,7 @@ import { UserEntity } from 'src/entities/user.entity';
 import { AddressEntity } from 'src/entities/address.entity';
 import { AddressService } from 'src/address/service/address.service';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
+import { UsersStorageSpace } from './services/users-storage.service';
 
 @Module({
   imports: [
@@ -19,6 +20,6 @@ import { UserMedicalEntity } from 'src/entities/user-medical.entity';
     ]),
   ],
   controllers: [StorageController],
-  providers: [StorageService, UserService, AddressService],
+  providers: [StorageService, UserService, AddressService, UsersStorageSpace],
 })
 export class StorageModule {}
