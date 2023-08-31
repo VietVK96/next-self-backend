@@ -1,6 +1,17 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { TokenGuard } from 'src/common/decorator/auth.decorator';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
 import { StoreOrgFsdDto } from './dto/store.org.fsd.dto';
 import { FsdSticktNoteService } from './services/fsd.stickyNote.service';
 import { StoreCommunicationFsdDto } from './dto/store.comunication.fsd.dto';
@@ -19,9 +30,22 @@ export class FsdStickyNoteController {
   }
 
   // fsd/communication/store.php
-  @Post('fsd/communication/store')
+  @Post('communication/store')
   @UseGuards(TokenGuard)
   async storeCommunicationFsd(@Body() payload: StoreCommunicationFsdDto) {
     return await this.fsdSticktNoteService.storeCommunicationFsd(payload);
+  }
+
+  // fsd/communication/delete.php
+  @Delete('communication/delete')
+  @UseGuards(TokenGuard)
+  async deleteCommunicationFsd(
+    @Query('id') id: number,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return await this.fsdSticktNoteService.deleteCommunicationFsd(
+      id,
+      identity.id,
+    );
   }
 }

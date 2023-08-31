@@ -23,7 +23,6 @@ export class FsdSticktNoteService {
     await queryRunner.startTransaction();
 
     try {
-      console.log(payload);
       if (!payload || checkEmpty(payload?.organization_id))
         return new CBadRequestException(ErrorCode.NOT_HAVE_ORGANIZATION);
       const organization_id = payload.organization_id;
@@ -98,12 +97,59 @@ export class FsdSticktNoteService {
       if (checkEmpty(content))
         return new CBadRequestException('Le champ message est obligatoire.');
 
-      const stickNote: StickyNoteEntity = {};
+      const stickNote: StickyNoteEntity = {
+        usrId: null,
+        content,
+        color,
+        editable: 0,
+      };
+
+      const stickNoteResult = await queryRunner.manager
+        .getRepository(StickyNoteEntity)
+        .save(stickNote);
+
+      await queryRunner.query(
+        `
+      INSERT INTO T_POSTIT_USER_PTU (PTT_ID, USR_ID, PTU_WIDTH, PTU_HEIGHT)
+      SELECT ?, USR_ID, ?, ?
+      FROM T_USER_USR`,
+        [stickNoteResult.id, width, height],
+      );
+
+      await queryRunner.commitTransaction();
+      return {
+        success: true,
+        msg: 'Le message a bien été envoyé.',
+      };
     } catch (e) {
       await queryRunner.rollbackTransaction();
       return new CBadRequestException(ErrorCode.FORBIDDEN);
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  async deleteCommunicationFsd(stickyNoteId: number, userId: number) {
+    try {
+      const stickyNote = stickyNoteId
+        ? await this.stickyNoteRepo.findOneBy({ id: stickyNoteId })
+        : null;
+
+      if (!stickyNoteId)
+        return new CBadRequestException(ErrorCode.NOT_FOUND_MEMO);
+
+      if (stickyNote.conId) {
+        await this.stickyNoteRepo.delete({ id: stickyNoteId });
+      } else {
+        await this.dataSource.query(
+          `DELETE FROM T_POSTIT_USER_PTU WHERE PTT_ID = ? AND USR_ID = ?`,
+          [stickyNoteId, userId],
+        );
+      }
+
+      return { success: true };
+    } catch (e) {
+      return new CBadRequestException(ErrorCode.FORBIDDEN);
     }
   }
 }
