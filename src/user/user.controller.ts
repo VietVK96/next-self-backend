@@ -35,6 +35,7 @@ import { CreditBalancesService } from './services/credit-balances.service';
 import { CreditBalancesDto } from './dto/credit-balances.dto';
 import type { Response } from 'express';
 import { UpdateUserSmsDto } from './dto/user-sms.dto';
+import { UserConnectionService } from './services/user-connection.service';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -46,6 +47,7 @@ export class UserController {
     private tokenDownloadService: TokenDownloadService,
     private unpaidService: UnpaidService,
     private creditBalancesService: CreditBalancesService,
+    private userConnectionService: UserConnectionService,
   ) {}
 
   /**
@@ -307,5 +309,22 @@ export class UserController {
   @UseGuards(TokenGuard)
   updateSMS(@Body() users: UpdateUserSmsDto) {
     return this.userService.updateUserSms(users);
+  }
+
+  /**
+   * ecoophp/fsd/users/connections.php
+   */
+  @Get('user-connections')
+  @UseGuards(TokenGuard)
+  async findLastConnectionsOfUser(
+    @Query('userId') userId: number,
+    @Query('page') page?: number,
+    @Query('maxPerPage') maxPerPage?: number,
+  ) {
+    return this.userConnectionService.findLastConnectionsOfUser(
+      userId,
+      page,
+      maxPerPage,
+    );
   }
 }
