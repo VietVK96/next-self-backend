@@ -190,75 +190,66 @@ export class UserService {
     id: number,
     updatePassWordSettingDto: UpdatePassWordSettingDto,
   ): Promise<SuccessResponse> {
-    try {
-      const userFind = await this.userRepository.findOneOrFail({
-        where: { id: id },
-      });
+    const userFind = await this.userRepository.findOneOrFail({
+      where: { id: id },
+    });
 
-      const { password, confirmation_password } = updatePassWordSettingDto;
+    const { password, confirmation_password } = updatePassWordSettingDto;
 
-      if (password !== confirmation_password) {
-        throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
-      }
-
-      const newPassword = phpPassword.hash(password);
-      userFind.passwordAccounting = newPassword;
-      await this.userRepository.save(userFind);
-
-      return {
-        success: true,
-      };
-    } catch (err) {
-      throw new BadRequestException(err);
+    if (password !== confirmation_password) {
+      throw new CBadRequestException(ErrorCode.CONFIRM_PASSWORD_NOT_CORRECT);
     }
+    const newPassword = phpPassword.hash(password);
+    userFind.passwordAccounting = newPassword;
+    await this.userRepository.save(userFind);
+
+    return {
+      success: true,
+    };
   }
 
   async updatePasswordAccounting(
     id: number,
     updatePassWordSettingDto: UpdatePassWordSettingDto,
   ): Promise<SuccessResponse> {
-    try {
-      const userFind = await this.userRepository.findOneOrFail({
-        where: { id: id },
-      });
-      const { old_password, password, confirmation_password } =
-        updatePassWordSettingDto;
+    const userFind = await this.userRepository.findOneOrFail({
+      where: { id: id },
+    });
+    const { old_password, password, confirmation_password } =
+      updatePassWordSettingDto;
 
-      if (!userFind.passwordAccounting) {
-        const shasum = crypto.createHash('sha1');
-        const passwordHash = shasum.update(old_password).digest('hex');
+    if (!userFind.passwordAccounting) {
+      const shasum = crypto.createHash('sha1');
+      const passwordHash = shasum.update(old_password).digest('hex');
 
-        if (passwordHash !== userFind.passwordAccounting) {
-          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
-        }
+      if (passwordHash !== userFind.passwordAccounting) {
+        throw new CBadRequestException(ErrorCode.INVALID_ACCOUNTING_PASSWORD);
+      }
 
+      if (password !== confirmation_password) {
+        throw new CBadRequestException(ErrorCode.CONFIRM_PASSWORD_NOT_CORRECT);
+      }
+
+      const newPassword = phpPassword.hash(password);
+      userFind.passwordAccounting = newPassword;
+      await this.userRepository.save(userFind);
+      return { success: true };
+    } else {
+      if (!phpPassword.verify(old_password, userFind.passwordAccounting)) {
+        throw new CBadRequestException(ErrorCode.INVALID_ACCOUNTING_PASSWORD);
+      }
+      if (phpPassword.needsRehash(password, 'PASSWORD_DEFAULT', { cost: 10 })) {
         if (password !== confirmation_password) {
-          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
+          throw new CBadRequestException(
+            ErrorCode.CONFIRM_PASSWORD_NOT_CORRECT,
+          );
         }
 
         const newPassword = phpPassword.hash(password);
         userFind.passwordAccounting = newPassword;
         await this.userRepository.save(userFind);
         return { success: true };
-      } else {
-        if (!phpPassword.verify(old_password, userFind.passwordAccounting)) {
-          throw new CBadRequestException(ErrorCode.CAN_NOT_LOGIN);
-        }
-        if (
-          phpPassword.needsRehash(password, 'PASSWORD_DEFAULT', { cost: 10 })
-        ) {
-          if (password !== confirmation_password) {
-            throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
-          }
-
-          const newPassword = phpPassword.hash(password);
-          userFind.passwordAccounting = newPassword;
-          await this.userRepository.save(userFind);
-          return { success: true };
-        }
       }
-    } catch (err) {
-      throw new BadRequestException(err);
     }
   }
 
@@ -266,43 +257,34 @@ export class UserService {
     id: number,
     updatePassWordSettingDto: UpdatePassWordSettingDto,
   ): Promise<SuccessResponse> {
-    try {
-      const userFind = await this.userRepository.findOneOrFail({
-        where: { id: id },
-      });
-
-      const { password } = updatePassWordSettingDto;
-
-      if (!userFind.passwordAccounting) {
-        const shasum = crypto.createHash('sha1');
-        const passwordHash = shasum.update(password).digest('hex');
-        if (passwordHash !== userFind.passwordAccounting) {
-          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
-        }
-
+    const userFind = await this.userRepository.findOneOrFail({
+      where: { id: id },
+    });
+    const { password } = updatePassWordSettingDto;
+    if (!userFind.passwordAccounting) {
+      const shasum = crypto.createHash('sha1');
+      const passwordHash = shasum.update(password).digest('hex');
+      if (passwordHash !== userFind.passwordAccounting) {
+        throw new CBadRequestException(ErrorCode.INVALID_ACCOUNTING_PASSWORD);
+      }
+      const newPassword = null;
+      userFind.passwordAccounting = newPassword;
+      await this.userRepository.save(userFind);
+      return {
+        success: true,
+      };
+    } else {
+      if (!phpPassword.verify(password, userFind.passwordAccounting)) {
+        throw new CBadRequestException(ErrorCode.INVALID_ACCOUNTING_PASSWORD);
+      }
+      if (phpPassword.needsRehash(password, 'PASSWORD_DEFAULT', { cost: 10 })) {
         const newPassword = null;
         userFind.passwordAccounting = newPassword;
         await this.userRepository.save(userFind);
         return {
           success: true,
         };
-      } else {
-        if (!phpPassword.verify(password, userFind.passwordAccounting)) {
-          throw new CBadRequestException(ErrorCode.CAN_NOT_LOGIN);
-        }
-        if (
-          phpPassword.needsRehash(password, 'PASSWORD_DEFAULT', { cost: 10 })
-        ) {
-          const newPassword = null;
-          userFind.passwordAccounting = newPassword;
-          await this.userRepository.save(userFind);
-          return {
-            success: true,
-          };
-        }
       }
-    } catch (err) {
-      throw new BadRequestException(err);
     }
   }
 
