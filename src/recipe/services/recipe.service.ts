@@ -16,12 +16,13 @@ import {
   ItemResponse,
   Options,
 } from '../../interfaces/interface';
+import { checkId } from 'src/common/util/number';
 
 @Injectable()
 export class RecipeService {
   constructor(private dataSource: DataSource) {}
 
-  async findAll(queryParams: QueryParamsDto, user: UserIdentity) {
+  async findAll(queryParams: QueryParamsDto) {
     const response = {
       page: 0,
       total: 0,
@@ -37,7 +38,7 @@ export class RecipeService {
       style: 'currency',
       currency: 'USD',
     });
-    const doctorId = user.id;
+    const doctorId = checkId(queryParams.user);
     const options = {
       limit: queryParams.rp,
       offset: (queryParams.page - 1) * queryParams.rp,
