@@ -106,7 +106,7 @@ export class SaveTaskService {
           payload.library_act_id ?? null,
           payload.library_act_quantity_id ?? null,
           payload.parent_id ?? null,
-          payload.name,
+          payload.name ?? '',
           dayjs(creationDate).format('YYYY-MM-DD'),
           payload.msg,
           payload.duration,

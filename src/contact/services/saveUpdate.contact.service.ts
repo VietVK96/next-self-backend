@@ -18,6 +18,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ContactPhoneCopEntity } from 'src/entities/contact-phone-cop.entity';
 import { checkId, checkNumber } from 'src/common/util/number';
 import { checkDay } from 'src/common/util/day';
+import { checkEmpty } from 'src/common/util/string';
 @Injectable()
 export class SaveUpdateContactService {
   constructor(
@@ -150,7 +151,7 @@ export class SaveUpdateContactService {
 
       // check if the requested policy holder name exists
       // exiting will update or insert a new policy holder
-      if (policyHolderName) {
+      if (!checkEmpty(policyHolderName)) {
         let policyHolder = patientMedical?.policyHolder;
         let resultQueryPolicyHolder: InsertResult | UpdateResult;
 
@@ -171,6 +172,7 @@ export class SaveUpdateContactService {
             .execute();
         } else {
           policyHolder = {
+            organizationId: identity.org,
             inseeNumber,
             name: policyHolderName,
             patientId: policyHolderPatientId,
@@ -181,17 +183,29 @@ export class SaveUpdateContactService {
             .into(PolicyHolderEntity)
             .values(policyHolder)
             .execute();
-          await queryRunner.manager
-            .createQueryBuilder()
-            .update(PatientMedicalEntity)
-            .set({
-              policyHolderId: resultQueryPolicyHolder?.raw?.id,
-            })
-            .where({ id: patientMedical?.id })
-            .execute();
+          if (patientMedical?.id) {
+            await queryRunner.manager
+              .createQueryBuilder()
+              .update(PatientMedicalEntity)
+              .set({
+                policyHolderId: resultQueryPolicyHolder?.raw?.insertId,
+              })
+              .where({ id: patientMedical.id })
+              .execute();
+          } else {
+            await queryRunner.manager
+              .createQueryBuilder()
+              .insert()
+              .into(PatientMedicalEntity)
+              .values({
+                patientId: patient?.id,
+                policyHolderId: resultQueryPolicyHolder?.raw?.insertId,
+              })
+              .execute();
+          }
         }
       } else {
-        if (patientMedical?.policyHolder) {
+        if (patientMedical?.policyHolder || patientMedical?.policyHolderId) {
           await queryRunner.manager
             .createQueryBuilder()
             .update(PatientMedicalEntity)
@@ -248,7 +262,7 @@ export class SaveUpdateContactService {
         identity,
       );
     } catch (err) {
-      queryRunner.rollbackTransaction();
+      await queryRunner.rollbackTransaction();
       throw new CBadRequestException(ErrorCode.INSERT_FAILED);
     } finally {
       await queryRunner.release();
@@ -353,6 +367,7 @@ export class SaveUpdateContactService {
         .set({ nbr: savePatient.raw.insertId })
         .where('id = :id', { id: savePatient.raw.insertId })
         .execute();
+
       const policyHolderName = reqBody?.medical.policy_holder?.name || '';
       const inseeNumber = reqBody?.medical?.policy_holder?.insee_number || null;
       const policyHolderPatientId = checkId(
@@ -364,12 +379,14 @@ export class SaveUpdateContactService {
           name: policyHolderName,
           patientId: policyHolderPatientId,
         };
+
         const savedPolicyHolder = await queryRunner.manager
           .createQueryBuilder()
           .insert()
           .into(PolicyHolderEntity)
           .values(policyHolder)
           .execute();
+
         await queryRunner.manager
           .createQueryBuilder()
           .insert()
