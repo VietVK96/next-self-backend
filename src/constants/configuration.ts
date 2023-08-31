@@ -1,5 +1,5 @@
 export const CONFIGURATION = {
   setting: {
-    MAIL_UNPAID_NAME: 'HAI',
+    MAIL_UNPAID_NAME: 'RELANCE',
   },
 };
