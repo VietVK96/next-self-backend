@@ -36,12 +36,15 @@ export class StorageController {
   async getStoragePack(@CurrentUser() identity: UserIdentity) {
     return this.storageService.getStoragePack(identity.org);
   }
+
+  //File /fsd/users/storage.php
   @Get('/users/storage')
   @UseGuards(TokenGuard)
   async getStorageSpaceManagement(@Query('group_id') groupId: number) {
     return this.usersStorageSpaceService.getStorageSpaceManagement(groupId);
   }
 
+  //File /fsd/users/storage.php
   @Put('/users/storage')
   @UseGuards(TokenGuard)
   async updateStorageSpaceManagement(
