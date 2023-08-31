@@ -5,10 +5,10 @@ import { UserEntity } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 import crypto from 'crypto';
 import * as phpPassword from 'node-php-password';
-import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { VerifyPasswordRes } from './res/services/verify-password.res';
+import { checkId } from 'src/common/util/number';
 
 @Injectable()
 export class SecuritiesService {
@@ -18,14 +18,13 @@ export class SecuritiesService {
   ) {}
   async verifyPassword(
     verifyPassWordDto: VerifyPasswordDto,
-    curentUser: UserIdentity,
   ): Promise<VerifyPasswordRes> {
     try {
-      const id = curentUser?.id;
+      const id = checkId(verifyPassWordDto?.id);
       const { password } = verifyPassWordDto;
       const user = await this.userRepository.findOne({
         where: {
-          id: id,
+          id: id || 0,
         },
       });
 
