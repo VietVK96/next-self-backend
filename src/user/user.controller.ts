@@ -206,12 +206,8 @@ export class UserController {
 
   @Get('unpaid/print')
   @UseGuards(TokenGuard)
-  async printUnpaid(
-    @Res() res: Response,
-    @CurrentUser() identity: UserIdentity,
-    @Query() param?: printUnpaidDto,
-  ) {
-    const buffer = await this.unpaidService.printUnpaid(identity, param);
+  async printUnpaid(@Res() res: Response, @Query() param?: printUnpaidDto) {
+    const buffer = await this.unpaidService.printUnpaid(param);
     res.set({
       // pdf
       'Content-Type': 'application/pdf',
@@ -234,13 +230,9 @@ export class UserController {
   @UseGuards(TokenGuard)
   async printCreditBalances(
     @Res() res: Response,
-    @CurrentUser() identity: UserIdentity,
     @Query() param?: printUnpaidDto,
   ) {
-    const buffer = await this.creditBalancesService.printCreditBalances(
-      param,
-      identity,
-    );
+    const buffer = await this.creditBalancesService.printCreditBalances(param);
     res.set({
       // pdf
       'Content-Type': 'application/pdf',
@@ -263,14 +255,9 @@ export class UserController {
   @UseGuards(TokenGuard)
   async exportCreditBalances(
     @Res() res: Response,
-    @CurrentUser() identity: UserIdentity,
     @Query() param: printUnpaidDto,
   ) {
-    return await this.creditBalancesService.exportCreditBalances(
-      param,
-      identity,
-      res,
-    );
+    return await this.creditBalancesService.exportCreditBalances(param, res);
   }
 
   /**
@@ -278,11 +265,8 @@ export class UserController {
    */
   @Get('unpaid/relaunch')
   @UseGuards(TokenGuard)
-  async relaunchUnpaid(
-    @CurrentUser() identity: UserIdentity,
-    @Query() param: printUnpaidDto,
-  ) {
-    return await this.unpaidService.relaunchUnpaid(identity, param);
+  async relaunchUnpaid(@Query() param: printUnpaidDto) {
+    return await this.unpaidService.relaunchUnpaid(param);
   }
   /**
    * File : php/user/credit-balances/index.php 100%

@@ -154,10 +154,6 @@ export class QuotationServices {
 
       return customCreatePdf({ files, options });
     } catch (error) {
-      console.log(
-        '🚀 ~ file: quotation.service.ts:156 ~ QuotationServices ~ generatePdf ~ error:',
-        error,
-      );
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }

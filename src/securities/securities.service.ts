@@ -5,10 +5,10 @@ import { UserEntity } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 import crypto from 'crypto';
 import * as phpPassword from 'node-php-password';
-import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { VerifyPasswordRes } from './res/services/verify-password.res';
+import { checkId } from 'src/common/util/number';
 
 @Injectable()
 export class SecuritiesService {
@@ -18,14 +18,13 @@ export class SecuritiesService {
   ) {}
   async verifyPassword(
     verifyPassWordDto: VerifyPasswordDto,
-    curentUser: UserIdentity,
   ): Promise<VerifyPasswordRes> {
     try {
-      const id = curentUser?.id;
+      const id = checkId(verifyPassWordDto?.id);
       const { password } = verifyPassWordDto;
       const user = await this.userRepository.findOne({
         where: {
-          id: id,
+          id: id || 0,
         },
       });
 
@@ -33,18 +32,18 @@ export class SecuritiesService {
       if (!user.passwordHash) {
         const shasum = crypto.createHash('sha1');
         const passwordHash = shasum.update(password).digest('hex');
-        if (passwordHash !== user.password) {
-          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
+        if (passwordHash !== user.passwordAccounting) {
+          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD_ACCOUNTING);
         }
       } else {
-        if (!phpPassword.verify(password, user.password)) {
-          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
+        if (!phpPassword.verify(password, user.passwordAccounting)) {
+          throw new CBadRequestException(ErrorCode.INVALID_PASSWORD_ACCOUNTING);
         }
       }
 
       return { password_verified: true };
     } catch (e) {
-      throw new CBadRequestException(ErrorCode.INVALID_PASSWORD);
+      throw new CBadRequestException(ErrorCode.INVALID_PASSWORD_ACCOUNTING);
     }
   }
 
@@ -57,6 +56,7 @@ export class SecuritiesService {
         where: { id: id },
       });
       if (userFind) return { confirm_password: !!userFind?.passwordAccounting };
+      throw new CBadRequestException(ErrorCode.NOT_FOUND_USER);
     } catch (err) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }

@@ -484,10 +484,14 @@ export class BordereauxService {
   /**
    *  File php/bordereaux/store.php
    */
-  async store(
-    identity: UserIdentity,
-    payload: BordereauxStoreDto,
-  ): Promise<SlipCheckEntity> {
+  async store(payload: BordereauxStoreDto): Promise<SlipCheckEntity> {
+    const user = await this.userRepository.findOne({
+      where: { id: payload?.user_id },
+    });
+    if (!user) {
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
+    }
+
     const bank = await this.libraryBankRepository.findOne({
       where: { id: payload.bank_id },
     });
@@ -496,8 +500,8 @@ export class BordereauxService {
       !(await this.permissionService.hasPermission(
         PerCode.PERMISSION_PAIEMENT,
         6,
-        identity.id,
-        identity.id,
+        user.id,
+        user.id,
       ))
     ) {
       throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
@@ -516,12 +520,12 @@ export class BordereauxService {
        FROM T_CASHING_CSG payment 
        WHERE payment.CSG_ID IN (${formatPaymentId}) 
         AND payment.USR_ID = ?`,
-        [identity.id],
+        [user.id],
       );
 
       const slipcheck = new SlipCheckEntity();
-      slipcheck.organizationId = identity.org;
-      slipcheck.userId = identity.id;
+      slipcheck.organizationId = user.organizationId;
+      slipcheck.userId = user.id;
       slipcheck.bank = bank;
       slipcheck.number = bank.slipCheckNbr;
       slipcheck.paymentChoice =

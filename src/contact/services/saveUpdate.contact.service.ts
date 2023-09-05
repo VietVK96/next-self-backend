@@ -268,6 +268,7 @@ export class SaveUpdateContactService {
       await queryRunner.release();
     }
   }
+
   async saveContact(reqBody: ContactDetailDto, identity: UserIdentity) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -373,39 +374,33 @@ export class SaveUpdateContactService {
       const policyHolderPatientId = checkId(
         reqBody?.medical?.policy_holder?.patient?.id,
       );
-      if (policyHolderName) {
-        const policyHolder: PolicyHolderEntity = {
-          inseeNumber,
-          name: policyHolderName,
-          patientId: policyHolderPatientId,
-        };
 
-        const savedPolicyHolder = await queryRunner.manager
-          .createQueryBuilder()
-          .insert()
-          .into(PolicyHolderEntity)
-          .values(policyHolder)
-          .execute();
-
-        await queryRunner.manager
-          .createQueryBuilder()
-          .insert()
-          .into(PatientMedicalEntity)
-          .values({
-            patientId: savePatient?.raw?.id,
-            policyHolderId: savedPolicyHolder?.raw?.id,
-          })
-          .execute();
-      } else {
-        await queryRunner.manager
-          .createQueryBuilder()
-          .insert()
-          .into(PatientMedicalEntity)
-          .values({
-            patientId: savePatient?.raw?.insertId,
-          })
-          .execute();
+      const policyHolder: PolicyHolderEntity = {
+        organizationId: identity.org,
+        inseeNumber,
+      };
+      if (!checkEmpty(policyHolderPatientId)) {
+        policyHolder.patientId = policyHolderPatientId;
+      } else if (!checkEmpty(policyHolderName)) {
+        policyHolder.name = policyHolderName;
       }
+
+      const savedPolicyHolder = await queryRunner.manager
+        .createQueryBuilder()
+        .insert()
+        .into(PolicyHolderEntity)
+        .values(policyHolder)
+        .execute();
+
+      await queryRunner.manager
+        .createQueryBuilder()
+        .insert()
+        .into(PatientMedicalEntity)
+        .values({
+          patientId: savePatient?.raw?.insertId,
+          policyHolderId: savedPolicyHolder?.raw?.insertId,
+        })
+        .execute();
 
       if (reqBody?.phones) {
         const phones: PhoneEntity[] = reqBody?.phones?.map((e) => {

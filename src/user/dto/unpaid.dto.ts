@@ -24,6 +24,9 @@ export class UnpaidDto {
 }
 
 export class printUnpaidDto {
+  @ApiProperty()
+  id?: number;
+
   @ApiProperty({
     required: false,
     default: 1,

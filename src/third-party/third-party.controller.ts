@@ -8,11 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import {
-  CurrentUser,
-  TokenGuard,
-  UserIdentity,
-} from 'src/common/decorator/auth.decorator';
+import { TokenGuard } from 'src/common/decorator/auth.decorator';
 import { ThirdPartyService } from './third-party.service';
 import { ThirdPartyDto, ThirdPartyUpdateDto } from './dto/index.dto';
 import { Response } from 'express';
@@ -56,15 +52,8 @@ export class ThirdPartyController {
    */
   @Get('print')
   @UseGuards(TokenGuard)
-  async print(
-    @Res() res: Response,
-    @Query() payload: ThirdPartyDto,
-    @CurrentUser() identity: UserIdentity,
-  ) {
-    const buffer = await this.thirdPartyService.printThirdParty(
-      identity,
-      payload,
-    );
+  async print(@Res() res: Response, @Query() payload: ThirdPartyDto) {
+    const buffer = await this.thirdPartyService.printThirdParty(payload);
     res.set({
       // pdf
       'Content-Type': 'application/pdf',
