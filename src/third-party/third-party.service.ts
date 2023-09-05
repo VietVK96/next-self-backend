@@ -33,6 +33,7 @@ import * as path from 'path';
 import * as dayjs from 'dayjs';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ConfigService } from '@nestjs/config';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class ThirdPartyService {
@@ -511,11 +512,18 @@ export class ThirdPartyService {
    * File: php/third-party/print.php 100%
    *
    */
-  async printThirdParty(identity: UserIdentity, payload: ThirdPartyDto) {
+  async printThirdParty(payload: ThirdPartyDto) {
+    const user = await this.userRepository.findOne({
+      where: { id: payload?.user_id },
+    });
+    if (!user) {
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
+    }
+
     const queryBuilder = this.fseRepository
       .createQueryBuilder('caresheet')
       .innerJoinAndSelect('caresheet.patient', 'patient')
-      .where('caresheet.usrId = :usrId', { usrId: identity.id })
+      .where('caresheet.usrId = :usrId', { usrId: user.id })
       .andWhere('caresheet.tiersPayant = true');
 
     payload.filterParam?.forEach((param, index) => {
@@ -616,12 +624,12 @@ export class ThirdPartyService {
     const currencyObj = await this.userPreferenceRepo.findOneOrFail({
       select: ['currency'],
       where: {
-        usrId: identity.id,
+        usrId: user.id,
       },
     });
 
     const data = {
-      user: identity,
+      user,
       caresheets: newCaresheets,
       currency: currencyObj?.currency,
       thirdPartyAmountTotal,

@@ -12,7 +12,6 @@ import { format } from 'date-fns';
 import { Parser } from 'json2csv';
 import { Response } from 'express';
 import { ErrorCode } from 'src/constants/error';
-import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { customCreatePdf } from 'src/common/util/pdf';
 import * as path from 'path';
 import * as dayjs from 'dayjs';
@@ -323,12 +322,19 @@ export class UnpaidService {
    * File php/user/unpaid/print.php 100%
    *
    */
-  async printUnpaid(identity: UserIdentity, param?: printUnpaidDto) {
+  async printUnpaid(param?: printUnpaidDto) {
+    const user = await this.userRepository.findOne({
+      where: { id: param?.id },
+    });
+    if (!user) {
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
+    }
+
     const queryBuilder = this.patientBalanceRepo
       .createQueryBuilder('patientBalance')
       .innerJoinAndSelect('patientBalance.patient', 'patient')
       .leftJoinAndSelect('patient.phones', 'phone')
-      .andWhere('patientBalance.usrId = :user', { user: identity.id })
+      .andWhere('patientBalance.usrId = :user', { user: user.id })
       .andWhere('patientBalance.amount < 0');
 
     for (let i = 0; i < param.filterParam?.length; i++) {
@@ -378,7 +384,7 @@ export class UnpaidService {
     const currencyObj = await this.userPreferenceRepo.findOneOrFail({
       select: ['currency'],
       where: {
-        usrId: identity.id,
+        usrId: user.id,
       },
     });
 
@@ -433,12 +439,19 @@ export class UnpaidService {
    * File php/user/unpaid/relaunch.php 100%
    *
    */
-  async relaunchUnpaid(identity: UserIdentity, param: printUnpaidDto) {
+  async relaunchUnpaid(param: printUnpaidDto) {
+    const user = await this.userRepository.findOne({
+      where: { id: param?.id },
+    });
+    if (!user) {
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
+    }
+
     const queryBuilder = this.patientBalanceRepo
       .createQueryBuilder('patientBalance')
       .innerJoinAndSelect('patientBalance.patient', 'patient')
       .leftJoinAndSelect('patient.phones', 'phone')
-      .andWhere('patientBalance.usrId = :user', { user: identity.id })
+      .andWhere('patientBalance.usrId = :user', { user: user.id })
       .andWhere('patientBalance.amount > 0');
     for (let i = 0; i < param.filterParam?.length; i++) {
       switch (param.filterParam?.[i]) {
@@ -508,7 +521,7 @@ export class UnpaidService {
           .andWhere('mail.title = :title', { title: mailName })
           .andWhere('mail.patient IS NULL')
           .andWhere('(mail.user IS NULL OR mail.usrId = :user)', {
-            user: identity.id,
+            user: user.id,
           })
           .addOrderBy('user.id', 'DESC')
           .getOne();
@@ -522,8 +535,8 @@ export class UnpaidService {
           : qr.msg;
         const mailParam: TranformVariableParam = {
           message: message,
-          groupId: identity.org,
-          practitionerId: identity.id,
+          groupId: user.organizationId,
+          practitionerId: user.id,
           patientId: patientBalance.patient.id,
         };
 
@@ -536,7 +549,7 @@ export class UnpaidService {
 
         if (qr) {
           const patientNode = new ContactNoteEntity();
-          patientNode.userId = identity.id;
+          patientNode.userId = user.id;
           patientNode.conId = patientBalance.patient.id;
           patientNode.date = dayjs(new Date()).format('YYYY-MM-DD');
           patientNode.message = `Impossible d'imprimer le courrier ${mailName} pour le patient {${

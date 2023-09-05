@@ -104,10 +104,7 @@ export class BordereauxController {
   @Post('store')
   @ApiBearerAuth()
   @UseGuards(TokenGuard)
-  store(
-    @CurrentUser() identity: UserIdentity,
-    @Body() payload: BordereauxStoreDto,
-  ) {
-    return this.bordereauxService.store(identity, payload);
+  store(@Body() payload: BordereauxStoreDto) {
+    return this.bordereauxService.store(payload);
   }
 }
