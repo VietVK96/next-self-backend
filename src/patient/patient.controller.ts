@@ -12,6 +12,7 @@ import {
   PatientActsDependenciesDto,
   PatientExportDto,
   PatientThirdPartyDto,
+  RelauchDto,
 } from './dto/index.dto';
 import { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -71,5 +72,11 @@ export class PatientController {
   @UseGuards(TokenGuard)
   async getAtcsDependencies(@Query() request: PatientActsDependenciesDto) {
     return await this.patientService.getAtcsDependencies(request);
+  }
+
+  @Get('/unpaid/relaunch')
+  @UseGuards(TokenGuard)
+  async printUnpaidRelaunch(@Query() payload: RelauchDto) {
+    return await this.patientService.relauch(payload);
   }
 }
