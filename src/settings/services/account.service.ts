@@ -183,9 +183,13 @@ export class AccountService {
       if (!body?.code || !body?.google_calendar_id) {
         throw new CBadRequestException(ErrorCode.CALENDAR_ID_IS_REQUIRED);
       }
-      const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-      const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-      const client = process.env.CLIENT_SIDE;
+      const GOOGLE_CLIENT_ID = this.config.get<string>(
+        'app.googleCalendar.clientId',
+      );
+      const GOOGLE_CLIENT_SECRET = this.config.get<string>(
+        'app.googleCalendar.clientSecret',
+      );
+      const client = this.config.get<string>('app.googleCalendar.clientSide');
 
       const oauth2Client = new google.auth.OAuth2(
         GOOGLE_CLIENT_ID,
