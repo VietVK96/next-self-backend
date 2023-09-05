@@ -27,6 +27,9 @@ import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { AntecedentPrestationEntity } from 'src/entities/antecedentprestation.entity';
 import { LibraryOdontogramEntity } from 'src/entities/library-odontogram.entity';
 import { LibraryActEntity } from 'src/entities/library-act.entity';
+import { DocumentMailService } from 'src/mail/services/document.mail.service';
+import { LettersEntity } from 'src/entities/letters.entity';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 
 @Module({
   imports: [
@@ -51,6 +54,8 @@ import { LibraryActEntity } from 'src/entities/library-act.entity';
       AntecedentPrestationEntity,
       LibraryOdontogramEntity,
       LibraryActEntity,
+      LettersEntity,
+      ContactNoteEntity,
     ]),
     forwardRef(() => ContactModule),
   ],
@@ -63,6 +68,7 @@ import { LibraryActEntity } from 'src/entities/library-act.entity';
     PermissionService,
     PatientService,
     PatientBalanceService,
+    DocumentMailService,
     PatientOdontogramService,
   ],
   exports: [PatientService, PatientBalanceService, PatientOdontogramService],
