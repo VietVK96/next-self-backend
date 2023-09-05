@@ -39,6 +39,7 @@ import { ListOfTreatmentsService } from './services/list-of-treatments.service';
       secret: JWT_SECRET_DOWNLOAD,
     }),
   ],
+
   providers: [
     PermissionService,
     UserService,
