@@ -20,6 +20,7 @@ import { DocumentMailService } from 'src/mail/services/document.mail.service';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { UserConnectionEntity } from 'src/entities/user-connection.entity';
 import { UserConnectionService } from './services/user-connection.service';
+import { ListOfTreatmentsService } from './services/list-of-treatments.service';
 
 @Module({
   imports: [
@@ -38,7 +39,6 @@ import { UserConnectionService } from './services/user-connection.service';
       secret: JWT_SECRET_DOWNLOAD,
     }),
   ],
-
   providers: [
     PermissionService,
     UserService,
@@ -48,6 +48,7 @@ import { UserConnectionService } from './services/user-connection.service';
     CreditBalancesService,
     DocumentMailService,
     UserConnectionService,
+    ListOfTreatmentsService,
   ],
   exports: [
     PermissionService,

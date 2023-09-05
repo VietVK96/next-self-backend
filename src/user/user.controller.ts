@@ -36,6 +36,8 @@ import { CreditBalancesDto } from './dto/credit-balances.dto';
 import type { Response } from 'express';
 import { UpdateUserSmsDto } from './dto/user-sms.dto';
 import { UserConnectionService } from './services/user-connection.service';
+import { ListOfTreatmentsService } from './services/list-of-treatments.service';
+import { ListOfTreatmentsFindAllDto } from './dto/list-of-treatments.dto';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -48,6 +50,7 @@ export class UserController {
     private unpaidService: UnpaidService,
     private creditBalancesService: CreditBalancesService,
     private userConnectionService: UserConnectionService,
+    private listOfTreatmentsService: ListOfTreatmentsService,
   ) {}
 
   /**
@@ -326,5 +329,17 @@ export class UserController {
       page,
       maxPerPage,
     );
+  }
+
+  /**
+   * ecoophp/php/user/listOfTreatments/findAll.php
+   */
+  @Post('listOfTreatments/findAll')
+  @UseGuards(TokenGuard)
+  async listOfTreatmentsFindAll(
+    @CurrentUser() identity: UserIdentity,
+    @Query() params: ListOfTreatmentsFindAllDto,
+  ) {
+    return this.listOfTreatmentsService.findAll(identity, params);
   }
 }
