@@ -266,10 +266,6 @@ export class DocumentMailService {
         year: 'numeric',
       });
     });
-    console.log('param.message', param.message);
-    console.log('context', context);
-
-    console.log('hihi', Handlebars.compile(param.message)(context));
 
     return Handlebars.compile(param.message)(context);
   }

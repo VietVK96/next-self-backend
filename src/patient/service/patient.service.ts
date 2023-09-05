@@ -1074,7 +1074,6 @@ export class PatientService {
       }
       return '<div style="page-break-after: always;">' + response + '</div>';
     } catch (err) {
-      console.log(err);
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
