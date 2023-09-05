@@ -74,6 +74,10 @@ export class PatientController {
     return await this.patientService.getAtcsDependencies(request);
   }
 
+  /**
+   * php/patients/unpaid/relauch.php
+   */
+
   @Get('/unpaid/relaunch')
   @UseGuards(TokenGuard)
   async printUnpaidRelaunch(@Query() payload: RelauchDto) {
