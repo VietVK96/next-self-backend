@@ -308,50 +308,49 @@ export class CashingService {
                 payment?.patient?.firstname || ''
               }`;
             }
-            // Bénéficiaires
-            if (payload?.contact && payment?.beneficiaries) {
-              amount = +payment?.beneficiaries[0]?.amount;
-              amountCare = +payment?.beneficiaries[0]?.amount_care;
-              amountProsthesis = +payment?.beneficiaries[0]?.amount_prosthesis;
-            }
-            amountTotal += amount;
-            amountCareTotal += amountCare;
-            amountProsthesisTotal += amountProsthesis;
-            if (mode) {
-              total[mode] = type[mode]
-                ? {
-                    amount: type[mode].amount + amount,
-                    amountCare: type[mode].amountCare + amountCare,
-                    amountProsthesis:
-                      type[mode].amountProsthesis + amountProsthesis,
-                  }
-                : {
-                    amount: amount,
-                    amountCare: amountCare,
-                    amountProsthesis: amountProsthesis,
-                  };
-            }
-
-            if (type) {
-              total[type] = total[type]
-                ? {
-                    amount: +(total[type].amount + amount).toFixed(2),
-                    amountCare: +(total[type].amountCare + amountCare).toFixed(
-                      2,
-                    ),
-                    amountProsthesis: +(
-                      total[type].amountProsthesis + amountProsthesis
-                    ).toFixed(2),
-                  }
-                : {
-                    amount: amount,
-                    amountCare: amountCare,
-                    amountProsthesis: amountProsthesis,
-                  };
-            }
-
-            payment.debtor = payer;
           }
+          // Bénéficiaires
+          if (payload?.contact && payment?.beneficiaries) {
+            amount = +payment?.beneficiaries[0]?.amount;
+            amountCare = +payment?.beneficiaries[0]?.amount_care;
+            amountProsthesis = +payment?.beneficiaries[0]?.amount_prosthesis;
+          }
+          amountTotal += amount;
+          amountCareTotal += amountCare;
+          amountProsthesisTotal += amountProsthesis;
+          if (mode) {
+            total[mode] = type[mode]
+              ? {
+                  amount: (type[mode].amount + amount).toFixed(2),
+                  amountCare: (type[mode].amountCare + amountCare).toFixed(2),
+                  amountProsthesis: (
+                    type[mode].amountProsthesis + amountProsthesis
+                  ).toFixed(2),
+                }
+              : {
+                  amount: amount.toFixed(2),
+                  amountCare: amountCare.toFixed(2),
+                  amountProsthesis: amountProsthesis.toFixed(2),
+                };
+          }
+
+          if (type) {
+            total[type] = total[type]
+              ? {
+                  amount: +(total[type].amount + amount).toFixed(2),
+                  amountCare: +(total[type].amountCare + amountCare).toFixed(2),
+                  amountProsthesis: +(
+                    total[type].amountProsthesis + amountProsthesis
+                  ).toFixed(2),
+                }
+              : {
+                  amount: amount.toFixed(2),
+                  amountCare: amountCare.toFixed(2),
+                  amountProsthesis: amountProsthesis.toFixed(2),
+                };
+          }
+
+          payment.debtor = payer;
         });
 
         const data = {
