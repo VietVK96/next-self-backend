@@ -107,7 +107,7 @@ export class SaveUpdateContactService {
         conMedecinTraitantId: checkId(reqBody?.doctor_id),
         msg: reqBody?.msg || null,
         notificationMsg: reqBody?.notificationMsg || null,
-        notificationEnable: checkNumber(reqBody?.notificationEnable) || 1,
+        notificationEnable: checkNumber(reqBody?.notificationEnable) || 0,
         notificationEveryTime: checkNumber(reqBody?.notificationEveryTime) || 0,
         reminderVisitType:
           EnumContactReminderVisitType[
