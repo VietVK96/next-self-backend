@@ -10,7 +10,7 @@ import { unpaidSort } from 'src/constants/unpaid';
 import { PatientMedicalEntity } from 'src/entities/patient-medical.entity';
 import { format } from 'date-fns';
 import { Parser } from 'json2csv';
-import e, { Response } from 'express';
+import { Response } from 'express';
 import { ErrorCode } from 'src/constants/error';
 import { customCreatePdf } from 'src/common/util/pdf';
 import * as path from 'path';
@@ -420,9 +420,7 @@ export class UnpaidService {
         )}</span><span style="font-size: 8px;margin-right:40mm; float: right;">Impayés</span></div>`,
         footerTemplate: `
         <div style="width: 100%;margin-right:10mm; font-size: 8px; display: flex; justify-content: space-between">
-          <span style="margin-left: 10mm">${this.configService.get(
-            'app.host',
-          )}/index#unpaid</span>
+         
           <div>
             <span class="pageNumber"></span>
             <span>/</span>
@@ -438,7 +436,7 @@ export class UnpaidService {
 
       return await customCreatePdf({ files, options, helpers });
     } catch (e) {
-      console.log('printUnpaid', e);
+      console.log('unpaid/print-services', e);
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
