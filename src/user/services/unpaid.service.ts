@@ -412,7 +412,6 @@ export class UnpaidService {
           right: '10mm',
           bottom: '20mm',
         },
-
         headerTemplate: `<div style="width:100%;margin-left:10mm"><span style="font-size: 8px;">${dayjs(
           new Date(),
         ).format(
