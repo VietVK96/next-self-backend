@@ -10,7 +10,7 @@ import { unpaidSort } from 'src/constants/unpaid';
 import { PatientMedicalEntity } from 'src/entities/patient-medical.entity';
 import { format } from 'date-fns';
 import { Parser } from 'json2csv';
-import { Response } from 'express';
+import e, { Response } from 'express';
 import { ErrorCode } from 'src/constants/error';
 import { customCreatePdf } from 'src/common/util/pdf';
 import * as path from 'path';
@@ -329,92 +329,96 @@ export class UnpaidService {
     if (!user) {
       throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
     }
+    try {
+      const queryBuilder = this.patientBalanceRepo
+        .createQueryBuilder('patientBalance')
+        .innerJoinAndSelect('patientBalance.patient', 'patient')
+        .leftJoinAndSelect('patient.phones', 'phone')
+        .andWhere('patientBalance.usrId = :user', { user: user.id })
+        .andWhere('patientBalance.amount < 0');
 
-    const queryBuilder = this.patientBalanceRepo
-      .createQueryBuilder('patientBalance')
-      .innerJoinAndSelect('patientBalance.patient', 'patient')
-      .leftJoinAndSelect('patient.phones', 'phone')
-      .andWhere('patientBalance.usrId = :user', { user: user.id })
-      .andWhere('patientBalance.amount < 0');
-
-    for (let i = 0; i < param.filterParam?.length; i++) {
-      switch (param.filterParam?.[i]) {
-        case 'patientBalance.amount':
-          queryBuilder.andWhere('patientBalance.amount <= :amount', {
-            amount: param.filterValue?.[i],
-          });
-          break;
-        case 'patientBalance.relaunchLevel':
-          queryBuilder.andWhere(
-            'patientBalance.relaunchLevel >= :relaunchLevel',
-            {
-              relaunchLevel: param.filterValue?.[i],
-            },
-          );
-          break;
-        case 'patientBalance.visitDate':
-          const arrDate = param.filterValue?.[i].toString().split(';');
-          if (arrDate.length > 0 && arrDate?.[0]) {
-            queryBuilder.andWhere('patientBalance.visitDate >= :startDate', {
-              startDate: arrDate?.[0],
+      for (let i = 0; i < param.filterParam?.length; i++) {
+        switch (param.filterParam?.[i]) {
+          case 'patientBalance.amount':
+            queryBuilder.andWhere('patientBalance.amount <= :amount', {
+              amount: param.filterValue?.[i],
             });
-          }
-          if (arrDate.length > 1 && arrDate?.[1]) {
-            queryBuilder.andWhere('patientBalance.visitDate <= :endDate', {
-              endDate: arrDate?.[1],
-            });
-          }
-          break;
+            break;
+          case 'patientBalance.relaunchLevel':
+            queryBuilder.andWhere(
+              'patientBalance.relaunchLevel >= :relaunchLevel',
+              {
+                relaunchLevel: param.filterValue?.[i],
+              },
+            );
+            break;
+          case 'patientBalance.visitDate':
+            const arrDate = param.filterValue?.[i].toString().split(';');
+            if (arrDate.length > 0 && arrDate?.[0]) {
+              queryBuilder.andWhere('patientBalance.visitDate >= :startDate', {
+                startDate: arrDate?.[0],
+              });
+            }
+            if (arrDate.length > 1 && arrDate?.[1]) {
+              queryBuilder.andWhere('patientBalance.visitDate <= :endDate', {
+                endDate: arrDate?.[1],
+              });
+            }
+            break;
+        }
       }
-    }
 
-    if (param?.sort)
-      queryBuilder.addOrderBy(
-        unpaidSort[param?.sort],
-        param?.direction.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
+      if (param?.sort)
+        queryBuilder.addOrderBy(
+          unpaidSort[param?.sort],
+          param?.direction.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
+        );
+
+      const res = await queryBuilder.getMany();
+
+      const totalAmount = res.reduce(
+        (totalAmount, item) => totalAmount + Number(item.amount),
+        0,
       );
 
-    const res = await queryBuilder.getMany();
+      const currencyObj = await this.userPreferenceRepo.findOneOrFail({
+        select: ['currency'],
+        where: {
+          usrId: user.id,
+        },
+      });
 
-    const totalAmount = res.reduce(
-      (totalAmount, item) => totalAmount + Number(item.amount),
-      0,
-    );
+      const data = {
+        patientBalances: res,
+        currency: currencyObj?.currency,
+        totalAmount,
+      };
 
-    const currencyObj = await this.userPreferenceRepo.findOneOrFail({
-      select: ['currency'],
-      where: {
-        usrId: user.id,
-      },
-    });
+      const filePath = path.join(
+        process.cwd(),
+        'templates/unpaid',
+        'index.hbs',
+      );
 
-    const data = {
-      patientBalances: res,
-      currency: currencyObj?.currency,
-      totalAmount,
-    };
+      const files = [{ path: filePath, data }];
 
-    const filePath = path.join(process.cwd(), 'templates/unpaid', 'index.hbs');
+      const options = {
+        format: 'A4',
+        displayHeaderFooter: true,
+        // landscape: true,
+        margin: {
+          left: '10mm',
+          top: '20mm',
+          right: '10mm',
+          bottom: '20mm',
+        },
 
-    const files = [{ path: filePath, data }];
-
-    const options = {
-      format: 'A4',
-      displayHeaderFooter: true,
-      landscape: true,
-      margin: {
-        left: '10mm',
-        top: '20mm',
-        right: '10mm',
-        bottom: '20mm',
-      },
-
-      headerTemplate: `<div style="width:100%;margin-left:10mm"><span style="font-size: 8px;">${dayjs(
-        new Date(),
-      ).format(
-        'M/D/YY, hh:mm A',
-      )}</span><span style="font-size: 8px;margin-right:40mm; float: right;">Impayés</span></div>`,
-      footerTemplate: `
+        headerTemplate: `<div style="width:100%;margin-left:10mm"><span style="font-size: 8px;">${dayjs(
+          new Date(),
+        ).format(
+          'M/D/YY, hh:mm A',
+        )}</span><span style="font-size: 8px;margin-right:40mm; float: right;">Impayés</span></div>`,
+        footerTemplate: `
         <div style="width: 100%;margin-right:10mm; font-size: 8px; display: flex; justify-content: space-between">
           <span style="margin-left: 10mm">${this.configService.get(
             'app.host',
@@ -426,13 +430,17 @@ export class UnpaidService {
           </div>
         </div>
       `,
-    };
+      };
 
-    const helpers = {
-      dateShort: (date) => (date ? dayjs(date).format('DD/MM/YYYY') : ''),
-    };
+      const helpers = {
+        dateShort: (date) => (date ? dayjs(date).format('DD/MM/YYYY') : ''),
+      };
 
-    return await customCreatePdf({ files, options, helpers });
+      return await customCreatePdf({ files, options, helpers });
+    } catch (e) {
+      console.log('printUnpaid', e);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+    }
   }
 
   /**
