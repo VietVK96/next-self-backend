@@ -404,7 +404,7 @@ export class UnpaidService {
 
       const options = {
         format: 'A4',
-        displayHeaderFooter: true,
+        // displayHeaderFooter: true,
         // landscape: true,
         margin: {
           left: '10mm',
@@ -412,22 +412,21 @@ export class UnpaidService {
           right: '10mm',
           bottom: '20mm',
         },
+        //   headerTemplate: `<div style="width:100%;margin-left:10mm"><span style="font-size: 8px;">${dayjs(
+        //     new Date(),
+        //   ).format(
+        //     'M/D/YY, hh:mm A',
+        //   )}</span><span style="font-size: 8px;margin-right:40mm; float: right;">Impayés</span></div>`,
+        //   footerTemplate: `
+        //   <div style="width: 100%;margin-right:10mm; font-size: 8px; display: flex; justify-content: space-between">
 
-        headerTemplate: `<div style="width:100%;margin-left:10mm"><span style="font-size: 8px;">${dayjs(
-          new Date(),
-        ).format(
-          'M/D/YY, hh:mm A',
-        )}</span><span style="font-size: 8px;margin-right:40mm; float: right;">Impayés</span></div>`,
-        footerTemplate: `
-        <div style="width: 100%;margin-right:10mm; font-size: 8px; display: flex; justify-content: space-between">
-         
-          <div>
-            <span class="pageNumber"></span>
-            <span>/</span>
-            <span class="totalPages"></span>
-          </div>
-        </div>
-      `,
+        //     <div>
+        //       <span class="pageNumber"></span>
+        //       <span>/</span>
+        //       <span class="totalPages"></span>
+        //     </div>
+        //   </div>
+        // `,
       };
 
       const helpers = {
