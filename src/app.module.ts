@@ -113,7 +113,7 @@ const importsModules = [
     },
     isGlobal: true,
   }),
-  BullModule.registerQueueAsync({
+  BullModule.forRootAsync({
     imports: [ConfigModule],
     inject: [ConfigService],
     useFactory: (c: ConfigService) => {
