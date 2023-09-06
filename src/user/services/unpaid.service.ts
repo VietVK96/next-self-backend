@@ -438,7 +438,7 @@ export class UnpaidService {
 
       return await customCreatePdf({ files, options, helpers });
     } catch (e) {
-      console.log('printUnpaid', e);
+      console.log('unpaid/print-services', e);
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
