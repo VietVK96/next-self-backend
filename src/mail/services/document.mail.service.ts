@@ -249,6 +249,7 @@ export class DocumentMailService {
     context.today = format(new Date(), 'P');
     context.todayLong = format(new Date(), 'PPP');
     context['praticien'] = practitioners?.[0];
+    context['practitioner'] = practitioners?.[0];
     context['contact'] = customers?.[0];
     context['correspondent'] = correspondents?.[0];
 
