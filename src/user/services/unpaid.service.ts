@@ -420,9 +420,7 @@ export class UnpaidService {
         )}</span><span style="font-size: 8px;margin-right:40mm; float: right;">Impayés</span></div>`,
         footerTemplate: `
         <div style="width: 100%;margin-right:10mm; font-size: 8px; display: flex; justify-content: space-between">
-          <span style="margin-left: 10mm">${this.configService.get(
-            'app.host',
-          )}/index#unpaid</span>
+         
           <div>
             <span class="pageNumber"></span>
             <span>/</span>
