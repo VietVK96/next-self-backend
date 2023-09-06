@@ -70,13 +70,11 @@ export class CorrespondentController {
     @CurrentUser() identity: UserIdentity,
     @Query('search') search?: string,
     @Query('page') page?: number,
-    @Query('sort') sort?: string,
   ) {
     return await this.correspondentService.findAllCorrespondents(
       identity.org,
       search,
       page,
-      sort,
     );
   }
   @Delete('/:id')
