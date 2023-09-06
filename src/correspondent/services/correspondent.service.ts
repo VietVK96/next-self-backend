@@ -333,12 +333,7 @@ export class CorrespondentService {
     return sql;
   }
 
-  async findAllCorrespondents(
-    groupId: number,
-    search: string,
-    page?: number,
-    sort?: string,
-  ) {
+  async findAllCorrespondents(groupId: number, search: string, page?: number) {
     const sql = await this.dataSource.query(
       `SELECT SQL_CALC_FOUND_ROWS
     CPD.CPD_ID AS id,
@@ -357,8 +352,8 @@ LEFT OUTER JOIN correspondent_type ON correspondent_type.id = CPD.correspondent_
 WHERE CPD.organization_id = ?
     AND (CPD.CPD_LASTNAME LIKE CONCAT(?, '%') OR CPD.CPD_FIRSTNAME LIKE CONCAT(?, '%') OR CPD.CPD_TYPE LIKE CONCAT(?, '%'))
     AND (CPD.correspondent_type_id IS NULL OR CPD.correspondent_type_id NOT IN (1,2))
-GROUP BY CPD.CPD_ID ${sort}`,
-      [groupId, search, search, search], // CPD.CPD_LASTNAME, CPD.CPD_FIRSTNAME ;
+GROUP BY CPD.CPD_ID ORDER BY CPD.CPD_LASTNAME, CPD.CPD_FIRSTNAME`,
+      [groupId, search, search, search],
     );
 
     const offSet = (page - 1) * 100;

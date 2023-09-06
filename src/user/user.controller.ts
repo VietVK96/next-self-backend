@@ -203,21 +203,14 @@ export class UserController {
 
   @Get('unpaid/print')
   @UseGuards(TokenGuard)
-  async printUnpaid(@Res() res: Response, @Query() param?: printUnpaidDto) {
-    const buffer = await this.unpaidService.printUnpaid(param);
-    res.set({
-      // pdf
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename=impayes_${dayjs(
-        new Date(),
-      ).format('YYYYMMDD')}.pdf`,
-      'Content-Length': buffer.length,
-      // prevent cache
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      Pragma: 'no-cache',
-      Expires: 0,
-    });
-    res.end(buffer);
+  async printUnpaid(@Query() param?: printUnpaidDto) {
+    try {
+      const buffer = await this.unpaidService.printUnpaid(param);
+      return buffer;
+    } catch (error) {
+      console.log('unpaid/print-controller', error);
+      throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
+    }
   }
 
   /**
