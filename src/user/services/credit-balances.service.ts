@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { printUnpaidDto } from '../dto/unpaid.dto';
-import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import * as path from 'path';
 import * as dayjs from 'dayjs';
 import { unpaidSort } from 'src/constants/unpaid';
@@ -17,6 +16,7 @@ import { IPatientBalances } from 'src/interfaces/interface';
 import { CreditBalancesDto } from '../dto/credit-balances.dto';
 import { UserEntity } from 'src/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
+import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 
 @Injectable()
 export class CreditBalancesService {
@@ -33,12 +33,18 @@ export class CreditBalancesService {
   /**
    *php/user/credit-balances/print.php 100%
    */
-  async printCreditBalances(param: printUnpaidDto, identity: UserIdentity) {
+  async printCreditBalances(param: printUnpaidDto) {
+    const user = await this.userRepository.findOne({
+      where: { id: param?.id },
+    });
+    if (!user) {
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
+    }
     const queryBuilder = this.patientBalanceRepo
       .createQueryBuilder('patientBalance')
       .innerJoinAndSelect('patientBalance.patient', 'patient')
       .leftJoinAndSelect('patient.phones', 'phone')
-      .andWhere('patientBalance.usrId = :user', { user: identity.id })
+      .andWhere('patientBalance.usrId = :user', { user: user.id })
       .andWhere('patientBalance.amount < 0');
 
     for (let i = 0; i < param.filterParam?.length; i++) {
@@ -80,7 +86,7 @@ export class CreditBalancesService {
     const currencyObj = await this.userPreferenceRepo.findOneOrFail({
       select: ['currency'],
       where: {
-        usrId: identity.id,
+        usrId: user.id,
       },
     });
     const data = {
@@ -137,17 +143,19 @@ export class CreditBalancesService {
   /**
    *php/user/credit-balances/export.php 100%
    */
-  async exportCreditBalances(
-    param: printUnpaidDto,
-    identity: UserIdentity,
-    res: Response,
-  ) {
+  async exportCreditBalances(param: printUnpaidDto, res: Response) {
+    const user = await this.userRepository.findOne({
+      where: { id: param?.id },
+    });
+    if (!user) {
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
+    }
     try {
       const queryBuilder = this.patientBalanceRepo
         .createQueryBuilder('patientBalance')
         .innerJoinAndSelect('patientBalance.patient', 'patient')
         .leftJoinAndSelect('patient.phones', 'phone')
-        .andWhere('patientBalance.usrId = :user', { user: identity.id })
+        .andWhere('patientBalance.usrId = :user', { user: user.id })
         .andWhere('patientBalance.amount < 0');
 
       for (let i = 0; i < param.filterParam?.length; i++) {

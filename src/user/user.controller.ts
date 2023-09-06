@@ -203,25 +203,25 @@ export class UserController {
 
   @Get('unpaid/print')
   @UseGuards(TokenGuard)
-  async printUnpaid(
-    @Res() res: Response,
-    @CurrentUser() identity: UserIdentity,
-    @Query() param?: printUnpaidDto,
-  ) {
-    const buffer = await this.unpaidService.printUnpaid(identity, param);
-    res.set({
-      // pdf
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename=impayes_${dayjs(
-        new Date(),
-      ).format('YYYYMMDD')}.pdf`,
-      'Content-Length': buffer.length,
-      // prevent cache
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      Pragma: 'no-cache',
-      Expires: 0,
-    });
-    res.end(buffer);
+  async printUnpaid(@Res() res: Response, @Query() param?: printUnpaidDto) {
+    try {
+      const buffer = await this.unpaidService.printUnpaid(param);
+      console.log('buffer', buffer);
+      res.set({
+        // pdf
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `inline; filename=impayes.pdf`,
+        'Content-Length': buffer ? buffer.length : 0,
+        // prevent cache
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      console.log('unpaid/print-controller', error);
+      throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
+    }
   }
 
   /**
@@ -231,13 +231,9 @@ export class UserController {
   @UseGuards(TokenGuard)
   async printCreditBalances(
     @Res() res: Response,
-    @CurrentUser() identity: UserIdentity,
     @Query() param?: printUnpaidDto,
   ) {
-    const buffer = await this.creditBalancesService.printCreditBalances(
-      param,
-      identity,
-    );
+    const buffer = await this.creditBalancesService.printCreditBalances(param);
     res.set({
       // pdf
       'Content-Type': 'application/pdf',
@@ -260,14 +256,9 @@ export class UserController {
   @UseGuards(TokenGuard)
   async exportCreditBalances(
     @Res() res: Response,
-    @CurrentUser() identity: UserIdentity,
     @Query() param: printUnpaidDto,
   ) {
-    return await this.creditBalancesService.exportCreditBalances(
-      param,
-      identity,
-      res,
-    );
+    return await this.creditBalancesService.exportCreditBalances(param, res);
   }
 
   /**
@@ -275,11 +266,8 @@ export class UserController {
    */
   @Get('unpaid/relaunch')
   @UseGuards(TokenGuard)
-  async relaunchUnpaid(
-    @CurrentUser() identity: UserIdentity,
-    @Query() param: printUnpaidDto,
-  ) {
-    return await this.unpaidService.relaunchUnpaid(identity, param);
+  async relaunchUnpaid(@Query() param: printUnpaidDto) {
+    return await this.unpaidService.relaunchUnpaid(param);
   }
   /**
    * File : php/user/credit-balances/index.php 100%

@@ -12,7 +12,6 @@ import { format } from 'date-fns';
 import { Parser } from 'json2csv';
 import { Response } from 'express';
 import { ErrorCode } from 'src/constants/error';
-import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { customCreatePdf } from 'src/common/util/pdf';
 import * as path from 'path';
 import * as dayjs from 'dayjs';
@@ -323,122 +322,141 @@ export class UnpaidService {
    * File php/user/unpaid/print.php 100%
    *
    */
-  async printUnpaid(identity: UserIdentity, param?: printUnpaidDto) {
-    const queryBuilder = this.patientBalanceRepo
-      .createQueryBuilder('patientBalance')
-      .innerJoinAndSelect('patientBalance.patient', 'patient')
-      .leftJoinAndSelect('patient.phones', 'phone')
-      .andWhere('patientBalance.usrId = :user', { user: identity.id })
-      .andWhere('patientBalance.amount < 0');
-
-    for (let i = 0; i < param.filterParam?.length; i++) {
-      switch (param.filterParam?.[i]) {
-        case 'patientBalance.amount':
-          queryBuilder.andWhere('patientBalance.amount <= :amount', {
-            amount: param.filterValue?.[i],
-          });
-          break;
-        case 'patientBalance.relaunchLevel':
-          queryBuilder.andWhere(
-            'patientBalance.relaunchLevel >= :relaunchLevel',
-            {
-              relaunchLevel: param.filterValue?.[i],
-            },
-          );
-          break;
-        case 'patientBalance.visitDate':
-          const arrDate = param.filterValue?.[i].toString().split(';');
-          if (arrDate.length > 0 && arrDate?.[0]) {
-            queryBuilder.andWhere('patientBalance.visitDate >= :startDate', {
-              startDate: arrDate?.[0],
-            });
-          }
-          if (arrDate.length > 1 && arrDate?.[1]) {
-            queryBuilder.andWhere('patientBalance.visitDate <= :endDate', {
-              endDate: arrDate?.[1],
-            });
-          }
-          break;
-      }
+  async printUnpaid(param?: printUnpaidDto) {
+    const user = await this.userRepository.findOne({
+      where: { id: param?.id },
+    });
+    if (!user) {
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
     }
+    try {
+      const queryBuilder = this.patientBalanceRepo
+        .createQueryBuilder('patientBalance')
+        .innerJoinAndSelect('patientBalance.patient', 'patient')
+        .leftJoinAndSelect('patient.phones', 'phone')
+        .andWhere('patientBalance.usrId = :user', { user: user.id })
+        .andWhere('patientBalance.amount < 0');
 
-    if (param?.sort)
-      queryBuilder.addOrderBy(
-        unpaidSort[param?.sort],
-        param?.direction.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
+      for (let i = 0; i < param.filterParam?.length; i++) {
+        switch (param.filterParam?.[i]) {
+          case 'patientBalance.amount':
+            queryBuilder.andWhere('patientBalance.amount <= :amount', {
+              amount: param.filterValue?.[i],
+            });
+            break;
+          case 'patientBalance.relaunchLevel':
+            queryBuilder.andWhere(
+              'patientBalance.relaunchLevel >= :relaunchLevel',
+              {
+                relaunchLevel: param.filterValue?.[i],
+              },
+            );
+            break;
+          case 'patientBalance.visitDate':
+            const arrDate = param.filterValue?.[i].toString().split(';');
+            if (arrDate.length > 0 && arrDate?.[0]) {
+              queryBuilder.andWhere('patientBalance.visitDate >= :startDate', {
+                startDate: arrDate?.[0],
+              });
+            }
+            if (arrDate.length > 1 && arrDate?.[1]) {
+              queryBuilder.andWhere('patientBalance.visitDate <= :endDate', {
+                endDate: arrDate?.[1],
+              });
+            }
+            break;
+        }
+      }
+
+      if (param?.sort)
+        queryBuilder.addOrderBy(
+          unpaidSort[param?.sort],
+          param?.direction.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
+        );
+
+      const res = await queryBuilder.getMany();
+
+      const totalAmount = res.reduce(
+        (totalAmount, item) => totalAmount + Number(item.amount),
+        0,
       );
 
-    const res = await queryBuilder.getMany();
+      const currencyObj = await this.userPreferenceRepo.findOneOrFail({
+        select: ['currency'],
+        where: {
+          usrId: user.id,
+        },
+      });
 
-    const totalAmount = res.reduce(
-      (totalAmount, item) => totalAmount + Number(item.amount),
-      0,
-    );
+      const data = {
+        patientBalances: res,
+        currency: currencyObj?.currency,
+        totalAmount,
+      };
 
-    const currencyObj = await this.userPreferenceRepo.findOneOrFail({
-      select: ['currency'],
-      where: {
-        usrId: identity.id,
-      },
-    });
+      const filePath = path.join(
+        process.cwd(),
+        'templates/unpaid',
+        'index.hbs',
+      );
 
-    const data = {
-      patientBalances: res,
-      currency: currencyObj?.currency,
-      totalAmount,
-    };
+      const files = [{ path: filePath, data }];
 
-    const filePath = path.join(process.cwd(), 'templates/unpaid', 'index.hbs');
+      const options = {
+        format: 'A4',
+        // displayHeaderFooter: true,
+        // landscape: true,
+        margin: {
+          left: '10mm',
+          top: '20mm',
+          right: '10mm',
+          bottom: '20mm',
+        },
+        //   headerTemplate: `<div style="width:100%;margin-left:10mm"><span style="font-size: 8px;">${dayjs(
+        //     new Date(),
+        //   ).format(
+        //     'M/D/YY, hh:mm A',
+        //   )}</span><span style="font-size: 8px;margin-right:40mm; float: right;">Impayés</span></div>`,
+        //   footerTemplate: `
+        //   <div style="width: 100%;margin-right:10mm; font-size: 8px; display: flex; justify-content: space-between">
 
-    const files = [{ path: filePath, data }];
+        //     <div>
+        //       <span class="pageNumber"></span>
+        //       <span>/</span>
+        //       <span class="totalPages"></span>
+        //     </div>
+        //   </div>
+        // `,
+      };
 
-    const options = {
-      format: 'A4',
-      displayHeaderFooter: true,
-      landscape: true,
-      margin: {
-        left: '10mm',
-        top: '20mm',
-        right: '10mm',
-        bottom: '20mm',
-      },
+      const helpers = {
+        dateShort: (date) => (date ? dayjs(date).format('DD/MM/YYYY') : ''),
+      };
 
-      headerTemplate: `<div style="width:100%;margin-left:10mm"><span style="font-size: 8px;">${dayjs(
-        new Date(),
-      ).format(
-        'M/D/YY, hh:mm A',
-      )}</span><span style="font-size: 8px;margin-right:40mm; float: right;">Impayés</span></div>`,
-      footerTemplate: `
-        <div style="width: 100%;margin-right:10mm; font-size: 8px; display: flex; justify-content: space-between">
-          <span style="margin-left: 10mm">${this.configService.get(
-            'app.host',
-          )}/index#unpaid</span>
-          <div>
-            <span class="pageNumber"></span>
-            <span>/</span>
-            <span class="totalPages"></span>
-          </div>
-        </div>
-      `,
-    };
-
-    const helpers = {
-      dateShort: (date) => (date ? dayjs(date).format('DD/MM/YYYY') : ''),
-    };
-
-    return await customCreatePdf({ files, options, helpers });
+      return await customCreatePdf({ files, options, helpers });
+    } catch (e) {
+      console.log('unpaid/print-services', e);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+    }
   }
 
   /**
    * File php/user/unpaid/relaunch.php 100%
    *
    */
-  async relaunchUnpaid(identity: UserIdentity, param: printUnpaidDto) {
+  async relaunchUnpaid(param: printUnpaidDto) {
+    const user = await this.userRepository.findOne({
+      where: { id: param?.id },
+    });
+    if (!user) {
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
+    }
+
     const queryBuilder = this.patientBalanceRepo
       .createQueryBuilder('patientBalance')
       .innerJoinAndSelect('patientBalance.patient', 'patient')
       .leftJoinAndSelect('patient.phones', 'phone')
-      .andWhere('patientBalance.usrId = :user', { user: identity.id })
+      .andWhere('patientBalance.usrId = :user', { user: user.id })
       .andWhere('patientBalance.amount > 0');
     for (let i = 0; i < param.filterParam?.length; i++) {
       switch (param.filterParam?.[i]) {
@@ -508,7 +526,7 @@ export class UnpaidService {
           .andWhere('mail.title = :title', { title: mailName })
           .andWhere('mail.patient IS NULL')
           .andWhere('(mail.user IS NULL OR mail.usrId = :user)', {
-            user: identity.id,
+            user: user.id,
           })
           .addOrderBy('user.id', 'DESC')
           .getOne();
@@ -522,8 +540,8 @@ export class UnpaidService {
           : qr.msg;
         const mailParam: TranformVariableParam = {
           message: message,
-          groupId: identity.org,
-          practitionerId: identity.id,
+          groupId: user.organizationId,
+          practitionerId: user.id,
           patientId: patientBalance.patient.id,
         };
 
@@ -536,7 +554,7 @@ export class UnpaidService {
 
         if (qr) {
           const patientNode = new ContactNoteEntity();
-          patientNode.userId = identity.id;
+          patientNode.userId = user.id;
           patientNode.conId = patientBalance.patient.id;
           patientNode.date = dayjs(new Date()).format('YYYY-MM-DD');
           patientNode.message = `Impossible d'imprimer le courrier ${mailName} pour le patient {${

@@ -67,3 +67,11 @@ export class PatientActsDependenciesDto {
   @ApiProperty({ required: false })
   check_parent?: boolean;
 }
+
+export class RelauchDto {
+  @ApiProperty()
+  id?: number;
+
+  @ApiProperty()
+  user_id?: number;
+}

@@ -45,4 +45,13 @@ export default registerAs('app', () => ({
   countries: {
     url: process?.env?.COUNTRIES_URL ?? 'https://restcountries.com/v3.1/all',
   },
+  googleCalendar: {
+    clientId:
+      process?.env?.GOOGLE_CLIENT_ID ??
+      '770111839875-2htniqvi3g7r3jnm8abni1pe00r04kis.apps.googleusercontent.com',
+    clientSecret:
+      process?.env?.GOOGLE_CLIENT_SECRET ??
+      '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',
+    clientSide: process?.env?.CLIENT_SIDE ?? 'https://test.ecoodentist.com',
+  },
 }));

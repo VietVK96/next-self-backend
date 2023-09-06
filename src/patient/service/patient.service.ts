@@ -37,8 +37,15 @@ import {
   PatientActsDependenciesDto,
   PatientExportDto,
   PatientThirdPartyDto,
+  RelauchDto,
 } from '../dto/index.dto';
 import { PatientThirdPartyRes } from '../reponse/index.res';
+import { CONFIGURATION } from 'src/constants/configuration';
+import * as dayjs from 'dayjs';
+import { LettersEntity } from 'src/entities/letters.entity';
+import { TranformVariableParam } from 'src/mail/dto/transformVariable.dto';
+import { DocumentMailService } from 'src/mail/services/document.mail.service';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 
 const TypeFile = {
   EXCEL: 'xlsx',
@@ -70,6 +77,11 @@ export class PatientService {
     private amcRepository: Repository<AmcEntity>,
     @InjectRepository(LibraryActEntity)
     private libraryActRepository: Repository<LibraryActEntity>,
+    @InjectRepository(LettersEntity)
+    private mailRepo: Repository<LettersEntity>,
+    private documentMailService: DocumentMailService,
+    @InjectRepository(ContactNoteEntity)
+    private contactNoteRepo: Repository<ContactNoteEntity>,
   ) {}
 
   async getExportQuery(res: Response, request: PatientExportDto): Promise<any> {
@@ -981,5 +993,88 @@ export class PatientService {
         },
       ],
     };
+  }
+
+  /**
+   * php/patients/unpaid/relauch.php
+   */
+  async relauch(payload: RelauchDto) {
+    const patient = await this.patientRepository.findOneOrFail({
+      where: {
+        id: payload.id,
+      },
+    });
+
+    const user = await this.userRepository.findOneOrFail({
+      where: {
+        id: payload.user_id,
+      },
+    });
+
+    const patientBalance = await this.contactUserRepository.findOne({
+      where: {
+        conId: patient.id,
+        usrId: user.id,
+      },
+      relations: ['patient'],
+    });
+
+    if (!patientBalance) {
+      return '<div style="page-break-after: always;">' + '</div>';
+    }
+    const updatePatientBalance = {
+      ...patientBalance,
+      relaunchLevel: patientBalance.relaunchLevel + 1,
+      relaunchDate: dayjs(new Date()).format('YYYY/MM/DD'),
+    };
+
+    const mailName =
+      CONFIGURATION.setting.MAIL_UNPAID_NAME +
+      ' ' +
+      updatePatientBalance.relaunchLevel;
+
+    try {
+      const qr = await this.mailRepo
+        .createQueryBuilder('mail')
+        .select('mail.msg')
+        .leftJoin('mail.user', 'user')
+        .andWhere('mail.title = :title', { title: mailName })
+        .andWhere('mail.patient IS NULL')
+        .andWhere('(mail.user IS NULL OR mail.usrId = :user)', {
+          user: user.id,
+        })
+        .addOrderBy('user.id', 'DESC')
+        .getOne();
+
+      const message = !qr
+        ? `Impossible d'imprimer le courrier ${mailName} pour le patient ${
+            patientBalance.patient.lastname +
+            ' ' +
+            patientBalance.patient.firstname
+          }.`
+        : qr.msg;
+      const mailParam: TranformVariableParam = {
+        message: message,
+        groupId: user.organizationId,
+        practitionerId: user.id,
+        patientId: patientBalance.conId,
+      };
+      const response = await this.documentMailService.transformVariable(
+        mailParam,
+      );
+
+      if (qr) {
+        const patientNode = new ContactNoteEntity();
+        patientNode.userId = user.id;
+        patientNode.conId = patientBalance.patient.id;
+        patientNode.date = dayjs(new Date()).format('YYYY-MM-DD');
+        patientNode.message = `Nouveau courrier ${mailName} pour le patient {${patientBalance.relaunchLevel}}`;
+        await this.contactUserRepository.save(updatePatientBalance);
+        await this.contactNoteRepo.save(patientNode);
+      }
+      return '<div style="page-break-after: always;">' + response + '</div>';
+    } catch (err) {
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+    }
   }
 }
