@@ -208,7 +208,6 @@ export class UserController {
       const buffer = await this.unpaidService.printUnpaid(param);
       return buffer;
     } catch (error) {
-      console.log('unpaid/print-controller', error);
       throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
     }
   }
@@ -218,24 +217,9 @@ export class UserController {
    */
   @Get('credit-balances/print')
   @UseGuards(TokenGuard)
-  async printCreditBalances(
-    @Res() res: Response,
-    @Query() param?: printUnpaidDto,
-  ) {
+  async printCreditBalances(@Query() param?: printUnpaidDto) {
     const buffer = await this.creditBalancesService.printCreditBalances(param);
-    res.set({
-      // pdf
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename=dossiers_crediteurs_${dayjs(
-        new Date(),
-      ).format('YYYYMMDD')}.pdf`,
-      'Content-Length': buffer.length,
-      // prevent cache
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      Pragma: 'no-cache',
-      Expires: 0,
-    });
-    res.end(buffer);
+    return buffer;
   }
 
   /**
@@ -258,6 +242,7 @@ export class UserController {
   async relaunchUnpaid(@Query() param: printUnpaidDto) {
     return await this.unpaidService.relaunchUnpaid(param);
   }
+
   /**
    * File : php/user/credit-balances/index.php 100%
    * @param payload

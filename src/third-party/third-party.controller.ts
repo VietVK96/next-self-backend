@@ -52,18 +52,8 @@ export class ThirdPartyController {
    */
   @Get('print')
   @UseGuards(TokenGuard)
-  async print(@Res() res: Response, @Query() payload: ThirdPartyDto) {
+  async print(@Query() payload: ThirdPartyDto) {
     const buffer = await this.thirdPartyService.printThirdParty(payload);
-    res.set({
-      // pdf
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename=suivi_tiers_payants.pdf`,
-      'Content-Length': buffer.length,
-      // prevent cache
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      Pragma: 'no-cache',
-      Expires: 0,
-    });
-    res.end(buffer);
+    return buffer;
   }
 }
