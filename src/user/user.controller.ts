@@ -213,7 +213,7 @@ export class UserController {
         'Content-Disposition': `inline; filename=impayes_${dayjs(
           new Date(),
         ).format('YYYYMMDD')}.pdf`,
-        'Content-Length': buffer.length || 0,
+        'Content-Length': buffer ? buffer.length : 0,
         // prevent cache
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         Pragma: 'no-cache',
