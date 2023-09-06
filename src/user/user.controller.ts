@@ -221,7 +221,7 @@ export class UserController {
       });
       res.end(buffer);
     } catch (error) {
-      console.log(error);
+      console.log('controller', error);
       throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
     }
   }
