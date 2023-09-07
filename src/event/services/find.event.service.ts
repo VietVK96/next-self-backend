@@ -462,7 +462,7 @@ export class FindEventService {
    * fuction findAll
    * File: App/Services/Event
    */
-  async _findAllForPrint(param: PrintReq) {
+  async _findAllForPrint(param: PrintReq, eventTitleFormat?: string[][]) {
     try {
       const sqlHome = await this.prepareSql(
         `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
@@ -549,6 +549,20 @@ export class FindEventService {
 
       const events: FindAllEventDto[] = [];
       for (const item of result) {
+        item.title = eventTitleFormat
+          .map((line) => {
+            return (
+              '<div>' +
+              line
+                .map((field) => {
+                  return item[field] || '';
+                })
+                .join(' ') +
+              '</div>'
+            );
+          })
+          .join('');
+
         const newItem = {
           ...item,
           color: {
@@ -628,6 +642,7 @@ export class FindEventService {
   async printCalendar(param: PrintReq, identity: number) {
     try {
       const session = await this.getSessionService.getUser(identity);
+      const eventTitleFormat = session?.settings?.eventTitleFormat;
       const preference = session?.preference;
 
       const begin = new Date(param?.start);
@@ -653,7 +668,7 @@ export class FindEventService {
 
       const lineHeight = Math.floor(690 / lineNumber);
 
-      const events = await this._findAllForPrint(param);
+      const events = await this._findAllForPrint(param, eventTitleFormat);
 
       let row = preference?.hmd;
 
@@ -695,16 +710,9 @@ export class FindEventService {
         );
       }
 
-      const newEvents = events.map((item) => {
-        return {
-          ...item,
-          title: '<div>' + item.title + '</div>',
-        };
-      });
-
       const data = {
-        events: newEvents,
-        eventLenght: newEvents?.length,
+        events,
+        eventLenght: events?.length,
         preference: preference,
         view: param?.view,
         start: param?.start,

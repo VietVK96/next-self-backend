@@ -213,8 +213,8 @@
                         el.classList.add('appointment');
                         el.style.top = ((Math.max(amStartToMinutes, startToMinutes) - amStartToMinutes) / frequency) * heightLine + 'px';
                         el.style.height = (((Math.min(pmEndToMinutes, endToMinutes) - Math.max(amStartToMinutes, startToMinutes)) / frequency) * heightLine) - 1 + 'px';
-                        el.style.backgroundColor = appointment.color.background;
-                        el.style.color = appointment.color.foreground;
+                        el.style.backgroundColor = 'white';
+                        el.style.color = "#ccc";
                         el.innerHTML = appointment.title;
                         if (pbw) {
                             el.classList.add('pbw');

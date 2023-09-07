@@ -227,13 +227,10 @@ export class AccountSettingService {
       await Promise.all(promises);
       delete user.privileged;
 
-      if (payload.short_name) user.abbr = payload.short_name;
-      if (payload.email) user.email = payload.email;
-      if (payload.company_name)
-        user.companyName =
-          payload.company_name.trim() !== ''
-            ? payload.company_name.trim()
-            : null;
+      user.abbr = payload?.short_name.trim() ?? '';
+      user.email = payload?.email.trim() ?? '';
+      user.companyName = payload.company_name.trim() ?? '';
+
       if (typeof payload.freelance === 'number')
         user.freelance = payload.freelance;
       if (typeof payload.agaMember === 'number')

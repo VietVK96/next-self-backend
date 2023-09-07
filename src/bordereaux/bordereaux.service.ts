@@ -34,6 +34,7 @@ import {
   BordereauxTotalAmountRes,
   BordereauxUserBankRes,
 } from './response/bordereaux.res';
+import Handlebars from 'handlebars';
 
 @Injectable()
 export class BordereauxService {
@@ -436,46 +437,299 @@ export class BordereauxService {
       throw new CBadRequestException(ErrorCode.NOT_FOUND_SLIPCHECK);
     }
     try {
-      const filePath = path?.join(
-        process.cwd(),
-        'templates/bordereaux',
-        'index.hbs',
-      );
-
-      const options = {
-        format: 'A4',
-        displayHeaderFooter: true,
-        footerTemplate: '<div></div>',
-        headerTemplate: '<div></div>',
-        margin: {
-          left: '5mm',
-          top: '5mm',
-          right: '5mm',
-          bottom: '5mm',
-        },
-      };
-
       const data = {
         slipCheck: slipCheck.length > 0 ? slipCheck[0] : {},
       };
 
-      const files: PdfTemplateFile[] = [
-        {
-          data,
-          path: filePath,
-        },
-      ];
+      const templates = `<head>
+  <title>Bordereau de remise {{slipCheck.number}}</title>
+ <style>
 
-      const helpers = {
-        dateFr: (date) => {
-          return dayjs(date).locale('fr').format('dddd D MMMM YYYY');
-        },
-        count: (arr) => arr.length,
-        checkPaymentChoice: (paymentChoice: string) =>
-          paymentChoice !== EnumSlipCheckPaymentChoice.CHEQUE,
-      };
+    @page {
+        margin: 5mm;
+        padding: 0;
+    }
 
-      return customCreatePdf({ files, options, helpers });
+    body {
+        font-family: Arial;
+        font-size: 12px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    header {
+        margin-bottom: 5mm;
+    }
+
+    header table th.titleColumn {
+        width: 50%;
+    }
+
+    header table th.numberTextColumn,
+    header table th.numberColumn {
+        width: 25%;
+        text-align: right;
+    }
+
+    div.accountOwner {
+        margin-bottom: 5mm;
+    }
+
+    div.bankRib {
+      
+        width: 45%;
+        background-color: #eeeeee;
+        margin-bottom: 10mm;
+    }
+
+    div.bankRib table {
+        font-size: 12px;
+        border-collapse: separate;
+        border-spacing: 2mm;
+    }
+
+    div.bankRib table td {
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+    div.bankInformation {
+      font-size: 12px;
+        margin-bottom: 10mm;
+    }
+
+    div.bankInformation table td {
+      font-size: 12px;
+        width: 50%;
+        vertical-align: top;
+    }
+
+    div.currency {
+      font-size: 12px;
+        width: 45%;
+        background-color: #eeeeee;
+        margin-bottom: 2mm;
+        text-align: center;
+    }
+
+    div.currency > div {
+        padding: 2mm;
+    }
+
+    div.payments table thead th,
+    div.payments table tbody td {
+        border: solid 0.1pt #000000;
+    }
+
+    div.payments table th,
+    div.payments table td {
+        padding: 2mm;
+    }
+
+    div.payments table th.payerColumn,
+    div.payments table td.payerColumn {
+        width: 45%;
+    }
+
+    div.payments table th.amountColumn,
+    div.payments table td.amountColumn {
+        width: 15%;
+    }
+
+    div.payments table td.amountColumn {
+        font-size: 12px;
+        text-align: right;
+    }
+
+    div.payments table th.checkNumberColumn,
+    div.payments table td.checkNumberColumn,
+    div.payments table th.checkBankColumn,
+    div.payments table td.checkBankColumn {
+        font-size: 12px;
+        width: 20%;
+    }
+
+    div.payments table td.paymentChoiceCount {
+        font-size: 12px;
+        text-align: right;
+    }
+
+    div.payments.noCheckColumn table th.payerColumn,
+    div.payments.noCheckColumn table td.payerColumn {
+        font-size: 12px;
+        width: 85%;
+    }
+
+    div.payments.noCheckColumn table th.checkNumberColumn,
+    div.payments.noCheckColumn table td.checkNumberColumn,
+    div.payments.noCheckColumn table th.checkBankColumn,
+    div.payments.noCheckColumn table td.checkBankColumn {
+        font-size: 12px;
+        display: none;
+    }
+
+    div.paymentDetails table td {
+        font-size: 12px;
+        padding: 2mm;
+    }
+
+    div.paymentDetails table td.amountTotalTitleColumn {
+        font-size: 12px;
+        text-align: right;
+    }
+
+    div.paymentDetails table td.amountTotalColumn {
+        font-size: 12px;
+        width: 15%;
+        text-align: right;
+    }
+
+    </style>
+</head>
+<body>
+  <header>
+    <table>
+      <tbody>
+        <tr>
+          <th class='titleColumn'>{{slipCheck.label}}</th>
+          <th class='numberTextColumn'>N°</th>
+          <th class='numberColumn'>{{slipCheck.number}}</th>
+        </tr>
+      </tbody>
+    </table>
+  </header>
+  <div class='accountOwner'>
+    <div>
+      Titulaire du compte :
+    </div>
+    <div>
+      Docteur:
+      {{#if (isEmpty slipCheck.libraryBank.user)}}
+        {{slipCheck.libraryBank.group.name}}
+      {{else}}
+        Docteur
+        {{slipCheck.libraryBank.user.lastname}}
+        {{slipCheck.libraryBank.user.firstname}}
+      {{/if}}
+    </div>
+  </div>
+  <div class='bankRib'>
+    <table>
+      <thead>
+        <tr>
+          <td></td>
+          <td>Code bq.</td>
+          <td>Guichet</td>
+          <td>Numéro compte</td>
+          <td>RIB</td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Compte</td>
+          <td>
+            <strong>{{slipCheck.libraryBank.bankCode}}</strong>
+          </td>
+          <td>
+            <strong>{{slipCheck.libraryBank.branchCode}}</strong>
+          </td>
+          <td>
+            <strong>{{slipCheck.libraryBank.accountNumber}}</strong>
+          </td>
+          <td>
+            <strong>{{slipCheck.libraryBank.bankDetails}}</strong>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class='bankInformation'>
+    <table>
+      <tbody>
+        <tr>
+          <td>
+            Date:
+            {{dateFr slipCheck.createdAt}}
+          </td>
+          <td>
+            <div>
+              {{slipCheck.libraryBank.name}}
+            </div>
+            {{#if (notEmpty slipCheck.libraryBank.address)}}
+              <div>
+                <div>
+                  {{slipCheck.libraryBank.address.street}}
+                </div>
+                <div>
+                  {{slipCheck.libraryBank.address.zipCode}}
+                  {{slipCheck.libraryBank.address.city}}
+                </div>
+              </div>
+            {{/if}}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class='currency'>
+    <div>
+      <strong> Versement en {{slipCheck.libraryBank.currency}}</strong>
+    </div>
+  </div>
+  <div class="payments {{#if (checkPaymentChoice slipCheck.paymentChoice)}} noCheckColumn {{/if}}">
+    <table>
+      <thead>
+        <tr>
+          <th class='payerColumn' colspan='2'>Émetteur</th>
+          <th class='checkBankColumn'>Banque</th>
+          <th class='checkNumberColumn'>N° Chèque</th>
+          <th class='amountColumn'>Montant</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each slipCheck.cashings}}
+          <tr>
+            <td class='payerColumn' colspan='2'>{{#if this.debtor}} {{this.debtor}} {{else}} {{this.contact.lastname}} {{this.contact.firstname}}{{/if}}</td>
+            <td class='checkBankColumn'>{{this.checkBank}}</td>
+            <td class='checkNumberColumn'>{{this.checkNumber}}</td>
+            <td class='amountColumn'>{{this.amount}}
+              {{../slipCheck.libraryBank.currency}}</td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+  <div class='paymentDetails'>
+    <table>
+      <tbody>
+        <tr>
+          <td class='paymentChoiceColumn'>{{count slipCheck.cashings}}
+            {{slipCheck.paymentChoice}}</td>
+          <td class='amountTotalTitleColumn'>Montant total de la remise :</td>
+          <td class='amountTotalColumn'>{{slipCheck.amount}}
+            {{slipCheck.libraryBank.currency}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+      </body>`;
+
+      Handlebars.registerHelper('dateFr', function (date) {
+        return dayjs(date).locale('fr').format('dddd D MMMM YYYY');
+      });
+
+      Handlebars.registerHelper('count', function (arr) {
+        return arr.length;
+      });
+
+      Handlebars.registerHelper('checkPaymentChoice', function (paymentChoice) {
+        return paymentChoice !== EnumSlipCheckPaymentChoice.CHEQUE;
+      });
+
+      return Handlebars.compile(templates)(data);
     } catch {
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
