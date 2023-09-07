@@ -30,6 +30,8 @@ import { LibraryActEntity } from 'src/entities/library-act.entity';
 import { DocumentMailService } from 'src/mail/services/document.mail.service';
 import { LettersEntity } from 'src/entities/letters.entity';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { BullModule } from '@nestjs/bull';
+import { BullConfigService } from 'src/common/config/bull.config';
 
 @Module({
   imports: [
@@ -58,6 +60,10 @@ import { ContactNoteEntity } from 'src/entities/contact-note.entity';
       ContactNoteEntity,
     ]),
     forwardRef(() => ContactModule),
+    BullModule.registerQueueAsync({
+      name: 'amount-due',
+      useClass: BullConfigService,
+    }),
   ],
   controllers: [
     PatientController,

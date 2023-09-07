@@ -19,6 +19,8 @@ import { UserEntity } from 'src/entities/user.entity';
 import { CcamUnitPriceEntity } from 'src/entities/ccamunitprice.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { checkNumber } from 'src/common/util/number';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @Injectable()
 export class TaskService {
@@ -34,6 +36,7 @@ export class TaskService {
     @InjectRepository(UserEntity)
     private userRepo: Repository<UserEntity>,
     private dataSource: DataSource,
+    @InjectQueue('amount-due') private readonly amountDueQueue: Queue,
   ) {}
 
   async updateEventTask(payload: EventTaskDto) {
@@ -91,6 +94,9 @@ export class TaskService {
         date: datetime,
       });
 
+      await this.amountDueQueue.add('update', {
+        groupId: identity.org,
+      });
       // Traçabilité IDS
       // @TODO Ids\Log::write('Acte', $patientId, 2);
     } catch (error) {
@@ -98,7 +104,10 @@ export class TaskService {
     }
   }
 
-  async updateEventTaskPatch(payload: EventTaskPatchDto) {
+  async updateEventTaskPatch(
+    payload: EventTaskPatchDto,
+    identity: UserIdentity,
+  ) {
     try {
       {
         let refreshAmount = false;
@@ -271,6 +280,10 @@ export class TaskService {
               `,
                 [Number(payload.value), payload.pk],
               );
+
+              this.amountDueQueue.add('update', {
+                groupId: identity.org,
+              });
             }
             if (payload?.name === 'caresheet') {
               const state = payload.value ? 2 : 1;
