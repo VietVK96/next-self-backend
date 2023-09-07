@@ -229,7 +229,7 @@ export class AccountSettingService {
 
       user.abbr = payload?.short_name.trim() ?? '';
       user.email = payload?.email.trim() ?? '';
-      user.companyName = payload.company_name.trim() ?? '';
+      user.companyName = payload?.company_name?.trim() ?? '';
 
       if (typeof payload.freelance === 'number')
         user.freelance = payload.freelance;

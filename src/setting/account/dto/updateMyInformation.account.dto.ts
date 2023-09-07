@@ -92,9 +92,11 @@ export class UpdateMyInformationDto {
   freelance?: number;
 
   @ApiProperty()
+  @IsNumber()
   agaMember?: number;
 
   @ApiProperty()
+  @IsNumber()
   droit_permanent_depassement?: number;
 
   @ApiProperty()
