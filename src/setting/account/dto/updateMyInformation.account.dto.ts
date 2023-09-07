@@ -8,6 +8,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
+import { IsStringOrNull, MaxLengthOrNull } from '../validator';
 
 class MedicalStruct {
   @ApiProperty()
@@ -29,17 +30,17 @@ export class UpdateMyInformationDto {
   short_name?: string;
 
   @ApiProperty()
-  @IsString()
+  @IsStringOrNull()
   phoneNumber?: string;
 
   @ApiProperty()
-  @IsString()
-  @MaxLength(20)
+  @IsStringOrNull()
+  @MaxLengthOrNull(20)
   gsm?: string;
 
   @ApiProperty()
-  @IsString()
-  @MaxLength(45)
+  @IsStringOrNull()
+  @MaxLengthOrNull(45)
   faxNumber?: string;
 
   @ApiProperty()
@@ -48,12 +49,12 @@ export class UpdateMyInformationDto {
   medical?: MedicalStruct;
 
   @ApiProperty()
-  @IsString()
-  @MaxLength(9)
+  @IsStringOrNull()
+  @MaxLengthOrNull(9)
   finess?: string;
 
   @ApiProperty()
-  @IsString()
+  @IsStringOrNull()
   company_name?: string;
 
   @ApiProperty()
