@@ -482,6 +482,7 @@ export class MailService {
         where: { id: inputs?.patient_id },
       });
       context.contact = JSON.parse(JSON.stringify(patient));
+      context.dental = {};
       context.nbr = context?.contact?.number;
       context.inseeKey = context?.contact?.insee_key;
       context.dental.insee = context?.contact?.insee;
@@ -1165,7 +1166,7 @@ export class MailService {
           userId: doctorId,
         },
       )
-      .orderBy('USR.USR_ID DESC')
+      .orderBy('USR.USR_ID', 'DESC')
       .getRawOne();
     if (!result) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND_LETTER);
@@ -1438,7 +1439,7 @@ export class MailService {
     const nodes = xmlDoc.getElementsByTagName('table');
     // Create a new DOMXPath object for XPath queries
     const xpath = new XPathEvaluator();
-    for (const node of nodes) {
+    for (const node of nodes ?? []) {
       // Insertion d'une largeur de 100% aux balises <table>.
       if (
         !node.hasAttribute('width') &&

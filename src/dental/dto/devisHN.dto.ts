@@ -357,4 +357,10 @@ export class DevisHNPdfDto extends DevisHNGetInitChampDto {
     required: false,
   })
   duplicate?: boolean;
+
+  @ApiProperty({
+    name: 'print',
+    required: false,
+  })
+  print?: number;
 }
