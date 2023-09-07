@@ -183,7 +183,9 @@ export class ContactService {
     record.amcs = await this.findAmcs(id);
 
     const image = await this.findLibraryLink(id);
-    record.image_library_link = image?.image_library_link ?? null;
+    record.image_library_link = image.image_library_link
+      ? image.image_library_link + `${record.nbr.toString().padStart(6, '0')}`
+      : null;
 
     if (record?.medical?.policyHolder) {
       record.medical.policy_holder = record?.medical?.policyHolder;
