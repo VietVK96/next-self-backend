@@ -329,7 +329,7 @@ export class FindEventService {
       if (events.length === 0)
         throw new CNotFoundRequestException("Le rendez-vous n'existe pas.");
 
-      let result: FindEventByIdRes = events.length > 0 ? events[0] : null;
+      const result: FindEventByIdRes = events.length > 0 ? events[0] : null;
       // TODO
       // if (result.avatar_id) {
       //   result.avatar_url = `php/contact/avatar.php?id=${result.contactId}`;

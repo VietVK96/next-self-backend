@@ -81,7 +81,7 @@ export class StickyNoteService {
           throw new Error('You cannot modify this sticky note');
         }
 
-        let qr1 = `UPDATE T_POSTIT_PTT
+        const qr1 = `UPDATE T_POSTIT_PTT
                     SET ${reqBody.msg ? `PTT_MSG = ?,` : ''}
                         PTT_COLOR = ?,
                         PTT_SHARED = ?

@@ -30,7 +30,6 @@ import { UnpaidDto, printUnpaidDto } from './dto/unpaid.dto';
 import { UpdatePassWordSettingDto } from './dto/user-setting.dto';
 import { ErrorCode } from 'src/constants/error';
 import { GetOneActiveRes } from './res/get-active.res';
-import * as dayjs from 'dayjs';
 import { CreditBalancesService } from './services/credit-balances.service';
 import { CreditBalancesDto } from './dto/credit-balances.dto';
 import type { Response } from 'express';
