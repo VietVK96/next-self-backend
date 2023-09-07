@@ -29,7 +29,6 @@ import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
 import { ActsService } from 'src/caresheets/service/caresheets.service';
 import * as dayjs from 'dayjs';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
-import { ConfigService } from '@nestjs/config';
 import { ErrorCode } from 'src/constants/error';
 import Handlebars from 'handlebars';
 
