@@ -127,6 +127,7 @@ export class DocumentServices {
     `;
     const queryParameters = [orgId, patientId, type];
 
+    //@Todo SQL-INJECTION
     if (tags && tags.length > 0) {
       const placeholders = tags.map(() => `?`).join(',');
       query += `

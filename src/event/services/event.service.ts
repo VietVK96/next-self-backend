@@ -116,7 +116,6 @@ export class EventService {
     datetime1: string,
     datetime2: string,
   ) {
-    const formatResources = resources.map((item) => `'${item}'`).join(',');
     const query = this.dataSource
       .createQueryBuilder()
       .select(
@@ -135,7 +134,9 @@ export class EventService {
         'eventOccurrence.resource_id = resource.id',
       )
       .leftJoin(ContactEntity, 'patient', 'patient.id = event.CON_ID')
-      .where(`eventOccurrence.resource IN (${formatResources})`)
+      .where(`eventOccurrence.resource IN (:resources)`, {
+        resources,
+      })
       .andWhere('eventOccurrence.date >= :datetime1', { datetime1 })
       .andWhere('eventOccurrence.date <= :datetime1', { datetime2 })
       .andWhere('eventOccurrence.exception = false')

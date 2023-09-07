@@ -511,16 +511,12 @@ export class BordereauxService {
       throw new CBadRequestException(ErrorCode.BORDEREAU_PAYMENT_IS_EMPTY);
     }
     try {
-      const formatPaymentId = payload.payment_id
-        .map((item) => `'${item}'`)
-        .join(',');
-
       const amounts: { totalAmount: number }[] = await this.dataSource.query(
         `SELECT SUM(payment.CSG_AMOUNT) as totalAmount
        FROM T_CASHING_CSG payment 
-       WHERE payment.CSG_ID IN (${formatPaymentId}) 
+       WHERE payment.CSG_ID IN (?) 
         AND payment.USR_ID = ?`,
-        [user.id],
+        [payload.payment_id, user.id],
       );
 
       const slipcheck = new SlipCheckEntity();

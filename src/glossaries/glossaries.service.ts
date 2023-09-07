@@ -83,7 +83,8 @@ export class GlossariesService {
 
     const lastGlossaryEntry: GlossaryEntryEntity[] =
       await this.dataSource.query(
-        `SELECT * FROM glossary_entry WHERE glossary_id = ${orgId} ORDER BY position DESC LIMIT 1`,
+        `SELECT * FROM glossary_entry WHERE glossary_id = ? ORDER BY position DESC LIMIT 1`,
+        [orgId],
       );
     const glossaryEntry = new GlossaryEntryEntity();
     glossaryEntry.glossaryId = Number(payload.glossary);
