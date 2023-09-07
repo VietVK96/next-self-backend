@@ -396,44 +396,6 @@ export class UnpaidService {
         totalAmount,
       };
 
-      const filePath = path.join(
-        process.cwd(),
-        'templates/unpaid',
-        'index.hbs',
-      );
-
-      const files = [{ path: filePath, data }];
-
-      const options = {
-        format: 'A4',
-        displayHeaderFooter: true,
-        // landscape: true,
-        margin: {
-          left: '10mm',
-          top: '20mm',
-          right: '10mm',
-          bottom: '20mm',
-        },
-
-        headerTemplate: `<div style="width:100%;margin-left:10mm"><span style="font-size: 8px;">${dayjs(
-          new Date(),
-        ).format(
-          'M/D/YY, hh:mm A',
-        )}</span><span style="font-size: 8px;margin-right:40mm; float: right;">Impayés</span></div>`,
-        footerTemplate: `
-        <div style="width: 100%;margin-right:10mm; font-size: 8px; display: flex; justify-content: space-between">
-          <span style="margin-left: 10mm">${this.configService.get(
-            'app.host',
-          )}/index#unpaid</span>
-          <div>
-            <span class="pageNumber"></span>
-            <span>/</span>
-            <span class="totalPages"></span>
-          </div>
-        </div>
-      `,
-      };
-
       const templates = `<html lang='fr'>
   <head>
     <meta charset='UTF-8' />
@@ -493,7 +455,7 @@ export class UnpaidService {
         </tbody>
     </table>
   </body>
-</html>`;
+      </html>`;
 
       Handlebars.registerHelper('dateShort', function (date) {
         return date ? dayjs(date).format('DD/MM/YYYY') : '';
@@ -501,13 +463,8 @@ export class UnpaidService {
 
       const html = Handlebars.compile(templates)(data);
 
-      const helpers = {
-        dateShort: (date) => (date ? dayjs(date).format('DD/MM/YYYY') : ''),
-      };
-
       return html;
     } catch (e) {
-      console.log('printUnpaid', e);
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }

@@ -2,7 +2,7 @@ import * as dayjs from 'dayjs';
 
 export function checkDay(day: any, format = 'YYYY-MM-DD'): string {
   const a = dayjs(day);
-  return a.isValid() ? a.format(format) : '';
+  return a.isValid() ? a.format(format) : null;
 }
 
 export const customDayOfYear = (day?: string | dayjs.Dayjs): string => {
