@@ -332,14 +332,12 @@ export class PatientService {
    *
    */
   async getPatientUser(userId: number, patientId: number) {
-    const patient = await this.patientRepository.find({
-      where: { id: patientId },
-      relations: {
-        patientUsers: true,
+    const patientUser = this.contactUserRepository.findOne({
+      where: {
+        usrId: userId,
+        conId: patientId,
       },
     });
-
-    const patientUser = patient[0].patientUsers.find((e) => e.usrId === userId);
     if (patientUser) {
       return patientUser;
     }
