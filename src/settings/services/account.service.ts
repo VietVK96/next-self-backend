@@ -19,6 +19,7 @@ import * as https from 'https';
 import { firstValueFrom } from 'rxjs';
 import { parseStringPromise } from 'xml2js';
 import { format } from 'date-fns';
+import { FindAccountRes } from 'src/setting/account/response/find.account.res';
 
 @Injectable()
 export class AccountService {
@@ -47,10 +48,88 @@ export class AccountService {
     return googleList[0];
   }
 
+  async find(userId: number): Promise<FindAccountRes> {
+    const users = await this.dataSource.query(
+      `
+    SELECT
+				T_USER_USR.USR_ID AS id,
+				T_USER_USR.ADR_ID AS address_id,
+				T_USER_USR.USR_ADMIN AS admin,
+				T_USER_USR.USR_LOG AS login,
+				T_USER_USR.USR_ABBR AS short_name,
+				T_USER_USR.USR_LASTNAME AS lastname,
+				T_USER_USR.USR_FIRSTNAME AS firstname,
+                T_USER_USR.color,
+				T_USER_USR.USR_MAIL AS email,
+				T_USER_USR.USR_PHONE_NUMBER AS phone_home_number,
+				T_USER_USR.USR_GSM AS phone_mobile_number,
+				T_USER_USR.USR_FAX_NUMBER AS fax_number,
+				T_USER_USR.USR_NUMERO_FACTURANT AS adeli,
+				T_USER_USR.finess AS finess,
+                T_USER_USR.USR_RATE_CHARGES AS taxes,
+                social_security_reimbursement_base_rate,
+                social_security_reimbursement_rate,
+				T_USER_USR.USR_AGA_MEMBER AS aga_member,
+				T_USER_USR.freelance,
+				T_USER_USR.USR_DEPASSEMENT_PERMANENT AS droit_permanent_depassement,
+				T_USER_USR.USR_SIGNATURE AS signature,
+				T_USER_USR.USR_TOKEN AS token,
+				T_USER_USR.USR_BCB_LICENSE AS bcbdexther_license,
+				T_LICENSE_LIC.LIC_END AS end_of_license_at,
+                T_USER_TYPE_UST.UST_PRO AS professional,
+                T_USER_PREFERENCE_USP.signature_automatic,
+                user_medical.rpps_number AS rpps_number
+			FROM T_USER_USR
+            JOIN T_USER_PREFERENCE_USP ON T_USER_PREFERENCE_USP.USR_ID = T_USER_USR.USR_ID
+			LEFT OUTER JOIN T_LICENSE_LIC ON T_LICENSE_LIC.USR_ID = T_USER_USR.USR_ID AND T_USER_USR.USR_CLIENT = 0
+			LEFT OUTER JOIN T_USER_TYPE_UST ON T_USER_TYPE_UST.UST_ID = T_USER_USR.UST_ID
+			LEFT OUTER JOIN user_medical ON user_medical.user_id = T_USER_USR.USR_ID
+			WHERE T_USER_USR.USR_ID = ?`,
+      [userId],
+    );
+
+    const user = users.length > 0 ? users[0] : {};
+    const address = await this.dataSource.query(
+      `
+      SELECT
+                  T_ADDRESS_ADR.ADR_ID AS id,
+                  T_ADDRESS_ADR.ADR_STREET AS street,
+                  T_ADDRESS_ADR.ADR_STREET_COMP AS street_comp,
+                  T_ADDRESS_ADR.ADR_ZIP_CODE AS zip_code,
+                  T_ADDRESS_ADR.ADR_CITY AS city,
+                  T_ADDRESS_ADR.ADR_COUNTRY AS country,
+                  T_ADDRESS_ADR.ADR_COUNTRY_ABBR AS country_code
+              FROM T_ADDRESS_ADR
+              WHERE T_ADDRESS_ADR.ADR_ID = ?`,
+      user.address_id,
+    );
+    user.address = address[0];
+    delete user.address_id;
+
+    const connections = await this.dataSource.query(
+      `
+    SELECT
+				T_USER_CONNECTION_USC.USC_IP AS ip,
+				T_USER_CONNECTION_USC.USC_SESSION_ID AS session_id,
+				T_USER_CONNECTION_USC.USC_AGENT AS agent,
+				T_USER_CONNECTION_USC.created_at
+			FROM T_USER_CONNECTION_USC
+			WHERE T_USER_CONNECTION_USC.USR_ID = ?
+			ORDER BY T_USER_CONNECTION_USC.created_at DESC
+			LIMIT 1`,
+      [userId],
+    );
+
+    return {
+      user,
+      userConnection: connections.length > 0 ? connections[0] : {},
+    };
+  }
+
   async fetchAccountWzagenda(identity: UserIdentity): Promise<WzagendaRes> {
     try {
       const [user, wzAgendaUser] = await Promise.all([
-        this.userRepository.findOne({ where: { id: identity?.id } }),
+        this.find(identity?.id),
         this.syncWzagendaUserRepository.findOne({
           where: { id: identity?.id },
         }),
