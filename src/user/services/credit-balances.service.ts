@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { printUnpaidDto } from '../dto/unpaid.dto';
-import * as path from 'path';
 import * as dayjs from 'dayjs';
 import { unpaidSort } from 'src/constants/unpaid';
-import { customCreatePdf } from 'src/common/util/pdf';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';

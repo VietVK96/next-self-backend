@@ -3,9 +3,7 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { OrganizationEntity } from 'src/entities/organization.entity';
 import { DataSource } from 'typeorm';
 import { StorageService } from './storage.service';
-import { StringHelper } from 'src/common/util/string-helper';
-import { ErrorCode } from 'src/constants/error';
-import { UpdateStoragePackDto, UsersStorageDto } from '../dto/storage-pack.dto';
+import { UsersStorageDto } from '../dto/storage-pack.dto';
 
 @Injectable()
 export class UsersStorageSpace {
