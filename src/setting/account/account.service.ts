@@ -11,10 +11,10 @@ import { ErrorCode } from 'src/constants/error';
 import sharp from 'sharp';
 import { SIGNATURE } from 'src/constants/users';
 import { PrivilegeEntity } from 'src/entities/privilege.entity';
-import { AmoEntity } from 'src/entities/amo.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { ConfigService } from '@nestjs/config';
+import { UserAmoEntity } from 'src/entities/user-amo.entity';
 
 @Injectable()
 export class AccountSettingService {
@@ -239,12 +239,12 @@ export class AccountSettingService {
         delete user.medical;
       }
 
-      if (user.amo) {
+      if (user?.amo) {
         const amo = user.amo;
         amo.codeConvention = payload?.amo?.code_convention
           ? payload.amo.code_convention
           : null;
-        await queryRunner.manager.save(AmoEntity, amo);
+        await queryRunner.manager.save(UserAmoEntity, amo);
         delete user.amo;
       }
 
