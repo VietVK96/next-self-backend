@@ -27,9 +27,6 @@ import {
 } from 'src/entities/cashing.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
 import { ActsService } from 'src/caresheets/service/caresheets.service';
-import { UserIdentity } from 'src/common/decorator/auth.decorator';
-import { customCreatePdf } from 'src/common/util/pdf';
-import * as path from 'path';
 import * as dayjs from 'dayjs';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ConfigService } from '@nestjs/config';

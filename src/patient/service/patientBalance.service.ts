@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ContactEntity } from 'src/entities/contact.entity';
-import { UserEntity } from 'src/entities/user.entity';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import {
   PatientBalanceUpdatePayloadDto,
   PatientBalanceUpdateQueryDto,
@@ -11,7 +9,6 @@ import { PatientService } from './patient.service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { CashingEntity } from 'src/entities/cashing.entity';
 import { CashingContactEntity } from 'src/entities/cashing-contact.entity';
-import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
@@ -23,8 +20,6 @@ export class PatientBalanceService {
     private readonly paymentRepo: Repository<CashingEntity>,
     @InjectRepository(CashingContactEntity)
     private readonly cashingContactRepo: Repository<CashingContactEntity>,
-    @InjectRepository(ContactUserEntity)
-    private readonly contactUserRepo: Repository<ContactUserEntity>,
     private patientService: PatientService,
     @InjectQueue('amount-due') private readonly amountDueQueue: Queue,
   ) {}

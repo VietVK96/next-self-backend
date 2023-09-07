@@ -1071,11 +1071,10 @@ export class QuotationServices {
         },
         select: { paymentScheduleId: true },
       });
-      let paymentSchedule;
       let paymentScheduleId: number | null = null;
       if (paymentScheduleStatement) {
         paymentScheduleId = paymentScheduleStatement?.paymentScheduleId;
-        paymentSchedule = await this.paymentScheduleService.duplicate(
+        await this.paymentScheduleService.duplicate(
           paymentScheduleId,
           identity,
         );
@@ -1518,7 +1517,7 @@ export class QuotationServices {
           break;
       }
 
-      const result = await this.userPreferenceQuotationRepository.save(
+      await this.userPreferenceQuotationRepository.save(
         userPreferenceQuotation,
       );
 

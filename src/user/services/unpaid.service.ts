@@ -12,8 +12,6 @@ import { format } from 'date-fns';
 import { Parser } from 'json2csv';
 import { Response } from 'express';
 import { ErrorCode } from 'src/constants/error';
-import { customCreatePdf } from 'src/common/util/pdf';
-import * as path from 'path';
 import * as dayjs from 'dayjs';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { LettersEntity } from 'src/entities/letters.entity';

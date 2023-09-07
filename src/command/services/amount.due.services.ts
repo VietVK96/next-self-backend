@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { checkNumber } from 'src/common/util/number';
-import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
 import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 import { ThirdPartyStatusEnum } from 'src/enum/third-party-status.enum';
@@ -18,8 +16,6 @@ export class AmountDueService {
     private thirdPartyAmoRepository: Repository<ThirdPartyAmoEntity>,
     @InjectRepository(ThirdPartyAmcEntity)
     private thirdPartyAmcRepository: Repository<ThirdPartyAmcEntity>,
-    @InjectRepository(ContactUserEntity)
-    private readonly patientUserRepository: Repository<ContactUserEntity>,
   ) {}
 
   /**

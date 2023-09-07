@@ -3,9 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LibraryBankEntity } from 'src/entities/library-bank.entity';
 import 'dayjs/locale/fr';
 import * as dayjs from 'dayjs';
-import * as path from 'path';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
 import { ErrorCode } from 'src/constants/error';
 import {
   EnumSlipCheckPaymentChoice,

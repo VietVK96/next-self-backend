@@ -5,11 +5,9 @@ import {
   Param,
   Query,
   UseGuards,
-  Res,
   Post,
   Body,
 } from '@nestjs/common';
-import type { Response } from 'express';
 import { BordereauxService } from './bordereaux.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
