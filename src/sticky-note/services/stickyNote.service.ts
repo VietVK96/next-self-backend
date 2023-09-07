@@ -17,12 +17,13 @@ export class StickyNoteService {
   async delete(stickyNoteId: number, userId: number) {
     const patient = await this.stickyNoteRepo.findOneBy({ id: stickyNoteId });
     if (patient['CON_ID']) {
-      await this.dataSource.query(
-        `DELETE FROM T_POSTIT_PTT WHERE PTT_ID = ${stickyNoteId}`,
-      );
+      await this.dataSource.query(`DELETE FROM T_POSTIT_PTT WHERE PTT_ID = ?`, [
+        stickyNoteId,
+      ]);
     } else {
       await this.dataSource.query(
-        `DELETE FROM T_POSTIT_USER_PTU WHERE PTT_ID = ${stickyNoteId} AND USR_ID = ${userId}`,
+        `DELETE FROM T_POSTIT_USER_PTU WHERE PTT_ID = ? AND USR_ID = ?`,
+        [stickyNoteId, userId],
       );
     }
     return {};
@@ -30,11 +31,11 @@ export class StickyNoteService {
 
   // File: php/stickyNote/findAll.php 26-49
   async findAll(contactId: number, userId: number): Promise<StickyNoteRes[]> {
-    const qr = `SELECT PTT.PTT_ID id,
+    let qr = `SELECT PTT.PTT_ID id,
                     PTT.PTT_MSG msg,
                     PTT.PTT_COLOR color,
                     PTT.PTT_EDITABLE editable,
-                    IF (PTT.PTT_SHARED = 1 OR PTT.USR_ID = ${userId}, 1, 0) shareable,
+                    IF (PTT.PTT_SHARED = 1 OR PTT.USR_ID = ?, 1, 0) shareable,
                     PTT.PTT_SHARED shared,
                     DATE_FORMAT(PTT.created_at, '%Y-%m-%dT%TZ') AS createdOn,
                     PTU.PTU_WIDTH width,
@@ -43,10 +44,14 @@ export class StickyNoteService {
                     PTU.PTU_Y top
                 FROM T_POSTIT_PTT PTT
                 JOIN T_POSTIT_USER_PTU PTU ON PTU.PTT_ID = PTT.PTT_ID
-                WHERE PTU.USR_ID = ${userId} AND PTT.CON_ID ${
-      contactId ? ` = ${contactId}` : ' IS NULL'
-    }`;
-    const result = await this.dataSource.query(qr);
+                WHERE PTU.USR_ID = ? AND PTT.CON_ID 
+                `;
+    if (contactId) {
+      qr += `= ?`;
+    } else {
+      qr += ` IS NULL`;
+    }
+    const result = await this.dataSource.query(qr, [userId, userId, contactId]);
     // convert shareable to number
     return result.map((item) => {
       return { ...item, shareable: Number(item.shareable) } as StickyNoteRes;
@@ -68,18 +73,33 @@ export class StickyNoteService {
         const stickyNoteRow = await queryRunner.query(
           `SELECT USR_ID, PTT_SHARED
                 FROM T_POSTIT_PTT 
-                WHERE PTT_ID = ${reqBody.id}
+                WHERE PTT_ID = ?
           `,
+          [reqBody.id],
         );
         if (stickyNoteRow.length === 0) {
           throw new Error('You cannot modify this sticky note');
         }
-        const qr1 = `UPDATE T_POSTIT_PTT
-                    SET ${reqBody.msg ? `PTT_MSG = "${reqBody.msg}",` : ''}
-                        PTT_COLOR = ${reqBody.color},
-                        PTT_SHARED = ${reqBody.shared}
-                    WHERE PTT_ID = ${reqBody.id}`;
-        await queryRunner.query(qr1);
+
+        let qr1 = `UPDATE T_POSTIT_PTT
+                    SET ${reqBody.msg ? `PTT_MSG = ?,` : ''}
+                        PTT_COLOR = ?,
+                        PTT_SHARED = ?
+                    WHERE PTT_ID = ?`;
+        if (reqBody.msg) {
+          await queryRunner.query(qr1, [
+            reqBody.msg,
+            reqBody.color,
+            reqBody.shared,
+            reqBody.id,
+          ]);
+        } else {
+          await queryRunner.query(qr1, [
+            reqBody.color,
+            reqBody.shared,
+            reqBody.id,
+          ]);
+        }
 
         const parameters = [reqBody.id, userId, reqBody.width, reqBody.height];
         parameters.push(Math.max(0, reqBody.left));
@@ -96,27 +116,29 @@ export class StickyNoteService {
         if (userId === stickyNote['USR_ID']) {
           if (Boolean(stickyNote['PTT_SHARED']) && !reqBody.shared) {
             const qr3 = `DELETE FROM T_POSTIT_USER_PTU
-                        WHERE PTT_ID = ${reqBody.id}
-                          AND USR_ID != ${userId}`;
-            await queryRunner.query(qr3);
+                        WHERE PTT_ID = ?
+                          AND USR_ID != ?`;
+            await queryRunner.query(qr3, [reqBody.id, userId]);
           } else if (!stickyNote['PTT_SHARED'] && Boolean(reqBody.shared)) {
             const qr4 = `INSERT IGNORE INTO T_POSTIT_USER_PTU (PTT_ID, USR_ID)
-                        SELECT ${reqBody.id}, USR_ID
+                        SELECT ?, USR_ID
                         FROM T_USER_USR
-                        WHERE organization_id = ${groupId}
-                          AND USR_ID != ${userId}`;
-            await queryRunner.query(qr4);
+                        WHERE organization_id = ?
+                          AND USR_ID != ?`;
+            await queryRunner.query(qr4, [reqBody.id, groupId, userId]);
           }
         }
       } else {
         if (!reqBody?.contact) {
           const result = await queryRunner.query(
-            `INSERT INTO T_POSTIT_PTT (USR_ID) VALUES (${userId})`,
+            `INSERT INTO T_POSTIT_PTT (USR_ID) VALUES (?)`,
+            [userId],
           );
           insertedId = result.insertId;
         } else {
           const result = await queryRunner.query(
-            `INSERT INTO T_POSTIT_PTT (USR_ID, CON_ID) VALUES (${userId}, ${reqBody.contact})`,
+            `INSERT INTO T_POSTIT_PTT (USR_ID, CON_ID) VALUES (?, ?)`,
+            [userId, reqBody.contact],
           );
           insertedId = result.insertId;
         }

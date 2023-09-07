@@ -170,7 +170,9 @@ export class TaskService {
                 .createQueryBuilder()
                 .select('T_DENTAL_EVENT_TASK_DET.DET_COMP')
                 .from('T_DENTAL_EVENT_TASK_DET', 'T_DENTAL_EVENT_TASK_DET')
-                .where(`T_DENTAL_EVENT_TASK_DET.ETK_ID = ${payload.pk}`)
+                .where(`T_DENTAL_EVENT_TASK_DET.ETK_ID = :pk`, {
+                  pk: payload.pk,
+                })
                 .getRawOne();
 
               const installComp = `INSERT INTO T_DENTAL_EVENT_TASK_DET (ETK_ID, DET_COMP)
@@ -321,7 +323,7 @@ export class TaskService {
                   .createQueryBuilder()
                   .select('T_DENTAL_EVENT_TASK_DET.DET_TYPE')
                   .from('T_DENTAL_EVENT_TASK_DET', 'T_DENTAL_EVENT_TASK_DET')
-                  .where(`ETK_ID = ${id}`)
+                  .where(`ETK_ID = :id`, { id })
                   .getRawOne();
               if (nomenclatureStatement.DET_TYPE === 'CCAM') {
                 const statements: {
@@ -536,25 +538,30 @@ export class TaskService {
                     radiographies.map(async (radiographie, index) => {
                       if (!index) {
                         await queryRunner.query(
-                          `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1 WHERE ETK_ID = ${radiographie.id}`,
+                          `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1 WHERE ETK_ID = ?`,
+                          [radiographie.id],
                         );
                         if (Number(radiographie.coef) === 0.5) {
                           await Promise.all([
                             queryRunner.query(
-                              `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
+                              `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1, DET_COEF = 1 WHERE ETK_ID = ?`,
+                              [radiographie.id],
                             ),
                             queryRunner.query(
-                              `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ${radiographie.id}`,
+                              `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ?`,
+                              [radiographie.id],
                             ),
                           ]);
                         }
                       } else if (Number(radiographie.coef) === 1) {
                         await Promise.all([
                           queryRunner.query(
-                            `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 2, DET_COEF = 0.5 WHERE ETK_ID = ${radiographie.id}`,
+                            `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 2, DET_COEF = 0.5 WHERE ETK_ID = ?`,
+                            [radiographie.id],
                           ),
                           queryRunner.query(
-                            `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT / 2 WHERE ETK_ID = ${radiographie.id}`,
+                            `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT / 2 WHERE ETK_ID = ?`,
+                            [radiographie.id],
                           ),
                         ]);
                         discountedCodes.push(radiographie.name);
@@ -567,10 +574,12 @@ export class TaskService {
                       if (Number(radiographie.coef) === 0.5) {
                         await Promise.all([
                           queryRunner.query(
-                            `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = NULL, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
+                            `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = NULL, DET_COEF = 1 WHERE ETK_ID = ?`,
+                            [radiographie.id],
                           ),
                           queryRunner.query(
-                            `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ${radiographie.id}`,
+                            `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ?`,
+                            [radiographie.id],
                           ),
                         ]);
                       }

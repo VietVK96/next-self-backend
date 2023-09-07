@@ -684,9 +684,9 @@ export class PlanService {
               DELETE ETK, DET
               FROM T_EVENT_TASK_ETK ETK
               LEFT OUTER JOIN T_DENTAL_EVENT_TASK_DET DET ON DET.ETK_ID = ETK.ETK_ID
-              WHERE ETK.EVT_ID = ${event?.id}
-              AND ETK.ETK_ID NOT IN (${listTask})`;
-            await manager.query(sql);
+              WHERE ETK.EVT_ID = ?
+              AND ETK.ETK_ID NOT IN (?)`;
+            await manager.query(sql, [event?.id, listTask]);
           }
 
           events.push(event?.id);
@@ -698,39 +698,55 @@ export class PlanService {
             EVT_ID
           FROM T_PLAN_EVENT_PLV
           WHERE PLF_ID = ?
-            AND EVT_ID NOT IN (${events.join()})`;
+            AND EVT_ID NOT IN (?)`;
           const eventResult = await manager.query(eventStatement, [
             options?.id,
+            events.join(),
           ]);
           const eventsId = eventResult.map((item) => item.EVT_ID);
           for (const eventId of eventsId) {
-            await manager.query(`
+            await manager.query(
+              `
             DELETE T_PLAN_EVENT_PLV
             FROM T_PLAN_EVENT_PLV
             JOIN T_EVENT_EVT
-            WHERE T_EVENT_EVT.EVT_ID = ${eventId}
-            AND T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID`);
+            WHERE T_EVENT_EVT.EVT_ID = ?
+            AND T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID`,
+              [eventId],
+            );
 
-            await manager.query(`
+            await manager.query(
+              `
             DELETE T_DENTAL_EVENT_TASK_DET
             FROM T_DENTAL_EVENT_TASK_DET
             JOIN T_EVENT_TASK_ETK
-            WHERE T_EVENT_TASK_ETK.EVT_ID = ${eventId}
-            AND T_EVENT_TASK_ETK.ETK_ID = T_DENTAL_EVENT_TASK_DET.ETK_ID`);
+            WHERE T_EVENT_TASK_ETK.EVT_ID = ?
+            AND T_EVENT_TASK_ETK.ETK_ID = T_DENTAL_EVENT_TASK_DET.ETK_ID`,
+              [eventId],
+            );
 
-            await manager.query(`
+            await manager.query(
+              `
             DELETE T_EVENT_TASK_ETK
             FROM T_EVENT_TASK_ETK
-            WHERE T_EVENT_TASK_ETK.EVT_ID = ${eventId}`);
+            WHERE T_EVENT_TASK_ETK.EVT_ID = ?`,
+              [eventId],
+            );
 
-            await manager.query(`
+            await manager.query(
+              `
             DELETE FROM event_occurrence_evo
-            WHERE evt_id = ${eventId}`);
+            WHERE evt_id = ?`,
+              [eventId],
+            );
 
-            await manager.query(`
+            await manager.query(
+              `
             DELETE T_EVENT_EVT
             FROM T_EVENT_EVT
-            WHERE T_EVENT_EVT.EVT_ID = ${eventId}`);
+            WHERE T_EVENT_EVT.EVT_ID = ?`,
+              [eventId],
+            );
           }
         }
         return options?.id;
@@ -871,14 +887,14 @@ export class PlanService {
         .createQueryBuilder()
         .delete()
         .from('T_DENTAL_QUOTATION_DQO')
-        .where(`PLF_ID = ${id}`);
+        .where(`PLF_ID = :id`, { id });
       await queryRunner.query(dentalQuery.getSql());
 
       const invoiceQuery = this.dataSource
         .createQueryBuilder()
         .select()
         .from('T_PLAN_PLF', 'T_PLAN_PLF')
-        .where(`T_PLAN_PLF.PLF_ID = ${id}`);
+        .where(`T_PLAN_PLF.PLF_ID = :id`, { id });
       const invoice = await queryRunner.query(invoiceQuery.getSql());
 
       if (invoice.BIL_ID) {
@@ -886,14 +902,14 @@ export class PlanService {
           .createQueryBuilder()
           .update('T_PLAN_PLF')
           .set({ BIL_ID: null })
-          .where(`PLF_ID = ${id}`);
+          .where(`PLF_ID = :id`, { id });
         await queryRunner.query(updatePlanQuery.getSql());
 
         const deleteBillQuery = this.dataSource
           .createQueryBuilder()
           .delete()
           .from('T_BILL_BIL')
-          .where(`BIL_ID = ${invoice.id}`)
+          .where(`BIL_ID = :id`, { id: invoice.id })
           .andWhere('BIL_LOCK = 0');
         await queryRunner.query(deleteBillQuery.getSql());
       }
