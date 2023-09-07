@@ -133,7 +133,6 @@ export class SettingOrganizationService {
         const auth = `${organizationId.toString().padStart(5, '0')}`;
         const dir = await this.configService.get('app.uploadDir');
         await this.removeOldFile(currentOrg?.uplId, dir, auth);
-        console.log('hihi');
 
         if (logo) {
           await this.uploadservice._checkGroupStorageSpace(
