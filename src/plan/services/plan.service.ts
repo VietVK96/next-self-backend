@@ -492,7 +492,7 @@ export class PlanService {
               ...task,
             };
 
-            const insertEventTaskk = await manager.save(EventTaskEntity, {
+            const newEventTask: EventTaskEntity = {
               libraryActId: task?.library_act_id ?? null,
               libraryActQuantityId: task?.library_act_quantity_id,
               usrId: event?.user?.id,
@@ -507,8 +507,12 @@ export class PlanService {
               color: task?.color,
               qty: task?.qty,
               ccamFamily: task?.ccam_family,
-            } as EventTaskEntity);
-
+            };
+            if (!this._empty(task?.id)) newEventTask.id = task.id;
+            const insertEventTaskk = await manager.save(
+              EventTaskEntity,
+              newEventTask,
+            );
             if (this._empty(task?.id)) {
               task.id = insertEventTaskk?.id;
               const act = await manager.findOne(EventTaskEntity, {
