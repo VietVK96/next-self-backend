@@ -74,7 +74,7 @@ export class PatientBalanceService {
         amountProsthesis: newBalanceProsthesis,
       });
       const oldContactUser = await this.contactUserRepo.findOne({
-        where: { conId: patientId },
+        where: { conId: patientId, usrId: doctorId },
       });
       const contactUser: ContactUserEntity = {
         ...oldContactUser,
