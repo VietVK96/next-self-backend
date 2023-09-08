@@ -86,7 +86,7 @@ export class BordereauxService {
       .select([
         'bordereau.id as id',
         'bordereau.date as date',
-        'bordereau.nbr as nbr',
+        'bordereau.number as nbr',
         'bordereau.label as label',
         'bordereau.paymentChoice as paymentChoice',
         'bordereau.paymentCount as paymentCount',
@@ -114,7 +114,7 @@ export class BordereauxService {
           }
           break;
         case 'bordereau.number':
-          queryBuilder.andWhere('bordereau.nbr LIKE :number', {
+          queryBuilder.andWhere('bordereau.number LIKE :number', {
             number: `%${valueParam}%`,
           });
           break;
@@ -145,7 +145,7 @@ export class BordereauxService {
       : 0;
     const sortList = payload?.sort
       ? [bordereauSort[payload?.sort]]
-      : ['bordereau.date', 'bordereau.nbr'];
+      : ['bordereau.date', 'bordereau.number'];
     for (const sortItem of sortList) {
       queryBuilder.addOrderBy(
         sortItem,
@@ -440,78 +440,77 @@ export class BordereauxService {
       };
 
       const templates = `<head>
-  <title>Bordereau de remise {{slipCheck.number}}</title>
- <style>
+        <title>Bordereau de remise {{slipCheck.number}}</title>
+        <style>
 
-    @page {
-        margin: 5mm;
-        padding: 0;
-    }
+          @page {
+            margin: 5mm;
+            padding: 0;
+          }
 
-    body {
-        font-family: Arial;
-        font-size: 12px;
-    }
+          body {
+            font-family: Arial;
+            font-size: 12px;
+          }
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+          }
 
-    header {
-        margin-bottom: 5mm;
-    }
+          header {
+            margin-bottom: 5mm;
+          }
 
-    header table th.titleColumn {
-        width: 50%;
-    }
+          header table th.titleColumn {
+            width: 50%;
+          }
 
-    header table th.numberTextColumn,
-    header table th.numberColumn {
-        width: 25%;
-        text-align: right;
-    }
+          header table th.numberTextColumn,
+          header table th.numberColumn {
+            width: 25%;
+            text-align: right;
+          }
 
-    div.accountOwner {
-        margin-bottom: 5mm;
-    }
+          div.accountOwner {
+            margin-bottom: 5mm;
+          }
 
-    div.bankRib {
-      
-        width: 45%;
-        background-color: #eeeeee;
-        margin-bottom: 10mm;
-    }
+          div.bankRib {
+            width: 45%;
+            background-color: #eeeeee;
+            margin-bottom: 10mm;
+          }
 
-    div.bankRib table {
-        font-size: 12px;
-        border-collapse: separate;
-        border-spacing: 2mm;
-    }
+          div.bankRib table {
+            font-size: 12px;
+            border-collapse: separate;
+            border-spacing: 2mm;
+          }
 
-    div.bankRib table td {
-        font-size: 12px;
-        white-space: nowrap;
-    }
+          div.bankRib table td {
+            font-size: 12px;
+            white-space: nowrap;
+          }
 
-    div.bankInformation {
-      font-size: 12px;
-        margin-bottom: 10mm;
-    }
+          div.bankInformation {
+            font-size: 12px;
+            margin-bottom: 10mm;
+          }
 
-    div.bankInformation table td {
-      font-size: 12px;
-        width: 50%;
-        vertical-align: top;
-    }
+          div.bankInformation table td {
+            font-size: 12px;
+            width: 50%;
+            vertical-align: top;
+          }
 
-    div.currency {
-      font-size: 12px;
-        width: 45%;
-        background-color: #eeeeee;
-        margin-bottom: 2mm;
-        text-align: center;
-    }
+          div.currency {
+            font-size: 12px;
+            width: 45%;
+            background-color: #eeeeee;
+            margin-bottom: 2mm;
+            text-align: center;
+          }
 
     div.currency > div {
         padding: 2mm;
@@ -727,8 +726,29 @@ export class BordereauxService {
         return paymentChoice !== EnumSlipCheckPaymentChoice.CHEQUE;
       });
 
+      Handlebars.registerHelper('isEmpty', function (v1) {
+        if (!v1) {
+          return true;
+        }
+        if (Array?.isArray(v1) || typeof v1 === 'string') {
+          return v1.length === 0;
+        }
+        if (typeof v1 === 'object') {
+          return Object.keys(v1).length === 0;
+        }
+      });
+
+      Handlebars.registerHelper('notEmpty', function (v1) {
+        if (Array?.isArray(v1) || typeof v1 === 'string') {
+          return v1.length !== 0;
+        }
+        if (typeof v1 === 'object') {
+          return Object.keys(v1).length !== 0;
+        }
+      });
+
       return Handlebars.compile(templates)(data);
-    } catch {
+    } catch (e) {
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
