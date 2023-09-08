@@ -58,8 +58,19 @@ export class SettingOrganizationService {
     body: UpdateOrganizationDto,
     logo: Express.Multer.File,
   ): Promise<SuccessResponse> {
+    const emailTemplate = /^[^@]+@[^@]+\.[^.]*[^.\s]+[^.\s]*$/;
+
+    if (!emailTemplate.test(body.email)) {
+      throw new CBadRequestException('This value is not a valid email address');
+    }
+
+    if (body.phone_number.length < 1 || body.phone_number.length > 17) {
+      throw new CBadRequestException('This value is not a valid phone number.');
+    }
+
     try {
       if (!userId || !organizationId) throw ErrorCode.FORBIDDEN;
+
       const currentOrg = await this.organizationRepository.findOne({
         where: { id: organizationId },
         relations: { address: true },
@@ -148,13 +159,15 @@ export class SettingOrganizationService {
       }
       const practitioners = await this._getPractitioners(organizationId);
 
+      const arrUser: UserPreferenceEntity[] = [];
       for (const practitioner of practitioners) {
-        const userSetting = practitioner?.setting;
-        await this.dataSource.getRepository(UserPreferenceEntity).save({
-          ...userSetting,
+        arrUser.push({
+          ...practitioner.setting,
           sesamVitaleModeDesynchronise: mode_desynchronise,
         });
       }
+
+      await this.dataSource.getRepository(UserPreferenceEntity).save(arrUser);
 
       await this.organizationRepository.save({
         ...currentOrg,
@@ -166,6 +179,7 @@ export class SettingOrganizationService {
         imageLibraryLink: image_library_link,
         settings: settings,
       });
+
       return { success: true };
     } catch (error) {
       throw new CBadRequestException(error);
