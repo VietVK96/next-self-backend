@@ -65,8 +65,8 @@
                 <tbody>
                 <tr>
                     <td>
-                        <b><?php echo trans("Liste des soins"); ?></b><br />
-                        <?php echo trans('Dr.') . ' ' . $userEntity->getFirstname() . ' ' . $userEntity->getLastname(); ?>
+                        <b>Liste des soins</b><br />
+                        Dr. {{ user.firstname }} {{user.lastname}}
                     </td>
                 </tr>
                 </tbody>
@@ -86,57 +86,20 @@
         </tr>
         </thead>
         <tbody>
-        <?php
-
-            $numberOfRows = count($collection);
-            $amountTotal = 0;
-            foreach ($collection as $value) :
-				$date = $value['date']->format('d/m/Y');
-                $contactNbr = $value['nbr'];
-                $contactFullname = $value["lastname"]." ".$value["firstname"];
-                $name = $value['name'];
-                $amount = number_format($value['amount'], 2, ",", "");
-                $type = $value['type'];
-                $teeth = $value['teeth'];
-
-                switch ($type) {
-                case 'CCAM' :
-                $cotation = $value['code'];
-                break;
-                case 'NGAP' :
-                $cotation = implode(' ', array($value['ngap_key_name'], $value['coef']));
-                break;
-                default :
-                $cotation = 'NPC';
-                break;
-                }
-
-                $caresheetDate = $value['caresheetDate'];
-                $caresheetNbr = '';
-                if (!is_null($caresheetDate)) :
-                $caresheetNbr = $value['caresheetNbr'];
-                if (is_null($caresheetNbr)) :
-                $caresheetNbr = 'Feuille de soin papier';
-                endif;
-                endif;
-
-                $amountTotal += (float) $value["amount"];
-        ?>
-        <tr>
-            <td class="date"><?php echo $date; ?></td>
-            <td class="contactFullname"><?php echo $contactNbr." - ".$contactFullname; ?></td>
-            <td class="name"><?php echo $name; ?></td>
-            <td class="teeth"><?php echo implode("<br/>", str_split($teeth, 15)); ?></td>
-            <td class="cotation"><?php echo $cotation; ?></td>
-            <td class="ccamFamily"><?php echo $value['ccamFamily']; ?></td>
-            <td class="amount"><?php echo $amount; ?></td>
-        </tr>
-        <?php endforeach; ?>
+            {{#each ets}}
+                <td class="date">{{this.date}}</td>
+                <td class="contactFullname">{{this.contactFullname}}</td>
+                <td class="name">{{this.name}}</td>
+                <td class="teeth">{{this.teeth}}</td>
+                <td class="cotation">{{this.cotation}}</td>
+                <td class="ccamFamily">{{this.ccamFamily}}</td>
+                <td class="amount">{{this.amount}}</td>
+            {{/each}}
         </tbody>
         <tfoot>
         <tr>
-            <td colspan="6"><?php echo $numberOfRows. " soins selectionnés."; ?></td>
-            <td class="text-right"><?php echo number_format($amountTotal, 2, ",", ""); ?></td>
+            <td colspan="6">{{this.numberOfRows}} soins selectionnés.</td>
+            <td class="text-right">{{formatNumber amountTotal}}</td>
         </tr>
         </tfoot>
     </table>

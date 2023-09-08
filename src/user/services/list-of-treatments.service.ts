@@ -12,6 +12,8 @@ import { UserEntity } from '../../entities/user.entity';
 import { customCreatePdf } from '../../common/util/pdf';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as path from 'path';
+import { br2nl, nl2br } from '../../common/util/string';
+import { checkDay } from '../../common/util/day';
 
 @Injectable()
 export class ListOfTreatmentsService {
@@ -225,7 +227,17 @@ export class ListOfTreatmentsService {
       );
       const numberOfRows = eventTasks.length || 0;
       let amountTotal = 0;
-      const data = [];
+      const ets = [];
+
+      const formatTeeth = (teeth: any) => {
+        const maxLength = 15;
+        const substrings = [];
+        for (let i = 0; i < teeth.length; i += maxLength) {
+          substrings.push(teeth.slice(i, i + maxLength));
+        }
+        return substrings.join('<br/>');
+      };
+
       for (const raw of eventTasks) {
         let cotation = null;
         if (raw?.dental?.type === 'CCAM') {
@@ -248,7 +260,9 @@ export class ListOfTreatmentsService {
         const contactFullname = `${raw?.patient?.lastname} ${raw?.patient?.firstname}`;
         amountTotal += raw?.amount;
 
-        data.push({
+        const teeth = formatTeeth(raw?.dental?.teeth);
+
+        ets.push({
           date: format(new Date(raw?.date), 'dd/MM/yyyy'),
           number: raw?.patient?.nbr,
           name: raw?.name || '',
@@ -258,11 +272,19 @@ export class ListOfTreatmentsService {
           }),
           type: raw?.dental?.type,
           cotation,
+          teeth,
           caresheetNbr,
           ccamFamily: raw?.ccamFamily,
           contactFullname,
         });
       }
+
+      const data = {
+        user,
+        numberOfRows,
+        amountTotal,
+        ets,
+      };
 
       const filePath = path.join(
         process.cwd(),
@@ -282,7 +304,21 @@ export class ListOfTreatmentsService {
       };
       const files = [{ path: filePath, data }];
 
-      return customCreatePdf({ files, options });
+      const helpers = {
+        formatNumber: (n: number) => {
+          return Number(n).toFixed(2);
+        },
+        formatTeeth: (teeth: any) => {
+          const maxLength = 15;
+          const substrings = [];
+          for (let i = 0; i < teeth.length; i += maxLength) {
+            substrings.push(teeth.slice(i, i + maxLength));
+          }
+          return substrings.join('<br/>');
+        },
+      };
+
+      return customCreatePdf({ files, options, helpers });
     } catch (error) {
       throw new RequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
