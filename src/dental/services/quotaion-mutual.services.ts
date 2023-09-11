@@ -442,7 +442,20 @@ export class QuotationMutualServices {
     const initChamp = await this.initChamps({ no_devis: id || 0 }, identity);
     let content = '';
     let dataTemp: any;
+    const files = [];
     try {
+      const options = {
+        format: 'A4',
+        displayHeaderFooter: true,
+        headerTemplate: `<div></div>`,
+        footerTemplate: QuotationMutualPdfFooter(initChamp.reference),
+        margin: {
+          left: '5mm',
+          top: '5mm',
+          right: '5mm',
+          bottom: '25mm',
+        },
+      };
       if (initChamp?.paymentScheduleId) {
         try {
           const mail =
@@ -458,14 +471,15 @@ export class QuotationMutualServices {
           content = await this.mailService.pdf(mailConverted, {
             preview: true,
           });
+          files.push({ type: 'string', data: content });
         } catch (error) {
-          const paymentSchedule = this.paymentScheduleService.find(
+          const paymentSchedule = await this.paymentScheduleService.find(
             initChamp?.paymentScheduleId,
             identity.org,
           );
 
           dataTemp = {
-            landscape: true,
+            landscape: false,
             date: initChamp?.date_devis,
             duration: initChamp?.duree_devis,
             reference: initChamp?.reference,
@@ -484,6 +498,19 @@ export class QuotationMutualServices {
             },
             payment_schedule: paymentSchedule,
           };
+          const filePath = path.join(
+            process.cwd(),
+            'templates/pdf/quotation-mutal',
+            'payment-schedule.hbs',
+          );
+          files.push({ path: filePath, data: dataTemp });
+          return await customCreatePdf({
+            files,
+            options,
+            helpers: {
+              format: (date: string) => dayjs(date).format('DD/MM/YYYY'),
+            },
+          });
         }
       }
 
@@ -492,19 +519,7 @@ export class QuotationMutualServices {
         'templates/pdf/quotation-mutal',
         'devis_corps_2_pdf.hbs',
       );
-      const options = {
-        format: 'A4',
-        displayHeaderFooter: true,
-        headerTemplate: `<div></div>`,
-        footerTemplate: QuotationMutualPdfFooter(initChamp.reference),
-        margin: {
-          left: '5mm',
-          top: '5mm',
-          right: '5mm',
-          bottom: '25mm',
-        },
-        landscape: true,
-      };
+
       const data = {
         duplicata: req?.duplicate,
         ...initChamp,
@@ -520,7 +535,7 @@ export class QuotationMutualServices {
           return localizations;
         },
       };
-      const files = [{ path: filePath, data }];
+      files.push({ path: filePath, data });
       if (dataTemp?.date) {
         const filePath = path.join(
           process.cwd(),

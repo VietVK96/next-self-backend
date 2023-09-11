@@ -30,7 +30,6 @@ import { UnpaidDto, printUnpaidDto } from './dto/unpaid.dto';
 import { UpdatePassWordSettingDto } from './dto/user-setting.dto';
 import { ErrorCode } from 'src/constants/error';
 import { GetOneActiveRes } from './res/get-active.res';
-import * as dayjs from 'dayjs';
 import { CreditBalancesService } from './services/credit-balances.service';
 import { CreditBalancesDto } from './dto/credit-balances.dto';
 import type { Response } from 'express';
@@ -206,25 +205,11 @@ export class UserController {
 
   @Get('unpaid/print')
   @UseGuards(TokenGuard)
-  async printUnpaid(@Res() res: Response, @Query() param?: printUnpaidDto) {
+  async printUnpaid(@Query() param?: printUnpaidDto) {
     try {
       const buffer = await this.unpaidService.printUnpaid(param);
-      console.log('buffer', buffer);
-      res.set({
-        // pdf
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename=impayes_${dayjs(
-          new Date(),
-        ).format('YYYYMMDD')}.pdf`,
-        'Content-Length': buffer.length,
-        // prevent cache
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        Pragma: 'no-cache',
-        Expires: 0,
-      });
-      res.end(buffer);
+      return buffer;
     } catch (error) {
-      console.log('unpaid/print-controller', error);
       throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
     }
   }
@@ -234,24 +219,9 @@ export class UserController {
    */
   @Get('credit-balances/print')
   @UseGuards(TokenGuard)
-  async printCreditBalances(
-    @Res() res: Response,
-    @Query() param?: printUnpaidDto,
-  ) {
+  async printCreditBalances(@Query() param?: printUnpaidDto) {
     const buffer = await this.creditBalancesService.printCreditBalances(param);
-    res.set({
-      // pdf
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename=dossiers_crediteurs_${dayjs(
-        new Date(),
-      ).format('YYYYMMDD')}.pdf`,
-      'Content-Length': buffer.length,
-      // prevent cache
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      Pragma: 'no-cache',
-      Expires: 0,
-    });
-    res.end(buffer);
+    return buffer;
   }
 
   /**
@@ -274,6 +244,7 @@ export class UserController {
   async relaunchUnpaid(@Query() param: printUnpaidDto) {
     return await this.unpaidService.relaunchUnpaid(param);
   }
+
   /**
    * File : php/user/credit-balances/index.php 100%
    * @param payload
@@ -285,6 +256,10 @@ export class UserController {
     return this.creditBalancesService.getPatientBalances(payload);
   }
 
+  @Post('create')
+  async create() {
+    return await this.userService.createAcc();
+  }
   /**
    * /fsd/users/sms.php?organization_id=1 line 46
    */

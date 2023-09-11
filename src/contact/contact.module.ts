@@ -42,6 +42,8 @@ import { MailService } from './services/mail.service';
 import { listEntities } from 'src/entities';
 import { ReminderVisitService } from './services/reminderVisit.service';
 import { ReminderVisitController } from './reminderVisit.controller';
+import { BullModule } from '@nestjs/bull';
+import { BullConfigService } from 'src/common/config/bull.config';
 
 @Module({
   controllers: [
@@ -97,6 +99,10 @@ import { ReminderVisitController } from './reminderVisit.controller';
     UserModule,
     PatientModule,
     UploadModule,
+    BullModule.registerQueueAsync({
+      name: 'amount-due',
+      useClass: BullConfigService,
+    }),
   ],
   exports: [ContactService, ContactPaymentService],
 })

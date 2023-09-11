@@ -11,10 +11,10 @@ import { ErrorCode } from 'src/constants/error';
 import sharp from 'sharp';
 import { SIGNATURE } from 'src/constants/users';
 import { PrivilegeEntity } from 'src/entities/privilege.entity';
-import { AmoEntity } from 'src/entities/amo.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { ConfigService } from '@nestjs/config';
+import { UserAmoEntity } from 'src/entities/user-amo.entity';
 
 @Injectable()
 export class AccountSettingService {
@@ -118,6 +118,7 @@ export class AccountSettingService {
     delete user.password;
     delete user.passwordAccounting;
     delete user.passwordHash;
+    user.rateCharges = parseFloat(user.rateCharges.toString());
 
     const specialtyCodes = await this.dataSource
       .getRepository(SpecialtyCodeEntity)
@@ -134,39 +135,31 @@ export class AccountSettingService {
     await queryRunner.startTransaction();
 
     try {
-      const user = await this.dataSource
-        .getRepository(UserEntity)
-        .findOneOrFail({
-          where: { id: userId },
-          relations: {
-            address: true,
-            privileged: true,
-            medical: true,
-            amo: true,
-            preference: true,
-          },
-        });
+      const user = await queryRunner.manager.getRepository(UserEntity).findOne({
+        where: { id: userId },
+        relations: {
+          address: true,
+          privileged: true,
+          medical: true,
+          amo: true,
+          preference: true,
+        },
+      });
 
-      const street = payload.street;
-      const zipCode = payload.zip_code;
-      const city = payload.city;
-      const countryAbbr = payload.countryAbbr;
+      if (!user) return new CBadRequestException(ErrorCode.NOT_FOUND_USER);
+
       const userLogin = payload.log ? payload.log.trim() : null;
-      const userGsm = payload.gsm;
-      const userPhoneNumber = payload.phoneNumber;
-      const userFaxNumber = payload.faxNumber;
-      const userAgaMember = payload.agaMember;
-      const droitPermanentDepassement = payload.droit_permanent_depassement;
-      const userRateCharges = payload.rateCharges;
-      let signature = payload.signature;
-      const userFiness = payload.finess;
-
-      if (!(await this.checkingLogin(userLogin, userId))) {
+      if (!userLogin || !(await this.checkingLogin(userLogin, userId))) {
         throw new CBadRequestException(
           "Le nom d'utilisateur doit être unique et doit contenir au minimum 6 caractères de types alphanumériques, points (.), underscore (_), arobase (@) ou tiret (-).",
         );
       }
 
+      const street = payload.street;
+      const zipCode = payload.zip_code;
+      const city = payload.city;
+      const countryAbbr = payload.countryAbbr;
+      let signature = payload.signature;
       if (street || zipCode || city || countryAbbr) {
         const address = user.address;
         if (address) {
@@ -177,7 +170,9 @@ export class AccountSettingService {
           address.street = street;
           address.zipCode = zipCode;
           address.city = city;
-          address.country = countries[countryAbbr];
+          address.country = countries[countryAbbr]
+            ? countries[countryAbbr]
+            : '';
           address.countryAbbr = countryAbbr;
 
           await queryRunner.manager.save(AddressEntity, address);
@@ -198,18 +193,26 @@ export class AccountSettingService {
         }
       }
       user.log = userLogin;
-      user.gsm = userGsm;
-      user.phoneNumber = userPhoneNumber;
-      user.faxNumber = userFaxNumber;
-      user.agaMember = !userAgaMember ? 1 : 0;
-      user.droitPermanentDepassement = !droitPermanentDepassement ? 1 : 0;
-      user.rateCharges = Number(userRateCharges);
+      user.gsm = payload.gsm;
+      user.phoneNumber = payload.phoneNumber;
+      user.faxNumber = payload.faxNumber;
+      user.rateCharges = Number(payload.rateCharges);
       user.socialSecurityReimbursementBaseRate =
         payload.social_security_reimbursement_base_rate;
       user.socialSecurityReimbursementRate =
         payload.social_security_reimbursement_rate;
       user.signature = signature;
-      user.finess = userFiness;
+      user.finess = payload.finess;
+      user.abbr = payload?.short_name.trim() ?? '';
+      user.email = payload?.email.trim() ?? '';
+      user.companyName = payload?.company_name?.trim() ?? '';
+
+      if (typeof payload.freelance === 'number')
+        user.freelance = payload.freelance;
+      if (typeof payload.agaMember === 'number')
+        user.agaMember = payload.agaMember;
+      if (typeof payload.droit_permanent_depassement === 'number')
+        user.droitPermanentDepassement = payload.droit_permanent_depassement;
 
       const promises = [];
       if (user.privileged) {
@@ -223,23 +226,9 @@ export class AccountSettingService {
             ),
           );
         }
+        await Promise.all(promises);
+        delete user.privileged;
       }
-      await Promise.all(promises);
-      delete user.privileged;
-
-      if (payload.short_name) user.abbr = payload.short_name;
-      if (payload.email) user.email = payload.email;
-      if (payload.company_name)
-        user.companyName =
-          payload.company_name.trim() !== ''
-            ? payload.company_name.trim()
-            : null;
-      if (typeof payload.freelance === 'number')
-        user.freelance = payload.freelance;
-      if (typeof payload.agaMember === 'number')
-        user.agaMember = payload.agaMember;
-      if (typeof payload.droit_permanent_depassement === 'number')
-        user.droitPermanentDepassement = payload.droit_permanent_depassement;
 
       if (user.medical) {
         const medical = user.medical;
@@ -250,12 +239,12 @@ export class AccountSettingService {
         delete user.medical;
       }
 
-      if (user.amo) {
+      if (user?.amo) {
         const amo = user.amo;
         amo.codeConvention = payload?.amo?.code_convention
           ? payload.amo.code_convention
           : null;
-        await queryRunner.manager.save(AmoEntity, amo);
+        await queryRunner.manager.save(UserAmoEntity, amo);
         delete user.amo;
       }
 
@@ -266,6 +255,7 @@ export class AccountSettingService {
 
       await queryRunner.manager.save(UserEntity, user);
       await queryRunner.commitTransaction();
+      return { success: true };
     } catch (e) {
       await queryRunner.rollbackTransaction();
       return new CBadRequestException(ErrorCode.SAVE_FAILED);

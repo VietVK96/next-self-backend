@@ -1,24 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm/repository/Repository';
-import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { ErrorCode } from 'src/constants/error';
-import { SuccessResponse } from 'src/common/response/success.res';
-import { PermissionService } from 'src/user/services/permission.service';
-import { PerCode } from 'src/constants/permissions';
-import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-request.exception';
-import { EventEntity } from 'src/entities/event.entity';
-import { EventOccurrenceEntity } from 'src/entities/event-occurrence.entity';
-import { DataSource } from 'typeorm';
-import { ContactEntity } from 'src/entities/contact.entity';
-import { UserEntity } from 'src/entities/user.entity';
-import { PlanEventEntity } from 'src/entities/plan-event.entity';
-import { DeteleEventDto } from '../dto/delete.event.dto';
-import { ResourceEntity } from 'src/entities/resource.entity';
 import * as dayjs from 'dayjs';
-import { Parser } from 'json2csv';
-import type { Response } from 'express';
 import { Workbook } from 'exceljs';
+import type { Response } from 'express';
+import { Parser } from 'json2csv';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-request.exception';
+import { SuccessResponse } from 'src/common/response/success.res';
+import { ErrorCode } from 'src/constants/error';
+import { PerCode } from 'src/constants/permissions';
+import { ContactEntity } from 'src/entities/contact.entity';
+import { EventOccurrenceEntity } from 'src/entities/event-occurrence.entity';
+import { EventEntity } from 'src/entities/event.entity';
+import { PlanEventEntity } from 'src/entities/plan-event.entity';
+import { ResourceEntity } from 'src/entities/resource.entity';
+import { UserEntity } from 'src/entities/user.entity';
+import { PermissionService } from 'src/user/services/permission.service';
+import { DataSource } from 'typeorm';
+import { Repository } from 'typeorm/repository/Repository';
+import { DeteleEventDto } from '../dto/delete.event.dto';
 
 @Injectable()
 export class EventService {
@@ -116,7 +116,6 @@ export class EventService {
     datetime1: string,
     datetime2: string,
   ) {
-    const formatResources = resources.map((item) => `'${item}'`).join(',');
     const query = this.dataSource
       .createQueryBuilder()
       .select(
@@ -135,7 +134,9 @@ export class EventService {
         'eventOccurrence.resource_id = resource.id',
       )
       .leftJoin(ContactEntity, 'patient', 'patient.id = event.CON_ID')
-      .where(`eventOccurrence.resource IN (${formatResources})`)
+      .where(`eventOccurrence.resource IN (:resources)`, {
+        resources,
+      })
       .andWhere('eventOccurrence.date >= :datetime1', { datetime1 })
       .andWhere('eventOccurrence.date <= :datetime1', { datetime2 })
       .andWhere('eventOccurrence.exception = false')

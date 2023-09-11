@@ -12,6 +12,8 @@ import { JwtStrategy } from './jwt.strategy';
 import { GetSessionService } from './services/get-session.service';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { UserAmoEntity } from 'src/entities/user-amo.entity';
+import { UserConnectionService } from 'src/user/services/user-connection.service';
+import { UserConnectionEntity } from 'src/entities/user-connection.entity';
 
 @Module({
   imports: [
@@ -21,6 +23,7 @@ import { UserAmoEntity } from 'src/entities/user-amo.entity';
       AddressEntity,
       UserMedicalEntity,
       UserAmoEntity,
+      UserConnectionEntity,
     ]),
     JwtModule.register({
       secret: JWT_SECRET,
@@ -33,6 +36,7 @@ import { UserAmoEntity } from 'src/entities/user-amo.entity';
     SessionService,
     JwtStrategy,
     GetSessionService,
+    UserConnectionService,
   ],
   exports: [GetSessionService, SessionService],
 })

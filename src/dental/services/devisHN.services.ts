@@ -971,7 +971,7 @@ export class DevisServices {
 
   async generatePDF(
     user: UserIdentity,
-    { no_pdt, duplicate, id }: DevisHNPdfDto,
+    { no_pdt, duplicate, id, print }: DevisHNPdfDto,
   ) {
     const no_devis = checkId(id);
     try {
@@ -1040,6 +1040,7 @@ export class DevisServices {
         src: '',
         width: 0,
         height: 0,
+        paymentSchedule: undefined,
       };
 
       const options = {
@@ -1057,17 +1058,25 @@ export class DevisServices {
       };
 
       const files = [];
-
-      const filePath = path.join(
+      const basePath = path.join(
         process.cwd(),
         'templates/pdf/devisHN',
-        'devis_hn_standand.hbs',
+        'base.hbs',
       );
 
-      files.push({ path: filePath, data: dataTemp });
+      files.push({ path: basePath, data: dataTemp });
+      if (!print) {
+        const filePath = path.join(
+          process.cwd(),
+          'templates/pdf/devisHN',
+          'devis_hn_standand.hbs',
+        );
+
+        files.push({ path: filePath, data: dataTemp });
+      }
 
       if (initital?.logoFilename && fs.existsSync(initital?.logoFilename)) {
-        const imageBuffer = fs.readFileSync(filePath);
+        const imageBuffer = fs.readFileSync(initital?.logoFilename);
         const base64Image = imageBuffer.toString('base64');
         dataTemp.src = base64Image;
         dataTemp.width = 350;
@@ -1075,23 +1084,39 @@ export class DevisServices {
       }
 
       if (initital?.paymentScheduleId) {
-        const mail =
-          await this.mailService.findOnePaymentScheduleTemplateByDoctor(
-            initital?.id_user,
+        try {
+          const mail =
+            await this.mailService.findOnePaymentScheduleTemplateByDoctor(
+              initital?.id_user,
+            );
+          const mailContext = await this.mailService.context({
+            doctor_id: initital?.id_user,
+            patient_id: initital?.id_contact,
+            payment_schedule_id: initital?.paymentScheduleId,
+          });
+          const mailConverted = await this.mailService.transform(
+            mail,
+            mailContext,
           );
-        const mailContext = await this.mailService.context({
-          doctor_id: initital?.id_user,
-          patient_id: initital?.id_contact,
-          payment_schedule_id: initital?.paymentScheduleId,
-        });
-        const mailConverted = await this.mailService.transform(
-          mail,
-          mailContext,
-        );
-        const pdf = await this.mailService.pdf(mailConverted, {
-          preview: true,
-        });
-        files.push({ type: 'string', data: pdf });
+          const pdf = await this.mailService.pdf(mailConverted, {
+            preview: true,
+          });
+          files.push({ type: 'string', data: pdf });
+        } catch (err) {
+          const paymentScheduleContext =
+            await this.paymentScheduleService?.find(
+              initital?.paymentScheduleId,
+              user?.org,
+            );
+          dataTemp.paymentSchedule = paymentScheduleContext;
+          const filePath = path.join(
+            process.cwd(),
+            'templates/pdf/devisHN',
+            'payment_schedule.hbs',
+          );
+
+          files.push({ path: filePath, data: dataTemp });
+        }
       }
 
       if (initital.schemas !== 'none') {
@@ -1119,6 +1144,7 @@ export class DevisServices {
         helpers: {},
       });
     } catch (err) {
+      console.log('-----data-----', err);
       throw new CBadRequestException(err);
     }
   }

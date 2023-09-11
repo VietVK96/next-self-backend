@@ -1,5 +1,6 @@
 import { SettingsModule } from './settings/settings.module';
 import { Module, RequestMethod } from '@nestjs/common';
+import { CommandModule as CliModule } from 'nestjs-command';
 import configuration from './common/config';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
@@ -113,7 +114,7 @@ const importsModules = [
     },
     isGlobal: true,
   }),
-  BullModule.registerQueueAsync({
+  BullModule.forRootAsync({
     imports: [ConfigModule],
     inject: [ConfigService],
     useFactory: (c: ConfigService) => {
@@ -151,6 +152,7 @@ const importsModules = [
     }),
     inject: [ConfigService],
   }),
+  CliModule,
   LanguageModule,
   EntityModule,
   ContactModule,

@@ -19,6 +19,8 @@ import { UserEntity } from 'src/entities/user.entity';
 import { CcamUnitPriceEntity } from 'src/entities/ccamunitprice.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { checkNumber } from 'src/common/util/number';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @Injectable()
 export class TaskService {
@@ -34,6 +36,7 @@ export class TaskService {
     @InjectRepository(UserEntity)
     private userRepo: Repository<UserEntity>,
     private dataSource: DataSource,
+    @InjectQueue('amount-due') private readonly amountDueQueue: Queue,
   ) {}
 
   async updateEventTask(payload: EventTaskDto) {
@@ -91,6 +94,9 @@ export class TaskService {
         date: datetime,
       });
 
+      await this.amountDueQueue.add('update', {
+        groupId: identity.org,
+      });
       // Traçabilité IDS
       // @TODO Ids\Log::write('Acte', $patientId, 2);
     } catch (error) {
@@ -98,7 +104,10 @@ export class TaskService {
     }
   }
 
-  async updateEventTaskPatch(payload: EventTaskPatchDto) {
+  async updateEventTaskPatch(
+    payload: EventTaskPatchDto,
+    identity: UserIdentity,
+  ) {
     try {
       {
         let refreshAmount = false;
@@ -170,7 +179,9 @@ export class TaskService {
                 .createQueryBuilder()
                 .select('T_DENTAL_EVENT_TASK_DET.DET_COMP')
                 .from('T_DENTAL_EVENT_TASK_DET', 'T_DENTAL_EVENT_TASK_DET')
-                .where(`T_DENTAL_EVENT_TASK_DET.ETK_ID = ${payload.pk}`)
+                .where(`T_DENTAL_EVENT_TASK_DET.ETK_ID = :pk`, {
+                  pk: payload.pk,
+                })
                 .getRawOne();
 
               const installComp = `INSERT INTO T_DENTAL_EVENT_TASK_DET (ETK_ID, DET_COMP)
@@ -271,6 +282,10 @@ export class TaskService {
               `,
                 [Number(payload.value), payload.pk],
               );
+
+              this.amountDueQueue.add('update', {
+                groupId: identity.org,
+              });
             }
             if (payload?.name === 'caresheet') {
               const state = payload.value ? 2 : 1;
@@ -321,7 +336,7 @@ export class TaskService {
                   .createQueryBuilder()
                   .select('T_DENTAL_EVENT_TASK_DET.DET_TYPE')
                   .from('T_DENTAL_EVENT_TASK_DET', 'T_DENTAL_EVENT_TASK_DET')
-                  .where(`ETK_ID = ${id}`)
+                  .where(`ETK_ID = :id`, { id })
                   .getRawOne();
               if (nomenclatureStatement.DET_TYPE === 'CCAM') {
                 const statements: {
@@ -536,25 +551,30 @@ export class TaskService {
                     radiographies.map(async (radiographie, index) => {
                       if (!index) {
                         await queryRunner.query(
-                          `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1 WHERE ETK_ID = ${radiographie.id}`,
+                          `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1 WHERE ETK_ID = ?`,
+                          [radiographie.id],
                         );
                         if (Number(radiographie.coef) === 0.5) {
                           await Promise.all([
                             queryRunner.query(
-                              `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
+                              `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1, DET_COEF = 1 WHERE ETK_ID = ?`,
+                              [radiographie.id],
                             ),
                             queryRunner.query(
-                              `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ${radiographie.id}`,
+                              `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ?`,
+                              [radiographie.id],
                             ),
                           ]);
                         }
                       } else if (Number(radiographie.coef) === 1) {
                         await Promise.all([
                           queryRunner.query(
-                            `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 2, DET_COEF = 0.5 WHERE ETK_ID = ${radiographie.id}`,
+                            `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 2, DET_COEF = 0.5 WHERE ETK_ID = ?`,
+                            [radiographie.id],
                           ),
                           queryRunner.query(
-                            `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT / 2 WHERE ETK_ID = ${radiographie.id}`,
+                            `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT / 2 WHERE ETK_ID = ?`,
+                            [radiographie.id],
                           ),
                         ]);
                         discountedCodes.push(radiographie.name);
@@ -567,10 +587,12 @@ export class TaskService {
                       if (Number(radiographie.coef) === 0.5) {
                         await Promise.all([
                           queryRunner.query(
-                            `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = NULL, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
+                            `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = NULL, DET_COEF = 1 WHERE ETK_ID = ?`,
+                            [radiographie.id],
                           ),
                           queryRunner.query(
-                            `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ${radiographie.id}`,
+                            `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ?`,
+                            [radiographie.id],
                           ),
                         ]);
                       }

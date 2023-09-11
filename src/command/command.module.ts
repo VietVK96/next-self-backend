@@ -4,6 +4,8 @@ import { AmountDueService } from './services/amount.due.services';
 import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
+import { CreateAccountCmd } from './cmd/create-account.cmd';
+import { AmountDueProcessor } from './services/amount.due.processer';
 
 @Module({
   imports: [
@@ -14,7 +16,7 @@ import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
     ]),
   ],
   controllers: [],
-  providers: [AmountDueService],
+  providers: [AmountDueService, CreateAccountCmd, AmountDueProcessor],
   exports: [AmountDueService],
 })
 export class CommandModule {}

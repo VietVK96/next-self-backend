@@ -87,18 +87,28 @@ export class ActServices {
       where: { actId: id },
       select: {
         id: true,
+        medicalDeviceId: true,
         reference: true,
       },
     });
-    const traceabilityStatus = dataAfter?.length
-      ? dataAfter.some((e) => e?.reference !== '')
-        ? TraceabilityStatusEnum.FILLED
-        : TraceabilityStatusEnum.UNFILLED
-      : TraceabilityStatusEnum.NONE;
-    await this.eventTaskRepository.save({
-      id,
-      traceabilityStatus,
-    });
+
+    if (dataAfter) {
+      let traceabilityStatus = TraceabilityStatusEnum.NONE;
+      for (const data of dataAfter) {
+        traceabilityStatus =
+          data.medicalDeviceId !== null && data.reference !== ''
+            ? TraceabilityStatusEnum.FILLED
+            : data.reference !== ''
+            ? TraceabilityStatusEnum.FILLED
+            : data.medicalDeviceId !== null
+            ? TraceabilityStatusEnum.UNFILLED
+            : TraceabilityStatusEnum.NONE;
+        await this.eventTaskRepository.save({
+          id,
+          traceabilityStatus,
+        });
+      }
+    }
   }
 
   async getShowAct(id: number) {

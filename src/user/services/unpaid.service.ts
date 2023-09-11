@@ -12,8 +12,6 @@ import { format } from 'date-fns';
 import { Parser } from 'json2csv';
 import { Response } from 'express';
 import { ErrorCode } from 'src/constants/error';
-import { customCreatePdf } from 'src/common/util/pdf';
-import * as path from 'path';
 import * as dayjs from 'dayjs';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { LettersEntity } from 'src/entities/letters.entity';
@@ -23,6 +21,8 @@ import { TranformVariableParam } from 'src/mail/dto/transformVariable.dto';
 import { CONFIGURATION } from 'src/constants/configuration';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { ConfigService } from '@nestjs/config';
+import Handlebars from 'handlebars';
+
 @Injectable()
 export class UnpaidService {
   constructor(
@@ -394,49 +394,75 @@ export class UnpaidService {
         totalAmount,
       };
 
-      const filePath = path.join(
-        process.cwd(),
-        'templates/unpaid',
-        'index.hbs',
-      );
+      const templates = `<html lang='fr'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <meta http-equiv='X-UA-Compatible' content='ie=edge' />
+    <title>Impayés</title>
+    <style>
 
-      const files = [{ path: filePath, data }];
+      html { margin: 0; padding: 0; font-family: Arial; } body { margin: 0;
+      padding: 0;  } table { width: 100%; border-collapse: collapse; font-size:
+      8pt; } table th, table td { vertical-align: top; padding: 2mm 2mm; border:
+      0.1pt solid #000000; } table thead th { text-align: center; } table
+      tr.tfoot { font-weight: bold; } td.visitDate { width: 8%; text-align:
+      center; } td.patient { width: 48%; } td.phoneNumbers { width: 20%; }
+      td.phoneNumbers span.number + span.number::before { content: "- "; }
+      td.amount { width: 8%; text-align: right; } td.relaunchLevel { width: 8%;
+      text-align: center; } td.relaunchDate { width: 8%; text-align: center; }
 
-      const options = {
-        format: 'A4',
-        displayHeaderFooter: true,
-        // landscape: true,
-        margin: {
-          left: '10mm',
-          top: '20mm',
-          right: '10mm',
-          bottom: '20mm',
-        },
+    </style>
+  </head>
+  <body>
+    <table>
+      <thead>
+        <tr>
+          <th class='visitDate'>Date visite</th>
+          <th class='patient'>Patient</th>
+          <th class='phoneNumbers'>Téléphone</th>
+          <th class='amount'>Solde</th>
+          <th class='relaunchLevel'>Niveau</th>
+          <th class='relaunchDate'>Date relance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each patientBalances}}
+            <tr>
+                <td class="visitDate">{{dateShort this.lastCare }}</td>
+                <td class="patient">{{ this.patient.firtName }} {{this.patient.lastname}}</td>
+                <td class="phoneNumbers">
+                    {{#each this.patient.phones }}
+                    <span class="number">{{ this.number }}</span>
+                    {{/each}}
+                </td>
+                <td class="amount">{{ this.amount}} {{../currency}}</td>
+                <td class="relaunchLevel">{{ this.relaunchLevel }}</td>
+                <td class="relaunchDate">
+                    {{#if this.relaunchDate }}
+                    {{ this.relaunchDate }}
+                    {{/if}}
+                </td>
+            </tr>
+          {{/each}}
+            <tr class="tfoot">
+                <td colspan="3"></td>
+                <td class="amount">{{totalAmount}} {{currency}}</td>
+                <td colspan="2"></td>
+            </tr>
+        </tbody>
+    </table>
+  </body>
+      </html>`;
 
-        headerTemplate: `<div style="width:100%;margin-left:10mm"><span style="font-size: 8px;">${dayjs(
-          new Date(),
-        ).format(
-          'M/D/YY, hh:mm A',
-        )}</span><span style="font-size: 8px;margin-right:40mm; float: right;">Impayés</span></div>`,
-        footerTemplate: `
-        <div style="width: 100%;margin-right:10mm; font-size: 8px; display: flex; justify-content: space-between">
-         
-          <div>
-            <span class="pageNumber"></span>
-            <span>/</span>
-            <span class="totalPages"></span>
-          </div>
-        </div>
-      `,
-      };
+      Handlebars.registerHelper('dateShort', function (date) {
+        return date ? dayjs(date).format('DD/MM/YYYY') : '';
+      });
 
-      const helpers = {
-        dateShort: (date) => (date ? dayjs(date).format('DD/MM/YYYY') : ''),
-      };
+      const html = Handlebars.compile(templates)(data);
 
-      return await customCreatePdf({ files, options, helpers });
+      return html;
     } catch (e) {
-      console.log('unpaid/print-services', e);
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }

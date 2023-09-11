@@ -1102,7 +1102,8 @@ export class LibrariesService {
         .leftJoinAndSelect('laq.odontograms', 'laqo')
         .leftJoinAndSelect('laq.tariffs', 'laqt')
         .leftJoinAndSelect('laq.traceabilities', 'laqtr')
-        .where('la.id = :id', { id });
+        .where('la.id = :id', { id })
+        .orderBy('laa.position', 'ASC');
       if (params?.used_only) {
         queryBuilder.andWhere('laq.used = :used', { used: true });
       }

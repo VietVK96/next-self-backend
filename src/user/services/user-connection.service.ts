@@ -4,7 +4,8 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { UserConnectionEntity } from 'src/entities/user-connection.entity';
 import { Repository } from 'typeorm';
 import { UserConnectionDto } from '../dto/user-connectio.dto';
-
+import { Request } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 @Injectable()
 export class UserConnectionService {
   constructor(
@@ -53,5 +54,16 @@ export class UserConnectionService {
     } catch (error) {
       throw new CBadRequestException(error);
     }
+  }
+
+  async saveConnection(userId: number, request: Request) {
+    const ip = request?.ip?.split(':');
+    const userConnection: UserConnectionEntity = {
+      usrId: userId,
+      sessionId: uuidv4(),
+      ipAddress: ip[ip.length - 1],
+      httpUserAgent: request.headers['user-agent'],
+    };
+    await this.userConnectionRepo.save(userConnection);
   }
 }
