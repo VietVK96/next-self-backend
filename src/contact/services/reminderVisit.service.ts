@@ -9,7 +9,7 @@ import {
 } from '../dto/reminderVisit.dto';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
-import { EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import * as dayjs from 'dayjs';
 import { ReminderVisitRes } from '../response/reminder-visit.res';
 import { nl2br } from 'src/common/util/string';
@@ -31,6 +31,7 @@ export class ReminderVisitService {
     private readonly userRepository: Repository<UserEntity>,
     @InjectEntityManager()
     private readonly entityManager: EntityManager,
+    private dataSource: DataSource,
   ) {}
 
   getQuery() {
@@ -126,6 +127,27 @@ export class ReminderVisitService {
 
     const phoneNumber = phoneStatement[0]?.phoneNumber || null;
     return phoneNumber;
+  }
+
+  async getListPhoneNumber(listId: number[]): Promise<ReminderVisitPhone[]> {
+    const phoneQuery = `
+    SELECT 
+    T_PHONE_PHO.PHO_NBR as phoneNumber,
+    T_CONTACT_PHONE_COP.CON_ID as conId
+    FROM T_CONTACT_PHONE_COP
+    JOIN T_PHONE_PHO
+    JOIN T_PHONE_TYPE_PTY
+    WHERE T_CONTACT_PHONE_COP.CON_ID IN (?)
+      AND T_CONTACT_PHONE_COP.PHO_ID = T_PHONE_PHO.PHO_ID
+      AND T_PHONE_PHO.PTY_ID = T_PHONE_TYPE_PTY.PTY_ID
+      AND T_PHONE_TYPE_PTY.PTY_NAME = 'sms'
+      `;
+    if (listId.length === 0) {
+      return [];
+    }
+    const phoneStatement: Array<ReminderVisitPhone> =
+      await this.dataSource.query(phoneQuery, [listId]);
+    return phoneStatement;
   }
 
   getConditions(conditions: Array<ConditionItem>): IReminderCondition {
@@ -267,13 +289,20 @@ export class ReminderVisitService {
     );
 
     const response = []; // To store the final response
+    const listIdPatient = results.map((item) => {
+      return item?.id;
+    });
+
+    const listPhoneNumber = await this.getListPhoneNumber(listIdPatient);
 
     for (const patient of results) {
       const { dateOfLastVisit, dateOfLastReminder, dateOfNextReminder } =
         this.formatReminderData(patient);
 
       // Récupération du numéro de téléphone
-      const phoneNumber = await this.getPhoneNumber(patient.id);
+      const phoneNumber = listPhoneNumber.find((item) => {
+        return item?.conId === patient?.id;
+      });
 
       const flexigridRow = {
         cell: [
@@ -284,7 +313,7 @@ export class ReminderVisitService {
             patient.message
           }">${nl2br(patient.message)}</span>`,
           patient.email,
-          phoneNumber,
+          phoneNumber?.phoneNumber,
           dateOfLastVisit,
           dateOfLastReminder,
           dateOfNextReminder,
