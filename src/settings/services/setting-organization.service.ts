@@ -52,22 +52,13 @@ export class SettingOrganizationService {
     return user.filter((x) => x?.medical);
   }
 
+  //settings/organizations/update.php
   async update(
     organizationId: number,
     userId: number,
     body: UpdateOrganizationDto,
     logo: Express.Multer.File,
   ): Promise<SuccessResponse> {
-    const emailTemplate = /^[^@]+@[^@]+\.[^.]*[^.\s]+[^.\s]*$/;
-
-    if (!emailTemplate.test(body.email)) {
-      throw new CBadRequestException('This value is not a valid email address');
-    }
-
-    if (body.phone_number.length < 1 || body.phone_number.length > 17) {
-      throw new CBadRequestException('This value is not a valid phone number.');
-    }
-
     try {
       if (!userId || !organizationId) throw ErrorCode.FORBIDDEN;
 
@@ -116,11 +107,11 @@ export class SettingOrganizationService {
       } else {
         newAddress = currentOrg?.address;
       }
-      newAddress.street = address?.street;
-      newAddress.streetComp = address?.street2;
-      newAddress.zipCode = address?.zip_code;
-      newAddress.city = address?.city;
-      newAddress.countryAbbr = address?.country_code;
+      newAddress.street = address?.street || null;
+      newAddress.streetComp = address?.street2 || null;
+      newAddress.zipCode = address?.zip_code || null;
+      newAddress.city = address?.city || null;
+      newAddress.countryAbbr = address?.country_code || null;
       const country = countries.find(
         (x) => x?.cca2 === newAddress?.countryAbbr,
       );
@@ -170,17 +161,19 @@ export class SettingOrganizationService {
         }
       }
 
-      await this.dataSource.getRepository(UserPreferenceEntity).save(arrUser);
+      const a = await this.dataSource
+        .getRepository(UserPreferenceEntity)
+        .save(arrUser);
 
       await this.organizationRepository.save({
         ...currentOrg,
         uplId: upload?.id,
         address: newAddress,
-        name,
-        email,
-        phoneNumber: phone_number,
-        imageLibraryLink: image_library_link,
-        settings: settings,
+        name: name ? name.trim() : null,
+        email: email ? email.trim() : null,
+        phoneNumber: phone_number ? phone_number.trim() : null,
+        imageLibraryLink: image_library_link || null,
+        settings: settings || {},
       });
 
       return { success: true };
