@@ -253,6 +253,10 @@ export class UserController {
     return this.creditBalancesService.getPatientBalances(payload);
   }
 
+  @Post('create')
+  async create() {
+    return await this.userService.createAcc();
+  }
   /**
    * /fsd/users/sms.php?organization_id=1 line 46
    */
