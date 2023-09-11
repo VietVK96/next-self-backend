@@ -3,11 +3,7 @@ import { Controller, Body, Post, UseGuards, Get, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SecuritiesService } from './securities.service';
 import { VerifyPasswordDto } from './dto/veiry-password.dto';
-import {
-  CurrentUser,
-  TokenGuard,
-  UserIdentity,
-} from 'src/common/decorator/auth.decorator';
+import { TokenGuard } from 'src/common/decorator/auth.decorator';
 
 @ApiBearerAuth()
 @ApiTags('Securities') // Thêm nhãn API nếu cần thiết
@@ -23,11 +19,8 @@ export class SecuritiesController {
   @Post('verify-password')
   @ApiResponse({ status: 200, description: 'Password verified: true' })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
-  verifyPassword(
-    @Body() verifyPassWordDto: VerifyPasswordDto,
-    @CurrentUser() user: UserIdentity,
-  ) {
-    return this.securituesService.verifyPassword(verifyPassWordDto, user);
+  verifyPassword(@Body() verifyPassWordDto: VerifyPasswordDto) {
+    return this.securituesService.verifyPassword(verifyPassWordDto);
   }
 
   /**

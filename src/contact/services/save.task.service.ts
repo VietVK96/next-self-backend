@@ -106,7 +106,7 @@ export class SaveTaskService {
           payload.library_act_id ?? null,
           payload.library_act_quantity_id ?? null,
           payload.parent_id ?? null,
-          payload.name,
+          payload.name ?? '',
           dayjs(creationDate).format('YYYY-MM-DD'),
           payload.msg,
           payload.duration,
@@ -251,30 +251,35 @@ export class SaveTaskService {
           if (!index) {
             promiseArr2.push(
               queryRunner.query(
-                `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1 WHERE ETK_ID = ${radiographie.id}`,
+                `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1 WHERE ETK_ID = ?`,
+                [radiographie.id],
               ),
             );
             if (Number(radiographie.coef) === 0.5) {
               promiseArr2.push(
                 queryRunner.query(
-                  `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
+                  `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 1, DET_COEF = 1 WHERE ETK_ID = ?`,
+                  [radiographie.id],
                 ),
               );
               promiseArr2.push(
                 queryRunner.query(
-                  `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ${radiographie.id}`,
+                  `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ?`,
+                  [radiographie.id],
                 ),
               );
             }
           } else if (Number(radiographie.coef) === 1) {
             promiseArr2.push(
               queryRunner.query(
-                `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 2, DET_COEF = 0.5 WHERE ETK_ID = ${radiographie.id}`,
+                `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = 2, DET_COEF = 0.5 WHERE ETK_ID = ?`,
+                [radiographie.id],
               ),
             );
             promiseArr2.push(
               queryRunner.query(
-                `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT / 2 WHERE ETK_ID = ${radiographie.id}`,
+                `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT / 2 WHERE ETK_ID = ?`,
+                [radiographie.id],
               ),
             );
             discountedCodes.push(radiographie.name);
@@ -285,12 +290,14 @@ export class SaveTaskService {
           if (Number(radiographie.coef) === 0.5) {
             promiseArr2.push(
               queryRunner.query(
-                `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = NULL, DET_COEF = 1 WHERE ETK_ID = ${radiographie.id}`,
+                `UPDATE T_DENTAL_EVENT_TASK_DET SET association_code = NULL, DET_COEF = 1 WHERE ETK_ID = ?`,
+                [radiographie.id],
               ),
             );
             promiseArr2.push(
               queryRunner.query(
-                `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ${radiographie.id}`,
+                `UPDATE T_EVENT_TASK_ETK SET ETK_AMOUNT = ETK_AMOUNT * 2 WHERE ETK_ID = ?`,
+                [radiographie.id],
               ),
             );
           }

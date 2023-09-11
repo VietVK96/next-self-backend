@@ -29,8 +29,8 @@ export class FusionPatientService {
     const contact: FindFusionPatientRes = await queryBuilder
       .select(select)
       .from('T_CONTACT_CON', 'CON')
-      .where(`CON.CON_ID = ${contactId}`)
-      .andWhere(`CON.organization_id = ${groupId}`)
+      .where(`CON.CON_ID = :contactId`, { contactId })
+      .andWhere(`CON.organization_id = :groupId`, { groupId })
       .getRawOne();
     if (contact) {
       const listQr = {
@@ -183,7 +183,7 @@ export class FusionPatientService {
         .createQueryBuilder()
         .select('doctolib.id, doctolib.group_id_partner')
         .from('doctolib', 'doctolib')
-        .where(`doctolib.group_id = ${groupId}`)
+        .where(`doctolib.group_id = :groupId`, { groupId })
         .andWhere('doctolib.deleted_at IS NULL')
         .getRawOne();
       if (doctor?.id) {

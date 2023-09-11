@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
 import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 import { ThirdPartyStatusEnum } from 'src/enum/third-party-status.enum';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, QueryRunner, Repository } from 'typeorm';
 
 /**
  * application/Command/AmountDueCommand.php
@@ -17,8 +16,6 @@ export class AmountDueService {
     private thirdPartyAmoRepository: Repository<ThirdPartyAmoEntity>,
     @InjectRepository(ThirdPartyAmcEntity)
     private thirdPartyAmcRepository: Repository<ThirdPartyAmcEntity>,
-    @InjectRepository(ContactUserEntity)
-    private readonly patientUserRepository: Repository<ContactUserEntity>,
   ) {}
 
   /**
@@ -141,7 +138,7 @@ export class AmountDueService {
            * --------------------------------------------------------------------------
            */
           const queryRunner = this.dataSource.createQueryRunner();
-          await queryRunner.connect();
+          // await queryRunner.connect();
           await queryRunner.startTransaction();
           try {
             await queryRunner.query(
@@ -198,8 +195,8 @@ export class AmountDueService {
               [item.USR_ID],
             );
 
-            await this.computeThirdPartyAmo(item.USR_ID);
-            await this.computeThirdPartyAmc(item.USR_ID);
+            await this.computeThirdPartyAmo(item.USR_ID, queryRunner);
+            await this.computeThirdPartyAmc(item.USR_ID, queryRunner);
 
             /**
              * --------------------------------------------------------------------------
@@ -247,7 +244,7 @@ export class AmountDueService {
    *
    * @param int userId identifiant de l'utilisateur
    */
-  async computeThirdPartyAmo(userId: number) {
+  async computeThirdPartyAmo(userId: number, queryRunner: QueryRunner) {
     try {
       const results: {
         patientId: number;
@@ -282,19 +279,23 @@ export class AmountDueService {
         const amountCareRemaining = row.amountCareRemaining;
         const amountProsthesisRemaining = row.amountProsthesisRemaining;
 
-        await this.patientUserRepository
-          .createQueryBuilder()
-          .update(ContactUserEntity)
-          .set({
-            amount: () => `amount - ${amountRemaining}`,
-            amountCare: () => `amountCare - ${amountCareRemaining}`,
-            amountProsthesis: () =>
-              `amountProsthesis - ${amountProsthesisRemaining}`,
-            thirdPartyBalance: () => `thirdPartyBalance + ${amountRemaining}`,
-          })
-          .where('conId = :patient', { patient: patientId })
-          .andWhere('userId = :user', { user: userId })
-          .execute();
+        queryRunner.query(
+          `UPDATE contact_user_cou
+            SET cou_amount_due = cou_amount_due - ?,
+            amount_due_care = amount_due_care - ? ,
+            amount_due_prosthesis = amount_due_prosthesis - ?,
+            third_party_balance = third_party_balance + ?
+            WHERE con_id = ? AND usr_id = ?
+            `,
+          [
+            amountRemaining,
+            amountCareRemaining,
+            amountProsthesisRemaining,
+            amountRemaining,
+            patientId,
+            userId,
+          ],
+        );
       }
     } catch (error) {
       throw error;
@@ -306,7 +307,7 @@ export class AmountDueService {
    *
    * @param int $userId identifiant de l'utilisateur
    */
-  async computeThirdPartyAmc(userId: number) {
+  async computeThirdPartyAmc(userId: number, queryRunner: QueryRunner) {
     try {
       const results: {
         patientId: number;
@@ -340,20 +341,23 @@ export class AmountDueService {
         const amountRemaining = row.amountRemaining;
         const amountCareRemaining = row.amountCareRemaining;
         const amountProsthesisRemaining = row.amountProsthesisRemaining;
-
-        await this.patientUserRepository
-          .createQueryBuilder()
-          .update(ContactUserEntity)
-          .set({
-            amount: () => `amount - ${amountRemaining}`,
-            amountCare: () => `amountCare - ${amountCareRemaining}`,
-            amountProsthesis: () =>
-              `amountProsthesis - ${amountProsthesisRemaining}`,
-            thirdPartyBalance: () => `thirdPartyBalance + ${amountRemaining}`,
-          })
-          .where('conId = :patient', { patient: patientId })
-          .andWhere('userId = :user', { user: userId })
-          .execute();
+        queryRunner.query(
+          `UPDATE contact_user_cou
+         SET cou_amount_due = cou_amount_due - ?,
+         amount_due_care = amount_due_care - ? ,
+         amount_due_prosthesis = amount_due_prosthesis - ?,
+         third_party_balance = third_party_balance + ?
+         WHERE con_id = ? AND usr_id = ?
+         `,
+          [
+            amountRemaining,
+            amountCareRemaining,
+            amountProsthesisRemaining,
+            amountRemaining,
+            patientId,
+            userId,
+          ],
+        );
       }
     } catch (error) {
       throw error;

@@ -49,7 +49,7 @@ export class SettingOrganizationService {
       },
     });
 
-    return user.filter((x) => x.medical);
+    return user.filter((x) => x?.medical);
   }
 
   async update(
@@ -58,9 +58,19 @@ export class SettingOrganizationService {
     body: UpdateOrganizationDto,
     logo: Express.Multer.File,
   ): Promise<SuccessResponse> {
+    const emailTemplate = /^[^@]+@[^@]+\.[^.]*[^.\s]+[^.\s]*$/;
+
+    if (!emailTemplate.test(body.email)) {
+      throw new CBadRequestException('This value is not a valid email address');
+    }
+
+    if (body.phone_number.length < 1 || body.phone_number.length > 17) {
+      throw new CBadRequestException('This value is not a valid phone number.');
+    }
+
     try {
-      if (!userId || !organizationId)
-        throw new CBadRequestException(ErrorCode.FORBIDDEN);
+      if (!userId || !organizationId) throw ErrorCode.FORBIDDEN;
+
       const currentOrg = await this.organizationRepository.findOne({
         where: { id: organizationId },
         relations: { address: true },
@@ -70,10 +80,10 @@ export class SettingOrganizationService {
         where: { id: userId },
       });
 
-      if (!currentOrg || !userCurrent)
-        throw new CBadRequestException(ErrorCode.NOT_FOUND);
-      if (!userCurrent?.admin)
-        throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
+      if (!currentOrg || !userCurrent) throw ErrorCode.NOT_FOUND;
+      if (!userCurrent?.admin) {
+        throw ErrorCode.PERMISSION_DENIED;
+      }
 
       const allowedMimeTypes = [
         'image/gif',
@@ -96,8 +106,9 @@ export class SettingOrganizationService {
         delete_logo,
       } = body;
 
-      const countries = (await axios.get('https://restcountries.com/v3.1/all'))
-        .data;
+      const countries = (
+        await axios.get(this.configService.get<string>('app.countries.url'))
+      ).data;
 
       let newAddress;
       if (!currentOrg?.address) {
@@ -110,8 +121,10 @@ export class SettingOrganizationService {
       newAddress.zipCode = address?.zip_code;
       newAddress.city = address?.city;
       newAddress.countryAbbr = address?.country_code;
-      const country = countries.find((x) => x.cca2 === newAddress.countryAbbr);
-      newAddress.country = country.translations.fra.common;
+      const country = countries.find(
+        (x) => x?.cca2 === newAddress?.countryAbbr,
+      );
+      newAddress.country = country?.translations?.fra?.common;
 
       newAddress = await this.dataSource
         .getRepository(AddressEntity)
@@ -121,16 +134,17 @@ export class SettingOrganizationService {
       if (delete_logo) {
         currentOrg.logo = null;
       } else if (logo) {
-        if (!allowedMimeTypes.includes(logo.mimetype)) {
-          throw new CBadRequestException('invalid type file');
+        if (!allowedMimeTypes.includes(logo?.mimetype)) {
+          throw 'invalid type file';
         }
-        if (logo.size > 40 * 1024 * 1024) {
-          throw new CBadRequestException('file lager than 40m');
+        if (logo?.size > 40 * 1024 * 1024) {
+          throw 'file lager than 40m';
         }
 
         const auth = `${organizationId.toString().padStart(5, '0')}`;
         const dir = await this.configService.get('app.uploadDir');
-        await this.removeOldFile(currentOrg.uplId, dir, auth);
+        await this.removeOldFile(currentOrg?.uplId, dir, auth);
+
         if (logo) {
           await this.uploadservice._checkGroupStorageSpace(
             organizationId,
@@ -146,13 +160,17 @@ export class SettingOrganizationService {
       }
       const practitioners = await this._getPractitioners(organizationId);
 
+      const arrUser: UserPreferenceEntity[] = [];
       for (const practitioner of practitioners) {
-        const userSetting = practitioner?.setting;
-        await this.dataSource.getRepository(UserPreferenceEntity).save({
-          ...userSetting,
-          sesamVitaleModeDesynchronise: mode_desynchronise,
-        });
+        if (practitioner.setting) {
+          arrUser.push({
+            ...practitioner.setting,
+            sesamVitaleModeDesynchronise: mode_desynchronise,
+          });
+        }
       }
+
+      await this.dataSource.getRepository(UserPreferenceEntity).save(arrUser);
 
       await this.organizationRepository.save({
         ...currentOrg,
@@ -164,9 +182,10 @@ export class SettingOrganizationService {
         imageLibraryLink: image_library_link,
         settings: settings,
       });
+
       return { success: true };
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(error);
     }
   }
 

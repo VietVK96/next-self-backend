@@ -58,6 +58,8 @@ export class CashingService {
 
     const where = this.conditionsToSQL(conditions);
     // query table T_CASHING_CSG join many table ....
+    const conditionValue = `${user} ${where}`;
+
     const statements: PaymentInterface[] = await this.dataSource.query(
       `SELECT
       T_CASHING_CSG.CSG_ID AS id,
@@ -79,8 +81,8 @@ export class CashingService {
   LEFT OUTER JOIN T_CASHING_CONTACT_CSC ON T_CASHING_CONTACT_CSC.CSG_ID = T_CASHING_CSG.CSG_ID
   LEFT OUTER JOIN T_CONTACT_CON ON T_CONTACT_CON.CON_ID = T_CASHING_CONTACT_CSC.CON_ID
   LEFT OUTER JOIN T_LIBRARY_BANK_LBK ON T_LIBRARY_BANK_LBK.LBK_ID = T_CASHING_CSG.LBK_ID
-  WHERE T_CASHING_CSG.USR_ID = ?${where}  ORDER BY T_CASHING_CSG.CSG_PAYMENT_DATE DESC, T_CASHING_CSG.created_at DESC`,
-      [user],
+  WHERE T_CASHING_CSG.USR_ID = ? ORDER BY T_CASHING_CSG.CSG_PAYMENT_DATE DESC, T_CASHING_CSG.created_at DESC`,
+      [conditionValue],
     );
 
     for (const statement of statements) {
@@ -308,50 +310,49 @@ export class CashingService {
                 payment?.patient?.firstname || ''
               }`;
             }
-            // Bénéficiaires
-            if (payload?.contact && payment?.beneficiaries) {
-              amount = +payment?.beneficiaries[0]?.amount;
-              amountCare = +payment?.beneficiaries[0]?.amount_care;
-              amountProsthesis = +payment?.beneficiaries[0]?.amount_prosthesis;
-            }
-            amountTotal += amount;
-            amountCareTotal += amountCare;
-            amountProsthesisTotal += amountProsthesis;
-            if (mode) {
-              total[mode] = type[mode]
-                ? {
-                    amount: type[mode].amount + amount,
-                    amountCare: type[mode].amountCare + amountCare,
-                    amountProsthesis:
-                      type[mode].amountProsthesis + amountProsthesis,
-                  }
-                : {
-                    amount: amount,
-                    amountCare: amountCare,
-                    amountProsthesis: amountProsthesis,
-                  };
-            }
-
-            if (type) {
-              total[type] = total[type]
-                ? {
-                    amount: +(total[type].amount + amount).toFixed(2),
-                    amountCare: +(total[type].amountCare + amountCare).toFixed(
-                      2,
-                    ),
-                    amountProsthesis: +(
-                      total[type].amountProsthesis + amountProsthesis
-                    ).toFixed(2),
-                  }
-                : {
-                    amount: amount,
-                    amountCare: amountCare,
-                    amountProsthesis: amountProsthesis,
-                  };
-            }
-
-            payment.debtor = payer;
           }
+          // Bénéficiaires
+          if (payload?.contact && payment?.beneficiaries) {
+            amount = +payment?.beneficiaries[0]?.amount;
+            amountCare = +payment?.beneficiaries[0]?.amount_care;
+            amountProsthesis = +payment?.beneficiaries[0]?.amount_prosthesis;
+          }
+          amountTotal += amount;
+          amountCareTotal += amountCare;
+          amountProsthesisTotal += amountProsthesis;
+          if (mode) {
+            total[mode] = type[mode]
+              ? {
+                  amount: (type[mode].amount + amount).toFixed(2),
+                  amountCare: (type[mode].amountCare + amountCare).toFixed(2),
+                  amountProsthesis: (
+                    type[mode].amountProsthesis + amountProsthesis
+                  ).toFixed(2),
+                }
+              : {
+                  amount: amount.toFixed(2),
+                  amountCare: amountCare.toFixed(2),
+                  amountProsthesis: amountProsthesis.toFixed(2),
+                };
+          }
+
+          if (type) {
+            total[type] = total[type]
+              ? {
+                  amount: +(total[type].amount + amount).toFixed(2),
+                  amountCare: +(total[type].amountCare + amountCare).toFixed(2),
+                  amountProsthesis: +(
+                    total[type].amountProsthesis + amountProsthesis
+                  ).toFixed(2),
+                }
+              : {
+                  amount: amount.toFixed(2),
+                  amountCare: amountCare.toFixed(2),
+                  amountProsthesis: amountProsthesis.toFixed(2),
+                };
+          }
+
+          payment.debtor = payer;
         });
 
         const data = {
@@ -443,6 +444,8 @@ export class CashingService {
       where = this.conditionsToSQL(conditions);
     }
 
+    const conditionValue = `${doctorId} ${where}`;
+
     const patientStatement = `
     SELECT
         T_CONTACT_CON.CON_ID AS id,
@@ -487,6 +490,8 @@ export class CashingService {
     FROM T_LIBRARY_BANK_LBK
     WHERE T_LIBRARY_BANK_LBK.LBK_ID = ?`;
 
+    const orderByValue = `${orderBy} ${order}`;
+
     const statement = `
     SELECT
         T_CASHING_CSG.CSG_ID AS id,
@@ -505,14 +510,18 @@ export class CashingService {
     LEFT OUTER JOIN T_CASHING_CONTACT_CSC ON T_CASHING_CONTACT_CSC.CSG_ID = T_CASHING_CSG.CSG_ID
     LEFT OUTER JOIN T_CONTACT_CON ON T_CONTACT_CON.CON_ID = T_CASHING_CONTACT_CSC.CON_ID
     LEFT OUTER JOIN T_LIBRARY_BANK_LBK ON T_LIBRARY_BANK_LBK.LBK_ID = T_CASHING_CSG.LBK_ID
-    WHERE T_CASHING_CSG.USR_ID = ${doctorId}
-      ${where}
+    WHERE T_CASHING_CSG.USR_ID = ?
     GROUP BY T_CASHING_CSG.CSG_ID
-    ORDER BY ${orderBy} ${order}, T_CASHING_CSG.created_at DESC
-    LIMIT ${limit}
-    OFFSET ${offset}`;
+    ORDER BY ? , T_CASHING_CSG.created_at DESC
+    LIMIT ?
+    OFFSET ?`;
 
-    const payments = await this.dataSource.query(statement);
+    const payments = await this.dataSource.query(statement, [
+      conditionValue,
+      orderByValue,
+      limit,
+      offset,
+    ]);
 
     const result: FindPaymentRes[] = [];
     for (const payment of payments) {
@@ -590,10 +599,10 @@ export class CashingService {
         T_CASHING_CSG.CSG_DEBTOR AS debtor
     FROM T_CASHING_CONTACT_CSC
     JOIN T_CASHING_CSG
-    WHERE T_CASHING_CONTACT_CSC.CON_ID = ${patientId}
+    WHERE T_CASHING_CONTACT_CSC.CON_ID = ?
       AND T_CASHING_CONTACT_CSC.CSG_ID = T_CASHING_CSG.CSG_ID`;
 
-    const payments = await this.dataSource.query(statement);
+    const payments = await this.dataSource.query(statement, [patientId]);
 
     const results: FindPaymentRes[] = [];
     for (const payment of payments) {
@@ -661,6 +670,7 @@ export class CashingService {
       if (typeof condition === 'string') {
         conditionUse = JSON.parse(condition);
       }
+
       const operator = conditionUse?.op;
       const value = conditionUse?.value;
       const field = conditionUse?.field;

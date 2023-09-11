@@ -30,10 +30,11 @@ import { UnpaidDto, printUnpaidDto } from './dto/unpaid.dto';
 import { UpdatePassWordSettingDto } from './dto/user-setting.dto';
 import { ErrorCode } from 'src/constants/error';
 import { GetOneActiveRes } from './res/get-active.res';
-import * as dayjs from 'dayjs';
 import { CreditBalancesService } from './services/credit-balances.service';
 import { CreditBalancesDto } from './dto/credit-balances.dto';
 import type { Response } from 'express';
+import { UpdateUserSmsDto } from './dto/user-sms.dto';
+import { UserConnectionService } from './services/user-connection.service';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -45,6 +46,7 @@ export class UserController {
     private tokenDownloadService: TokenDownloadService,
     private unpaidService: UnpaidService,
     private creditBalancesService: CreditBalancesService,
+    private userConnectionService: UserConnectionService,
   ) {}
 
   /**
@@ -200,25 +202,13 @@ export class UserController {
 
   @Get('unpaid/print')
   @UseGuards(TokenGuard)
-  async printUnpaid(
-    @Res() res: Response,
-    @CurrentUser() identity: UserIdentity,
-    @Query() param?: printUnpaidDto,
-  ) {
-    const buffer = await this.unpaidService.printUnpaid(identity, param);
-    res.set({
-      // pdf
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename=impayes_${dayjs(
-        new Date(),
-      ).format('YYYYMMDD')}.pdf`,
-      'Content-Length': buffer.length,
-      // prevent cache
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      Pragma: 'no-cache',
-      Expires: 0,
-    });
-    res.end(buffer);
+  async printUnpaid(@Query() param?: printUnpaidDto) {
+    try {
+      const buffer = await this.unpaidService.printUnpaid(param);
+      return buffer;
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
+    }
   }
 
   /**
@@ -226,28 +216,9 @@ export class UserController {
    */
   @Get('credit-balances/print')
   @UseGuards(TokenGuard)
-  async printCreditBalances(
-    @Res() res: Response,
-    @CurrentUser() identity: UserIdentity,
-    @Query() param?: printUnpaidDto,
-  ) {
-    const buffer = await this.creditBalancesService.printCreditBalances(
-      param,
-      identity,
-    );
-    res.set({
-      // pdf
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename=dossiers_crediteurs_${dayjs(
-        new Date(),
-      ).format('YYYYMMDD')}.pdf`,
-      'Content-Length': buffer.length,
-      // prevent cache
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      Pragma: 'no-cache',
-      Expires: 0,
-    });
-    res.end(buffer);
+  async printCreditBalances(@Query() param?: printUnpaidDto) {
+    const buffer = await this.creditBalancesService.printCreditBalances(param);
+    return buffer;
   }
 
   /**
@@ -257,14 +228,9 @@ export class UserController {
   @UseGuards(TokenGuard)
   async exportCreditBalances(
     @Res() res: Response,
-    @CurrentUser() identity: UserIdentity,
     @Query() param: printUnpaidDto,
   ) {
-    return await this.creditBalancesService.exportCreditBalances(
-      param,
-      identity,
-      res,
-    );
+    return await this.creditBalancesService.exportCreditBalances(param, res);
   }
 
   /**
@@ -272,12 +238,10 @@ export class UserController {
    */
   @Get('unpaid/relaunch')
   @UseGuards(TokenGuard)
-  async relaunchUnpaid(
-    @CurrentUser() identity: UserIdentity,
-    @Query() param: printUnpaidDto,
-  ) {
-    return await this.unpaidService.relaunchUnpaid(identity, param);
+  async relaunchUnpaid(@Query() param: printUnpaidDto) {
+    return await this.unpaidService.relaunchUnpaid(param);
   }
+
   /**
    * File : php/user/credit-balances/index.php 100%
    * @param payload
@@ -292,5 +256,40 @@ export class UserController {
   @Post('create')
   async create() {
     return await this.userService.createAcc();
+  }
+  /**
+   * /fsd/users/sms.php?organization_id=1 line 46
+   */
+  @Get('find-all-sms')
+  @UseGuards(TokenGuard)
+  findAll(@CurrentUser() user: UserIdentity) {
+    return this.userService.findAll(user);
+  }
+
+  /**
+   * /fsd/users/sms.php?organization_id=1
+   * line 14-43
+   */
+  @Post('update-sms')
+  @UseGuards(TokenGuard)
+  updateSMS(@Body() users: UpdateUserSmsDto) {
+    return this.userService.updateUserSms(users);
+  }
+
+  /**
+   * ecoophp/fsd/users/connections.php
+   */
+  @Get('user-connections')
+  @UseGuards(TokenGuard)
+  async findLastConnectionsOfUser(
+    @Query('userId') userId: number,
+    @Query('page') page?: number,
+    @Query('maxPerPage') maxPerPage?: number,
+  ) {
+    return this.userConnectionService.findLastConnectionsOfUser(
+      userId,
+      page,
+      maxPerPage,
+    );
   }
 }

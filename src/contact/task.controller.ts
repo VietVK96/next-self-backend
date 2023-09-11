@@ -35,8 +35,11 @@ export class TaskController {
 
   @Post('task/patch')
   @UseGuards(TokenGuard)
-  async updateEventTaskPatch(@Body() payload: EventTaskPatchDto) {
-    return await this.taskService.updateEventTaskPatch(payload);
+  async updateEventTaskPatch(
+    @Body() payload: EventTaskPatchDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return await this.taskService.updateEventTaskPatch(payload, identity);
   }
   /**
    * php/event/task/unrealized.php line 1->12

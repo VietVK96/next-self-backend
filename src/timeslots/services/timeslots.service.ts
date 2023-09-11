@@ -49,13 +49,12 @@ export class TimeslotsService {
     endDate: string,
   ): Promise<TimeslotsAllRes[]> {
     try {
-      const formattedResources = resources.map((item) => `'${item}'`).join(',');
       const timeslots = await this.dataSource.query(
         `SELECT timeslot.id, resource_id as resourceId, resource.name as resourceName, start_date, 
       end_date, timeslot.color, title FROM timeslot JOIN resource ON timeslot.resource_id = resource.id 
-      WHERE resource_id IN (${formattedResources}) and start_date >= ? AND end_date < ?
+      WHERE resource_id IN (?) and start_date >= ? AND end_date < ?
        ORDER BY start_date ASC, end_date ASC`,
-        [this.getStartDay(startDate), this.getEndDay(endDate)],
+        [resources, this.getStartDay(startDate), this.getEndDay(endDate)],
       );
       return timeslots.map((timeslot) => {
         const color: {
@@ -130,7 +129,7 @@ export class TimeslotsService {
 
       return result;
     } catch (err) {
-      throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -239,7 +238,7 @@ export class TimeslotsService {
         .where('TSL.id = :id', { id })
         .getRawOne();
       if (!recurringPatternId)
-        throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
+        throw new CBadRequestException(ErrorCode.NOT_FOUND_ID);
 
       if (recurringPatternId?.getId === null || scope === 'one') {
         const deleteTimeslot = await queryRunner.manager.query(
@@ -247,7 +246,7 @@ export class TimeslotsService {
           [id],
         );
         if (deleteTimeslot.affectedRows === 0)
-          throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
+          throw new CBadRequestException(ErrorCode.DELETE_UNSUCCESSFUL);
       } else {
         if (scope === 'all') {
           const deleteTimeslot = await queryRunner.manager.query(
@@ -262,7 +261,7 @@ export class TimeslotsService {
             deleteTimeslot.affectedRows === 0 ||
             deleteRulesId.affectedRows === 0
           )
-            throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
+            throw new CBadRequestException(ErrorCode.DELETE_UNSUCCESSFUL);
         }
         if (scope === 'tail') {
           const deleteTimeslot = await queryRunner.manager.query(
@@ -270,14 +269,14 @@ export class TimeslotsService {
             [recurringPatternId.getId, id],
           );
           if (deleteTimeslot.affectedRows === 0)
-            throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
+            throw new CBadRequestException(ErrorCode.DELETE_UNSUCCESSFUL);
         }
       }
       await queryRunner.commitTransaction();
       return 1;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new CBadRequestException(ErrorCode.FRESH_TOKEN_WRONG);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     } finally {
       await queryRunner.release();
     }

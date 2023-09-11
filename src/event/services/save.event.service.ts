@@ -491,14 +491,12 @@ export class SaveEventService {
         const reminderIds: number[] = reminders.map((reminder) =>
           Number(reminder.id),
         );
-        const inQuery: string = Array(reminderIds.length).fill('?').join(',');
-
         await queryRunner.query(
           `
         DELETE FROM T_REMINDER_RMD
             WHERE EVT_ID = ?
-              AND RMD_ID NOT IN (${inQuery})`,
-          [eventId, ...reminderIds],
+              AND RMD_ID NOT IN (?)`,
+          [eventId, reminderIds],
         );
 
         const promiseArr = [];

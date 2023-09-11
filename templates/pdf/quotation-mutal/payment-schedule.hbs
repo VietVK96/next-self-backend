@@ -160,7 +160,7 @@ div.header div.h1 {
         {{#each payment_schedule.lines }}
         <tr>
             <td style="background-color: #F6F6F6;">
-                {{ this.date}}
+                {{format this.date}}
             </td>
             <td style="background-color: #F6F6F6; text-align: right;">
                 {{ this.amount}}

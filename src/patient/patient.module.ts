@@ -27,6 +27,11 @@ import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { AntecedentPrestationEntity } from 'src/entities/antecedentprestation.entity';
 import { LibraryOdontogramEntity } from 'src/entities/library-odontogram.entity';
 import { LibraryActEntity } from 'src/entities/library-act.entity';
+import { DocumentMailService } from 'src/mail/services/document.mail.service';
+import { LettersEntity } from 'src/entities/letters.entity';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { BullModule } from '@nestjs/bull';
+import { BullConfigService } from 'src/common/config/bull.config';
 
 @Module({
   imports: [
@@ -51,8 +56,14 @@ import { LibraryActEntity } from 'src/entities/library-act.entity';
       AntecedentPrestationEntity,
       LibraryOdontogramEntity,
       LibraryActEntity,
+      LettersEntity,
+      ContactNoteEntity,
     ]),
     forwardRef(() => ContactModule),
+    BullModule.registerQueueAsync({
+      name: 'amount-due',
+      useClass: BullConfigService,
+    }),
   ],
   controllers: [
     PatientController,
@@ -63,6 +74,7 @@ import { LibraryActEntity } from 'src/entities/library-act.entity';
     PermissionService,
     PatientService,
     PatientBalanceService,
+    DocumentMailService,
     PatientOdontogramService,
   ],
   exports: [PatientService, PatientBalanceService, PatientOdontogramService],

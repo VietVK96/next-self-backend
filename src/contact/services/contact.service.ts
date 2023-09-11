@@ -183,7 +183,15 @@ export class ContactService {
     record.amcs = await this.findAmcs(id);
 
     const image = await this.findLibraryLink(id);
-    record.image_library_link = image?.image_library_link ?? null;
+    record.image_library_link = image.image_library_link
+      ? image.image_library_link + `${record.nbr.toString().padStart(6, '0')}`
+      : null;
+
+    if (record?.medical?.policyHolder) {
+      record.medical.policy_holder = record?.medical?.policyHolder;
+      delete record.medical.policyHolder;
+    }
+
     return record;
   }
 
@@ -282,15 +290,12 @@ count(CON_ID) as countId,COD_TYPE as codType
   }
 
   async findMedical(id: number) {
-    const queryBuiler = this.dataSource.createQueryBuilder();
-    const qr = queryBuiler
-      .select('*')
-      .from(PatientMedicalEntity, 'pme')
-      .where(`patient_id = :id`, {
-        id,
-      });
-
-    return qr.getRawOne();
+    return this.dataSource.getRepository(PatientMedicalEntity).findOne({
+      where: {
+        patientId: id,
+      },
+      relations: ['policyHolder', 'policyHolder.patient'],
+    });
   }
 
   async findAmos(id: number) {

@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { printUnpaidDto } from '../dto/unpaid.dto';
-import { UserIdentity } from 'src/common/decorator/auth.decorator';
-import * as path from 'path';
 import * as dayjs from 'dayjs';
 import { unpaidSort } from 'src/constants/unpaid';
-import { customCreatePdf } from 'src/common/util/pdf';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
@@ -17,6 +14,8 @@ import { IPatientBalances } from 'src/interfaces/interface';
 import { CreditBalancesDto } from '../dto/credit-balances.dto';
 import { UserEntity } from 'src/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
+import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
+import Handlebars from 'handlebars';
 
 @Injectable()
 export class CreditBalancesService {
@@ -33,12 +32,18 @@ export class CreditBalancesService {
   /**
    *php/user/credit-balances/print.php 100%
    */
-  async printCreditBalances(param: printUnpaidDto, identity: UserIdentity) {
+  async printCreditBalances(param: printUnpaidDto) {
+    const user = await this.userRepository.findOne({
+      where: { id: param?.id },
+    });
+    if (!user) {
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
+    }
     const queryBuilder = this.patientBalanceRepo
       .createQueryBuilder('patientBalance')
       .innerJoinAndSelect('patientBalance.patient', 'patient')
       .leftJoinAndSelect('patient.phones', 'phone')
-      .andWhere('patientBalance.usrId = :user', { user: identity.id })
+      .andWhere('patientBalance.usrId = :user', { user: user.id })
       .andWhere('patientBalance.amount < 0');
 
     for (let i = 0; i < param.filterParam?.length; i++) {
@@ -80,7 +85,7 @@ export class CreditBalancesService {
     const currencyObj = await this.userPreferenceRepo.findOneOrFail({
       select: ['currency'],
       where: {
-        usrId: identity.id,
+        usrId: user.id,
       },
     });
     const data = {
@@ -89,65 +94,126 @@ export class CreditBalancesService {
       totalAmount,
     };
 
-    const filePath = path.join(
-      process.cwd(),
-      'templates/credit-balances',
-      'index.hbs',
-    );
+    const templates = `<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Dossiers créditeurs</title>
+    <style>
 
-    const files = [{ path: filePath, data }];
+    html {
+        margin: 0;
+        padding: 0;
+        font-family: Arial;
+    }
 
-    const options = {
-      format: 'A4',
-      displayHeaderFooter: true,
-      landscape: true,
-      margin: {
-        left: '10mm',
-        top: '20mm',
-        right: '10mm',
-        bottom: '20mm',
-      },
+    body {
+        margin: 0;
+        padding: 0;
+    }
 
-      headerTemplate: `<div style="width:100%;margin-left:10mm"><span style="font-size: 8px;">${dayjs(
-        new Date(),
-      ).format(
-        'M/D/YY, hh:mm A',
-      )}</span><span style="font-size: 8px;margin-right:40mm; float: right;">Dossiers créditeurs</span></div>`,
-      footerTemplate: `
-        <div style="width: 100%;margin-right:10mm; font-size: 8px; display: flex; justify-content: space-between">
-          <span style="margin-left: 10mm">${this.configService.get(
-            'app.host',
-          )}/index#credit-balances</span>
-          <div>
-            <span class="pageNumber"></span>
-            <span>/</span>
-            <span class="totalPages"></span>
-          </div>
-        </div>
-      `,
-    };
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 9pt;
+    }
 
-    const helpers = {
-      dateShort: (date) => (date ? dayjs(date).format('DD/MM/YYYY') : ''),
-    };
+    table th,
+    table td {
+        vertical-align: top;
+        padding: 2mm 2mm;
+        border: 0.1pt solid #000000;
+    }
 
-    return await customCreatePdf({ files, options, helpers });
+    table thead th {
+        text-align: center;
+    }
+
+    table tr.tfoot {
+        font-weight: bold;
+    }
+
+    td.visitDate {
+        width: 8%;
+        text-align: center;
+    }
+
+    td.patient {
+        width: 64%;
+    }
+
+    td.phoneNumbers {
+        width: 20%;
+    }
+
+    td.phoneNumbers span.number + span.number::before {
+        content: "- ";
+    }
+
+    td.amount {
+        width: 8%;
+        text-align: right;
+    }
+
+    </style>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th class="visitDate">Date visite</th>
+                <th class="patient">Patient</th>
+                <th class="phoneNumbers">Téléphone</th>
+                <th class="amount">Solde</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each patientBalances }}
+            <tr>
+                <td class="visitDate">{{dateShort this.lastCare }}</td>
+                <td class="patient">{{ this.patient.firtName }} {{this.patient.lastname}}</td>
+                <td class="phoneNumbers">
+                    {{#each this.patient.phones }}
+                    <span class="number">{{ this.number }}</span>
+                    {{/each}}
+                </td>
+                <td class="amount">{{ this.amount}} {{../currency}}</td>
+            </tr>
+            {{/each}}
+            <tr class="tfoot">
+                <td colspan="3"></td>
+                <td class="amount">{{totalAmount}} {{currency}}</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
+    `;
+
+    Handlebars.registerHelper('dateShort', function (date) {
+      return date ? dayjs(date).format('DD/MM/YYYY') : '';
+    });
+
+    return Handlebars.compile(templates)(data);
   }
 
   /**
    *php/user/credit-balances/export.php 100%
    */
-  async exportCreditBalances(
-    param: printUnpaidDto,
-    identity: UserIdentity,
-    res: Response,
-  ) {
+  async exportCreditBalances(param: printUnpaidDto, res: Response) {
+    const user = await this.userRepository.findOne({
+      where: { id: param?.id },
+    });
+    if (!user) {
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
+    }
     try {
       const queryBuilder = this.patientBalanceRepo
         .createQueryBuilder('patientBalance')
         .innerJoinAndSelect('patientBalance.patient', 'patient')
         .leftJoinAndSelect('patient.phones', 'phone')
-        .andWhere('patientBalance.usrId = :user', { user: identity.id })
+        .andWhere('patientBalance.usrId = :user', { user: user.id })
         .andWhere('patientBalance.amount < 0');
 
       for (let i = 0; i < param.filterParam?.length; i++) {

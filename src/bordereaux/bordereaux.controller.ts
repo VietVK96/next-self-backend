@@ -5,11 +5,9 @@ import {
   Param,
   Query,
   UseGuards,
-  Res,
   Post,
   Body,
 } from '@nestjs/common';
-import type { Response } from 'express';
 import { BordereauxService } from './bordereaux.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
@@ -69,19 +67,9 @@ export class BordereauxController {
    */
   @Get('print/:id')
   @UseGuards(TokenGuard)
-  async printPdf(@Res() res: Response, @Param('id') id: number) {
+  async printPdf(@Param('id') id: number) {
     const buffer = await this.bordereauxService.printPdf(id);
-    res.set({
-      // pdf
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename=print.pdf`,
-      'Content-Length': buffer.length,
-      // prevent cache
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      Pragma: 'no-cache',
-      Expires: 0,
-    });
-    res.end(buffer);
+    return buffer;
   }
 
   /**
@@ -104,10 +92,7 @@ export class BordereauxController {
   @Post('store')
   @ApiBearerAuth()
   @UseGuards(TokenGuard)
-  store(
-    @CurrentUser() identity: UserIdentity,
-    @Body() payload: BordereauxStoreDto,
-  ) {
-    return this.bordereauxService.store(identity, payload);
+  store(@Body() payload: BordereauxStoreDto) {
+    return this.bordereauxService.store(payload);
   }
 }

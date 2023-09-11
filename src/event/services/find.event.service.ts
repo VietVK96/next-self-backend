@@ -1,6 +1,5 @@
 import { DataSource } from 'typeorm';
 import { Injectable } from '@nestjs/common';
-
 import { BgEventDto, FindAllEventDto, MemoDto } from '../dto/findAll.event.dto';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
@@ -82,8 +81,6 @@ export class FindEventService {
     return ageString;
   }
 
-  getPhoneNumber;
-
   getStartDay(date: string) {
     const modifiedDate = new Date(date);
     modifiedDate.setHours(0, 0, 0, 0);
@@ -113,8 +110,6 @@ export class FindEventService {
     confidentiality: number,
   ) {
     try {
-      const formattedResources = resources.map((item) => `'${item}'`).join(',');
-
       const sqlHome = await this.prepareSql(
         `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
      FROM T_CONTACT_PHONE_COP
@@ -182,7 +177,7 @@ export class FindEventService {
     LEFT OUTER JOIN T_GENDER_GEN ON T_GENDER_GEN.GEN_ID = T_CONTACT_CON.GEN_ID
     LEFT OUTER JOIN T_REMINDER_RMD ON T_REMINDER_RMD.EVT_ID = T_EVENT_EVT.EVT_ID
     LEFT OUTER JOIN T_REMINDER_TYPE_RMT ON T_REMINDER_TYPE_RMT.RMT_ID = T_REMINDER_RMD.RMT_ID
-    WHERE event_occurrence_evo.resource_id IN (${formattedResources})
+    WHERE event_occurrence_evo.resource_id IN (?)
       AND event_occurrence_evo.evo_date BETWEEN ? AND ?
       AND event_occurrence_evo.evo_exception = 0
       AND event_occurrence_evo.evt_id = T_EVENT_EVT.EVT_ID
@@ -192,7 +187,7 @@ export class FindEventService {
       AND CASE WHEN 0 = ? THEN T_EVENT_EVT.EVT_STATE NOT IN (2,3) ELSE 1 = 1 END
     GROUP BY event_occurrence_evo.evo_id
     ORDER BY start_date, end_date`,
-        [startDate, endDate, viewCancelledEvents],
+        [resources, startDate, endDate, viewCancelledEvents],
       );
       const events: FindAllEventDto[] = [];
       if (confidentiality === 0) {
@@ -243,17 +238,17 @@ export class FindEventService {
       const memos: MemoDto[] = await this.dataSource.query(
         `SELECT T_MEMO_MEM.MEM_ID as id, resource_id as resourceId, resource.name as resourceName,
       MEM_DATE as date FROM T_MEMO_MEM JOIN resource on T_MEMO_MEM.resource_id = resource.id 
-      WHERE resource_id in (${formattedResources}) AND MEM_DATE BETWEEN ? AND ? 
+      WHERE resource_id in (?) AND MEM_DATE BETWEEN ? AND ? 
       ORDER BY MEM_DATE ASC`,
-        [startDate, endDate],
+        [resources, startDate, endDate],
       );
 
       const bgevents: BgEventDto[] = await this.dataSource.query(
         `SELECT timeslot.id, resource_id as resourceId, resource.name as resourceName, start_date, 
       end_date, timeslot.color, title FROM timeslot JOIN resource ON timeslot.resource_id = resource.id 
-      WHERE resource_id IN (${formattedResources}) and start_date >= ? AND end_date < ?
+      WHERE resource_id IN (?) and start_date >= ? AND end_date < ?
        ORDER BY start_date ASC, end_date ASC`,
-        [this.getStartDay(startDate), this.getEndDay(endDate)],
+        [resources, this.getStartDay(startDate), this.getEndDay(endDate)],
       );
       const bgeventsFinalResult = bgevents.map((item) => {
         return {
@@ -334,7 +329,7 @@ export class FindEventService {
       if (events.length === 0)
         throw new CNotFoundRequestException("Le rendez-vous n'existe pas.");
 
-      let result: FindEventByIdRes = events.length > 0 ? events[0] : null;
+      const result: FindEventByIdRes = events.length > 0 ? events[0] : null;
       // TODO
       // if (result.avatar_id) {
       //   result.avatar_url = `php/contact/avatar.php?id=${result.contactId}`;
@@ -379,11 +374,9 @@ export class FindEventService {
         [result.eventId],
       );
 
-      result = { ...result, reminders, historicals };
-
-      return result;
+      return { ...result, reminders, historicals };
     } catch (err) {
-      return err;
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -469,12 +462,8 @@ export class FindEventService {
    * fuction findAll
    * File: App/Services/Event
    */
-  async _findAllForPrint(param: PrintReq) {
+  async _findAllForPrint(param: PrintReq, eventTitleFormat?: string[][]) {
     try {
-      const formattedResources = param.resources
-        .map((item) => `'${item}'`)
-        .join(',');
-
       const sqlHome = await this.prepareSql(
         `SELECT T_PHONE_PHO.PHO_NBR,CON_ID
      FROM T_CONTACT_PHONE_COP
@@ -542,7 +531,7 @@ export class FindEventService {
             JOIN T_USER_USR
             LEFT OUTER JOIN T_CONTACT_CON ON T_CONTACT_CON.CON_ID = T_EVENT_EVT.CON_ID
             LEFT OUTER JOIN T_GENDER_GEN ON T_GENDER_GEN.GEN_ID = T_CONTACT_CON.GEN_ID
-            WHERE event_occurrence_evo.resource_id IN (${formattedResources})
+            WHERE event_occurrence_evo.resource_id IN (?)
               AND event_occurrence_evo.evo_date >= ?
               AND event_occurrence_evo.evo_date < ?
               AND event_occurrence_evo.evo_exception = 0
@@ -551,11 +540,29 @@ export class FindEventService {
               AND T_EVENT_EVT.resource_id = resource.id
               AND T_EVENT_EVT.USR_ID = T_USER_USR.USR_ID
             ORDER BY startDatetime, endDatetime`,
-        [this.getStartDay(param.start), this.getEndDay(param.end)],
+        [
+          param.resources,
+          this.getStartDay(param.start),
+          this.getEndDay(param.end),
+        ],
       );
 
       const events: FindAllEventDto[] = [];
       for (const item of result) {
+        item.title = eventTitleFormat
+          .map((line) => {
+            return (
+              '<div>' +
+              line
+                .map((field) => {
+                  return item[field] || '';
+                })
+                .join(' ') +
+              '</div>'
+            );
+          })
+          .join('');
+
         const newItem = {
           ...item,
           color: {
@@ -597,12 +604,6 @@ export class FindEventService {
    */
   async printPlanning(param: PrintReq) {
     try {
-      const formattedResources = param.resources
-        .map((item) => `'${item}'`)
-        .join(',');
-      if (!formattedResources) {
-        throw new CBadRequestException(ErrorCode.NOT_FOUND_RESOURCES);
-      }
       const events = await this._findAllForPrint(param);
 
       const data = {
@@ -641,6 +642,7 @@ export class FindEventService {
   async printCalendar(param: PrintReq, identity: number) {
     try {
       const session = await this.getSessionService.getUser(identity);
+      const eventTitleFormat = session?.settings?.eventTitleFormat;
       const preference = session?.preference;
 
       const begin = new Date(param?.start);
@@ -666,13 +668,7 @@ export class FindEventService {
 
       const lineHeight = Math.floor(690 / lineNumber);
 
-      const formattedResources = param.resources
-        .map((item) => `'${item}'`)
-        .join(',');
-      if (!formattedResources) {
-        throw new CBadRequestException(ErrorCode.NOT_FOUND_RESOURCES);
-      }
-      const events = await this._findAllForPrint(param);
+      const events = await this._findAllForPrint(param, eventTitleFormat);
 
       let row = preference?.hmd;
 
@@ -714,16 +710,9 @@ export class FindEventService {
         );
       }
 
-      const newEvents = events.map((item) => {
-        return {
-          ...item,
-          title: '<div>' + item.title + '</div>',
-        };
-      });
-
       const data = {
-        events: newEvents,
-        eventLenght: newEvents?.length,
+        events,
+        eventLenght: events?.length,
         preference: preference,
         view: param?.view,
         start: param?.start,

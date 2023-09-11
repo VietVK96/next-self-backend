@@ -1,6 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNumber, IsString, MaxLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsEmail,
+  IsNumber,
+  IsString,
+  MaxLength,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
+import { IsStringOrNull, MaxLengthOrNull } from '../validator';
 
+class MedicalStruct {
+  @ApiProperty()
+  @MinLength(11)
+  @MaxLength(11)
+  rpps_number?: string;
+}
 export class UpdateMyInformationDto {
   @ApiProperty()
   @IsString()
@@ -15,31 +30,31 @@ export class UpdateMyInformationDto {
   short_name?: string;
 
   @ApiProperty()
-  @IsString()
+  @IsStringOrNull()
   phoneNumber?: string;
 
   @ApiProperty()
-  @IsString()
-  @MaxLength(20)
+  @IsStringOrNull()
+  @MaxLengthOrNull(20)
   gsm?: string;
 
   @ApiProperty()
-  @IsString()
-  @MaxLength(45)
+  @IsStringOrNull()
+  @MaxLengthOrNull(45)
   faxNumber?: string;
 
   @ApiProperty()
-  medical?: {
-    rpps_number?: string;
-  };
+  @ValidateNested()
+  @Type(() => MedicalStruct)
+  medical?: MedicalStruct;
 
   @ApiProperty()
-  @IsString()
-  @MaxLength(9)
+  @IsStringOrNull()
+  @MaxLengthOrNull(9)
   finess?: string;
 
   @ApiProperty()
-  @IsString()
+  @IsStringOrNull()
   company_name?: string;
 
   @ApiProperty()
@@ -78,12 +93,14 @@ export class UpdateMyInformationDto {
   freelance?: number;
 
   @ApiProperty()
+  @IsNumber()
   agaMember?: number;
 
   @ApiProperty()
+  @IsNumber()
   droit_permanent_depassement?: number;
 
   @ApiProperty()
   @IsNumber()
-  signature_automatic: number;
+  signature_automatic?: number;
 }
