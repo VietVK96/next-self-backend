@@ -328,8 +328,8 @@ export class UserController {
   @UseGuards(TokenGuard)
   async listOfTreatmentsFindAll(
     @CurrentUser() identity: UserIdentity,
-    @Query() params: ListOfTreatmentsFindAllDto,
+    @Body() body: ListOfTreatmentsFindAllDto,
   ) {
-    return this.listOfTreatmentsService.findAll(identity, params);
+    return this.listOfTreatmentsService.findAll(identity, body);
   }
 }

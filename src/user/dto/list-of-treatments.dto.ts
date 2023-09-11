@@ -1,6 +1,8 @@
 import { ApiProperty, ApiExtraModels } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { parseJson } from 'src/common/util/json';
+import { IsSqlOperator } from './validator-custom';
+import { IsNumber } from 'class-validator';
 
 @ApiExtraModels()
 export class FindAllConditionsDto {
@@ -25,16 +27,12 @@ export class FindAllConditionsDto {
 
 export class ListOfTreatmentsFindAllDto {
   @ApiProperty({ example: 1 })
+  @IsNumber()
   page?: number;
 
   @ApiProperty({ example: 100 })
+  @IsNumber()
   rp?: number;
-
-  @ApiProperty({ required: false })
-  sortname?: string;
-
-  @ApiProperty({ required: false })
-  sortorder?: string;
 
   @ApiProperty({
     isArray: true,
@@ -60,5 +58,6 @@ export class ListOfTreatmentsFindAllDto {
     }
     return re;
   })
+  @IsSqlOperator()
   conditions?: FindAllConditionsDto[];
 }
