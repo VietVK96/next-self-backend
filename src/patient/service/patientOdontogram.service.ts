@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, In, IsNull, MoreThan, Not, Repository } from 'typeorm';
+import { DataSource, IsNull, MoreThan, Not, Repository } from 'typeorm';
 import {
   OdontogramCurrentDto,
   TreatmentPlanOdontogramDto,

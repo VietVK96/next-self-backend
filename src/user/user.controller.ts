@@ -288,4 +288,9 @@ export class UserController {
   getCreditBalances(@Query() payload: CreditBalancesDto) {
     return this.creditBalancesService.getPatientBalances(payload);
   }
+
+  @Post('create')
+  async create() {
+    return await this.userService.createAcc();
+  }
 }

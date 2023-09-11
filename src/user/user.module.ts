@@ -18,6 +18,7 @@ import { CreditBalancesService } from './services/credit-balances.service';
 import { LettersEntity } from 'src/entities/letters.entity';
 import { DocumentMailService } from 'src/mail/services/document.mail.service';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { CreateAccountCmd } from 'src/command/cmd/create-account.cmd';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { ContactNoteEntity } from 'src/entities/contact-note.entity';
     UnpaidService,
     CreditBalancesService,
     DocumentMailService,
+    CreateAccountCmd,
   ],
   exports: [
     PermissionService,
@@ -51,6 +53,7 @@ import { ContactNoteEntity } from 'src/entities/contact-note.entity';
     PreferenceService,
     UnpaidService,
     CreditBalancesService,
+    CreateAccountCmd,
   ],
   controllers: [UserController],
 })

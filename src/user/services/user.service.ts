@@ -584,4 +584,30 @@ export class UserService {
       throw new CBadRequestException(error?.message);
     }
   }
+
+  async add(user: any): Promise<any> {
+    return Promise.resolve().then(() => {
+      console.log('user added:', user);
+    });
+  }
+
+  async createAcc() {
+    try {
+      for (let n = 0; n <= 500; n++) {
+        const name = 'test' + n;
+        await this.userRepository.save({
+          log: name,
+          password:
+            '$2y$10$jldzVAQH5pG2R5uSqMiP0uHVE.VJ2u2ghErBEKpfOGlw8m2R3CHda',
+          token: crypto.randomUUID(),
+          passwordHash: 1,
+          validated: '2023-09-06',
+        });
+      }
+
+      return 'a';
+    } catch (err) {
+      console.log('loi', err);
+    }
+  }
 }
