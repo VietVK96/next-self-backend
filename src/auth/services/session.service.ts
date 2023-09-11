@@ -22,6 +22,7 @@ import { LogoutDto } from '../dto/logout.dto';
 import { ResourceEntity } from 'src/entities/resource.entity';
 import { UserResourceEntity } from 'src/entities/user-resource.entity';
 import { LicenseEntity } from 'src/entities/license.entity';
+import { GetSessionService } from './get-session.service';
 
 @Injectable()
 export class SessionService {
@@ -33,7 +34,7 @@ export class SessionService {
     private jwtService: JwtService,
     @Inject(CACHE_MANAGER)
     protected cacheManager: Cache,
-    private dataSource: DataSource,
+    private getSessionService: GetSessionService,
   ) {}
 
   async createTokenLogin({
@@ -45,36 +46,11 @@ export class SessionService {
     lang?: string;
     oldRefreshToken?: string;
   }): Promise<LoginRes> {
-    const queryBuiler = this.dataSource.createQueryBuilder();
-
-    const selectResource = `resource.id, resource.user_id as doctorId`;
-    const getResourceQr = queryBuiler
-      .select(selectResource)
-      .from(ResourceEntity, 'resource')
-      .innerJoin(
-        UserResourceEntity,
-        'user_resource',
-        'user_resource.resource_id = resource.id',
-      )
-      .innerJoin(
-        UserEntity,
-        'T_USER_USR',
-        'user_resource.user_id = T_USER_USR.USR_ID',
-      )
-      .innerJoin(
-        LicenseEntity,
-        'T_LICENSE_LIC',
-        'T_USER_USR.USR_ID = T_LICENSE_LIC.USR_ID',
-      )
-      .leftJoin(UserEntity, 'USR1', 'USR1.USR_ID = resource.user_id')
-      .andWhere('user_resource.user_id = :userId', {
-        userId: user.id,
-      })
-      .orderBy('resource.name');
-
-    const dataResources: { doctorId: number }[] =
-      await getResourceQr.getRawMany();
-    const doctorIds = dataResources.map((r) => r.doctorId);
+    const practitioners = await this.getSessionService.getPractitioners(
+      user?.id,
+      user?.organizationId,
+    );
+    const doctorIds = practitioners.map((r) => r.id);
 
     const payloadSign: UserIdentity = {
       id: user.id,
