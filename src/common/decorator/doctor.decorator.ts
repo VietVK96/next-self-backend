@@ -11,7 +11,6 @@ export const CurrentDoctor = createParamDecorator(
     }: { user: UserIdentity; headers: Record<string, string> } = context
       .switchToHttp()
       .getRequest();
-    console.log('headers', headers, user.dis);
     const doctorId = parseInt(headers['x-doctorid']);
     if (!doctorId || !user.dis.includes(doctorId)) {
       throw new CBadRequestException(ErrorCode.YOU_NOT_HAVE_DOCTOR);

@@ -161,9 +161,7 @@ export class SettingOrganizationService {
         }
       }
 
-      const a = await this.dataSource
-        .getRepository(UserPreferenceEntity)
-        .save(arrUser);
+      await this.dataSource.getRepository(UserPreferenceEntity).save(arrUser);
 
       await this.organizationRepository.save({
         ...currentOrg,
