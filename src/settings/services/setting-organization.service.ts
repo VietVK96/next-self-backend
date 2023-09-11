@@ -161,10 +161,12 @@ export class SettingOrganizationService {
 
       const arrUser: UserPreferenceEntity[] = [];
       for (const practitioner of practitioners) {
-        arrUser.push({
-          ...practitioner.setting,
-          sesamVitaleModeDesynchronise: mode_desynchronise,
-        });
+        if (practitioner.setting) {
+          arrUser.push({
+            ...practitioner.setting,
+            sesamVitaleModeDesynchronise: mode_desynchronise,
+          });
+        }
       }
 
       await this.dataSource.getRepository(UserPreferenceEntity).save(arrUser);
