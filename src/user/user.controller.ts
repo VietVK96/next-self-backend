@@ -54,6 +54,57 @@ export class UserController {
   ) {}
 
   /**
+   * ecoophp/php/user/listOfTreatments/findAll.php
+   */
+  @Get('listOfTreatments/findAll')
+  @UseGuards(TokenGuard)
+  async listOfTreatmentsFindAll(
+    @CurrentDoctor() doctorId: number,
+    @Query() params: ListOfTreatmentsFindAllDto,
+  ) {
+    return this.listOfTreatmentsService.findAll(doctorId, params);
+  }
+
+  /**
+   * ecoophp/php/user/listOfTreatments/export.php
+   */
+  @Get('listOfTreatments/export')
+  @UseGuards(TokenGuard)
+  async listOfTreatmentsExport(
+    @Res() res: Response,
+    @CurrentDoctor() doctorId: number,
+    @Query() params: ListOfTreatmentsFindAllDto,
+  ) {
+    return this.listOfTreatmentsService.export(res, doctorId, params);
+  }
+
+  /**
+   * ecoophp/php/user/listOfTreatments/print.php
+   */
+  @Get('listOfTreatments/print')
+  @UseGuards(TokenGuard)
+  async listOfTreatmentsPrint(
+    @Res() res: Response,
+    @CurrentDoctor() doctorId: number,
+    @Query() params: ListOfTreatmentsFindAllDto,
+  ) {
+    try {
+      const buffer = await this.listOfTreatmentsService.print(doctorId, params);
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment;`,
+        'Content-Length': buffer.length,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    }
+  }
+
+  /**
    * php/contact/prestation/findAll.php 1->14
    * @param payload
    * @param identity
@@ -291,57 +342,6 @@ export class UserController {
       page,
       maxPerPage,
     );
-  }
-
-  /**
-   * ecoophp/php/user/listOfTreatments/findAll.php
-   */
-  @Get('listOfTreatments/findAll')
-  @UseGuards(TokenGuard)
-  async listOfTreatmentsFindAll(
-    @CurrentDoctor() doctorId: number,
-    @Query() params: ListOfTreatmentsFindAllDto,
-  ) {
-    return this.listOfTreatmentsService.findAll(doctorId, params);
-  }
-
-  /**
-   * ecoophp/php/user/listOfTreatments/export.php
-   */
-  @Get('listOfTreatments/export')
-  @UseGuards(TokenGuard)
-  async listOfTreatmentsExport(
-    @Res() res: Response,
-    @CurrentDoctor() doctorId: number,
-    @Query() params: ListOfTreatmentsFindAllDto,
-  ) {
-    return this.listOfTreatmentsService.export(res, doctorId, params);
-  }
-
-  /**
-   * ecoophp/php/user/listOfTreatments/print.php
-   */
-  @Get('listOfTreatments/print')
-  @UseGuards(TokenGuard)
-  async listOfTreatmentsPrint(
-    @Res() res: Response,
-    @CurrentDoctor() doctorId: number,
-    @Query() params: ListOfTreatmentsFindAllDto,
-  ) {
-    try {
-      const buffer = await this.listOfTreatmentsService.print(doctorId, params);
-      res.set({
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment;`,
-        'Content-Length': buffer.length,
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        Pragma: 'no-cache',
-        Expires: 0,
-      });
-      res.end(buffer);
-    } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
-    }
   }
 
   @Post('create')
