@@ -10,6 +10,7 @@ export class ReminderVisitCount {
 
 export class ReminderVisitPhone {
   phoneNumber?: number;
+  conId?: number;
 }
 
 export class ReminderVisitItemDto {
