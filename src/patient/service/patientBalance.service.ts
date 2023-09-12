@@ -38,6 +38,7 @@ export class PatientBalanceService {
         doctorId,
         patientId,
       );
+
       const oldBalance = checkNumber(patientUser.amount);
       const oldBalanceCare = checkNumber(patientUser.amountCare);
       const oldBalanceProsthesis = checkNumber(patientUser.amountProsthesis);
