@@ -739,6 +739,7 @@ export class BordereauxService {
       });
 
       Handlebars.registerHelper('notEmpty', function (v1) {
+        if (!v1) return false;
         if (Array?.isArray(v1) || typeof v1 === 'string') {
           return v1.length !== 0;
         }
@@ -804,6 +805,7 @@ export class BordereauxService {
           ? amounts[0].totalAmount
           : 0;
       slipcheck.label = `bordereau de remise de ${payload.payment_id.length} ${payload.payment_choice}`;
+      slipcheck.date = dayjs().format('YYYY-MM-DD');
 
       const newSlipcheck = await this.slipCheckRepository.save(slipcheck);
 
