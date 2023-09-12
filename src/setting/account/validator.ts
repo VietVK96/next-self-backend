@@ -13,7 +13,7 @@ export function IsStringOrNull(validationOptions?: ValidationOptions) {
       constraints: [],
       options: validationOptions,
       validator: {
-        validate(value: any, args: ValidationArguments) {
+        validate(value: any) {
           return (
             typeof value === 'string' || value === null || value === undefined
           );
