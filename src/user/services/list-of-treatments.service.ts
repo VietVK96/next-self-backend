@@ -21,8 +21,6 @@ import { UserEntity } from '../../entities/user.entity';
 import { customCreatePdf } from '../../common/util/pdf';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as path from 'path';
-import { br2nl, nl2br } from '../../common/util/string';
-import { checkDay } from '../../common/util/day';
 
 @Injectable()
 export class ListOfTreatmentsService {
@@ -32,7 +30,7 @@ export class ListOfTreatmentsService {
     private userRepository: Repository<UserEntity>,
   ) {}
 
-  async findAll(identity: UserIdentity, body: ListOfTreatmentsFindAllDto) {
+  async findAll(identity: UserIdentity, params: ListOfTreatmentsFindAllDto) {
     try {
       const sumOfAmountQueryBuilder = this.dataSource
         .getRepository(EventTaskEntity)
@@ -47,8 +45,8 @@ export class ListOfTreatmentsService {
         .leftJoin('det.ngapKey', 'ngapKey')
         .where('etk.user = :user', { user: identity.id })
         .andWhere('etk.status > :status', { status: 0 });
-      if (body.conditions)
-        this.addConditions(sumOfAmountQueryBuilder, body?.conditions);
+      if (params.conditions)
+        this.addConditions(sumOfAmountQueryBuilder, params?.conditions);
 
       const result: { sumOfAmount: string } =
         await sumOfAmountQueryBuilder.getRawOne();
@@ -84,17 +82,17 @@ export class ListOfTreatmentsService {
         .groupBy('etk.id')
         .orderBy('etk.date', 'DESC')
         .addOrderBy('etk.createdAt', 'ASC');
-      this.addConditions(queryBuilder, body?.conditions, true);
+      this.addConditions(queryBuilder, params?.conditions, true);
 
       const total = await queryBuilder.getCount();
 
-      const pageSize = body?.rp || 50;
-      const offset = (body?.page ? Number(body.page) - 1 : 0) * pageSize;
+      const pageSize = Number(params?.rp) || 50;
+      const offset = (params?.page ? Number(params.page) - 1 : 0) * pageSize;
       const sql = queryBuilder.getSql().concat(` LIMIT ${offset},${pageSize}`);
       const data = await this.dataSource.query(sql);
 
       const respon: ListTreatmentRes = {
-        page: body?.page ? Number(body.page) : 1,
+        page: params?.page ? Number(params.page) : 1,
         total,
         customs: {
           totalAmount: result.sumOfAmount ?? '0.00',
@@ -108,8 +106,8 @@ export class ListOfTreatmentsService {
           : null;
         const contactId = value?.id;
         const contactNbr = value?.nbr;
-        const contactLastname = value?.lastname;
-        const contactFirstname = value?.firstname;
+        const contactLastname = value?.lastname ?? '';
+        const contactFirstname = value?.firstname ?? '';
         const contactFullname = [contactLastname, contactFirstname]
           .filter(Boolean)
           .join(' ');
@@ -117,8 +115,8 @@ export class ListOfTreatmentsService {
         const amount = value?.amount
           ? parseFloat(value?.amount.toString()).toFixed(2)
           : '0.00';
-        const type = value?.type;
         const teeth = value?.teeth ? value.teeth.toString() : '';
+        const type = value?.type;
 
         let cotation = '';
         switch (type) {
@@ -140,9 +138,10 @@ export class ListOfTreatmentsService {
         if (caresheetDate !== null) {
           caresheetNbr = value?.caresheetNbr;
           if (caresheetNbr === null) {
-            caresheetNbr = 'FS';
+            caresheetNbr = 'Feuille de soin papier';
           }
         }
+
         const row: ListTreatmentRow = {
           id: null,
           cell: [
@@ -171,11 +170,10 @@ export class ListOfTreatmentsService {
     queryBuilder: SelectQueryBuilder<EventTaskEntity>,
     conditions: FindAllConditionsDto[],
     rawQr = false,
-  ): string[] {
+  ) {
+    if (!conditions || conditions.length === 0) return;
     let aliasNumber = 0;
     const alias = 'alias';
-    const params: string[] = [];
-
     const operators = {
       gte: '>=',
       lte: '<=',
@@ -200,47 +198,43 @@ export class ListOfTreatmentsService {
         queryBuilder.setParameter(`${alias}${aliasNumber}`, value);
       }
     });
-
-    return params;
   }
 
   private async fetchEventTask(identity: UserIdentity, conditions: any) {
     const queryBuilder = this.dataSource
       .getRepository(EventTaskEntity)
       .createQueryBuilder('etk')
-      .select([
-        'etk.date',
-        'con.id',
-        'con.nbr',
-        'con.lastname',
-        'con.firstname',
-        'etk.name',
-        'etk.amount',
-        'etk.ccamFamily',
-        'det.coef',
-        'det.teeth',
-        'det.code',
-        'det.type',
-        'ngapKey.name AS ngap_key_name',
-        'fse.date as caresheetDate',
-        'fse.nbr as caresheetNbr',
-      ])
-      .innerJoin('etk.contact', 'con')
-      .leftJoin('etk.event', 'evt', 'evt.delete = :deleteStatus', {
-        deleteStatus: 0,
-      })
+      .select('etk.date as date')
+      .addSelect('con.id as id')
+      .addSelect('con.nbr as nbr')
+      .addSelect('con.lastname as lastname')
+      .addSelect('con.firstname as firstname')
+      .addSelect('etk.name as name')
+      .addSelect('etk.amount as amount')
+      .addSelect('etk.ccamFamily as ccamFamily')
+      .addSelect('det.coef as coef')
+      .addSelect('det.teeth as teeth')
+      .addSelect('det.code as code')
+      .addSelect('det.type as type')
+      .addSelect('ngapKey.name AS ngap_key_name')
+      .addSelect('fse.date as caresheetDate')
+      .addSelect('fse.nbr as caresheetNbr')
+      .innerJoin('etk.patient', 'con')
+      .leftJoin('etk.event', 'evt', 'evt.delete = 0')
       .leftJoin('etk.dental', 'det')
       .leftJoin('det.fse', 'fse')
       .leftJoin('det.ngapKey', 'ngapKey')
-      .where('etk.user = :user', { user: identity?.id })
-      .andWhere('etk.state > :status', { status: 0 })
+      .leftJoin('det.ccam', 'ccam')
+      .leftJoin('ccam.family', 'ccamFamily')
+      .where(`etk.user = ${identity.id}`)
+      .andWhere('etk.status > 0')
       .groupBy('etk.id')
       .orderBy('etk.date', 'DESC')
-      .addOrderBy('etk.createdAt');
+      .addOrderBy('etk.createdAt', 'ASC');
 
     this.addConditions(queryBuilder, conditions);
 
-    return await queryBuilder.getMany();
+    return await queryBuilder.getRawMany();
   }
 
   async export(
@@ -250,35 +244,45 @@ export class ListOfTreatmentsService {
   ) {
     try {
       const raws = await this.fetchEventTask(identity, params?.conditions);
+
       const data = [];
       for (const raw of raws) {
-        let cotation = null;
-        if (raw?.dental?.type === 'CCAM') {
-          cotation = raw?.dental?.code;
-        } else if (raw?.dental.type === 'NGAP') {
-          cotation = [raw?.dental?.ngapKey?.name, raw?.dental?.coef].join(' ');
-        } else {
-          cotation = 'NPC';
+        const type = raw?.type;
+
+        let cotation = '';
+        switch (type) {
+          case 'CCAM':
+            cotation = raw?.code;
+            break;
+          case 'NGAP':
+            cotation = [raw?.ngap_key_name, raw?.coef]
+              .filter(Boolean)
+              .join(' ');
+            break;
+          default:
+            cotation = 'NPC';
+            break;
         }
 
-        const caresheetDate = raw?.dental?.fse?.date;
+        const caresheetDate = raw?.caresheetDate;
         let caresheetNbr = '';
-        if (caresheetDate) {
-          caresheetNbr = raw?.dental?.fse?.nbr;
-          if (!caresheetNbr) {
+        if (caresheetDate !== null) {
+          caresheetNbr = raw?.caresheetNbr;
+          if (caresheetNbr === null) {
             caresheetNbr = 'Feuille de soin papier';
           }
         }
 
+        const amount = raw?.amount
+          ? parseFloat(raw?.amount.toString()).toFixed(2)
+          : '0.00';
+
         data.push({
-          date: format(new Date(raw?.date), 'dd/MM/yyyy'),
-          number: raw?.patient?.nbr,
-          name: raw?.name || '',
-          amount: raw?.amount.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }),
-          type: raw?.dental?.type,
+          date: raw?.date ? dayjs(raw.date).format('DD/MM/YYYY') : null,
+          number: raw?.nbr,
+          name: raw?.name,
+          amount,
+          type,
           cotation,
           caresheetNbr,
           ccamFamily: raw?.ccamFamily,
@@ -295,13 +299,9 @@ export class ListOfTreatmentsService {
         { label: 'FS/FSE', value: 'caresheetNbr' },
         { label: 'Code Regroupement', value: 'ccamFamily' },
       ];
-      const parser = new Parser({ fields });
+      const parser = new Parser({ fields, delimiter: ';' });
       const result = parser.parse(data);
-      const currentDate = new Date();
-      const datePart = format(currentDate, 'yyyyMMdd');
-      const filename = `${datePart}_soins.csv`;
       res.header('Content-Type', 'text/csv');
-      res.attachment(filename);
       res.status(200).send(result);
     } catch (error) {
       throw new RequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
@@ -313,56 +313,62 @@ export class ListOfTreatmentsService {
       const user = await this.userRepository.findOne({
         where: { id: identity?.id },
       });
+      if (!user) throw new RequestException(ErrorCode.NOT_FOUND_USER);
+
       const eventTasks = await this.fetchEventTask(
         identity,
         params?.conditions,
       );
       const numberOfRows = eventTasks.length || 0;
-      let amountTotal = 0;
+      let amountTotal = 0.0;
       const ets = [];
 
-      const formatTeeth = (teeth: any) => {
-        const maxLength = 15;
-        const substrings = [];
-        for (let i = 0; i < teeth.length; i += maxLength) {
-          substrings.push(teeth.slice(i, i + maxLength));
-        }
-        return substrings.join('<br/>');
-      };
-
       for (const raw of eventTasks) {
-        let cotation = null;
-        if (raw?.dental?.type === 'CCAM') {
-          cotation = raw?.dental?.code;
-        } else if (raw?.dental.type === 'NGAP') {
-          cotation = [raw?.dental?.ngapKey?.name, raw?.dental?.coef].join(' ');
-        } else {
-          cotation = 'NPC';
+        amountTotal += parseFloat(raw?.amount) ?? 0.0;
+        let cotation = '';
+        switch (raw.type) {
+          case 'CCAM':
+            cotation = raw?.code;
+            break;
+          case 'NGAP':
+            cotation = [raw?.ngap_key_name, raw?.coef]
+              .filter(Boolean)
+              .join(' ');
+            break;
+          default:
+            cotation = 'NPC';
+            break;
         }
 
-        const caresheetDate = raw?.dental?.fse?.date;
+        const caresheetDate = raw?.caresheetDate;
         let caresheetNbr = '';
-        if (caresheetDate) {
-          caresheetNbr = raw?.dental?.fse?.nbr;
-          if (!caresheetNbr) {
+        if (caresheetDate !== null) {
+          caresheetNbr = raw?.caresheetNbr;
+          if (caresheetNbr === null) {
             caresheetNbr = 'Feuille de soin papier';
           }
         }
 
-        const contactFullname = `${raw?.patient?.lastname} ${raw?.patient?.firstname}`;
-        amountTotal += raw?.amount;
-
-        const teeth = formatTeeth(raw?.dental?.teeth);
+        const contactLastname = raw?.lastname ?? '';
+        const contactFirstname = raw?.firstname ?? '';
+        const contactFullname = [contactLastname, contactFirstname]
+          .filter(Boolean)
+          .join(' ');
+        const name = raw?.name;
+        const amount = raw?.amount
+          ? parseFloat(raw?.amount.toString()).toFixed(2)
+          : '0.00';
+        const teeth = raw?.teeth ? raw.teeth.toString() : '';
+        const dateAsString = raw?.date
+          ? dayjs(raw.date).format('DD/MM/YYYY')
+          : null;
 
         ets.push({
-          date: format(new Date(raw?.date), 'dd/MM/yyyy'),
-          number: raw?.patient?.nbr,
-          name: raw?.name || '',
-          amount: raw?.amount.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          }),
-          type: raw?.dental?.type,
+          date: dateAsString,
+          number: raw?.nbr,
+          name,
+          amount,
+          type: raw?.type,
           cotation,
           teeth,
           caresheetNbr,
@@ -383,16 +389,22 @@ export class ListOfTreatmentsService {
         'templates/pdf/list-of-treatments',
         'print.hbs',
       );
+
       const options = {
         format: 'A4',
         displayHeaderFooter: true,
-        footerTemplate: '',
         margin: {
-          left: '5mm',
-          top: '5mm',
-          right: '5mm',
-          bottom: '5mm',
+          left: '10mm',
+          top: '10mm',
+          right: '10mm',
+          bottom: '15mm',
         },
+        headerTemplate: `<div></div>`,
+        footerTemplate: `<div style="width: 100%;margin-right:10mm; text-align: right; font-size: 8px;">Document généré le ${format(
+          new Date(),
+          'dd/MM/yyyy',
+        )} Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>`,
+        landscape: true,
       };
       const files = [{ path: filePath, data }];
 
@@ -410,7 +422,7 @@ export class ListOfTreatmentsService {
         },
       };
 
-      return customCreatePdf({ files, options, helpers });
+      return await customCreatePdf({ files, options, helpers });
     } catch (error) {
       throw new RequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }

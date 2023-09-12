@@ -1,4 +1,8 @@
-import { registerDecorator, ValidationOptions } from 'class-validator';
+import {
+  registerDecorator,
+  ValidationOptions,
+  ValidationArguments,
+} from 'class-validator';
 import { FindAllConditionsDto } from './list-of-treatments.dto';
 
 const OPERATOR_SQL = ['between', 'gte', 'eq', 'lte', 'like'];
@@ -41,7 +45,29 @@ export function IsSqlOperator(validationOptions?: ValidationOptions) {
           return result;
         },
         defaultMessage() {
-          return `op must be a operator of sql and or field is invalid`;
+          return `op must be a operator of sql or field is invalid`;
+        },
+      },
+    });
+  };
+}
+
+export function IsNumberOrNull(validationOptions?: ValidationOptions) {
+  return function (object: unknown, propertyName: string) {
+    registerDecorator({
+      name: 'isNumberOrNull',
+      target: object.constructor,
+      propertyName: propertyName,
+      constraints: [],
+      options: validationOptions,
+      validator: {
+        validate(value: any) {
+          return (
+            typeof value === 'number' || value === null || value === undefined
+          );
+        },
+        defaultMessage(args: ValidationArguments) {
+          return `${args.property} must be a number or null.`;
         },
       },
     });

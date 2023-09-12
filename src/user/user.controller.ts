@@ -299,13 +299,13 @@ export class UserController {
   /**
    * ecoophp/php/user/listOfTreatments/findAll.php
    */
-  @Post('listOfTreatments/findAll')
+  @Get('listOfTreatments/findAll')
   @UseGuards(TokenGuard)
   async listOfTreatmentsFindAll(
     @CurrentUser() identity: UserIdentity,
-    @Body() body: ListOfTreatmentsFindAllDto,
+    @Query() params: ListOfTreatmentsFindAllDto,
   ) {
-    return this.listOfTreatmentsService.findAll(identity, body);
+    return this.listOfTreatmentsService.findAll(identity, params);
   }
 
   /**
@@ -322,7 +322,7 @@ export class UserController {
   }
 
   /**
-   * ecoophp/php/user/listOfTreatments/export.php
+   * ecoophp/php/user/listOfTreatments/print.php
    */
   @Get('listOfTreatments/print')
   @UseGuards(TokenGuard)
