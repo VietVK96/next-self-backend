@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { DataSource, SelectQueryBuilder, Repository } from 'typeorm';
 import {
   FindAllConditionsDto,
@@ -30,7 +29,7 @@ export class ListOfTreatmentsService {
     private userRepository: Repository<UserEntity>,
   ) {}
 
-  async findAll(identity: UserIdentity, params: ListOfTreatmentsFindAllDto) {
+  async findAll(doctorId: number, params: ListOfTreatmentsFindAllDto) {
     try {
       const sumOfAmountQueryBuilder = this.dataSource
         .getRepository(EventTaskEntity)
@@ -43,7 +42,7 @@ export class ListOfTreatmentsService {
         .leftJoin('etk.dental', 'det')
         .leftJoin('det.fse', 'fse')
         .leftJoin('det.ngapKey', 'ngapKey')
-        .where('etk.user = :user', { user: identity.id })
+        .where('etk.user = :user', { user: doctorId })
         .andWhere('etk.status > :status', { status: 0 });
       if (params.conditions)
         this.addConditions(sumOfAmountQueryBuilder, params?.conditions);
@@ -77,7 +76,7 @@ export class ListOfTreatmentsService {
         .leftJoin('det.ngapKey', 'ngapKey')
         .leftJoin('det.ccam', 'ccam')
         .leftJoin('ccam.family', 'ccamFamily')
-        .where(`etk.user = ${identity.id}`)
+        .where(`etk.user = ${doctorId}`)
         .andWhere('etk.status > 0')
         .groupBy('etk.id')
         .orderBy('etk.date', 'DESC')
@@ -200,7 +199,7 @@ export class ListOfTreatmentsService {
     });
   }
 
-  private async fetchEventTask(identity: UserIdentity, conditions: any) {
+  private async fetchEventTask(doctorId: number, conditions: any) {
     const queryBuilder = this.dataSource
       .getRepository(EventTaskEntity)
       .createQueryBuilder('etk')
@@ -226,7 +225,7 @@ export class ListOfTreatmentsService {
       .leftJoin('det.ngapKey', 'ngapKey')
       .leftJoin('det.ccam', 'ccam')
       .leftJoin('ccam.family', 'ccamFamily')
-      .where(`etk.user = ${identity.id}`)
+      .where(`etk.user = ${doctorId}`)
       .andWhere('etk.status > 0')
       .groupBy('etk.id')
       .orderBy('etk.date', 'DESC')
@@ -239,11 +238,11 @@ export class ListOfTreatmentsService {
 
   async export(
     res: Response,
-    identity: UserIdentity,
+    doctorId: number,
     params: ListOfTreatmentsFindAllDto,
   ) {
     try {
-      const raws = await this.fetchEventTask(identity, params?.conditions);
+      const raws = await this.fetchEventTask(doctorId, params?.conditions);
 
       const data = [];
       for (const raw of raws) {
@@ -308,15 +307,15 @@ export class ListOfTreatmentsService {
     }
   }
 
-  async print(identity: UserIdentity, params: ListOfTreatmentsFindAllDto) {
+  async print(doctorId: number, params: ListOfTreatmentsFindAllDto) {
     try {
       const user = await this.userRepository.findOne({
-        where: { id: identity?.id },
+        where: { id: doctorId },
       });
       if (!user) throw new RequestException(ErrorCode.NOT_FOUND_USER);
 
       const eventTasks = await this.fetchEventTask(
-        identity,
+        doctorId,
         params?.conditions,
       );
       const numberOfRows = eventTasks.length || 0;

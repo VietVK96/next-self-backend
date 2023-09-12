@@ -37,6 +37,7 @@ import { UpdateUserSmsDto } from './dto/user-sms.dto';
 import { UserConnectionService } from './services/user-connection.service';
 import { ListOfTreatmentsService } from './services/list-of-treatments.service';
 import { ListOfTreatmentsFindAllDto } from './dto/list-of-treatments.dto';
+import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -302,10 +303,10 @@ export class UserController {
   @Get('listOfTreatments/findAll')
   @UseGuards(TokenGuard)
   async listOfTreatmentsFindAll(
-    @CurrentUser() identity: UserIdentity,
+    @CurrentDoctor() doctorId: number,
     @Query() params: ListOfTreatmentsFindAllDto,
   ) {
-    return this.listOfTreatmentsService.findAll(identity, params);
+    return this.listOfTreatmentsService.findAll(doctorId, params);
   }
 
   /**
@@ -315,10 +316,10 @@ export class UserController {
   @UseGuards(TokenGuard)
   async listOfTreatmentsExport(
     @Res() res: Response,
-    @CurrentUser() identity: UserIdentity,
+    @CurrentDoctor() doctorId: number,
     @Query() params: ListOfTreatmentsFindAllDto,
   ) {
-    return this.listOfTreatmentsService.export(res, identity, params);
+    return this.listOfTreatmentsService.export(res, doctorId, params);
   }
 
   /**
@@ -328,11 +329,11 @@ export class UserController {
   @UseGuards(TokenGuard)
   async listOfTreatmentsPrint(
     @Res() res: Response,
-    @CurrentUser() identity: UserIdentity,
+    @CurrentDoctor() doctorId: number,
     @Query() params: ListOfTreatmentsFindAllDto,
   ) {
     try {
-      const buffer = await this.listOfTreatmentsService.print(identity, params);
+      const buffer = await this.listOfTreatmentsService.print(doctorId, params);
       res.set({
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment;`,
