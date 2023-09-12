@@ -139,8 +139,8 @@ export class ReminderVisitService {
     };
 
     const operators = {
-      gte: '>=',
-      lte: '<=',
+      gte: '>',
+      lte: '<',
       eq: '=',
       like: 'like',
     };

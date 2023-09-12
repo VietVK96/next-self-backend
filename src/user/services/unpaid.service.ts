@@ -67,7 +67,8 @@ export class UnpaidService {
       patientBalance.relaunchDate as relaunchDate,
       patientBalance.relaunchLevel as relaunchLevel,
       patientBalance.lastCare as lastCare,
-      patientBalance.conId as conId
+      patientBalance.conId as conId,
+      patientBalance.usr_id as userId
       `,
       )
       .from(ContactUserEntity, 'patientBalance')
