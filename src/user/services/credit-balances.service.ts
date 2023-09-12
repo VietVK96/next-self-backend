@@ -16,6 +16,8 @@ import { UserEntity } from 'src/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import Handlebars from 'handlebars';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class CreditBalancesService {
@@ -94,102 +96,10 @@ export class CreditBalancesService {
       totalAmount,
     };
 
-    const templates = `<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Dossiers créditeurs</title>
-    <style>
-
-    html {
-        margin: 0;
-        padding: 0;
-        font-family: Arial;
-    }
-
-    body {
-        margin: 0;
-        padding: 0;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 9pt;
-    }
-
-    table th,
-    table td {
-        vertical-align: top;
-        padding: 2mm 2mm;
-        border: 0.1pt solid #000000;
-    }
-
-    table thead th {
-        text-align: center;
-    }
-
-    table tr.tfoot {
-        font-weight: bold;
-    }
-
-    td.visitDate {
-        width: 8%;
-        text-align: center;
-    }
-
-    td.patient {
-        width: 64%;
-    }
-
-    td.phoneNumbers {
-        width: 20%;
-    }
-
-    td.phoneNumbers span.number + span.number::before {
-        content: "- ";
-    }
-
-    td.amount {
-        width: 8%;
-        text-align: right;
-    }
-
-    </style>
-</head>
-<body>
-    <table>
-        <thead>
-            <tr>
-                <th class="visitDate">Date visite</th>
-                <th class="patient">Patient</th>
-                <th class="phoneNumbers">Téléphone</th>
-                <th class="amount">Solde</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{#each patientBalances }}
-            <tr>
-                <td class="visitDate">{{dateShort this.lastCare }}</td>
-                <td class="patient">{{ this.patient.firtName }} {{this.patient.lastname}}</td>
-                <td class="phoneNumbers">
-                    {{#each this.patient.phones }}
-                    <span class="number">{{ this.number }}</span>
-                    {{/each}}
-                </td>
-                <td class="amount">{{ this.amount}} {{../currency}}</td>
-            </tr>
-            {{/each}}
-            <tr class="tfoot">
-                <td colspan="3"></td>
-                <td class="amount">{{totalAmount}} {{currency}}</td>
-            </tr>
-        </tbody>
-    </table>
-</body>
-</html>
-    `;
+    const templates = fs.readFileSync(
+      path.join(__dirname, '../../../templates/credit-balances/index.hbs'),
+      'utf-8',
+    );
 
     Handlebars.registerHelper('dateShort', function (date) {
       return date ? dayjs(date).format('DD/MM/YYYY') : '';

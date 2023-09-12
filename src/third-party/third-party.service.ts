@@ -31,6 +31,8 @@ import * as dayjs from 'dayjs';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { ErrorCode } from 'src/constants/error';
 import Handlebars from 'handlebars';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class ThirdPartyService {
@@ -633,86 +635,10 @@ export class ThirdPartyService {
       thirdPartyAmountRemainingTotal,
     };
 
-    const templates = `<html lang='fr'>
-  <head>
-    <meta charset='UTF-8' />
-    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-    <meta http-equiv='X-UA-Compatible' content='ie=edge' />
-    <title>Suivi des tiers payants</title>
-    <style>
-      html { margin: 0; padding: 0; font-family: Arial; } body { margin: 0;
-      padding: 0; } .status-WTN { color: #6e7687; background-color: #e9ecef;
-      border-radius: 50px; } .status-INK { color: #ffffff; background-color:
-      #ffc107; border-radius: 50px; } .status-PYD { color: #ffffff;
-      background-color: #28a745; border-radius: 50px; } .status-RJT { color:
-      #ffffff; background-color: #dc3545; border-radius: 50px; } table { width:
-      100%; border-collapse: collapse; font-size: 9pt; } table th, table td {
-      vertical-align: top; padding: 2mm 2mm; border: 0.1pt solid #000000; }
-      table thead th { text-align: center; } table tr.tfoot { font-weight: bold;
-      } td.amoStatusReadable { width: 5%; text-align: center; }
-      td.amcStatusReadable { width: 5%; text-align: center; } td.creationDate {
-      width: 8%; text-align: center; } td.number { width: 8%; text-align:
-      center; } td.amoLibelle { width: 10%; text-align: center; } td.amcLibelle
-      { width: 10%; text-align: center; } td.amount { width: 8%; text-align:
-      right; } td.amountPaid { width: 8%; text-align: right; }
-      td.amountRemaining { width: 8%; text-align: right; }
-
-    </style>
-  </head>
-  <body>
-    <table>
-      <thead>
-        <tr>
-          <th colspan='2'>État</th>
-          <th class='creationDate'>Date</th>
-          <th class='number'>Numéro</th>
-          <th class='patientFullName'>Patient</th>
-          <th class='amoLibelle'>AMO</th>
-          <th class='amcLibelle'>AMC</th>
-          <th class='amount'>Montant</th>
-          <th class='amountPaid'>Montant payé</th>
-          <th class='amountRemaining'>Montant restant</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each caresheets}}
-          <tr>
-            <td class='amoStatusReadable'>
-              {{#if this.thirdPartyAmo}}
-                <div class='status-{{this.thirdPartyAmo.status}}'>
-                  AMO
-                </div>
-              {{/if}}
-            </td>
-            <td class='amcStatusReadable'>
-              {{#if this.thirdPartyAmc}}
-                <div class='status-{{this.thirdPartyAmc.status}}'>
-                  AMC
-                </div>
-              {{/if}}
-            </td>
-            <td class='creationDate'>{{dateShort this.date}}</td>
-            <td class='number'>{{this.nbr}}</td>
-            <td class='patientFullName'>{{this.patient.lastname}}
-              {{this.patient.firstname}}</td>
-            <td class='amoLibelle'>{{this.thirdPartyAmo.amo.libelle}}</td>
-            <td class='amcLibelle'>{{this.thirdPartyAmc.amc.libelle}}</td>
-            <td class='amount'>{{this.thirdPartyAmount}} {{../currency}}</td>
-            <td class="amountPaid">{{this.thirdPartyAmountPaid}} {{../currency}}</td>
-            <td class="amountRemaining">{{this.thirdPartyAmountRemaining}} {{../currency}}</td>
-          </tr>
-        {{/each}}
-        <tr class="tfoot">
-                <td colspan="7"></th>
-                <td class="amount">{{ thirdPartyAmountTotal}} {{currency}}</td>
-                <td class="amountPaid">{{ thirdPartyAmountPaidTotal}} {{currency}}</td>
-                <td class="amountRemaining">{{ thirdPartyAmountRemainingTotal}} {{currency}}</td>
-            </tr>
-      </tbody>
-
-    </table>
-  </body>
-    </html>`;
+    const templates = fs.readFileSync(
+      path.join(__dirname, '../../templates/third-party/index.hbs'),
+      'utf-8',
+    );
 
     Handlebars.registerHelper('dateShort', function (date) {
       return date ? dayjs(date).format('DD/MM/YYYY') : '';
