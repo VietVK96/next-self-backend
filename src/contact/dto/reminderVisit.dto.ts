@@ -46,3 +46,14 @@ export class ReminderVisitPrintQuery {
   @ApiProperty()
   user?: number;
 }
+
+export class ReminderVisitMailDto {
+  @ApiProperty()
+  contacts?: number[];
+
+  @ApiProperty()
+  documentMailId?: number;
+
+  @ApiProperty()
+  user?: number;
+}

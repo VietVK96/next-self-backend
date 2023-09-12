@@ -3,13 +3,14 @@ import {
   ConditionItem,
   ReminderVisitCount,
   ReminderVisitItemDto,
+  ReminderVisitMailDto,
   ReminderVisitPhone,
   ReminderVisitPrintQuery,
   ReminderVisitQuery,
 } from '../dto/reminderVisit.dto';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
-import { EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import * as dayjs from 'dayjs';
 import { ReminderVisitRes } from '../response/reminder-visit.res';
 import { nl2br } from 'src/common/util/string';
@@ -20,6 +21,11 @@ import {
   IReminderCondition,
   IReminderVisitDateConvert,
 } from '../interface/reminder.visit.interface';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
+import { LettersEntity } from 'src/entities/letters.entity';
+import { PatientService } from 'src/patient/service/patient.service';
+import { MailService } from 'src/mail/services/mail.service';
 
 @Injectable()
 export class ReminderVisitService {
@@ -29,8 +35,13 @@ export class ReminderVisitService {
     private readonly userPreferenceRepository: Repository<UserPreferenceEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(LettersEntity)
+    private readonly mailRepository: Repository<LettersEntity>,
     @InjectEntityManager()
     private readonly entityManager: EntityManager,
+    private readonly patientService: PatientService,
+    private readonly mailService: MailService,
+    private readonly dataSource: DataSource,
   ) {}
 
   getQuery() {
@@ -376,5 +387,153 @@ export class ReminderVisitService {
 
     const pdf = await createPdf(filePath, options, { patients });
     return pdf;
+  }
+
+  async getNextReminderByDoctor(id: number, doctorId: number) {
+    const patient = await this.dataSource.query(
+      `
+      SELECT
+        CON_REMINDER_VISIT_TYPE AS type,
+        CON_REMINDER_VISIT_DATE AS date
+      FROM T_CONTACT_CON
+      WHERE CON_ID = ?`,
+      [id],
+    );
+    const type = patient?.[0]?.type;
+    if (type === 'date') return patient?.[0]?.date;
+    if (type === 'duration') {
+      const duration = await this.dataSource.query(
+        `
+        SELECT
+          USP_REMINDER_VISIT_DURATION
+        FROM T_USER_PREFERENCE_USP
+        WHERE USR_ID = ?
+      `,
+        [doctorId],
+      );
+      return await this.dataSource.query(
+        `
+        SELECT
+            MAX(t1.max_date) + INTERVAL IF(
+                CON_REMINDER_VISIT_DURATION IS NULL OR CON_REMINDER_VISIT_DURATION = 0,
+                ?,
+                CON_REMINDER_VISIT_DURATION
+            ) MONTH as date
+        FROM T_CONTACT_CON
+        JOIN (
+            (
+                SELECT
+                    MAX(T_EVENT_TASK_ETK.ETK_DATE) AS max_date
+                FROM T_CONTACT_CON
+                JOIN T_EVENT_TASK_ETK
+                WHERE T_CONTACT_CON.CON_ID = ?
+                  AND T_CONTACT_CON.CON_ID = T_EVENT_TASK_ETK.CON_ID
+                  AND T_EVENT_TASK_ETK.USR_ID = ?
+                GROUP BY T_CONTACT_CON.CON_ID
+            )
+            UNION
+            (
+                SELECT
+                    MAX(event_occurrence_evo.evo_date) AS max_date
+                FROM T_CONTACT_CON
+                JOIN T_EVENT_EVT
+                JOIN event_occurrence_evo
+                WHERE T_CONTACT_CON.CON_ID = ?
+                  AND T_CONTACT_CON.CON_ID = T_EVENT_EVT.CON_ID
+                  AND T_EVENT_EVT.USR_ID = ?
+                  AND T_EVENT_EVT.EVT_ID = event_occurrence_evo.evt_id
+                GROUP BY T_CONTACT_CON.CON_ID
+            )
+        ) AS t1
+        WHERE T_CONTACT_CON.CON_ID = ?
+      `,
+        [
+          duration?.[0]?.USP_REMINDER_VISIT_DURATION,
+          id,
+          doctorId,
+          id,
+          doctorId,
+          id,
+        ],
+      );
+      // return duration ?? null;
+    }
+  }
+
+  async mail(payload: ReminderVisitMailDto) {
+    const user = await this.userRepository.findOne({
+      where: {
+        id: payload.user,
+      },
+    });
+    if (!user) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND_USER);
+    }
+
+    if (payload.contacts.length === 0 || !Array.isArray(payload.contacts)) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND_CONTACT);
+    }
+
+    const mailTemplate: LettersEntity = await this.mailRepository.findOne({
+      where: {
+        id: payload.documentMailId,
+      },
+    });
+
+    const message = mailTemplate.msg;
+
+    const res = [];
+    const queryRunner = this.dataSource.createQueryRunner();
+    for (const contact of payload.contacts) {
+      try {
+        const nextReminder = await this.getNextReminderByDoctor(
+          contact,
+          user.id,
+        );
+
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+
+        const context = await this.mailService.context([user.id, contact]);
+
+        const messageTransformed = await this.mailService.render(
+          message,
+          context,
+          '',
+          true,
+        );
+
+        await queryRunner.query(
+          `UPDATE T_CONTACT_CON
+                  SET CON_REMINDER_VISIT_LAST_DATE = CURRENT_TIMESTAMP()
+                  WHERE CON_ID = ?`,
+          [contact],
+        );
+
+        await queryRunner.query(
+          `INSERT INTO T_CONTACT_NOTE_CNO (user_id, CON_ID, CNO_DATE, CNO_MESSAGE)
+                    VALUES (?, ?, CURRENT_TIMESTAMP(), ?)`,
+          [
+            user.id,
+            contact,
+            `Envoi d'un courrier pour le rappel visite du ${dayjs(
+              nextReminder?.[0]?.date,
+            ).format('DD/MM/YYYY')}`,
+          ],
+        );
+
+        await queryRunner.commitTransaction();
+
+        res.push(
+          '<div style="page-break-after: always;">' +
+            messageTransformed +
+            '</div>',
+        );
+      } catch {
+        await queryRunner.rollbackTransaction();
+        throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+      }
+    }
+    return res;
   }
 }

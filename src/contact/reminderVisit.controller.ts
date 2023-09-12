@@ -8,6 +8,7 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import {
+  ReminderVisitMailDto,
   ReminderVisitPrintQuery,
   ReminderVisitQuery,
 } from './dto/reminderVisit.dto';
@@ -62,5 +63,15 @@ export class ReminderVisitController {
       Expires: 0,
     });
     res.end(buffer);
+  }
+
+  /**
+   * php/contact/reminderVisit/mail.php
+   * full file
+   */
+  @Get('/mail')
+  @UseGuards(TokenGuard)
+  async mail(@Query() payload: ReminderVisitMailDto) {
+    return await this.reminderVisitService.mail(payload);
   }
 }

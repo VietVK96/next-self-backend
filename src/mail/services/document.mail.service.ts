@@ -1,12 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 import { TranformVariableParam } from '../dto/transformVariable.dto';
 import { format } from 'date-fns';
 import Handlebars from 'handlebars';
+import { EnumLettersType, LettersEntity } from 'src/entities/letters.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class DocumentMailService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private dataSource: DataSource,
+    @InjectRepository(LettersEntity)
+    private readonly mailRepository: Repository<LettersEntity>,
+  ) {}
 
   /**
    * File: application/Services/Document/Mail.php
@@ -268,5 +274,31 @@ export class DocumentMailService {
     });
 
     return Handlebars.compile(param.message)(context);
+  }
+
+  /**
+   * File: php/document/mail/findAll.php
+   */
+  async findAll(user: number, type?: EnumLettersType) {
+    //@Todo missing relations
+    const mails = await this.mailRepository.find({
+      select: ['id', 'title', 'type', 'conId', 'cpdId', 'usrId'],
+      where: [
+        {
+          conId: IsNull(),
+          cpdId: IsNull(),
+          usrId: IsNull(),
+          type: EnumLettersType[type.toLocaleUpperCase()],
+        },
+        {
+          conId: IsNull(),
+          cpdId: IsNull(),
+          usrId: user,
+          type: EnumLettersType[type.toLocaleUpperCase()],
+        },
+      ],
+    });
+
+    return mails;
   }
 }

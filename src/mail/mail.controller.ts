@@ -31,6 +31,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { SendMailDto } from './dto/sendMail.dto';
 import { UpdateMailDto } from './dto/mail.dto';
 import { DocumentMailService } from './services/document.mail.service';
+import { EnumLettersType } from 'src/entities/letters.entity';
 
 @ApiBearerAuth()
 @Controller('/mails')
@@ -213,5 +214,17 @@ export class MailController {
     @CurrentUser() identity: UserIdentity,
   ): Promise<TranformDto> {
     return this.mailService.preview(id, docId, identity.org);
+  }
+
+  /**
+   * File: php/document/mail/findAll.php
+   */
+  @Get('/document/findAll')
+  @UseGuards(TokenGuard)
+  async documentFindAll(
+    @Query('user') user: number,
+    @Query('type') type?: EnumLettersType,
+  ) {
+    return this.documentMailService.findAll(user, type);
   }
 }
