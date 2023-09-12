@@ -52,6 +52,7 @@ export class GetSessionService {
         'USR.USR_ABBR as abbr',
         'USR.USR_LASTNAME as lastname',
         'USR.USR_FIRSTNAME as firstname',
+        'USR.color as color',
         'USR.USR_MAIL as email',
         'USR.USR_PHONE_NUMBER as phoneHome',
         'USR.USR_GSM as phoneMobile',
