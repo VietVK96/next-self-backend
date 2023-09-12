@@ -35,6 +35,8 @@ import { CreditBalancesDto } from './dto/credit-balances.dto';
 import type { Response } from 'express';
 import { UpdateUserSmsDto } from './dto/user-sms.dto';
 import { UserConnectionService } from './services/user-connection.service';
+import { ListOfTreatmentsService } from './services/list-of-treatments.service';
+import { ListOfTreatmentsFindAllDto } from './dto/list-of-treatments.dto';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -47,6 +49,7 @@ export class UserController {
     private unpaidService: UnpaidService,
     private creditBalancesService: CreditBalancesService,
     private userConnectionService: UserConnectionService,
+    private listOfTreatmentsService: ListOfTreatmentsService,
   ) {}
 
   /**
@@ -291,5 +294,56 @@ export class UserController {
       page,
       maxPerPage,
     );
+  }
+
+  /**
+   * ecoophp/php/user/listOfTreatments/findAll.php
+   */
+  @Get('listOfTreatments/findAll')
+  @UseGuards(TokenGuard)
+  async listOfTreatmentsFindAll(
+    @CurrentUser() identity: UserIdentity,
+    @Query() params: ListOfTreatmentsFindAllDto,
+  ) {
+    return this.listOfTreatmentsService.findAll(identity, params);
+  }
+
+  /**
+   * ecoophp/php/user/listOfTreatments/export.php
+   */
+  @Get('listOfTreatments/export')
+  @UseGuards(TokenGuard)
+  async listOfTreatmentsExport(
+    @Res() res: Response,
+    @CurrentUser() identity: UserIdentity,
+    @Query() params: ListOfTreatmentsFindAllDto,
+  ) {
+    return this.listOfTreatmentsService.export(res, identity, params);
+  }
+
+  /**
+   * ecoophp/php/user/listOfTreatments/print.php
+   */
+  @Get('listOfTreatments/print')
+  @UseGuards(TokenGuard)
+  async listOfTreatmentsPrint(
+    @Res() res: Response,
+    @CurrentUser() identity: UserIdentity,
+    @Query() params: ListOfTreatmentsFindAllDto,
+  ) {
+    try {
+      const buffer = await this.listOfTreatmentsService.print(identity, params);
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment;`,
+        'Content-Length': buffer.length,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    }
   }
 }

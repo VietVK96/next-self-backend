@@ -893,6 +893,7 @@ export class DevisStd2Services {
         'templates/pdf/devisStd2',
         'devisStd2.hbs',
       );
+
       const files: PdfTemplateFile[] = [
         {
           data: {
