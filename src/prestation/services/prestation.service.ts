@@ -293,10 +293,6 @@ export class PrestationService {
         // @TODO Ids\Log:: write('Acte', $act -> getPatient() -> getId(), 3);
       }
     } catch (error) {
-      console.log(
-        '🚀 ~ file: prestation.service.ts:295 ~ PrestationService ~ delete ~ error:',
-        error,
-      );
       throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
   }
