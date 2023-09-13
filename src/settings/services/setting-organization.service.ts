@@ -134,7 +134,6 @@ export class SettingOrganizationService {
 
         const auth = `${organizationId.toString().padStart(5, '0')}`;
         const dir = await this.configService.get('app.uploadDir');
-        await this.removeOldFile(currentOrg?.uplId, dir, auth);
 
         if (logo) {
           await this.uploadservice._checkGroupStorageSpace(
@@ -177,20 +176,6 @@ export class SettingOrganizationService {
       return { success: true };
     } catch (error) {
       throw new CBadRequestException(error);
-    }
-  }
-
-  async removeOldFile(id: number, dir: string, auth: string) {
-    const oldFile = await this.uploadRepository.findOne({
-      where: { id: id },
-    });
-
-    if (oldFile) {
-      const filename = oldFile.name;
-      if (fs.existsSync(`${dir}/${auth}/${filename}`)) {
-        fs.unlinkSync(`${dir}/${auth}/${filename}`);
-      }
-      await this.uploadRepository.delete(oldFile.id);
     }
   }
 
