@@ -59,6 +59,9 @@ export class SettingOrganizationService {
     body: UpdateOrganizationDto,
     logo: Express.Multer.File,
   ): Promise<SuccessResponse> {
+    if (!/^\w+([.]?\w+)*@\w+([.]?\w+)*(\.\w+)+$/.test(body.email)) {
+      throw new CBadRequestException(ErrorCode.INVALID_EMAIL);
+    }
     try {
       if (!userId || !organizationId) throw ErrorCode.FORBIDDEN;
 
