@@ -53,6 +53,8 @@ import * as handlebars from 'handlebars';
 import * as dayjs from 'dayjs';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { ConfigService } from '@nestjs/config';
+import { PreviewMailService } from 'src/mail/services/preview.mail.service';
+import { DataMailService } from 'src/mail/services/data.mail.service';
 @Injectable()
 export class QuotesServices {
   constructor(
@@ -81,7 +83,8 @@ export class QuotesServices {
     private ccamUnitPriceRepository: Repository<CcamUnitPriceEntity>,
     @InjectRepository(ContactNoteEntity)
     private contactNoteRepo: Repository<ContactNoteEntity>,
-    private mailService: MailService,
+    private previewMailService: PreviewMailService,
+    private dataMailService: DataMailService,
     private paymentPlanService: PaymentScheduleService,
     private therapeuticAlternativeService: TherapeuticAlternativeService,
     private contactService: ContactService,
@@ -947,7 +950,7 @@ export class QuotesServices {
           signature = data?.signaturePatient;
         }
 
-        const mailConverted = await this.mailService.transform(
+        const mailConverted = await this.previewMailService.transform(
           mail,
           context,
           signature,
@@ -965,7 +968,7 @@ export class QuotesServices {
         delete mailConverted.header;
         delete mailConverted.footer;
 
-        const sendMail = await this.mailService.store(mailConverted);
+        const sendMail = await this.dataMailService.store(mailConverted);
 
         await this.lettersRepository.update(sendMail?.id, {
           quoteId: data?.id,

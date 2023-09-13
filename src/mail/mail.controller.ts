@@ -31,6 +31,9 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { SendMailDto } from './dto/sendMail.dto';
 import { UpdateMailDto } from './dto/mail.dto';
 import { DocumentMailService } from './services/document.mail.service';
+import { DataMailService } from './services/data.mail.service';
+import { TemplateMailService } from './services/template.mail.service';
+import { PreviewMailService } from './services/preview.mail.service';
 
 @ApiBearerAuth()
 @Controller('/mails')
@@ -38,7 +41,9 @@ import { DocumentMailService } from './services/document.mail.service';
 export class MailController {
   constructor(
     private readonly mailService: MailService,
-    private documentMailService: DocumentMailService,
+    private readonly dataMailService: DataMailService,
+    private readonly templateMailService: TemplateMailService,
+    private readonly previewMailService: PreviewMailService,
   ) {}
 
   /**
@@ -59,7 +64,7 @@ export class MailController {
     @Query('practitionerId') practitionerId?: string,
     @Query('orderBy') orderBy?: string,
   ) {
-    return await this.mailService.findAll(
+    return await this.dataMailService.findAll(
       draw,
       pageIndex,
       docId,
@@ -76,7 +81,7 @@ export class MailController {
   @UseGuards(TokenGuard)
   @Get('/find')
   async findById(@Query('id') id?: number) {
-    return await this.mailService.findById(id);
+    return await this.dataMailService.findById(id);
   }
 
   /**
@@ -88,13 +93,13 @@ export class MailController {
     @Body() payload: CreateUpdateMailDto,
     @CurrentDoctor() docId: number,
   ) {
-    return await this.mailService.duplicate(payload, docId);
+    return await this.dataMailService.duplicate(payload, docId);
   }
 
   @UseGuards(TokenGuard)
   @Delete('/delete/:id')
   async delete(@Param('id') id: number) {
-    return await this.mailService.delete(id);
+    return await this.dataMailService.delete(id);
   }
 
   // php/mail/transform/php
@@ -127,8 +132,11 @@ export class MailController {
       contextParam.patient_id = Number(payload.patient.id);
     if (payload?.correspondent?.id)
       contextParam.patient_id = Number(payload.correspondent.id);
-    const context = await this.mailService.contextMail(contextParam, docId);
-    return await this.mailService.transform(payload, context);
+    const context = await this.templateMailService.contextMail(
+      contextParam,
+      docId,
+    );
+    return await this.previewMailService.transform(payload, context);
   }
 
   // php/mail/send.php
@@ -212,6 +220,6 @@ export class MailController {
     @CurrentDoctor() docId: number,
     @CurrentUser() identity: UserIdentity,
   ): Promise<TranformDto> {
-    return this.mailService.preview(id, docId, identity.org);
+    return this.previewMailService.preview(id, docId, identity.org);
   }
 }
