@@ -13,15 +13,19 @@ import {
   EnumDentalQuotationActType,
 } from 'src/entities/dental-quotation-act.entity';
 import { LettersEntity } from 'src/entities/letters.entity';
-import { MailService } from 'src/mail/services/mail.service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { UserEntity } from 'src/entities/user.entity';
 import { DEFAULT_LOCALE } from 'src/constants/default';
+import { PreviewMailService } from 'src/mail/services/preview.mail.service';
+import { DataMailService } from 'src/mail/services/data.mail.service';
+import { TemplateMailService } from 'src/mail/services/template.mail.service';
 @Injectable()
 export class DevisHNServices {
   constructor(
-    private mailService: MailService,
+    private previewMailService: PreviewMailService,
+    private dataMailService: DataMailService,
+    private templateMailService: TemplateMailService,
     private readonly dataSource: DataSource,
     @InjectRepository(DentalQuotationEntity)
     private readonly dentalQuotationRepository: Repository<DentalQuotationEntity>,
@@ -191,10 +195,12 @@ export class DevisHNServices {
                 const mail = await this.lettersRepository.findOne({
                   where: { id: payload.attachments[i] },
                 });
-                const context = await this.mailService.context({
-                  doctor_id: quote.user.id,
-                  patient_id: quote.patient.id,
-                });
+                const context = await this.templateMailService.contextMail(
+                  {
+                    patient_id: quote.patient.id,
+                  },
+                  quote.user.id,
+                );
                 const signature: { practitioner?: string; patient?: string } =
                   {};
                 if (quote.signaturePraticien) {
@@ -204,7 +210,7 @@ export class DevisHNServices {
                   signature.patient = quote.signaturePatient;
                 }
 
-                const mailConverted = await this.mailService.transform(
+                const mailConverted = await this.previewMailService.transform(
                   mail,
                   context,
                   signature,
@@ -216,7 +222,9 @@ export class DevisHNServices {
                 }
                 delete mailConverted?.header;
                 delete mailConverted?.footer;
-                const mailResult = await this.mailService.store(mailConverted);
+                const mailResult = await this.dataMailService.store(
+                  mailConverted,
+                );
                 const newMail = await this.lettersRepository.findOne({
                   where: { id: mailResult?.id },
                 });

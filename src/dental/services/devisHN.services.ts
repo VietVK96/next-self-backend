@@ -33,11 +33,18 @@ import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { DOMParser, XMLSerializer } from 'xmldom';
 import { generateBarcode } from 'src/common/util/image';
+import { DataMailService } from 'src/mail/services/data.mail.service';
+import { PdfMailService } from 'src/mail/services/pdf.mail.service';
+import { TemplateMailService } from 'src/mail/services/template.mail.service';
+import { PreviewMailService } from 'src/mail/services/preview.mail.service';
 
 @Injectable()
 export class DevisServices {
   constructor(
-    private mailService: MailService,
+    private dataMailService: DataMailService,
+    private pdfMailService: PdfMailService,
+    private templateMailService: TemplateMailService,
+    private previewMailService: PreviewMailService,
     private paymentScheduleService: PaymentScheduleService,
     private odotogramService: PatientOdontogramService,
     private configService: ConfigService,
@@ -1086,19 +1093,21 @@ export class DevisServices {
       if (initital?.paymentScheduleId) {
         try {
           const mail =
-            await this.mailService.findOnePaymentScheduleTemplateByDoctor(
+            await this.dataMailService.findOnePaymentScheduleTemplateByDoctor(
               initital?.id_user,
             );
-          const mailContext = await this.mailService.context({
-            doctor_id: initital?.id_user,
-            patient_id: initital?.id_contact,
-            payment_schedule_id: initital?.paymentScheduleId,
-          });
-          const mailConverted = await this.mailService.transform(
+          const mailContext = await this.templateMailService.contextMail(
+            {
+              patient_id: initital?.id_contact,
+              payment_schedule_id: initital?.paymentScheduleId,
+            },
+            initital?.id_user,
+          );
+          const mailConverted = await this.previewMailService.transform(
             mail,
             mailContext,
           );
-          const pdf = await this.mailService.pdf(mailConverted, {
+          const pdf = await this.pdfMailService.pdf(mailConverted, {
             preview: true,
           });
           files.push({ type: 'string', data: pdf });
@@ -1130,9 +1139,11 @@ export class DevisServices {
 
       if (quote?.attachments?.length) {
         for (const attachment of quote?.attachments) {
-          const mail = await this.mailService.find(attachment?.id);
+          const mail = await this.dataMailService.find(attachment?.id);
           if (mail?.patient) {
-            const content = await this.mailService.pdf(mail, { preview: true });
+            const content = await this.pdfMailService.pdf(mail, {
+              preview: true,
+            });
             files.push({ type: 'string', data: content });
           }
         }
