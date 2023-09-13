@@ -251,19 +251,20 @@ export class PrestationService {
 
       // Si l'acte fait partie d'un devis ou plan de traitement,
       // on modifie uniquement son état.
-      const { count: etkCount } = await this.dataSource
-        .createQueryBuilder()
-        .select(`COUNT(*) as count`)
-        .from('T_EVENT_TASK_ETK', 'T_EVENT_TASK_ETK')
-        .innerJoin('T_EVENT_EVT', 'T_EVENT_EVT')
-        .innerJoin('T_PLAN_EVENT_PLV', 'T_PLAN_EVENT_PLV')
-        .innerJoin('T_PLAN_PLF', 'T_PLAN_PLF')
-        .where('T_EVENT_TASK_ETK.ETK_ID = :etkId', { etkId: id })
-        .andWhere('T_EVENT_TASK_ETK.EVT_ID = T_EVENT_EVT.EVT_ID')
-        .andWhere('T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID')
-        .andWhere('T_PLAN_EVENT_PLV.PLF_ID = T_PLAN_PLF.PLF_ID')
-        .getRawOne();
-
+      const { count: etkCount } = await this.dataSource.manager.query(
+        `
+        SELECT COUNT(*)
+        FROM T_EVENT_TASK_ETK
+        JOIN T_EVENT_EVT
+        JOIN T_PLAN_EVENT_PLV
+        JOIN T_PLAN_PLF
+        WHERE T_EVENT_TASK_ETK.ETK_ID = ?
+          AND T_EVENT_TASK_ETK.EVT_ID = T_EVENT_EVT.EVT_ID
+          AND T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID
+          AND T_PLAN_EVENT_PLV.PLF_ID = T_PLAN_PLF.PLF_ID
+        `,
+        [id],
+      );
       if (Number(etkCount)) {
         await this.dataSource.query(
           `UPDATE T_EVENT_TASK_ETK SET ETK_STATE = 0 WHERE ETK_ID = ?`,
@@ -273,7 +274,7 @@ export class PrestationService {
         await this.dataSource
           .getRepository(EventTaskEntity)
           .createQueryBuilder()
-          .softDelete()
+          .delete()
           .where('ETK_ID = :id', { id: id })
           .execute();
       }
@@ -292,6 +293,10 @@ export class PrestationService {
         // @TODO Ids\Log:: write('Acte', $act -> getPatient() -> getId(), 3);
       }
     } catch (error) {
+      console.log(
+        '🚀 ~ file: prestation.service.ts:295 ~ PrestationService ~ delete ~ error:',
+        error,
+      );
       throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
   }
