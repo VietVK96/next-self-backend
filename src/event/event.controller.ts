@@ -121,19 +121,8 @@ export class EventController {
    */
   @Get('/print/planning')
   @UseGuards(TokenGuard)
-  async printPlanning(@Res() res: Response, @Query() param: PrintReq) {
-    const buffer = await this.findEventService.printPlanning(param);
-    res.set({
-      // pdf
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename=print.pdf`,
-      'Content-Length': buffer.length,
-      // prevent cache
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      Pragma: 'no-cache',
-      Expires: 0,
-    });
-    res.end(buffer);
+  async printPlanning(@Query() param: PrintReq) {
+    return await this.findEventService.printPlanning(param);
   }
 
   /**
