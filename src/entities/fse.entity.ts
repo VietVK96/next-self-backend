@@ -7,6 +7,7 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -313,7 +314,12 @@ export class FseEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"caresheet:index", "caresheet:read", "tiersPayant:index"})
    */
-
+  @OneToOne(() => ThirdPartyAmoEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'amc_id',
+  })
   thirdPartyAmo?: ThirdPartyAmoEntity;
   /**
    * @ORM\OneToOne(targetEntity="ThirdPartyAmc", mappedBy="caresheet", cascade={"persist", "remove"})
