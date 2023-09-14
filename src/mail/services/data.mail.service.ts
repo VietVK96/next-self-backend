@@ -120,8 +120,6 @@ export class DataMailService {
       }
     }
 
-    console.log(mails);
-
     const startIndex = pageIndex === -1 ? 0 : (pageIndex - 1) * pageSize;
     const endIndex = pageIndex === -1 ? mails.length : startIndex + pageSize;
     const mailPaging = mails.slice(startIndex, endIndex);

@@ -8,7 +8,6 @@ import { UserEntity } from 'src/entities/user.entity';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { DevisRequestAjaxDto } from '../dto/devis_request_ajax.dto';
 import { LettersEntity } from 'src/entities/letters.entity';
-import { MailService } from 'src/mail/services/mail.service';
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
 import { PrintPDFDto } from '../dto/facture.dto';
 import { ErrorCode } from 'src/constants/error';

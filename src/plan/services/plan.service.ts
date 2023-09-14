@@ -891,7 +891,7 @@ export class PlanService {
       const invoiceQuery =
         'SELECT * FROM `T_PLAN_PLF` WHERE `T_PLAN_PLF`.`PLF_ID` = ?';
 
-      const invoice = await queryRunner.query(invoiceQuery,[id]);
+      const invoice = await queryRunner.query(invoiceQuery, [id]);
 
       if (invoice.BIL_ID) {
         await this.dataSource
@@ -901,7 +901,7 @@ export class PlanService {
           .where(`PLF_ID = :id`, { id })
           .execute();
 
-        const deleteBillQuery = this.dataSource
+        this.dataSource
           .createQueryBuilder()
           .delete()
           .from('T_BILL_BIL')

@@ -101,7 +101,6 @@ export class HaliteUtil {
         prk,
       );
       t = Buffer.concat([t, lastBlock]);
-      // console.log(iBlock, t.toString('ascii'), t.toString('hex'));
     }
     return t.subarray(0, length);
   }
