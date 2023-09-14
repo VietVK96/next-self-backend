@@ -883,35 +883,31 @@ export class PlanService {
         );
       }
 
-      const dentalQuery = this.dataSource
-        .createQueryBuilder()
-        .delete()
-        .from('T_DENTAL_QUOTATION_DQO')
-        .where(`PLF_ID = :id`, { id });
-      await queryRunner.query(dentalQuery.getSql());
+      const dentalQuery =
+        'DELETE FROM `T_DENTAL_QUOTATION_DQO` WHERE `PLF_ID` = ?';
 
-      const invoiceQuery = this.dataSource
-        .createQueryBuilder()
-        .select()
-        .from('T_PLAN_PLF', 'T_PLAN_PLF')
-        .where(`T_PLAN_PLF.PLF_ID = :id`, { id });
-      const invoice = await queryRunner.query(invoiceQuery.getSql());
+      await queryRunner.query(dentalQuery, [id]);
+
+      const invoiceQuery =
+        'SELECT * FROM `T_PLAN_PLF` WHERE `T_PLAN_PLF`.`PLF_ID` = ?';
+
+      const invoice = await queryRunner.query(invoiceQuery,[id]);
 
       if (invoice.BIL_ID) {
-        const updatePlanQuery = this.dataSource
+        await this.dataSource
           .createQueryBuilder()
           .update('T_PLAN_PLF')
           .set({ BIL_ID: null })
-          .where(`PLF_ID = :id`, { id });
-        await queryRunner.query(updatePlanQuery.getSql());
+          .where(`PLF_ID = :id`, { id })
+          .execute();
 
         const deleteBillQuery = this.dataSource
           .createQueryBuilder()
           .delete()
           .from('T_BILL_BIL')
           .where(`BIL_ID = :id`, { id: invoice.id })
-          .andWhere('BIL_LOCK = 0');
-        await queryRunner.query(deleteBillQuery.getSql());
+          .andWhere('BIL_LOCK = 0')
+          .execute();
       }
 
       const queryEvent = `
