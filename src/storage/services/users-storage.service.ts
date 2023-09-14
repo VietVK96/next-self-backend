@@ -31,7 +31,6 @@ export class UsersStorageSpace {
             Number(group.totalStorageSpace)) *
             100,
         ) / 100;
-      console.log(storageSpaceUsedPercent);
       group['storageSpaceUsedPercent'] = storageSpaceUsedPercent;
     }
 

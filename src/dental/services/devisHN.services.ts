@@ -10,7 +10,6 @@ import { PlanEventEntity } from 'src/entities/plan-event.entity';
 import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
 import { UserPreferenceQuotationDisplayOdontogramType } from 'src/entities/user-preference-quotation.entity';
 import { UserEntity } from 'src/entities/user.entity';
-import { MailService } from 'src/mail/services/mail.service';
 import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { DevisHNGetInitChampDto, DevisHNPdfDto } from '../dto/devisHN.dto';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';

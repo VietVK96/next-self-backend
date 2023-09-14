@@ -30,7 +30,6 @@ import { TranformDto } from './dto/transform.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { SendMailDto } from './dto/sendMail.dto';
 import { UpdateMailDto } from './dto/mail.dto';
-import { DocumentMailService } from './services/document.mail.service';
 import { DataMailService } from './services/data.mail.service';
 import { TemplateMailService } from './services/template.mail.service';
 import { PreviewMailService } from './services/preview.mail.service';
