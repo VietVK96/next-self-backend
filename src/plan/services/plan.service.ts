@@ -679,14 +679,14 @@ export class PlanService {
           }
 
           if (tasks.length > 0) {
-            const listTask = tasks.join();
+            const conditionsSql = Array(tasks.length).fill('?').join();
             const sql = `
               DELETE ETK, DET
               FROM T_EVENT_TASK_ETK ETK
               LEFT OUTER JOIN T_DENTAL_EVENT_TASK_DET DET ON DET.ETK_ID = ETK.ETK_ID
               WHERE ETK.EVT_ID = ?
-              AND ETK.ETK_ID NOT IN (?)`;
-            await manager.query(sql, [event?.id, listTask]);
+              AND ETK.ETK_ID NOT IN (${conditionsSql})`;
+            await manager.query(sql, [event?.id, ...tasks]);
           }
 
           events.push(event?.id);
