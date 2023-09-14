@@ -2,18 +2,20 @@ import { Injectable, Logger } from '@nestjs/common';
 import {
   ConditionItem,
   ReminderVisitCount,
+  ReminderVisitEmailDto,
   ReminderVisitItemDto,
   ReminderVisitMailDto,
   ReminderVisitPhone,
   ReminderVisitPrintQuery,
   ReminderVisitQuery,
+  ReminderVisitSmsDto,
 } from '../dto/reminderVisit.dto';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import * as dayjs from 'dayjs';
 import { ReminderVisitRes } from '../response/reminder-visit.res';
-import { nl2br } from 'src/common/util/string';
+import { nl2br, validateEmail } from 'src/common/util/string';
 import { UserEntity } from 'src/entities/user.entity';
 import * as path from 'path';
 import { createPdf } from '@saemhco/nestjs-html-pdf';
@@ -24,8 +26,13 @@ import {
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { LettersEntity } from 'src/entities/letters.entity';
-import { PatientService } from 'src/patient/service/patient.service';
 import { MailService } from 'src/mail/services/mail.service';
+import * as cheerio from 'cheerio';
+import * as htmlEntities from 'html-entities';
+import { ContactEntity } from 'src/entities/contact.entity';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { MailTransportService } from 'src/mail/services/mailTransport.service';
+import { TexterService } from 'src/notifier/services/texter.service';
 
 @Injectable()
 export class ReminderVisitService {
@@ -37,11 +44,14 @@ export class ReminderVisitService {
     private readonly userRepository: Repository<UserEntity>,
     @InjectRepository(LettersEntity)
     private readonly mailRepository: Repository<LettersEntity>,
+    @InjectRepository(ContactEntity)
+    private readonly contactRepository: Repository<ContactEntity>,
     @InjectEntityManager()
     private readonly entityManager: EntityManager,
-    private readonly patientService: PatientService,
     private readonly mailService: MailService,
     private readonly dataSource: DataSource,
+    private readonly mailTransporterService: MailTransportService,
+    private readonly texterService: TexterService,
   ) {}
 
   getQuery() {
@@ -411,7 +421,7 @@ export class ReminderVisitService {
       `,
         [doctorId],
       );
-      return await this.dataSource.query(
+      const res = await this.dataSource.query(
         `
         SELECT
             MAX(t1.max_date) + INTERVAL IF(
@@ -456,8 +466,9 @@ export class ReminderVisitService {
           id,
         ],
       );
-      // return duration ?? null;
+      return res[0].date ?? null;
     }
+    return null;
   }
 
   async mail(payload: ReminderVisitMailDto) {
@@ -529,11 +540,244 @@ export class ReminderVisitService {
             messageTransformed +
             '</div>',
         );
-      } catch {
+      } catch (e) {
         await queryRunner.rollbackTransaction();
+
         throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
       }
     }
     return res;
+  }
+
+  async sendReminderSMS(payload: ReminderVisitSmsDto) {
+    const dateFormatter = new Intl.DateTimeFormat(undefined, {
+      dateStyle: 'long',
+    });
+    let number = 0;
+    const errors: Array<string> = [];
+    let patient: ContactEntity = null;
+    let phoneNumber = null;
+    try {
+      let message = payload.message.replace(/<br(\s)*\/?>/gi, '\n');
+      message = cheerio.load(message).text(); // strip tags
+      message = htmlEntities.decode(message);
+
+      const user: UserEntity = await this.userRepository.findOne({
+        where: {
+          id: payload.user,
+        },
+      });
+
+      const patientIds = payload.patient_ids;
+      if (0 === patientIds.length) {
+        throw new CBadRequestException(ErrorCode.MIN_ARRAY_ERROR, {
+          attribute: 'patients',
+          min: 1,
+        });
+      }
+
+      for (const patId of patientIds) {
+        try {
+          patient = await this.contactRepository.findOne({
+            relations: {
+              address: true,
+            },
+            where: {
+              id: +patId,
+            },
+          });
+
+          // getSmsPhoneNumber
+          const result: { phoneNumbers_PHO_NBR: string } =
+            await this.entityManager
+              .createQueryBuilder(ContactEntity, 'patient')
+              .innerJoinAndSelect('patient.phoneNumbers', 'phoneNumbers')
+              .innerJoinAndSelect('phoneNumbers.category', 'category')
+              .where('patient.id = :patientId', { patientId: patient.id })
+              .andWhere('category.name = :categoryName', {
+                categoryName: 'sms',
+              })
+              .select('phoneNumbers.nbr')
+              .getRawOne();
+          phoneNumber = result?.phoneNumbers_PHO_NBR;
+
+          const address = patient?.address;
+          const countryCode =
+            address === null || address?.countryAbbr === null
+              ? 'FR'
+              : address?.countryAbbr;
+
+          this.texterService.init();
+          this.texterService.setUser(user);
+          this.texterService.addReceiver(phoneNumber, countryCode);
+          const contextMail = await this.mailService.contextMail(
+            { patient_id: +patId },
+            user.id,
+          );
+          const messageMail = await this.mailService.render(
+            message,
+            contextMail,
+          );
+          await this.texterService.send(messageMail);
+
+          number += 1;
+
+          const queryRunner = this.dataSource.createQueryRunner();
+
+          try {
+            await queryRunner.connect();
+            await queryRunner.startTransaction();
+
+            const nextReminder = await this.getNextReminderByDoctor(
+              +patId,
+              user.id,
+            );
+
+            await queryRunner.query(
+              `
+              UPDATE T_CONTACT_CON
+              SET CON_REMINDER_VISIT_LAST_DATE = CURRENT_TIMESTAMP()
+              WHERE CON_ID = ?`,
+              [patId],
+            );
+
+            const patientNote = new ContactNoteEntity();
+            patientNote.user = user;
+            patientNote.patient = patient;
+            patientNote.date = dayjs(new Date()).format('YYYY-MM-DD');
+            patientNote.message = `Envoi par sms d'un rappel visite ${
+              payload.title
+            } pour le ${dateFormatter.format(new Date(nextReminder))}`;
+
+            await queryRunner.manager.save(patientNote);
+
+            await queryRunner.commitTransaction();
+          } catch (error) {
+            await queryRunner.rollbackTransaction();
+            throw error;
+          }
+        } catch (e) {
+          const fullname = patient.firstname + ' ' + patient.lastname;
+          errors.push(`${fullname} <${phoneNumber}>`);
+        }
+      }
+
+      return {
+        number: number,
+        errors: errors,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async sendReminderEmail(payload: ReminderVisitEmailDto) {
+    const dateFormatter = new Intl.DateTimeFormat(undefined, {
+      dateStyle: 'long',
+    });
+    let number = 0;
+    const errors: Array<string> = [];
+    let patient: ContactEntity = null;
+    try {
+      const user: UserEntity = await this.userRepository.findOne({
+        where: {
+          id: payload.user,
+        },
+      });
+
+      const patientIds = payload.patient_ids;
+      if (0 === patientIds.length) {
+        throw new CBadRequestException(ErrorCode.MIN_ARRAY_ERROR, {
+          attribute: 'patients',
+          min: 1,
+        });
+      }
+
+      for (const patId of patientIds) {
+        try {
+          patient = await this.contactRepository.findOne({
+            where: {
+              id: +patId,
+            },
+          });
+
+          if (!validateEmail(patient.email)) {
+            const fullname = patient.firstname + ' ' + patient.lastname;
+            errors.push(`${fullname} <${patient.email}>`);
+            continue;
+          }
+
+          try {
+            const contextMail = await this.mailService.contextMail(
+              {
+                patient_id: +patId,
+              },
+              user.id,
+            );
+            const htmlMail = await this.mailService.render(
+              payload.message,
+              contextMail,
+            );
+            const fullname = patient.firstname + ' ' + patient.lastname;
+            await this.mailTransporterService.sendEmail(user.id, {
+              from: user.email,
+              to: patient.email,
+              subject: `${payload.title} de Dr ${fullname}`,
+              html: htmlMail,
+            });
+          } catch (e) {
+            const fullname = patient.firstname + ' ' + patient.lastname;
+            errors.push(`${fullname} <${patient.email}>`);
+            continue;
+          }
+
+          number += 1;
+
+          const queryRunner = this.dataSource.createQueryRunner();
+
+          try {
+            await queryRunner.connect();
+            await queryRunner.startTransaction();
+
+            const nextReminder = await this.getNextReminderByDoctor(
+              +patId,
+              user.id,
+            );
+
+            await queryRunner.query(
+              `
+              UPDATE T_CONTACT_CON
+              SET CON_REMINDER_VISIT_LAST_DATE = CURRENT_TIMESTAMP()
+              WHERE CON_ID = ?`,
+              [patId],
+            );
+
+            const patientNote = new ContactNoteEntity();
+            patientNote.userId = user.id;
+            patientNote.conId = patient.id;
+            patientNote.date = dayjs(new Date()).format('YYYY-MM-DD');
+            patientNote.message = `Envoi par email d'un rappel visite ${
+              payload.title
+            } pour le ${dateFormatter.format(new Date(nextReminder))}`;
+
+            await queryRunner.manager.save(patientNote);
+
+            await queryRunner.commitTransaction();
+          } catch (error) {
+            await queryRunner.rollbackTransaction();
+          }
+        } catch (e) {
+          const fullname = patient.firstname + ' ' + patient.lastname;
+          errors.push(`${fullname} <${patient.email}>`);
+        }
+      }
+
+      return {
+        number: number,
+        errors: errors,
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 }

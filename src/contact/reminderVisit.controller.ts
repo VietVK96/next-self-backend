@@ -1,6 +1,14 @@
 import { ApiBasicAuth, ApiTags } from '@nestjs/swagger';
 import { ReminderVisitService } from './services/reminderVisit.service';
-import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import type { Response } from 'express';
 import {
   CurrentUser,
@@ -11,6 +19,7 @@ import {
   ReminderVisitMailDto,
   ReminderVisitPrintQuery,
   ReminderVisitQuery,
+  ReminderVisitSmsDto,
 } from './dto/reminderVisit.dto';
 import { ReminderVisitRes } from './response/reminder-visit.res';
 import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
@@ -73,5 +82,23 @@ export class ReminderVisitController {
   @UseGuards(TokenGuard)
   async mail(@Query() payload: ReminderVisitMailDto) {
     return await this.reminderVisitService.mail(payload);
+  }
+
+  /**
+   * php/contact/reminderVisit/sms.php
+   */
+  @Post('/sms')
+  @UseGuards(TokenGuard)
+  async sms(@Body() payload: ReminderVisitSmsDto) {
+    return await this.reminderVisitService.sendReminderSMS(payload);
+  }
+
+  /**
+   * php/contact/reminderVisit/email.php
+   */
+  @Post('/email')
+  @UseGuards(TokenGuard)
+  async email(@Body() payload: ReminderVisitSmsDto) {
+    return await this.reminderVisitService.sendReminderEmail(payload);
   }
 }

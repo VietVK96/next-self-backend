@@ -279,10 +279,21 @@ export class DocumentMailService {
   /**
    * File: php/document/mail/findAll.php
    */
-  async findAll(user: number, type?: EnumLettersType) {
-    //@Todo missing relations
+  async findAll(orgId: number, userId: number, type?: EnumLettersType) {
     const mails = await this.mailRepository.find({
-      select: ['id', 'title', 'type', 'conId', 'cpdId', 'usrId'],
+      select: [
+        'id',
+        'title',
+        'type',
+        'msg',
+        'conId',
+        'cpdId',
+        'createdAt',
+        'updatedAt',
+      ],
+      relations: {
+        user: true,
+      },
       where: [
         {
           conId: IsNull(),
@@ -293,10 +304,16 @@ export class DocumentMailService {
         {
           conId: IsNull(),
           cpdId: IsNull(),
-          usrId: user,
+          usrId: userId,
+          user: {
+            organizationId: orgId,
+          },
           type: EnumLettersType[type.toLocaleUpperCase()],
         },
       ],
+      order: {
+        title: 'ASC',
+      },
     });
 
     return mails;

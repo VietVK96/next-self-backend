@@ -222,9 +222,10 @@ export class MailController {
   @Get('/document/findAll')
   @UseGuards(TokenGuard)
   async documentFindAll(
+    @CurrentUser() identity: UserIdentity,
     @Query('user') user: number,
     @Query('type') type?: EnumLettersType,
   ) {
-    return this.documentMailService.findAll(user, type);
+    return this.documentMailService.findAll(identity.org, user, type);
   }
 }

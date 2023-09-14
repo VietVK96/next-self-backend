@@ -50,6 +50,7 @@ import { PaymentScheduleService } from 'src/payment-schedule/services/payment-sc
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import { DocumentMailService } from 'src/mail/services/document.mail.service';
 import { MailModule } from 'src/mail/mail.module';
+import { NotifierModule } from 'src/notifier/notifier.module';
 
 @Module({
   controllers: [
@@ -118,6 +119,7 @@ import { MailModule } from 'src/mail/mail.module';
       name: 'amount-due',
       useClass: BullConfigService,
     }),
+    NotifierModule,
   ],
   exports: [ContactService, ContactPaymentService],
 })
