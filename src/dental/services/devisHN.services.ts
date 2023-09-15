@@ -683,12 +683,13 @@ export class DevisServices {
               JOIN T_CONTACT_CON
               LEFT OUTER JOIN T_GENDER_GEN ON T_GENDER_GEN.GEN_ID = T_CONTACT_CON.GEN_ID
               LEFT OUTER JOIN T_UPLOAD_UPL UPL ON UPL.UPL_ID = DQO.logo_id
-              WHERE DQO.DQO_ID = ${no_devis}
+              WHERE DQO.DQO_ID = ?
                 AND DQO.USR_ID = USR.USR_ID
-                AND USR.organization_id = ${user.org}
+                AND USR.organization_id = ?
                 AND USR.USR_ID = user_medical.user_id
                 AND DQO.CON_ID = T_CONTACT_CON.CON_ID
           `,
+          [no_devis, user.org],
         );
 
         if (!row?.length)
@@ -787,11 +788,6 @@ export class DevisServices {
           userType: currentUser?.type,
           actes,
         };
-
-        // init champs line 892-947 load svg
-        // if (isset($pdf)) {
-        //   /** todo */
-        // }
       } catch (error) {
         throw new CBadRequestException(error);
       }
@@ -997,11 +993,15 @@ export class DevisServices {
           ligneBlanche,
         };
       });
-      const imgRppsNumber = await generateBarcode({
-        text: initital?.practitionerRpps,
-        scaleX: 4,
-        scaleY: 1,
-      });
+
+      let imgRppsNumber = undefined;
+      if (initital?.practitionerRpps) {
+        imgRppsNumber = await generateBarcode({
+          text: initital?.practitionerRpps,
+          scaleX: 4,
+          scaleY: 1,
+        });
+      }
       initital?.identPat;
       const dataTemp = {
         color,
