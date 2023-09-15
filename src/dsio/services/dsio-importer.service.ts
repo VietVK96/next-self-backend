@@ -40,7 +40,7 @@ export class DsioImporterService {
 
       const extension = path.extname(pathname).toUpperCase();
       if (extension === '.ZIP') {
-        this.letterImporterService
+        await this.letterImporterService
           .letterImport(user, pathname)
           .catch((error) => {
             console.log('letterImport', error);
