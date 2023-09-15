@@ -7,6 +7,7 @@ import {
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
+import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { EventEntity } from 'src/entities/event.entity';
 import { EnumPlanPlfType, PlanPlfEntity } from 'src/entities/plan-plf.entity';
@@ -27,7 +28,6 @@ import {
   TaskData,
   findOnePlanRes,
 } from '../response/plan.res';
-import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 
 @Injectable()
 export class PlanService {
@@ -841,162 +841,162 @@ export class PlanService {
   //File /php/plan/delete.php, line 6-203
   async deleteOne(request: IdStructDto, identity: UserIdentity) {
     const { id } = request;
-    const queryRunner = this.dataSource.createQueryRunner();
-    const queryBuiler = this.dataSource.createQueryBuilder();
-    try {
-      const selectPlan = `
-        T_PLAN_PLF.PLF_TYPE AS type,
-        T_PLAN_PLF.payment_schedule_id,
-        T_EVENT_EVT.CON_ID AS patient_id`;
+    return await this.dataSource.transaction(async (manager) => {
+      try {
+        const selectPlan = `
+          T_PLAN_PLF.PLF_TYPE AS type,
+          T_PLAN_PLF.payment_schedule_id,
+          T_EVENT_EVT.CON_ID AS patient_id`;
 
-      const currentPlanPlf = queryBuiler
-        .select(selectPlan)
-        .from('T_PLAN_PLF', 'T_PLAN_PLF')
-        .innerJoin('T_PLAN_EVENT_PLV', 'T_PLAN_EVENT_PLV')
-        .innerJoin('T_EVENT_EVT', 'T_EVENT_EVT')
-        .where('T_PLAN_PLF.PLF_ID = :planId', { planId: id })
-        .andWhere('T_PLAN_PLF.PLF_ID = T_PLAN_EVENT_PLV.PLF_ID')
-        .andWhere('T_PLAN_EVENT_PLV.EVT_ID = T_EVENT_EVT.EVT_ID')
-        .groupBy('T_PLAN_PLF.PLF_ID');
-      const plan = await currentPlanPlf.getRawOne();
-
-      if (!plan) {
-        throw new NotFoundException();
-      }
-
-      if (
-        !this.permissionService.hasPermission(
-          'PERMISSION_DELETE',
-          8,
-          identity.id,
-        )
-      ) {
-        throw new NotAcceptableException();
-      }
-
-      await queryRunner.startTransaction();
-
-      if (plan.payment_schedule_id !== null) {
-        await this.paymentPlanService.delete(
-          plan.payment_schedule_id,
-          identity.org,
-        );
-      }
-
-      const dentalQuery =
-        'DELETE FROM `T_DENTAL_QUOTATION_DQO` WHERE `PLF_ID` = ?';
-
-      await queryRunner.query(dentalQuery, [id]);
-
-      const invoiceQuery =
-        'SELECT * FROM `T_PLAN_PLF` WHERE `T_PLAN_PLF`.`PLF_ID` = ?';
-
-      const invoice = await queryRunner.query(invoiceQuery, [id]);
-
-      if (invoice.BIL_ID) {
-        await this.dataSource
+        const currentPlanPlf = manager
           .createQueryBuilder()
-          .update('T_PLAN_PLF')
-          .set({ BIL_ID: null })
+          .select(selectPlan)
+          .from('T_PLAN_PLF', 'T_PLAN_PLF')
+          .innerJoin('T_PLAN_EVENT_PLV', 'T_PLAN_EVENT_PLV')
+          .innerJoin('T_EVENT_EVT', 'T_EVENT_EVT')
+          .where('T_PLAN_PLF.PLF_ID = :id', { id })
+          .andWhere('T_PLAN_PLF.PLF_ID = T_PLAN_EVENT_PLV.PLF_ID')
+          .andWhere('T_PLAN_EVENT_PLV.EVT_ID = T_EVENT_EVT.EVT_ID')
+          .groupBy('T_PLAN_PLF.PLF_ID');
+        const plan = await currentPlanPlf.getRawOne();
+
+        if (!plan) {
+          throw new NotFoundException();
+        }
+
+        if (
+          !this.permissionService.hasPermission(
+            'PERMISSION_DELETE',
+            8,
+            identity.id,
+          )
+        ) {
+          throw new NotAcceptableException();
+        }
+
+        if (plan.payment_schedule_id !== null) {
+          await manager
+            .createQueryBuilder()
+            .delete()
+            .from('payment_schedule')
+            .where('id = :id', { id })
+            .andWhere('group_id = :groupId', { groupId: identity.org })
+            .execute();
+        }
+
+        await manager
+          .createQueryBuilder()
+          .delete()
+          .from('T_DENTAL_QUOTATION_DQO')
           .where(`PLF_ID = :id`, { id })
           .execute();
 
-        this.dataSource
+        const invoice = await manager
           .createQueryBuilder()
-          .delete()
-          .from('T_BILL_BIL')
-          .where(`BIL_ID = :id`, { id: invoice.id })
-          .andWhere('BIL_LOCK = 0')
-          .execute();
-      }
+          .select()
+          .from('T_PLAN_PLF', 'T_PLAN_PLF')
+          .where(`T_PLAN_PLF.PLF_ID = :id`, { id })
+          .getOne();
 
-      const queryEvent = `
-      DELETE T_EVENT_TASK_ETK
-      FROM T_EVENT_TASK_ETK
-      JOIN T_EVENT_EVT
-      JOIN T_PLAN_EVENT_PLV
-      JOIN T_PLAN_PLF
-      WHERE T_EVENT_TASK_ETK.ETK_STATE = 0
-        AND T_EVENT_TASK_ETK.EVT_ID = T_EVENT_EVT.EVT_ID
-        AND T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID
-        AND T_PLAN_EVENT_PLV.PLF_ID = T_PLAN_PLF.PLF_ID
-        AND T_PLAN_PLF.PLF_ID = ?`;
-      await queryRunner.query(queryEvent, [id]);
+        if (invoice?.BIL_ID) {
+          await manager
+            .createQueryBuilder()
+            .update('T_PLAN_PLF')
+            .set({ BIL_ID: null })
+            .where(`PLF_ID = :id`, { id })
+            .execute();
 
-      const queryReminder = `
-        DELETE T_REMINDER_RMD
-        FROM T_EVENT_EVT
-        JOIN T_REMINDER_RMD
+          await manager
+            .createQueryBuilder()
+            .delete()
+            .from('T_BILL_BIL')
+            .where(`BIL_ID = :id`, { id: invoice.id })
+            .andWhere('BIL_LOCK = 0')
+            .execute();
+        }
+
+        const queryEvent = `
+        DELETE T_EVENT_TASK_ETK
+        FROM T_EVENT_TASK_ETK
+        JOIN T_EVENT_EVT
         JOIN T_PLAN_EVENT_PLV
         JOIN T_PLAN_PLF
-        WHERE T_EVENT_EVT.EVT_ID = T_REMINDER_RMD.EVT_ID
+        WHERE T_EVENT_TASK_ETK.ETK_STATE = 0
+          AND T_EVENT_TASK_ETK.EVT_ID = T_EVENT_EVT.EVT_ID
+          AND T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID
+          AND T_PLAN_EVENT_PLV.PLF_ID = T_PLAN_PLF.PLF_ID
+          AND T_PLAN_PLF.PLF_ID = ?`;
+        await manager.query(queryEvent, [id]);
+
+        const queryReminder = `
+          DELETE T_REMINDER_RMD
+          FROM T_EVENT_EVT
+          JOIN T_REMINDER_RMD
+          JOIN T_PLAN_EVENT_PLV
+          JOIN T_PLAN_PLF
+          WHERE T_EVENT_EVT.EVT_ID = T_REMINDER_RMD.EVT_ID
+            AND T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID
+            AND T_PLAN_EVENT_PLV.PLF_ID = T_PLAN_PLF.PLF_ID
+            AND T_PLAN_PLF.PLF_ID = ?
+            AND NOT EXISTS (
+              SELECT *
+              FROM T_EVENT_TASK_ETK
+              WHERE T_EVENT_TASK_ETK.EVT_ID = T_EVENT_EVT.EVT_ID
+          )`;
+        await manager.query(queryReminder, [id]);
+
+        const queryEventOccurrenceEvo = `
+        DELETE event_occurrence_evo
+        FROM T_EVENT_EVT
+        JOIN event_occurrence_evo
+        JOIN T_PLAN_EVENT_PLV
+        JOIN T_PLAN_PLF
+        WHERE T_EVENT_EVT.EVT_ID = event_occurrence_evo.evt_id
           AND T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID
           AND T_PLAN_EVENT_PLV.PLF_ID = T_PLAN_PLF.PLF_ID
           AND T_PLAN_PLF.PLF_ID = ?
           AND NOT EXISTS (
-            SELECT *
-            FROM T_EVENT_TASK_ETK
-            WHERE T_EVENT_TASK_ETK.EVT_ID = T_EVENT_EVT.EVT_ID
-        )`;
-      await queryRunner.query(queryReminder, [id]);
+              SELECT *
+                FROM T_EVENT_TASK_ETK
+              WHERE T_EVENT_TASK_ETK.EVT_ID = T_EVENT_EVT.EVT_ID
+          )`;
+        await manager.query(queryEventOccurrenceEvo, [id]);
 
-      const queryEventOccurrenceEvo = `
-      DELETE event_occurrence_evo
-      FROM T_EVENT_EVT
-      JOIN event_occurrence_evo
-      JOIN T_PLAN_EVENT_PLV
-      JOIN T_PLAN_PLF
-      WHERE T_EVENT_EVT.EVT_ID = event_occurrence_evo.evt_id
-        AND T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID
-        AND T_PLAN_EVENT_PLV.PLF_ID = T_PLAN_PLF.PLF_ID
-        AND T_PLAN_PLF.PLF_ID = ?
-        AND NOT EXISTS (
-            SELECT *
-              FROM T_EVENT_TASK_ETK
-            WHERE T_EVENT_TASK_ETK.EVT_ID = T_EVENT_EVT.EVT_ID
-        )`;
-      await queryRunner.query(queryEventOccurrenceEvo, [id]);
+        const queryEventEvt = `
+        DELETE T_EVENT_EVT
+        FROM T_EVENT_EVT
+        JOIN T_PLAN_EVENT_PLV
+        JOIN T_PLAN_PLF
+        WHERE T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID
+          AND T_PLAN_EVENT_PLV.PLF_ID = T_PLAN_PLF.PLF_ID
+          AND T_PLAN_PLF.PLF_ID = ?
+          AND NOT EXISTS (
+              SELECT *
+                FROM T_EVENT_TASK_ETK
+              WHERE T_EVENT_TASK_ETK.EVT_ID = T_EVENT_EVT.EVT_ID
+          )`;
+        await manager.query(queryEventEvt, [id]);
 
-      const queryEventEvt = `
-      DELETE T_EVENT_EVT
-      FROM T_EVENT_EVT
-      JOIN T_PLAN_EVENT_PLV
-      JOIN T_PLAN_PLF
-      WHERE T_EVENT_EVT.EVT_ID = T_PLAN_EVENT_PLV.EVT_ID
-        AND T_PLAN_EVENT_PLV.PLF_ID = T_PLAN_PLF.PLF_ID
-        AND T_PLAN_PLF.PLF_ID = ?
-        AND NOT EXISTS (
-            SELECT *
-              FROM T_EVENT_TASK_ETK
-            WHERE T_EVENT_TASK_ETK.EVT_ID = T_EVENT_EVT.EVT_ID
-        )`;
-      await queryRunner.query(queryEventEvt, [id]);
+        const deletePlanQuery = `
+          DELETE FROM T_PLAN_PLF
+          WHERE PLF_ID = ?`;
+        await manager.query(deletePlanQuery, [id]);
 
-      const deletePlanQuery = `
-        DELETE FROM T_PLAN_PLF
-        WHERE PLF_ID = ?`;
-      await queryRunner.query(deletePlanQuery, [id]);
+        //@TODO
+        // switch ($plan['type']) {
+        //   case 'plan':
+        //     Ids\Log:: write('Plan de traitement', $plan['patient_id'], 3);
+        //     break;
+        //   case 'quotation':
+        //     Ids\Log:: write('Devis', $plan['patient_id'], 3);
+        //     break;
+        // }
 
-      await queryRunner.commitTransaction();
-
-      //@TODO
-      // switch ($plan['type']) {
-      //   case 'plan':
-      //     Ids\Log:: write('Plan de traitement', $plan['patient_id'], 3);
-      //     break;
-      //   case 'quotation':
-      //     Ids\Log:: write('Devis', $plan['patient_id'], 3);
-      //     break;
-      // }
-
-      return id;
-    } catch (error) {
-      if (queryRunner.isTransactionActive) {
-        await queryRunner.rollbackTransaction();
+        return id;
+      } catch (error) {
+        throw new CBadRequestException(error);
       }
-
-      return error;
-    }
+    });
   }
 
   //File /php/plan/find.php, line 6-46
