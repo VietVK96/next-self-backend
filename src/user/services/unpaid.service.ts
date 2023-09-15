@@ -1,6 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { UserEntity } from 'src/entities/user.entity';
-import { DataSource, Repository } from 'typeorm';
+import {
+  And,
+  DataSource,
+  FindOptionsWhere,
+  LessThan,
+  LessThanOrEqual,
+  MoreThan,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UnpaidDto, printUnpaidDto } from '../dto/unpaid.dto';
 import { ContactEntity } from 'src/entities/contact.entity';
@@ -24,6 +33,8 @@ import { ConfigService } from '@nestjs/config';
 import Handlebars from 'handlebars';
 import * as path from 'path';
 import * as fs from 'fs';
+import { customCreatePdf } from 'src/common/util/pdf';
+import { checkId } from 'src/common/util/number';
 
 @Injectable()
 export class UnpaidService {
@@ -42,7 +53,6 @@ export class UnpaidService {
     @InjectRepository(ContactNoteEntity)
     private contactNoteRepo: Repository<ContactNoteEntity>,
     private documentMailService: DocumentMailService,
-    private configService: ConfigService,
   ) {}
 
   async getUserUnpaid(payload: UnpaidDto) {
@@ -77,38 +87,40 @@ export class UnpaidService {
       .innerJoin(ContactEntity, 'patient', 'patientBalance.conId = patient.id')
       .andWhere('patientBalance.usrId = :usrId', { usrId: user.id })
       .andWhere('patientBalance.amount > 0');
-
+    let amount = 0;
+    let relaunchLevel = 0;
+    const where:
+      | FindOptionsWhere<ContactUserEntity>
+      | FindOptionsWhere<ContactUserEntity>[] = {};
     filterParam.forEach((param, index) => {
       const valueParam = filterValue[index];
       switch (param) {
         case 'patientBalance.amount':
-          queryBuilder.andWhere('patientBalance.amount >= :amount', {
-            amount: valueParam,
-          });
+          amount = valueParam ? Number(valueParam) : 0;
           break;
         case 'patientBalance.relaunchLevel':
-          queryBuilder.andWhere(
-            'patientBalance.relaunchLevel >= :relaunchLevel',
-            {
-              relaunchLevel: valueParam,
-            },
-          );
+          where.relaunchLevel = valueParam ? Number(valueParam) : 0;
           break;
         case 'patientBalance.visitDate':
           const period = valueParam.split(';');
-          if (period[0]) {
-            queryBuilder.andWhere('patientBalance.lastCare >= :visitDate1', {
-              visitDate1: period[0],
-            });
-          }
-          if (period[1]) {
-            queryBuilder.andWhere('patientBalance.lastCare <= :visitDate2', {
-              visitDate2: period[1],
-            });
-          }
+          where.lastCare = And(MoreThanOrEqual(period[0]), LessThanOrEqual(period[1]));
           break;
       }
     });
+
+    const balance = this.patientBalanceRepo.find({
+      where: {
+        usrId: user?.id,
+        amount: amount ? MoreThanOrEqual(amount) : MoreThan(0),
+        ...where,
+      },
+      relations: {
+        patient: {
+          phones: true,
+        },
+      },
+    });
+
     const sort = payload?.sort ?? 'patientBalance.visitDate';
     queryBuilder.addOrderBy(
       unpaidSort[sort],
@@ -135,11 +147,16 @@ export class UnpaidService {
         'civilityTitle',
         'medical',
         'user',
+        'phones',
         'user.amo',
         'user.medical',
         'user.medical.specialtyCode',
       ],
     });
+    console.log(
+      '🚀 ~ file: unpaid.service.ts:145 ~ UnpaidService ~ getUserUnpaidPatient ~ patients:',
+      patients,
+    );
     const patientBalancesFormat = patientBalances.map((patientBalance) => {
       const patient = patients.find((p) => p?.id === patientBalance?.conId);
       const res: any = {
@@ -234,6 +251,10 @@ export class UnpaidService {
           patientRes.user = user;
         }
         res.patient = patientRes;
+        console.log(
+          '🚀 ~ file: unpaid.service.ts:239 ~ UnpaidService ~ patientBalancesFormat ~ patientRes:',
+          patientRes,
+        );
       }
       return res;
     });
@@ -326,60 +347,10 @@ export class UnpaidService {
    *
    */
   async printUnpaid(param?: printUnpaidDto) {
-    const user = await this.userRepository.findOne({
-      where: { id: param?.id },
-    });
-    if (!user) {
-      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
-    }
     try {
-      const queryBuilder = this.patientBalanceRepo
-        .createQueryBuilder('patientBalance')
-        .innerJoinAndSelect('patientBalance.patient', 'patient')
-        .leftJoinAndSelect('patient.phones', 'phone')
-        .andWhere('patientBalance.usrId = :user', { user: user.id })
-        .andWhere('patientBalance.amount < 0');
+      const userUnpaid = await this.getUserUnpaidPatient(param as UnpaidDto);
 
-      for (let i = 0; i < param.filterParam?.length; i++) {
-        switch (param.filterParam?.[i]) {
-          case 'patientBalance.amount':
-            queryBuilder.andWhere('patientBalance.amount <= :amount', {
-              amount: param.filterValue?.[i],
-            });
-            break;
-          case 'patientBalance.relaunchLevel':
-            queryBuilder.andWhere(
-              'patientBalance.relaunchLevel >= :relaunchLevel',
-              {
-                relaunchLevel: param.filterValue?.[i],
-              },
-            );
-            break;
-          case 'patientBalance.visitDate':
-            const arrDate = param.filterValue?.[i].toString().split(';');
-            if (arrDate.length > 0 && arrDate?.[0]) {
-              queryBuilder.andWhere('patientBalance.visitDate >= :startDate', {
-                startDate: arrDate?.[0],
-              });
-            }
-            if (arrDate.length > 1 && arrDate?.[1]) {
-              queryBuilder.andWhere('patientBalance.visitDate <= :endDate', {
-                endDate: arrDate?.[1],
-              });
-            }
-            break;
-        }
-      }
-
-      if (param?.sort)
-        queryBuilder.addOrderBy(
-          unpaidSort[param?.sort],
-          param?.direction.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
-        );
-
-      const res = await queryBuilder.getMany();
-
-      const totalAmount = res.reduce(
+      const totalAmount = userUnpaid.items.reduce(
         (totalAmount, item) => totalAmount + Number(item.amount),
         0,
       );
@@ -387,28 +358,50 @@ export class UnpaidService {
       const currencyObj = await this.userPreferenceRepo.findOneOrFail({
         select: ['currency'],
         where: {
-          usrId: user.id,
+          usrId: checkId(param?.id),
         },
       });
 
       const data = {
-        patientBalances: res,
+        patientBalances: userUnpaid.items,
         currency: currencyObj?.currency,
         totalAmount,
       };
-
-      const templates = fs.readFileSync(
-        path.join(__dirname, '../../../templates/unpaid/index.hbs'),
-        'utf-8',
+      console.log(
+        '🚀 ~ file: unpaid.service.ts:350 ~ UnpaidService ~ printUnpaid ~ data.userUnpaid:',
+        userUnpaid,
       );
 
-      Handlebars.registerHelper('dateShort', function (date) {
-        return date ? dayjs(date).format('DD/MM/YYYY') : '';
+      const filePath = path.join(
+        process.cwd(),
+        'templates/unpaid',
+        'index.hbs',
+      );
+
+      return await customCreatePdf({
+        files: [
+          {
+            data: data,
+            path: filePath,
+          },
+        ],
+        options: {
+          displayHeaderFooter: true,
+          headerTemplate: '<div></div>',
+          footerTemplate: '<div></div>',
+          margin: {
+            left: '5mm',
+            top: '5mm',
+            right: '5mm',
+            bottom: '5mm',
+          },
+        },
+        helpers: {
+          dateShort: function (date) {
+            return date ? dayjs(date).format('DD/MM/YYYY') : '';
+          },
+        },
       });
-
-      const html = Handlebars.compile(templates)(data);
-
-      return html;
     } catch (e) {
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }

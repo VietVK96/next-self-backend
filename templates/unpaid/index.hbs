@@ -1,60 +1,69 @@
-<html lang='fr'>
   <head>
-    <meta charset='UTF-8' />
-    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-    <meta http-equiv='X-UA-Compatible' content='ie=edge' />
-    <title>Impayés</title>
     <style>
+      @page {
+        size: a4 landscape;
+      }
+      tbody, thead, table {
+        width: 100%;
+        font-size: 9pt;
+      }
+      tr {
+        width: 100%;
+        display: flex;
+      }
+      td, th {
+        padding: 4px;
+        border-top: 1px solid black;
+        border-left: 1px solid black;
+      }
 
-      html { margin: 0; padding: 0; font-family: Arial; } body { margin: 0;
-      padding: 0;  } table { width: 100%; border-collapse: collapse; font-size:
-      8pt; } table th, table td { vertical-align: top; padding: 2mm 2mm; border:
-      0.1pt solid #000000; } table thead th { text-align: center; } table
-      tr.tfoot { font-weight: bold; } td.visitDate { width: 8%; text-align:
-      center; } td.patient { width: 48%; } td.phoneNumbers { width: 20%; }
-      td.phoneNumbers span.number + span.number::before { content: "- "; }
-      td.amount { width: 8%; text-align: right; } td.relaunchLevel { width: 8%;
-      text-align: center; } td.relaunchDate { width: 8%; text-align: center; }
+      .col-1 {
+        width: 8.33%;
+        text-align: center;
+      }
 
+      .col-2 {
+        width: 16.66%;
+      }
+
+      .col-6 {
+        width: 50%;
+      }
     </style>
   </head>
-  <body>
+  <Page>
     <table>
-      <thead>
         <tr>
-          <th class='visitDate'>Date visite</th>
-          <th class='patient'>Patient</th>
-          <th class='phoneNumbers'>Téléphone</th>
-          <th class='amount'>Solde</th>
-          <th class='relaunchLevel'>Niveau</th>
-          <th class='relaunchDate'>Date relance</th>
+          <th class='visitDate col-1'>Date visite</th>
+          <th class='patient col-6'>Patient</th>
+          <th class='phoneNumbers col-2'>Téléphone</th>
+          <th class='amount col-1'>Solde</th>
+          <th class='relaunchLevel col-1'>Niveau</th>
+          <th class='relaunchDate col-1' style="border-right: 1px solid black;">Date relance</th>
         </tr>
-      </thead>
-      <tbody>
         {{#each patientBalances}}
             <tr>
-                <td class="visitDate">{{dateShort this.lastCare }}</td>
-                <td class="patient">{{ this.patient.firtName }} {{this.patient.lastname}}</td>
-                <td class="phoneNumbers">
+                <td class="visitDate col-1">{{dateShort this.lastCare }}</td>
+                <td class="patient col-6" style="text-align: left;">{{ this.patient.firtName }} {{this.patient.lastname}}</td>
+                <td class="phoneNumbers col-2 " style="text-align: left;">
                     {{#each this.patient.phones }}
+                      {{#if (eq @index 0)}} - {{/if}}
                     <span class="number">{{ this.number }}</span>
                     {{/each}}
                 </td>
-                <td class="amount">{{ this.amount}} {{../currency}}</td>
-                <td class="relaunchLevel">{{ this.relaunchLevel }}</td>
-                <td class="relaunchDate">
+                <td class="amount col-1" style="text-align: right;">{{amountCurrency this.amount ../currency}}</td>
+                <td class="relaunchLevel col-1">{{ this.relaunchLevel }}</td>
+                <td class="relaunchDate col-1" style="border-right: 1px solid black;">
                     {{#if this.relaunchDate }}
-                    {{ this.relaunchDate }}
+                    {{dateShort this.relaunchDate }}
                     {{/if}}
                 </td>
             </tr>
           {{/each}}
-            <tr class="tfoot">
-                <td colspan="3"></td>
-                <td class="amount">{{totalAmount}} {{currency}}</td>
-                <td colspan="2"></td>
+            <tr>
+                <td style="width: 73.2%; border-bottom: 1px solid black;" ></td>
+                <td style="width: 8%; border-bottom: 1px solid black; text-align:right" >{{amountCurrency totalAmount currency}}</td>
+                <td style="width: 16.66%; border-right: 1px solid black; border-bottom: 1px solid black;"></td>
             </tr>
-        </tbody>
     </table>
-  </body>
-</html>
+  </Page>
