@@ -79,6 +79,7 @@ import { AddressBookModule } from './address-books/address-books.module';
 import { AdvanceSearchModule } from './advanced-search/advanced-search.module';
 import { BullModule } from '@nestjs/bull';
 import { LanguageModule } from './language/language.module';
+import { NotifierModule } from './notifier/notifier.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -224,6 +225,7 @@ const importsModules = [
   FeedbackModule,
   AddressBookModule,
   AdvanceSearchModule,
+  NotifierModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {
