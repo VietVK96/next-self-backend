@@ -229,10 +229,6 @@ export class CreditBalancesService {
             break;
           case 'patientBalance.visitDate':
             const period = filterValue.split(';');
-            console.log(
-              '🚀 ~ file: credit-balances.service.ts:232 ~ CreditBalancesService ~ filterParams.map ~ period:',
-              period,
-            );
             if (period[0]) {
               queryBuilder.andWhere('patientBalance.lastCare >= :visitDate1', {
                 visitDate1: period[0],
