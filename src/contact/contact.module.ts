@@ -51,7 +51,6 @@ import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import { DocumentMailService } from 'src/mail/services/document.mail.service';
 import { MailModule } from 'src/mail/mail.module';
 import { NotifierModule } from 'src/notifier/notifier.module';
-import { TemplateMailService } from 'src/mail/services/template.mail.service';
 
 @Module({
   controllers: [
