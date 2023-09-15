@@ -38,16 +38,8 @@ export class DsioImporterService {
         throw new CBadRequestException(ErrorCode.FILE_NOT_FOUND);
       }
 
-      let command = '';
       const extension = path.extname(pathname).toUpperCase();
       if (extension === '.ZIP') {
-        const importPathname = 'php/document/letters/import.php';
-        command = `php -c ${importPathname} filename="${pathname}" organization_id=${user.org}`;
-
-        if (null !== importerDsioDto['iduser']) {
-          command += ` user_id=${importerDsioDto['iduser']}`;
-        }
-
         this.letterImporterService
           .letterImport(user, pathname)
           .catch((error) => {
@@ -72,20 +64,6 @@ export class DsioImporterService {
          * php/dsio/importer.php line 58->61
          */
         importerDsioDto.pathname = pathname;
-        const paramsObject: { [key: string]: string } = {
-          pathname: importerDsioDto.pathname || '',
-          patient_number: importerDsioDto.patient_number
-            ? importerDsioDto.patient_number.toString()
-            : '',
-          sections: JSON.stringify(importerDsioDto.sections),
-        };
-        const params = new URLSearchParams(paramsObject);
-        const queryString = `${params.toString()} group=${
-          user.org
-        } FRQ=${FRQ} HMD=${HMD} HMF=${HMF} HAD=${HAD} HAF=${HAF}`;
-
-        command = `php -c import_shell.php -- ${queryString}`;
-
         this.importerService
           .runImportShell(importerDsioDto, user.org, FRQ, HMD, HMF, HAD, HAF)
           .catch((error) => {
@@ -101,7 +79,6 @@ export class DsioImporterService {
       return {
         status: 1,
         ext: extension,
-        command: command,
       };
     } catch (error) {
       throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
