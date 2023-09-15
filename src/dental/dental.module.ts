@@ -32,9 +32,18 @@ import { QuotesController } from './quotes.controller';
 import { ContactPaymentService } from 'src/contact/services/contact.payment.service';
 import { QuotationController } from './quotation.controller';
 import { DocumentMailService } from 'src/mail/services/document.mail.service';
+import { PreviewMailService } from 'src/mail/services/preview.mail.service';
+import { TemplateMailService } from 'src/mail/services/template.mail.service';
+import { PdfMailService } from 'src/mail/services/pdf.mail.service';
+import { DataMailService } from 'src/mail/services/data.mail.service';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature(listEntities), PaymentSchedulesModule],
+  imports: [
+    TypeOrmModule.forFeature(listEntities),
+    PaymentSchedulesModule,
+    MailModule,
+  ],
   controllers: [
     DevisHNController,
     DevisStd2Controller,
@@ -68,6 +77,10 @@ import { DocumentMailService } from 'src/mail/services/document.mail.service';
     QuotationServices,
     ContactPaymentService,
     DocumentMailService,
+    DataMailService,
+    PdfMailService,
+    TemplateMailService,
+    PreviewMailService,
   ],
 })
 export class DentalModule {}

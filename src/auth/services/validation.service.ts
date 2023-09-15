@@ -9,6 +9,8 @@ import crypto from 'crypto';
 import * as phpPassword from 'node-php-password';
 import { SessionService } from './session.service';
 import { LoginRes } from '../reponse/token.res';
+import { UserConnectionService } from 'src/user/services/user-connection.service';
+import { Request } from 'express';
 
 @Injectable()
 export class ValidationService {
@@ -16,6 +18,7 @@ export class ValidationService {
     @InjectRepository(UserEntity)
     private userRepo: Repository<UserEntity>,
     private sessionService: SessionService,
+    private useConnectionService: UserConnectionService,
   ) {}
 
   /**
@@ -23,7 +26,10 @@ export class ValidationService {
    * @function main function
    *
    */
-  async validation(payload: ValidationDto): Promise<LoginRes> {
+  async validation(
+    payload: ValidationDto,
+    request: Request,
+  ): Promise<LoginRes> {
     const user = await this.userRepo.findOne({
       where: {
         log: payload.username,
@@ -71,6 +77,11 @@ export class ValidationService {
     // End logic
     // @TODO check license from : application\Repositories\User.php 155-171
     // @TODO Save session and check laguage auth\validation.php 56-77
+
+    // save user connection
+    //ecoophp/application/include/default.inc.php
+    // 38 -> 46
+    this.useConnectionService.saveConnection(user.id, request);
 
     // Replace session to jwt token
     return await this.sessionService.createTokenLogin({ user });

@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
@@ -15,6 +23,7 @@ import { LoginRes } from './reponse/token.res';
 import { GetSessionService } from './services/get-session.service';
 import { SessionService } from './services/session.service';
 import { ValidationService } from './services/validation.service';
+import { Request } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -30,8 +39,8 @@ export class AuthController {
    * File: auth\validation.php
    */
   @Post('validation')
-  async validation(@Body() payload: ValidationDto) {
-    return await this.validationService.validation(payload);
+  async validation(@Body() payload: ValidationDto, @Req() request: Request) {
+    return await this.validationService.validation(payload, request);
   }
 
   @Post('refresh')

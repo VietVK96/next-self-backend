@@ -8,7 +8,6 @@ import { UserEntity } from 'src/entities/user.entity';
 import { DentalQuotationEntity } from 'src/entities/dental-quotation.entity';
 import { DevisRequestAjaxDto } from '../dto/devis_request_ajax.dto';
 import { LettersEntity } from 'src/entities/letters.entity';
-import { MailService } from 'src/mail/services/mail.service';
 import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
 import { PrintPDFDto } from '../dto/facture.dto';
 import { ErrorCode } from 'src/constants/error';
@@ -37,11 +36,18 @@ import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import { SuccessResponse } from 'src/common/response/success.res';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { ConfigService } from '@nestjs/config';
+import { PreviewMailService } from 'src/mail/services/preview.mail.service';
+import { DataMailService } from 'src/mail/services/data.mail.service';
+import { TemplateMailService } from 'src/mail/services/template.mail.service';
+import { PdfMailService } from 'src/mail/services/pdf.mail.service';
 
 @Injectable()
 export class QuotationMutualServices {
   constructor(
-    private mailService: MailService,
+    private pdfMailService: PdfMailService,
+    private previewMailService: PreviewMailService,
+    private dataMailService: DataMailService,
+    private templateMailService: TemplateMailService,
     @InjectRepository(MedicalHeaderEntity)
     private medicalHeaderRepository: Repository<MedicalHeaderEntity>,
     @InjectRepository(UserEntity)
@@ -223,11 +229,13 @@ export class QuotationMutualServices {
         }
         if (attachments && attachments.length > 0) {
           attachments.map(async (id) => {
-            const mail = await this.mailService.find(id);
-            const context = await this.mailService.context({
-              doctor_id: quote?.user?.id,
-              patient_id: quote?.patient?.id,
-            });
+            const mail = await this.dataMailService.find(id);
+            const context = await this.templateMailService.contextMail(
+              {
+                patient_id: quote?.patient?.id,
+              },
+              quote?.user?.id,
+            );
             const signature: any = {};
             if (quote?.signaturePraticien) {
               signature.practitioner = quote?.signaturePraticien;
@@ -235,7 +243,7 @@ export class QuotationMutualServices {
             if (quote?.signaturePraticien) {
               signature.patient = quote?.signaturePatient;
             }
-            const mailConverted = await this.mailService.transform(
+            const mailConverted = await this.previewMailService.transform(
               mail,
               context,
               signature,
@@ -247,7 +255,7 @@ export class QuotationMutualServices {
             }
             delete mailConverted?.header;
             delete mailConverted?.footer;
-            const mailResult = await this.mailService.store(mailConverted);
+            const mailResult = await this.dataMailService.store(mailConverted);
             const newMail = await this.lettersRepository.findOne({
               where: { id: mailResult?.id || 0 },
             });
@@ -459,16 +467,20 @@ export class QuotationMutualServices {
       if (initChamp?.paymentScheduleId) {
         try {
           const mail =
-            await this.mailService.findOnePaymentScheduleTemplateByDoctor(id);
-          const mailConverted = await this.mailService.transform(
+            await this.dataMailService.findOnePaymentScheduleTemplateByDoctor(
+              id,
+            );
+          const mailConverted = await this.previewMailService.transform(
             mail,
-            this.mailService.context({
-              doctor_id: initChamp?.id_user,
-              patient_id: initChamp?.ident_pat,
-              payment_schedule_id: initChamp?.paymentScheduleId,
-            }),
+            this.templateMailService.contextMail(
+              {
+                patient_id: initChamp?.ident_pat,
+                payment_schedule_id: initChamp?.paymentScheduleId,
+              },
+              initChamp?.id_user,
+            ),
           );
-          content = await this.mailService.pdf(mailConverted, {
+          content = await this.pdfMailService.pdf(mailConverted, {
             preview: true,
           });
           files.push({ type: 'string', data: content });

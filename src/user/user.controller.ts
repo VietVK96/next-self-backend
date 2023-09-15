@@ -35,6 +35,9 @@ import { CreditBalancesDto } from './dto/credit-balances.dto';
 import type { Response } from 'express';
 import { UpdateUserSmsDto } from './dto/user-sms.dto';
 import { UserConnectionService } from './services/user-connection.service';
+import { ListOfTreatmentsService } from './services/list-of-treatments.service';
+import { ListOfTreatmentsFindAllDto } from './dto/list-of-treatments.dto';
+import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -47,7 +50,59 @@ export class UserController {
     private unpaidService: UnpaidService,
     private creditBalancesService: CreditBalancesService,
     private userConnectionService: UserConnectionService,
+    private listOfTreatmentsService: ListOfTreatmentsService,
   ) {}
+
+  /**
+   * ecoophp/php/user/listOfTreatments/findAll.php
+   */
+  @Get('listOfTreatments/findAll')
+  @UseGuards(TokenGuard)
+  async listOfTreatmentsFindAll(
+    @CurrentDoctor() doctorId: number,
+    @Query() params: ListOfTreatmentsFindAllDto,
+  ) {
+    return this.listOfTreatmentsService.findAll(doctorId, params);
+  }
+
+  /**
+   * ecoophp/php/user/listOfTreatments/export.php
+   */
+  @Get('listOfTreatments/export')
+  @UseGuards(TokenGuard)
+  async listOfTreatmentsExport(
+    @Res() res: Response,
+    @CurrentDoctor() doctorId: number,
+    @Query() params: ListOfTreatmentsFindAllDto,
+  ) {
+    return this.listOfTreatmentsService.export(res, doctorId, params);
+  }
+
+  /**
+   * ecoophp/php/user/listOfTreatments/print.php
+   */
+  @Get('listOfTreatments/print')
+  @UseGuards(TokenGuard)
+  async listOfTreatmentsPrint(
+    @Res() res: Response,
+    @CurrentDoctor() doctorId: number,
+    @Query() params: ListOfTreatmentsFindAllDto,
+  ) {
+    try {
+      const buffer = await this.listOfTreatmentsService.print(doctorId, params);
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment;`,
+        'Content-Length': buffer.length,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    }
+  }
 
   /**
    * php/contact/prestation/findAll.php 1->14
@@ -287,5 +342,10 @@ export class UserController {
       page,
       maxPerPage,
     );
+  }
+
+  @Post('create')
+  async create() {
+    return await this.userService.createAcc();
   }
 }

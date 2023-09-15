@@ -92,7 +92,6 @@ export const customCreatePdf = async ({
     const content = contents.join('');
     await page.setContent(content);
     const buffer = await page.pdf({
-      // path: 'output-abc.pdf',
       format: 'a4',
       printBackground: true,
       margin: {

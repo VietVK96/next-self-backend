@@ -10,7 +10,6 @@ import { AuthGuard } from '@nestjs/passport';
 import { JWT_LOG_OUT } from 'src/constants/jwt';
 import { JwtPayload } from 'jsonwebtoken';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-
 export interface UserIdentity extends JwtPayload {
   id: number;
   org: number; // $groupId = $session->get("group"); $session->get('organization_id');
@@ -36,10 +35,8 @@ export const CurrentUser = createParamDecorator(
 export class TokenGuard extends AuthGuard('jwt') {
   @Inject(CACHE_MANAGER)
   protected cacheManager: Cache;
-
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = this.getRequest(context);
-
     let authorization = request.headers?.authorization;
     if (!authorization || authorization === '') {
       if (!request?.query?.token || request?.query?.token === '') {

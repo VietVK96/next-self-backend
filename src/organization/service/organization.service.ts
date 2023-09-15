@@ -152,7 +152,7 @@ export class OrganizationService {
     });
     const practitioners = await this._getPractitioners(organizationId);
     const modeDesynchronise = practitioners.every(
-      (x) => x?.preference?.sesamVitaleModeDesynchronise,
+      (x) => x?.setting?.sesamVitaleModeDesynchronise,
     );
     return {
       organization: currentOrganization,

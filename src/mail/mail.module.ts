@@ -11,6 +11,10 @@ import { listEntities } from 'src/entities';
 import { MailTransportService } from './services/mailTransport.service';
 import { ContactModule } from 'src/contact/contact.module';
 import { DocumentMailService } from './services/document.mail.service';
+import { PreviewMailService } from './services/preview.mail.service';
+import { DataMailService } from './services/data.mail.service';
+import { PdfMailService } from './services/pdf.mail.service';
+import { TemplateMailService } from './services/template.mail.service';
 
 @Module({
   imports: [
@@ -27,7 +31,18 @@ import { DocumentMailService } from './services/document.mail.service';
     PaymentScheduleService,
     MailTransportService,
     DocumentMailService,
+    PreviewMailService,
+    DataMailService,
+    PdfMailService,
+    TemplateMailService,
   ],
-  exports: [MailService, DocumentMailService],
+  exports: [
+    MailService,
+    DocumentMailService,
+    PreviewMailService,
+    DataMailService,
+    PdfMailService,
+    TemplateMailService,
+  ],
 })
 export class MailModule {}

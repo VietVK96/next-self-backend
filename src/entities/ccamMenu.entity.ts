@@ -3,8 +3,10 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { CcamEntity } from './ccam.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\CcamMenuRepository")
@@ -91,6 +93,18 @@ export class CcamMenuEntity {
     nullable: true,
   })
   paragraphe?: string;
+
+  @Column({
+    name: 'label',
+    type: 'varchar',
+    length: 255,
+  })
+  label?: string;
+
+  @OneToMany(() => CcamEntity, (e) => e.menu, {
+    createForeignKeyConstraints: false,
+  })
+  menu?: CcamEntity[];
 }
 
 //application\Entity\CcamMenu.php

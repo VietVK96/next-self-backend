@@ -21,6 +21,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    "cli": "nestjs-command",
     "prepare": "husky install"
   },
   "husky": {
@@ -72,8 +73,10 @@
     "html-entities": "^2.4.0",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.0",
+    "merge-pdf-buffers": "^1.0.3",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.3.3",
+    "nestjs-command": "^3.1.4",
     "nestjs-pino": "^3.3.0",
     "node-html-parser": "^6.1.5",
     "node-php-password": "^0.1.2",
@@ -82,7 +85,6 @@
     "ovh": "^2.0.3",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
-    "pdf-merger-js": "^4.3.0",
     "pino-http": "^8.3.3",
     "puppeteer": "^20.9.0",
     "recurr": "^0.1.0",
@@ -99,7 +101,8 @@
     "xml2js": "^0.6.0",
     "xmlbuilder2": "^3.1.1",
     "xmldom": "^0.6.0",
-    "xpath": "^0.0.33"
+    "xpath": "^0.0.33",
+    "yargs": "^17.7.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.3.0",

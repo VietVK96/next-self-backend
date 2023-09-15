@@ -52,22 +52,16 @@ export class SettingOrganizationService {
     return user.filter((x) => x?.medical);
   }
 
+  //settings/organizations/update.php
   async update(
     organizationId: number,
     userId: number,
     body: UpdateOrganizationDto,
     logo: Express.Multer.File,
   ): Promise<SuccessResponse> {
-    const emailTemplate = /^[^@]+@[^@]+\.[^.]*[^.\s]+[^.\s]*$/;
-
-    if (!emailTemplate.test(body.email)) {
-      throw new CBadRequestException('This value is not a valid email address');
+    if (!/^\w+([.]?\w+)*@\w+([.]?\w+)*(\.\w+)+$/.test(body.email)) {
+      throw new CBadRequestException(ErrorCode.INVALID_EMAIL);
     }
-
-    if (body.phone_number.length < 1 || body.phone_number.length > 17) {
-      throw new CBadRequestException('This value is not a valid phone number.');
-    }
-
     try {
       if (!userId || !organizationId) throw ErrorCode.FORBIDDEN;
 
@@ -116,11 +110,11 @@ export class SettingOrganizationService {
       } else {
         newAddress = currentOrg?.address;
       }
-      newAddress.street = address?.street;
-      newAddress.streetComp = address?.street2;
-      newAddress.zipCode = address?.zip_code;
-      newAddress.city = address?.city;
-      newAddress.countryAbbr = address?.country_code;
+      newAddress.street = address?.street || null;
+      newAddress.streetComp = address?.street2 || null;
+      newAddress.zipCode = address?.zip_code || null;
+      newAddress.city = address?.city || null;
+      newAddress.countryAbbr = address?.country_code || null;
       const country = countries.find(
         (x) => x?.cca2 === newAddress?.countryAbbr,
       );
@@ -143,7 +137,6 @@ export class SettingOrganizationService {
 
         const auth = `${organizationId.toString().padStart(5, '0')}`;
         const dir = await this.configService.get('app.uploadDir');
-        await this.removeOldFile(currentOrg?.uplId, dir, auth);
 
         if (logo) {
           await this.uploadservice._checkGroupStorageSpace(
@@ -176,30 +169,16 @@ export class SettingOrganizationService {
         ...currentOrg,
         uplId: upload?.id,
         address: newAddress,
-        name,
-        email,
-        phoneNumber: phone_number,
-        imageLibraryLink: image_library_link,
-        settings: settings,
+        name: name ? name.trim() : null,
+        email: email ? email.trim() : null,
+        phoneNumber: phone_number ? phone_number.trim() : null,
+        imageLibraryLink: image_library_link || null,
+        settings: settings || {},
       });
 
       return { success: true };
     } catch (error) {
       throw new CBadRequestException(error);
-    }
-  }
-
-  async removeOldFile(id: number, dir: string, auth: string) {
-    const oldFile = await this.uploadRepository.findOne({
-      where: { id: id },
-    });
-
-    if (oldFile) {
-      const filename = oldFile.name;
-      if (fs.existsSync(`${dir}/${auth}/${filename}`)) {
-        fs.unlinkSync(`${dir}/${auth}/${filename}`);
-      }
-      await this.uploadRepository.delete(oldFile.id);
     }
   }
 

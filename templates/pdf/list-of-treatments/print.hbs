@@ -1,0 +1,156 @@
+<style type="text/css">
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    .text-left {
+        text-align: left;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    th,
+    td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .list table {
+        border-collapse: collapse;
+    }
+
+    .list td {
+        border: dotted 0.1mm #999;
+        border-top-color: #fff;
+        border-left-color: #fff;
+        padding: 2mm 0;
+        vertical-align: top;
+    }
+
+    .list td.last {
+        border-right-color: #fff;
+    }
+
+    .total {
+        margin-top: 5mm;
+    }
+
+    .total td {
+        text-align: right;
+    }
+
+    .cashingCollection {
+        border-spacing: 0;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .cashingCollection td,
+    .cashingCollection th {
+        padding: 2mm;
+    }
+
+    .cashingCollection th {
+        text-align: center;
+    }
+
+    .cashingCollection tbody td,
+    .cashingCollection tfoot td,
+    .cashingCollection th {
+        border: solid 1px black;
+        font-size: 9pt;
+    }
+
+    .cashingCollection .date {
+        width: 8%;
+        text-align: center;
+    }
+
+    .cashingCollection .contactFullname {
+        width: 26%;
+    }
+
+    .cashingCollection .name {
+        width: 29%;
+    }
+
+    .cashingCollection .teeth {
+        width: 10%;
+        text-align: center;
+    }
+
+    .cashingCollection .cotation {
+        width: 8%;
+        text-align: center;
+    }
+
+    .cashingCollection .ccamFamily {
+        width: 10%;
+        text-align: center;
+    }
+
+    .cashingCollection .amount {
+        width: 9%;
+        text-align: right;
+    }
+</style>
+<page backtop="16mm" backbottom="7mm" orientation="L" footer="page;date;">
+    <page_header>
+        <div style="padding-bottom: 4mm;">
+            <table>
+                <tbody>
+                    <tr>
+                        <td>
+                            <b>Liste des soins</b><br />
+                            Dr. {{ user.firstname }} {{user.lastname}}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </page_header>
+    <table class="cashingCollection">
+        <thead>
+            <tr>
+                <th class="date">Date</th>
+                <th class="contactFullname">Patient</th>
+                <th class="name">Libellé</th>
+                <th class="teeth">Dents</th>
+                <th class="cotation">Cotation</th>
+                <th class="ccamFamily">Code Regrpt</th>
+                <th class="amount">Montant</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each ets}}
+            <tr>
+                <td class="date">{{this.date}}</td>
+                <td class="contactFullname">{{this.contactFullname}}</td>
+                <td class="name">{{this.name}}</td>
+                <td class="teeth">{{this.teeth}}</td>
+                <td class="cotation">{{this.cotation}}</td>
+                <td class="ccamFamily">{{this.ccamFamily}}</td>
+                <td class="amount">{{this.amount}}</td>
+            </tr>
+            {{/each}}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="6">{{this.numberOfRows}} soins selectionnés.</td>
+                <td class="text-right">{{formatNumber amountTotal}}</td>
+            </tr>
+        </tfoot>
+    </table>
+</page>

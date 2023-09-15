@@ -856,9 +856,10 @@ export class FactureServices {
       const contactEmail = result?.contactEmail;
 
       if (!validateEmail(userEmail) || !validateEmail(contactEmail)) {
-        throw new CBadRequestException(
-          'Veuillez renseigner une adresse email valide dans la fiche patient',
-        );
+        throw {
+          message:
+            'Veuillez renseigner une adresse email valide dans la fiche patient',
+        };
       }
 
       const filename = `Facture_${format(
@@ -933,7 +934,7 @@ export class FactureServices {
       });
       return { message: true };
     } catch (err) {
-      throw new CBadRequestException(`${err?.message}`);
+      throw new CBadRequestException(err?.message);
     }
   }
 

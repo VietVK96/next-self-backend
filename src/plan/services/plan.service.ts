@@ -679,14 +679,14 @@ export class PlanService {
           }
 
           if (tasks.length > 0) {
-            const listTask = tasks.join();
+            const conditionsSql = Array(tasks.length).fill('?').join();
             const sql = `
               DELETE ETK, DET
               FROM T_EVENT_TASK_ETK ETK
               LEFT OUTER JOIN T_DENTAL_EVENT_TASK_DET DET ON DET.ETK_ID = ETK.ETK_ID
               WHERE ETK.EVT_ID = ?
-              AND ETK.ETK_ID NOT IN (?)`;
-            await manager.query(sql, [event?.id, listTask]);
+              AND ETK.ETK_ID NOT IN (${conditionsSql})`;
+            await manager.query(sql, [event?.id, ...tasks]);
           }
 
           events.push(event?.id);
@@ -883,35 +883,31 @@ export class PlanService {
         );
       }
 
-      const dentalQuery = this.dataSource
-        .createQueryBuilder()
-        .delete()
-        .from('T_DENTAL_QUOTATION_DQO')
-        .where(`PLF_ID = :id`, { id });
-      await queryRunner.query(dentalQuery.getSql());
+      const dentalQuery =
+        'DELETE FROM `T_DENTAL_QUOTATION_DQO` WHERE `PLF_ID` = ?';
 
-      const invoiceQuery = this.dataSource
-        .createQueryBuilder()
-        .select()
-        .from('T_PLAN_PLF', 'T_PLAN_PLF')
-        .where(`T_PLAN_PLF.PLF_ID = :id`, { id });
-      const invoice = await queryRunner.query(invoiceQuery.getSql());
+      await queryRunner.query(dentalQuery, [id]);
+
+      const invoiceQuery =
+        'SELECT * FROM `T_PLAN_PLF` WHERE `T_PLAN_PLF`.`PLF_ID` = ?';
+
+      const invoice = await queryRunner.query(invoiceQuery, [id]);
 
       if (invoice.BIL_ID) {
-        const updatePlanQuery = this.dataSource
+        await this.dataSource
           .createQueryBuilder()
           .update('T_PLAN_PLF')
           .set({ BIL_ID: null })
-          .where(`PLF_ID = :id`, { id });
-        await queryRunner.query(updatePlanQuery.getSql());
+          .where(`PLF_ID = :id`, { id })
+          .execute();
 
-        const deleteBillQuery = this.dataSource
+        this.dataSource
           .createQueryBuilder()
           .delete()
           .from('T_BILL_BIL')
           .where(`BIL_ID = :id`, { id: invoice.id })
-          .andWhere('BIL_LOCK = 0');
-        await queryRunner.query(deleteBillQuery.getSql());
+          .andWhere('BIL_LOCK = 0')
+          .execute();
       }
 
       const queryEvent = `
