@@ -55,15 +55,14 @@ export class ImportDsioService {
         }
         linePos += Buffer.from(buffer).length + 1;
         this.handleDsioService.getLine(buffer, utf8, linePos);
-
         if (buffer) {
           switch (buffer[0]) {
             case String.fromCharCode(27): // on est en train de changer de section
               if (
                 !(await this.handleDsioService.newSection(
                   buffer[1],
-                  linePos,
                   groupId,
+                  linePos,
                   payload.patient_number,
                   LFT_ASSOCIATED_ACTS,
                   t_dsio_tasks,
