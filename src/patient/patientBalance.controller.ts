@@ -25,4 +25,14 @@ export class PatientBalanceController {
   ) {
     return this.service.update(request, payload, identity);
   }
+
+  @Patch('/balance/delete')
+  @UseGuards(TokenGuard)
+  async delete(
+    @Query() request: PatientBalanceUpdateQueryDto,
+    @Body() payload: PatientBalanceUpdatePayloadDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return this.service.delete(request, payload, identity);
+  }
 }

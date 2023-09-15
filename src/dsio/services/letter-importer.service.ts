@@ -13,6 +13,7 @@ import { parse } from 'node-html-parser';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { LettersEntity } from 'src/entities/letters.entity';
 import { EnumLettersType } from 'src/entities/letters.entity';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class LetterImporterService {
@@ -145,7 +146,7 @@ export class LetterImporterService {
         title =
           elements[3].substring(0, 3) +
           (elements.length === 4 ? '' : ' : ' + elements[4]);
-        createdAt = new Date(`${elements[2]}T00:00:00`);
+        createdAt = dayjs(elements[2]).toDate();
         patient = patients.find((p) => p?.nbr === parseFloat(elements[1]));
       } else {
         const lastPos = originalFilename.lastIndexOf('_');
@@ -163,7 +164,7 @@ export class LetterImporterService {
       if (firstPart !== 'macdent' || patient) {
         for (const user of users) {
           try {
-            const mail = new LettersEntity();
+            const mail: LettersEntity = {} as LettersEntity;
             mail.usrId = user?.id;
             mail.title = title;
             mail.msg = root.querySelectorAll('body').toString();
@@ -171,6 +172,9 @@ export class LetterImporterService {
             if (createdAt) {
               mail.createdAt = createdAt;
               mail.updatedAt = createdAt;
+            } else {
+              mail.createdAt = dayjs().toDate();
+              mail.updatedAt = dayjs().toDate();
             }
             if (patient) {
               mail.patient = patient;

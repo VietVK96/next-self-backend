@@ -332,7 +332,7 @@ export class PatientService {
    *
    */
   async getPatientUser(userId: number, patientId: number) {
-    const patientUser = this.contactUserRepository.findOne({
+    const patientUser = await this.contactUserRepository.findOne({
       where: {
         usrId: userId,
         conId: patientId,

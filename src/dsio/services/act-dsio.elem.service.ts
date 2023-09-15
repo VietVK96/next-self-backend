@@ -71,8 +71,8 @@ export class ActDsioElemService {
 
         let FRQ = this.initDsioElemService.FRQ;
         if (
-          this.initDsioElemService.SDU &&
-          this.initDsioElemService.SDU.length > 0 &&
+          this.initDsioElemService?.SDU &&
+          this.initDsioElemService.SDU?.length > 0 &&
           this.initDsioElemService.SDU !== '00:00:00' &&
           dayjs(this.initDsioElemService.SDU, 'HH:mm:ss').isValid()
         ) {

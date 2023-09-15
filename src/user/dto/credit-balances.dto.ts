@@ -17,8 +17,8 @@ export class CreditBalancesDto {
   sort?: string;
 
   @ApiProperty({ isArray: true, type: String, required: false })
-  filterParams?: string[];
+  filterParam?: string[];
 
   @ApiProperty({ isArray: true, type: String, required: false })
-  filterValues?: string[];
+  filterValue?: string[];
 }

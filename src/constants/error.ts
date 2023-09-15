@@ -82,6 +82,7 @@ export enum ErrorCode {
   INVALID_ACCOUNTING_PASSWORD = 'INVALID_ACCOUNTING_PASSWORD',
   CONFIRM_PASSWORD_NOT_CORRECT = 'CONFIRM_PASSWORD_NOT_CORRECT',
   NOT_FOUND_ID = 'NOT_FOUND_ID',
+  INVALID_EMAIL = 'This value is not a valid email address',
 }
 
 export enum HttpStatus {

@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { OrganizationEntity } from 'src/entities/organization.entity';
+import { metaphone } from 'src/common/util/metaphone';
 
 @Injectable()
 export class InitDsioElemService {
@@ -470,10 +471,12 @@ export class InitDsioElemService {
       }
 
       let patient = new ContactEntity();
-      patient.group = this.organizationRepo.create({ id: groupId });
+      patient.organizationId = groupId;
       patient.nbr = +PTC;
       patient.lastname = this.PTN;
       patient.firstname = this.PTP;
+      patient.lastNamePhonetic = metaphone(this.PTN).substring(0, 10);
+      patient.firstNamePhonetic = metaphone(this.PTP).substring(0, 10);
 
       patient = await this.contactRepo.save(patient);
 

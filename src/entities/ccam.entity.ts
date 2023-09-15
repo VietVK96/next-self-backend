@@ -15,6 +15,7 @@ import { CcamUnitPriceEntity } from './ccamunitprice.entity';
 import { CcamCmuCodificationEntity } from './ccam-cmu-codification.entity';
 import { CcamToothEntity } from './ccamTooth.entity';
 import { DomtomMajorationEntity } from './domtom-majoration.entity';
+import { CcamMenuEntity } from './ccamMenu.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repositories\CcamRepository")
@@ -451,6 +452,27 @@ export class CcamEntity {
     createForeignKeyConstraints: false,
   })
   domtomMajorations?: DomtomMajorationEntity[];
+
+  /**
+   * @ORM\ManyToOne(targetEntity="CcamMenu")
+   * @ORM\JoinColumn(name="ccam_menu_id", referencedColumnName="id")
+   */
+  //   protected $parent = null;
+  @Column({
+    name: 'ccam_menu_id',
+    type: 'int',
+    width: 11,
+    nullable: true,
+  })
+  menuId?: number;
+
+  @ManyToOne(() => CcamMenuEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'ccam_menu_id',
+  })
+  menu?: CcamMenuEntity;
 }
 
 // application\Entities\Ccam.php

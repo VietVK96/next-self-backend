@@ -198,12 +198,12 @@ export class CreditBalancesService {
   ): Promise<IPatientBalances> {
     const { id, page, per_page, direction, sort } = payload;
 
-    const filterParams: string[] = Array.isArray(payload?.filterParams)
-      ? payload?.filterParams
-      : [payload?.filterParams] || [];
-    const filterValues: string[] = Array.isArray(payload?.filterValues)
-      ? payload?.filterValues
-      : [payload?.filterValues] || [];
+    const filterParams: string[] = Array.isArray(payload?.filterParam)
+      ? payload?.filterParam
+      : [payload?.filterParam] || [];
+    const filterValues: string[] = Array.isArray(payload?.filterValue)
+      ? payload?.filterValue
+      : [payload?.filterValue] || [];
     try {
       const user: UserEntity = await this.userRepository.findOne({
         where: { id: id },

@@ -10,10 +10,11 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { ErrorCode } from 'src/constants/error';
 import { PrintReq } from '../dto/printEvent.dto';
 import * as path from 'path';
+import * as fs from 'fs';
 import * as dayjs from 'dayjs';
-import { createPdf } from '@saemhco/nestjs-html-pdf';
 import { GetSessionService } from 'src/auth/services/get-session.service';
 import { customCreatePdf } from 'src/common/util/pdf';
+import Handlebars from 'handlebars';
 
 const classNameFromStatuses: Map<number, string> = new Map<number, string>();
 classNameFromStatuses.set(1, 'present');
@@ -550,7 +551,7 @@ export class FindEventService {
       const events: FindAllEventDto[] = [];
       for (const item of result) {
         item.title = eventTitleFormat
-          .map((line) => {
+          ?.map((line) => {
             return (
               '<div>' +
               line
@@ -614,24 +615,28 @@ export class FindEventService {
         pbw: param?.pbw === 'true',
       };
 
-      let filePath: string;
-
+      let templates: string;
       if (Number(param.mode) === 2) {
-        filePath = path.join(process.cwd(), 'templates/events', 'planning.hbs');
+        templates = fs.readFileSync(
+          path.join(__dirname, '../../../templates/events/planning.hbs'),
+          'utf-8',
+        );
       } else {
-        filePath = path.join(
-          process.cwd(),
-          'templates/events',
-          'planning-observation.hbs',
+        templates = fs.readFileSync(
+          path.join(
+            __dirname,
+            '../../../templates/events/planning-observation.hbs',
+          ),
+          'utf-8',
         );
       }
-      const options = {
-        format: 'A4',
-        displayHeaderFooter: false,
-      };
 
-      return await createPdf(filePath, options, data);
-    } catch (e) {
+      Handlebars.registerHelper('eq', function (v1, v2) {
+        return v1 === v2;
+      });
+
+      return Handlebars.compile(templates)(data);
+    } catch {
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
