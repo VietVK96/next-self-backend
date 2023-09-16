@@ -13,11 +13,11 @@ import { Parser } from 'json2csv';
 import { IPatientBalances } from 'src/interfaces/interface';
 import { CreditBalancesDto } from '../dto/credit-balances.dto';
 import { UserEntity } from 'src/entities/user.entity';
-import { ConfigService } from '@nestjs/config';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import Handlebars from 'handlebars';
 import * as path from 'path';
 import * as fs from 'fs';
+import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
 
 @Injectable()
 export class CreditBalancesService {
@@ -28,7 +28,6 @@ export class CreditBalancesService {
     private userPreferenceRepo: Repository<UserPreferenceEntity>,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-    private configService: ConfigService,
   ) {}
 
   /**
@@ -90,22 +89,46 @@ export class CreditBalancesService {
         usrId: user.id,
       },
     });
-    const data = {
-      patientBalances: res,
-      currency: currencyObj?.currency,
-      totalAmount,
-    };
 
-    const templates = fs.readFileSync(
-      path.join(__dirname, '../../../templates/credit-balances/index.hbs'),
-      'utf-8',
+    const filePath = path.join(
+      process.cwd(),
+      'templates/credit-balances',
+      'index.hbs',
     );
 
-    Handlebars.registerHelper('dateShort', function (date) {
-      return date ? dayjs(date).format('DD/MM/YYYY') : '';
-    });
+    const files: PdfTemplateFile[] = [];
+    const pageCount = Math.ceil(res.length / 31);
+    for (let i = 0; i < pageCount; i++) {
+      files.push({
+        data: {
+          patientBalances: res.splice(0, 31),
+          currency: currencyObj?.currency,
+          totalAmount,
+          displayFooter: i === pageCount - 1,
+        },
+        path: filePath,
+      });
+    }
 
-    return Handlebars.compile(templates)(data);
+    return await customCreatePdf({
+      files,
+      options: {
+        displayHeaderFooter: true,
+        headerTemplate: `<div style="width: 100%;margin: 0 5mm;font-size: 8px; display:flex; justify-content:space-between"><div>${user.lastname} ${user.firstname}</div> <div>Dossiers créditeurs</div></div>`,
+        footerTemplate: `<div style="width: 100%;margin-right:10mm; text-align: right; font-size: 8px;"><span class="pageNumber"></span>/<span class="totalPages"></span></div>`,
+        margin: {
+          left: '5mm',
+          top: '10mm',
+          right: '5mm',
+          bottom: '10mm',
+        },
+      },
+      helpers: {
+        dateShort: function (date) {
+          return date ? dayjs(date).format('DD/MM/YYYY') : '';
+        },
+      },
+    });
   }
 
   /**

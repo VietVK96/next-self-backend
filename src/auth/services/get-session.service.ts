@@ -266,18 +266,47 @@ export class GetSessionService {
     const preferences = await this.getPreference(practitionerIds);
     const amos = await this.getAmo(practitionerIds);
     const medicals = await this.getMedical(practitionerIds);
+    const eventTypesRes = await this.getEventTypes(practitionerIds);
     const dataReturn = data.map((d) => {
       const preference = preferences.find((p) => p.id === d.id);
       const amo = amos.find((a) => a.userId === d.id);
       const medical = medicals.find((m) => m.userId === d.id);
-
+      const eventTypes = eventTypesRes.find(
+        (event) => event.pracId === d.id,
+      )?.eventTypes;
       return {
         ...d,
         preference,
         amo,
         medical,
+        eventTypes,
       };
     });
+    return dataReturn;
+  }
+
+  async getEventTypes(practitionerIds: number[]) {
+    if (!practitionerIds || practitionerIds.length === 0) {
+      return [];
+    }
+    const dataReturn = [];
+    for (const pracId of practitionerIds) {
+      let userEventTypes = await this.dataSource.query(
+        `SELECT id, label, position, duration, color, is_visible 
+        FROM event_type WHERE user_id = ? AND deleted_at IS NULL
+        ORDER BY position`,
+        [pracId],
+      );
+      userEventTypes = userEventTypes.map((eventType) => ({
+        ...eventType,
+        is_visible: eventType.is_visible === 1 ? true : false,
+      }));
+
+      dataReturn.push({
+        pracId: +pracId,
+        eventTypes: userEventTypes,
+      });
+    }
     return dataReturn;
   }
 

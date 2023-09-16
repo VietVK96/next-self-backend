@@ -7,6 +7,7 @@ import {
   UseGuards,
   Post,
   Body,
+  Res,
 } from '@nestjs/common';
 import { BordereauxService } from './bordereaux.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -16,6 +17,9 @@ import {
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
 import { BordereauxDto, BordereauxStoreDto } from './dto/index.dto';
+import { Response } from 'express';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 @Controller('bordereaux')
 @ApiTags('Bordereaux')
@@ -67,9 +71,23 @@ export class BordereauxController {
    */
   @Get('print/:id')
   @UseGuards(TokenGuard)
-  async printPdf(@Param('id') id: number) {
-    const buffer = await this.bordereauxService.printPdf(id);
-    return buffer;
+  async printPdf(@Res() res: Response, @Param('id') id: number) {
+    try {
+      const buffer = await this.bordereauxService.printPdf(id);
+      res.set({
+        // pdf
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Length': buffer.length,
+        // prevent cache
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    }
   }
 
   /**

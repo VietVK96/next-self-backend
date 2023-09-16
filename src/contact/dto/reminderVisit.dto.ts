@@ -47,3 +47,48 @@ export class ReminderVisitPrintQuery {
   @ApiProperty()
   user?: number;
 }
+
+export class ReminderVisitMailDto {
+  @ApiProperty()
+  contacts?: number[];
+
+  @ApiProperty()
+  documentMailId?: number;
+
+  @ApiProperty()
+  user?: number;
+}
+
+export class ReminderVisitSmsDto {
+  @ApiProperty()
+  patient_ids?: string[];
+
+  @ApiProperty()
+  user?: number;
+
+  @ApiProperty()
+  title?: string;
+
+  @ApiProperty()
+  type?: string;
+
+  @ApiProperty()
+  message?: string;
+}
+
+export class ReminderVisitEmailDto {
+  @ApiProperty()
+  patient_ids?: string[];
+
+  @ApiProperty()
+  user?: number;
+
+  @ApiProperty()
+  title?: string;
+
+  @ApiProperty()
+  type?: string;
+
+  @ApiProperty()
+  message?: string;
+}

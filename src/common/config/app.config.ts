@@ -54,4 +54,12 @@ export default registerAs('app', () => ({
       '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',
     clientSide: process?.env?.CLIENT_SIDE ?? 'https://test.ecoodentist.com',
   },
+  ovhApi: {
+    applicationKey: process?.env?.OVH_APPLICATION_KEY ?? 'zGRjO5T1uEDsffzc8',
+    applicationSecret:
+      process?.env?.OVH_APPLICATION_SECRET ?? 'zv8gLFUzsdfSyp5lp31Ebgur2e72X0',
+    consumerKey:
+      process?.env?.OVH_CONSUMER_KEY ?? 'zAqkJJSsdfsbJHaadL2FY7CgIrFox0Y',
+    serviceName: process?.env?.OVH_SERVICE_NAME ?? 'zms-hl35552-1',
+  },
 }));

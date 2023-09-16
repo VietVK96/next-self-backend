@@ -49,6 +49,7 @@ export const customCreatePdf = async ({
         return v1 ? false : true;
       },
       notEmpty: (v1: any) => {
+        if (!v1) return false;
         if (Array?.isArray(v1) || typeof v1 === 'string') {
           return v1.length !== 0;
         }
@@ -76,6 +77,12 @@ export const customCreatePdf = async ({
       nl2br: nl2br,
       formatAmount: (e: number) => {
         return Number(e) ? Number(e).toFixed(2) : '0.00';
+      },
+      amountCurrency: (e: number, currency: string) => {
+        return Intl.NumberFormat('de-DE', {
+          style: 'currency',
+          currency: currency || 'EUR',
+        }).format(+e);
       },
     });
 

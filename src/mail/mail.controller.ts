@@ -30,6 +30,8 @@ import { TranformDto } from './dto/transform.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { SendMailDto } from './dto/sendMail.dto';
 import { UpdateMailDto } from './dto/mail.dto';
+import { DocumentMailService } from './services/document.mail.service';
+import { EnumLettersType } from 'src/entities/letters.entity';
 import { DataMailService } from './services/data.mail.service';
 import { TemplateMailService } from './services/template.mail.service';
 import { PreviewMailService } from './services/preview.mail.service';
@@ -43,6 +45,7 @@ export class MailController {
     private readonly dataMailService: DataMailService,
     private readonly templateMailService: TemplateMailService,
     private readonly previewMailService: PreviewMailService,
+    private readonly documentMailService: DocumentMailService,
   ) {}
 
   /**
@@ -220,5 +223,18 @@ export class MailController {
     @CurrentUser() identity: UserIdentity,
   ): Promise<TranformDto> {
     return this.previewMailService.preview(id, docId, identity.org);
+  }
+
+  /**
+   * File: php/document/mail/findAll.php
+   */
+  @Get('/document/findAll')
+  @UseGuards(TokenGuard)
+  async documentFindAll(
+    @CurrentUser() identity: UserIdentity,
+    @Query('user') user: number,
+    @Query('type') type?: EnumLettersType,
+  ) {
+    return this.documentMailService.findAll(identity.org, user, type);
   }
 }

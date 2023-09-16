@@ -35,7 +35,7 @@ import { customCreatePdf } from 'src/common/util/pdf';
 import * as dayjs from 'dayjs';
 import { LotEntity } from 'src/entities/lot.entity';
 import { checkBoolean, checkId } from 'src/common/util/number';
-import { merge } from 'merge-pdf-buffers';
+const PDFMerger = require('pdf-merger-js');
 
 const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
 const PAV_MINIMUM_AMOUNT = 120;
@@ -1284,10 +1284,10 @@ export class ActsService {
   }
 
   async print(userId: number, ids: Array<number>, duplicata?: boolean) {
-    const files: Buffer[] = [];
+    const merger = new PDFMerger();
     for (const id of ids) {
       const { file } = await this.getCaresheetFileById(id, duplicata);
-      files.push(file);
+      await merger.add(file);
     }
     const user = await this.userRepository.findOne({
       where: { id: userId },
@@ -1296,10 +1296,9 @@ export class ActsService {
     const lots: LotEntity[] = await this.getListLotByIds(ids);
     for (const lot of lots) {
       const { file } = await this.getLotFile(lot, user);
-      files.push(file);
+      await merger.add(file);
     }
-    const merged = await merge(files);
-    return merged;
+    return await merger.saveAsBuffer();
   }
   async duplicata(id: number, duplicata: boolean) {
     const result = await this.getCaresheetFileById(id, checkBoolean(duplicata));
