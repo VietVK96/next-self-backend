@@ -35,6 +35,7 @@ import {
 } from './response/bordereaux.res';
 import Handlebars from 'handlebars';
 import * as path from 'path';
+import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
 
 @Injectable()
 export class BordereauxService {
@@ -422,7 +423,7 @@ export class BordereauxService {
    *  File php/bordereaux/print.php
    */
   async printPdf(id: number) {
-    const slipCheck = await this.slipCheckRepository.find({
+    const slipCheck = await this.slipCheckRepository.findOne({
       relations: [
         'libraryBank',
         'cashings',
@@ -433,54 +434,48 @@ export class BordereauxService {
       ],
       where: { id: id },
     });
-    if (slipCheck.length === 0) {
+    if (!slipCheck) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND_SLIPCHECK);
     }
     try {
       const data = {
-        slipCheck: slipCheck.length > 0 ? slipCheck[0] : {},
+        slipCheck: slipCheck ? slipCheck : {},
       };
 
-      const templates = fs.readFileSync(
-        path.join(__dirname, '../../templates/bordereaux/index.hbs'),
-        'utf-8',
+      const filePath = path.join(
+        process.cwd(),
+        'templates/bordereaux/',
+        'index.hbs',
       );
 
-      Handlebars.registerHelper('dateFr', function (date) {
-        return dayjs(date).locale('fr').format('dddd D MMMM YYYY');
+      return await customCreatePdf({
+        files: [
+          {
+            data,
+            path: filePath,
+          },
+        ],
+        options: {
+          displayHeaderFooter: false,
+          margin: {
+            left: '5mm',
+            top: '5mm',
+            right: '5mm',
+            bottom: 'mm',
+          },
+        },
+        helpers: {
+          dateFr: function (date: string) {
+            return dayjs(date).locale('fr').format('dddd D MMMM YYYY');
+          },
+          checkPaymentChoice: function (paymentChoice: string) {
+            return paymentChoice !== EnumSlipCheckPaymentChoice.CHEQUE;
+          },
+          count: function (arr: any[]) {
+            return arr ? arr.length : 0;
+          },
+        },
       });
-
-      Handlebars.registerHelper('count', function (arr) {
-        return arr.length;
-      });
-
-      Handlebars.registerHelper('checkPaymentChoice', function (paymentChoice) {
-        return paymentChoice !== EnumSlipCheckPaymentChoice.CHEQUE;
-      });
-
-      Handlebars.registerHelper('isEmpty', function (v1) {
-        if (!v1) {
-          return true;
-        }
-        if (Array?.isArray(v1) || typeof v1 === 'string') {
-          return v1.length === 0;
-        }
-        if (typeof v1 === 'object') {
-          return Object.keys(v1).length === 0;
-        }
-      });
-
-      Handlebars.registerHelper('notEmpty', function (v1) {
-        if (!v1) return false;
-        if (Array?.isArray(v1) || typeof v1 === 'string') {
-          return v1.length !== 0;
-        }
-        if (typeof v1 === 'object') {
-          return Object.keys(v1).length !== 0;
-        }
-      });
-
-      return Handlebars.compile(templates)(data);
     } catch (e) {
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
@@ -489,7 +484,7 @@ export class BordereauxService {
   /**
    *  File php/bordereaux/store.php
    */
-  async store(payload: BordereauxStoreDto): Promise<SlipCheckEntity> {
+  async store(payload: BordereauxStoreDto) {
     const user = await this.userRepository.findOne({
       where: { id: payload?.user_id },
     });
@@ -557,10 +552,9 @@ export class BordereauxService {
       });
 
       await this.cashingRepository.save(updatePayments);
-
       return newSlipcheck;
     } catch (err) {
-      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+      throw new CBadRequestException(err);
     }
   }
 }

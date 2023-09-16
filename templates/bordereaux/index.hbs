@@ -20,6 +20,9 @@
     header {
         margin-bottom: 5mm;
     }
+    td,th{
+      font-size: 9pt;
+    }
 
     header table th.titleColumn {
         width: 50%;
@@ -163,12 +166,11 @@
       Titulaire du compte :
     </div>
     <div>
-      Docteur:
       {{#if (isEmpty slipCheck.libraryBank.user)}}
         {{slipCheck.libraryBank.group.name}}
       {{else}}
-        Docteur
-        {{slipCheck.libraryBank.user.lastname}}
+        Docteur 
+        {{slipCheck.libraryBank.user.lastname}} 
         {{slipCheck.libraryBank.user.firstname}}
       {{/if}}
     </div>
@@ -233,7 +235,7 @@
   </div>
   <div class='currency'>
     <div>
-      <strong> Versement en {{slipCheck.libraryBank.currency}}</strong>
+      <strong> Versement en {{#if slipCheck.libraryBank.currency}}{{slipCheck.libraryBank.currency}}{{else}}EUR{{/if}}</strong>
     </div>
   </div>
   <div class="payments {{#if (checkPaymentChoice slipCheck.paymentChoice)}} noCheckColumn {{/if}}">
@@ -252,8 +254,7 @@
             <td class='payerColumn' colspan='2'>{{#if this.debtor}} {{this.debtor}} {{else}} {{this.contact.lastname}} {{this.contact.firstname}}{{/if}}</td>
             <td class='checkBankColumn'>{{this.checkBank}}</td>
             <td class='checkNumberColumn'>{{this.checkNumber}}</td>
-            <td class='amountColumn'>{{this.amount}}
-              {{../slipCheck.libraryBank.currency}}</td>
+            <td class='amountColumn'>{{amountCurrency this.amount ../slipCheck.libraryBank.currency}}</td>
           </tr>
         {{/each}}
       </tbody>
@@ -266,8 +267,7 @@
           <td class='paymentChoiceColumn'>{{count slipCheck.cashings}}
             {{slipCheck.paymentChoice}}</td>
           <td class='amountTotalTitleColumn'>Montant total de la remise :</td>
-          <td class='amountTotalColumn'>{{slipCheck.amount}}
-            {{slipCheck.libraryBank.currency}}</td>
+          <td class='amountTotalColumn'>{{amountCurrency slipCheck.amount slipCheck.libraryBank.currency}}</td>
         </tr>
       </tbody>
     </table>

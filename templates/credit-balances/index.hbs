@@ -1,11 +1,8 @@
-<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Dossiers créditeurs</title>
     <style>
-
+    @page{ 
+        size: a4 landscape;
+    }
     html {
         margin: 0;
         padding: 0;
@@ -26,7 +23,7 @@
     table th,
     table td {
         vertical-align: top;
-        padding: 2mm 2mm;
+        padding: 1mm 1mm;
         border: 0.1pt solid #000000;
     }
 
@@ -59,10 +56,9 @@
         width: 8%;
         text-align: right;
     }
-
     </style>
 </head>
-<body>
+<Page>
     <table>
         <thead>
             <tr>
@@ -76,20 +72,22 @@
             {{#each patientBalances }}
             <tr>
                 <td class="visitDate">{{dateShort this.lastCare }}</td>
-                <td class="patient">{{ this.patient.firtName }} {{this.patient.lastname}}</td>
+                <td class="patient">{{ this.patient.firstname }} {{this.patient.lastname}}</td>
                 <td class="phoneNumbers">
                     {{#each this.patient.phones }}
-                    <span class="number">{{ this.number }}</span>
+                        {{#if (gt @index 0)}} - {{/if}}
+                    <span class="number">{{ this.nbr }}</span>
                     {{/each}}
                 </td>
-                <td class="amount">{{ this.amount}} {{../currency}}</td>
+                <td class="amount">{{amountCurrency this.amount ../currency}}</td>
             </tr>
             {{/each}}
-            <tr class="tfoot">
+            {{#if displayFooter}}
+                <tr class="tfoot">
                 <td colspan="3"></td>
-                <td class="amount">{{totalAmount}} {{currency}}</td>
+                <td class="amount">{{amountCurrency totalAmount currency}}</td>
             </tr>
+            {{/if}}
         </tbody>
     </table>
-</body>
-</html>
+</Page>
