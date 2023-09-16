@@ -406,9 +406,7 @@ export class FactureServices {
 
     let identPrat = user?.lastname + user?.firstname + '\nChirurgien Dentiste';
     let adressePrat = '';
-    let titreFacture = encodeURIComponent(
-      "Note d'honoraires pour traitement bucco-dentaire",
-    );
+    let titreFacture = "Note d'honoraires pour traitement bucco-dentaire";
     let identPat: string;
     const adressePratEntity = user?.address;
     if (adressePratEntity) {
@@ -424,6 +422,8 @@ export class FactureServices {
     if (userNumeroFacturant) {
       adressePrat = 'N° ADELI : ' + userNumeroFacturant;
     }
+    console.log('withs', withs);
+    console.log('Us', userID);
 
     const medicalHeader = await this.medicalHeaderRepository.findOneBy({
       userId: userID,
@@ -437,7 +437,7 @@ export class FactureServices {
         medicalHeader?.address !== null
           ? StringHelper.br2nl(medicalHeader?.address, '')
           : adressePrat;
-      titreFacture = medicalHeader?.name || titreFacture;
+      titreFacture = medicalHeader?.name;
     }
     if (
       user?.freelance &&
@@ -484,6 +484,8 @@ export class FactureServices {
           );
           identPat += '\n\n' + [personInsee, personInseeKey].join(' ');
         }
+        console.log('titreFacture', titreFacture);
+
         return this.newFacture({
           id_facture,
           id_user,
