@@ -422,8 +422,6 @@ export class FactureServices {
     if (userNumeroFacturant) {
       adressePrat = 'N° ADELI : ' + userNumeroFacturant;
     }
-    console.log('withs', withs);
-    console.log('Us', userID);
 
     const medicalHeader = await this.medicalHeaderRepository.findOneBy({
       userId: userID,
@@ -437,7 +435,7 @@ export class FactureServices {
         medicalHeader?.address !== null
           ? StringHelper.br2nl(medicalHeader?.address, '')
           : adressePrat;
-      titreFacture = medicalHeader?.name;
+      titreFacture = medicalHeader?.name || titreFacture;
     }
     if (
       user?.freelance &&
@@ -484,7 +482,6 @@ export class FactureServices {
           );
           identPat += '\n\n' + [personInsee, personInseeKey].join(' ');
         }
-        console.log('titreFacture', titreFacture);
 
         return this.newFacture({
           id_facture,
