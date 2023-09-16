@@ -158,7 +158,7 @@ export class ContactPaymentService {
         // }
         if (payment.payees) {
           const payeesId = payment.payees.map((e) => e.id);
-          this.cashingContactRepo.delete(payeesId);
+          await this.cashingContactRepo.delete(payeesId);
         }
         await this.repo.delete({ id });
         return;
