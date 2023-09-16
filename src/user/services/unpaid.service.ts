@@ -1,6 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { UserEntity } from 'src/entities/user.entity';
-import { DataSource, Repository } from 'typeorm';
+import {
+  And,
+  DataSource,
+  FindOptionsWhere,
+  LessThanOrEqual,
+  MoreThan,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UnpaidDto, printUnpaidDto } from '../dto/unpaid.dto';
 import { ContactEntity } from 'src/entities/contact.entity';
@@ -20,19 +28,15 @@ import { DocumentMailService } from 'src/mail/services/document.mail.service';
 import { TranformVariableParam } from 'src/mail/dto/transformVariable.dto';
 import { CONFIGURATION } from 'src/constants/configuration';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
-import { ConfigService } from '@nestjs/config';
-import Handlebars from 'handlebars';
 import * as path from 'path';
-import * as fs from 'fs';
+import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
+import { checkId } from 'src/common/util/number';
 
 @Injectable()
 export class UnpaidService {
   constructor(
-    private dataSource: DataSource,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-    @InjectRepository(ContactEntity)
-    private patientRepository: Repository<ContactEntity>,
     @InjectRepository(ContactUserEntity)
     private patientBalanceRepo: Repository<ContactUserEntity>,
     @InjectRepository(UserPreferenceEntity)
@@ -42,10 +46,10 @@ export class UnpaidService {
     @InjectRepository(ContactNoteEntity)
     private contactNoteRepo: Repository<ContactNoteEntity>,
     private documentMailService: DocumentMailService,
-    private configService: ConfigService,
   ) {}
 
   async getUserUnpaid(payload: UnpaidDto) {
+    const { page, per_page } = payload;
     const filterParam: string[] = Array.isArray(payload?.filterParam)
       ? payload?.filterParam
       : [payload?.filterParam] || [];
@@ -58,64 +62,59 @@ export class UnpaidService {
     if (!user) {
       throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
     }
-    const queryBuilder = this.dataSource
-      .createQueryBuilder()
-      .select(
-        `
-      patientBalance.amount as amount,
-      patientBalance.amountCare as amountCare,
-      patientBalance.amountProsthesis as amountProsthesis,
-      patientBalance.id as id,
-      patientBalance.relaunchDate as relaunchDate,
-      patientBalance.relaunchLevel as relaunchLevel,
-      patientBalance.lastCare as lastCare,
-      patientBalance.conId as conId,
-      patientBalance.usr_id as userId
-      `,
-      )
-      .from(ContactUserEntity, 'patientBalance')
-      .innerJoin(ContactEntity, 'patient', 'patientBalance.conId = patient.id')
-      .andWhere('patientBalance.usrId = :usrId', { usrId: user.id })
-      .andWhere('patientBalance.amount > 0');
+    let amount = 0;
+    const where:
+      | FindOptionsWhere<ContactUserEntity>
+      | FindOptionsWhere<ContactUserEntity>[] = {};
+    const skip = page ? (page - 1) * per_page : 0;
 
     filterParam.forEach((param, index) => {
       const valueParam = filterValue[index];
       switch (param) {
         case 'patientBalance.amount':
-          queryBuilder.andWhere('patientBalance.amount >= :amount', {
-            amount: valueParam,
-          });
+          amount = valueParam ? Number(valueParam) : 0;
           break;
         case 'patientBalance.relaunchLevel':
-          queryBuilder.andWhere(
-            'patientBalance.relaunchLevel >= :relaunchLevel',
-            {
-              relaunchLevel: valueParam,
-            },
-          );
+          where.relaunchLevel = valueParam ? Number(valueParam) : 0;
           break;
         case 'patientBalance.visitDate':
           const period = valueParam.split(';');
-          if (period[0]) {
-            queryBuilder.andWhere('patientBalance.lastCare >= :visitDate1', {
-              visitDate1: period[0],
-            });
-          }
-          if (period[1]) {
-            queryBuilder.andWhere('patientBalance.lastCare <= :visitDate2', {
-              visitDate2: period[1],
-            });
-          }
+          where.lastCare = And(
+            MoreThanOrEqual(period[0]),
+            LessThanOrEqual(period[1]),
+          );
           break;
       }
     });
-    const sort = payload?.sort ?? 'patientBalance.visitDate';
-    queryBuilder.addOrderBy(
-      unpaidSort[sort],
-      payload?.direction?.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
-    );
-    const queryResult: ContactUserEntity[] = await queryBuilder.getRawMany();
-    return queryResult;
+
+    where.usrId = user?.id;
+    where.amount = amount ? MoreThanOrEqual(amount) : MoreThan(0);
+
+    const balance = await this.patientBalanceRepo.find({
+      where,
+      relations: {
+        patient: {
+          phones: true,
+          address: true,
+          civilityTitle: true,
+          medical: true,
+          user: {
+            amo: true,
+            medical: {
+              specialtyCode: true,
+            },
+          },
+        },
+      },
+      order: {
+        lastCare:
+          payload?.direction?.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
+      },
+      take: per_page ? per_page : null,
+      skip,
+    });
+    const count = await this.patientBalanceRepo.count({ where });
+    return { balance, count, user };
   }
 
   /**
@@ -125,124 +124,11 @@ export class UnpaidService {
 
   async getUserUnpaidPatient(payload: UnpaidDto) {
     const { page, per_page } = payload;
-    const patientBalances: ContactUserEntity[] = await this.getUserUnpaid(
-      payload,
-    );
-    const patients = await this.patientRepository.find({
-      select: ['id', 'birthOrder', 'email', 'firstname', 'lastname', 'nbr'],
-      relations: [
-        'address',
-        'civilityTitle',
-        'medical',
-        'user',
-        'user.amo',
-        'user.medical',
-        'user.medical.specialtyCode',
-      ],
-    });
-    const patientBalancesFormat = patientBalances.map((patientBalance) => {
-      const patient = patients.find((p) => p?.id === patientBalance?.conId);
-      const res: any = {
-        id: patientBalance?.id,
-        amount: patientBalance?.amount
-          ? parseFloat(patientBalance?.amount.toString())
-          : 0,
-        amount_care: patientBalance?.amountCare
-          ? parseFloat(patientBalance?.amountCare.toString())
-          : 0,
-        amount_prosthesis: patientBalance?.amountProsthesis
-          ? parseFloat(patientBalance?.amountProsthesis.toString())
-          : 0,
-        relaunch_date: patientBalance?.relaunchDate
-          ? format(new Date(patientBalance?.relaunchDate), 'yyyy-MM-dd')
-          : '',
-        relaunch_level: patientBalance?.relaunchLevel
-          ? parseFloat(patientBalance?.relaunchLevel.toString())
-          : 0,
-        visit_date: patientBalance?.lastCare ?? '',
-      };
-      if (patient) {
-        const patientRes: any = {
-          id: patient?.id,
-          birth_rank: patient?.birthOrder,
-          email: patient?.email ?? '',
-          first_name: patient?.firstname ?? '',
-          last_name: patient?.lastname ?? '',
-          full_name: `${patient?.lastname ?? ''} ${patient?.firstname ?? ''}`,
-          number: patient?.nbr,
-        };
-        if (patient?.address) {
-          patientRes.address = {
-            id: patient?.address?.id,
-            city: patient?.address?.city ?? '',
-            country: patient?.address?.country ?? '',
-            country_code: patient?.address?.countryAbbr ?? '',
-            street: patient?.address?.street ?? '',
-            street2: patient?.address?.streetComp ?? '',
-            zip_code: patient?.address?.zipCode ?? '',
-          };
-        }
-        if (patient?.civilityTitle) {
-          patientRes.civility_title = {
-            id: patient?.civilityTitle?.id,
-            code: patient?.civilityTitle?.code,
-            name: patient?.civilityTitle?.longName ?? '',
-            short_name: patient?.civilityTitle?.name ?? '',
-          };
-        }
-        if (patient?.medical) {
-          const isActiveAcs = this._isActiveActPatientMedical(patient?.medical);
-          patientRes.medical = {
-            id: patient?.medical?.id,
-            is_active_acs: isActiveAcs,
-          };
-        }
-        if (patient?.user) {
-          const user: any = {
-            id: patient?.user?.id,
-            admin: !!patient?.user?.admin,
-            email: patient?.user?.email,
-            first_name: patient?.user?.firstname,
-            last_name: patient?.user?.lastname,
-            full_name: `${patient?.user?.lastname ?? ''} ${
-              patient?.user?.firstname ?? ''
-            }`,
-            home_phone_number: patient?.user?.phoneNumber,
-            settings: patient?.user?.settings,
-            short_name: patient?.user?.abbr,
-          };
-          if (patient?.user?.amo) {
-            user.amo = {
-              id: patient?.user?.amo?.id,
-              code_convention: patient?.user?.amo?.codeConvention,
-              id_tp: !!patient?.user?.amo?.isTp,
-            };
-          }
-          if (patient?.user?.medical) {
-            user.medical = {
-              id: patient?.user?.medical?.id,
-              finess_number: patient?.user?.medical?.finessNumber ?? '',
-              national_identifier_number:
-                patient?.user?.medical?.nationalIdentifierNumber ?? '',
-              national_identifier_number_remp:
-                patient?.user?.medical?.nationalIdentifierNumberRemp ?? '',
-              rpps_number: patient?.user?.medical?.rppsNumber,
-              specialty_code: patient?.user?.medical?.specialtyCode ?? null,
-            };
-          }
-          user.setting = {};
-          patientRes.user = user;
-        }
-        res.patient = patientRes;
-      }
-      return res;
-    });
-    const offSet = (page - 1) * per_page;
-    const dataPaging = patientBalancesFormat.slice(offSet, offSet + per_page);
+    const { balance, count } = await this.getUserUnpaid(payload);
     const data = {
       current_page_number: page,
       custom_parameters: { query: payload },
-      items: dataPaging,
+      items: balance,
       num_item_per_page: per_page,
       paginator_options: {
         defaultSortDirection: 'desc',
@@ -255,7 +141,7 @@ export class UnpaidService {
         sortFieldParameterName: 'sort',
       },
       range: 5,
-      total_count: dataPaging?.length,
+      total_count: count,
     };
     return data;
   }
@@ -266,35 +152,30 @@ export class UnpaidService {
    */
 
   async getExportQuery(res: Response, payload: UnpaidDto) {
-    const patientBalances: ContactUserEntity[] = await this.getUserUnpaid(
-      payload,
-    );
-    const patients = await this.patientRepository.find({
-      relations: ['phones'],
-    });
-    const rows = [];
-    for (const patientBalance of patientBalances) {
-      const patient = patients.find((p) => p?.id === patientBalance?.conId);
-      const listPhoneNumber = patient?.phones?.map((phone) => phone?.nbr) ?? [];
-      const phoneNumber = listPhoneNumber ? listPhoneNumber?.join(' ') : '';
-      rows.push({
-        lastCare: patientBalance?.lastCare
-          ? format(new Date(patientBalance?.lastCare), 'dd/MM/yyyy')
-          : '',
-        name: `${patient?.lastname ?? ''} ${patient?.firstname ?? ''}`,
-        phoneNumber,
-        amount: patientBalance?.amount
-          ? parseFloat(patientBalance?.amount.toString())
-          : 0,
-        relaunchLevel: patientBalance?.relaunchLevel
-          ? parseFloat(patientBalance?.relaunchLevel.toString())
-          : 0,
-        relaunchDate: patientBalance?.relaunchDate
-          ? format(new Date(patientBalance?.relaunchDate), 'dd/MM/yyyy')
-          : '',
-      });
-    }
+    const { balance: patientBalances } = await this.getUserUnpaid(payload);
 
+    const rows = patientBalances.map((e) => {
+      const phoneNumber = e?.patient?.phones
+        ? e?.patient?.phones?.reduce((numbers, phone, i) => {
+            numbers = i === 0 ? phone.nbr : numbers + ' ' + phone.nbr;
+            return numbers;
+          }, '')
+        : '';
+      return {
+        lastCare: e?.lastCare
+          ? format(new Date(e?.lastCare), 'dd/MM/yyyy')
+          : '',
+        name: `${e.patient?.lastname ?? ''} ${e.patient?.firstname ?? ''}`,
+        phoneNumber,
+        amount: e?.amount ? parseFloat(e?.amount.toString()) : 0,
+        relaunchLevel: e?.relaunchLevel
+          ? parseFloat(e?.relaunchLevel.toString())
+          : 0,
+        relaunchDate: e?.relaunchDate
+          ? format(new Date(e?.relaunchDate), 'dd/MM/yyyy')
+          : '',
+      };
+    });
     const fields = [
       { label: 'Date visite', value: 'lastCare' },
       { label: 'Patient', value: 'name' },
@@ -326,60 +207,16 @@ export class UnpaidService {
    *
    */
   async printUnpaid(param?: printUnpaidDto) {
-    const user = await this.userRepository.findOne({
-      where: { id: param?.id },
-    });
-    if (!user) {
-      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
-    }
+    delete param?.page;
+    delete param?.per_page;
     try {
-      const queryBuilder = this.patientBalanceRepo
-        .createQueryBuilder('patientBalance')
-        .innerJoinAndSelect('patientBalance.patient', 'patient')
-        .leftJoinAndSelect('patient.phones', 'phone')
-        .andWhere('patientBalance.usrId = :user', { user: user.id })
-        .andWhere('patientBalance.amount < 0');
+      const {
+        balance: userUnpaid,
+        count,
+        user,
+      } = await this.getUserUnpaid(param as UnpaidDto);
 
-      for (let i = 0; i < param.filterParam?.length; i++) {
-        switch (param.filterParam?.[i]) {
-          case 'patientBalance.amount':
-            queryBuilder.andWhere('patientBalance.amount <= :amount', {
-              amount: param.filterValue?.[i],
-            });
-            break;
-          case 'patientBalance.relaunchLevel':
-            queryBuilder.andWhere(
-              'patientBalance.relaunchLevel >= :relaunchLevel',
-              {
-                relaunchLevel: param.filterValue?.[i],
-              },
-            );
-            break;
-          case 'patientBalance.visitDate':
-            const arrDate = param.filterValue?.[i].toString().split(';');
-            if (arrDate.length > 0 && arrDate?.[0]) {
-              queryBuilder.andWhere('patientBalance.visitDate >= :startDate', {
-                startDate: arrDate?.[0],
-              });
-            }
-            if (arrDate.length > 1 && arrDate?.[1]) {
-              queryBuilder.andWhere('patientBalance.visitDate <= :endDate', {
-                endDate: arrDate?.[1],
-              });
-            }
-            break;
-        }
-      }
-
-      if (param?.sort)
-        queryBuilder.addOrderBy(
-          unpaidSort[param?.sort],
-          param?.direction.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
-        );
-
-      const res = await queryBuilder.getMany();
-
-      const totalAmount = res.reduce(
+      const totalAmount = userUnpaid.reduce(
         (totalAmount, item) => totalAmount + Number(item.amount),
         0,
       );
@@ -387,28 +224,49 @@ export class UnpaidService {
       const currencyObj = await this.userPreferenceRepo.findOneOrFail({
         select: ['currency'],
         where: {
-          usrId: user.id,
+          usrId: checkId(param?.id),
         },
       });
 
-      const data = {
-        patientBalances: res,
-        currency: currencyObj?.currency,
-        totalAmount,
-      };
-
-      const templates = fs.readFileSync(
-        path.join(__dirname, '../../../templates/unpaid/index.hbs'),
-        'utf-8',
+      const filePath = path.join(
+        process.cwd(),
+        'templates/unpaid',
+        'index.hbs',
       );
 
-      Handlebars.registerHelper('dateShort', function (date) {
-        return date ? dayjs(date).format('DD/MM/YYYY') : '';
+      const files: PdfTemplateFile[] = [];
+      const pageCount = Math.ceil(count / 31);
+      for (let i = 0; i < pageCount; i++) {
+        files.push({
+          data: {
+            patientBalances: userUnpaid.splice(0, 31),
+            currency: currencyObj?.currency,
+            totalAmount,
+            displayFooter: i === pageCount - 1,
+          },
+          path: filePath,
+        });
+      }
+
+      return await customCreatePdf({
+        files,
+        options: {
+          displayHeaderFooter: true,
+          headerTemplate: `<div style="width: 100%;margin: 0 5mm;font-size: 8px; display:flex; justify-content:space-between"><div>${user.lastname} ${user.firstname}</div> <div>Impays</div></div>`,
+          footerTemplate: `<div style="width: 100%;margin-right:10mm; text-align: right; font-size: 8px;"><span class="pageNumber"></span>/<span class="totalPages"></span></div>`,
+          margin: {
+            left: '5mm',
+            top: '10mm',
+            right: '5mm',
+            bottom: '10mm',
+          },
+        },
+        helpers: {
+          dateShort: function (date) {
+            return date ? dayjs(date).format('DD/MM/YYYY') : '';
+          },
+        },
       });
-
-      const html = Handlebars.compile(templates)(data);
-
-      return html;
     } catch (e) {
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }

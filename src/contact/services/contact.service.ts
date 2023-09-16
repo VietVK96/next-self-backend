@@ -344,17 +344,17 @@ count(CON_ID) as countId,COD_TYPE as codType
       .where(
         `contact_user_cou.con_id = :patientId 
       AND contact_user_cou.usr_id = :practitionerId`,
-        { patientId, practitionerId },
+        { patientId: patientId, practitionerId },
       )
       .execute();
-    if (obj) {
+    if (!obj.length) {
       return {
         amount_due: 0,
         amount_due_care: 0,
         amount_due_prosthesis: 0,
       };
     }
-    return obj;
+    return obj[0];
   }
 
   async patch(payload: ContactPatchDto) {

@@ -81,6 +81,7 @@ import { BullModule } from '@nestjs/bull';
 import { LanguageModule } from './language/language.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { JobsModule } from './schedule/jobs.module';
+import { NotifierModule } from './notifier/notifier.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -228,6 +229,7 @@ const importsModules = [
   AdvanceSearchModule,
   JobsModule,
   ScheduleModule.forRoot(),
+  NotifierModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {

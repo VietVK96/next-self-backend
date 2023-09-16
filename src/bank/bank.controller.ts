@@ -109,9 +109,9 @@ export class BankController {
 
   @Get('/banks/all')
   @UseGuards(TokenGuard)
-  async findAllBankByUser(@CurrentUser() identity: UserIdentity) {
+  async findAllBankByUser(@Query('id') id: number) {
     try {
-      return await this.bankService.findAllByUser(identity.id);
+      return await this.bankService.findAllByUser(id);
     } catch (error) {
       throw new CBadRequestException(ErrorCode.ERROR_GET_BANKS, error);
     }

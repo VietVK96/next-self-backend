@@ -77,6 +77,12 @@ export const customCreatePdf = async ({
       formatAmount: (e: number) => {
         return Number(e) ? Number(e).toFixed(2) : '0.00';
       },
+      amountCurrency: (e: number, currency: string) => {
+        return Intl.NumberFormat('de-DE', {
+          style: 'currency',
+          currency,
+        }).format(+e);
+      },
     });
 
     if (helpers) {

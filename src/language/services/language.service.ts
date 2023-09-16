@@ -181,7 +181,6 @@ export class LanguageService {
       console.error(e);
       this.updateStatus(localeConfig.sheetRootId, sheets, 'error');
     }
-    console.log('localeConfig', localeConfig);
     return localeConfig;
   }
 

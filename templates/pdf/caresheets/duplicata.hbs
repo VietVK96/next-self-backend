@@ -107,6 +107,7 @@ div.act4 {
 
 div.actDate {
     position: absolute;
+    bottom: 100mm;
     left: 9mm;
     width: 30mm;
 }
@@ -125,6 +126,7 @@ div.actCcamActivity {
 
 div.actNgapKey {
     position: absolute;
+    bottom: 100mm;
     left: 82mm;
     width: 8mm;
 }
@@ -149,7 +151,8 @@ div.actExceptionalRefund {
 
 div.actAmount {
     position: absolute;
-    left: 125mm;
+    bottom: 100mm;
+    left: 150mm;
     width: 30mm;
 }
 
@@ -255,7 +258,7 @@ div.thirdPartyAmc {
                 <div class="actDate"> {{#table (formatDate act.date)}} {{/table}} </div> 
                   {{#if ccam.id}} 
                     <div class="actCcamCode"> 
-                     {{#table ccam.code}} {{/table}}
+                     {{ccam.code}}
                     </div> 
                     <div class="actCcamActivity"> 
                         {{ccam.activity}} 
@@ -266,7 +269,7 @@ div.thirdPartyAmc {
                   {{/if}} 
                   {{#if ngapKey}} 
                     <div class="actNgapKey"> 
-                     {{ngapKey.nameToTransmit}}{{ coefficient}} 
+                     {{nameToTransmit ngapKey.name}}{{coef}} 
                     </div> 
                     {{#if complement}} 
                         <div class="actModifier"> {{complement}} </div> 
@@ -281,7 +284,7 @@ div.thirdPartyAmc {
                   <div class="actExceptionalRefund"> X </div> 
                   {{/if}} 
                   <div class="actAmount"> 
-                    {{#table (padStart actMedical.act.amount 8)}} {{/table}}
+                    {{act.amount}}
                     </div> 
                     {{#if  exceeding}} 
                       <div class="actExceeding"> {{exceeding}} </div> 
@@ -296,7 +299,7 @@ div.thirdPartyAmc {
                 {{/if}} 
             {{/each}} 
             <div class="amountTotal"> 
-                {{#table (padStart amountTotal 8)}} {{/table}} 
+                {{formatNumber @root.amountTotal}}
                 </div> 
               {{#if ../caresheet.thirdPartyAmo}} 
               <div class="thirdPartyAmo"> X </div> 

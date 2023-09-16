@@ -211,9 +211,7 @@ export class PaymentDsioElemService {
 
       try {
         await this.contactService.setAmountDue(id_pat, id_prat, Number(TD));
-      } catch (error) {
-        throw error;
-      }
+      } catch (error) {}
     }
   }
 
@@ -427,27 +425,6 @@ export class PaymentDsioElemService {
           DLQ_PURCHASE_PRICE,
           LFQ_ID,
         ]);
-      }
-
-      if (false) {
-        if (
-          this.initDsioElemService.t_library_family_task_lft[
-            this.initDsioElemService.ACA
-          ]
-        ) {
-          // Mise à jour des actes des rdvs
-          const etk_list =
-            this.initDsioElemService.t_library_family_task_lft[
-              this.initDsioElemService.ACA
-            ].join(',');
-          const query = `UPDATE T_EVENT_TASK_ETK ETK
-            SET ETK.LFT_ID = ?
-            WHERE ETK.ETK_ID in (?)`;
-          await this.dataSource.query(query, [LFT_ID, etk_list]);
-          delete this.initDsioElemService.t_library_family_task_lft[
-            this.initDsioElemService.ACA
-          ];
-        }
       }
     } catch (error) {
       throw error;

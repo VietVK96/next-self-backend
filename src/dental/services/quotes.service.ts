@@ -28,7 +28,6 @@ import { PaymentScheduleService } from 'src/payment-schedule/services/payment-sc
 import { Convention2020RequestAjaxDto } from '../dto/devis_request_ajax.dto';
 import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
 import { LettersEntity } from 'src/entities/letters.entity';
-import { MailService } from 'src/mail/services/mail.service';
 import {
   checkId,
   checkNumber,

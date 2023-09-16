@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FindContactController } from './find.contact.controller';
 import { HistoricalController } from './historical.controller';
@@ -44,6 +44,13 @@ import { ReminderVisitService } from './services/reminderVisit.service';
 import { ReminderVisitController } from './reminderVisit.controller';
 import { BullModule } from '@nestjs/bull';
 import { BullConfigService } from 'src/common/config/bull.config';
+import { PatientService } from 'src/patient/service/patient.service';
+import { AddressService } from 'src/address/service/address.service';
+import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
+import { MailTransportService } from 'src/mail/services/mailTransport.service';
+import { DocumentMailService } from 'src/mail/services/document.mail.service';
+import { MailModule } from 'src/mail/mail.module';
+import { NotifierModule } from 'src/notifier/notifier.module';
 
 @Module({
   controllers: [
@@ -74,7 +81,7 @@ import { BullConfigService } from 'src/common/config/bull.config';
     FindContactService,
     HistoricalService,
     ContactService,
-    PatientModule,
+    // PatientModule,
     NoteService,
     ActServices,
     TaskService,
@@ -93,9 +100,18 @@ import { BullConfigService } from 'src/common/config/bull.config';
     CashingService,
     MailService,
     ReminderVisitService,
+    PatientService,
+    PatientService,
+    AddressService,
+    PermissionService,
+    ContactService,
+    PaymentScheduleService,
+    MailTransportService,
+    DocumentMailService,
   ],
   imports: [
     TypeOrmModule.forFeature(listEntities),
+    forwardRef(() => MailModule),
     UserModule,
     PatientModule,
     UploadModule,
@@ -103,6 +119,7 @@ import { BullConfigService } from 'src/common/config/bull.config';
       name: 'amount-due',
       useClass: BullConfigService,
     }),
+    NotifierModule,
   ],
   exports: [ContactService, ContactPaymentService],
 })

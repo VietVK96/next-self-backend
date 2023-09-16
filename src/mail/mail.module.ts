@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MailController } from './mail.controller';
 import { MailService } from './services/mail.service';
@@ -17,7 +17,10 @@ import { PdfMailService } from './services/pdf.mail.service';
 import { TemplateMailService } from './services/template.mail.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature(listEntities), ContactModule],
+  imports: [
+    TypeOrmModule.forFeature(listEntities),
+    forwardRef(() => ContactModule),
+  ],
   controllers: [MailController],
   providers: [
     MailService,

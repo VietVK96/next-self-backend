@@ -32,13 +32,15 @@ import {
 import { SesamvitaleTeletranmistionService } from './sesamvitale-teletranmistion.service';
 import * as path from 'path';
 import { customCreatePdf } from 'src/common/util/pdf';
-import PDFMerger = require('pdf-merger-js');
 import * as dayjs from 'dayjs';
 import { LotEntity } from 'src/entities/lot.entity';
+import { checkBoolean, checkId } from 'src/common/util/number';
+const PDFMerger = require('pdf-merger-js');
+
 const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
 const PAV_MINIMUM_AMOUNT = 120;
 const helpersCaresheetPdf = {
-  formatDate: function (date) {
+  formatDate: function (date: string) {
     return dayjs(date).format('DDMMYYYY');
   },
   slice: function (string, start, end) {
@@ -87,6 +89,12 @@ const helpersCaresheetPdf = {
       </tbody>
     </table>`;
     return str;
+  },
+  nameToTransmit: (key) => {
+    return key === 'CBX' ? 'CCX' : key;
+  },
+  formatNumber: (n: number) => {
+    return Number(n).toFixed(2);
   },
 };
 const optionsCaresheetPdf = {
@@ -653,6 +661,7 @@ export class ActsService {
     // return $this->sendRequest('TransmettreFacture', $xml->outputMemory());
     return xml;
   }
+  CCX;
 
   private isTestAntigenique(medical): boolean {
     if (!medical?.ngapKey) {
@@ -1039,7 +1048,7 @@ export class ActsService {
     const _take = size || 25;
     const _skip = page ? (page - 1) * _take : 0;
     const user = await this.userRepository.findOne({
-      where: { id: userId },
+      where: { id: checkId(userId) || 0 },
     });
     if (!user) {
       throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
@@ -1197,6 +1206,8 @@ export class ActsService {
       where: { id },
       relations: [
         'actMedicals',
+        'amo',
+        'amc',
         'actMedicals.act',
         'actMedicals.ccam',
         'actMedicals.ngapKey',
@@ -1205,7 +1216,16 @@ export class ActsService {
         'patient.medical.policyHolder',
       ],
     });
-
+    caresheet.thirdPartyAmo = await this.thirdPartyAmoRepository.findOne({
+      where: {
+        caresheetId: caresheet?.id,
+      },
+    });
+    caresheet.thirdPartyAmc = await this.thirdPartyAmcRepository.findOne({
+      where: {
+        caresheetId: caresheet?.id,
+      },
+    });
     const filePath = path.join(
       process.cwd(),
       'templates/pdf/caresheets',
@@ -1217,7 +1237,7 @@ export class ActsService {
     };
     const pdf = await customCreatePdf({
       files: [{ path: filePath, data }],
-      options: optionsCaresheetPdf,
+      options: { optionsCaresheetPdf },
       helpers: helpersCaresheetPdf,
     });
     return {
@@ -1264,10 +1284,10 @@ export class ActsService {
   }
 
   async print(userId: number, ids: Array<number>, duplicata?: boolean) {
-    const pdfMerger = new PDFMerger();
+    const merger = new PDFMerger();
     for (const id of ids) {
       const { file } = await this.getCaresheetFileById(id, duplicata);
-      await pdfMerger.add(file);
+      await merger.add(file);
     }
     const user = await this.userRepository.findOne({
       where: { id: userId },
@@ -1276,9 +1296,13 @@ export class ActsService {
     const lots: LotEntity[] = await this.getListLotByIds(ids);
     for (const lot of lots) {
       const { file } = await this.getLotFile(lot, user);
-      await pdfMerger.add(file);
+      await merger.add(file);
     }
-    return await pdfMerger.saveAsBuffer();
+    return await merger.saveAsBuffer();
+  }
+  async duplicata(id: number, duplicata: boolean) {
+    const result = await this.getCaresheetFileById(id, checkBoolean(duplicata));
+    return result.file;
   }
 
   async download(userId: number, ids: Array<number>, duplicata?: boolean) {

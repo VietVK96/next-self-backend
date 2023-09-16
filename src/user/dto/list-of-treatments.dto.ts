@@ -1,8 +1,6 @@
 import { ApiProperty, ApiExtraModels } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
-import { parseJson } from 'src/common/util/json';
-import { IsNumberOrNull, IsSqlOperator } from './validator-custom';
-import { IsNumber } from 'class-validator';
+
+import { IsSqlOperator } from './validator-custom';
 
 @ApiExtraModels()
 export class FindAllConditionsDto {

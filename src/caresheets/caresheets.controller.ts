@@ -49,14 +49,14 @@ export class CaresheetsController {
   @Get('/user')
   @UseGuards(TokenGuard)
   async getUserCaresheet(
-    @CurrentUser() identity: UserIdentity,
+    @Query('id') id: number,
     @Query('page') page?: number,
     @Query('page_size') size?: number,
     @Query('filterParam') filterParam?: string[],
     @Query('filterValue') filterValue?: string[],
   ) {
     return await this.service.getUserCaresheet(
-      identity.id,
+      id,
       page,
       size,
       filterParam,
@@ -98,6 +98,30 @@ export class CaresheetsController {
     @Query('duplicata') duplicata?: boolean,
   ) {
     const buffer = await this.service.print(identity.id, ids, duplicata);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=print.pdf`,
+      'Content-Length': buffer?.length,
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: 0,
+    });
+    res.end(buffer);
+  }
+
+  /**
+   * php/caresheets/duplicata.php
+   * 12-80
+   */
+
+  @Get('/duplicata')
+  @UseGuards(TokenDownloadGuard)
+  async duplicata(
+    @Res() res: Response,
+    @Query('id') id?: number,
+    @Query('duplicata') duplicata?: boolean,
+  ) {
+    const buffer = await this.service.duplicata(id, duplicata);
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename=print.pdf`,

@@ -49,7 +49,7 @@ export class TemplateMailService {
     });
 
     let content = message;
-    if (isPreview) content = Handlebars.compile(message)(context);
+    if (isPreview) content = handlebars.compile(message)(context);
 
     // Replace the signature for the practitioner if it exists in the context
     if (context.praticien?.signature) {
