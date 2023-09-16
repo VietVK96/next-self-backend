@@ -109,7 +109,7 @@ export class UnpaidService {
           break;
       }
     });
-    const sort = payload?.sort ?? 'patientBalance.visitDate';
+    const sort = payload?.sort ?? 'patientBalance.lastCare';
     queryBuilder.addOrderBy(
       unpaidSort[sort],
       payload?.direction?.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
