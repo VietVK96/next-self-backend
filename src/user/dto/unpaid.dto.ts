@@ -41,7 +41,7 @@ export class printUnpaidDto {
 
   @ApiProperty({
     required: false,
-    examples: ['asc', 'desc'],
+    examples: ['row', 'col'],
   })
   direction?: string;
 

@@ -157,6 +157,27 @@ export class UserController {
     return await this.unpaidService.getUserUnpaidPatient(payload);
   }
 
+  @Get('unpaid/print')
+  @UseGuards(TokenGuard)
+  async printUnpaid(@Res() res: Response, @Query() param?: printUnpaidDto) {
+    try {
+      const buffer = await this.unpaidService.printUnpaid(param);
+      res.set({
+        // pdf
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Length': buffer.length,
+        // prevent cache
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    }
+  }
+
   /**
    * File: php/third-party/export.php
    */
@@ -253,17 +274,6 @@ export class UserController {
       identity.org,
       body,
     );
-  }
-
-  @Get('unpaid/print')
-  @UseGuards(TokenGuard)
-  async printUnpaid(@Query() param?: printUnpaidDto) {
-    try {
-      const buffer = await this.unpaidService.printUnpaid(param);
-      return buffer;
-    } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
-    }
   }
 
   /**
