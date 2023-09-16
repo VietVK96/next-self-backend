@@ -4,7 +4,6 @@ import {
   And,
   DataSource,
   FindOptionsWhere,
-  LessThan,
   LessThanOrEqual,
   MoreThan,
   MoreThanOrEqual,
@@ -36,11 +35,8 @@ import { checkId } from 'src/common/util/number';
 @Injectable()
 export class UnpaidService {
   constructor(
-    private dataSource: DataSource,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-    @InjectRepository(ContactEntity)
-    private patientRepository: Repository<ContactEntity>,
     @InjectRepository(ContactUserEntity)
     private patientBalanceRepo: Repository<ContactUserEntity>,
     @InjectRepository(UserPreferenceEntity)
