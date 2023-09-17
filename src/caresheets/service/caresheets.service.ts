@@ -679,7 +679,7 @@ export class ActsService {
       .ele('xsd:identification')
       .ele('xsd:idPatient', facture?.identification?.idPatient)
       .up()
-      .ele('xsd:source', 'ecoodentist')
+      .ele('xsd:source', 'weClever')
       .up()
       .ele(
         'xsd:dateFacturation',

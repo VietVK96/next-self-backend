@@ -23,7 +23,6 @@ import { FindAllStructDto } from '../dto/findAll.contact.dto';
 import { FindPaymentRes, GetExtrasRes } from '../response/cashing.res';
 import * as dayjs from 'dayjs';
 import * as path from 'path';
-import { createPdf } from '@saemhco/nestjs-html-pdf';
 import { checkDay } from 'src/common/util/day';
 import {
   BankStatement,
@@ -282,11 +281,12 @@ export class CashingService {
               byDay[dateFormat] = { total: 0 };
             }
 
-            byDay[dateFormat].total = +amount;
             if (!byDay[dateFormat][mode]) {
               byDay[dateFormat][mode] = 0;
             }
-            byDay[dateFormat][mode] += +amount;
+            byDay[dateFormat][mode] += amount;
+            byDay[dateFormat].total += amount;
+
             total.total.total += amount;
           }
         });
@@ -297,11 +297,6 @@ export class CashingService {
           total,
           byDay,
         };
-        console.log(
-          '🚀 ~ file: cashing.service.ts:296 ~ CashingService ~ print ~ data:',
-          data,
-        );
-
         return await customCreatePdf({
           files: [{ data, path: filePath }],
           options,
@@ -397,10 +392,6 @@ export class CashingService {
           groupValid,
           total,
         };
-        console.log(
-          '🚀 ~ file: cashing.service.ts:392 ~ CashingService ~ print ~ data:',
-          data,
-        );
 
         return await customCreatePdf({
           files: [{ data, path: filePath }],
@@ -408,10 +399,6 @@ export class CashingService {
         });
       }
     } catch (error) {
-      console.log(
-        '🚀 ~ file: cashing.service.ts:408 ~ CashingService ~ print ~ error:',
-        error,
-      );
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
@@ -532,8 +519,6 @@ export class CashingService {
         T_LIBRARY_BANK_LBK.product_account
     FROM T_LIBRARY_BANK_LBK
     WHERE T_LIBRARY_BANK_LBK.LBK_ID = ?`;
-
-    const orderByValue = `${orderBy} ${order}`;
 
     const statement = `
         T_CASHING_CSG.CSG_ID AS id,

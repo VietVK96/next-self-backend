@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { UserEntity } from 'src/entities/user.entity';
 import {
   And,
-  DataSource,
   FindOptionsWhere,
   LessThanOrEqual,
   MoreThan,
@@ -11,7 +10,6 @@ import {
 } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UnpaidDto, printUnpaidDto } from '../dto/unpaid.dto';
-import { ContactEntity } from 'src/entities/contact.entity';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { unpaidSort } from 'src/constants/unpaid';

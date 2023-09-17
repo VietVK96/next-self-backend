@@ -172,7 +172,7 @@ export class PaymentService {
     const currentDate = dayjs().format('YYYYMMDD');
 
     // Tạo tên tệp mới
-    const fileName = `${currentDate}_ecooDentist.txt`;
+    const fileName = `${currentDate}weClever.txt`;
     try {
       const payments = await this.recipeService.findByDoctor(user, conditions, {
         limit: 0,

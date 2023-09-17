@@ -14,9 +14,7 @@ import { IPatientBalances } from 'src/interfaces/interface';
 import { CreditBalancesDto } from '../dto/credit-balances.dto';
 import { UserEntity } from 'src/entities/user.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
-import Handlebars from 'handlebars';
 import * as path from 'path';
-import * as fs from 'fs';
 import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
 
 @Injectable()

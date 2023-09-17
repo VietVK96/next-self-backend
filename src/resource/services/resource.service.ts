@@ -208,7 +208,7 @@ export class ResourceService {
     const creator = `${currentUser.lastname} ${currentUser.firstname}`;
     try {
       await this.mailerService.sendEmail(identity.id, {
-        from: 'noreply@ecoodentist.com',
+        from: 'noreply@weclever.com',
         to: 'admin@dentalviamedilor.com',
         subject: 'Agenda supplémentaire',
         html: `Un agenda supplémentaire ${res.name} a été créé par ${creator}.`,

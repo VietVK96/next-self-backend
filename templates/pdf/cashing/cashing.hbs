@@ -41,159 +41,175 @@
 
     <page>
       {{#if groupValid}}
-<table class="bordered" style="margin-bottom: 5mm; table-layout: fixed;">
-    <thead>
-        <tr>
-            <th>Date d'échéance</th>
-            {{#each paymentMethods}}
-            <th>{{this.[1]}}</th>
-            {{/each}}
-            <th>Montant</th>
-        </tr>
-    </thead>
-    <tbody>
-        {{#each byDay}}
-        <tr>
-            <td style="text-align: center;">{{@key}}</td>
-            <td style="text-align: right;">{{formatAmount this.espece}}</td>
-            <td style="text-align: right;">{{formatAmount this.cheque}}</td>
-            <td style="text-align: right;">{{formatAmount this.carte}}</td>
-            <td style="text-align: right;">{{formatAmount this.virement}}</td>
-            <td style="text-align: right;">{{formatAmount this.prelevement}}</td>
-            <td style="text-align: right;">{{formatAmount this.total}}</td>
-        </tr>
-        {{/each}}
-        <tr class="tfoot">
-            <th>Total</th>
-            <td style="text-align: right;">{{formatAmount total.espece.total}}</td>
-            <td style="text-align: right;">{{formatAmount total.cheque.total}}</td>
-            <td style="text-align: right;">{{formatAmount total.carte.total}}</td>
-            <td style="text-align: right;">{{formatAmount total.virement.total}}</td>
-            <td style="text-align: right;">{{formatAmount total.prelevement.total}}</td>
-            <td style="text-align: right;">{{formatAmount total.total.total}}</td>
-        </tr>
-    </tbody>
-</table>
-<table class="total">
-    <tbody>
-        {{#each paymentTypes}}
-        {{#if (or ../total.[this].amount 0)}}
-        <tr>
-            <td class="amountTotalLabel" style="text-align: right;"><strong>{{PaymentTypeEnum.getReadableValue this}}</strong></td>
-            <td class="amountTotal">{{formatAmount this.total}}</td>
-        </tr>
+        <table class="bordered" style="margin-bottom: 5mm; table-layout: fixed;">
+            <thead>
+                <tr>
+                    <th>Date d'échéance</th>
+                    {{#each paymentMethods}}
+                    <th>{{this.[1]}}</th>
+                    {{/each}}
+                    <th>Montant</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each byDay}}
+                <tr>
+                    <td style="text-align: center;">{{@key}}</td>
+                    <td style="text-align: right;">{{formatAmount this.espece}}</td>
+                    <td style="text-align: right;">{{formatAmount this.cheque}}</td>
+                    <td style="text-align: right;">{{formatAmount this.carte}}</td>
+                    <td style="text-align: right;">{{formatAmount this.virement}}</td>
+                    <td style="text-align: right;">{{formatAmount this.prelevement}}</td>
+                    <td style="text-align: right;">{{formatAmount this.total}}</td>
+                </tr>
+                {{/each}}
+                <tr class="tfoot">
+                    <th>Total</th>
+                    <td style="text-align: right;">{{formatAmount total.espece.total}}</td>
+                    <td style="text-align: right;">{{formatAmount total.cheque.total}}</td>
+                    <td style="text-align: right;">{{formatAmount total.carte.total}}</td>
+                    <td style="text-align: right;">{{formatAmount total.virement.total}}</td>
+                    <td style="text-align: right;">{{formatAmount total.prelevement.total}}</td>
+                    <td style="text-align: right;">{{formatAmount total.total.total}}</td>
+                </tr>
+            </tbody>
+        </table>
+        <table class="total">
+            <tbody>
+                {{#if total.solde.total}}
+                <tr>
+                    <td class="amountTotalLabel" style="text-align: right;"><strong>Solde</strong></td>
+                    <td class="amountTotal">{{total.solde.total}}</td>
+                </tr>
+                {{/if}}
+                {{#if total.acompte.total}}
+                <tr>
+                    <td class="amountTotalLabel" style="text-align: right;"><strong>Acompte</strong></td>
+                    <td class="amountTotal">{{total.acompte.total}}</td>
+                </tr>
+                {{/if}}
+                {{#if total.honoraire.total}}
+                <tr>
+                    <td class="amountTotalLabel" style="text-align: right;"><strong>Honoraire</strong></td>
+                    <td class="amountTotal">{{total.honoraire.total}}</td>
+                </tr>
+                {{/if}}
+                {{#if total.remboursement.total}}
+                <tr>
+                    <td class="amountTotalLabel" style="text-align: right;"><strong>Remboursement</strong></td>
+                    <td class="amountTotal">{{total.remboursement.total}}</td>
+                </tr>
+                {{/if}}
+            </tbody>
+        </table>
+        {{else}}
+        <table class="bordered" style="margin-bottom: 5mm;">
+            <thead>
+                <tr>
+                    <th class="paymentDate"> Date d'échéance</th>
+                    <th class="entryDate"> Date de saisie</th>
+                    <th class="payer"> Partie versante</th>
+                    <th class="paymentMode"> Mode</th>
+                    <th class="amount"> Montant</th>
+                    <th class="amountCare"> Soins</th>
+                    <th class="amountProsthesis"> Prothèses</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each payments}}
+                <tr>
+                    <td class="paymentDate"> {{this.paymentDate}}</td>
+                    <td class="entryDate">{{this.date}}</td>
+                    <td class="payer">{{this.debtor}}</td>
+                    <td class="paymentMode">{{this.payment}}</td>
+                    <td class="amount">{{formatAmount this.amount}}</td>
+                    <td class="amountCare">{{formatAmount this.amount_care}}</td>
+                    <td class="amountProsthesis">{{formatAmount this.amount_prosthesis}}</td>
+                </tr>
+                {{/each}}
+                <tr class="tfoot">
+                    <td colspan="4" style="text-align: right;"> Total</td>
+                    <td class="amountTotal">{{formatAmount amountTotal}}</td>
+                    <td class="amountCareTotal">{{formatAmount amountCareTotal}}</td>
+                    <td class="amountProsthesisTotal">{{formatAmount amountProsthesisTotal}}</td>
+                </tr>
+            </tbody>
+        </table>
+        <table class="total">
+            <tbody>
+                {{#if total.cheque.amount}}
+                <tr>
+                    <td class="amountTotalLabel"><strong>Cheque</strong></td>
+                    <td class="amountTotal">{{formatAmount total.cheque.amount}}</td>
+                    <td class="amountCareTotal">{{formatAmount total.cheque.amountCare}}</td>
+                    <td class="amountProsthesisTotal">{{formatAmount total.cheque.amountProsthesis}}</td>
+                </tr>
+                {{/if}}
+                {{#if total.carte.amount}}
+                <tr>
+                    <td class="amountTotalLabel"><strong>Carte</strong></td>
+                    <td class="amountTotal">{{formatAmount total.carte.amount}}</td>
+                    <td class="amountCareTotal">{{formatAmount total.carte.amountCare}}</td>
+                    <td class="amountProsthesisTotal">{{formatAmount total.carte.amountProsthesis}}</td>
+                </tr>
+                {{/if}}
+                {{#if total.espece.amount}}
+                <tr>
+                    <td class="amountTotalLabel"><strong>Espece</strong></td>
+                    <td class="amountTotal">{{formatAmount total.espece.amount}}</td>
+                    <td class="amountCareTotal">{{formatAmount total.espece.amountCare}}</td>
+                    <td class="amountProsthesisTotal">{{formatAmount total.espece.amountProsthesis}}</td>
+                </tr>
+                {{/if}}
+                {{#if total.virement.amount}}
+                <tr>
+                    <td class="amountTotalLabel"><strong>Virement</strong></td>
+                    <td class="amountTotal">{{formatAmount total.virement.amount}}</td>
+                    <td class="amountCareTotal">{{formatAmount total.virement.amountCare}}</td>
+                    <td class="amountProsthesisTotal">{{formatAmount total.virement.amountProsthesis}}</td>
+                </tr>
+                {{/if}}
+                {{#if total.prelevement.amount}}
+                <tr>
+                    <td class="amountTotalLabel"><strong>Prelevement</strong></td>
+                    <td class="amountTotal">{{formatAmount total.prelevement.amount}}</td>
+                    <td class="amountCareTotal">{{formatAmount total.prelevement.amountCare}}</td>
+                    <td class="amountProsthesisTotal">{{formatAmount total.prelevement.amountProsthesis}}</td>
+                </tr>
+                {{/if}}
+                {{#if total.solde.amount}}
+                <tr>
+                    <td class="amountTotalLabel"><strong>Solde</strong></td>
+                    <td class="amountTotal">{{formatAmount total.solde.amount}}</td>
+                    <td class="amountCareTotal">{{formatAmount total.solde.amountCare}}</td>
+                    <td class="amountProsthesisTotal">{{formatAmount total.solde.amountProsthesis}}</td>
+                </tr>
+                {{/if}}
+                {{#if total.acompte.amount}}
+                <tr>
+                    <td class="amountTotalLabel"><strong>Acompte</strong></td>
+                    <td class="amountTotal">{{formatAmount total.acompte.amount}}</td>
+                    <td class="amountCareTotal">{{formatAmount total.acompte.amountCare}}</td>
+                    <td class="amountProsthesisTotal">{{formatAmount total.acompte.amountProsthesis}}</td>
+                </tr>
+                {{/if}}
+                {{#if total.honoraire.amount}}
+                <tr>
+                    <td class="amountTotalLabel"><strong>Honoraire</strong></td>
+                    <td class="amountTotal">{{formatAmount total.honoraire.amount}}</td>
+                    <td class="amountCareTotal">{{formatAmount total.honoraire.amountCare}}</td>
+                    <td class="amountProsthesisTotal">{{formatAmount total.honoraire.amountProsthesis}}</td>
+                </tr>
+                {{/if}}
+                {{#if total.remboursement.amount}}
+                <tr>
+                    <td class="amountTotalLabel"><strong>Remboursement</strong></td>
+                    <td class="amountTotal">{{formatAmount total.remboursement.amount}}</td>
+                    <td class="amountCareTotal">{{formatAmount total.remboursement.amountCare}}</td>
+                    <td class="amountProsthesisTotal">{{formatAmount total.remboursement.amountProsthesis}}</td>
+                </tr>
+                {{/if}}
+            </tbody>
+        </table>
         {{/if}}
-        {{/each}}
-    </tbody>
-</table>
-{{else}}
-<table class="bordered" style="margin-bottom: 5mm;">
-    <thead>
-        <tr>
-            <th class="paymentDate"> Date d'échéance</th>
-            <th class="entryDate"> Date de saisie</th>
-            <th class="payer"> Partie versante</th>
-            <th class="paymentMode"> Mode</th>
-            <th class="amount"> Montant</th>
-            <th class="amountCare"> Soins</th>
-            <th class="amountProsthesis"> Prothèses</th>
-        </tr>
-    </thead>
-    <tbody>
-        {{#each payments}}
-        <tr>
-            <td class="paymentDate"> {{this.paymentDate}}</td>
-            <td class="entryDate">{{this.date}}</td>
-            <td class="payer">{{this.debtor}}</td>
-            <td class="paymentMode">{{this.payment}}</td>
-            <td class="amount">{{formatAmount this.amount}}</td>
-            <td class="amountCare">{{formatAmount this.amount_care}}</td>
-            <td class="amountProsthesis">{{formatAmount this.amount_prosthesis}}</td>
-        </tr>
-        {{/each}}
-        <tr class="tfoot">
-            <td colspan="4" style="text-align: right;"> Total</td>
-            <td class="amountTotal">{{formatAmount amountTotal}}</td>
-            <td class="amountCareTotal">{{formatAmount amountCareTotal}}</td>
-            <td class="amountProsthesisTotal">{{formatAmount amountProsthesisTotal}}</td>
-        </tr>
-    </tbody>
-</table>
-<table class="total">
-    <tbody>
-        {{#if total.cheque.amount}}
-        <tr>
-            <td class="amountTotalLabel"><strong>Cheque</strong></td>
-            <td class="amountTotal">{{formatAmount total.cheque.amount}}</td>
-            <td class="amountCareTotal">{{formatAmount total.cheque.amountCare}}</td>
-            <td class="amountProsthesisTotal">{{formatAmount total.cheque.amountProsthesis}}</td>
-        </tr>
-        {{/if}}
-        {{#if total.carte.amount}}
-        <tr>
-            <td class="amountTotalLabel"><strong>Carte</strong></td>
-            <td class="amountTotal">{{formatAmount total.carte.amount}}</td>
-            <td class="amountCareTotal">{{formatAmount total.carte.amountCare}}</td>
-            <td class="amountProsthesisTotal">{{formatAmount total.carte.amountProsthesis}}</td>
-        </tr>
-        {{/if}}
-        {{#if total.espece.amount}}
-        <tr>
-            <td class="amountTotalLabel"><strong>Espece</strong></td>
-            <td class="amountTotal">{{formatAmount total.espece.amount}}</td>
-            <td class="amountCareTotal">{{formatAmount total.espece.amountCare}}</td>
-            <td class="amountProsthesisTotal">{{formatAmount total.espece.amountProsthesis}}</td>
-        </tr>
-        {{/if}}
-        {{#if total.virement.amount}}
-        <tr>
-            <td class="amountTotalLabel"><strong>Virement</strong></td>
-            <td class="amountTotal">{{formatAmount total.virement.amount}}</td>
-            <td class="amountCareTotal">{{formatAmount total.virement.amountCare}}</td>
-            <td class="amountProsthesisTotal">{{formatAmount total.virement.amountProsthesis}}</td>
-        </tr>
-        {{/if}}
-        {{#if total.prelevement.amount}}
-        <tr>
-            <td class="amountTotalLabel"><strong>Prelevement</strong></td>
-            <td class="amountTotal">{{formatAmount total.prelevement.amount}}</td>
-            <td class="amountCareTotal">{{formatAmount total.prelevement.amountCare}}</td>
-            <td class="amountProsthesisTotal">{{formatAmount total.prelevement.amountProsthesis}}</td>
-        </tr>
-        {{/if}}
-        {{#if total.solde.amount}}
-        <tr>
-            <td class="amountTotalLabel"><strong>Solde</strong></td>
-            <td class="amountTotal">{{formatAmount total.solde.amount}}</td>
-            <td class="amountCareTotal">{{formatAmount total.solde.amountCare}}</td>
-            <td class="amountProsthesisTotal">{{formatAmount total.solde.amountProsthesis}}</td>
-        </tr>
-        {{/if}}
-        {{#if total.acompte.amount}}
-        <tr>
-            <td class="amountTotalLabel"><strong>Acompte</strong></td>
-            <td class="amountTotal">{{formatAmount total.acompte.amount}}</td>
-            <td class="amountCareTotal">{{formatAmount total.acompte.amountCare}}</td>
-            <td class="amountProsthesisTotal">{{formatAmount total.acompte.amountProsthesis}}</td>
-        </tr>
-        {{/if}}
-        {{#if total.honoraire.amount}}
-        <tr>
-            <td class="amountTotalLabel"><strong>Honoraire</strong></td>
-            <td class="amountTotal">{{formatAmount total.honoraire.amount}}</td>
-            <td class="amountCareTotal">{{formatAmount total.honoraire.amountCare}}</td>
-            <td class="amountProsthesisTotal">{{formatAmount total.honoraire.amountProsthesis}}</td>
-        </tr>
-        {{/if}}
-        {{#if total.remboursement.amount}}
-        <tr>
-            <td class="amountTotalLabel"><strong>Remboursement</strong></td>
-            <td class="amountTotal">{{formatAmount total.remboursement.amount}}</td>
-            <td class="amountCareTotal">{{formatAmount total.remboursement.amountCare}}</td>
-            <td class="amountProsthesisTotal">{{formatAmount total.remboursement.amountProsthesis}}</td>
-        </tr>
-        {{/if}}
-    </tbody>
-</table>
-{{/if}}
     </page>
