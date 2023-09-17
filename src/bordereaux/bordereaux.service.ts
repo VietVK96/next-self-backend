@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { LibraryBankEntity } from 'src/entities/library-bank.entity';
 import 'dayjs/locale/fr';
 import * as dayjs from 'dayjs';
-import * as fs from 'fs';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import {
@@ -33,9 +32,8 @@ import {
   BordereauxTotalAmountRes,
   BordereauxUserBankRes,
 } from './response/bordereaux.res';
-import Handlebars from 'handlebars';
 import * as path from 'path';
-import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
+import { customCreatePdf } from 'src/common/util/pdf';
 
 @Injectable()
 export class BordereauxService {

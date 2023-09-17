@@ -33,6 +33,8 @@ import {
   SlipCheck,
 } from '../../interfaces/interface';
 import { DEFAULT_LOCALE } from 'src/constants/default';
+import { customCreatePdf } from 'src/common/util/pdf';
+import { checkNumber } from 'src/common/util/number';
 
 dayjs.locale(DEFAULT_LOCALE);
 @Injectable()
@@ -92,22 +94,24 @@ export class CashingService {
       const bankId = statement?.bank_id;
       const slipCheckId = statement?.slip_check_id;
       // query table T_CONTACT_CON
-      const patientStatement: PatientStatement[] = await this.dataSource.query(
-        `SELECT
+      const patientStatement: PatientStatement[] = patientId
+        ? await this.dataSource.query(
+            `SELECT
       T_CONTACT_CON.CON_ID AS id,
       T_CONTACT_CON.CON_NBR AS number,
       T_CONTACT_CON.CON_LASTNAME AS lastname,
       T_CONTACT_CON.CON_FIRSTNAME AS firstname
   FROM T_CONTACT_CON
   WHERE T_CONTACT_CON.CON_ID = ?`,
-        [patientId],
-      );
+            [patientId],
+          )
+        : null;
       payment.patient = patientStatement;
 
       // query table T_CASHING_CONTACT_CSC Join T_CONTACT_CON
-      const beneficiariesStatement: Beneficiaries[] =
-        await this.dataSource.query(
-          `SELECT
+      const beneficiariesStatement: Beneficiaries[] = id
+        ? await this.dataSource.query(
+            `SELECT
       T_CONTACT_CON.CON_ID AS id,
       T_CONTACT_CON.CON_LASTNAME AS lastname,
       T_CONTACT_CON.CON_FIRSTNAME AS firstname,
@@ -118,13 +122,15 @@ export class CashingService {
   JOIN T_CONTACT_CON
   WHERE T_CASHING_CONTACT_CSC.CSG_ID = ?
     AND T_CASHING_CONTACT_CSC.CON_ID = T_CONTACT_CON.CON_ID`,
-          [id],
-        );
+            [id],
+          )
+        : null;
       payment.beneficiaries = beneficiariesStatement;
 
       // query table T_LIBRARY_BANK_LBK
-      const bankStatement: BankStatement[] = await this.dataSource.query(
-        `SELECT
+      const bankStatement: BankStatement[] = bankId
+        ? await this.dataSource.query(
+            `SELECT
       T_LIBRARY_BANK_LBK.LBK_ID AS id,
       T_LIBRARY_BANK_LBK.LBK_ACCOUNTING_CODE AS accounting_code,
       T_LIBRARY_BANK_LBK.third_party_account,
@@ -132,13 +138,15 @@ export class CashingService {
       T_LIBRARY_BANK_LBK.LBK_NAME as bank_name
   FROM T_LIBRARY_BANK_LBK
   WHERE T_LIBRARY_BANK_LBK.LBK_ID = ?`,
-        [bankId],
-      );
+            [bankId],
+          )
+        : null;
       payment.bank = bankStatement;
 
       // query table T_SLIP_CHECK_SLC join T_LIBRARY_BANK_LBK
-      const slipCheckStatement: SlipCheck[] = await this.dataSource.query(
-        `SELECT
+      const slipCheckStatement: SlipCheck[] = slipCheckId
+        ? await this.dataSource.query(
+            `SELECT
       T_SLIP_CHECK_SLC.SLC_ID AS id,
       T_SLIP_CHECK_SLC.SLC_NBR AS number,
       T_SLIP_CHECK_SLC.SLC_DATE AS date,
@@ -149,8 +157,9 @@ export class CashingService {
   JOIN T_LIBRARY_BANK_LBK
   WHERE T_SLIP_CHECK_SLC.SLC_ID = ?
     AND T_SLIP_CHECK_SLC.LBK_ID = T_LIBRARY_BANK_LBK.LBK_ID`,
-        [slipCheckId],
-      );
+            [slipCheckId],
+          )
+        : null;
       payment.slip_check = slipCheckStatement;
       // ruslt
       payments.push(payment);
@@ -216,7 +225,11 @@ export class CashingService {
       payments = payments?.filter(
         (payment) => payment?.date || payment?.paymentDate,
       );
-      const total: PrintCashingTotal = {};
+      const total: PrintCashingTotal = {
+        total: {
+          total: 0,
+        },
+      };
 
       const filePath = path.join(
         process.cwd(),
@@ -226,21 +239,19 @@ export class CashingService {
       const options = {
         format: 'A4',
         displayHeaderFooter: true,
-        headerTemplate: '<div></div>',
-        footerTemplate: '<div></div>',
+        headerTemplate: `<div style="width: 100%;margin: 0 5mm;font-size: 8px; display:flex; justify-content:space-between"><div>${user.lastname} ${user.firstname}</div> <div>Dossiers créditeurs</div></div>`,
+        footerTemplate: `<div style="width: 100%;margin-right:10mm; text-align: right; font-size: 8px;"><span class="pageNumber"></span>/<span class="totalPages"></span></div>`,
         margin: {
-          left: '10mm',
+          left: '5mm',
           top: '25mm',
-          right: '10mm',
+          right: '5mm',
           bottom: '15mm',
         },
-        landscape: true,
       };
 
       const groupValid = !!(
         payload?.group && ['day', 'month'].includes(payload?.group)
       );
-
       if (groupValid) {
         const byDay: ByDayRes = {};
         payments.forEach((payment) => {
@@ -251,13 +262,13 @@ export class CashingService {
 
           if (type) {
             total[type] = total[type]
-              ? { total: +total[type]?.total.toFixed(2) }
-              : { total: 0 };
+              ? { total: total[type]?.total + amount }
+              : { total: amount };
           }
           if (mode) {
             total[mode] = total[mode]
-              ? { total: +total[mode]?.total.toFixed(2) }
-              : { total: 0 };
+              ? { total: +total[mode]?.total + amount }
+              : { total: amount };
           }
           const dateTime = paymentDate ? dayjs(paymentDate) : null;
           if (dateTime) {
@@ -276,6 +287,7 @@ export class CashingService {
               byDay[dateFormat][mode] = 0;
             }
             byDay[dateFormat][mode] += +amount;
+            total.total.total += amount;
           }
         });
         const data = {
@@ -285,8 +297,25 @@ export class CashingService {
           total,
           byDay,
         };
+        console.log(
+          '🚀 ~ file: cashing.service.ts:296 ~ CashingService ~ print ~ data:',
+          data,
+        );
 
-        return await createPdf(filePath, options, data);
+        return await customCreatePdf({
+          files: [{ data, path: filePath }],
+          options,
+          helpers: {
+            readAblePayment: (payment: string) => {
+              let result = 'Espèce';
+              result = payment === 'cheque' ? 'Chèque' : result;
+              result = payment === 'carte' ? 'Carte' : result;
+              result = payment === 'virement' ? 'Virement' : result;
+              result = payment === 'prelevement' ? 'Prélèvement' : result;
+              return result;
+            },
+          },
+        });
       } else {
         let amountTotal = 0;
         let amountCareTotal = 0;
@@ -296,9 +325,9 @@ export class CashingService {
           let payer = payment?.debtor;
           const mode = payment?.payment;
           const type = payment?.type;
-          let amount = +payment?.amount;
-          let amountCare = +payment?.amount_care;
-          let amountProsthesis = +payment?.amount_prosthesis;
+          let amount = checkNumber(payment?.amount);
+          let amountCare = checkNumber(payment?.amount_care);
+          let amountProsthesis = checkNumber(payment?.amount_prosthesis);
           // Partie versante
           if (payment?.patient) {
             if (payload?.anonymous) {
@@ -339,10 +368,15 @@ export class CashingService {
           if (type) {
             total[type] = total[type]
               ? {
-                  amount: +(total[type].amount + amount).toFixed(2),
-                  amountCare: +(total[type].amountCare + amountCare).toFixed(2),
+                  amount: +(checkNumber(total[type]?.amount) + amount).toFixed(
+                    2,
+                  ),
+                  amountCare: +(
+                    checkNumber(total[type]?.amountCare) + amountCare
+                  ).toFixed(2),
                   amountProsthesis: +(
-                    total[type].amountProsthesis + amountProsthesis
+                    checkNumber(total[type]?.amountProsthesis) +
+                    amountProsthesis
                   ).toFixed(2),
                 }
               : {
@@ -363,11 +397,22 @@ export class CashingService {
           groupValid,
           total,
         };
+        console.log(
+          '🚀 ~ file: cashing.service.ts:392 ~ CashingService ~ print ~ data:',
+          data,
+        );
 
-        return await createPdf(filePath, options, data);
+        return await customCreatePdf({
+          files: [{ data, path: filePath }],
+          options,
+        });
       }
     } catch (error) {
-      return new CBadRequestException(ErrorCode.ERROR_GET_PDF);
+      console.log(
+        '🚀 ~ file: cashing.service.ts:408 ~ CashingService ~ print ~ error:',
+        error,
+      );
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
 
@@ -444,8 +489,6 @@ export class CashingService {
       where = this.conditionsToSQL(conditions);
     }
 
-    const conditionValue = `${doctorId} ${where}`;
-
     const patientStatement = `
     SELECT
         T_CONTACT_CON.CON_ID AS id,
@@ -493,7 +536,6 @@ export class CashingService {
     const orderByValue = `${orderBy} ${order}`;
 
     const statement = `
-    SELECT
         T_CASHING_CSG.CSG_ID AS id,
         T_CASHING_CSG.CON_ID AS patient_id,
         T_CASHING_CSG.LBK_ID AS bank_id,
@@ -505,26 +547,36 @@ export class CashingService {
         T_CASHING_CSG.CSG_AMOUNT AS amount,
         T_CASHING_CSG.amount_care,
         T_CASHING_CSG.amount_prosthesis,
-        T_CASHING_CSG.CSG_DEBTOR AS debtor
-    FROM T_CASHING_CSG
-    LEFT OUTER JOIN T_CASHING_CONTACT_CSC ON T_CASHING_CONTACT_CSC.CSG_ID = T_CASHING_CSG.CSG_ID
-    LEFT OUTER JOIN T_CONTACT_CON ON T_CONTACT_CON.CON_ID = T_CASHING_CONTACT_CSC.CON_ID
-    LEFT OUTER JOIN T_LIBRARY_BANK_LBK ON T_LIBRARY_BANK_LBK.LBK_ID = T_CASHING_CSG.LBK_ID
-    WHERE T_CASHING_CSG.USR_ID = ?
-    GROUP BY T_CASHING_CSG.CSG_ID
-    ORDER BY ? , T_CASHING_CSG.created_at DESC
-    LIMIT ?
-    OFFSET ?`;
+        T_CASHING_CSG.CSG_DEBTOR AS debtor`;
 
-    const payments = await this.dataSource.query(statement, [
-      conditionValue,
-      orderByValue,
-      limit,
-      offset,
-    ]);
+    const payments = await this.dataSource
+      .createQueryBuilder()
+      .select(statement)
+      .from(CashingEntity, 'T_CASHING_CSG')
+      .leftJoin(
+        CashingContactEntity,
+        'T_CASHING_CONTACT_CSC',
+        'T_CASHING_CONTACT_CSC.CSG_ID = T_CASHING_CSG.CSG_ID',
+      )
+      .leftJoin(
+        ContactEntity,
+        'T_CONTACT_CON',
+        'T_CONTACT_CON.CON_ID = T_CASHING_CONTACT_CSC.CON_ID',
+      )
+      .leftJoin(
+        LibraryBankEntity,
+        'T_LIBRARY_BANK_LBK',
+        'T_LIBRARY_BANK_LBK.LBK_ID = T_CASHING_CSG.LBK_ID',
+      )
+      .where('T_CASHING_CSG.USR_ID = :id', { id: doctorId })
+      .andWhere(where)
+      .limit(limit)
+      .offset(offset)
+      .orderBy(orderBy, order === 'DESC' ? 'DESC' : 'ASC')
+      .execute();
 
     const result: FindPaymentRes[] = [];
-    for (const payment of payments) {
+    for await (const payment of payments) {
       const patient = await this.dataSource.query(patientStatement, [
         payment?.patient_id,
       ]);
@@ -550,9 +602,8 @@ export class CashingService {
         bank: bank[0],
         slipCheck: slipCheck[0],
       });
-
-      return result;
     }
+    return result;
   }
 
   // application/Services/Cashing.php 248 -322
@@ -677,11 +728,10 @@ export class CashingService {
 
       if (conditionFields[field] && conditionOperators[operator]) {
         wheres.push(
-          `${conditionFields[field]} ${conditionOperators[operator]} "${value}"`,
+          `${conditionFields[field]} ${conditionOperators[operator]} '${value}'`,
         );
       }
     }
-
-    return wheres.length > 0 ? ' AND ' + wheres.join(' AND ') : '';
+    return wheres.join(' AND ');
   }
 }
