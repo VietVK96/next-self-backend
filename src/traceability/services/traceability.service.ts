@@ -4,6 +4,7 @@ import { TraceabilityEntity } from 'src/entities/traceability.entity';
 import { Repository } from 'typeorm';
 import { TraceabilitiesRequestDto } from '../dto/index.dto';
 import { TraceabilitiesResponse } from '../res/traceabilities.response';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
 
 @Injectable()
 export class TraceabilityService {
@@ -17,6 +18,7 @@ export class TraceabilityService {
   }
   async getListTraceabilities(
     payload: TraceabilitiesRequestDto,
+    identity: UserIdentity,
   ): Promise<TraceabilitiesResponse> {
     const { page, per_page, filterParam, filterValue } = payload;
     const _take = per_page || 50;
@@ -33,7 +35,8 @@ export class TraceabilityService {
       .addSelect(['medicalDevice.id', 'medicalDevice.name'])
       .innerJoin('traceability.act', 'act')
       .innerJoin('act.patient', 'patient')
-      .leftJoin('traceability.medicalDevice', 'medicalDevice');
+      .leftJoin('traceability.medicalDevice', 'medicalDevice')
+      .where('traceability.organizationId = :orgId', { orgId: identity.org });
 
     for (let index = 0; index < filterParam?.length; index++) {
       const _filterParam = filterParam[index];

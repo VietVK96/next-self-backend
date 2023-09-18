@@ -18,6 +18,7 @@ import { ActsService } from './service/caresheets.service';
 import { CaresheetStatusRes } from './reponse/index.res';
 import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
 import type { Response } from 'express';
+import { async } from 'fast-glob';
 
 @ApiBearerAuth()
 @ApiTags('Caresheets')
@@ -172,6 +173,25 @@ export class CaresheetsController {
     res.set({
       'Content-Type': 'application/octet-stream',
       'Content-Disposition': `attachment; filename=factures.zip`,
+      'Content-Length': buffer?.length,
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: 0,
+    });
+    res.end(buffer);
+  }
+
+  @Get('lots/bordereau-teletransmission')
+  @UseGuards(TokenGuard)
+  async printBordereau(
+    @Res() res: Response,
+    @Query('id') id?: number,
+    @Query('user_id') user_id?: number,
+  ) {
+    const buffer = await this.service.printLotBordereau(id, user_id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=print.pdf`,
       'Content-Length': buffer?.length,
       'Cache-Control': 'no-cache, no-store, must-revalidate',
       Pragma: 'no-cache',

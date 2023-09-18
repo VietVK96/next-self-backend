@@ -318,7 +318,7 @@ export class FseEntity {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
-    name: 'amc_id',
+    name: 'amo_id',
   })
   thirdPartyAmo?: ThirdPartyAmoEntity;
   /**
@@ -326,6 +326,13 @@ export class FseEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"caresheet:read", "tiersPayant:index"})
    */
+  @OneToOne(() => ThirdPartyAmcEntity, {
+    createForeignKeyConstraints: false,
+  })
+  @JoinColumn({
+    name: 'amc_id',
+  })
+  // thirdPartyAmo?: ThirdPartyAmoEntity;
   thirdPartyAmc?: ThirdPartyAmcEntity;
 
   /**
