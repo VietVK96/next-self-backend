@@ -121,7 +121,7 @@ export class FileController {
     @Body() payload: UpdateFileDto,
   ) {
     try {
-      return await this.fileService.updateFile(id, payload);
+      return await this.fileService.updateFile(id, payload, user);
     } catch (error) {
       throw new CBadRequestException(ErrorCode.CANNOT_UPDATE_FILE, error);
     }
