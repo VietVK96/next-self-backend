@@ -30,3 +30,11 @@ export class CreateImageSoftwareDto {
   @ApiProperty()
   computerName?: string;
 }
+
+export class ImageSoftwareDto {
+  @ApiProperty()
+  computerName?: string | boolean;
+
+  @ApiProperty()
+  radios?: string;
+}

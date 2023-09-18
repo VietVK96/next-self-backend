@@ -156,13 +156,12 @@ export class StatisticsController {
   async storeXrayGateways(
     @CurrentUser() identity: UserIdentity,
     @Req() req: Request,
-    @Body() body: { name: string },
+    @Body() body: { name?: string },
   ) {
-    // console.log(req.headers['user-agent'])
     return this.statisticsXrayGatewayService.storeXrayGateways(
       identity,
       req,
-      body.name,
+      body?.name ? body.name : '',
     );
   }
 }

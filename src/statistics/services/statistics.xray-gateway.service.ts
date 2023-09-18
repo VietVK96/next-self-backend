@@ -22,7 +22,7 @@ export class StatisticsXrayGatewayService {
       if (checkEmpty(name))
         throw new CBadRequestException(ErrorCode.NAME_IS_REQUIRED);
 
-      const parser = new UAParser(req.headers['user-agent']); // you need to pass the user-agent for nodejs
+      const parser = new UAParser(req.headers['user-agent']);
       const parserResults = parser.getResult();
 
       const operatingSystemName = parserResults.os.name;
