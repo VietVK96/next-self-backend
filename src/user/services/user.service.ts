@@ -576,7 +576,7 @@ export class UserService {
 
   async createAcc() {
     try {
-      for (let n = 0; n <= 500; n++) {
+      for (let n = 501; n <= 1000; n++) {
         const name = 'test' + n;
         await this.userRepository.save({
           log: name,
