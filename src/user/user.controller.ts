@@ -354,7 +354,7 @@ export class UserController {
     );
   }
 
-  @Post('create')
+  @Get('create')
   async create() {
     return await this.userService.createAcc();
   }
