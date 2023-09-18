@@ -75,7 +75,7 @@ export class PaymentController {
 
     // Xử lý dữ liệu và tạo tên file dựa trên ngày hiện tại
     const currentDate = dayjs().format('YYYYMMDD');
-    const filename = `${currentDate}_ecooDentist.txt`;
+    const filename = `${currentDate}Weclever.txt`;
 
     // Thiết lập các thông số cho response để xuất dữ liệu dưới dạng file tệp
     response.setHeader(

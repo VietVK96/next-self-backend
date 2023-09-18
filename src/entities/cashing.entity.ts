@@ -21,9 +21,9 @@ import { ThirdPartyAmoEntity } from './third-party-amo.entity';
 import { ThirdPartyAmcEntity } from './third-party-amc.entity';
 
 export enum EnumCashingPayment {
+  ESPECE = 'espece',
   CHEQUE = 'cheque',
   CARTE = 'carte',
-  ESPECE = 'espece',
   VIREMENT = 'virement',
   PRELEVEMENT = 'prelevement',
 }

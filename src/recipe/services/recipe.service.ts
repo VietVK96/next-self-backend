@@ -88,7 +88,7 @@ export class RecipeService {
           return beneficiaries.push(obSub);
         });
 
-        if (payment.slip_check && payment.slip_check.length > 0) {
+        if (payment?.slip_check && payment?.slip_check.length > 0) {
           const slipCheckId = payment.slip_check[0]?.id;
           const slipCheckDateRoot = payment.slip_check[0]?.date;
           const slipCheckNumber = payment.slip_check[0]?.number;

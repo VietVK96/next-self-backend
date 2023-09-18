@@ -12,16 +12,13 @@ import { Cache } from 'cache-manager';
 import { DEFAULT_LANGUAGE } from 'src/constants/default';
 import { JWT_LOG_OUT, JWT_RF_LOG_OUT, JWT_SECRET } from 'src/constants/jwt';
 import { UserEntity } from 'src/entities/user.entity';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { LoginRes } from '../reponse/token.res';
 import { RefreshJwt, UserIdentity } from 'src/common/decorator/auth.decorator';
 import { ErrorCode } from 'src/constants/error';
 import * as dayjs from 'dayjs';
 import { LogoutDto } from '../dto/logout.dto';
-import { ResourceEntity } from 'src/entities/resource.entity';
-import { UserResourceEntity } from 'src/entities/user-resource.entity';
-import { LicenseEntity } from 'src/entities/license.entity';
 import { GetSessionService } from './get-session.service';
 
 @Injectable()

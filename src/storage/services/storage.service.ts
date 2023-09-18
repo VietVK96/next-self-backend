@@ -121,7 +121,7 @@ export class StorageService {
       });
 
       await this.mailerService.sendMail({
-        from: 'noreply@ecoodentist.com',
+        from: 'noreply@weclever.com',
         to: 'admin@dentalviamedilor.com',
         bcc: user?.email,
         subject: 'Votre facture - Espace de stockage',

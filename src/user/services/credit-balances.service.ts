@@ -14,9 +14,7 @@ import { IPatientBalances } from 'src/interfaces/interface';
 import { CreditBalancesDto } from '../dto/credit-balances.dto';
 import { UserEntity } from 'src/entities/user.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
-import Handlebars from 'handlebars';
 import * as path from 'path';
-import * as fs from 'fs';
 import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
 
 @Injectable()
@@ -118,9 +116,9 @@ export class CreditBalancesService {
         footerTemplate: `<div style="width: 100%;margin-right:10mm; text-align: right; font-size: 8px;"><span class="pageNumber"></span>/<span class="totalPages"></span></div>`,
         margin: {
           left: '5mm',
-          top: '10mm',
+          top: '5mm',
           right: '5mm',
-          bottom: '10mm',
+          bottom: '5mm',
         },
       },
       helpers: {
