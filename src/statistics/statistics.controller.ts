@@ -1,4 +1,12 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -10,6 +18,8 @@ import { StatisticsEventsService } from './services/statistics.events.service';
 import { FilterValuesStatisticDto } from './dto';
 import { StatisticsPaymentService } from './services/statistics.payment.service';
 import { StatisticsPatientService } from './services/statistics.patient.service';
+import { StatisticsXrayGatewayService } from './services/statistics.xray-gateway.service';
+import { Request } from 'express';
 
 @ApiBearerAuth()
 @ApiTags('Statistics')
@@ -20,6 +30,7 @@ export class StatisticsController {
     private statisticsEventsService: StatisticsEventsService,
     private statisticsPaymentService: StatisticsPaymentService,
     private statisticsPatientService: StatisticsPatientService,
+    private statisticsXrayGatewayService: StatisticsXrayGatewayService,
   ) {}
 
   @Get('/acts/caresheets')
@@ -135,5 +146,23 @@ export class StatisticsController {
   @UseGuards(TokenGuard)
   async patientAverage(@Query() param: FilterValuesStatisticDto) {
     return this.statisticsPatientService.patientAverage(param);
+  }
+
+  /**
+   * File php/statistics/xray-gateways/store.php
+   */
+  @Post('xray-gateways')
+  @UseGuards(TokenGuard)
+  async storeXrayGateways(
+    @CurrentUser() identity: UserIdentity,
+    @Req() req: Request,
+    @Body() body: { name: string },
+  ) {
+    // console.log(req.headers['user-agent'])
+    return this.statisticsXrayGatewayService.storeXrayGateways(
+      identity,
+      req,
+      body.name,
+    );
   }
 }

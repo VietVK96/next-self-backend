@@ -124,7 +124,7 @@ export class StatisticXrayGatewayEntity {
    * @var string|null
    */
   @Column({
-    name: 'operating_system_name',
+    name: 'operating_system_version',
     type: 'varchar',
     length: 7,
     nullable: true,
