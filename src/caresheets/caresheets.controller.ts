@@ -18,7 +18,6 @@ import { ActsService } from './service/caresheets.service';
 import { CaresheetStatusRes } from './reponse/index.res';
 import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
 import type { Response } from 'express';
-import { async } from 'fast-glob';
 
 @ApiBearerAuth()
 @ApiTags('Caresheets')
