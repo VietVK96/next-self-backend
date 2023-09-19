@@ -18,6 +18,7 @@ import { LibraryActAttachmentPivotEntity } from 'src/entities/library-act-attach
 import { LibraryActAssociationEntity } from 'src/entities/library-act-association.entity';
 import { LibraryActOdontogramPivotEntity } from 'src/entities/library-act-odontogram-pivot.entity';
 import { LibraryActQuantityTariffEntity } from 'src/entities/library-act-quantity-tariff.entity';
+import { LibraryActComplementaryEntity } from 'src/entities/library-act-complementary.entity';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { LibraryActQuantityTariffEntity } from 'src/entities/library-act-quantit
       LibraryActAttachmentPivotEntity,
       LibraryActOdontogramPivotEntity,
       LibraryActQuantityTariffEntity,
+      LibraryActComplementaryEntity,
     ]),
   ],
   controllers: [LibrariesController],

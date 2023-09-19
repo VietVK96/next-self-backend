@@ -84,6 +84,7 @@ export enum ErrorCode {
   NOT_FOUND_ID = 'NOT_FOUND_ID',
   MIN_ARRAY_ERROR = 'MIN_ARRAY_ERROR',
   INVALID_EMAIL = 'This value is not a valid email address',
+  NOT_FOUND_QUANTITIES = 'NOT_FOUND_QUANTITIES',
 }
 
 export enum HttpStatus {
