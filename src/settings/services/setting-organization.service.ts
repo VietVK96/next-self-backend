@@ -169,9 +169,7 @@ export class SettingOrganizationService {
 
       await this.dataSource.getRepository(UserPreferenceEntity).save(arrUser);
 
-      console.log('start');
-
-      const a = await this.organizationRepository.save({
+      await this.organizationRepository.save({
         ...currentOrg,
         uplId: upload?.id,
         address: newAddress,
@@ -182,8 +180,6 @@ export class SettingOrganizationService {
         imageLibraryLink: image_library_link || null,
         settings: settings || {},
       });
-
-      console.log(a);
 
       return { success: true };
     } catch (error) {
