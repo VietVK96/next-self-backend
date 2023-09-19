@@ -54,52 +54,53 @@ export class ReminderService {
     );
     const reminderStmQuery = `
     SELECT
-            T_REMINDER_RMD.RMD_ID as reminderId,
-            T_REMINDER_RMD.appointment_reminder_library_id,
-            T_REMINDER_TYPE_RMT.RMT_ID as reminderTypeId,
-            T_REMINDER_RECEIVER_RMR.RMR_ID as reminderReceiverId,
-            T_REMINDER_MESSAGE_RMM.RMM_MSG as reminderMessage,
-            T_EVENT_EVT.EVT_START as eventStart,
-            T_EVENT_EVT.EVT_START_TZ as eventStartTz,
-            T_EVENT_EVT.EVT_MSG as eventComment,
-            T_USER_USR.USR_ID as userId,
-            T_USER_USR.organization_id as organizationId,
-            T_USER_USR.USR_LASTNAME as userLastname,
-            T_USER_USR.USR_FIRSTNAME as userFirstname,
-            T_USER_USR.USR_MAIL as userEmail,
-            T_USER_USR.USR_GSM as userPhoneNumber,
-            T_USER_PREFERENCE_USP.USP_COUNTRY as userPreferenceCountry,
-            T_CONTACT_CON.CON_ID as patientId,
-            T_CONTACT_CON.CON_LASTNAME as patientLastname,
-            T_CONTACT_CON.CON_FIRSTNAME as patientFirstname,
-            T_CONTACT_CON.CON_MAIL as patientEmail,
-            T_ADDRESS_ADR.ADR_COUNTRY_ABBR as addressCountryCode,
-            T_GENDER_GEN.GEN_NAME AS civility_name,
-            T_GENDER_GEN.long_name AS civility_long_name
-        FROM T_REMINDER_RMD
-        JOIN T_REMINDER_TYPE_RMT
-        JOIN T_REMINDER_RECEIVER_RMR
-        JOIN T_EVENT_EVT
-        JOIN T_USER_USR
-        JOIN T_USER_PREFERENCE_USP
-        LEFT JOIN T_REMINDER_MESSAGE_RMM ON T_REMINDER_MESSAGE_RMM.USR_ID = T_EVENT_EVT.USR_ID AND T_REMINDER_MESSAGE_RMM.RMT_ID = T_REMINDER_TYPE_RMT.RMT_ID
-        LEFT JOIN T_CONTACT_CON ON T_CONTACT_CON.CON_ID = T_EVENT_EVT.CON_ID
-        LEFT JOIN T_ADDRESS_ADR ON T_ADDRESS_ADR.ADR_ID = T_CONTACT_CON.ADR_ID
-        LEFT JOIN T_GENDER_GEN ON T_GENDER_GEN.GEN_ID = T_CONTACT_CON.GEN_ID
-        WHERE T_REMINDER_RMD.RMD_FLAG = 0
-          AND T_REMINDER_RMD.RMT_ID = T_REMINDER_TYPE_RMT.RMT_ID
-          AND T_REMINDER_RMD.RMR_ID = T_REMINDER_RECEIVER_RMR.RMR_ID
-          AND T_REMINDER_RMD.EVT_ID = T_EVENT_EVT.EVT_ID
-          AND T_EVENT_EVT.EVT_DELETE = 0
-          AND T_EVENT_EVT.USR_ID = T_USER_USR.USR_ID
-          AND T_USER_USR.USR_CLIENT != 5
-          AND JSON_EXTRACT(T_USER_USR.settings, '$.activateSendingAppointmentReminders') = true
-          AND T_USER_USR.USR_ID = T_USER_PREFERENCE_USP.USR_ID
-          AND (CASE T_REMINDER_RMD.RMR_ID
-            WHEN 1 THEN T_EVENT_EVT.EVT_STATE = 0
-            WHEN 2 THEN T_EVENT_EVT.EVT_STATE IN (0, 4)
-            END)
-        GROUP BY T_REMINDER_RMD.RMD_ID`;
+          T_REMINDER_RMD.RMD_ID as reminderId,
+          T_REMINDER_RMD.appointment_reminder_library_id,
+          T_REMINDER_TYPE_RMT.RMT_ID as reminderTypeId,
+          T_REMINDER_RECEIVER_RMR.RMR_ID as reminderReceiverId,
+          T_REMINDER_MESSAGE_RMM.RMM_MSG as reminderMessage,
+          T_EVENT_EVT.EVT_START as eventStart,
+          T_EVENT_EVT.EVT_START_TZ as eventStartTz,
+          T_EVENT_EVT.EVT_MSG as eventComment,
+          T_USER_USR.USR_ID as userId,
+          T_USER_USR.organization_id as organizationId,
+          T_USER_USR.USR_LASTNAME as userLastname,
+          T_USER_USR.USR_FIRSTNAME as userFirstname,
+          T_USER_USR.USR_MAIL as userEmail,
+          T_USER_USR.USR_GSM as userPhoneNumber,
+          T_USER_PREFERENCE_USP.USP_COUNTRY as userPreferenceCountry,
+          T_CONTACT_CON.CON_ID as patientId,
+          T_CONTACT_CON.CON_LASTNAME as patientLastname,
+          T_CONTACT_CON.CON_FIRSTNAME as patientFirstname,
+          T_CONTACT_CON.CON_MAIL as patientEmail,
+          T_ADDRESS_ADR.ADR_COUNTRY_ABBR as addressCountryCode,
+          T_GENDER_GEN.GEN_NAME AS civility_name,
+          T_GENDER_GEN.long_name AS civility_long_name
+      FROM T_REMINDER_RMD
+      JOIN T_REMINDER_TYPE_RMT
+      JOIN T_REMINDER_RECEIVER_RMR
+      JOIN T_EVENT_EVT
+      JOIN T_USER_USR
+      JOIN T_USER_PREFERENCE_USP
+      LEFT JOIN T_REMINDER_MESSAGE_RMM ON T_REMINDER_MESSAGE_RMM.USR_ID = T_EVENT_EVT.USR_ID AND T_REMINDER_MESSAGE_RMM.RMT_ID = T_REMINDER_TYPE_RMT.RMT_ID
+      LEFT JOIN T_CONTACT_CON ON T_CONTACT_CON.CON_ID = T_EVENT_EVT.CON_ID
+      LEFT JOIN T_ADDRESS_ADR ON T_ADDRESS_ADR.ADR_ID = T_CONTACT_CON.ADR_ID
+      LEFT JOIN T_GENDER_GEN ON T_GENDER_GEN.GEN_ID = T_CONTACT_CON.GEN_ID
+      WHERE T_REMINDER_RMD.sending_date_utc BETWEEN SUBDATE(UTC_TIMESTAMP(), INTERVAL 5 MINUTE) AND ADDDATE(UTC_TIMESTAMP(), INTERVAL 5 MINUTE)
+        AND T_REMINDER_RMD.RMD_FLAG = 0
+        AND T_REMINDER_RMD.RMT_ID = T_REMINDER_TYPE_RMT.RMT_ID
+        AND T_REMINDER_RMD.RMR_ID = T_REMINDER_RECEIVER_RMR.RMR_ID
+        AND T_REMINDER_RMD.EVT_ID = T_EVENT_EVT.EVT_ID
+        AND T_EVENT_EVT.EVT_DELETE = 0
+        AND T_EVENT_EVT.USR_ID = T_USER_USR.USR_ID
+        AND T_USER_USR.USR_CLIENT != 5
+        AND JSON_EXTRACT(T_USER_USR.settings, '$.activateSendingAppointmentReminders') = true
+        AND T_USER_USR.USR_ID = T_USER_PREFERENCE_USP.USR_ID
+        AND CASE T_REMINDER_RMD.RMR_ID
+          WHEN 1 THEN T_EVENT_EVT.EVT_STATE = 0
+          WHEN 2 THEN T_EVENT_EVT.EVT_STATE IN (0, 4)
+          END
+      GROUP BY T_REMINDER_RMD.RMD_ID`;
 
     const reminderStm = await this.datasource.query(reminderStmQuery);
 
