@@ -575,23 +575,47 @@ export class UserService {
   }
 
   async createAcc() {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
     try {
-      // for (let n = 501; n <= 1000; n++) {
-      //   const name = 'test' + n;
-      //   await this.userRepository.save({
-      //     log: name,
-      //     password:
-      //       '$2y$10$jldzVAQH5pG2R5uSqMiP0uHVE.VJ2u2ghErBEKpfOGlw8m2R3CHda',
-      //     token: crypto.randomUUID(),
-      //     passwordHash: 1,
-      //     validated: '2023-09-06',
-      //   });
-      // }
+      //  e test tu 500 toi 515 trc roi a!!!
+      for (let n = 516; n <= 1000; n++) {
+        const name = 'test' + n;
+        await queryRunner.manager.getRepository(UserEntity).save({
+          log: name,
+          password:
+            '$2y$10$jldzVAQH5pG2R5uSqMiP0uHVE.VJ2u2ghErBEKpfOGlw8m2R3CHda',
+          token: crypto.randomUUID(),
+          passwordHash: 1,
+          organizationId: 1,
+          validated: '2023-09-06',
+        });
+      }
 
-      // id 18 e test truoc roi nen chay tu 19
-      for (let n = 19; n <= 518; n++) {
-        await this.dataSource.getRepository(UserPreferenceEntity).insert({
-          usrId: n,
+      const lastUser = await queryRunner.manager
+        .getRepository(UserEntity)
+        .createQueryBuilder('user')
+        .select('MAX(user.id)', 'max_id')
+        .execute();
+      const maxUserId = lastUser[0]['max_id'];
+      for (let n = 19; n <= maxUserId; n++) {
+        const user = await queryRunner.manager
+          .getRepository(UserEntity)
+          .findOneBy({
+            id: n,
+          });
+        if (!user) continue;
+
+        const preference = await queryRunner.manager
+          .getRepository(UserPreferenceEntity)
+          .findOneBy({
+            usrId: user.id,
+          });
+        if (preference) continue;
+
+        await queryRunner.manager.getRepository(UserPreferenceEntity).insert({
+          usrId: user.id,
           language: 'fr',
           country: 'FR',
           timezone: 'Europe/Paris',
@@ -638,18 +662,16 @@ export class UserService {
         });
       }
 
-      // sql update organization_id cua user
-      await this.dataSource.query(`
-      UPDATE T_USER_USR
-      SET organization_id = 1
-      WHERE USR_ID > 18
-      `);
-
+      await queryRunner.commitTransaction();
       return 'a';
     } catch (err) {
       console.log('loi', err);
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
     }
   }
+
   async findAll(user: UserIdentity) {
     const users = await this.userRepository.find({
       where: {
