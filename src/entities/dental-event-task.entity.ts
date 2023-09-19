@@ -516,9 +516,9 @@ export class DentalEventTaskEntity {
    * @ORM\JoinColumn(name="ETK_ID", referencedColumnName="ETK_ID")
    */
   // act?: number;
-  @OneToOne(() => EventTaskEntity, { createForeignKeyConstraints: false })
-  @JoinColumn({ name: 'ETK_ID' })
-  act?: EventTaskEntity;
+  // @OneToOne(() => EventTaskEntity, { createForeignKeyConstraints: false })
+  // @JoinColumn({ name: 'ETK_ID' })
+  // act?: EventTaskEntity;
 
   /**
    * @ORM\ManyToOne(targetEntity="\App\Entities\Fse", inversedBy="tasks")

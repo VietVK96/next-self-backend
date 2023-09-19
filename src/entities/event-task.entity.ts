@@ -413,10 +413,10 @@ export class EventTaskEntity {
    * @Serializer\Expose
    */
   //   protected $medical = null;
-  @OneToOne(() => DentalEventTaskEntity, (e) => e.act, {
-    createForeignKeyConstraints: false,
-  })
-  medical?: DentalEventTaskEntity;
+  // @OneToOne(() => DentalEventTaskEntity, (e) => e.act, {
+  //   createForeignKeyConstraints: false,
+  // })
+  // medical?: DentalEventTaskEntity;
 
   /**
    * @ORM\OneToMany(targetEntity="Traceability", mappedBy="act", cascade={"persist"}, orphanRemoval=true)
