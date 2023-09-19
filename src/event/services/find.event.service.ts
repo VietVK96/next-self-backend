@@ -549,6 +549,8 @@ export class FindEventService {
       );
 
       const events: FindAllEventDto[] = [];
+      console.log('bug', param.resources);
+
       for (const item of result) {
         item.title = eventTitleFormat
           ?.map((line) => {
@@ -732,7 +734,6 @@ export class FindEventService {
         arrDays: arrDays,
         arrResources: arrResources,
       };
-
       const filePath = path.join(
         process.cwd(),
         'templates/events',
@@ -761,7 +762,9 @@ export class FindEventService {
       };
 
       return await customCreatePdf({ files, options, helpers });
-    } catch {
+    } catch (e) {
+      console.log('check print agenda', e);
+
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }

@@ -126,8 +126,6 @@ export class ActsService {
     private fseRepository: Repository<FseEntity>,
     @InjectRepository(EventTaskEntity)
     private eventTaskRepository: Repository<EventTaskEntity>,
-    @InjectRepository(DentalEventTaskEntity)
-    private dentalEventTaskRepository: Repository<DentalEventTaskEntity>,
     @InjectRepository(CaresheetStatusEntity)
     private caresheetStatusRepository: Repository<CaresheetStatusEntity>,
     @InjectRepository(ThirdPartyAmcEntity)
@@ -1205,17 +1203,20 @@ export class ActsService {
   ): Promise<{ file: Buffer; name: string }> {
     const caresheet = await this.fseRepository.findOne({
       where: { id },
-      relations: [
-        'actMedicals',
-        'amo',
-        'amc',
-        'actMedicals.act',
-        'actMedicals.ccam',
-        'actMedicals.ngapKey',
-        'patient',
-        'patient.medical',
-        'patient.medical.policyHolder',
-      ],
+      relations: {
+        actMedicals: {
+          act: true,
+          ccam: true,
+          ngapKey: true,
+        },
+        amo: true,
+        amc: true,
+        patient: {
+          medical: {
+            policyHolder: true,
+          },
+        },
+      },
     });
     caresheet.thirdPartyAmo = await this.thirdPartyAmoRepository.findOne({
       where: {
