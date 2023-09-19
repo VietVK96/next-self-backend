@@ -54,12 +54,22 @@ export class SaveUpdateContactService {
         address?.country ||
         address?.countryAbbr
       ) {
-        await queryRunner.manager
-          .createQueryBuilder()
-          .update(AddressEntity)
-          .set(address)
-          .where({ id: address?.id })
-          .execute();
+        if (address?.id) {
+          await queryRunner.manager
+            .createQueryBuilder()
+            .update(AddressEntity)
+            .set(address)
+            .where({ id: address?.id })
+            .execute();
+        } else {
+          delete address.id;
+          await queryRunner.manager
+            .createQueryBuilder()
+            .insert()
+            .into(AddressEntity)
+            .values(address)
+            .execute();
+        }
       } else {
         if (address?.id) {
           await queryRunner.manager
