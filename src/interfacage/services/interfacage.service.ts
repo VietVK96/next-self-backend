@@ -11,7 +11,6 @@ import { FseEntity } from 'src/entities/fse.entity';
 import { format } from 'date-fns';
 import { CaresheetModeEnum } from 'src/enum/caresheet.enum';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
-import { CcamEntity } from 'src/entities/ccam.entity';
 import * as dayjs from 'dayjs';
 
 @Injectable()
@@ -20,16 +19,14 @@ export class InterfacageService {
     private dataSource: DataSource,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-    @InjectRepository(DentalEventTaskEntity)
+    @InjectRepository(ContactEntity)
     private patientRepository: Repository<ContactEntity>,
     @InjectRepository(FseEntity)
     private fseRepository: Repository<FseEntity>,
     @InjectRepository(EventTaskEntity)
     private eventTaskRepository: Repository<EventTaskEntity>,
-    @InjectRepository(EventTaskEntity)
+    @InjectRepository(DentalEventTaskEntity)
     private dentalEventTaskRepository: Repository<DentalEventTaskEntity>,
-    @InjectRepository(CcamEntity)
-    private ccamRepository: Repository<CcamEntity>,
   ) {}
 
   /**
@@ -44,7 +41,7 @@ export class InterfacageService {
         this.userRepository.findOneOrFail({ where: { id: user_id } }),
       ]);
       const dataActs: EventTaskEntity[] = await this.eventTaskRepository.find({
-        relations: ['medical'],
+        relations: { dental: true },
         where: { id: In(act_id), conId: patient_id },
       });
 
@@ -57,23 +54,25 @@ export class InterfacageService {
       caresheet.date = format(new Date(), 'yyyy-MM-dd');
       caresheet.mode = CaresheetModeEnum.PAPIER;
       caresheet.amountAssure = 0;
+      caresheet.amount = 0;
       caresheet.electronicCaresheet = 0;
       caresheet.tasks = [];
 
       dataActs.forEach((act) => {
         act.status = 2;
-        const actMedical = act.medical;
-        if (!actMedical) {
-          this.dentalEventTaskRepository.save(act);
+        const actMedical = act.dental;
+
+        if (!caresheet.tasks.includes(actMedical)) {
+          caresheet.tasks.push(actMedical);
         }
-        caresheet?.tasks?.push(actMedical);
-        caresheet.amount = act?.amount + caresheet?.amount;
-        caresheet.amountAssure = caresheet?.amountAssure + act?.amount;
+
+        caresheet.amount += act?.amount;
+        caresheet.amountAssure += act?.amount;
       });
+      await this.eventTaskRepository.save(dataActs);
       this.compute(caresheet);
       return await this.fseRepository.save({ ...caresheet });
     } catch (error) {
-      // return (new ExceptionController($container -> get('twig'))) -> showAction($request, $e) -> send();
       throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
   }
@@ -82,8 +81,8 @@ export class InterfacageService {
     const groupByDates: Record<string, DentalEventTaskEntity[]> = {};
     caresheet.tasks.forEach((actMedical) => {
       const dateKey =
-        actMedical && actMedical?.act?.date
-          ? dayjs(actMedical?.act?.date).format('YYYYMMDD')
+        actMedical && actMedical?.task?.date
+          ? dayjs(actMedical?.task?.date).format('YYYYMMDD')
           : '';
       if (!groupByDates[dateKey]) {
         groupByDates[dateKey] = [];
@@ -108,7 +107,7 @@ export class InterfacageService {
           actMedical1: DentalEventTaskEntity,
           actMedical2: DentalEventTaskEntity,
         ) => {
-          return actMedical1?.act?.id - actMedical2?.act?.id;
+          return actMedical1?.task?.id - actMedical2?.task?.id;
         };
         const actMedicalCcamss = arrayUdiff(
           actMedicalCcams,
