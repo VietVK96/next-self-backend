@@ -213,7 +213,6 @@ export class EmailSettingService {
       from: `${mailInfo.displayName} <${mailInfo.outgoingServer.username}>`,
       to: email,
       subject: `Message de l'adresse électronique ${mailInfo.outgoingServer.username}`,
-      bcc: 'someone@example.com',
       text: `
       Félicitation, votre adresse électronique ${mailInfo.outgoingServer.username} est bien configurée - vos patients recevront desormais vos messages depuis cette adresse électronique.
       `,
