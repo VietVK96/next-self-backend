@@ -62,6 +62,10 @@ export class SettingOrganizationService {
     if (!/^\w+([.]?\w+)*@\w+([.]?\w+)*(\.\w+)+$/.test(body.email)) {
       throw new CBadRequestException(ErrorCode.INVALID_EMAIL);
     }
+
+    if (!/^[0-9]+$/.test(body.phone_number)) {
+      throw new CBadRequestException(ErrorCode.INVALID_PHONE_NUMBER);
+    }
     try {
       if (!userId || !organizationId) throw ErrorCode.FORBIDDEN;
 
@@ -172,6 +176,7 @@ export class SettingOrganizationService {
         name: name ? name.trim() : null,
         email: email ? email.trim() : null,
         phoneNumber: phone_number ? phone_number.trim() : null,
+        tel: phone_number ? phone_number.trim() : null,
         imageLibraryLink: image_library_link || null,
         settings: settings || {},
       });

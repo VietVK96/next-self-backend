@@ -85,6 +85,7 @@ export enum ErrorCode {
   NOT_FOUND_ID = 'NOT_FOUND_ID',
   MIN_ARRAY_ERROR = 'MIN_ARRAY_ERROR',
   INVALID_EMAIL = 'This value is not a valid email address',
+  INVALID_PHONE_NUMBER = 'This value is not a valid phone number',
   NOT_FOUND_QUANTITIES = 'NOT_FOUND_QUANTITIES',
 }
 
