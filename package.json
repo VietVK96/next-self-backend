@@ -97,7 +97,7 @@
     "soap": "^1.0.0",
     "sodium-native": "^4.0.4",
     "typeorm": "^0.3.16",
-    "ua-parser-js": "^1.0.35",
+    "ua-parser-js": "^1.0.36",
     "uuid": "^9.0.0",
     "xml2js": "^0.6.0",
     "xmlbuilder2": "^3.1.1",
