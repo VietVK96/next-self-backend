@@ -24,10 +24,7 @@ export const customCreatePdf = async ({
   helpers,
 }: CustomCreatePdfProps) => {
   try {
-    const browser = await puppeteer.launch({
-      headless: false,
-      args: ["--no-sandbox"]
-    });
+    const browser = await puppeteer.launch({ headless: 'new' });
     const page = await browser.newPage();
 
     hbs.registerHelper({
