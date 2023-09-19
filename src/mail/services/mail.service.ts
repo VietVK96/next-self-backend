@@ -133,6 +133,7 @@ export class MailService {
     userId: number,
     payload: SendMailDto,
     files: Express.Multer.File[],
+    docId: number,
   ) {
     const mail = await this.dataMailService.findById(payload.id);
     if (mail instanceof CNotFoundRequestException) return mail;
@@ -205,7 +206,7 @@ export class MailService {
             ? mail.conrrespondent.id
             : null,
         },
-        mail?.doctor?.id,
+        docId,
       );
       const mailConverted = await this.previewMailService.transform(
         mail,
@@ -245,7 +246,7 @@ export class MailService {
 
       const fullName = [mail?.user?.lastname, mail?.user?.firstname].join(' ');
       const emailTemplate = fs.readFileSync(
-        path.join(__dirname, '../../../templates/mail/feedback.hbs'),
+        path.join(__dirname, '../../../templates/mail/mailTemplate.hbs'),
         'utf-8',
       );
       const template = handlebars.compile(emailTemplate);

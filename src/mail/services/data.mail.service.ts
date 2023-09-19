@@ -155,7 +155,7 @@ export class DataMailService {
         T_USER_USR.USR_MAIL AS email
     FROM T_USER_USR
     WHERE T_USER_USR.USR_ID = ?`,
-      [qr.usrId],
+      [qr.usrId ?? 1],
     );
 
     const patients: PersonInfoDto[] = await this.dataSource.query(

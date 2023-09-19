@@ -40,6 +40,7 @@ import { TemplateMailService } from './services/template.mail.service';
     MailService,
     DocumentMailService,
     PreviewMailService,
+    MailTransportService,
     DataMailService,
     PdfMailService,
     TemplateMailService,
