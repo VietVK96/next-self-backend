@@ -576,17 +576,74 @@ export class UserService {
 
   async createAcc() {
     try {
-      for (let n = 501; n <= 1000; n++) {
-        const name = 'test' + n;
-        await this.userRepository.save({
-          log: name,
-          password:
-            '$2y$10$jldzVAQH5pG2R5uSqMiP0uHVE.VJ2u2ghErBEKpfOGlw8m2R3CHda',
-          token: crypto.randomUUID(),
-          passwordHash: 1,
-          validated: '2023-09-06',
+      // for (let n = 501; n <= 1000; n++) {
+      //   const name = 'test' + n;
+      //   await this.userRepository.save({
+      //     log: name,
+      //     password:
+      //       '$2y$10$jldzVAQH5pG2R5uSqMiP0uHVE.VJ2u2ghErBEKpfOGlw8m2R3CHda',
+      //     token: crypto.randomUUID(),
+      //     passwordHash: 1,
+      //     validated: '2023-09-06',
+      //   });
+      // }
+
+      // id 18 e test truoc roi nen chay tu 19
+      for (let n = 19; n <= 518; n++) {
+        await this.dataSource.getRepository(UserPreferenceEntity).insert({
+          usrId: n,
+          language: 'fr',
+          country: 'FR',
+          timezone: 'Europe/Paris',
+          currency: 'EUR',
+          view: 'day',
+          days: 127,
+          weekStartDay: 1,
+          displayHoliday: 0,
+          displayEventTime: 1,
+          displayLastPatients: 1,
+          displayPractitionerCalendar: 1,
+          enableEventPractitionerChange: 0,
+          frequency: 15,
+          hmd: '08:00',
+          hmf: '12:00',
+          had: '14:00',
+          haf: '20:00',
+          heightLine: 0,
+          quotationDisplayOdontogram: 'none',
+          quotationDisplayDetails: 'both',
+          quotationDisplayTooltip: 1,
+          quotationDisplayDuplicata: 0,
+          quotationColor: null,
+          billDisplayTooltip: 1,
+          billTemplate: 1,
+          orderDisplayTooltip: 1,
+          orderDuplicata: 1,
+          orderPreprintedHeader: 0,
+          orderPreprintedHeaderSize: 35,
+          orderFormat: 'A4',
+          orderBcbCheck: 1,
+          themeCustom: 0,
+          themeColor: null,
+          themeBgcolor: -26368,
+          themeBordercolor: -768,
+          themeAsideBgcolor: null,
+          reminderVisitDuration: 6,
+          ccamBridgeQuickentry: 0,
+          priceGrid: 13,
+          patientCareTime: '00:20:00',
+          sesamVitaleModeDesynchronise: 0,
+          calendarBorderColored: 1,
+          signatureAutomatic: 0,
         });
       }
+
+      // sql update organization_id cua user
+      await this.dataSource.query(`
+      UPDATE T_USER_USR
+      SET organization_id = 1
+      WHERE USR_ID > 18
+      `);
 
       return 'a';
     } catch (err) {
