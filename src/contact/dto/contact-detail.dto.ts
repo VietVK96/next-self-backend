@@ -113,6 +113,8 @@ export class MedicalDto {
   service_amo_start_date?: string;
   @ApiProperty()
   service_amo_end_date?: string;
+  @ApiProperty()
+  tariff_type_id?: number;
 }
 
 export class AddressedByDto {
