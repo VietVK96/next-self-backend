@@ -164,8 +164,9 @@ export class MailController {
     @UploadedFiles() files: Express.Multer.File[],
     @Body() body: SendMailDto,
     @CurrentUser() identity: UserIdentity,
+    @CurrentDoctor() docId: number,
   ) {
-    return await this.mailService.sendTemplate(identity.id, body, files);
+    return await this.mailService.sendTemplate(identity.id, body, files, docId);
   }
   /**
    *  php/mail/update.php

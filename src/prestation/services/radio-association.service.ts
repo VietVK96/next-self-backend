@@ -16,7 +16,7 @@ export class RadioAssociationService {
   async calculHonoraires(
     practitioner: UserEntity,
     patient: ContactEntity,
-    creationDate: string,
+    creationDate: string | Date,
   ) {
     const radiographiesStm = this.dataSource
       .createQueryBuilder()

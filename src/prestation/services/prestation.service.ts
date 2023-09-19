@@ -285,7 +285,7 @@ export class PrestationService {
       await this.radioAssociationService.calculHonoraires(
         actEntity.user,
         actEntity.patient,
-        actEntity.date,
+        actEntity?.date ? actEntity.date : new Date(),
       );
 
       // Traçabilité IDS
