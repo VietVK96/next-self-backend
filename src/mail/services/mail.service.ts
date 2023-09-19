@@ -148,7 +148,10 @@ export class MailService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
-    const browser = await puppeteer.launch({ headless: 'new' });
+    const browser = await puppeteer.launch({
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
     const page = await browser.newPage();
 
     try {
