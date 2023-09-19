@@ -575,24 +575,103 @@ export class UserService {
   }
 
   async createAcc() {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
     try {
-      for (let n = 501; n <= 1000; n++) {
+      //  e test tu 500 toi 515 trc roi a!!!
+      for (let n = 516; n <= 1000; n++) {
         const name = 'test' + n;
-        await this.userRepository.save({
+        await queryRunner.manager.getRepository(UserEntity).save({
           log: name,
           password:
             '$2y$10$jldzVAQH5pG2R5uSqMiP0uHVE.VJ2u2ghErBEKpfOGlw8m2R3CHda',
           token: crypto.randomUUID(),
           passwordHash: 1,
+          organizationId: 1,
           validated: '2023-09-06',
         });
       }
 
+      const lastUser = await queryRunner.manager
+        .getRepository(UserEntity)
+        .createQueryBuilder('user')
+        .select('MAX(user.id)', 'max_id')
+        .execute();
+      const maxUserId = lastUser[0]['max_id'];
+      for (let n = 19; n <= maxUserId; n++) {
+        const user = await queryRunner.manager
+          .getRepository(UserEntity)
+          .findOneBy({
+            id: n,
+          });
+        if (!user) continue;
+
+        const preference = await queryRunner.manager
+          .getRepository(UserPreferenceEntity)
+          .findOneBy({
+            usrId: user.id,
+          });
+        if (preference) continue;
+
+        await queryRunner.manager.getRepository(UserPreferenceEntity).insert({
+          usrId: user.id,
+          language: 'fr',
+          country: 'FR',
+          timezone: 'Europe/Paris',
+          currency: 'EUR',
+          view: 'day',
+          days: 127,
+          weekStartDay: 1,
+          displayHoliday: 0,
+          displayEventTime: 1,
+          displayLastPatients: 1,
+          displayPractitionerCalendar: 1,
+          enableEventPractitionerChange: 0,
+          frequency: 15,
+          hmd: '08:00',
+          hmf: '12:00',
+          had: '14:00',
+          haf: '20:00',
+          heightLine: 0,
+          quotationDisplayOdontogram: 'none',
+          quotationDisplayDetails: 'both',
+          quotationDisplayTooltip: 1,
+          quotationDisplayDuplicata: 0,
+          quotationColor: null,
+          billDisplayTooltip: 1,
+          billTemplate: 1,
+          orderDisplayTooltip: 1,
+          orderDuplicata: 1,
+          orderPreprintedHeader: 0,
+          orderPreprintedHeaderSize: 35,
+          orderFormat: 'A4',
+          orderBcbCheck: 1,
+          themeCustom: 0,
+          themeColor: null,
+          themeBgcolor: -26368,
+          themeBordercolor: -768,
+          themeAsideBgcolor: null,
+          reminderVisitDuration: 6,
+          ccamBridgeQuickentry: 0,
+          priceGrid: 13,
+          patientCareTime: '00:20:00',
+          sesamVitaleModeDesynchronise: 0,
+          calendarBorderColored: 1,
+          signatureAutomatic: 0,
+        });
+      }
+
+      await queryRunner.commitTransaction();
       return 'a';
     } catch (err) {
       console.log('loi', err);
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
     }
   }
+
   async findAll(user: UserIdentity) {
     const users = await this.userRepository.find({
       where: {

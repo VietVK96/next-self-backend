@@ -54,12 +54,22 @@ export class SaveUpdateContactService {
         address?.country ||
         address?.countryAbbr
       ) {
-        await queryRunner.manager
-          .createQueryBuilder()
-          .update(AddressEntity)
-          .set(address)
-          .where({ id: address?.id })
-          .execute();
+        if (address?.id) {
+          await queryRunner.manager
+            .createQueryBuilder()
+            .update(AddressEntity)
+            .set(address)
+            .where({ id: address?.id })
+            .execute();
+        } else {
+          delete address.id;
+          await queryRunner.manager
+            .createQueryBuilder()
+            .insert()
+            .into(AddressEntity)
+            .values(address)
+            .execute();
+        }
       } else {
         if (address?.id) {
           await queryRunner.manager
@@ -77,6 +87,27 @@ export class SaveUpdateContactService {
       ) {
         reqBody.social_security_reimbursement_rate = null;
       }
+
+      const medical = await this.patientMedicalRepository.findOne({
+        where: {
+          patientId: reqBody.id,
+        },
+      });
+
+      let medicalUpdate: PatientMedicalEntity = {};
+      if (medical) {
+        medicalUpdate = {
+          ...medical,
+          tariffTypeId: reqBody.medical.tariff_type_id,
+        };
+      } else {
+        medicalUpdate = {
+          ...medical,
+          patientId: reqBody.id,
+          tariffTypeId: reqBody.medical.tariff_type_id,
+        };
+      }
+      await this.patientMedicalRepository.save(medicalUpdate);
 
       const patient: ContactEntity = {
         id: reqBody?.id,
