@@ -100,6 +100,7 @@ const helpersCaresheetPdf = {
 const optionsCaresheetPdf = {
   format: 'A4',
   displayHeaderFooter: true,
+  landscape: true,
   headerTemplate: '<div></div>',
   footerTemplate: '<div></div>',
   margin: {
@@ -1300,6 +1301,25 @@ export class ActsService {
     }
     return await merger.saveAsBuffer();
   }
+
+  async printLotBordereau(id: number, user_id: number) {
+    const queryBuilder = this.lotRepository
+      .createQueryBuilder('lot')
+      .distinct()
+      .leftJoinAndSelect('lot.amc', 'amc')
+      .leftJoinAndSelect('lot.amo', 'amo')
+      .innerJoinAndSelect('lot.caresheets', 'caresheets')
+      .where('lot.id  = :id', { id: id });
+
+    const lot = await queryBuilder.getOne();
+
+    const user = await this.userRepository.findOne({
+      where: { id: user_id },
+      relations: ['medical', 'medical.specialtyCode'],
+    });
+    return (await this.getLotFile(lot, user)).file;
+  }
+
   async duplicata(id: number, duplicata: boolean) {
     const result = await this.getCaresheetFileById(id, checkBoolean(duplicata));
     return result.file;
