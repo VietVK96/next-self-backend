@@ -323,8 +323,11 @@ export class FindContactService {
         'address',
         'phones',
         'family',
+        'upload',
       ],
     });
+
+    console.log('result.upload', result.upload);
 
     const res: FindRetrieveRes = {
       id: result?.id || null,
@@ -393,6 +396,8 @@ export class FindContactService {
       doctor: null,
       amountDue: null,
       reliability: null,
+      avatarId: result?.upload.id,
+      avatarToken: result?.upload.token,
     };
     if (result?.cpdId) {
       res.addressed_by = {
