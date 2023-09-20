@@ -187,6 +187,7 @@ export class EmailSettingService {
   async mailTester(mailId: number) {
     try {
       const mailInfo = await this.findById(mailId, true);
+      console.log('mailTester => mailInfo', mailInfo);
       if (mailInfo instanceof CBadRequestException) {
         return mailInfo;
       }
@@ -195,6 +196,7 @@ export class EmailSettingService {
         success: true,
       };
     } catch (e) {
+      console.log('mailTester => e', e);
       return new CBadRequestException(ErrorCode.FORBIDDEN);
     }
   }
