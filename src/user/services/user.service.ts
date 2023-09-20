@@ -24,6 +24,10 @@ import { AppointmentReminderLibraryEntity } from 'src/entities/appointment-remin
 import { checkId } from 'src/common/util/number';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { UpdateUserSmsDto } from '../dto/user-sms.dto';
+import { AddressEntity } from 'src/entities/address.entity';
+import { UserPreferenceQuotationEntity } from 'src/entities/user-preference-quotation.entity';
+import { UserConnectionEntity } from 'src/entities/user-connection.entity';
+import { UserResourceEntity } from 'src/entities/user-resource.entity';
 @Injectable()
 export class UserService {
   constructor(
@@ -579,56 +583,99 @@ export class UserService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      //  e test tu 500 toi 515 trc roi a!!!
-      for (let n = 516; n <= 1000; n++) {
-        const name = 'test' + n;
-        await queryRunner.manager.getRepository(UserEntity).save({
-          log: name,
-          password:
-            '$2y$10$jldzVAQH5pG2R5uSqMiP0uHVE.VJ2u2ghErBEKpfOGlw8m2R3CHda',
-          token: crypto.randomUUID(),
-          passwordHash: 1,
-          organizationId: 1,
-          validated: '2023-09-06',
-        });
-      }
+      for (let n = 0; n <= 500; n++) {
+        const savedAddress = await queryRunner.manager
+          .getRepository(AddressEntity)
+          .insert({
+            street: '78, impasse Caroline Allard',
+            streetComp: null,
+            zipCode: '10577',
+            city: 'Neveu',
+            country: 'France',
+            countryAbbr: 'FR',
+          });
 
-      const lastUser = await queryRunner.manager
-        .getRepository(UserEntity)
-        .createQueryBuilder('user')
-        .select('MAX(user.id)', 'max_id')
-        .execute();
-      const maxUserId = lastUser[0]['max_id'];
-      for (let n = 19; n <= maxUserId; n++) {
-        const user = await queryRunner.manager
+        const savedUser = await queryRunner.manager
           .getRepository(UserEntity)
-          .findOneBy({
-            id: n,
+          .insert({
+            socialSecurityReimbursementBaseRate: '100.00',
+            socialSecurityReimbursementRate: '70.00',
+            resourceId: 1,
+            avatarId: null,
+            admin: 1,
+            log: `test${n}`,
+            passwordAccounting: null,
+            password:
+              '$2y$10$jldzVAQH5pG2R5uSqMiP0uHVE.VJ2u2ghErBEKpfOGlw8m2R3CHda',
+            passwordHash: 1,
+            email: 'support@ecoodentist.com',
+            validated: '1995-06-18',
+            abbr: 'ROU',
+            lastname: 'ROULETTE',
+            firstname: 'Paul',
+            color: -25344,
+            gsm: '+33 7 38 17 34 83',
+            phoneNumber: '+33 (0)1 84 15 76 55',
+            faxNumber: '03 53 03 05 33',
+            companyName: null,
+            permissionLibrary: 15,
+            permissionPatient: 15,
+            permissionPatientView: 1,
+            permissionPassword: 15,
+            permissionDelete: 15,
+            agaMember: 0,
+            freelance: 0,
+            droitPermanentDepassement: 1,
+            numeroFacturant: '994003143',
+            finess: '514040351',
+            fluxCps: null,
+            rateCharges: '84.16',
+            bcbLicense: '999999998',
+            settings: {
+              eventTitleFormat: [
+                [
+                  'startTime',
+                  'civilityTitle',
+                  'lastName',
+                  'firstName',
+                  'title',
+                ],
+              ],
+              activateSendingAppointmentReminders: true,
+            },
+            signature: null,
+            pendingDeletion: 0,
+            client: 1,
+            token: crypto.randomUUID(),
+            archivedAt: null,
+            adrId: savedAddress.raw.insertId,
+            organizationId: 1,
+            ustId: 1,
+            deletedAt: null,
+            sms: null,
           });
-        if (!user) continue;
 
-        const preference = await queryRunner.manager
-          .getRepository(UserPreferenceEntity)
-          .findOneBy({
-            usrId: user.id,
-          });
-        if (preference) continue;
+        await queryRunner.manager.getRepository(LicenseEntity).insert({
+          start: '2023-05-29',
+          end: '2032-12-31',
+          usrId: savedUser.raw.insertId,
+        });
 
         await queryRunner.manager.getRepository(UserPreferenceEntity).insert({
-          usrId: user.id,
+          usrId: savedUser.raw.insertId,
           language: 'fr',
           country: 'FR',
           timezone: 'Europe/Paris',
           currency: 'EUR',
-          view: 'day',
-          days: 127,
+          view: 'week',
+          days: 62,
           weekStartDay: 1,
           displayHoliday: 0,
-          displayEventTime: 1,
+          displayEventTime: 0,
           displayLastPatients: 1,
-          displayPractitionerCalendar: 1,
-          enableEventPractitionerChange: 0,
-          frequency: 15,
+          displayPractitionerCalendar: 0,
+          enableEventPractitionerChange: 1,
+          frequency: 30,
           hmd: '08:00',
           hmf: '12:00',
           had: '14:00',
@@ -649,17 +696,109 @@ export class UserService {
           orderBcbCheck: 1,
           themeCustom: 0,
           themeColor: null,
-          themeBgcolor: -26368,
-          themeBordercolor: -768,
+          themeBgcolor: null,
+          themeBordercolor: null,
           themeAsideBgcolor: null,
           reminderVisitDuration: 6,
           ccamBridgeQuickentry: 0,
           priceGrid: 13,
-          patientCareTime: '00:20:00',
+          patientCareTime: '00:00:00',
           sesamVitaleModeDesynchronise: 0,
           calendarBorderColored: 1,
           signatureAutomatic: 0,
         });
+
+        await queryRunner.manager
+          .getRepository(UserPreferenceQuotationEntity)
+          .insert({
+            usrId: savedUser.raw.insertId,
+            color: null,
+            periodOfValidity: 6,
+            placeOfManufacture: 1,
+            placeOfManufactureLabel: null,
+            withSubcontracting: 1,
+            placeOfSubcontracting: null,
+            placeOfSubcontractingLabel: null,
+            displayOdontogram: 'none',
+            displayAnnexe: 'both',
+            displayNotice: 1,
+            displayTooltip: 1,
+            displayDuplicata: 1,
+            treatmentTimeline: 0,
+          });
+
+        await queryRunner.manager
+          .getRepository(AppointmentReminderLibraryEntity)
+          .insert({
+            usrId: savedUser.raw.insertId,
+            rmrId: 1,
+            RMTID: 1,
+            rmuId: 1,
+            timelimit: 1,
+            attachmentCount: 0,
+          });
+
+        await queryRunner.manager.getRepository(PrivilegeEntity).insert([
+          {
+            name: 'ROULETTE Paul',
+            color: -12303,
+            type: 'all',
+            pos: 0,
+            enable: 1,
+            permissionCalendar: 15,
+            permissionBilling: 15,
+            permissionPaiement: 15,
+            permissionAccounting: 15,
+            usrId: savedUser.raw.insertId,
+            usrWithId: savedUser.raw.insertId,
+          },
+          {
+            name: 'DENTISTE RPPS-ADELI Géraldine',
+            color: -12303,
+            type: 'all',
+            pos: 0,
+            enable: 1,
+            permissionCalendar: 15,
+            permissionBilling: 15,
+            permissionPaiement: 15,
+            permissionAccounting: 15,
+            usrId: savedUser.raw.insertId,
+            usrWithId: 2,
+          },
+          {
+            name: 'ROULETTE Paul',
+            color: -12303,
+            type: 'all',
+            pos: 0,
+            enable: 1,
+            permissionCalendar: 15,
+            permissionBilling: 15,
+            permissionPaiement: 15,
+            permissionAccounting: 15,
+            usrId: 2,
+            usrWithId: savedUser.raw.insertId,
+          },
+        ]);
+
+        await queryRunner.manager.getRepository(UserConnectionEntity).insert({
+          usrId: savedUser.raw.insertId,
+          sessionId: 'p3uo7rsrqt2q4vaoeaso38ljcs',
+          ipAddress: '10.10.31.92',
+          httpUserAgent:
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.57',
+          USC_FROM_GSM: 0,
+        });
+
+        await queryRunner.manager.getRepository(UserResourceEntity).insert([
+          {
+            usrId: savedUser.raw.insertId,
+            resourceId: 1,
+          },
+          {
+            usrId: savedUser.raw.insertId,
+            resourceId: 2,
+          },
+        ]);
       }
 
       await queryRunner.commitTransaction();
