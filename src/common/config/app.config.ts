@@ -1,5 +1,13 @@
 import { registerAs } from '@nestjs/config';
 
+let isRunCron = true;
+if (
+  process.env.NODE_APP_INSTANCE !== '0' ||
+  (process.env.NODE_APP_INSTANCE === '0' && process.env?.IS_RUN_CRON !== 'true')
+) {
+  isRunCron = false;
+}
+
 export default registerAs('app', () => ({
   port: process.env.PORT || 3000,
   isSwagger: process.env.IS_SWAGGER || true,
@@ -62,4 +70,5 @@ export default registerAs('app', () => ({
       process?.env?.OVH_CONSUMER_KEY ?? 'zAqkJJSsdfsbJHaadL2FY7CgIrFox0Y',
     serviceName: process?.env?.OVH_SERVICE_NAME ?? 'zms-hl35552-1',
   },
+  isRunCron,
 }));

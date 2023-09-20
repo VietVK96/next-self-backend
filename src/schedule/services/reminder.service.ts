@@ -12,6 +12,8 @@ import { UserEntity } from 'src/entities/user.entity';
 import Mail from 'nodemailer/lib/mailer';
 import { AppointmentReminderLibraryEntity } from 'src/entities/appointment-reminder-library.entity';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ReminderService {
@@ -21,6 +23,7 @@ export class ReminderService {
     private readonly entityManager: EntityManager,
     private readonly texterService: TexterService,
     private mailTransportService: MailTransportService,
+    private config: ConfigService,
   ) {}
   private readonly logger = new Logger(ReminderService.name);
 
@@ -46,8 +49,15 @@ export class ReminderService {
     return emailRegex.test(email);
   }
 
-  // @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async reminder() {
+    // Bug from when run mutiple instance. All cron need this condition
+    const isRunCron = this.config.get<boolean>('app.isRunCron');
+    if (!isRunCron) {
+      return;
+    }
+    //
+
     const defaultMessage = fs.readFileSync(
       path.join(process.cwd(), 'templates', 'reminder/standard.hbs'),
       'utf-8',

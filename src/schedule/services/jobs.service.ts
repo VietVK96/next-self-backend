@@ -16,6 +16,12 @@ export class JobsService {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async googleCalendar() {
+    // Bug from when run mutiple instance. All cron need this condition
+    const isRunCron = this.config.get<boolean>('app.isRunCron');
+    if (!isRunCron) {
+      return;
+    }
+    //
     await this.datasource.query('SET @TRIGGER_CHECKS = FALSE');
     const syncGoogleUserRows = `
     SELECT SGU.SGU_TOKEN as syncGoogleUserToken,
