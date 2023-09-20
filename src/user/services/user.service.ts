@@ -580,7 +580,7 @@ export class UserService {
     await queryRunner.startTransaction();
     try {
       //  e test tu 500 toi 515 trc roi a!!!
-      for (let n = 516; n <= 1000; n++) {
+      for (let n = 0; n <= 1000; n++) {
         const name = 'test' + n;
         await queryRunner.manager.getRepository(UserEntity).save({
           log: name,
