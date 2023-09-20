@@ -143,7 +143,7 @@ export class OrdonnancesServices {
       }
 
       if (payload?.keep_params === 1) {
-        const medicalHeader = this.medicalHeaderRepository.findOne({
+        const medicalHeader = await this.medicalHeaderRepository.findOne({
           where: { userId: payload?.user_id },
         });
         if (!medicalHeader) {
@@ -166,22 +166,22 @@ export class OrdonnancesServices {
           format: payload?.format,
           headerEnable: payload?.header_enable,
         });
-        return medicalHeader;
+        return medicalHeader.id;
       }
       {
-        const medicalHeader = this.medicalHeaderRepository.findOne({
+        const medicalHeader = await this.medicalHeaderRepository.findOne({
           where: { userId: payload?.user_id },
         });
-        return (await medicalHeader).id;
+        return medicalHeader?.id;
       }
     } catch {
       return new CBadRequestException(ErrorCode.NOT_FOUND);
     }
   }
 
-  async getMedicalByPatientId(patientId: number, currentUser: UserIdentity) {
+  async getMedicalByPatientId(patientId: number, userId: number) {
     const medicalOrder = await this.medicalRepository.findOne({
-      where: { conId: patientId, usrId: currentUser?.id },
+      where: { conId: patientId, usrId: userId },
       order: { createdAt: 'DESC' },
     });
     if (!medicalOrder)
