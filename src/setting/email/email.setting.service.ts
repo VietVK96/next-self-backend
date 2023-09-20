@@ -202,6 +202,7 @@ export class EmailSettingService {
   }
   async sendMailTest(mailInfo: EmailAccountEntity, email: string) {
     try {
+      console.log('mailInfo', mailInfo);
       const transporter = nodemailer.createTransport({
         host: mailInfo.outgoingServer.hostname,
         secure: false,
