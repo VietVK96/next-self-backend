@@ -201,25 +201,29 @@ export class EmailSettingService {
     }
   }
   async sendMailTest(mailInfo: EmailAccountEntity, email: string) {
-    const transporter = nodemailer.createTransport({
-      host: mailInfo.outgoingServer.hostname,
-      secure: false,
-      auth: {
-        user: mailInfo.outgoingServer.username,
-        pass: mailInfo.outgoingServer.password,
-        // port: mailInfo.outgoingServer.port,
-      },
-    });
+    try {
+      const transporter = nodemailer.createTransport({
+        host: mailInfo.outgoingServer.hostname,
+        secure: false,
+        auth: {
+          user: mailInfo.outgoingServer.username,
+          pass: mailInfo.outgoingServer.password,
+          // port: mailInfo.outgoingServer.port,
+        },
+      });
 
-    const mailOptions = {
-      from: `${mailInfo.displayName} <${mailInfo.outgoingServer.username}>`,
-      to: email,
-      subject: `Message de l'adresse électronique ${mailInfo.outgoingServer.username}`,
-      text: `
+      const mailOptions = {
+        from: `${mailInfo.displayName} <${mailInfo.outgoingServer.username}>`,
+        to: email,
+        subject: `Message de l'adresse électronique ${mailInfo.outgoingServer.username}`,
+        text: `
       Félicitation, votre adresse électronique ${mailInfo.outgoingServer.username} est bien configurée - vos patients recevront desormais vos messages depuis cette adresse électronique.
       `,
-    };
-
-    await transporter.sendMail(mailOptions);
+      };
+      console.log('mailOptions', mailOptions);
+      await transporter.sendMail(mailOptions);
+    } catch (e) {
+      console.log('bug', e);
+    }
   }
 }
