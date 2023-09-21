@@ -169,6 +169,9 @@ export class UserUserSettingRes {
   displayAllWaitingRooms?: boolean;
   printAdditionalPatientInformation?: boolean;
   activateSendingAppointmentReminders?: boolean;
+  'module.interamc.enabled'?: boolean;
+  'module.apcv.enabled'?: boolean;
+  'module.prescription.autoAddPatientObservation'?: boolean;
 }
 
 export class UserUserPreferenceRes {
