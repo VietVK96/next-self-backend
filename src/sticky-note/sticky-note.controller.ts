@@ -16,6 +16,7 @@ import { StickyNoteService } from './services/stickyNote.service';
 export class StickyNoteController {
   constructor(private stickyNoteService: StickyNoteService) {}
 
+  // File: php/stickyNote/save.php 23-166
   @Post('/save')
   @ApiBody({
     type: SaveStickNoteDto,
@@ -28,6 +29,7 @@ export class StickyNoteController {
     return this.stickyNoteService.save(reqBody, identity.id, identity.org);
   }
 
+  // File: php/stickyNote/delete.php 23-38
   @Post('/delete')
   @ApiQuery({
     name: 'deleteReq',
@@ -41,6 +43,7 @@ export class StickyNoteController {
     return this.stickyNoteService.delete(Number(request.id), identity.id);
   }
 
+  // File: php/stickyNote/findAll.php 26-49
   @Get('/findAll')
   @ApiQuery({
     name: 'contact',

@@ -35,6 +35,9 @@ export class ContraindicationsController {
     return this.contraindicationsService.findAll(identity);
   }
 
+  /**
+   * settings/contraindications/create.php
+   */
   @Post()
   @UseGuards(TokenGuard)
   async create(
@@ -56,6 +59,9 @@ export class ContraindicationsController {
     return await this.contraindicationsService.sortable(payload);
   }
 
+  /**
+   * settings/contraindications/edit.php
+   */
   @Put('/:id')
   @UseGuards(TokenGuard)
   async update(
@@ -66,6 +72,9 @@ export class ContraindicationsController {
     return this.contraindicationsService.update(identity.id, body, id);
   }
 
+  /**
+   * settings/contraindications/delete.php
+   */
   @Delete('/:id')
   @UseGuards(TokenGuard)
   async delete(@CurrentUser() identity: UserIdentity, @Param('id') id: number) {

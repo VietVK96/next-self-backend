@@ -27,6 +27,10 @@ export class AppointmentReminderLibrarieController {
     private appointmentReminderLibrarieService: AppointmentReminderLibrarieService,
   ) {}
 
+  /**
+   * /settings/appointment-reminder-libraries/index.php 100%
+   *
+   */
   @Get()
   @UseGuards(TokenGuard)
   async findAll(@CurrentUser() identity: UserIdentity) {
@@ -35,6 +39,10 @@ export class AppointmentReminderLibrarieController {
     );
   }
 
+  /**
+   * /settings/appointment-reminder-libraries/store.php 100%
+   *
+   */
   @Post()
   @UseInterceptors(AnyFilesInterceptor())
   @ApiConsumes('multipart/form-data')
@@ -52,6 +60,10 @@ export class AppointmentReminderLibrarieController {
     );
   }
 
+  /**
+   * /settings/appointment-reminder-libraries/delete.php 100%
+   *
+   */
   @Delete('/:id')
   @UseGuards(TokenGuard)
   async deleteAppointmentReminderLibrarie(@Param('id') id: number) {
@@ -60,6 +72,10 @@ export class AppointmentReminderLibrarieController {
     );
   }
 
+  /**
+   * /settings/appointment-reminder-libraries/create.php 100%
+   *
+   */
   @Post('/mobilePhoneNumbers')
   @UseGuards(TokenGuard)
   async updateMobilePhoneNumbers(@CurrentUser() identity: UserIdentity) {

@@ -24,6 +24,7 @@ import { SaveSmsShareDto } from './dto/notification.dto';
 export class NotificationSettingController {
   constructor(private notificationSettingService: NotificationSettingService) {}
 
+  // settings/notification/index.php
   @Get('')
   @UseGuards(TokenGuard)
   async find(
@@ -38,12 +39,14 @@ export class NotificationSettingController {
     );
   }
 
+  // settings/notification/message.php
   @Get('message')
   @UseGuards(TokenGuard)
   async findMessage(@CurrentUser() identity: UserIdentity) {
     return await this.notificationSettingService.findMessage(identity.id);
   }
 
+  // settings/notification/message.php
   @Post('message')
   @UseGuards(TokenGuard)
   async saveMessage(
@@ -56,6 +59,7 @@ export class NotificationSettingController {
     );
   }
 
+  // settings/notification/index.php
   @Post()
   @UseGuards(TokenGuard)
   async saveSmsShare(

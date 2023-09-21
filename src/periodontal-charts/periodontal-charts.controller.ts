@@ -34,18 +34,21 @@ export class PeriodontalChartsController {
     return this.periodontalChartsService.index(payload?.patient_id);
   }
 
+  // File php/periodontal-charts/show.php
   @Get('/show')
   @UseGuards(TokenGuard)
   async show(@Query() payload: ShowDto) {
     return this.periodontalChartsService.show(payload?.id);
   }
 
+  // File php/periodontal-charts/delete.php
   @Delete('/delete/:id')
   @UseGuards(TokenGuard)
   async delete(@Param('id') id: number) {
     return this.periodontalChartsService.delete(id);
   }
 
+  // File php/periodontal-charts/update.php
   @Post('/update')
   @UseGuards(TokenGuard)
   async update(
