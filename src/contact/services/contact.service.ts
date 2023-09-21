@@ -29,6 +29,7 @@ import { checkEmpty } from 'src/common/util/string';
 import * as fs from 'fs';
 import { ContactPaymentService } from './contact.payment.service';
 import { checkId } from 'src/common/util/number';
+import { CodeNatureAssuranceEnum } from 'src/constants/act';
 
 @Injectable()
 export class ContactService {
@@ -299,10 +300,21 @@ count(CON_ID) as countId,COD_TYPE as codType
   }
 
   async findAmos(id: number) {
-    return await this.patientAmoRepo.find({
+    const amos = await this.patientAmoRepo.find({
       where: {
         patientId: id,
       },
+    });
+    return amos?.map((amo) => {
+      const hasMaternitySituation =
+        amo.codeNatureAssurance === CodeNatureAssuranceEnum.MATERNITE;
+      const hasMissingMaternityDate =
+        hasMaternitySituation && !amo.maternityDate;
+      return {
+        ...amo,
+        hasMissingMaternityDate,
+        hasMaternitySituation,
+      };
     });
   }
 
