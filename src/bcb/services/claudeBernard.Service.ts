@@ -4,6 +4,7 @@ import axios, { AxiosInstance } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import * as Url from 'url';
 
+//ecoophp/application/Service/MedicamentDatabase/ClaudeBernardService.php
 @Injectable()
 export class ClaudeBernardService {
   WSDL: string =

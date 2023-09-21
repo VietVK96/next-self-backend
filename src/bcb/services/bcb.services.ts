@@ -15,7 +15,7 @@ export class BcbServices {
     private readonly entityManager: EntityManager,
     private claudeBernardService: ClaudeBernardService,
   ) {}
-
+  //ecoophp/php/bcb/findAll.php
   async findAll(payload: BcbDto) {
     try {
       this.claudeBernardService.setIdPS(payload?.license?.toString());
@@ -49,6 +49,4 @@ export class BcbServices {
       return [];
     }
   }
-
-  //ecoophp/application/Service/MedicamentDatabase/ClaudeBernardService.php
 }
