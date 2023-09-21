@@ -757,12 +757,18 @@ export class ReminderVisitService {
               true,
             );
             const fullname = patient.firstname + ' ' + patient.lastname;
-            await this.mailTransporterService.sendEmail(user.id, {
+            const res = await this.mailTransporterService.sendEmail(user.id, {
               from: user.email,
               to: patient.email,
               subject: `${payload.title} de Dr ${fullname}`,
               html: htmlMail,
             });
+
+            if (res instanceof CBadRequestException) {
+              const fullname = patient.firstname + ' ' + patient.lastname;
+              errors.push(`${fullname} <${patient.email}>`);
+              continue;
+            }
           } catch (e) {
             const fullname = patient.firstname + ' ' + patient.lastname;
             errors.push(`${fullname} <${patient.email}>`);

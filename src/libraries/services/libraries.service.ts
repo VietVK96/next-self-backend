@@ -35,6 +35,8 @@ import { SuccessResponse } from 'src/common/response/success.res';
 import { LibraryActOdontogramPivotEntity } from 'src/entities/library-act-odontogram-pivot.entity';
 import { checkId } from 'src/common/util/number';
 import { AcFamiliesCopyRes } from '../res/act-families.res';
+import { CForbiddenRequestException } from 'src/common/exceptions/forbidden-request.exception';
+import { LibraryActComplementaryEntity } from 'src/entities/library-act-complementary.entity';
 
 @Injectable()
 export class LibrariesService {
@@ -64,6 +66,8 @@ export class LibrariesService {
     private libraryActTraceabilityRepo: Repository<TraceabilityEntity>,
     @InjectRepository(LibraryActAssociationEntity)
     private libraryActAssociationRepo: Repository<LibraryActAssociationEntity>,
+    @InjectRepository(LibraryActComplementaryEntity)
+    private libraryActComplementaryRepo: Repository<LibraryActComplementaryEntity>,
     @InjectRepository(LibraryActAttachmentPivotEntity)
     private libraryActAttachmentPivotRepo: Repository<LibraryActAttachmentPivotEntity>,
     @InjectRepository(LibraryActOdontogramPivotEntity)
@@ -310,6 +314,10 @@ export class LibrariesService {
           }
         }
 
+        if (params?.quantities.length === 0) {
+          throw new CForbiddenRequestException(ErrorCode.NOT_FOUND_QUANTITIES);
+        }
+
         const quantities = params?.quantities ?? [];
         if (quantities && quantities?.length > 0) {
           libraryAct.quantities = [];
@@ -483,7 +491,7 @@ export class LibrariesService {
         return await this.libraryActRepo.save(libraryAct);
       }
     } catch (error) {
-      console.log(error);
+      throw new CBadRequestException(ErrorCode.SAVE_FAILED);
     }
   }
 
@@ -756,6 +764,22 @@ export class LibrariesService {
           }
         }
         await this.libraryActAssociationRepo.save(libraryAct.associations);
+        const complementaries = params?.complementaries ?? [];
+        const arrLibraryActComplementarie = [];
+        if (complementaries && complementaries?.length > 0) {
+          for (const o of complementaries) {
+            const libraryActComplementarie: LibraryActComplementaryEntity = {
+              libraryActParentId: id,
+              libraryActChildId: o?.child?.id,
+              position: o?.position,
+              used: o?.used,
+            };
+            arrLibraryActComplementarie.push(libraryActComplementarie);
+          }
+          await this.libraryActComplementaryRepo.save(
+            arrLibraryActComplementarie,
+          );
+        }
         const latIds =
           libraryAct.traceabilities?.map((traceability) => traceability?.id) ||
           [];
@@ -1095,6 +1119,7 @@ export class LibrariesService {
         .leftJoinAndSelect('la.associations', 'laa')
         .leftJoinAndSelect('laa.child', 'laac')
         .leftJoinAndSelect('la.complementaries', 'lac')
+        .leftJoinAndSelect('lac.child', 'lacc')
         .leftJoinAndSelect('la.attachments', 'laat')
         .leftJoinAndSelect('la.traceabilities', 'lat')
         .leftJoinAndSelect('lat.medicalDevice', 'latm')
@@ -1108,8 +1133,10 @@ export class LibrariesService {
         queryBuilder.andWhere('laq.used = :used', { used: true });
       }
       const libraryAct = await queryBuilder.getOne();
+
       const result = {
         id: libraryAct?.id,
+
         family: {
           id: libraryAct?.family?.id,
           label: libraryAct?.family?.id,
@@ -1118,6 +1145,7 @@ export class LibrariesService {
           used: !!libraryAct?.family?.used,
           internal_reference_id: libraryAct?.family?.internalReferenceId,
         },
+
         label: libraryAct?.label,
         observation: libraryAct?.observation,
         descriptive_text: libraryAct?.descriptiveText,
@@ -1129,6 +1157,7 @@ export class LibrariesService {
         transmitted: !!libraryAct?.transmitted,
         used: !!libraryAct?.used,
         internal_reference_id: libraryAct?.internalReferenceId,
+
         quantities: libraryAct?.quantities?.map((item) => {
           return {
             id: item?.id,

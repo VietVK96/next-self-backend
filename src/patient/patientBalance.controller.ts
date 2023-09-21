@@ -23,7 +23,7 @@ export class PatientBalanceController {
     @Body() payload: PatientBalanceUpdatePayloadDto,
     @CurrentUser() identity: UserIdentity,
   ) {
-    return this.service.update(request, payload, identity);
+    return await this.service.update(request, payload, identity);
   }
 
   @Patch('/balance/delete')
@@ -33,6 +33,6 @@ export class PatientBalanceController {
     @Body() payload: PatientBalanceUpdatePayloadDto,
     @CurrentUser() identity: UserIdentity,
   ) {
-    return this.service.delete(request, payload, identity);
+    return await this.service.delete(request, payload, identity);
   }
 }

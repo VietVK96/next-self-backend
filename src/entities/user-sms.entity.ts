@@ -75,13 +75,13 @@ export class UserSmsEntity {
   /**
    * @ORM\Column(name="USS_STOCK", type="integer", nullable=false)
    */
-  @Column({
-    name: 'USS_STOCK',
-    type: 'int',
-    nullable: false,
-    default: 0,
-  })
-  stock?: number;
+  // @Column({
+  //   name: 'USS_STOCK',
+  //   type: 'int',
+  //   nullable: false,
+  //   default: 0,
+  // })
+  // stock?: number;
 
   /**
    * @ORM\Column(name="USS_STOCK", type="integer", options={"default": 0})

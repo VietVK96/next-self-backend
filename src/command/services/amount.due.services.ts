@@ -87,6 +87,7 @@ export class AmountDueService {
       );
 
       if (usrIds && usrIds.length > 0) {
+        const list = `'BR1', 'CM0', 'CT0', 'CT1', 'CZ0', 'CZ1', 'IC0', 'IC1', 'ICO', 'IMP', 'IN1', 'INO', 'PA0', 'PA1', 'PAM', 'PAR', 'PDT', 'PF0', 'PF1', 'PFC', 'PFM', 'PT0', 'RA0', 'RE1', 'RF0', 'RPN', 'RS0', 'SU0', 'SU1'`;
         for (const item of usrIds) {
           // Récupération des actes
           await this.dataSource.query(
@@ -96,8 +97,8 @@ export class AmountDueService {
               T_EVENT_TASK_ETK.CON_ID,
               T_EVENT_TASK_ETK.ETK_DATE,
               T_EVENT_TASK_ETK.ETK_AMOUNT,
-              IF (F_ccam_prosthesis(T_EVENT_TASK_ETK.ccam_family) = 0, ETK_AMOUNT, 0),
-              IF (F_ccam_prosthesis(T_EVENT_TASK_ETK.ccam_family) = 1, ETK_AMOUNT, 0)
+              IF (LEAST(1, FIELD(T_EVENT_TASK_ETK.ccam_family, ${list})) = 0, ETK_AMOUNT, 0),
+              IF (LEAST(1, FIELD(T_EVENT_TASK_ETK.ccam_family, ${list})) = 1, ETK_AMOUNT, 0)
             FROM T_EVENT_TASK_ETK
             JOIN T_CONTACT_CON
             LEFT OUTER JOIN T_EVENT_EVT ON T_EVENT_EVT.EVT_ID = T_EVENT_TASK_ETK.EVT_ID

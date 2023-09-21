@@ -208,11 +208,11 @@ export class UserController {
   // file settings/securities/password-accounting/update.php
   @UseGuards(TokenGuard)
   @Post('/settings/securities/password-accounting/update')
-  updatePasswordSettings(
+  async updatePasswordSettings(
     @Body() updatePassWordSettingDto: UpdatePassWordSettingDto,
     @CurrentUser() user: UserIdentity,
   ) {
-    return this.userService.updatePasswordAccounting(
+    return await this.userService.updatePasswordAccounting(
       user.id,
       updatePassWordSettingDto,
     );
@@ -221,11 +221,11 @@ export class UserController {
   // file settings/securities/password-accounting/delete.php
   @UseGuards(TokenGuard)
   @Delete('/settings/securities/password-accounting/delete')
-  deletePasswordSettings(
+  async deletePasswordSettings(
     @Body() PassWordSettingDto: UpdatePassWordSettingDto,
     @CurrentUser() user: UserIdentity,
   ) {
-    return this.userService.deletePasswordAccounting(
+    return await this.userService.deletePasswordAccounting(
       user.id,
       PassWordSettingDto,
     );
@@ -333,8 +333,8 @@ export class UserController {
    */
   @Get('credit-balances/index')
   @UseGuards(TokenGuard)
-  getCreditBalances(@Query() payload: CreditBalancesDto) {
-    return this.creditBalancesService.getPatientBalances(payload);
+  async getCreditBalances(@Query() payload: CreditBalancesDto) {
+    return await this.creditBalancesService.getPatientBalances(payload);
   }
 
   /**
@@ -352,8 +352,8 @@ export class UserController {
    */
   @Post('update-sms')
   @UseGuards(TokenGuard)
-  updateSMS(@Body() users: UpdateUserSmsDto) {
-    return this.userService.updateUserSms(users);
+  async updateSMS(@Body() users: UpdateUserSmsDto) {
+    return await this.userService.updateUserSms(users);
   }
 
   /**
@@ -373,7 +373,7 @@ export class UserController {
     );
   }
 
-  @Post('create')
+  @Get('create')
   async create() {
     return await this.userService.createAcc();
   }

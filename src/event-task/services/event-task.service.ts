@@ -69,7 +69,7 @@ export class EventTaskService {
         {
           where: { id },
           relations: {
-            medical: {
+            dental: {
               ccam: true,
             },
             user: {
@@ -86,7 +86,7 @@ export class EventTaskService {
       if (
         this._canPerformFreeFee(eventTask[0].user) &&
         ExceedingEnum.NON_REMBOURSABLE &&
-        eventTask[0].medical &&
+        eventTask[0].dental &&
         eventTask[0].user
       ) {
         if (

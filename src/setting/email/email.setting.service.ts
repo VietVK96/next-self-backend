@@ -187,6 +187,7 @@ export class EmailSettingService {
   async mailTester(mailId: number) {
     try {
       const mailInfo = await this.findById(mailId, true);
+      console.log('mailTester => mailInfo', mailInfo);
       if (mailInfo instanceof CBadRequestException) {
         return mailInfo;
       }
@@ -195,30 +196,35 @@ export class EmailSettingService {
         success: true,
       };
     } catch (e) {
+      console.log('mailTester => e', e);
       return new CBadRequestException(ErrorCode.FORBIDDEN);
     }
   }
   async sendMailTest(mailInfo: EmailAccountEntity, email: string) {
-    const transporter = nodemailer.createTransport({
-      host: mailInfo.outgoingServer.hostname,
-      secure: false,
-      auth: {
-        user: mailInfo.outgoingServer.username,
-        pass: mailInfo.outgoingServer.password,
-        // port: mailInfo.outgoingServer.port,
-      },
-    });
+    try {
+      console.log('mailInfo', mailInfo);
+      const transporter = nodemailer.createTransport({
+        host: mailInfo.outgoingServer.hostname,
+        secure: false,
+        auth: {
+          user: mailInfo.outgoingServer.username,
+          pass: mailInfo.outgoingServer.password,
+          // port: mailInfo.outgoingServer.port,
+        },
+      });
 
-    const mailOptions = {
-      from: `${mailInfo.displayName} <${mailInfo.outgoingServer.username}>`,
-      to: email,
-      subject: `Message de l'adresse électronique ${mailInfo.outgoingServer.username}`,
-      bcc: 'someone@example.com',
-      text: `
+      const mailOptions = {
+        from: `${mailInfo.displayName} <${mailInfo.outgoingServer.username}>`,
+        to: email,
+        subject: `Message de l'adresse électronique ${mailInfo.outgoingServer.username}`,
+        text: `
       Félicitation, votre adresse électronique ${mailInfo.outgoingServer.username} est bien configurée - vos patients recevront desormais vos messages depuis cette adresse électronique.
       `,
-    };
-
-    await transporter.sendMail(mailOptions);
+      };
+      console.log('mailOptions', mailOptions);
+      await transporter.sendMail(mailOptions);
+    } catch (e) {
+      console.log('bug', e);
+    }
   }
 }

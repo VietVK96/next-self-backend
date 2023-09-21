@@ -236,6 +236,7 @@ export class GetSessionService {
       social_security_reimbursement_rate,
       USR.USR_BCB_LICENSE as bcbLicense,
       USR.USR_SIGNATURE as signature,
+      USR.settings as settings,
       USR.USR_TOKEN as token,
       PVG.PVG_PERMISSION_BILLING as permissionBilling,
       PVG.PVG_PERMISSION_PAIEMENT as permissionPaiement,
@@ -271,6 +272,7 @@ export class GetSessionService {
     const amos = await this.getAmo(practitionerIds);
     const medicals = await this.getMedical(practitionerIds);
     const eventTypesRes = await this.getEventTypes(practitionerIds);
+
     const dataReturn = data.map((d) => {
       const preference = preferences.find((p) => p.id === d.id);
       const amo = amos.find((a) => a.userId === d.id);
@@ -278,12 +280,21 @@ export class GetSessionService {
       const eventTypes = eventTypesRes.find(
         (event) => event.pracId === d.id,
       )?.eventTypes;
+      let userSettings = d?.settings as UserUserSettingRes | string;
+      if (
+        userSettings &&
+        userSettings !== '' &&
+        typeof userSettings === 'string'
+      ) {
+        userSettings = parseJson<UserUserSettingRes>(d?.settings);
+      }
       return {
         ...d,
         preference,
         amo,
         medical,
         eventTypes,
+        settings: userSettings,
       };
     });
     return dataReturn;

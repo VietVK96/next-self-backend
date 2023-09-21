@@ -100,6 +100,7 @@ const helpersCaresheetPdf = {
 const optionsCaresheetPdf = {
   format: 'A4',
   displayHeaderFooter: true,
+  landscape: true,
   headerTemplate: '<div></div>',
   footerTemplate: '<div></div>',
   margin: {
@@ -125,8 +126,6 @@ export class ActsService {
     private fseRepository: Repository<FseEntity>,
     @InjectRepository(EventTaskEntity)
     private eventTaskRepository: Repository<EventTaskEntity>,
-    @InjectRepository(DentalEventTaskEntity)
-    private dentalEventTaskRepository: Repository<DentalEventTaskEntity>,
     @InjectRepository(CaresheetStatusEntity)
     private caresheetStatusRepository: Repository<CaresheetStatusEntity>,
     @InjectRepository(ThirdPartyAmcEntity)
@@ -192,11 +191,11 @@ export class ActsService {
       await this.interfacageService.compute(caresheet);
       //convert funtion transmettrePatient in client services
       if (
-        !patient?.firstname &&
-        !patient?.lastname &&
-        !patient?.birthDate &&
-        !patient?.birthRank &&
-        !patient?.insee &&
+        !patient?.firstname ||
+        !patient?.lastname ||
+        !patient?.birthDate ||
+        !patient?.birthRank ||
+        !patient?.insee ||
         !patient?.inseeKey
       ) {
         throw new CBadRequestException(ErrorCode.ERROR_PATIENT_IS_REQUIRED);
@@ -260,8 +259,8 @@ export class ActsService {
         for (const [, raws] of Object.entries(groupBy)) {
           const collectionFilteredByFamilyCode = raws.filter(
             (act) =>
-              act?.medical?.ccam &&
-              PAV_AUTHORIZED_CODES.includes(act?.medical?.ccam?.code),
+              act?.dental?.ccam &&
+              PAV_AUTHORIZED_CODES.includes(act?.dental?.ccam?.code),
           );
           const amounts = raws.map((act) => act?.amount);
           const totalAmount = amounts.reduce((acc, cur) => acc + cur, 0);
@@ -286,7 +285,7 @@ export class ActsService {
       if (
         dataActs.reduce(
           (isTestAntigenique, act) =>
-            isTestAntigenique || this.isTestAntigenique(act?.medical),
+            isTestAntigenique || this.isTestAntigenique(act?.dental),
           false,
         )
       ) {
@@ -294,9 +293,9 @@ export class ActsService {
       }
       for (const act of dataActs) {
         const amount = act?.amount;
-        const amoAmount = act?.medical?.secuAmount;
-        const coefficient = act?.medical?.coef;
-        const rawTeeth = act?.medical?.teeth
+        const amoAmount = act?.dental?.secuAmount;
+        const coefficient = act?.dental?.coef;
+        const rawTeeth = act?.dental?.teeth
           ?.split(',')
           .map((tooth) => (tooth === '00' ? ['01', '02'] : tooth))
           .flat(); // LOGIC?act.entity
@@ -305,23 +304,23 @@ export class ActsService {
           qte: 1,
           isAld: false,
           dateExecution: act?.date,
-          codeActe: act?.medical?.ccam
-            ? act?.medical?.ccam?.code
-            : act?.medical?.ngapKey?.name, // nameToTransmit
+          codeActe: act?.dental?.ccam
+            ? act?.dental?.ccam?.code
+            : act?.dental?.ngapKey?.name, // nameToTransmit
           coefficient: coefficient,
           montantHonoraire: amount !== amoAmount ? amount : null,
           libelle: act?.name,
           numeroDents: teeth.join(','),
-          codeAssociation: act?.medical?.associationCode,
+          codeAssociation: act?.dental?.associationCode,
           codeAccordPrealable: code_accord_prealable,
           codeJustifExoneration: null,
-          qualifDepense: act?.medical?.exceeding,
+          qualifDepense: act?.dental?.exceeding,
           dateDemandePrealable: date_demande_prealable,
           remboursementExceptionnel: null,
           complementPrestation: null,
         };
 
-        const exemptionCode = act?.medical?.exemptionCode;
+        const exemptionCode = act?.dental?.exemptionCode;
         if (!!exemptionCode) {
           acte.codeJustifExoneration = exemptionCode;
           if (exemptionCode === ExemptionCodeEnum.DISPOSITIF_PREVENTION) {
@@ -332,9 +331,9 @@ export class ActsService {
           acte.codeJustifExoneration = codeJustifExoneration;
         }
 
-        const ngapKey = act?.medical?.ngapKey;
+        const ngapKey = act?.dental?.ngapKey;
         if (ngapKey) {
-          acte.complementPrestation = act?.medical?.complement;
+          acte.complementPrestation = act?.dental?.complement;
           const name = ngapKey?.name;
           if (name === 'IK') {
             acte.qte = coefficient;
@@ -350,13 +349,13 @@ export class ActsService {
           }
         }
 
-        const ccam = act?.medical?.ccam;
+        const ccam = act?.dental?.ccam;
         if (ccam && !!ccam?.repayableOnCondition) {
-          acte.remboursementExceptionnel = act?.medical?.exceptionalRefund;
+          acte.remboursementExceptionnel = act?.dental?.exceptionalRefund;
         }
 
         /** === MODIFICATEURS === */
-        const modifiers = act?.medical?.ccamModifier ?? [];
+        const modifiers = act?.dental?.ccamModifier ?? [];
         for (let i = 0; i < modifiers.length; i++) {
           acte['codeModificateur' + (i + 1)] = modifiers[i];
         }
@@ -1204,17 +1203,20 @@ export class ActsService {
   ): Promise<{ file: Buffer; name: string }> {
     const caresheet = await this.fseRepository.findOne({
       where: { id },
-      relations: [
-        'actMedicals',
-        'amo',
-        'amc',
-        'actMedicals.act',
-        'actMedicals.ccam',
-        'actMedicals.ngapKey',
-        'patient',
-        'patient.medical',
-        'patient.medical.policyHolder',
-      ],
+      relations: {
+        actMedicals: {
+          act: true,
+          ccam: true,
+          ngapKey: true,
+        },
+        amo: true,
+        amc: true,
+        patient: {
+          medical: {
+            policyHolder: true,
+          },
+        },
+      },
     });
     caresheet.thirdPartyAmo = await this.thirdPartyAmoRepository.findOne({
       where: {
@@ -1300,6 +1302,25 @@ export class ActsService {
     }
     return await merger.saveAsBuffer();
   }
+
+  async printLotBordereau(id: number, user_id: number) {
+    const queryBuilder = this.lotRepository
+      .createQueryBuilder('lot')
+      .distinct()
+      .leftJoinAndSelect('lot.amc', 'amc')
+      .leftJoinAndSelect('lot.amo', 'amo')
+      .innerJoinAndSelect('lot.caresheets', 'caresheets')
+      .where('lot.id  = :id', { id: id });
+
+    const lot = await queryBuilder.getOne();
+
+    const user = await this.userRepository.findOne({
+      where: { id: user_id },
+      relations: ['medical', 'medical.specialtyCode'],
+    });
+    return (await this.getLotFile(lot, user)).file;
+  }
+
   async duplicata(id: number, duplicata: boolean) {
     const result = await this.getCaresheetFileById(id, checkBoolean(duplicata));
     return result.file;

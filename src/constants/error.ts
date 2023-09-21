@@ -39,6 +39,7 @@ export enum ErrorCode {
   NOT_FOUND_HISTORICAL = 'NOT_FOUND_HISTORICAL',
   NOT_FOUND_PATIENT = 'NOT_FOUND_PATIENT',
   ORIGINAL_FILENAME_IS_REQUIRED = 'original_filename is required',
+  NAME_IS_REQUIRED = 'name is required',
   PERMISSION_DENIED = 'PERMISSION_DENIED',
   SAVE_FAILED = 'SAVE_FAILED',
   STATUS_INTERNAL_SERVER_ERROR = 'STATUS_INTERNAL_SERVER_ERROR',
@@ -84,6 +85,8 @@ export enum ErrorCode {
   NOT_FOUND_ID = 'NOT_FOUND_ID',
   MIN_ARRAY_ERROR = 'MIN_ARRAY_ERROR',
   INVALID_EMAIL = 'This value is not a valid email address',
+  INVALID_PHONE_NUMBER = 'This value is not a valid phone number',
+  NOT_FOUND_QUANTITIES = 'NOT_FOUND_QUANTITIES',
 }
 
 export enum HttpStatus {

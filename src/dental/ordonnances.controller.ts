@@ -41,11 +41,11 @@ export class OrdonnancesController {
   @UseGuards(TokenGuard)
   async getMedical(
     @Param('patientId') patientId: number,
-    @CurrentUser() identity: UserIdentity,
+    @Query('user_id') userId: number,
   ) {
     return await this.ordonnancesServices.getMedicalByPatientId(
       patientId,
-      identity,
+      userId,
     );
   }
 

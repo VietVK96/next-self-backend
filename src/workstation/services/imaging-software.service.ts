@@ -8,9 +8,16 @@ import { Repository } from 'typeorm';
 import {
   CreateImageSoftwareDto,
   CreateImageSoftwareQueryDto,
+  ImageSoftwareDto,
 } from '../dto/image-software.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
+import { Request } from 'express';
+import { UAParser } from 'ua-parser-js';
+import { checkEmpty } from 'src/common/util/string';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
+import { MACOS, WINDOWS } from './platformsClass';
+import { parseString } from 'xml2js';
 
 @Injectable()
 export class ImagingSoftwareService {
@@ -172,6 +179,104 @@ export class ImagingSoftwareService {
       return;
     } catch (error) {
       throw new CBadRequestException(error?.message);
+    }
+  }
+
+  async getComputerNameFromPlatform(platform: number) {
+    let incr = 0;
+    let name: string;
+    let workstation: WorkstationEntity;
+    do {
+      if (!Object.keys(PlatformEnum.choices).includes(platform.toString())) {
+        throw new CBadRequestException(
+          `Invalid value "${platform}" for ENUM type "PlatformEnum".`,
+        );
+      }
+      name = PlatformEnum.choices[platform].concat(` ${++incr}`);
+      workstation = await this.workstaionRepository.findOne({
+        where: {
+          platform,
+          name,
+        },
+      });
+    } while (workstation);
+    return name;
+  }
+
+  async parseXML(xmlString: string) {
+    let result: any;
+    parseString(xmlString, (err, rs) => {
+      if (err) {
+        result = {};
+      } else {
+        result = rs?.document ? rs.document : rs;
+      }
+    });
+    return result;
+  }
+
+  async imagingSoftware(
+    req: Request,
+    body: ImageSoftwareDto,
+    identity: UserIdentity,
+  ) {
+    try {
+      const parser = new UAParser(req.headers['user-agent']);
+      const parserResults = parser.getResult();
+
+      const platform =
+        parserResults.os.name.toUpperCase() === 'WINDOWS'
+          ? PlatformEnum.WINDOWS
+          : PlatformEnum.MACOS;
+
+      // On récupère le poste de travail ayant pour nom computerName
+      // sinon on en créé un nouveau.
+      let computerName = body?.computerName;
+      if (checkEmpty(computerName)) {
+        computerName = await this.getComputerNameFromPlatform(platform);
+      }
+
+      const workstation = new WorkstationEntity();
+      workstation.organizationId = identity.org;
+      if (typeof computerName === 'string') workstation.name = computerName;
+      workstation.platform = platform;
+      const workstationSaved = await this.workstaionRepository.save(
+        workstation,
+      );
+
+      const xmlDoc = body?.radios ? await this.parseXML(body.radios) : {};
+      for (const key in xmlDoc) {
+        const parameters = xmlDoc[key];
+        if (
+          Object.keys(parameters).includes('Actif') &&
+          parameters['Actif'].toString() !== '0'
+        ) {
+          continue;
+        }
+
+        const imagingSoftware = new ImagingSoftwareEntity();
+        imagingSoftware.organizationId = identity.org;
+        imagingSoftware.workstationId = workstationSaved.id;
+        imagingSoftware.name = key.toUpperCase();
+
+        if (PlatformEnum[platform] === 'WINDOWS') {
+          if (typeof WINDOWS[imagingSoftware.name] !== 'function') continue;
+          WINDOWS[imagingSoftware.name](imagingSoftware, parameters);
+        } else {
+          if (typeof MACOS[imagingSoftware.name] !== 'function') continue;
+          MACOS[imagingSoftware.name](imagingSoftware, parameters);
+        }
+      }
+
+      // @TODO
+      //   $serializationContext = new SerializationContext();
+      // $serializationContext->setGroups(['workstation:read']);
+
+      // return JsonResponse::fromJsonString($container->get('jms_serializer')->serialize($workstation, 'json', $serializationContext))->send();
+
+      return workstationSaved;
+    } catch (e) {
+      return new CBadRequestException(ErrorCode.FORBIDDEN);
     }
   }
 }
