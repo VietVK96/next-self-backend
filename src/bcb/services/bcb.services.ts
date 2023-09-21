@@ -42,6 +42,7 @@ export class BcbServices {
           },
         );
       });
+      // handle result has in frontend : bcbConvert()  function
       return await result;
     } catch (error) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
