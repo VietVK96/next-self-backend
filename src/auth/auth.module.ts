@@ -14,6 +14,7 @@ import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { UserAmoEntity } from 'src/entities/user-amo.entity';
 import { UserConnectionService } from 'src/user/services/user-connection.service';
 import { UserConnectionEntity } from 'src/entities/user-connection.entity';
+import { WorkstationEntity } from 'src/entities/workstation.entity';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { UserConnectionEntity } from 'src/entities/user-connection.entity';
       UserMedicalEntity,
       UserAmoEntity,
       UserConnectionEntity,
+      WorkstationEntity,
     ]),
     JwtModule.register({
       secret: JWT_SECRET,
