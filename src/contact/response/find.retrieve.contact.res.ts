@@ -64,6 +64,8 @@ export class FindRetrieveRes {
   doctor?: ResRetrieve;
   amountDue?: boolean;
   reliability?: Reliability;
+  avatarId?: number;
+  avatarToken?: string;
 }
 
 class DateTime {
