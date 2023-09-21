@@ -8,6 +8,7 @@ import {
   IListeDateChangementEtat,
   IRecevoirDetailListeRsp,
   IRecevoirRsp,
+  IConsulterClient,
 } from '../interface/caresheet.interface';
 import { SesamvitaleBaseService } from './sesamvitale-base.service';
 
@@ -151,6 +152,23 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
   </soapenv:Envelope>`;
     const data = await this.sendRequest<IConsulterFacture>(
       'ConsulterFacture',
+      xml,
+    );
+    return data;
+  }
+
+  async consulterClient(idPatient: number): Promise<IConsulterClient> {
+    const xml = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">
+      <soapenv:Body>
+        <jux:ConsulterClient>
+          <xsd:appelConsulterClient>
+            <xsd:idPatient>${idPatient}</xsd:idPatient>
+          </xsd:appelConsulterClient>
+        </jux:ConsulterClient>
+      </soapenv:Body>
+    </soapenv:Envelope>`;
+    const data = await this.sendRequest<IConsulterClient>(
+      'ConsulterClient',
       xml,
     );
     return data;

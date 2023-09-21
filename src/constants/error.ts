@@ -87,6 +87,7 @@ export enum ErrorCode {
   INVALID_EMAIL = 'This value is not a valid email address',
   INVALID_PHONE_NUMBER = 'This value is not a valid phone number',
   NOT_FOUND_QUANTITIES = 'NOT_FOUND_QUANTITIES',
+  NOT_FOUND_PATIENT_ID_IN_CART_VITAL = 'NOT_FOUND_PATIENT_ID_IN_CART_VITAL',
 }
 
 export enum HttpStatus {

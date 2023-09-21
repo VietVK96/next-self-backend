@@ -82,6 +82,7 @@ import { LanguageModule } from './language/language.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { JobsModule } from './schedule/jobs.module';
 import { NotifierModule } from './notifier/notifier.module';
+import { CartVitalModule } from './cart-vital/cart-vital.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -230,6 +231,7 @@ const importsModules = [
   JobsModule,
   ScheduleModule.forRoot(),
   NotifierModule,
+  CartVitalModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {
