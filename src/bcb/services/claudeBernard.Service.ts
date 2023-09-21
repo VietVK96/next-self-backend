@@ -3,12 +3,17 @@ import * as dayjs from 'dayjs';
 import axios, { AxiosInstance } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import * as Url from 'url';
+import * as https from 'https';
+import { firstValueFrom } from 'rxjs';
+import { HttpService } from '@nestjs/axios';
+import { parseStringPromise } from 'xml2js';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 //ecoophp/application/Service/MedicamentDatabase/ClaudeBernardService.php
 @Injectable()
 export class ClaudeBernardService {
-  WSDL: string =
-    'https://www.bcbdexther.fr/wsdl/BCBDexther-integrateurs-full.wsdl';
+  WSDL: string = '';
   tabConversion = [
     154, 43, 174, 241, 124, 205, 51, 103, 70, 40, 54, 93, 166, 130, 250, 217,
     24, 181, 3, 33, 210, 39, 125, 41, 10, 232, 62, 28, 207, 1, 255, 244, 63,
@@ -31,10 +36,12 @@ export class ClaudeBernardService {
   #idPS: string = '';
   client: AxiosInstance;
 
-  constructor(private configService: ConfigService) {
-    this.#codeEditeur = configService.get<string>(
-      'app.claudeBernard.codeEditeur',
-    );
+  constructor(
+    private configService: ConfigService,
+    private readonly httpService: HttpService,
+  ) {
+    this.#codeEditeur = configService.get<string>('app.claudeBernard.');
+    this.WSDL = configService.get<string>('app.htclaudeBernardpProxy.wsdl');
     const proxy = configService.get<string>('app.httpProxy') || '';
     // Create an Axios instance with the proxy settings
     const url = Url.parse(proxy);
@@ -60,6 +67,53 @@ export class ClaudeBernardService {
         ...params,
       },
     });
+  }
+
+  async sendRequest<T>(
+    action: string,
+    contents: string,
+    mock?: string,
+  ): Promise<T> {
+    const headers = {
+      'Content-Type': 'text/xml; charset=utf-8',
+    };
+
+    const httpsAgent = new https.Agent({
+      rejectUnauthorized: false,
+    });
+
+    let { data } = await firstValueFrom(
+      this.httpService.post(this.WSDL, contents, {
+        headers,
+        httpsAgent,
+        httpAgent: httpsAgent,
+      }),
+    );
+
+    if (mock && mock !== '') {
+      data = mock;
+    }
+    data = data.replaceAll('xsi:nil="true"', '');
+    const resJson = await parseStringPromise(data);
+    if (
+      !resJson ||
+      !resJson['soap:Envelope'] ||
+      !resJson['soap:Envelope']['soap:Body'] ||
+      !resJson['soap:Envelope']['soap:Body'][0][`${action}Response`] ||
+      !resJson['soap:Envelope']['soap:Body'][0][`${action}Response`][0][
+        `${action}Result`
+      ]
+    ) {
+      throw new CBadRequestException(ErrorCode.CANNOT_REQUEST_CLAUDEBERNARD);
+    }
+    const soapBody =
+      resJson['soap:Envelope']['soap:Body'][0][`${action}Response`][0][
+        `${action}Result`
+      ][0];
+    if (soapBody['erreur']['libelleErreur']) {
+      throw new CBadRequestException(soapBody['erreur']['libelleErreur']);
+    }
+    return soapBody as T;
   }
 
   /**
