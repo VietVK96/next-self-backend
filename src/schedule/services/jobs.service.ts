@@ -299,7 +299,7 @@ export class JobsService {
         let numberOfAppointmentTreaty = 0;
         const listEventsParameters = {
           orderBy: 'updated',
-          showDeleted: false,
+          showDeleted: true,
           timeMin: dayjs().toISOString(),
           singleEvents: true,
         };

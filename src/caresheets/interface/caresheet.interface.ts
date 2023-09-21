@@ -117,3 +117,23 @@ export interface IConsulterUtlStatut {
   numFiness: string[];
   codeSpecialite: string[];
 }
+
+export interface IConsulterClient {
+  individu?: {
+    idPatient?: string[];
+    nomUsuel?: string[];
+    prenom?: string[];
+    rangGem?: string[];
+    dateNaissance?: string[];
+    nirIndividu?: string[];
+    nirIndividuCle?: string[];
+    codeCivilite?: string[];
+    isDateLunaire?: string[];
+    codeServiceAMO: string[];
+    dateDebutServiceAMO?: string[];
+    dateFinServiceAMO?: string[];
+    couvertureAMO?: string[];
+    couvertureAMC?: string[];
+    idAssure?: string[];
+  }[];
+}
