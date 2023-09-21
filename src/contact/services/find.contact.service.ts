@@ -327,8 +327,6 @@ export class FindContactService {
       ],
     });
 
-    console.log('result.upload', result.upload);
-
     const res: FindRetrieveRes = {
       id: result?.id || null,
       nbr: result?.nbr,
