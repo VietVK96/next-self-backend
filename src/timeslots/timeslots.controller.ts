@@ -19,6 +19,7 @@ import { CreateTimeslotPayloadDto } from './dto/create.timeslots.dto';
 export class TimeslotController {
   constructor(private readonly timeslotsService: TimeslotsService) {}
 
+  //php/timeslot/index.php full file
   @Get()
   @UseGuards(TokenGuard)
   async findAll(
@@ -29,18 +30,21 @@ export class TimeslotController {
     return await this.timeslotsService.findAll(resources, startDate, endDate);
   }
 
+  //php/timeslot/show.php full file
   @Get('find/:id')
   @UseGuards(TokenGuard)
   async findById(@Param('id') id: number) {
     return await this.timeslotsService.find(id);
   }
 
+  //php/timeslot/store.php full file
   @Post()
   @UseGuards(TokenGuard)
   async create(@Body() payload: CreateTimeslotPayloadDto) {
     return this.timeslotsService.create(payload);
   }
 
+  //php/timeslot/delete.php full file
   @Delete('delete')
   @UseGuards(TokenGuard)
   async delete(@Query('id') id: number, @Query('scope') scope: string) {

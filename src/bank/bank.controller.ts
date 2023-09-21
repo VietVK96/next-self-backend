@@ -84,6 +84,7 @@ export class BankController {
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
     }
   }
+
   @Put('/bank-checks/sortable')
   @UseGuards(TokenGuard)
   async sortableContraindications(
@@ -107,6 +108,11 @@ export class BankController {
     return await this.bankService.duplicateBankChecks(id);
   }
 
+  /**
+   *
+   * /settings/library/bank.php -> full
+   */
+
   @Get('/banks/all')
   @UseGuards(TokenGuard)
   async findAllBankByUser(@Query('id') id: number) {
@@ -117,6 +123,9 @@ export class BankController {
     }
   }
 
+  /**
+   * /settings/library/bankEdit.php
+   */
   @Post('/banks')
   @UseGuards(TokenGuard)
   async createUpdateBank(
@@ -130,6 +139,9 @@ export class BankController {
     );
   }
 
+  /**
+   * /settings/library/bankEdit.php
+   */
   @Delete('/banks/:id')
   @UseGuards(TokenGuard)
   async deleteBank(

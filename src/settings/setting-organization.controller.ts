@@ -22,7 +22,7 @@ import { UpdateOrganizationDto } from './dtos/setting-organization.dto';
 @ApiTags('Settings/organization')
 export class SettingOrganizationController {
   constructor(private settingOrganizationService: SettingOrganizationService) {}
-
+  // settings/organizations/update.php
   @Post('/update')
   @ApiBody({
     schema: {
@@ -50,11 +50,5 @@ export class SettingOrganizationController {
       body,
       logo,
     );
-  }
-
-  @Delete('delete')
-  @UseGuards(TokenGuard)
-  async deletePatientPhoto(@CurrentUser() user: UserIdentity) {
-    return await this.settingOrganizationService.deletePhoto(user);
   }
 }

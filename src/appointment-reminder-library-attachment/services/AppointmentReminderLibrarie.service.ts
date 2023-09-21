@@ -39,6 +39,11 @@ export class AppointmentReminderLibrarieService {
     private readonly dataSource: DataSource,
   ) {}
 
+  /**
+   * /settings/appointment-reminder-libraries/index.php 100%
+   *
+   */
+
   async getAppointmentReminderLibrarie(id: number) {
     try {
       const user = await this.userRepository.findOne({
@@ -58,6 +63,10 @@ export class AppointmentReminderLibrarieService {
     }
   }
 
+  /**
+   * /settings/appointment-reminder-libraries/store.php 100%
+   *
+   */
   async createAppointmentReminderLibrarie(
     orgId: number,
     userId: number,
@@ -148,6 +157,10 @@ export class AppointmentReminderLibrarieService {
     }
   }
 
+  /**
+   * /settings/appointment-reminder-libraries/delete.php 100%
+   *
+   */
   async deleteAppointmentReminderLibrarie(id: number) {
     try {
       const currentAppointmentReminderLibrarie =
@@ -181,6 +194,10 @@ export class AppointmentReminderLibrarieService {
     }
   }
 
+  /**
+   * /settings/appointment-reminder-libraries/create.php 100%
+   *
+   */
   async updateMobilePhoneNumbers(userId: number) {
     try {
       const user = await this.userRepository.findOne({

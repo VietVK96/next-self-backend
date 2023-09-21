@@ -57,6 +57,10 @@ export class AntecedentPrestationController {
     return this.antecedentPrestationService.save(payload);
   }
 
+  /**
+   * php/antecedentPrestation/delete.php
+   *
+   */
   @Delete()
   @UseGuards(TokenGuard)
   async deleteAntecedentPrestation(

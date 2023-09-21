@@ -10,6 +10,7 @@ import { DeleteStructDto } from '../dto/delete.antecedent-prestation.dto';
 export class AntecedentPrestationService {
   constructor(private dataSource: DataSource) {}
 
+  //File php/contact/antecedentPrestation/findAll.php
   async findAll(
     payload: FindAllStructDto,
     organizationId: number,
@@ -33,6 +34,10 @@ export class AntecedentPrestationService {
     }
   }
 
+  /**
+   * php/antecedentPrestation/save.php
+   *
+   */
   async save(payload: SaveStructDto) {
     const {
       id,
@@ -61,6 +66,10 @@ export class AntecedentPrestationService {
     }
   }
 
+  /**
+   * php/antecedentPrestation/delete.php
+   *
+   */
   async delete(payload: DeleteStructDto, organizationId: number) {
     try {
       const queryBuilder = this.dataSource

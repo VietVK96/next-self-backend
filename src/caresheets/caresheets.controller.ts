@@ -180,6 +180,9 @@ export class CaresheetsController {
     res.end(buffer);
   }
 
+  /**
+   * php/lots/bordereau-teletransmission.php -> full
+   */
   @Get('lots/bordereau-teletransmission')
   @UseGuards(TokenGuard)
   async printBordereau(

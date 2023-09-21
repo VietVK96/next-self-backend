@@ -9,6 +9,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 export class PlantPlfController {
   constructor(private readonly plantPlfService: PlantPlfService) {}
 
+  //php/planification/getPlanificationContact.php
   @Get('/:id')
   @UseGuards(TokenGuard)
   async getPlanificationContact(@Param('id') id: number) {
