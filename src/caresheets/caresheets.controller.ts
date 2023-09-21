@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  Param,
   Post,
   Query,
   Res,
@@ -200,5 +202,12 @@ export class CaresheetsController {
       Expires: 0,
     });
     res.end(buffer);
+  }
+
+  // File php/caresheets/delete.php
+  @Delete('/delete/:id')
+  @UseGuards(TokenGuard)
+  async delete(@Param('id') id: number) {
+    return this.service.deleteCaresheet(id);
   }
 }

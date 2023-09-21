@@ -10,8 +10,37 @@ export interface IConsulterTeleTrans {
 }
 
 export interface IConsulterFacture {
-  etatLotFse?: number;
-  etatLotDre?: number;
+  etatLotFse?: string[];
+  etatLotDre?: string[];
+  typeFacture?: string[];
+  numeroFse?: string[];
+  estValide?: string[];
+  modeFacture?: string[];
+  AMO?: {
+    isTp: string[];
+    montant: string[];
+  }[];
+  AMC?: {
+    isTp: string[];
+    montant: string[];
+  }[];
+  prestations?: {
+    codePrestation: string[];
+    montantTotal: string[];
+    montantAMO: string[];
+    montantAMC: string[];
+    montantPP: string[];
+    coefficient: string[];
+    codesActes: string[];
+  }[];
+
+  documents?: {
+    idDocument: string[];
+    typeDocument: string[];
+    nomDocument: string[];
+    dateDocument: string[];
+    etatDocument: string[];
+  }[];
 }
 
 export interface IListeDateChangementEtat {
