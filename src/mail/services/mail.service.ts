@@ -24,6 +24,7 @@ import { TemplateMailService } from './template.mail.service';
 import { DataMailService } from './data.mail.service';
 import { PreviewMailService } from './preview.mail.service';
 import { InjectRepository } from '@nestjs/typeorm';
+import { UserEntity } from 'src/entities/user.entity';
 
 @Injectable()
 export class MailService {
@@ -137,10 +138,15 @@ export class MailService {
   ) {
     const mail = await this.dataMailService.findById(payload.id);
     if (mail instanceof CNotFoundRequestException) return mail;
+
     let mailTitle = mail.title;
     const mailFilename = sanitizeFilename(`${mailTitle}.pdf`);
     // const mailDirname = path ? path.join(process.cwd(), mailFilename) : '';
-    const doctor = mail.doctor;
+    const doctor = mail?.doctor
+      ? mail.doctor
+      : await this.dataSource
+          .getRepository(UserEntity)
+          .findOneBy({ id: docId });
     const patient = mail.patient;
     const correspondent = mail?.conrrespondent;
 
