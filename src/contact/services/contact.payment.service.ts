@@ -205,7 +205,7 @@ export class ContactPaymentService {
     // Bénéficiaires du règlement, uniquement ceux ayant un montant.
     let beneficiaries: IBeneficiary[];
     if (data.beneficiaries && Array.isArray(data.beneficiaries)) {
-      beneficiaries = data.beneficiaries.filter((e) => e.pivot.amount);
+      beneficiaries = data.beneficiaries.filter((e) => e.pivot?.amount);
       beneficiaries.forEach((e) => {
         e.amount_care = 0;
         e.amount_prosthesis = 0;
@@ -278,7 +278,7 @@ export class ContactPaymentService {
             beneficiary.id,
             beneficiary.pivot.amount,
             beneficiary.pivot.amount_care,
-            beneficiary.pivot.amount_prosthesis,
+            beneficiary.pivot.amount_prosthesis ?? 0,
           ]);
           // Réinitialise le niveau de relance
           await queryRunner.query(updateToCOU, [
@@ -404,6 +404,7 @@ export class ContactPaymentService {
         );
       }
       await queryRunner.commitTransaction();
+      return { success: true };
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw new CBadRequestException(err);

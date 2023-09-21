@@ -61,7 +61,7 @@ export class PatientController {
   @Get('/contraindications/:id')
   @UseGuards(TokenGuard)
   async findAllContraindications(@Param('id') id: number) {
-    return this.patientService.findAllContraindications(id);
+    return await this.patientService.findAllContraindications(id);
   }
 
   /**
