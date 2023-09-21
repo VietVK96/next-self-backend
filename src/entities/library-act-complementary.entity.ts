@@ -46,7 +46,7 @@ export class LibraryActComplementaryEntity {
    * @Serializer\MaxDepth(1)
    */
   //   protected $child;
-  @Column({
+  @PrimaryColumn({
     name: 'library_act_child_id',
     type: 'int',
     width: 11,

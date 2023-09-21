@@ -179,4 +179,23 @@ export class CaresheetsController {
     });
     res.end(buffer);
   }
+
+  @Get('lots/bordereau-teletransmission')
+  @UseGuards(TokenGuard)
+  async printBordereau(
+    @Res() res: Response,
+    @Query('id') id?: number,
+    @Query('user_id') user_id?: number,
+  ) {
+    const buffer = await this.service.printLotBordereau(id, user_id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=print.pdf`,
+      'Content-Length': buffer?.length,
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: 0,
+    });
+    res.end(buffer);
+  }
 }

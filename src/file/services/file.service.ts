@@ -51,7 +51,7 @@ export class FileService {
     };
   }
 
-  async updateFile(id: number, payload: UpdateFileDto) {
+  async updateFile(id: number, payload: UpdateFileDto, user: UserIdentity) {
     const file = await this.uploadRepository.findOne({
       where: { id: id },
     });
@@ -64,8 +64,8 @@ export class FileService {
       for (const tagParam of payload.tags) {
         const condition: FindOptionsWhere<TagEntity> =
           typeof tagParam == 'number'
-            ? { id: tagParam }
-            : { internalReference: tagParam };
+            ? { id: tagParam, organizationId: user?.org }
+            : { internalReference: tagParam, organizationId: user?.org };
         const tag = await this.tagRepository.findOne({
           where: condition,
         });

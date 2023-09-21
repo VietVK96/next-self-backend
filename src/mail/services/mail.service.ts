@@ -24,6 +24,7 @@ import { TemplateMailService } from './template.mail.service';
 import { DataMailService } from './data.mail.service';
 import { PreviewMailService } from './preview.mail.service';
 import { InjectRepository } from '@nestjs/typeorm';
+import { UserEntity } from 'src/entities/user.entity';
 
 @Injectable()
 export class MailService {
@@ -42,7 +43,7 @@ export class MailService {
 
   async sendTest(id: number) {
     await this.mailerService.sendMail({
-      to: 'nguyenthanh.rise.88@gmail.com',
+      to: 'trungnq2103@gmail.com',
       subject: `Greeting from NestJS NodeMailer ${id}`,
       template: 'test.hbs',
       context: {},
@@ -133,13 +134,19 @@ export class MailService {
     userId: number,
     payload: SendMailDto,
     files: Express.Multer.File[],
+    docId: number,
   ) {
     const mail = await this.dataMailService.findById(payload.id);
     if (mail instanceof CNotFoundRequestException) return mail;
+
     let mailTitle = mail.title;
     const mailFilename = sanitizeFilename(`${mailTitle}.pdf`);
     // const mailDirname = path ? path.join(process.cwd(), mailFilename) : '';
-    const doctor = mail.doctor;
+    const doctor = mail?.doctor
+      ? mail.doctor
+      : await this.dataSource
+          .getRepository(UserEntity)
+          .findOneBy({ id: docId });
     const patient = mail.patient;
     const correspondent = mail?.conrrespondent;
 
@@ -147,7 +154,10 @@ export class MailService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
-    const browser = await puppeteer.launch({ headless: 'new' });
+    const browser = await puppeteer.launch({
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
     const page = await browser.newPage();
 
     try {
@@ -205,7 +215,7 @@ export class MailService {
             ? mail.conrrespondent.id
             : null,
         },
-        mail?.doctor?.id,
+        docId,
       );
       const mailConverted = await this.previewMailService.transform(
         mail,
@@ -245,7 +255,7 @@ export class MailService {
 
       const fullName = [mail?.user?.lastname, mail?.user?.firstname].join(' ');
       const emailTemplate = fs.readFileSync(
-        path.join(__dirname, '../../../templates/mail/feedback.hbs'),
+        path.join(__dirname, '../../../templates/mail/mailTemplate.hbs'),
         'utf-8',
       );
       const template = handlebars.compile(emailTemplate);

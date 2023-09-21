@@ -323,6 +323,7 @@ export class FindContactService {
         'address',
         'phones',
         'family',
+        'upload',
       ],
     });
 
@@ -393,6 +394,8 @@ export class FindContactService {
       doctor: null,
       amountDue: null,
       reliability: null,
+      avatarId: result?.upload.id,
+      avatarToken: result?.upload.token,
     };
     if (result?.cpdId) {
       res.addressed_by = {
