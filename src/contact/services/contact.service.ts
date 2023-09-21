@@ -518,7 +518,7 @@ count(CON_ID) as countId,COD_TYPE as codType
       const previousId = previousIdResult[0];
       if (!previousId) {
         throw new CBadRequestException(
-          "Aucun patient du jour suivant n'a été trouvé.",
+          "Aucun patient du jour précédent n'a été trouvé.",
         );
       }
       return previousId;
