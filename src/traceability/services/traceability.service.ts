@@ -36,7 +36,8 @@ export class TraceabilityService {
       .innerJoin('traceability.act', 'act')
       .innerJoin('act.patient', 'patient')
       .leftJoin('traceability.medicalDevice', 'medicalDevice')
-      .where('traceability.organizationId = :orgId', { orgId: identity.org });
+      .where('traceability.organizationId = :orgId', { orgId: identity.org })
+      .andWhere('patient.organizationId = :orgId', { orgId: identity.org });
 
     for (let index = 0; index < filterParam?.length; index++) {
       const _filterParam = filterParam[index];
