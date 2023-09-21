@@ -41,7 +41,7 @@ export default registerAs('app', () => ({
       `FF23C97BA6B760A6E3BBE298DA18415334558D92`,
   },
   claudeBernard: {
-    wdsl:
+    wsdl:
       process?.env?.CLAUDE_BERNARD_END_POINT ||
       'https://www.bcbdexther.fr/wsdl/BCBDexther-integrateurs-full.wsdl',
     codeEditeur: process?.env?.CLAUDE_BERNARD_CODE_EDITEUR || 'ECOODENTIST',

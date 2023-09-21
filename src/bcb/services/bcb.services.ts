@@ -5,6 +5,8 @@ import { EntityManager } from 'typeorm';
 import { UserEntity } from 'src/entities/user.entity';
 import { BcbDto } from '../dto/bcb.dto';
 import { ClaudeBernardService } from './claudeBernard.Service';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class BcbServices {
@@ -19,34 +21,30 @@ export class BcbServices {
   async findAll(payload: BcbDto) {
     try {
       this.claudeBernardService.setIdPS(payload?.license?.toString());
-      const claudeBernardSearchResult = await this.claudeBernardService.call({
-        baseLocation: payload?.baseLocation,
-        query: payload?.query,
-        type: payload?.type,
+      const claudeBernardSearchResult = await this.claudeBernardService?.call();
+      delete payload?.license;
+      const result = new Promise((resolve, reject) => {
+        claudeBernardSearchResult.rechercheBCB(
+          {
+            key: {
+              codeEditeur: this.claudeBernardService.codeEditeur,
+              idPS: this.claudeBernardService.idPS,
+              secretEditeur: this.claudeBernardService.generateKey(),
+            },
+            ...payload,
+          },
+          (error, res) => {
+            if (error) {
+              reject(error); // Handle the error appropriately
+            } else {
+              resolve(res); // Process the SOAP response
+            }
+          },
+        );
       });
-      const result: any[] = [];
-      const data = claudeBernardSearchResult?.data;
-      if (data) {
-        for (const key in data) {
-          if (Array.isArray(data[key])) {
-            data[key]?.forEach((produit) => {
-              result.push({
-                ...produit,
-                listName: key,
-              });
-            });
-          } else if (typeof data[key] === 'object') {
-            data.push({ ...data[key], listName: key });
-          }
-          result;
-        }
-
-        return result;
-      } else {
-        return [];
-      }
+      return await result;
     } catch (error) {
-      return [];
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
   }
 }

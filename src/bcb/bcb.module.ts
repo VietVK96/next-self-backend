@@ -5,9 +5,10 @@ import { BcbController } from './bcb.controller';
 import { UserEntity } from 'src/entities/user.entity';
 import { ClaudeBernardService } from './services/claudeBernard.Service';
 import { ConfigModule } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity]), ConfigModule],
+  imports: [TypeOrmModule.forFeature([UserEntity]), ConfigModule, HttpModule],
   controllers: [BcbController],
   exports: [BcbServices],
   providers: [BcbServices, ClaudeBernardService],
