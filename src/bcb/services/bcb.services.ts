@@ -4,9 +4,7 @@ import { Repository } from 'typeorm/repository/Repository';
 import { EntityManager } from 'typeorm';
 import { UserEntity } from 'src/entities/user.entity';
 import { BcbDto } from '../dto/bcb.dto';
-import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
-import { ErrorCode } from 'src/constants/error';
-import { fakeData } from '../data/bcb.data';
+import { ClaudeBernardService } from './claudeBernard.Service';
 
 @Injectable()
 export class BcbServices {
@@ -15,13 +13,42 @@ export class BcbServices {
     private userRepository: Repository<UserEntity>,
     @InjectEntityManager()
     private readonly entityManager: EntityManager,
+    private claudeBernardService: ClaudeBernardService,
   ) {}
 
   async findAll(payload: BcbDto) {
-    if (payload.license === 999999998) {
-      throw new CNotFoundRequestException(ErrorCode.STATUS_NOT_FOUND); //Bad Request
+    try {
+      this.claudeBernardService.setIdPS(payload?.license?.toString());
+      const claudeBernardSearchResult = await this.claudeBernardService.call({
+        baseLocation: payload?.baseLocation,
+        query: payload?.query,
+        type: payload?.type,
+      });
+      const result: any[] = [];
+      const data = claudeBernardSearchResult?.data;
+      if (data) {
+        for (const key in data) {
+          if (Array.isArray(data[key])) {
+            data[key]?.forEach((produit) => {
+              result.push({
+                ...produit,
+                listName: key,
+              });
+            });
+          } else if (typeof data[key] === 'object') {
+            data.push({ ...data[key], listName: key });
+          }
+          result;
+        }
+
+        return result;
+      } else {
+        return [];
+      }
+    } catch (error) {
+      return [];
     }
-    //TODO: dumping data
-    return fakeData;
   }
+
+  //ecoophp/application/Service/MedicamentDatabase/ClaudeBernardService.php
 }

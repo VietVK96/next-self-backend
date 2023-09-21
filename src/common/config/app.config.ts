@@ -15,6 +15,7 @@ export default registerAs('app', () => ({
   uploadDir: process.env.UPLOAD_DIR || './uploads',
   urlImg: process.env.IMAGE_URL || 'http://localhost:3000',
   host: process.env.HOST || 'http://localhost:3000',
+  httpProxy: process.env.HTTP_PROXY || '',
   sesamVitale: {
     cnda: process.env.SESAM_VITALE_CNDA || false,
     endPoint:
