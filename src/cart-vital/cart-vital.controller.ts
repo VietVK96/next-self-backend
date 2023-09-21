@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiProperty, ApiTags } from '@nestjs/swagger';
 import {
   CurrentUser,
@@ -34,7 +34,7 @@ export class CartVitalController {
   })
   async saveCartVital(
     @CurrentUser() identity: UserIdentity,
-    @Query() payload: SaveCardVitalDto,
+    @Body() payload: SaveCardVitalDto,
   ) {
     return await this.cartVitalService.saveCartVital(payload, identity);
   }

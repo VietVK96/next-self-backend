@@ -453,6 +453,6 @@ export class CartVitalService {
     patient.externalReferenceId = payload?.external_reference_id;
 
     await this.updateFromSv(patient);
-    return patient;
+    return { ...patient, external_reference_id: patient.externalReferenceId };
   }
 }
