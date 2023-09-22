@@ -35,6 +35,8 @@ import { customCreatePdf } from 'src/common/util/pdf';
 import * as dayjs from 'dayjs';
 import { LotEntity } from 'src/entities/lot.entity';
 import { checkBoolean, checkId } from 'src/common/util/number';
+import { CurrencyEnum } from 'src/constants/currency';
+import { StringHelper } from 'src/common/util/string-helper';
 const PDFMerger = require('pdf-merger-js');
 
 const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
@@ -42,6 +44,18 @@ const PAV_MINIMUM_AMOUNT = 120;
 const helpersCaresheetPdf = {
   formatDate: function (date: string) {
     return dayjs(date).format('DDMMYYYY');
+  },
+  formatInsee: function (s1, s2) {
+    let string = s1?.concat(s2 ?? '');
+    if (!string) return '';
+    string = string?.replace(/\W/g, '')?.toUpperCase();
+    return string?.replace(
+      /(\w{1})(\w{2})(\w{2})(\w{2})(\w{3})(\w{3})(\w{2})/,
+      '$1 $2 $3 $4 $5 $6 $7',
+    );
+  },
+  formatDateISO: function (date) {
+    return dayjs(date).format('DD/MM/YYYY');
   },
   slice: function (string, start, end) {
     if (!string) return;
@@ -61,6 +75,9 @@ const helpersCaresheetPdf = {
   },
   setVar: function (varName, varValue, options) {
     options.data.root[varName] = varValue;
+  },
+  concatString: function (s1, s2) {
+    return s1.concat(s2);
   },
   math: function (lvalue, operator, rvalue) {
     lvalue = parseFloat(lvalue);
@@ -660,7 +677,6 @@ export class ActsService {
     // return $this->sendRequest('TransmettreFacture', $xml->outputMemory());
     return xml;
   }
-  CCX;
 
   private isTestAntigenique(medical): boolean {
     if (!medical?.ngapKey) {
@@ -1255,6 +1271,7 @@ export class ActsService {
       .leftJoinAndSelect('lot.amc', 'amc')
       .leftJoinAndSelect('lot.amo', 'amo')
       .innerJoinAndSelect('lot.caresheets', 'caresheets')
+      .innerJoinAndSelect('caresheets.patient', 'patients')
       .where('caresheets.id IN (:id)', { id: ids });
 
     const lots = await queryBuilder.getMany();
@@ -1270,10 +1287,14 @@ export class ActsService {
       'templates/pdf/lot',
       'bordereau_teletransmission.hbs',
     );
+
     const data = {
       lot,
       user,
+      currencyy: CurrencyEnum[user?.preference?.currency ?? 'EUR'],
+      count: lot?.caresheets?.length,
     };
+
     const pdf = await customCreatePdf({
       files: [{ path: filePath, data }],
       options: optionsCaresheetPdf,
@@ -1293,9 +1314,10 @@ export class ActsService {
     }
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      relations: ['medical', 'medical.specialtyCode'],
+      relations: ['medical', 'medical.specialtyCode', 'preference'],
     });
     const lots: LotEntity[] = await this.getListLotByIds(ids);
+
     for (const lot of lots) {
       const { file } = await this.getLotFile(lot, user);
       await merger.add(file);
@@ -1310,13 +1332,14 @@ export class ActsService {
       .leftJoinAndSelect('lot.amc', 'amc')
       .leftJoinAndSelect('lot.amo', 'amo')
       .innerJoinAndSelect('lot.caresheets', 'caresheets')
+      .innerJoinAndSelect('caresheets.patient', 'patients')
       .where('lot.id  = :id', { id: id });
 
     const lot = await queryBuilder.getOne();
 
     const user = await this.userRepository.findOne({
       where: { id: user_id },
-      relations: ['medical', 'medical.specialtyCode'],
+      relations: ['medical', 'medical.specialtyCode', 'preference'],
     });
     return (await this.getLotFile(lot, user)).file;
   }
