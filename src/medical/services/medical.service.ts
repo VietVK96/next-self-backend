@@ -24,11 +24,8 @@ export class MedicalService {
       // $claudeBernard->setIdPS($request->query->get('license'));
       // $claudeBernardVersion = $claudeBernard->getVersion();
       // $claudeBernardInformation = $claudeBernard->testConnexion();
-
       //   if (1 > $claudeBernardInformation->result->statutConnexion) {
-
       //     throw new BadRequestHttpException($claudeBernardInformation->result->statutConnexionLibelle);
-
       // }
 
       const profilPatientQueryBuilder =

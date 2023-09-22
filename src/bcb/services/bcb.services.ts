@@ -4,9 +4,9 @@ import { Repository } from 'typeorm/repository/Repository';
 import { EntityManager } from 'typeorm';
 import { UserEntity } from 'src/entities/user.entity';
 import { BcbDto } from '../dto/bcb.dto';
-import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
+import { ClaudeBernardService } from './claudeBernard.Service';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
-import { fakeData } from '../data/bcb.data';
 
 @Injectable()
 export class BcbServices {
@@ -15,13 +15,37 @@ export class BcbServices {
     private userRepository: Repository<UserEntity>,
     @InjectEntityManager()
     private readonly entityManager: EntityManager,
+    private claudeBernardService: ClaudeBernardService,
   ) {}
-
+  //ecoophp/php/bcb/findAll.php
   async findAll(payload: BcbDto) {
-    if (payload.license === 999999998) {
-      throw new CNotFoundRequestException(ErrorCode.STATUS_NOT_FOUND); //Bad Request
+    try {
+      this.claudeBernardService.setIdPS(payload?.license?.toString());
+      const claudeBernardSearchResult = await this.claudeBernardService?.call();
+      delete payload?.license;
+      const result = new Promise((resolve, reject) => {
+        claudeBernardSearchResult.rechercheBCB(
+          {
+            key: {
+              codeEditeur: this.claudeBernardService.codeEditeur,
+              idPS: this.claudeBernardService.idPS,
+              secretEditeur: this.claudeBernardService.generateKey(),
+            },
+            ...payload,
+          },
+          (error, res) => {
+            if (error) {
+              reject(error); // Handle the error appropriately
+            } else {
+              resolve(res); // Process the SOAP response
+            }
+          },
+        );
+      });
+      // handle result has in frontend : bcbConvert()  function
+      return await result;
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
-    //TODO: dumping data
-    return fakeData;
   }
 }
