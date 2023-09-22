@@ -21,7 +21,7 @@ export function sanitizeFilename(filename: string, replacement = '-'): string {
     255 - (extension ? extension.length + 1 : 0),
   );
   const sanitizedFilename =
-    sanitizedBasename + (extension ? `.${extension}` : '');
+    sanitizedBasename + (extension ? `${extension}` : '');
 
   return sanitizedFilename;
 }
