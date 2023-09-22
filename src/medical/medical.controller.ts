@@ -15,6 +15,9 @@ import { FindAllInProgressDto } from './dto/findAllInProgress.medical.dto';
 export class MedicalController {
   constructor(private medicalService: MedicalService) {}
 
+  /**
+   * php/medical/order/baseClaudeBernardCheck.php
+   */
   @Post('baseClaudeBernardCheck')
   @UseGuards(TokenGuard)
   async baseClaudeBernardCheck(
@@ -27,6 +30,9 @@ export class MedicalController {
     );
   }
 
+  /**
+   * php/medical/order/findAllInProgress.php
+   */
   @Post('findAllInProgress')
   @UseGuards(TokenGuard)
   async findAllInProgress(

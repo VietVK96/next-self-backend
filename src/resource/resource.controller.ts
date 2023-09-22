@@ -53,6 +53,9 @@ export class ResourceController {
     return await this.resourceService.findAllUsersAndPractitioners(identity);
   }
 
+  /*
+   * settings/resources/store.php
+   */
   @Post('/store')
   @UseGuards(TokenGuard)
   async createResource(
@@ -62,6 +65,9 @@ export class ResourceController {
     return await this.resourceService.save(payload, identity);
   }
 
+  /*
+   * settings/resources/update.php
+   */
   @Patch('/update')
   @UseGuards(TokenGuard)
   async updateResource(

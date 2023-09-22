@@ -168,7 +168,7 @@ export class ContactService {
       throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_PATIENT);
     }
     record.phones = await this.findPhone(id);
-    if (record.contactFamilyId) {
+    if (record?.contactFamilyId) {
       record.members = await this.getMembers(
         id,
         doctorId,
@@ -184,9 +184,11 @@ export class ContactService {
     record.amcs = await this.findAmcs(id);
 
     const image = await this.findLibraryLink(id);
-    record.image_library_link = image.image_library_link
-      ? image.image_library_link + `${record.nbr.toString().padStart(6, '0')}`
-      : null;
+    record.image_library_link =
+      image?.image_library_link && record?.nbr
+        ? image?.image_library_link +
+          `${record?.nbr?.toString().padStart(6, '0')}`
+        : null;
 
     if (record?.medical?.policyHolder) {
       record.medical.policy_holder = record?.medical?.policyHolder;

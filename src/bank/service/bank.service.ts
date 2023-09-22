@@ -44,6 +44,10 @@ export class BankService {
     private addressRepo: Repository<AddressEntity>,
   ) {}
 
+  /**
+   * php/bank/findAll.php 100%
+   *
+   */
   async findAllBank(groupId: number, practitionerId: number) {
     const records = await this.dataSource.query(
       `SELECT
@@ -78,6 +82,10 @@ export class BankService {
     return records;
   }
 
+  /**
+   * php/bank-checks/index.php -> full
+   *
+   */
   async bankChecks(organizationId: number) {
     const bankCheck = this.dataSource
       .createQueryBuilder(BankCheckEntity, 'bankCheck')
@@ -94,6 +102,10 @@ export class BankService {
     return await bankCheck.getMany();
   }
 
+  /**
+   * php/bank-checks/print.php -> full
+   *
+   */
   async print(params: BankCheckPrintDto) {
     try {
       const id = checkId(params.id);
@@ -159,6 +171,10 @@ export class BankService {
     }
   }
 
+  /**
+   * php/bank-checks/patch.php -> full
+   *
+   */
   async updateBankChecks(id: number, payload: UpdateBankCheckDto) {
     id = checkId(id);
     const currentBankCheck = await this.bankCheckRepo.findOne({
@@ -179,6 +195,9 @@ export class BankService {
     return await this.bankCheckRepo.save(newBankCheck);
   }
 
+  /**
+   *  /settings/bank-checks/copy.php -> full
+   */
   async duplicateBankChecks(id: number) {
     id = checkId(id);
     const currentBankCheck = await this.bankCheckRepo.findOne({
@@ -192,6 +211,9 @@ export class BankService {
     });
   }
 
+  /**
+   *  /settings/bank-checks/index.php -> full
+   */
   async findAllByUser(userId: number) {
     const query = `
     SELECT

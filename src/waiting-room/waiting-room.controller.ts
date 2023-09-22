@@ -13,6 +13,11 @@ import {
 export class WaitingRoomController {
   constructor(private findWaitingService: FindWaitingService) {}
 
+  /**
+   * File: php/waitingRoom/findAll.php 21-99
+   * @function main function
+   *
+   */
   @Get()
   @ApiQuery({
     name: 'practitioner_id',
