@@ -346,7 +346,7 @@ export class CartVitalService {
   async readCartVital(payload: ReadCardVitalDto) {
     let homonyms = false;
     const data = await this.sesamvitaleTeletranmistionService.consulterClient(
-      payload.external_reference_id,
+      payload?.external_reference_id,
     );
     if (!data?.individu?.[0]?.idPatient?.[0]) {
       throw new CBadRequestException(
