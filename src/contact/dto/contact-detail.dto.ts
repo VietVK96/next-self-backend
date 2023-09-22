@@ -108,13 +108,13 @@ export class MedicalDto {
   @ApiProperty()
   tariff_type?: string;
   @ApiProperty()
-  service_amo_code?: string;
+  serviceAmoCode?: string;
   @ApiProperty()
-  service_amo_start_date?: string;
+  serviceAmoStartDate?: string;
   @ApiProperty()
-  service_amo_end_date?: string;
+  serviceAmoEndDate?: string;
   @ApiProperty()
-  tariff_type_id?: number;
+  tariffTypeId?: number;
 }
 
 export class AddressedByDto {
