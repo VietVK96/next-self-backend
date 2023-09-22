@@ -288,7 +288,7 @@ export class CartVitalService {
         patientAmc = new PatientAmcEntity();
       }
 
-      const isGu = couvertureAmc?.isGu?.[0];
+      const isGu = couvertureAmc?.isGu?.[0] === 'true' ? 1 : 0;
       const numero = couvertureAmc?.GU?.[0]?.mutnum?.[0]
         ? couvertureAmc?.GU?.[0]?.mutnum?.[0]
         : couvertureAmc?.rnm?.[0];
