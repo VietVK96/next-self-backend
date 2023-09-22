@@ -213,7 +213,7 @@ export class ReminderService {
             notifier.setUser(currentUser);
             notifier.addReceiver(phoneNumber, countryCode);
 
-            const response = notifier.send(templateRendered);
+            const response = await notifier.send(templateRendered);
 
             this.logger.debug(
               "Envoi d'un rappel de rendez-vous par sms",
