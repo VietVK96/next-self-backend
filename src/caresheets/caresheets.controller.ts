@@ -210,4 +210,11 @@ export class CaresheetsController {
   async delete(@Param('id') id: number) {
     return this.service.deleteCaresheet(id);
   }
+
+  // File php/caresheets/update.php
+  @Post('/update/:id')
+  @UseGuards(TokenGuard)
+  async updateCaresheet(@Param('id') id: number) {
+    return this.service.updateCaresheet(id);
+  }
 }
