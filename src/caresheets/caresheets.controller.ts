@@ -212,7 +212,7 @@ export class CaresheetsController {
   }
 
   // File php/caresheets/update.php
-  @Post('/update/:id')
+  @Post('/save/:id')
   @UseGuards(TokenGuard)
   async updateCaresheet(@Param('id') id: number) {
     return this.service.updateCaresheet(id);

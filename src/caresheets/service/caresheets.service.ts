@@ -1391,160 +1391,172 @@ export class ActsService {
   }
 
   async updateCaresheet(id: number) {
-    const caresheet = await this.fseRepository.findOne({
-      where: { id },
-      relations: {
-        actMedicals: {
-          act: true,
-          ccam: true,
-          ngapKey: true,
-        },
-        amo: true,
-        amc: true,
-        patient: {
-          medical: {
-            policyHolder: true,
+    try {
+      const caresheet = await this.fseRepository.findOne({
+        where: { id },
+        relations: {
+          actMedicals: {
+            act: true,
+            ccam: true,
+            ngapKey: true,
           },
-          amos: true,
-          amcs: true,
+          amo: true,
+          amc: true,
+          patient: {
+            medical: {
+              policyHolder: true,
+            },
+            amos: true,
+            amcs: true,
+          },
         },
-      },
-    });
+      });
 
-    const facture =
-      await this.sesamvitaleTeletranmistionService.consulterFacture(
-        caresheet?.externalReferenceId,
-      );
-    let amount = 0;
-    let amountPatient = 0;
-    let amountAmo = 0;
-    let amountAmoCare = 0;
-    let amountAmoProsthesis = 0;
-    let amountAmc = 0;
-    let amountAmcCare = 0;
-    let amountAmcProsthesis = 0;
+      const facture =
+        await this.sesamvitaleTeletranmistionService.consulterFacture(
+          caresheet?.externalReferenceId,
+        );
+      let amount = 0;
+      let amountPatient = 0;
+      let amountAmo = 0;
+      let amountAmoCare = 0;
+      let amountAmoProsthesis = 0;
+      let amountAmc = 0;
+      let amountAmcCare = 0;
+      let amountAmcProsthesis = 0;
 
-    const prestations = associatifToSequential(facture?.prestations);
-    if (prestations && prestations.length > 0) {
-      for (const prestation of prestations) {
-        const montantAMO = parseFloat(prestation?.montantAMO);
-        const montantAMC = parseFloat(prestation?.montantAMC);
-        amount += parseFloat(prestation?.montantTotal);
-        amountPatient += parseFloat(prestation?.montantPP);
-        amountAmo += montantAMO;
-        amountAmc += montantAMC;
-      }
-    }
-
-    const amoList = this.getActiveAmo(
-      caresheet?.patient?.amos,
-      new Date(caresheet?.date),
-    );
-    const activeAmo = amoList?.[0];
-    const amcList = this.getActiveAmc(
-      caresheet?.patient?.amcs,
-      new Date(caresheet?.date),
-    );
-    const activeAmc = amcList?.[0];
-    const amo = activeAmo?.amo ? activeAmo?.amo : null;
-    const amc = activeAmc?.amc ? activeAmc?.amc : null;
-
-    caresheet.amo = amo;
-    caresheet.amc = amc;
-
-    caresheet.nbr =
-      typeof facture?.numeroFse?.[0] === 'string'
-        ? String(facture?.numeroFse?.[0]).padStart(9, '0')
-        : facture?.numeroFse?.[0];
-    const fseStatus = await this.caresheetStatusRepository.findOne({
-      where: {
-        value: Number(facture.etatLotFse?.[0]),
-      },
-    });
-    if (fseStatus) {
-      caresheet.fseStatus = fseStatus;
-    }
-    const dreStatus = await this.caresheetStatusRepository.findOne({
-      where: { value: Number(facture.etatLotDre?.[0]) },
-    });
-    if (dreStatus) {
-      caresheet.dreStatus = dreStatus;
-    }
-
-    caresheet.mode = facture?.modeFacture?.[0];
-    caresheet.type = facture?.typeFacture?.[0];
-    caresheet.amount = amount;
-    caresheet.amountAMO = amountAmo;
-    caresheet.amountAMC = amountAmc;
-    caresheet.amountAssure = amountPatient;
-
-    for (const actMedicals of caresheet?.actMedicals) {
-      const code = actMedicals?.ccam
-        ? actMedicals?.ccam?.code
-        : actMedicals?.ngapKey?.name;
-
-      for (const prestation of prestations) {
-        const presentationCode = prestation?.codesActes?.[0].code?.[0];
-        const prestationMontantTotal = prestation?.montantTotal?.[0];
-        if (presentationCode === code && prestationMontantTotal === amount) {
-          actMedicals.secuRepayment = prestation?.montantAMO?.[0];
-          actMedicals.mutualRepayment = prestation?.montantAMC?.[0];
-          actMedicals.personAmount = prestation?.montantPP?.[0];
-
-          await this.dentalEventTaskRepository.save(actMedicals);
-
-          const ccamFamily = actMedicals?.act?.ccamFamily;
-          if (ccamFamily && this.isProsthesis(ccamFamily)) {
-            amountAmoProsthesis += parseFloat(prestation?.montantAMO?.[0] || 0);
-            amountAmcProsthesis += parseFloat(prestation?.montantAMC?.[0] || 0);
-          } else {
-            amountAmoCare += parseFloat(prestation?.montantAMO?.[0] || 0);
-            amountAmcCare += parseFloat(prestation?.montantAMC?.[0] || 0);
-          }
-          break;
+      const prestations = associatifToSequential(facture?.prestations);
+      if (prestations && prestations.length > 0) {
+        for (const prestation of prestations) {
+          const montantAMO = parseFloat(prestation?.[0]?.montantAMO?.[0]);
+          const montantAMC = parseFloat(prestation?.[0]?.montantAMC?.[0]);
+          amount += parseFloat(prestation?.[0]?.montantTotal?.[0]);
+          amountPatient += parseFloat(prestation?.[0]?.montantPP?.[0]);
+          amountAmo += montantAMO;
+          amountAmc += montantAMC;
         }
       }
-    }
-    const amoIsTp = facture?.AMO?.[0].isTp?.[0];
-    const amcIsTp = facture?.AMC?.[0].isTp?.[0];
-    if (amoIsTp && amountAmo) {
-      const thirdPartyAmo = new ThirdPartyAmoEntity();
-      thirdPartyAmo.userId = caresheet?.usrId;
-      thirdPartyAmo.patientId = caresheet?.conId;
-      thirdPartyAmo.amo = caresheet?.amo;
-      thirdPartyAmo.amoId = caresheet?.amo?.id;
-      thirdPartyAmo.amount = amountAmo;
-      thirdPartyAmo.amountCare = amountAmoCare;
-      thirdPartyAmo.amountProsthesis = amountAmoProsthesis;
-      caresheet.tiersPayant = 1;
-      caresheet.tiersPayantStatus = EnumThirdPartyStatus.WAITING;
 
-      const amountThirdParty = caresheet?.thirdPartyAmount + amountAmo;
-      caresheet.thirdPartyAmount = amountThirdParty;
-      caresheet.thirdPartyAmo = thirdPartyAmo;
-    }
-    if (amcIsTp && amountAmc) {
-      const thirdPartyAmc = new ThirdPartyAmcEntity();
-      thirdPartyAmc.userId = caresheet?.usrId;
-      thirdPartyAmc.patientId = caresheet?.conId;
-      thirdPartyAmc.amc = caresheet?.amc;
-      thirdPartyAmc.amcId = caresheet?.amc?.id;
-      thirdPartyAmc.amount = amountAmc;
-      thirdPartyAmc.amountCare = amountAmcCare;
-      thirdPartyAmc.amountProsthesis = amountAmcProsthesis;
+      const amoList = this.getActiveAmo(
+        caresheet?.patient?.amos,
+        new Date(caresheet?.date),
+      );
+      const activeAmo = amoList?.[0];
+      const amcList = this.getActiveAmc(
+        caresheet?.patient?.amcs,
+        new Date(caresheet?.date),
+      );
+      const activeAmc = amcList?.[0];
+      const amo = activeAmo?.amo ? activeAmo?.amo : null;
+      const amc = activeAmc?.amc ? activeAmc?.amc : null;
 
-      const typeFacture = facture.typeFacture?.[0];
-      typeFacture == 'FDE'
-        ? (thirdPartyAmc.isDre = 1)
-        : (thirdPartyAmc.isDre = 0);
-      caresheet.tiersPayant = 1;
-      caresheet.tiersPayantStatus = EnumThirdPartyStatus.WAITING;
-      const amountThirdParty = caresheet.thirdPartyAmount + amountAmc;
-      caresheet.thirdPartyAmount = amountThirdParty;
-      caresheet.thirdPartyAmc = thirdPartyAmc;
-    }
+      caresheet.amo = amo;
+      caresheet.amc = amc;
 
-    return await this.fseRepository.save(caresheet);
+      caresheet.nbr =
+        typeof facture?.numeroFse?.[0] === 'string'
+          ? String(facture?.numeroFse?.[0]).padStart(9, '0')
+          : facture?.numeroFse?.[0];
+      const fseStatus = await this.caresheetStatusRepository.findOne({
+        where: {
+          value: Number(facture.etatLotFse?.[0]),
+        },
+      });
+      if (fseStatus) {
+        caresheet.fseStatus = fseStatus;
+      }
+      const dreStatus = await this.caresheetStatusRepository.findOne({
+        where: { value: Number(facture.etatLotDre?.[0]) },
+      });
+      if (dreStatus) {
+        caresheet.dreStatus = dreStatus;
+      }
+
+      caresheet.mode = facture?.modeFacture?.[0];
+      caresheet.type = facture?.typeFacture?.[0];
+      caresheet.amount = amount;
+      caresheet.amountAMO = amountAmo;
+      caresheet.amountAMC = amountAmc;
+      caresheet.amountAssure = amountPatient;
+
+      for (const actMedicals of caresheet?.actMedicals) {
+        const code = actMedicals?.ccam
+          ? actMedicals?.ccam?.code
+          : actMedicals?.ngapKey?.name;
+
+        for (const prestation of prestations) {
+          const presentationCode = prestation?.[0]?.codesActes?.[0].code?.[0];
+          const prestationMontantTotal = prestation?.[0]?.montantTotal?.[0];
+          if (presentationCode === code && prestationMontantTotal === amount) {
+            actMedicals.secuRepayment = prestation?.[0]?.montantAMO?.[0];
+            actMedicals.mutualRepayment = prestation?.[0]?.montantAMC?.[0];
+            actMedicals.personAmount = prestation?.[0]?.montantPP?.[0];
+
+            await this.dentalEventTaskRepository.save(actMedicals);
+
+            const ccamFamily = actMedicals?.act?.ccamFamily;
+            if (ccamFamily && this.isProsthesis(ccamFamily)) {
+              amountAmoProsthesis += parseFloat(
+                prestation?.[0]?.montantAMO?.[0] || 0,
+              );
+              amountAmcProsthesis += parseFloat(
+                prestation?.[0]?.montantAMC?.[0] || 0,
+              );
+            } else {
+              amountAmoCare += parseFloat(
+                prestation?.[0]?.montantAMO?.[0] || 0,
+              );
+              amountAmcCare += parseFloat(
+                prestation?.[0]?.montantAMC?.[0] || 0,
+              );
+            }
+            break;
+          }
+        }
+      }
+      const amoIsTp = facture?.AMO?.[0].isTp?.[0];
+      const amcIsTp = facture?.AMC?.[0].isTp?.[0];
+      if (amoIsTp && amountAmo) {
+        const thirdPartyAmo = new ThirdPartyAmoEntity();
+        thirdPartyAmo.userId = caresheet?.usrId;
+        thirdPartyAmo.patientId = caresheet?.conId;
+        thirdPartyAmo.amo = caresheet?.amo;
+        thirdPartyAmo.amoId = caresheet?.amo?.id;
+        thirdPartyAmo.amount = amountAmo;
+        thirdPartyAmo.amountCare = amountAmoCare;
+        thirdPartyAmo.amountProsthesis = amountAmoProsthesis;
+        caresheet.tiersPayant = 1;
+        caresheet.tiersPayantStatus = EnumThirdPartyStatus.WAITING;
+
+        const amountThirdParty = caresheet?.thirdPartyAmount + amountAmo;
+        caresheet.thirdPartyAmount = amountThirdParty;
+        caresheet.thirdPartyAmo = thirdPartyAmo;
+      }
+      if (amcIsTp && amountAmc) {
+        const thirdPartyAmc = new ThirdPartyAmcEntity();
+        thirdPartyAmc.userId = caresheet?.usrId;
+        thirdPartyAmc.patientId = caresheet?.conId;
+        thirdPartyAmc.amc = caresheet?.amc;
+        thirdPartyAmc.amcId = caresheet?.amc?.id;
+        thirdPartyAmc.amount = amountAmc;
+        thirdPartyAmc.amountCare = amountAmcCare;
+        thirdPartyAmc.amountProsthesis = amountAmcProsthesis;
+
+        const typeFacture = facture.typeFacture?.[0];
+        typeFacture == 'FDE'
+          ? (thirdPartyAmc.isDre = 1)
+          : (thirdPartyAmc.isDre = 0);
+        caresheet.tiersPayant = 1;
+        caresheet.tiersPayantStatus = EnumThirdPartyStatus.WAITING;
+        const amountThirdParty = caresheet.thirdPartyAmount + amountAmc;
+        caresheet.thirdPartyAmount = amountThirdParty;
+        caresheet.thirdPartyAmc = thirdPartyAmc;
+      }
+
+      return await this.fseRepository.save(caresheet);
+    } catch (error) {
+      console.log('error', error);
+    }
   }
 
   isProsthesis(family: string): boolean {
