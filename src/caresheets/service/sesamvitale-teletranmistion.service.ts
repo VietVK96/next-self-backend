@@ -9,8 +9,14 @@ import {
   IRecevoirDetailListeRsp,
   IRecevoirRsp,
   IConsulterClient,
+  ITransmettrePatient,
 } from '../interface/caresheet.interface';
 import { SesamvitaleBaseService } from './sesamvitale-base.service';
+import { UserEntity } from 'src/entities/user.entity';
+import { ContactEntity } from 'src/entities/contact.entity';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
@@ -172,5 +178,86 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
       xml,
     );
     return data;
+  }
+
+  async transmettrePatient(user: UserEntity, patient: ContactEntity) {
+    if (
+      !patient?.firstname ||
+      !patient?.lastname ||
+      !patient?.birthday ||
+      !patient?.birthOrder ||
+      !patient?.insee ||
+      !patient?.inseeKey
+    ) {
+      throw new CBadRequestException(ErrorCode.ERROR_PATIENT_IS_REQUIRED);
+    }
+    const birthDate =
+      patient?.birthDateLunar ?? dayjs(patient?.birthday).format('YYYY-MM-DD');
+    const matches = birthDate.match(
+      /^(?<year>[0-9]{4})(?<month>[0-9]{2})(?<day>[0-9]{2})$/,
+    );
+
+    if (patient?.externalReferenceId) {
+      const respone = await this.consulterClient(patient?.externalReferenceId);
+      if (
+        respone?.individu?.[0]?.nomUsuel?.[0].toLocaleLowerCase() ===
+          patient?.lastname.toLocaleLowerCase() &&
+        respone?.individu?.[0]?.prenom?.[0].toLocaleLowerCase() ===
+          patient?.firstname.toLocaleLowerCase() &&
+        respone?.individu?.[0]?.rangGem?.[0] === String(patient?.birthOrder) &&
+        respone?.individu?.[0]?.dateNaissance?.[0] ===
+          `${matches?.groups?.year}${matches?.groups?.month}${matches?.groups?.day}` &&
+        respone?.individu?.[0]?.nirIndividu?.[0] === patient?.insee &&
+        respone?.individu?.[0]?.nirIndividuCle?.[0] === patient?.inseeKey
+      ) {
+        return null;
+      }
+    }
+
+    const numFacturation = user?.medical?.finessNumber ?? '';
+    const numRpps = user?.medical?.nationalIdentifierNumber ?? '';
+    const idPatient = patient?.externalReferenceId ?? '';
+    const nom = patient?.lastname ?? '';
+    const prenom = patient?.firstname ?? '';
+    const jour = matches?.groups?.day ?? '';
+    const mois = matches?.groups?.month ?? '';
+    const annee = matches?.groups?.year ?? '';
+    const lunaire = !!patient?.birthDateLunar ? 'true' : 'false';
+    const numeroSS = patient?.insee ?? '';
+    const cleNumeroSS = patient?.inseeKey ?? '';
+    const rangNaissance = patient?.birthOrder ?? '';
+    const xml = `
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">
+      <soapenv:Body>
+        <jux:transmettrePatient>
+          <xsd:appelTransmettrePatient>
+            <xsd:numFacturation>${numFacturation}</xsd:numFacturation>
+            <xsd:numRpps>${numRpps}</xsd:numRpps>
+            ${idPatient ? `<xsd:idPatient>${idPatient}</xsd:idPatient>` : ``}
+            <xsd:nom>${nom}</xsd:nom>
+            <xsd:prenom>${prenom}</xsd:prenom>
+            <xsd:dateNaissance>
+              <xsd:jour>${jour}</xsd:jour>
+              <xsd:mois>${mois}</xsd:mois>
+              <xsd:annee>${annee}</xsd:annee>
+              <xsd:lunaire>${lunaire}</xsd:lunaire>
+            </xsd:dateNaissance>
+            <xsd:numeroSS>${numeroSS}</xsd:numeroSS>
+            <xsd:cleNumeroSS>${cleNumeroSS}</xsd:cleNumeroSS>
+            <xsd:rangNaissance>${rangNaissance}</xsd:rangNaissance>
+          </xsd:appelTransmettrePatient>
+        </jux:transmettrePatient>
+      </soapenv:Body>
+    </soapenv:Envelope>`;
+
+    const respone = await this.sendRequest<ITransmettrePatient>(
+      'transmettrePatient',
+      xml,
+    );
+
+    if (!patient?.externalReferenceId) {
+      patient.externalReferenceId = Number(respone?.idPatient?.[0]);
+    }
+    return respone;
   }
 }

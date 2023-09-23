@@ -184,19 +184,19 @@ export class ActsService {
       } = request;
       const [patient, user] = await Promise.all([
         this.patientRepository.findOneOrFail({
-          relations: ['amos'],
+          relations: { amos: true },
           where: { id: patient_id },
         }),
         this.userRepository.findOneOrFail({
-          relations: ['medical'],
+          relations: { medical: true },
           where: { id: user_id },
         }),
       ]);
       const dataActs: EventTaskEntity[] = await this.eventTaskRepository.find({
-        relations: ['medical'],
+        relations: { medical: { act: true } },
         where: { id: In(act_id), conId: patient_id },
       });
-      if (!dataActs.length) {
+      if (!dataActs || dataActs?.length === 0) {
         throw new CBadRequestException(ErrorCode.ERROR_CARESHEET_ACTS_IS_EMPTY);
       }
       const caresheet: FseEntity = {};
@@ -210,22 +210,16 @@ export class ActsService {
       });
       caresheet.dreStatus = caresheet.fseStatus;
       dataActs.forEach((act) => {
-        caresheet.tasks.push(act);
+        caresheet?.tasks.push(act?.medical);
       });
       await this.interfacageService.compute(caresheet);
       //convert funtion transmettrePatient in client services
-      if (
-        !patient?.firstname ||
-        !patient?.lastname ||
-        !patient?.birthDate ||
-        !patient?.birthRank ||
-        !patient?.insee ||
-        !patient?.inseeKey
-      ) {
-        throw new CBadRequestException(ErrorCode.ERROR_PATIENT_IS_REQUIRED);
-      } else {
-        this.transmettrePatient(user, patient);
-      }
+      const dataTransmettrePatient =
+        await this.sesamvitaleTeletranmistionService.transmettrePatient(
+          user,
+          patient,
+        );
+      //@TODO
 
       let datePrescription: Date;
       if (date_prescription) {
@@ -399,7 +393,7 @@ export class ActsService {
         acte.isAld = !!relatedToAnAld;
         facture.actes.push(acte);
       }
-      this.transmettreFactureXml(facture);
+      const data = this.transmettreFactureXml(facture);
       // On transmet la facture à FSV.
       // const response = await this.transmettreFacture(facture);
       // caresheet.externalReferenceId = response?.idFacture;
@@ -434,7 +428,7 @@ export class ActsService {
     const lunaire = !!patient?.birthDateLunar ? 'true' : 'false';
     const numeroSS = patient?.insee ?? '';
     const cleNumeroSS = patient?.inseeKey ?? '';
-    const rangNaissance = patient?.birthRank ?? '';
+    const rangNaissance = patient?.birthOrder ?? '';
     const xml = `
     <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">
       <soapenv:Body>
@@ -442,7 +436,7 @@ export class ActsService {
           <xsd:appelTransmettrePatient>
             <xsd:numFacturation>${numFacturation}</xsd:numFacturation>
             <xsd:numRpps>${numRpps}</xsd:numRpps>
-            ${idPatient ? `<xsd:idPatient>${numRpps}</xsd:idPatient>` : ``}
+            ${idPatient ? `<xsd:idPatient>${idPatient}</xsd:idPatient>` : ``}
             <xsd:nom>${nom}</xsd:nom>
             <xsd:prenom>${prenom}</xsd:prenom>
             <xsd:dateNaissance>
@@ -668,7 +662,7 @@ export class ActsService {
                 }
                 ${
                   acte?.codeAccordPrealable
-                    ? `<xsd:dateDemandePrealable">${acte?.codeAccordPrealable}</xsd:dateDemandePrealable>`
+                    ? `<xsd:codeAccordPrealable">${acte?.codeAccordPrealable}</xsd:codeAccordPrealable>`
                     : ``
                 }
               </xsd:acte>

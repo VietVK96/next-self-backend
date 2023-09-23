@@ -79,7 +79,7 @@ export class InterfacageService {
 
   async compute(caresheet: FseEntity) {
     const groupByDates: Record<string, DentalEventTaskEntity[]> = {};
-    caresheet.tasks.forEach((actMedical) => {
+    caresheet?.tasks?.forEach((actMedical) => {
       const dateKey =
         actMedical && actMedical?.task?.date
           ? dayjs(actMedical?.task?.date).format('YYYYMMDD')
@@ -97,9 +97,9 @@ export class InterfacageService {
       if (actMedicalCcams.length <= 1) continue;
       const actMedicalDemiTarifs: DentalEventTaskEntity[] =
         actMedicalCcams.filter((actMedical) => actMedical?.coef === 0.5);
-      if (actMedicalDemiTarifs.length > 0) {
+      if (actMedicalDemiTarifs.length === 1) {
         associationCode = 1;
-        this.add(actMedicalDemiTarifs, 2);
+        await this.add(actMedicalDemiTarifs, 2);
         const arrayUdiff = (arr1, arr2, compareFn) => {
           return arr1.filter((v1) => !arr2.some((v2) => compareFn(v1, v2)));
         };

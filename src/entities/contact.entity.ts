@@ -211,7 +211,7 @@ export class ContactEntity {
   //   width: 11,
   //   default: 1,
   // })
-  birthRank?: number;
+  // birthRank?: number;
 
   /**
    * @ORM\Column(name="CON_QUALITY", type="integer")
