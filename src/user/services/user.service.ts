@@ -583,7 +583,7 @@ export class UserService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      for (let n = 0; n <= 500; n++) {
+      for (let n = 0; n <= 1000; n++) {
         const savedAddress = await queryRunner.manager
           .getRepository(AddressEntity)
           .insert({
@@ -603,7 +603,7 @@ export class UserService {
             resourceId: 1,
             avatarId: null,
             admin: 1,
-            log: `Testper${n}`,
+            log: `Testperformance${n}`,
             passwordAccounting: null,
             password:
               '$2y$10$jldzVAQH5pG2R5uSqMiP0uHVE.VJ2u2ghErBEKpfOGlw8m2R3CHda',
