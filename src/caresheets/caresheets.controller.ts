@@ -217,4 +217,19 @@ export class CaresheetsController {
   async updateCaresheet(@Param('id') id: number) {
     return this.service.updateCaresheet(id);
   }
+
+  @Get('/printQuittance')
+  @UseGuards(TokenGuard)
+  async printQuittance(@Res() res: Response, @Query('id') ids?: number) {
+    const buffer = await this.service.printQuittance(ids);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=print.pdf`,
+      'Content-Length': buffer?.length,
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: 0,
+    });
+    res.end(buffer);
+  }
 }

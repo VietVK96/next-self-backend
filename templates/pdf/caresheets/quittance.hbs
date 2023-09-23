@@ -1,0 +1,197 @@
+
+
+
+    <title>{{ 'Quittance'|trans }}</title>
+    <style>
+
+    @page {
+        margin: 5mm;
+        padding: 0;
+    }
+
+    body {
+        font-family: Arial;
+        font-size: 12px;
+    }
+
+    hr {
+        margin: 5mm 0;
+        border-top: 0.1pt solid #000000;
+        border-bottom: 0.1pt solid #ffffff;
+    }
+
+    h1 {
+        font-size: 14px;
+        text-align: center;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    table thead th {
+        text-align: center;
+    }
+
+    table td,
+    table th {
+        padding: 2mm;
+        vertical-align: top;
+    }
+
+    table.bordered td,
+    table.bordered th {
+        border: solid 0.1pt #000000;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    div.organization {
+        display: inline-block;
+        padding: 3mm 5mm;
+        background-color: #eeeeee;
+    }
+
+    </style>
+
+<body>
+    <h1>
+        Quittance
+    </h1>
+    <hr />
+    <table style="margin-bottom: 5mm">
+        <tbody>
+            <tr>
+                <td style="width: 50%; padding: 0 5mm;">
+                    <div>
+                        {{ caresheet.user.medical.lastName }} {{ caresheet.user.medical.firstName }}
+                    </div>
+                    <div>
+                        {{ caresheet.user.medical.specialtyCode.label }}
+                    </div>
+                    {{#if caresheet.user.address}}
+                    <div>
+                        {{ caresheet.user.address.street }}
+                        <br />
+                         {{caresheet.user.address.zipCode}}
+                        {{caresheet.user.address.city}}
+                    </div>
+                    {{/if}}
+                    <div>
+                        Numéro de facturation : 
+                        {{ caresheet.user.medical.finessNumber }}
+                    </div>
+                    <div>
+                        Feuille de soins {{caresheet.nbr}} créée le {{formatDateISO caresheet.date}}
+                    </div>
+                </td>
+                <td style="width: 50%; padding: 0 5mm; text-align: right;">
+                    <div>
+                        {{ caresheet.patient.lastName }} {{ caresheet.patient.firstName }}
+                    </div>
+                    <div>
+                        NIR : {{formatInsee caresheet.patient.insee caresheet.patient.inseeKey }}
+                    </div>
+                    <div>
+                        Né(e) le {{formatDateISO caresheet.patient.birthDay}}
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    {{#if caresheet.amo}}
+    <div style="margin-bottom: 5mm;">
+        <div class="organization">
+            <div>
+                <strong>Organisme destinataire</strong>
+            </div>
+            <div>
+                {{ caresheet.amo.libelle }} ( {{ caresheet.amo.grandRegime }} {{ caresheet.amo.caisseGestionnaire }} {{ caresheet.amo.centreGestionnaire }} )
+            </div>
+        </div>
+    </div>
+    {{/if}}
+    <table class="bordered">
+        <thead>
+            <tr>
+                <th style="width: 12%;">Date</th>
+                <th>Désignation</th>
+                <th style="width: 12%;">Montant</th>
+                <th style="width: 12%;">Caisse</th>
+                <th style="width: 12%;">Mutuelle</th>
+                <th style="width: 12%;">Assuré</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each caresheet.actMedicals}}
+            <tr>
+                <td class="text-center">{{ this.act.date }}</td>
+                <td>
+                    <div>
+                        {{ this.act.name }}
+                    </div>
+                    <div>
+                      Code : 
+                          {{#if this.ccam}}
+                              {{this.ccam.code}}
+                          {{else if this.ngapKey}}
+                              {{this.ngapKey.name}} {{this.coef}}
+                          {{/if}}
+                                          </div>
+                                          {{#if this.teeth}}
+                                          <div>
+                                            <div>
+                          {{#if this.teeth.length}}
+                              {{#if (eq this.teeth.length 1)}}
+                                  1 Dent traitée
+                              {{else}}
+                                  {{this.teeth.length}} Dents traitées
+                              {{/if}}
+                              : {{this.teeth.join ', '}}
+                          {{/if}}
+                      </div>
+                    </div>
+                    {{/if}}
+                </td>
+                <td class="text-right">{{ this.act.amount}} {{../currencyy}}</td>
+                <td class="text-right">{{ this.secuRepayment}} {{../currencyy}}</td>
+                <td class="text-right">{{ this.mutualRepayment }} {{../currencyy}}</td>
+                <td class="text-right">{{ this.personAmount}} {{../currencyy}}</td>
+            </tr>
+            {{/each}}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2">
+                  {{#if (eq caresheet.actMedicals.length 0)}}
+                      <strong>Aucune prestation</strong>
+                  {{else if (eq caresheet.actMedicals.length 1)}}
+                      <strong>1 prestation</strong>
+                  {{else}}
+                      <strong>{{caresheet.actMedicals.length}} prestations</strong>
+                  {{/if}}
+                </td>
+                <td class="text-right">
+                    <strong>{{ caresheet.amount}} {{../currencyy}}</strong>
+                </td>
+                <td class="text-right">
+                    <strong>{{ caresheet.amountAMO }} {{../currencyy}}</strong>
+                </td>
+                <td class="text-right">
+                    <strong>{{ caresheet.amountAMC }} {{../currencyy}}</strong>
+                </td>
+                <td class="text-right">
+                    <strong>{{ caresheet.amountAssure }} {{../currencyy}}</strong>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</body>
+</html>
