@@ -1585,6 +1585,65 @@ export class ActsService {
     return PROSTHESIS_FAMILIES.includes(family);
   }
 
+  async getQuittanceFile(id: number): Promise<{ file: Buffer; name: string }> {
+    const caresheet = await this.fseRepository.findOne({
+      where: { id },
+      relations: {
+        actMedicals: {
+          act: true,
+          ccam: true,
+          ngapKey: true,
+        },
+        amo: true,
+        amc: true,
+        patient: {
+          medical: {
+            policyHolder: true,
+          },
+        },
+      },
+    });
+    caresheet.thirdPartyAmo = await this.thirdPartyAmoRepository.findOne({
+      where: {
+        caresheetId: caresheet?.id,
+      },
+    });
+    caresheet.thirdPartyAmc = await this.thirdPartyAmcRepository.findOne({
+      where: {
+        caresheetId: caresheet?.id,
+      },
+    });
+    const filePath = path.join(
+      process.cwd(),
+      'templates/pdf/caresheets',
+      'quittance.hbs',
+    );
+
+    const data = {
+      caresheet,
+      currencyy: CurrencyEnum[caresheet?.user.setting?.currency ?? 'EUR'],
+    };
+
+    const pdf = await customCreatePdf({
+      files: [{ path: filePath, data }],
+      options: optionsCaresheetPdf,
+      helpers: helpersCaresheetPdf,
+    });
+    return {
+      file: pdf,
+      name: `${caresheet.nbr}.pdf`,
+    };
+  }
+  async printQuittance(ids: Array<number>) {
+    const merger = new PDFMerger();
+
+    for (const id of ids) {
+      const { file } = await this.getQuittanceFile(id);
+      await merger.add(file);
+    }
+
+    return await merger.saveAsBuffer();
+  }
   private getActiveAmc = (amcs: PatientAmcEntity[], date: Date) => {
     return amcs.filter((amc) => {
       return (
