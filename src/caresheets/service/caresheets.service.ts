@@ -1601,6 +1601,7 @@ export class ActsService {
             policyHolder: true,
           },
         },
+        user: true,
       },
     });
     caresheet.thirdPartyAmo = await this.thirdPartyAmoRepository.findOne({
@@ -1634,14 +1635,10 @@ export class ActsService {
       name: `${caresheet.nbr}.pdf`,
     };
   }
-  async printQuittance(ids: Array<number>) {
+  async printQuittance(id: number) {
     const merger = new PDFMerger();
-
-    for (const id of ids) {
-      const { file } = await this.getQuittanceFile(id);
-      await merger.add(file);
-    }
-
+    const { file } = await this.getQuittanceFile(id);
+    await merger.add(file);
     return await merger.saveAsBuffer();
   }
   private getActiveAmc = (amcs: PatientAmcEntity[], date: Date) => {

@@ -218,9 +218,9 @@ export class CaresheetsController {
     return this.service.updateCaresheet(id);
   }
 
-  @Get('printQuittance')
+  @Get('/printQuittance')
   @UseGuards(TokenGuard)
-  async printQuittance(@Res() res: Response, @Query('id') ids?: Array<number>) {
+  async printQuittance(@Res() res: Response, @Query('id') ids?: number) {
     const buffer = await this.service.printQuittance(ids);
     res.set({
       'Content-Type': 'application/pdf',
