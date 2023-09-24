@@ -3,13 +3,16 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrdonnancesDto } from '../dto/ordonnances.dto';
-import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
+import {
+  EnumMedicalOrderFormatType,
+  MedicalOrderEntity,
+} from 'src/entities/medical-order.entity';
 import { ErrorCode } from 'src/constants/error';
 import { MedicalHeaderEntity } from 'src/entities/medical-header.entity';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { PrintPDFDto } from '../dto/facture.dto';
-import { checkBoolean, checkId } from 'src/common/util/number';
+import { checkBoolean, checkId, checkNumber } from 'src/common/util/number';
 import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
 import { UserEntity } from 'src/entities/user.entity';
 import * as cheerio from 'cheerio';
@@ -28,6 +31,7 @@ import * as fs from 'fs';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { ConfigService } from '@nestjs/config';
+import { isNumber } from 'class-validator';
 
 @Injectable()
 export class OrdonnancesServices {
@@ -132,13 +136,39 @@ export class OrdonnancesServices {
 
   async update(payload: OrdonnancesDto) {
     try {
-      if ((payload?.creation_date as string) && (payload?.end_date as string)) {
-        await this.medicalRepository.save({
-          usrId: payload?.user_id,
-          conId: payload?.patient_id,
+      let prescription: MedicalOrderEntity;
+      let prescriptions = payload?.prescriptions || '';
+
+      prescriptions = prescriptions.replace(
+        /<DIV name="cross" [^>]+><\/DIV>/gi,
+        '',
+      );
+      prescriptions = prescriptions.replace(/ onmouseover="[^"]+"/gi, '');
+      prescriptions = prescriptions.replace(/ onmouseout="[^"]+"/gi, '');
+      prescriptions = prescriptions.replace(/ onclick="[^"]+"/gi, '');
+
+      if (payload?.creation_date as string) {
+        prescription = await this.medicalRepository.save({
+          usrId: payload?.user_id || null,
+          conId: payload?.patient_id || null,
           title: payload?.title,
           date: payload?.creation_date,
-          endDate: payload?.end_date,
+          endDate: payload?.end_date || null,
+          address: payload?.address || null,
+          bcbVersion: payload?.bcbVersion || null,
+          format:
+            payload?.format in EnumMedicalOrderFormatType
+              ? EnumMedicalOrderFormatType[payload?.format?.toUpperCase()]
+              : 'A4',
+          headerEnable: payload?.header_enable || 0,
+          headerHeight: checkNumber(payload?.header_height) || null,
+          headerMsg: payload?.header_msg || null,
+          identContact: payload?.ident_contact || '',
+          identPrat: payload?.ident_prat || null,
+          numberOfPrescription: checkNumber(payload?.numberOfPrescription) || 0,
+          prescription: prescriptions || '',
+          comment: payload?.comment || null,
+          signaturePraticien: payload?.signaturePraticien || null,
         });
       }
 
@@ -147,15 +177,7 @@ export class OrdonnancesServices {
           where: { userId: payload?.user_id },
         });
         if (!medicalHeader) {
-          const medicalHeaderCreate = this.medicalHeaderRepository.create({
-            userId: payload?.user_id,
-            msg: payload?.header_msg,
-            address: payload?.address,
-            identPrat: payload?.ident_prat,
-            height: payload?.header_height,
-            format: payload?.format,
-          });
-          await this.medicalHeaderRepository.save(medicalHeaderCreate);
+          medicalHeader.userId = payload?.user_id;
         }
         await this.medicalHeaderRepository.save({
           userId: payload?.user_id,
@@ -166,14 +188,9 @@ export class OrdonnancesServices {
           format: payload?.format,
           headerEnable: payload?.header_enable,
         });
-        return medicalHeader.id;
       }
-      {
-        const medicalHeader = await this.medicalHeaderRepository.findOne({
-          where: { userId: payload?.user_id },
-        });
-        return medicalHeader?.id;
-      }
+
+      return prescription?.id;
     } catch {
       return new CBadRequestException(ErrorCode.NOT_FOUND);
     }
@@ -268,8 +285,12 @@ export class OrdonnancesServices {
         versions.push('duplicata');
       }
 
-      const imgFinessNumber = await generateBarcode({ text: finessNumber });
-      const imgRppsNumber = await generateBarcode({ text: rppsNumber });
+      const imgFinessNumber = finessNumber
+        ? await generateBarcode({ text: finessNumber })
+        : null;
+      const imgRppsNumber = rppsNumber
+        ? await generateBarcode({ text: rppsNumber })
+        : null;
       const data = {
         ident_prat: nl2br(ident_prat),
         adresse: nl2br(adresse),
@@ -320,6 +341,10 @@ export class OrdonnancesServices {
 
       return customCreatePdf({ files, options });
     } catch (error) {
+      console.log(
+        '🚀 ~ file: ordonnances.services.ts:340 ~ OrdonnancesServices ~ generatePdf ~ error:',
+        error,
+      );
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }

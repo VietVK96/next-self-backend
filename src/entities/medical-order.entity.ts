@@ -15,7 +15,7 @@ export enum EnumMedicalOrderFormatType {
   A4 = 'A4',
   A5 = 'A5',
   A5P = 'A5p',
-  SCREEN_180x210 = '180x210',
+  '180X210' = '180x210',
 }
 
 /**

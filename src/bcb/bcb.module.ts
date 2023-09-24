@@ -6,9 +6,19 @@ import { UserEntity } from 'src/entities/user.entity';
 import { ClaudeBernardService } from './services/claudeBernard.Service';
 import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
+import { ContraindicationEntity } from 'src/entities/contraindication.entity';
+import { ContactEntity } from 'src/entities/contact.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity]), ConfigModule, HttpModule],
+  imports: [
+    TypeOrmModule.forFeature([
+      UserEntity,
+      ContraindicationEntity,
+      ContactEntity,
+    ]),
+    ConfigModule,
+    HttpModule,
+  ],
   controllers: [BcbController],
   exports: [BcbServices],
   providers: [BcbServices, ClaudeBernardService],

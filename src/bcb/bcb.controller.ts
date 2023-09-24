@@ -1,8 +1,13 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { TokenGuard } from 'src/common/decorator/auth.decorator';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
 import { BcbServices } from './services/bcb.services';
-import { BcbDto } from './dto/bcb.dto';
+import { BcbDto, BcbFindOneDto } from './dto/bcb.dto';
+import { identity } from 'rxjs';
 
 @Controller('bcb')
 @ApiTags('Bcb')
@@ -16,5 +21,14 @@ export class BcbController {
   @UseGuards(TokenGuard)
   async findAll(@Body() payload: BcbDto) {
     return await this.bcbServices.findAll(payload);
+  }
+
+  @Get('find')
+  @UseGuards(TokenGuard)
+  async findOne(
+    @Query() payload: BcbFindOneDto,
+    @CurrentUser() identity: UserIdentity,
+  ) {
+    return await this.bcbServices.findOne(payload, identity);
   }
 }
