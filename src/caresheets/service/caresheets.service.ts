@@ -1613,7 +1613,12 @@ export class ActsService {
             policyHolder: true,
           },
         },
-        user: true,
+        user: {
+          medical: {
+            specialtyCode: true,
+          },
+          address: true,
+        },
       },
     });
     caresheet.thirdPartyAmo = await this.thirdPartyAmoRepository.findOne({

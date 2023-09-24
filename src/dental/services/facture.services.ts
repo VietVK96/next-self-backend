@@ -55,6 +55,9 @@ import * as handlebars from 'handlebars';
 import * as dayjs from 'dayjs';
 import { DEFAULT_LOCALE } from 'src/constants/default';
 import { ConfigService } from '@nestjs/config';
+import { FseEntity } from 'src/entities/fse.entity';
+import { inseeFormatter } from 'src/common/formatter';
+import { CashingEntity } from 'src/entities/cashing.entity';
 @Injectable()
 export class FactureServices {
   constructor(
@@ -71,10 +74,14 @@ export class FactureServices {
     private privilegeRepository: Repository<PrivilegeEntity>,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
+    @InjectRepository(FseEntity)
+    private caresheetRepository: Repository<FseEntity>,
     @InjectRepository(ContactEntity)
     private contactRepository: Repository<ContactEntity>,
     @InjectRepository(AddressEntity)
     private addressRepository: Repository<AddressEntity>,
+    @InjectRepository(CashingEntity)
+    private paymentRepo: Repository<CashingEntity>,
     @InjectRepository(ContactNoteEntity)
     private contactNoteRepository: Repository<ContactNoteEntity>,
     private dataSource: DataSource,
@@ -363,6 +370,8 @@ export class FactureServices {
     userId: number,
     contactId: number,
     identity: UserIdentity,
+    caresheet_id: number,
+    payment_id: number,
   ) {
     const withs = userId;
     const userID = identity?.id as number;
@@ -371,11 +380,12 @@ export class FactureServices {
 
     const id_facture = 0;
     const id_societe = 0;
-    const id_user = userID;
+    let id_user = userID;
     const id_devis = 0;
+    let id_contact = 0;
     const dateFacture = new Date().toISOString().split('T')[0];
     const infosCompl = '';
-    const modePaiement = 'Non Payee';
+    let modePaiement = 'Non Payee';
 
     if (withs !== null) {
       const type = EnumPrivilegeTypeType.NONE;
@@ -497,6 +507,107 @@ export class FactureServices {
           infosCompl,
           modePaiement,
         });
+      } catch (err) {
+        throw new CBadRequestException(err);
+      }
+    } else if (caresheet_id) {
+      try {
+        const caresheet = await this.caresheetRepository.findOne({
+          where: { id: caresheet_id || 0 },
+          relations: {
+            user: true,
+            actMedicals: {
+              act: true,
+              ngapKey: true,
+              ccam: true,
+            },
+            patient: true,
+          },
+        });
+        const user = caresheet?.user;
+        const patient = caresheet?.patient;
+        id_user = user?.id;
+        id_contact = patient?.id;
+        identPat = patient?.lastname + ' ' + patient?.firstname;
+
+        const address = patient?.address;
+        if (address) {
+          identPat += `\n${address.street}\n${address.zipCode} ${address.city}`;
+        }
+        const patientInsee = inseeFormatter(
+          `${patient?.insee}${patient?.inseeKey}`,
+        );
+        identPat += `\n\n${patientInsee}`;
+        if (payment_id) {
+          const payment = await this.paymentRepo.findOne({
+            where: { id: payment_id || 0 },
+            relations: {
+              user: true,
+            },
+          });
+          modePaiement = payment?.payment;
+        }
+
+        const newFacture = await this.newFacture({
+          id_facture,
+          id_user,
+          id_societe,
+          contactId: id_contact,
+          id_devis,
+          dateFacture,
+          titreFacture,
+          identPrat,
+          adressePrat,
+          identPat,
+          infosCompl,
+          modePaiement,
+        });
+
+        const insertToCSC = `
+        INSERT INTO T_BILL_LINE_BLN (BIL_ID, BLN_POS, BLN_TYPE, BLN_DATE, BLN_MSG, BLN_AMOUNT, BLN_TEETH, BLN_COTATION, BLN_SECU_AMOUNT, BLN_MATERIALS)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const actMedicals = caresheet?.actMedicals;
+        const queryRunner = this.dataSource.createQueryRunner();
+        try {
+          await queryRunner.connect();
+          await queryRunner.startTransaction();
+
+          actMedicals.map(async (actMedicals) => {
+            const act = actMedicals?.act;
+            const ccam = actMedicals?.ccam;
+            const ngapKey = actMedicals?.ngapKey;
+            let materials = null;
+            if (act?.libraryActQuantity != null) {
+              materials = act?.libraryActQuantity.materials ?? null;
+            }
+            const libraryAct = act?.libraryAct;
+            if (materials === null && libraryAct) {
+              materials = libraryAct?.materials ?? null;
+            }
+
+            await queryRunner.query(insertToCSC, [
+              newFacture?.id,
+              act?.position,
+              'operation',
+              dayjs(act?.date).format('YYYY-MM-DD'),
+              `${ccam ? ccam.code : `${ngapKey.name}${actMedicals.coef}`} ${
+                act?.name
+              }`,
+              act?.amount,
+              actMedicals?.teeth,
+              ccam ? ccam.code : `${ngapKey.name}${actMedicals.coef}`,
+              ccam
+                ? Number(actMedicals?.secuAmount) * Number(actMedicals?.coef)
+                : Number(actMedicals?.secuAmount),
+              materials,
+            ]);
+          });
+          await queryRunner.commitTransaction();
+          return newFacture;
+        } catch (error) {
+          await queryRunner.rollbackTransaction();
+          throw error;
+        }
       } catch (err) {
         throw new CBadRequestException(err);
       }

@@ -80,11 +80,17 @@ export class FactureController {
     @CurrentUser() identity: UserIdentity,
     @Query() params: DevisStd2Dto,
   ) {
-    const { id_user, id_contact } = params;
+    const { id_user, id_contact, caresheet_id, payment_id } = params;
+    // let id_contacts
+    // if(id_contact == 0 ){
+    //   id_contacts = null
+    // }
     return await this.factureServices.getInitChamps(
       id_user,
       id_contact,
       identity,
+      caresheet_id,
+      payment_id,
     );
   }
 }

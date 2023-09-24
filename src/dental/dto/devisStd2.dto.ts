@@ -26,5 +26,17 @@ export class DevisStd2Dto {
   })
   no_devis?: number;
 
+  @ApiProperty({
+    name: 'caresheet_id',
+    required: false,
+  })
+  caresheet_id?: number;
+
+  @ApiProperty({
+    name: 'payment_id',
+    required: false,
+  })
+  payment_id?: number;
+
   pdf?: boolean;
 }
