@@ -31,7 +31,6 @@ import * as fs from 'fs';
 import { MailTransportService } from 'src/mail/services/mailTransport.service';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 import { ConfigService } from '@nestjs/config';
-import { isNumber } from 'class-validator';
 
 @Injectable()
 export class OrdonnancesServices {
@@ -341,10 +340,6 @@ export class OrdonnancesServices {
 
       return customCreatePdf({ files, options });
     } catch (error) {
-      console.log(
-        '🚀 ~ file: ordonnances.services.ts:340 ~ OrdonnancesServices ~ generatePdf ~ error:',
-        error,
-      );
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }

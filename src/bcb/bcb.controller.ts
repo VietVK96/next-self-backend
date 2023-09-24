@@ -7,7 +7,6 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { BcbServices } from './services/bcb.services';
 import { BcbDto, BcbFindOneDto } from './dto/bcb.dto';
-import { identity } from 'rxjs';
 
 @Controller('bcb')
 @ApiTags('Bcb')

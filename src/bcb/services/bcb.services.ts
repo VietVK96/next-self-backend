@@ -256,19 +256,10 @@ export class BcbServices {
         posologieComplete.lstPosologies[0].selected = true;
         infos.produitResult.lstPosologies = posologieComplete.lstPosologies;
       }
-      console.log(
-        '🚀 ~ file: bcb.services.ts:223 ~ BcbServices ~ posologieComplete ~ posologieComplete:',
-        posologieComplete,
-      );
-
       return infos.produitResult;
 
       // handle result has in frontend : bcbConvert()  function
     } catch (error) {
-      console.log(
-        '🚀 ~ file: bcb.services.ts:227 ~ BcbServices ~ findOne ~ error:',
-        error,
-      );
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
   }
