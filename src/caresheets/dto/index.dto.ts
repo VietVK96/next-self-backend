@@ -73,4 +73,9 @@ export class CaresheetsDto {
     required: false,
   })
   suite_exp?: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  generer_dre?: string;
 }

@@ -181,6 +181,7 @@ export class ActsService {
         date_demande_prealable,
         code_accord_prealable,
         // suite_exp,
+        generer_dre,
       } = request;
       const [patient, user] = await Promise.all([
         this.patientRepository.findOneOrFail({
@@ -214,11 +215,11 @@ export class ActsService {
       });
       await this.interfacageService.compute(caresheet);
       //convert funtion transmettrePatient in client services
-      const dataTransmettrePatient =
-        await this.sesamvitaleTeletranmistionService.transmettrePatient(
-          user,
-          patient,
-        );
+
+      await this.sesamvitaleTeletranmistionService.transmettrePatient(
+        user,
+        patient,
+      );
       //@TODO
 
       let datePrescription: Date;
@@ -253,6 +254,10 @@ export class ActsService {
         actes: [],
       };
 
+      if (generer_dre) {
+        facture.identification['GenererDRE'] = Boolean(generer_dre);
+      }
+
       const relatedToAnAld = related_ald ?? false;
       const participationAssures = [];
       if (
@@ -284,7 +289,7 @@ export class ActsService {
           const totalAmount = amounts.reduce((acc, cur) => acc + cur, 0);
           if (
             collectionFilteredByFamilyCode.length &&
-            totalAmount > PAV_MINIMUM_AMOUNT
+            totalAmount >= PAV_MINIMUM_AMOUNT
           ) {
             const raws = collectionFilteredByFamilyCode.sort(
               (a, b) => a?.amount - b?.amount,
@@ -324,6 +329,8 @@ export class ActsService {
           dateExecution: act?.date,
           codeActe: act?.dental?.ccam
             ? act?.dental?.ccam?.code
+            : act?.dental?.ngapKey?.name === 'CBX'
+            ? 'CCX'
             : act?.dental?.ngapKey?.name, // nameToTransmit
           coefficient: coefficient,
           montantHonoraire: amount !== amoAmount ? amount : null,
@@ -393,13 +400,15 @@ export class ActsService {
         acte.isAld = !!relatedToAnAld;
         facture.actes.push(acte);
       }
-      const data = this.transmettreFactureXml(facture);
-      // On transmet la facture à FSV.
-      // const response = await this.transmettreFacture(facture);
-      // caresheet.externalReferenceId = response?.idFacture;
+      const data =
+        await this.sesamvitaleTeletranmistionService.transmettreFacture(
+          facture,
+        );
+      if (data) {
+        caresheet.externalReferenceId = data?.idFacture;
+      }
       return await this.fseRepository.save({ ...caresheet });
     } catch (error) {
-      // return (new ExceptionController($container -> get('twig'))) -> showAction($request, $e) -> send();
       throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
   }
