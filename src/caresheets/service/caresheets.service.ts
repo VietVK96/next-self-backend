@@ -1621,6 +1621,9 @@ export class ActsService {
         },
       },
     });
+    console.log('check log pre-pro caresheets =====>', caresheet?.patient);
+    console.log('check log pre-pro caresheets =====>', caresheet?.amc);
+    console.log('check log pre-pro caresheets =====>', caresheet?.actMedicals);
     caresheet.thirdPartyAmo = await this.thirdPartyAmoRepository.findOne({
       where: {
         caresheetId: caresheet?.id,

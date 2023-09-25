@@ -603,11 +603,15 @@ export class FactureServices {
             ]);
           });
           await queryRunner.commitTransaction();
-          return newFacture;
         } catch (error) {
           await queryRunner.rollbackTransaction();
           throw error;
         }
+
+        const billlines = await this.billLineRepository.find({
+          where: { id: newFacture.id || 0 },
+        });
+        return { newFacture, billlines };
       } catch (err) {
         throw new CBadRequestException(err);
       }
