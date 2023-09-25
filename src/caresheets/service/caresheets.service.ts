@@ -20,7 +20,10 @@ import { ExemptionCodeEnum } from 'src/enum/exemption-code.enum';
 import { ConfigService } from '@nestjs/config';
 import { CaresheetStatusEntity } from 'src/entities/caresheet-status.entity';
 import { RequestException } from 'src/common/exceptions/request-exception.exception';
-import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
+import {
+  EnumThirdPartyStatus,
+  ThirdPartyAmcEntity,
+} from 'src/entities/third-party-amc.entity';
 import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 import { CaresheetModeEnum } from 'src/enum/caresheet.enum';
 import { CaresheetTypeEnum } from 'src/enum/caresheet-type.enum';
@@ -35,6 +38,10 @@ import { customCreatePdf } from 'src/common/util/pdf';
 import * as dayjs from 'dayjs';
 import { LotEntity } from 'src/entities/lot.entity';
 import { checkBoolean, checkId } from 'src/common/util/number';
+import { CurrencyEnum } from 'src/constants/currency';
+import { SuccessResponse } from 'src/common/response/success.res';
+import { associatifToSequential } from 'src/common/util/array';
+import { PatientAmcEntity } from 'src/entities/patient-amc.entity';
 const PDFMerger = require('pdf-merger-js');
 
 const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
@@ -42,6 +49,18 @@ const PAV_MINIMUM_AMOUNT = 120;
 const helpersCaresheetPdf = {
   formatDate: function (date: string) {
     return dayjs(date).format('DDMMYYYY');
+  },
+  formatInsee: function (s1, s2) {
+    let string = s1?.concat(s2 ?? '');
+    if (!string) return '';
+    string = string?.replace(/\W/g, '')?.toUpperCase();
+    return string?.replace(
+      /(\w{1})(\w{2})(\w{2})(\w{2})(\w{3})(\w{3})(\w{2})/,
+      '$1 $2 $3 $4 $5 $6 $7',
+    );
+  },
+  formatDateISO: function (date) {
+    return dayjs(date).format('DD/MM/YYYY');
   },
   slice: function (string, start, end) {
     if (!string) return;
@@ -61,6 +80,9 @@ const helpersCaresheetPdf = {
   },
   setVar: function (varName, varValue, options) {
     options.data.root[varName] = varValue;
+  },
+  concatString: function (s1, s2) {
+    return s1.concat(s2);
   },
   math: function (lvalue, operator, rvalue) {
     lvalue = parseFloat(lvalue);
@@ -132,6 +154,8 @@ export class ActsService {
     private thirdPartyAmcRepository: Repository<ThirdPartyAmcEntity>,
     @InjectRepository(ThirdPartyAmoEntity)
     private thirdPartyAmoRepository: Repository<ThirdPartyAmoEntity>,
+    @InjectRepository(DentalEventTaskEntity)
+    private dentalEventTaskRepository: Repository<DentalEventTaskEntity>,
     private sesamvitaleTeletranmistionService: SesamvitaleTeletranmistionService,
     @InjectRepository(LotEntity)
     private lotRepository: Repository<LotEntity>,
@@ -660,7 +684,6 @@ export class ActsService {
     // return $this->sendRequest('TransmettreFacture', $xml->outputMemory());
     return xml;
   }
-  CCX;
 
   private isTestAntigenique(medical): boolean {
     if (!medical?.ngapKey) {
@@ -860,7 +883,6 @@ export class ActsService {
             isAfter(new Date(amo?.endDate), new Date(date))))
       );
     });
-    return amos.length > 0 ? amos[0] : null;
   };
 
   async sendRequest(action: string, contents: string): Promise<any> {
@@ -1181,14 +1203,14 @@ export class ActsService {
         );
       const fseStatus = await this.caresheetStatusRepository.findOne({
         where: {
-          value: facture.etatLotFse,
+          value: Number(facture.etatLotFse?.[0]),
         },
       });
       if (fseStatus) {
         caresheet.fseStatus = fseStatus;
       }
       const dreStatus = await this.caresheetStatusRepository.findOne({
-        where: { value: facture.etatLotDre },
+        where: { value: Number(facture.etatLotDre?.[0]) },
       });
       if (dreStatus) {
         caresheet.dreStatus = dreStatus;
@@ -1255,6 +1277,7 @@ export class ActsService {
       .leftJoinAndSelect('lot.amc', 'amc')
       .leftJoinAndSelect('lot.amo', 'amo')
       .innerJoinAndSelect('lot.caresheets', 'caresheets')
+      .innerJoinAndSelect('caresheets.patient', 'patients')
       .where('caresheets.id IN (:id)', { id: ids });
 
     const lots = await queryBuilder.getMany();
@@ -1270,10 +1293,14 @@ export class ActsService {
       'templates/pdf/lot',
       'bordereau_teletransmission.hbs',
     );
+
     const data = {
       lot,
       user,
+      currencyy: CurrencyEnum[user?.preference?.currency ?? 'EUR'],
+      count: lot?.caresheets?.length,
     };
+
     const pdf = await customCreatePdf({
       files: [{ path: filePath, data }],
       options: optionsCaresheetPdf,
@@ -1293,9 +1320,10 @@ export class ActsService {
     }
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      relations: ['medical', 'medical.specialtyCode'],
+      relations: ['medical', 'medical.specialtyCode', 'preference'],
     });
     const lots: LotEntity[] = await this.getListLotByIds(ids);
+
     for (const lot of lots) {
       const { file } = await this.getLotFile(lot, user);
       await merger.add(file);
@@ -1310,13 +1338,14 @@ export class ActsService {
       .leftJoinAndSelect('lot.amc', 'amc')
       .leftJoinAndSelect('lot.amo', 'amo')
       .innerJoinAndSelect('lot.caresheets', 'caresheets')
+      .innerJoinAndSelect('caresheets.patient', 'patients')
       .where('lot.id  = :id', { id: id });
 
     const lot = await queryBuilder.getOne();
 
     const user = await this.userRepository.findOne({
       where: { id: user_id },
-      relations: ['medical', 'medical.specialtyCode'],
+      relations: ['medical', 'medical.specialtyCode', 'preference'],
     });
     return (await this.getLotFile(lot, user)).file;
   }
@@ -1344,4 +1373,302 @@ export class ActsService {
     }
     return zip.toBuffer();
   }
+
+  async deleteCaresheet(id: number): Promise<SuccessResponse> {
+    try {
+      const caresheet = await this.fseRepository.findOne({
+        where: { id: id },
+      });
+      if (!caresheet) {
+        throw new CBadRequestException(ErrorCode.FILE_NOT_FOUND);
+      }
+      await this.fseRepository.delete({ id });
+
+      return { success: true };
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.DELETE_UNSUCCESSFUL);
+    }
+  }
+
+  async updateCaresheet(id: number) {
+    try {
+      const caresheet = await this.fseRepository.findOne({
+        where: { id },
+        relations: {
+          actMedicals: {
+            act: true,
+            ccam: true,
+            ngapKey: true,
+          },
+          amo: true,
+          amc: true,
+          patient: {
+            medical: {
+              policyHolder: true,
+            },
+            amos: true,
+            amcs: true,
+          },
+        },
+      });
+
+      const facture =
+        await this.sesamvitaleTeletranmistionService.consulterFacture(
+          caresheet?.externalReferenceId,
+        );
+      let amount = 0;
+      let amountPatient = 0;
+      let amountAmo = 0;
+      let amountAmoCare = 0;
+      let amountAmoProsthesis = 0;
+      let amountAmc = 0;
+      let amountAmcCare = 0;
+      let amountAmcProsthesis = 0;
+
+      const prestations = associatifToSequential(facture?.prestations);
+      if (prestations && prestations.length > 0) {
+        for (const prestation of prestations) {
+          const montantAMO = parseFloat(prestation?.[0]?.montantAMO?.[0]);
+          const montantAMC = parseFloat(prestation?.[0]?.montantAMC?.[0]);
+          amount += parseFloat(prestation?.[0]?.montantTotal?.[0]);
+          amountPatient += parseFloat(prestation?.[0]?.montantPP?.[0]);
+          amountAmo += montantAMO;
+          amountAmc += montantAMC;
+        }
+      }
+
+      const amoList = this.getActiveAmo(
+        caresheet?.patient?.amos,
+        new Date(caresheet?.date),
+      );
+      const activeAmo = amoList?.[0];
+      const amcList = this.getActiveAmc(
+        caresheet?.patient?.amcs,
+        new Date(caresheet?.date),
+      );
+      const activeAmc = amcList?.[0];
+      const amo = activeAmo?.amo ? activeAmo?.amo : null;
+      const amc = activeAmc?.amc ? activeAmc?.amc : null;
+
+      caresheet.amo = amo;
+      caresheet.amc = amc;
+
+      caresheet.nbr =
+        typeof facture?.numeroFse?.[0] === 'string'
+          ? String(facture?.numeroFse?.[0]).padStart(9, '0')
+          : facture?.numeroFse?.[0];
+      const fseStatus = await this.caresheetStatusRepository.findOne({
+        where: {
+          value: Number(facture.etatLotFse?.[0]),
+        },
+      });
+      if (fseStatus) {
+        caresheet.fseStatus = fseStatus;
+      }
+      const dreStatus = await this.caresheetStatusRepository.findOne({
+        where: { value: Number(facture.etatLotDre?.[0]) },
+      });
+      if (dreStatus) {
+        caresheet.dreStatus = dreStatus;
+      }
+
+      caresheet.mode = facture?.modeFacture?.[0];
+      caresheet.type = facture?.typeFacture?.[0];
+      caresheet.amount = amount;
+      caresheet.amountAMO = amountAmo;
+      caresheet.amountAMC = amountAmc;
+      caresheet.amountAssure = amountPatient;
+
+      for (const actMedicals of caresheet?.actMedicals) {
+        const code = actMedicals?.ccam
+          ? actMedicals?.ccam?.code
+          : actMedicals?.ngapKey?.name;
+
+        for (const prestation of prestations) {
+          const presentationCode = prestation?.[0]?.codesActes?.[0].code?.[0];
+          const prestationMontantTotal = prestation?.[0]?.montantTotal?.[0];
+          if (presentationCode === code && prestationMontantTotal === amount) {
+            actMedicals.secuRepayment = prestation?.[0]?.montantAMO?.[0];
+            actMedicals.mutualRepayment = prestation?.[0]?.montantAMC?.[0];
+            actMedicals.personAmount = prestation?.[0]?.montantPP?.[0];
+
+            await this.dentalEventTaskRepository.save(actMedicals);
+
+            const ccamFamily = actMedicals?.act?.ccamFamily;
+            if (ccamFamily && this.isProsthesis(ccamFamily)) {
+              amountAmoProsthesis += parseFloat(
+                prestation?.[0]?.montantAMO?.[0] || 0,
+              );
+              amountAmcProsthesis += parseFloat(
+                prestation?.[0]?.montantAMC?.[0] || 0,
+              );
+            } else {
+              amountAmoCare += parseFloat(
+                prestation?.[0]?.montantAMO?.[0] || 0,
+              );
+              amountAmcCare += parseFloat(
+                prestation?.[0]?.montantAMC?.[0] || 0,
+              );
+            }
+            break;
+          }
+        }
+      }
+      const amoIsTp = facture?.AMO?.[0].isTp?.[0];
+      const amcIsTp = facture?.AMC?.[0].isTp?.[0];
+      if (amoIsTp && amountAmo) {
+        const thirdPartyAmo = new ThirdPartyAmoEntity();
+        thirdPartyAmo.userId = caresheet?.usrId;
+        thirdPartyAmo.patientId = caresheet?.conId;
+        thirdPartyAmo.amo = caresheet?.amo;
+        thirdPartyAmo.amoId = caresheet?.amo?.id;
+        thirdPartyAmo.amount = amountAmo;
+        thirdPartyAmo.amountCare = amountAmoCare;
+        thirdPartyAmo.amountProsthesis = amountAmoProsthesis;
+        caresheet.tiersPayant = 1;
+        caresheet.tiersPayantStatus = EnumThirdPartyStatus.WAITING;
+
+        const amountThirdParty = caresheet?.thirdPartyAmount + amountAmo;
+        caresheet.thirdPartyAmount = amountThirdParty;
+        caresheet.thirdPartyAmo = thirdPartyAmo;
+      }
+      if (amcIsTp && amountAmc) {
+        const thirdPartyAmc = new ThirdPartyAmcEntity();
+        thirdPartyAmc.userId = caresheet?.usrId;
+        thirdPartyAmc.patientId = caresheet?.conId;
+        thirdPartyAmc.amc = caresheet?.amc;
+        thirdPartyAmc.amcId = caresheet?.amc?.id;
+        thirdPartyAmc.amount = amountAmc;
+        thirdPartyAmc.amountCare = amountAmcCare;
+        thirdPartyAmc.amountProsthesis = amountAmcProsthesis;
+
+        const typeFacture = facture.typeFacture?.[0];
+        typeFacture == 'FDE'
+          ? (thirdPartyAmc.isDre = 1)
+          : (thirdPartyAmc.isDre = 0);
+        caresheet.tiersPayant = 1;
+        caresheet.tiersPayantStatus = EnumThirdPartyStatus.WAITING;
+        const amountThirdParty = caresheet.thirdPartyAmount + amountAmc;
+        caresheet.thirdPartyAmount = amountThirdParty;
+        caresheet.thirdPartyAmc = thirdPartyAmc;
+      }
+
+      return await this.fseRepository.save(caresheet);
+    } catch (error) {
+      console.log('error', error);
+    }
+  }
+
+  isProsthesis(family: string): boolean {
+    /**
+     * @var array liste des codes de regroupement de prothèses
+     */
+    const PROSTHESIS_FAMILIES = [
+      'BR1',
+      'CM0',
+      'CT0',
+      'CT1',
+      'CZ0',
+      'CZ1',
+      'IC0',
+      'IC1',
+      'ICO',
+      'IMP',
+      'IN1',
+      'INO',
+      'PA0',
+      'PA1',
+      'PAM',
+      'PAR',
+      'PDT',
+      'PF0',
+      'PF1',
+      'PFC',
+      'PFM',
+      'PT0',
+      'RA0',
+      'RE1',
+      'RF0',
+      'RPN',
+      'RS0',
+      'SU0',
+      'SU1',
+    ];
+    return PROSTHESIS_FAMILIES.includes(family);
+  }
+
+  async getQuittanceFile(id: number): Promise<{ file: Buffer; name: string }> {
+    const caresheet = await this.fseRepository.findOne({
+      where: { id },
+      relations: {
+        actMedicals: {
+          act: true,
+          ccam: true,
+          ngapKey: true,
+        },
+        amo: true,
+        amc: true,
+        patient: {
+          medical: {
+            policyHolder: true,
+          },
+        },
+        user: {
+          medical: {
+            specialtyCode: true,
+          },
+          address: true,
+        },
+      },
+    });
+    console.log('check log pre-pro caresheets =====>', caresheet?.patient);
+    console.log('check log pre-pro caresheets =====>', caresheet?.amc);
+    console.log('check log pre-pro caresheets =====>', caresheet?.actMedicals);
+    caresheet.thirdPartyAmo = await this.thirdPartyAmoRepository.findOne({
+      where: {
+        caresheetId: caresheet?.id,
+      },
+    });
+    caresheet.thirdPartyAmc = await this.thirdPartyAmcRepository.findOne({
+      where: {
+        caresheetId: caresheet?.id,
+      },
+    });
+    const filePath = path.join(
+      process.cwd(),
+      'templates/pdf/caresheets',
+      'quittance.hbs',
+    );
+
+    const data = {
+      caresheet,
+      currencyy: CurrencyEnum[caresheet?.user.setting?.currency ?? 'EUR'],
+    };
+
+    const pdf = await customCreatePdf({
+      files: [{ path: filePath, data }],
+      options: optionsCaresheetPdf,
+      helpers: helpersCaresheetPdf,
+    });
+    return {
+      file: pdf,
+      name: `${caresheet.nbr}.pdf`,
+    };
+  }
+  async printQuittance(id: number) {
+    const merger = new PDFMerger();
+    const { file } = await this.getQuittanceFile(id);
+    await merger.add(file);
+    return await merger.saveAsBuffer();
+  }
+  private getActiveAmc = (amcs: PatientAmcEntity[], date: Date) => {
+    return amcs.filter((amc) => {
+      return (
+        amc?.startDate === null ||
+        (isBefore(new Date(amc?.startDate), new Date(date)) &&
+          (amc?.endDate === null ||
+            isAfter(new Date(amc?.endDate), new Date(date))))
+      );
+    });
+  };
 }

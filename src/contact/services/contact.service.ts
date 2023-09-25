@@ -29,6 +29,7 @@ import { checkEmpty } from 'src/common/util/string';
 import * as fs from 'fs';
 import { ContactPaymentService } from './contact.payment.service';
 import { checkId } from 'src/common/util/number';
+import { CodeNatureAssuranceEnum } from 'src/constants/act';
 
 @Injectable()
 export class ContactService {
@@ -167,7 +168,7 @@ export class ContactService {
       throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_PATIENT);
     }
     record.phones = await this.findPhone(id);
-    if (record.contactFamilyId) {
+    if (record?.contactFamilyId) {
       record.members = await this.getMembers(
         id,
         doctorId,
@@ -183,9 +184,11 @@ export class ContactService {
     record.amcs = await this.findAmcs(id);
 
     const image = await this.findLibraryLink(id);
-    record.image_library_link = image.image_library_link
-      ? image.image_library_link + `${record.nbr.toString().padStart(6, '0')}`
-      : null;
+    record.image_library_link =
+      image?.image_library_link && record?.nbr
+        ? image?.image_library_link +
+          `${record?.nbr?.toString().padStart(6, '0')}`
+        : null;
 
     if (record?.medical?.policyHolder) {
       record.medical.policy_holder = record?.medical?.policyHolder;
@@ -299,10 +302,21 @@ count(CON_ID) as countId,COD_TYPE as codType
   }
 
   async findAmos(id: number) {
-    return await this.patientAmoRepo.find({
+    const amos = await this.patientAmoRepo.find({
       where: {
         patientId: id,
       },
+    });
+    return amos?.map((amo) => {
+      const hasMaternitySituation =
+        amo.codeNatureAssurance === CodeNatureAssuranceEnum.MATERNITE;
+      const hasMissingMaternityDate =
+        hasMaternitySituation && !amo.maternityDate;
+      return {
+        ...amo,
+        hasMissingMaternityDate,
+        hasMaternitySituation,
+      };
     });
   }
 

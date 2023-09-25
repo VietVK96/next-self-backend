@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  Param,
   Post,
   Query,
   Res,
@@ -180,6 +182,9 @@ export class CaresheetsController {
     res.end(buffer);
   }
 
+  /**
+   * php/lots/bordereau-teletransmission.php -> full
+   */
   @Get('lots/bordereau-teletransmission')
   @UseGuards(TokenGuard)
   async printBordereau(
@@ -188,6 +193,35 @@ export class CaresheetsController {
     @Query('user_id') user_id?: number,
   ) {
     const buffer = await this.service.printLotBordereau(id, user_id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=print.pdf`,
+      'Content-Length': buffer?.length,
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: 0,
+    });
+    res.end(buffer);
+  }
+
+  // File php/caresheets/delete.php
+  @Delete('/delete/:id')
+  @UseGuards(TokenGuard)
+  async delete(@Param('id') id: number) {
+    return this.service.deleteCaresheet(id);
+  }
+
+  // File php/caresheets/update.php
+  @Post('/save/:id')
+  @UseGuards(TokenGuard)
+  async updateCaresheet(@Param('id') id: number) {
+    return this.service.updateCaresheet(id);
+  }
+
+  @Get('/printQuittance')
+  @UseGuards(TokenGuard)
+  async printQuittance(@Res() res: Response, @Query('id') ids?: number) {
+    const buffer = await this.service.printQuittance(ids);
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Disposition': `attachment; filename=print.pdf`,

@@ -19,6 +19,7 @@ import { parseJson } from 'src/common/util/json';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { UserAmoEntity } from 'src/entities/user-amo.entity';
 import { WorkstationEntity } from 'src/entities/workstation.entity';
+import { AddressEntity } from 'src/entities/address.entity';
 
 @Injectable()
 export class GetSessionService {
@@ -32,6 +33,8 @@ export class GetSessionService {
     private userAmoRepo: Repository<UserAmoEntity>,
     @InjectRepository(WorkstationEntity)
     private workstaionRepository: Repository<WorkstationEntity>,
+    @InjectRepository(AddressEntity)
+    private addressRepo: Repository<AddressEntity>,
   ) {}
 
   async getSession(identity: UserIdentity) {

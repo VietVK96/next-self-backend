@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { MedicalService } from './services/medical.service';
 import {
@@ -15,18 +15,21 @@ import { FindAllInProgressDto } from './dto/findAllInProgress.medical.dto';
 export class MedicalController {
   constructor(private medicalService: MedicalService) {}
 
-  @Post('baseClaudeBernardCheck')
+  /**
+   * php/medical/order/baseClaudeBernardCheck.php
+   */
+  @Get('baseClaudeBernardCheck')
   @UseGuards(TokenGuard)
   async baseClaudeBernardCheck(
-    @Body() payload: BaseClaudeBernardCheckDto,
+    @Query() payload: BaseClaudeBernardCheckDto,
     @CurrentUser() identity: UserIdentity,
   ) {
-    return this.medicalService.baseClaudeBernardCheck(
-      payload.contact,
-      identity.org,
-    );
+    return this.medicalService.baseClaudeBernardCheck(payload, identity.org);
   }
 
+  /**
+   * php/medical/order/findAllInProgress.php
+   */
   @Post('findAllInProgress')
   @UseGuards(TokenGuard)
   async findAllInProgress(

@@ -10,8 +10,37 @@ export interface IConsulterTeleTrans {
 }
 
 export interface IConsulterFacture {
-  etatLotFse?: number;
-  etatLotDre?: number;
+  etatLotFse?: string[];
+  etatLotDre?: string[];
+  typeFacture?: string[];
+  numeroFse?: string[];
+  estValide?: string[];
+  modeFacture?: string[];
+  AMO?: {
+    isTp: string[];
+    montant: string[];
+  }[];
+  AMC?: {
+    isTp: string[];
+    montant: string[];
+  }[];
+  prestations?: {
+    codePrestation: string[];
+    montantTotal: string[];
+    montantAMO: string[];
+    montantAMC: string[];
+    montantPP: string[];
+    coefficient: string[];
+    codesActes: string[];
+  }[];
+
+  documents?: {
+    idDocument: string[];
+    typeDocument: string[];
+    nomDocument: string[];
+    dateDocument: string[];
+    etatDocument: string[];
+  }[];
 }
 
 export interface IListeDateChangementEtat {
@@ -116,4 +145,24 @@ export interface IConsulterUtlStatut {
   numStructure: string[];
   numFiness: string[];
   codeSpecialite: string[];
+}
+
+export interface IConsulterClient {
+  individu?: {
+    idPatient?: string[];
+    nomUsuel?: string[];
+    prenom?: string[];
+    rangGem?: string[];
+    dateNaissance?: string[];
+    nirIndividu?: string[];
+    nirIndividuCle?: string[];
+    codeCivilite?: string[];
+    isDateLunaire?: string[];
+    codeServiceAMO: string[];
+    dateDebutServiceAMO?: string[];
+    dateFinServiceAMO?: string[];
+    couvertureAMO?: string[];
+    couvertureAMC?: string[];
+    idAssure?: string[];
+  }[];
 }

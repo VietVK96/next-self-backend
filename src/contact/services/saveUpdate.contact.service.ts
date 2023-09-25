@@ -98,13 +98,13 @@ export class SaveUpdateContactService {
       if (medical) {
         medicalUpdate = {
           ...medical,
-          tariffTypeId: reqBody.medical.tariff_type_id,
+          tariffTypeId: reqBody.medical.tariffTypeId,
         };
       } else {
         medicalUpdate = {
           ...medical,
           patientId: reqBody.id,
-          tariffTypeId: reqBody.medical.tariff_type_id,
+          tariffTypeId: reqBody.medical.tariffTypeId,
         };
       }
       await this.patientMedicalRepository.save(medicalUpdate);
@@ -255,36 +255,38 @@ export class SaveUpdateContactService {
         }
       }
       const phoneids: number[] = [0];
-      Promise.all(
-        reqBody?.phones.map(async (phone) => {
-          const qPhone = [phone.id, phone.phoneTypeId, phone.nbr];
-
-          const q = `INSERT INTO T_PHONE_PHO (PHO_ID, PTY_ID, PHO_NBR)
+      const promiseArr1: Promise<any>[] = [];
+      reqBody?.phones.map(async (phone) => {
+        const qPhone = [phone?.id, phone?.phoneTypeId, phone?.nbr];
+        const q = `INSERT INTO T_PHONE_PHO (PHO_ID, PTY_ID, PHO_NBR)
                 VALUES (?, ?, ?)
                 ON DUPLICATE KEY UPDATE PTY_ID = VALUES(PTY_ID),
                                   PHO_NBR = VALUES(PHO_NBR)`;
-          const result = await queryRunner.query(q, qPhone);
-          phone.id = phone?.id || result?.insertId;
-          phoneids.push(phone.id);
-          const qUpdateContactPhone = `INSERT IGNORE INTO T_CONTACT_PHONE_COP (PHO_ID, CON_ID)
-            VALUES (?, ?)`;
-          await queryRunner.query(qUpdateContactPhone, [
-            phone?.id,
-            patient?.id,
-          ]);
-        }),
-      );
+        promiseArr1.push(queryRunner.query(q, qPhone));
+      });
+      const results = await Promise.all(promiseArr1);
 
+      const promiseArr2: Promise<any>[] = [];
+      results?.map((rs, index) => {
+        const phoneId =
+          rs?.insertId === 0 ? reqBody?.phones[index]?.id : rs?.insertId;
+        phoneids.push(phoneId);
+        const qUpdateContactPhone = `INSERT IGNORE INTO T_CONTACT_PHONE_COP (PHO_ID, CON_ID)
+        VALUES (?, ?)`;
+        promiseArr2.push(
+          queryRunner.query(qUpdateContactPhone, [phoneId, patient?.id]),
+        );
+      });
+      await Promise.all(promiseArr2);
+
+      const subqr = Array(phoneids.length).fill('?').join(',');
       const q = `DELETE COP, PHO
         FROM T_CONTACT_PHONE_COP COP,
              T_PHONE_PHO PHO
         WHERE COP.CON_ID = ?
           AND COP.PHO_ID = PHO.PHO_ID
-          AND PHO.PHO_ID NOT IN (?)`;
-      await queryRunner.query(q, [
-        patient.id,
-        reqBody?.phones.map((e) => e.id).join(),
-      ]);
+          AND PHO.PHO_ID NOT IN (${subqr})`;
+      await queryRunner.query(q, [patient.id, ...phoneids]);
 
       await queryRunner.commitTransaction();
       return await this.contactService.findOne(
@@ -430,6 +432,7 @@ export class SaveUpdateContactService {
         .values({
           patientId: savePatient?.raw?.insertId,
           policyHolderId: savedPolicyHolder?.raw?.insertId,
+          tariffTypeId: reqBody?.medical?.tariffTypeId,
         })
         .execute();
 

@@ -24,6 +24,10 @@ export class ActController {
     return await this.actService.getTraceability(id);
   }
 
+  /**
+   * php/acts/traceabilities/update.php
+   *
+   */
   @Patch('traceabilities/:id')
   @UseGuards(TokenGuard)
   async updateTraceabilities(
@@ -38,12 +42,20 @@ export class ActController {
     );
   }
 
+  /**
+   * php/acts/show.php
+   *
+   */
   @Get('show/:id')
   @UseGuards(TokenGuard)
   async getShowAct(@Param('id') id: number) {
     return await this.actService.getShowAct(id);
   }
 
+  /**
+   * php/acts/update.php
+   *
+   */
   @Patch('update/:id')
   @UseGuards(TokenGuard)
   async updateAct(@Param('id') id: number, @Body() payload: ActDto) {

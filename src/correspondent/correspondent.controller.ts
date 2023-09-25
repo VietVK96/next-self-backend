@@ -45,7 +45,7 @@ export class CorrespondentController {
     return await this.correspondentService.find(id);
   }
 
-  /**?
+  /**
    * /php/correspondent/save.php full
    */
   @Post()
@@ -54,7 +54,7 @@ export class CorrespondentController {
     return await this.correspondentService.save(identity.org, payload);
   }
 
-  /**?
+  /*
    * php/correspondent/type/findAll.php full
    *
    */
@@ -64,6 +64,9 @@ export class CorrespondentController {
     return await this.correspondentService.findAllType(search);
   }
 
+  /**
+   * php/correspondent/findAll.php
+   */
   @Get()
   @UseGuards(TokenGuard)
   async findAllCorrespondents(
@@ -77,12 +80,19 @@ export class CorrespondentController {
       page,
     );
   }
+
+  /**
+   * php/correspondent/delete.php
+   */
   @Delete('/:id')
   @UseGuards(TokenGuard)
   async delete(@CurrentUser() identity: UserIdentity, @Param('id') id: number) {
     return await this.correspondentService.delete(identity.id, id);
   }
 
+  /**
+   * php/correspondent/patients-addressed.php
+   */
   @Get('export/:id')
   @UseGuards(TokenGuard)
   async export(@Param('id') id: number, @Res() res: Response) {

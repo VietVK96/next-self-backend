@@ -14,6 +14,10 @@ import { AddressBookService } from './services/address-book.service';
 export class AddressBookController {
   constructor(private addressService: AddressBookService) {}
 
+  /**
+   * File: php/address-books/export.php 100%
+   *
+   */
   @Get('export')
   @ApiBearerAuth()
   @UseGuards(TokenGuard)

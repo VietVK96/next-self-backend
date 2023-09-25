@@ -73,7 +73,9 @@ export class UnpaidService {
           amount = valueParam ? Number(valueParam) : 0;
           break;
         case 'patientBalance.relaunchLevel':
-          where.relaunchLevel = valueParam ? Number(valueParam) : 0;
+          where.relaunchLevel = valueParam
+            ? MoreThanOrEqual(Number(valueParam))
+            : 0;
           break;
         case 'patientBalance.visitDate':
           const period = valueParam.split(';');
