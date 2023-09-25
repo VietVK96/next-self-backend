@@ -18,6 +18,7 @@ import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { parseJson } from 'src/common/util/json';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { UserAmoEntity } from 'src/entities/user-amo.entity';
+import { WorkstationEntity } from 'src/entities/workstation.entity';
 import { AddressEntity } from 'src/entities/address.entity';
 
 @Injectable()
@@ -30,6 +31,8 @@ export class GetSessionService {
     private userMedicalRepository: Repository<UserMedicalEntity>,
     @InjectRepository(UserAmoEntity)
     private userAmoRepo: Repository<UserAmoEntity>,
+    @InjectRepository(WorkstationEntity)
+    private workstaionRepository: Repository<WorkstationEntity>,
     @InjectRepository(AddressEntity)
     private addressRepo: Repository<AddressEntity>,
   ) {}
@@ -41,6 +44,7 @@ export class GetSessionService {
     data.user = await this.getUser(identity.id);
     data.practitioners = await this.getPractitioners(identity.id, identity.org);
     data.users = await this.getUsers(identity.id, identity.org);
+    data.workstations = await this.getWorkstations(identity.org);
     return data;
   }
 
@@ -427,5 +431,17 @@ export class GetSessionService {
       )
       .orderBy('USR.USR_LASTNAME, USR.USR_FIRSTNAME');
     return await queryBuiler.getRawMany();
+  }
+
+  async getWorkstations(orgId: number) {
+    return await this.workstaionRepository.find({
+      where: {
+        organizationId: orgId,
+      },
+      relations: ['imagingSoftwares'],
+      order: {
+        name: 'DESC',
+      },
+    });
   }
 }
