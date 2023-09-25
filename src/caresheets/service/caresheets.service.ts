@@ -14,7 +14,7 @@ import { FseEntity } from 'src/entities/fse.entity';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
 import { InterfacageService } from 'src/interfacage/services/interfacage.service';
-import { CodeNatureAssuranceEnum } from 'src/constants/act';
+import { CodeNatureAssuranceEnum, ExceedingEnum } from 'src/constants/act';
 import { PatientAmoEntity } from 'src/entities/patient-amo.entity';
 import { ExemptionCodeEnum } from 'src/enum/exemption-code.enum';
 import { ConfigService } from '@nestjs/config';
@@ -193,24 +193,24 @@ export class ActsService {
           where: { id: user_id },
         }),
       ]);
-      const dataActs: EventTaskEntity[] = await this.eventTaskRepository.find({
-        relations: { medical: { act: true } },
+      const acts: EventTaskEntity[] = await this.eventTaskRepository.find({
+        relations: { medical: { act: true, ccam: { family: true } } },
         where: { id: In(act_id), conId: patient_id },
       });
-      if (!dataActs || dataActs?.length === 0) {
+      if (acts?.length === 0) {
         throw new CBadRequestException(ErrorCode.ERROR_CARESHEET_ACTS_IS_EMPTY);
       }
       const caresheet: FseEntity = {};
       caresheet.usrId = user?.id;
       caresheet.conId = patient?.id;
       caresheet.numeroFacturation = user?.medical?.finessNumber;
-      caresheet.date = format(new Date(), 'yyyy-MM-dd');
+      caresheet.date = dayjs().format('YYYY-MM-dd');
       caresheet.tasks = [];
       caresheet.fseStatus = await this.caresheetStatusRepository.findOne({
         where: { value: 0 },
       });
       caresheet.dreStatus = caresheet.fseStatus;
-      dataActs.forEach((act) => {
+      acts.forEach((act) => {
         caresheet?.tasks.push(act?.medical);
       });
       await this.interfacageService.compute(caresheet);
@@ -220,21 +220,20 @@ export class ActsService {
         user,
         patient,
       );
-      //@TODO
 
-      let datePrescription: Date;
-      if (date_prescription) {
-        datePrescription = new Date(date_prescription);
+      let datePrescription: string = date_prescription;
+      if (datePrescription) {
+        datePrescription = dayjs(datePrescription).format('YYYYMMDD');
       } else {
-        const actDates = dataActs.map((act) => new Date(act?.date).getTime());
+        const actDates = acts.map((act) => new Date(act?.date).getTime());
         const minDate = actDates.length ? new Date(Math.min(...actDates)) : '';
-        datePrescription = minDate ? new Date(minDate) : new Date();
+        datePrescription = minDate && dayjs(minDate).format('YYYYMMDD');
       }
 
       const facture = {
         identification: {
           idPatient: patient?.externalReferenceId,
-          dateFacturation: new Date(),
+          dateFacturation: dayjs().format('YYYYMMDD'),
           datePrescription: datePrescription,
           numFiness: user?.medical?.finessNumber,
           numNatPs: user?.medical?.nationalIdentifierNumber,
@@ -244,7 +243,7 @@ export class ActsService {
           prescripteur,
           modeSecurisation: user?.setting?.sesamVitaleModeDesynchronise
             ? 'DESYNCHR'
-            : null,
+            : undefined,
           ParcoursDeSoin: {
             situationParcoursDeSoin: situation_parcours_de_soin,
             nomMedecinOrienteur: nom_medecin_orienteur,
@@ -258,43 +257,38 @@ export class ActsService {
         facture.identification['GenererDRE'] = Boolean(generer_dre);
       }
 
-      const relatedToAnAld = related_ald ?? false;
       const participationAssures = [];
       if (
         this.isEligibleForParticipationAssure(
           patient?.amos,
-          caresheet?.createdAt,
-        ) &&
-        !relatedToAnAld
+          new Date(caresheet?.date),
+        )
       ) {
         const groupBy: { [key: string]: EventTaskEntity[] } = {};
 
-        dataActs.forEach((act) => {
-          const dateKey = new Date(act?.date)
-            .toISOString()
-            .split('T')[0]
-            .replace(/-/g, '');
+        acts.forEach((act) => {
+          const dateKey = dayjs(act?.date).format('YYYYMMDD');
           if (!groupBy[dateKey]) {
             groupBy[dateKey] = [];
           }
           groupBy[dateKey].push(act);
         });
-        for (const [, raws] of Object.entries(groupBy)) {
-          const collectionFilteredByFamilyCode = raws.filter(
+        for (const [, collection] of Object.entries(groupBy)) {
+          const collectionFilteredByFamilyCode = collection.filter(
             (act) =>
-              act?.dental?.ccam &&
-              PAV_AUTHORIZED_CODES.includes(act?.dental?.ccam?.code),
+              (!act?.medical ? false : act?.medical !== null) &&
+              PAV_AUTHORIZED_CODES.includes(act?.medical?.ccam?.family?.code),
           );
-          const amounts = raws.map((act) => act?.amount);
+          const amounts = collection.map((act) => act?.amount);
           const totalAmount = amounts.reduce((acc, cur) => acc + cur, 0);
           if (
             collectionFilteredByFamilyCode.length &&
             totalAmount >= PAV_MINIMUM_AMOUNT
           ) {
-            const raws = collectionFilteredByFamilyCode.sort(
+            const collection = collectionFilteredByFamilyCode.sort(
               (a, b) => a?.amount - b?.amount,
             );
-            participationAssures.push(raws[raws.length - 1]);
+            participationAssures.push(collection[collection.length - 1]?.id);
           }
         }
       }
@@ -304,65 +298,68 @@ export class ActsService {
       // - TEST ANTIGÉNIQUE : C 1.13
       // - PRÉLÈVEMENT NASOPHARYNGÉ : C 0.42
       // - PRÉLÈVEMENT OROPHARYNGÉ : C 0.25
-      let codeJustifExoneration = null;
+      let codeJustifExoneration = undefined;
       if (
-        dataActs.reduce(
+        acts.reduce(
           (isTestAntigenique, act) =>
-            isTestAntigenique || this.isTestAntigenique(act?.dental),
+            isTestAntigenique || this.isTestAntigenique(act?.medical),
           false,
         )
       ) {
         codeJustifExoneration = 3;
       }
-      for (const act of dataActs) {
+      for (const act of acts) {
         const amount = act?.amount;
-        const amoAmount = act?.dental?.secuAmount;
-        const coefficient = act?.dental?.coef;
-        const rawTeeth = act?.dental?.teeth
+        const amoAmount = act?.medical?.secuAmount;
+        const coefficient = act?.medical?.coef;
+        const rawTeeth = act?.medical?.teeth
           ?.split(',')
           .map((tooth) => (tooth === '00' ? ['01', '02'] : tooth))
-          .flat(); // LOGIC?act.entity
+          .flat();
         const teeth = Array.from(new Set(rawTeeth));
         const acte = {
           qte: 1,
-          isAld: false,
           dateExecution: act?.date,
-          codeActe: act?.dental?.ccam
-            ? act?.dental?.ccam?.code
-            : act?.dental?.ngapKey?.name === 'CBX'
+          codeActe: act?.medical?.ccam
+            ? act?.medical?.ccam?.code
+            : act?.medical?.ngapKey?.name === 'CBX'
             ? 'CCX'
-            : act?.dental?.ngapKey?.name, // nameToTransmit
+            : act?.medical?.ngapKey?.name, // nameToTransmit
           coefficient: coefficient,
-          montantHonoraire: amount !== amoAmount ? amount : null,
+          montantHonoraire: amount !== amoAmount ? amount : undefined,
           libelle: act?.name,
           numeroDents: teeth.join(','),
-          codeAssociation: act?.dental?.associationCode,
+          codeAssociation: act?.medical?.associationCode,
           codeAccordPrealable: code_accord_prealable,
-          codeJustifExoneration: null,
-          qualifDepense: act?.dental?.exceeding,
+          codeJustifExoneration: undefined,
+          qualifDepense: act?.medical?.exceeding,
           dateDemandePrealable: date_demande_prealable,
-          remboursementExceptionnel: null,
-          complementPrestation: null,
+          remboursementExceptionnel: undefined,
+          complementPrestation: undefined,
         };
 
-        const exemptionCode = act?.dental?.exemptionCode;
+        if (act?.medical?.exceeding === String(ExceedingEnum.GRATUIT)) {
+          acte.montantHonoraire = null;
+        }
+
+        const exemptionCode = act?.medical?.exemptionCode;
         if (!!exemptionCode) {
           acte.codeJustifExoneration = exemptionCode;
           if (exemptionCode === ExemptionCodeEnum.DISPOSITIF_PREVENTION) {
             facture.identification.isTpAmo = true;
           }
         }
-        if (codeJustifExoneration !== null) {
+        if (codeJustifExoneration !== undefined) {
           acte.codeJustifExoneration = codeJustifExoneration;
         }
 
-        const ngapKey = act?.dental?.ngapKey;
+        const ngapKey = act?.medical?.ngapKey;
         if (ngapKey) {
-          acte.complementPrestation = act?.dental?.complement;
+          acte.complementPrestation = act?.medical?.complement;
           const name = ngapKey?.name;
           if (name === 'IK') {
             acte.qte = coefficient;
-            acte.montantHonoraire = null;
+            acte.montantHonoraire = undefined;
             acte.coefficient = 1;
           } else if (['FDA', 'FDC', 'FDO', 'FDR'].includes(name)) {
             acte.montantHonoraire = amount;
@@ -374,13 +371,13 @@ export class ActsService {
           }
         }
 
-        const ccam = act?.dental?.ccam;
+        const ccam = act?.medical?.ccam;
         if (ccam && !!ccam?.repayableOnCondition) {
-          acte.remboursementExceptionnel = act?.dental?.exceptionalRefund;
+          acte.remboursementExceptionnel = act?.medical?.exceptionalRefund;
         }
 
         /** === MODIFICATEURS === */
-        const modifiers = act?.dental?.ccamModifier ?? [];
+        const modifiers = act?.medical?.ccamModifier ?? [];
         for (let i = 0; i < modifiers.length; i++) {
           acte['codeModificateur' + (i + 1)] = modifiers[i];
         }
@@ -394,10 +391,9 @@ export class ActsService {
           facture.identification.isTpAmo = true;
           acte.codeJustifExoneration = 7;
         }
-        if (relatedToAnAld) {
-          facture.identification.isTpAmo = true;
-        }
-        acte.isAld = !!relatedToAnAld;
+        // if (relatedToAnAld) {
+        //   facture.identification.isTpAmo = true;
+        // }
         facture.actes.push(acte);
       }
       const data =
@@ -405,287 +401,12 @@ export class ActsService {
           facture,
         );
       if (data) {
-        caresheet.externalReferenceId = data?.idFacture;
+        caresheet.externalReferenceId = data?.idFacture?.[0];
       }
       return await this.fseRepository.save({ ...caresheet });
     } catch (error) {
       throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
     }
-  }
-  private transmettrePatient = (user: UserEntity, patient: ContactEntity) => {
-    const getTimeString = (date: string, type: string) => {
-      if (!date) return '';
-      const currentDate = format(new Date(date), 'yyyy-MM-dd');
-      const time = currentDate.split('-');
-      switch (type) {
-        case 'day':
-          return time[0];
-        case 'month':
-          return time[1];
-        case 'year':
-          return time[2];
-      }
-    };
-    const numFacturation = user?.medical?.finessNumber ?? '';
-    const numRpps = user?.medical?.nationalIdentifierNumber ?? '';
-    const idPatient = patient?.externalReferenceId ?? '';
-    const nom = patient.lastname ?? '';
-    const prenom = patient.firstname ?? '';
-    const jour = getTimeString(patient?.birthDate, 'day');
-    const mois = getTimeString(patient?.birthDate, 'month');
-    const annee = getTimeString(patient?.birthDate, 'year');
-    const lunaire = !!patient?.birthDateLunar ? 'true' : 'false';
-    const numeroSS = patient?.insee ?? '';
-    const cleNumeroSS = patient?.inseeKey ?? '';
-    const rangNaissance = patient?.birthOrder ?? '';
-    const xml = `
-    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">
-      <soapenv:Body>
-        <jux:transmettrePatient>
-          <xsd:appelTransmettrePatient>
-            <xsd:numFacturation>${numFacturation}</xsd:numFacturation>
-            <xsd:numRpps>${numRpps}</xsd:numRpps>
-            ${idPatient ? `<xsd:idPatient>${idPatient}</xsd:idPatient>` : ``}
-            <xsd:nom>${nom}</xsd:nom>
-            <xsd:prenom>${prenom}</xsd:prenom>
-            <xsd:dateNaissance>
-              <xsd:jour>${jour}</xsd:jour>
-              <xsd:mois>${mois}</xsd:mois>
-              <xsd:annee>${annee}</xsd:annee>
-              <xsd:lunaire>${lunaire}</xsd:lunaire>
-            </xsd:dateNaissance>
-            <xsd:numeroSS>${numeroSS}</xsd:numeroSS>
-            <xsd:cleNumeroSS>${cleNumeroSS}</xsd:cleNumeroSS>
-            <xsd:rangNaissance>${rangNaissance}</xsd:rangNaissance>
-          </xsd:appelTransmettrePatient>
-        </jux:transmettrePatient>
-      </soapenv:Body>
-    </soapenv:Envelope>`;
-
-    // $response = $this->sendRequest('transmettrePatient', $xml->outputMemory());
-    // if (!$patient->getExternalReferenceId()) {
-    //     $patient->setExternalReferenceId($response['idPatient']);
-    //     $this->em->persist($patient);
-    //     $this->em->flush();
-    // }
-    // return $response;
-    return xml;
-  };
-  private transmettreFactureXml(data: {
-    identification: {
-      idPatient?: number;
-      dateFacturation?: Date;
-      datePrescription?: Date;
-      numFiness?: string;
-      numNatPs?: string;
-      numNatPsRemplace?: string;
-      isTpAmo?: boolean;
-      isTpAmc?: boolean;
-      prescripteur?: string;
-      modeSecurisation?: string;
-      ParcoursDeSoin: {
-        situationParcoursDeSoin?: string;
-        nomMedecinOrienteur?: string;
-        prenomMedecinOrienteur?: string;
-      };
-      genererDRE?: boolean;
-    };
-    actes: any[];
-  }) {
-    const _getpPescripteurXml = (prescripteur: any) => {
-      const codeConditionExercice = prescripteur?.codeConditionExercice ?? '';
-      const numIdFacPresc = prescripteur?.numIdFacPresc ?? '';
-      const rppsPresc = prescripteur?.rppsPresc ?? '';
-      const numeroStructure = prescripteur?.numeroStructure ?? '';
-      const codeSpecialite = prescripteur?.codeSpecialite ?? '';
-      const estPrescipteurSncf = prescripteur?.estPrescipteurSncf ?? '';
-      if (numIdFacPresc) {
-        return `
-        <xsd:prescripteur>
-          <xsd:codeConditionExercice>${codeConditionExercice}</xsd:codeConditionExercice>
-          <xsd:numIdFacPresc>${numIdFacPresc?.slice(0, -1)}</xsd:numIdFacPresc>
-          <xsd:numIdFacPrescCle>${numIdFacPresc?.slice(
-            -1,
-          )}</xsd:numIdFacPrescCle>
-          <xsd:codeSpecialite>${codeSpecialite}</xsd:codeSpecialite>
-          <xsd:rppsPresc>${rppsPresc?.slice(0, -1)}</xsd:rppsPresc>
-          <xsd:rppsPrescCle>${rppsPresc?.slice(-1)}</xsd:rppsPrescCle>
-          <xsd:numeroStructure>${numeroStructure}</xsd:numeroStructure>
-          <xsd:estPrescipteurSncf>${estPrescipteurSncf}</xsd:estPrescipteurSncf>
-        <xsd:prescripteur/>
-        `;
-      }
-      return '';
-    };
-
-    const _getSituationParcoursDeSoin = () => {
-      const situationParcoursDeSoin =
-        data?.identification?.ParcoursDeSoin?.situationParcoursDeSoin ?? '';
-      if (situationParcoursDeSoin) {
-        const nomMedecinOrienteur =
-          data?.identification?.ParcoursDeSoin?.nomMedecinOrienteur ?? '';
-        const prenomMedecinOrienteur =
-          data?.identification?.ParcoursDeSoin?.prenomMedecinOrienteur ?? '';
-        return `
-        <xsd:ParcoursDeSoin>
-          <xsd:situationParcoursDeSoin>${situationParcoursDeSoin}</xsd:situationParcoursDeSoin>
-          <xsd:nomMedecinOrienteur>${nomMedecinOrienteur}</xsd:nomMedecinOrienteur>
-          <xsd:prenomMedecinOrienteur>${prenomMedecinOrienteur}</xsd:prenomMedecinOrienteur>
-        </xsd:ParcoursDeSoin>
-        `;
-      }
-      return '';
-    };
-
-    const formatDate = (date?: string | Date) => {
-      try {
-        if (!date) return '';
-        if (date === 'Invalid Date') return '';
-        return format(new Date(date), 'yyyyMMdd');
-      } catch {
-        return '';
-      }
-    };
-    const xml = `
-    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">
-      <soapenv:Body>
-        <jux:TransmettreFacture>
-          <xsd:appelTransmettreFacture>
-            <xsd:identification>
-              <xsd:idPatient>${
-                data?.identification?.idPatient ?? ''
-              }</xsd:idPatient>
-              <xsd:source>weclever</xsd:source>
-              <xsd:dateFacturation format="yyyyMMdd">${formatDate(
-                data?.identification?.dateFacturation,
-              )}</xsd:dateFacturation>
-              <xsd:datePrescription format="yyyyMMdd">${formatDate(
-                data?.identification?.datePrescription,
-              )}</xsd:datePrescription>
-              <xsd:numNatPs>${
-                data?.identification?.numNatPs ?? ''
-              }</xsd:numNatPs>
-              <xsd:numFiness>${
-                data?.identification?.numFiness ?? ''
-              }</xsd:numFiness>
-              <xsd:numNatPsRemplace>${
-                data?.identification?.numNatPsRemplace ?? ''
-              }</xsd:numNatPsRemplace>
-              <xsd:isTpAmo>${
-                data?.identification?.isTpAmo ? 'true' : 'false'
-              }</xsd:isTpAmo>
-              <xsd:isTpAmc>${
-                data?.identification?.isTpAmc ? 'true' : 'false'
-              }</xsd:isTpAmc>
-              ${
-                (data?.identification?.genererDRE ?? null) !== null
-                  ? `<xsd:GenererDRE>${
-                      data?.identification?.genererDRE ? 'true' : 'false'
-                    }</xsd:GenererDRE>`
-                  : ``
-              }
-              ${
-                (data?.identification?.modeSecurisation ?? null) !== null
-                  ? `<xsd:modeSecurisation>${data?.identification?.modeSecurisation}</xsd:GenererDRE>`
-                  : ``
-              }
-              ${_getpPescripteurXml(data?.identification?.prescripteur)}
-              ${_getSituationParcoursDeSoin()}
-            </xsd:identification>
-            ${data?.actes
-              ?.map(
-                (acte, index) => `
-                <xsd:acte>
-                <xsd:numero>${index}</xsd:numero>
-                <xsd:dateExecution format="yyyyMMdd">${formatDate(
-                  acte?.dateExecution,
-                )}</xsd:dateExecution>
-                <xsd:codeActe>${acte?.codeActe ?? ''}</xsd:codeActe>
-                <xsd:qte>${acte?.qte ?? ''}</xsd:qte>
-                <xsd:montantHonoraire>${
-                  acte?.montantHonoraire ?? ''
-                }</xsd:montantHonoraire>
-                <xsd:libelle>${acte?.libelle ?? ''}</xsd:libelle>
-                <xsd:numeroDents>${acte?.numeroDents ?? ''}</xsd:numeroDents>
-                <xsd:coefficient>${acte?.coefficient ?? ''}</xsd:coefficient>
-                ${
-                  acte?.codeAssociation
-                    ? `<xsd:codeAssociation>${acte?.coefficient}</xsd:codeAssociation>`
-                    : ``
-                }
-                ${
-                  acte?.qualifDepense
-                    ? `<xsd:qualifDepense>${acte?.qualifDepense}</xsd:qualifDepense>`
-                    : ``
-                }
-                ${
-                  acte?.complementPrestation
-                    ? `<xsd:complementPrestation>${acte?.complementPrestation}</xsd:complementPrestation>`
-                    : ``
-                }
-                ${
-                  acte?.codeModificateur1
-                    ? `<xsd:codeModificateur1>${acte?.codeModificateur1}</xsd:codeModificateur1>`
-                    : ``
-                }
-                ${
-                  acte?.codeModificateur2
-                    ? `<xsd:codeModificateur2>${acte?.codeModificateur2}</xsd:codeModificateur2>`
-                    : ``
-                }
-                ${
-                  acte?.codeModificateur3
-                    ? `<xsd:codeModificateur3>${acte?.codeModificateur3}</xsd:codeModificateur3>`
-                    : ``
-                }
-                ${
-                  acte?.codeModificateur4
-                    ? `<xsd:codeModificateur4>${acte?.codeModificateur4}</xsd:codeModificateur4>`
-                    : ``
-                }
-                ${
-                  acte?.remboursementExceptionnel !== undefined
-                    ? `<xsd:remboursementExceptionnel>${
-                        !!acte?.remboursementExceptionnel ? 'true' : 'false'
-                      }</xsd:remboursementExceptionnel>`
-                    : ``
-                }
-                ${
-                  acte?.codeJustifExoneration
-                    ? `<xsd:codeJustifExoneration>${acte?.codeJustifExoneration}</xsd:codeJustifExoneration>`
-                    : ``
-                }
-                ${
-                  acte?.isAld !== undefined
-                    ? `<xsd:isAld>${
-                        !!acte?.isAld ? 'true' : 'false'
-                      }</xsd:isAld>`
-                    : ``
-                }
-                ${
-                  acte?.dateDemandePrealable
-                    ? `<xsd:dateDemandePrealable format="yyyyMMdd">${formatDate(
-                        acte?.dateDemandePrealable,
-                      )}</xsd:dateDemandePrealable>`
-                    : ``
-                }
-                ${
-                  acte?.codeAccordPrealable
-                    ? `<xsd:codeAccordPrealable">${acte?.codeAccordPrealable}</xsd:codeAccordPrealable>`
-                    : ``
-                }
-              </xsd:acte>
-              `,
-              )
-              .join('')}
-           
-          </xsd:appelTransmettreFacture>
-        </jux:TransmettreFacture>
-      </soapenv:Body>
-    </soapenv:Envelope>`;
-
-    // return $this->sendRequest('TransmettreFacture', $xml->outputMemory());
-    return xml;
   }
 
   private isTestAntigenique(medical): boolean {
@@ -698,174 +419,13 @@ export class ActsService {
     );
   }
 
-  private async transmettreFacture(facture: any) {
-    const xml = create('jux:TransmettreFacture')
-      .ele('xsd:appelTransmettreFacture')
-      .ele('xsd:identification')
-      .ele('xsd:idPatient', facture?.identification?.idPatient)
-      .up()
-      .ele('xsd:source', 'weClever')
-      .up()
-      .ele(
-        'xsd:dateFacturation',
-        format(facture?.identification?.dateFacturation, 'yyyyMMdd'),
-      )
-      .up()
-      .ele(
-        'xsd:datePrescription',
-        format(facture?.identification?.datePrescription, 'yyyyMMdd'),
-      )
-      .up()
-      .ele('xsd:numNatPs', facture?.identification?.numNatPs)
-      .up()
-      .ele('xsd:numFiness', facture?.identification?.numFiness)
-      .up()
-      .ele('xsd:numNatPsRemplace', facture?.identification?.numNatPsRemplace)
-      .up()
-      .ele('xsd:isTpAmo', String(facture?.identification?.isTpAmo ?? false))
-      .up()
-      .ele('xsd:isTpAmc', String(facture?.identification?.isTpAmc ?? false))
-      .up();
-    const modeSecurisation = facture?.identification?.modeSecurisation ?? null;
-    if (modeSecurisation) {
-      xml.ele('xsd:modeSecurisation', modeSecurisation).up();
-    }
-    const prescripteur = facture?.identification?.prescripteur ?? null;
-    if (prescripteur) {
-      const codeConditionExercice = prescripteur?.codeConditionExercice ?? null;
-      const numIdFacPresc = prescripteur?.numIdFacPresc ?? null;
-      const rppsPresc = prescripteur?.rppsPresc ?? null;
-      const numeroStructure = prescripteur?.numeroStructure ?? null;
-      const codeSpecialite = prescripteur?.codeSpecialite ?? null;
-      const estPrescipteurSncf: boolean =
-        prescripteur?.estPrescipteurSncf ?? null;
-      if (numIdFacPresc) {
-        xml
-          .ele('xsd:prescripteur')
-          .ele('xsd:codeConditionExercice', codeConditionExercice)
-          .up()
-          .ele('xsd:numIdFacPresc', numIdFacPresc.slice(0, -1))
-          .up()
-          .ele('xsd:numIdFacPrescCle', numIdFacPresc.slice(-1))
-          .up()
-          .ele('xsd:codeSpecialite', codeSpecialite)
-          .up()
-          .ele('xsd:rppsPresc', rppsPresc.slice(0, -1))
-          .up()
-          .ele('xsd:rppsPrescCle', rppsPresc.slice(-1))
-          .up()
-          .ele('xsd:numeroStructure', numeroStructure)
-          .up()
-          .ele('xsd:estPrescipteurSncf', String(estPrescipteurSncf))
-          .up();
-      }
-    }
-    const situationParcoursDeSoin =
-      facture?.identification?.ParcoursDeSoin?.situationParcoursDeSoin ?? null;
-    if (situationParcoursDeSoin) {
-      const nomMedecinOrienteur =
-        facture?.identification?.ParcoursDeSoin?.situationParcoursDeSoin ??
-        null;
-      const prenomMedecinOrienteur =
-        facture?.identification?.ParcoursDeSoin?.nomMedecinOrienteur ?? null;
-
-      xml
-        .ele('xsd:ParcoursDeSoin')
-        .ele('xsd:situationParcoursDeSoin', situationParcoursDeSoin)
-        .up()
-        .ele('xsd:nomMedecinOrienteur', nomMedecinOrienteur)
-        .up()
-        .ele('xsd:prenomMedecinOrienteur', prenomMedecinOrienteur)
-        .up();
-    }
-    xml.up();
-    facture?.actes.forEach((acte, index) => {
-      xml
-        .ele('xsd:acte')
-        .ele('xsd:numero', index.toString())
-        .up()
-        .ele('xsd:dateExecution', format(acte?.dateExecution, 'yyyyMMdd'))
-        .up()
-        .ele('xsd:codeActe', acte?.codeActe)
-        .up()
-        .ele('xsd:qte', acte?.qte)
-        .up();
-      if (acte?.montantHonoraire)
-        xml.ele('xsd:montantHonoraire', acte?.montantHonoraire).up();
-      xml
-        .ele('xsd:libelle', acte?.libelle)
-        .up()
-        .ele('xsd:numeroDents', acte?.numeroDents)
-        .up()
-        .ele('xsd:coefficient', acte?.coefficient)
-        .up();
-      if (acte?.codeAssociation)
-        xml.ele('xsd:codeAssociation', acte?.codeAssociation).up();
-      if (acte?.qualifDepense)
-        xml.ele('xsd:qualifDepense', acte?.qualifDepense).up();
-      if (acte?.complementPrestation)
-        xml.ele('xsd:complementPrestation', acte?.complementPrestation).up();
-      if (acte?.codeModificateur1) {
-        xml
-          .ele('xsd:codeModificateur1')
-          .ele('xsd:codeModificateur', acte?.codeModificateur1)
-          .up();
-      }
-      if (acte?.codeModificateur2) {
-        xml
-          .ele('xsd:codeModificateur2')
-          .ele('xsd:codeModificateur', acte?.codeModificateur2)
-          .up();
-      }
-      if (acte?.codeModificateur3) {
-        xml
-          .ele('xsd:codeModificateur3')
-          .ele('xsd:codeModificateur', acte?.codeModificateur3)
-          .up();
-      }
-      if (acte?.codeModificateur4) {
-        xml
-          .ele('xsd:codeModificateur4')
-          .ele('xsd:codeModificateur', acte?.codeModificateur4)
-          .up();
-      }
-      if (acte?.remboursementExceptionnel !== null)
-        xml
-          .ele(
-            'xsd:remboursementExceptionnel',
-            acte?.remboursementExceptionnel.toString(),
-          )
-          .up();
-      if (acte?.codeJustifExoneration)
-        xml.ele('xsd:codeJustifExoneration', acte?.codeJustifExoneration).up();
-      if (acte?.isAld !== null)
-        xml.ele('xsd:isAld', acte?.isAld.toString()).up();
-      if (acte?.dateDemandePrealable) {
-        xml
-          .ele(
-            'xsd:dateDemandePrealable',
-            format(acte?.dateDemandePrealable, 'yyyyMMdd').substring(0, 10),
-          )
-          .up()
-          .ele('xsd:codeAccordPrealable', acte?.codeAccordPrealable)
-          .up();
-      }
-
-      xml.up();
-    });
-
-    xml.up().up().up().up();
-
-    return await this.sendRequest('TransmettreFacture', xml.toString());
-  }
-
   private isEligibleForParticipationAssure = (
     amos: PatientAmoEntity[],
     dateTime: Date,
   ) => {
     const amo: any = this.getActiveAmo(amos, dateTime);
     return (
-      !amo ||
+      !amo.length ||
       ([
         CodeNatureAssuranceEnum.ASSURANCE_MALADIE,
         CodeNatureAssuranceEnum.ALSACE_MOSELLE,

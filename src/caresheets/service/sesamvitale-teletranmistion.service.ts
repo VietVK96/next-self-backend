@@ -16,7 +16,7 @@ import { UserEntity } from 'src/entities/user.entity';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import { DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
@@ -195,8 +195,9 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
     ) {
       throw new CBadRequestException(ErrorCode.ERROR_PATIENT_IS_REQUIRED);
     }
-    const birthDate =
-      patient?.birthDateLunar ?? dayjs(patient?.birthday).format('YYYY-MM-DD');
+    const birthDate = patient?.birthDateLunar
+      ? dayjs(patient?.birthDateLunar).format('YYYYMMDD')
+      : dayjs(patient?.birthday).format('YYYYMMDD');
     const matches = birthDate.match(
       /^(?<year>[0-9]{4})(?<month>[0-9]{2})(?<day>[0-9]{2})$/,
     );
@@ -218,37 +219,49 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
       }
     }
 
-    const numFacturation = user?.medical?.finessNumber ?? '';
-    const numRpps = user?.medical?.nationalIdentifierNumber ?? '';
-    const idPatient = patient?.externalReferenceId ?? '';
-    const nom = patient?.lastname ?? '';
-    const prenom = patient?.firstname ?? '';
-    const jour = matches?.groups?.day ?? '';
-    const mois = matches?.groups?.month ?? '';
-    const annee = matches?.groups?.year ?? '';
+    const numFacturation = user?.medical?.finessNumber;
+    const numRpps = user?.medical?.nationalIdentifierNumber;
+    const idPatient = patient?.externalReferenceId;
+    const nom = patient?.lastname;
+    const prenom = patient?.firstname;
+    const jour = matches?.groups?.day;
+    const mois = matches?.groups?.month;
+    const annee = matches?.groups?.year;
     const lunaire = !!patient?.birthDateLunar ? 'true' : 'false';
-    const numeroSS = patient?.insee ?? '';
-    const cleNumeroSS = patient?.inseeKey ?? '';
-    const rangNaissance = patient?.birthOrder ?? '';
+    const numeroSS = patient?.insee;
+    const cleNumeroSS = patient?.inseeKey;
+    const rangNaissance = patient?.birthOrder;
     const xml = `
     <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">
       <soapenv:Body>
         <jux:transmettrePatient>
           <xsd:appelTransmettrePatient>
-            <xsd:numFacturation>${numFacturation}</xsd:numFacturation>
-            <xsd:numRpps>${numRpps}</xsd:numRpps>
+            ${
+              numFacturation
+                ? `<xsd:numFacturation>${numFacturation}</xsd:numFacturation>`
+                : ''
+            }
+            ${numRpps ? `<xsd:numRpps>${numRpps}</xsd:numRpps>` : ''}
             ${idPatient ? `<xsd:idPatient>${idPatient}</xsd:idPatient>` : ``}
-            <xsd:nom>${nom}</xsd:nom>
-            <xsd:prenom>${prenom}</xsd:prenom>
+            ${nom ? `<xsd:nom>${nom}</xsd:nom>` : ''}
+            ${prenom ? `<xsd:prenom>${prenom}</xsd:prenom>` : ''}
             <xsd:dateNaissance>
-              <xsd:jour>${jour}</xsd:jour>
-              <xsd:mois>${mois}</xsd:mois>
-              <xsd:annee>${annee}</xsd:annee>
+              ${jour ? `<xsd:jour>${jour}</xsd:jour>` : ``}
+              ${mois ? `<xsd:mois>${mois}</xsd:mois>` : ``}
+              ${annee ? `<xsd:annee>${annee}</xsd:annee>` : ``}
               <xsd:lunaire>${lunaire}</xsd:lunaire>
             </xsd:dateNaissance>
-            <xsd:numeroSS>${numeroSS}</xsd:numeroSS>
-            <xsd:cleNumeroSS>${cleNumeroSS}</xsd:cleNumeroSS>
-            <xsd:rangNaissance>${rangNaissance}</xsd:rangNaissance>
+            ${numeroSS ? `<xsd:numeroSS>${numeroSS}</xsd:numeroSS>` : ``}
+            ${
+              cleNumeroSS
+                ? `<xsd:cleNumeroSS>${cleNumeroSS}</xsd:cleNumeroSS>`
+                : ``
+            }
+            ${
+              rangNaissance
+                ? `<xsd:rangNaissance>${rangNaissance}</xsd:rangNaissance>`
+                : ``
+            }
           </xsd:appelTransmettrePatient>
         </jux:transmettrePatient>
       </soapenv:Body>
@@ -269,8 +282,8 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
   async transmettreFacture(data: {
     identification: {
       idPatient?: number;
-      dateFacturation?: Date;
-      datePrescription?: Date;
+      dateFacturation?: string;
+      datePrescription?: string;
       numFiness?: string;
       numNatPs?: string;
       numNatPsRemplace?: string;
@@ -288,26 +301,63 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
     actes: any[];
   }) {
     const _getpPescripteurXml = (prescripteur: any) => {
-      const codeConditionExercice = prescripteur?.codeConditionExercice ?? '';
-      const numIdFacPresc = prescripteur?.numIdFacPresc ?? '';
-      const rppsPresc = prescripteur?.rppsPresc ?? '';
-      const numeroStructure = prescripteur?.numeroStructure ?? '';
-      const codeSpecialite = prescripteur?.codeSpecialite ?? '';
-      const estPrescipteurSncf = prescripteur?.estPrescipteurSncf ?? '';
+      const codeConditionExercice = prescripteur?.codeConditionExercice;
+      const numIdFacPresc = prescripteur?.numIdFacPresc;
+      const rppsPresc = prescripteur?.rppsPresc;
+      const numeroStructure = prescripteur?.numeroStructure;
+      const codeSpecialite = prescripteur?.codeSpecialite;
+      const estPrescipteurSncf = prescripteur?.estPrescipteurSncf;
       if (numIdFacPresc) {
         return `
         <xsd:prescripteur>
-          <xsd:codeConditionExercice>${codeConditionExercice}</xsd:codeConditionExercice>
-          <xsd:numIdFacPresc>${numIdFacPresc?.slice(0, -1)}</xsd:numIdFacPresc>
-          <xsd:numIdFacPrescCle>${numIdFacPresc?.slice(
-            -1,
-          )}</xsd:numIdFacPrescCle>
-          <xsd:codeSpecialite>${codeSpecialite}</xsd:codeSpecialite>
-          <xsd:rppsPresc>${rppsPresc?.slice(0, -1)}</xsd:rppsPresc>
-          <xsd:rppsPrescCle>${rppsPresc?.slice(-1)}</xsd:rppsPrescCle>
-          <xsd:numeroStructure>${numeroStructure}</xsd:numeroStructure>
-          <xsd:estPrescipteurSncf>${estPrescipteurSncf}</xsd:estPrescipteurSncf>
-        <xsd:prescripteur/>
+          ${
+            codeConditionExercice
+              ? `<xsd:codeConditionExercice>${codeConditionExercice}</xsd:codeConditionExercice>`
+              : ''
+          }
+          ${
+            numIdFacPresc
+              ? `<xsd:numIdFacPresc>${numIdFacPresc?.slice(
+                  0,
+                  -1,
+                )}</xsd:numIdFacPresc>`
+              : ''
+          }
+          ${
+            numIdFacPresc
+              ? `<xsd:numIdFacPrescCle>${numIdFacPresc?.slice(
+                  -1,
+                )}</xsd:numIdFacPrescCle>`
+              : ''
+          }
+          ${
+            codeSpecialite
+              ? `<xsd:codeSpecialite>${codeSpecialite}</xsd:codeSpecialite>`
+              : ''
+          }
+          ${
+            rppsPresc
+              ? `<xsd:rppsPresc>${rppsPresc?.slice(0, -1)}</xsd:rppsPresc>`
+              : ''
+          }
+          ${
+            rppsPresc
+              ? `<xsd:rppsPrescCle>${rppsPresc?.slice(-1)}</xsd:rppsPrescCle>`
+              : ''
+          }
+          ${
+            numeroStructure
+              ? `<xsd:numeroStructure>${numeroStructure}</xsd:numeroStructure>`
+              : ''
+          }
+          ${
+            estPrescipteurSncf !== null && estPrescipteurSncf !== undefined
+              ? `<xsd:estPrescipteurSncf>${
+                  estPrescipteurSncf ? 'true' : 'false'
+                }</xsd:estPrescipteurSncf>`
+              : ''
+          }
+        </xsd:prescripteur>
         `;
       }
       return '';
@@ -318,83 +368,43 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
         data?.identification?.ParcoursDeSoin?.situationParcoursDeSoin;
       if (situationParcoursDeSoin) {
         const nomMedecinOrienteur =
-          data?.identification?.ParcoursDeSoin?.nomMedecinOrienteur ?? '';
+          data?.identification?.ParcoursDeSoin?.nomMedecinOrienteur;
         const prenomMedecinOrienteur =
-          data?.identification?.ParcoursDeSoin?.prenomMedecinOrienteur ?? '';
+          data?.identification?.ParcoursDeSoin?.prenomMedecinOrienteur;
         return `
         <xsd:ParcoursDeSoin>
-          <xsd:situationParcoursDeSoin>${situationParcoursDeSoin}</xsd:situationParcoursDeSoin>
-          <xsd:nomMedecinOrienteur>${nomMedecinOrienteur}</xsd:nomMedecinOrienteur>
-          <xsd:prenomMedecinOrienteur>${prenomMedecinOrienteur}</xsd:prenomMedecinOrienteur>
+          ${
+            situationParcoursDeSoin
+              ? `<xsd:situationParcoursDeSoin>${situationParcoursDeSoin}</xsd:situationParcoursDeSoin>`
+              : ''
+          }
+          ${
+            nomMedecinOrienteur
+              ? `<xsd:nomMedecinOrienteur>${nomMedecinOrienteur}</xsd:nomMedecinOrienteur>`
+              : ''
+          }
+          ${
+            prenomMedecinOrienteur
+              ? `<xsd:prenomMedecinOrienteur>${prenomMedecinOrienteur}</xsd:prenomMedecinOrienteur>`
+              : ''
+          }
         </xsd:ParcoursDeSoin>
         `;
       }
       return '';
     };
 
-    const formatDate = (date?: string | Date) => {
-      try {
-        if (!date) return '';
-        if (date === 'Invalid Date') return '';
-        return dayjs(new Date(date)).format('YYYYMMDD');
-      } catch {
-        return '';
-      }
-    };
-    const xml = `
-    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">
-      <soapenv:Body>
-        <jux:TransmettreFacture>
-          <xsd:appelTransmettreFacture>
-            <xsd:identification>
-              <xsd:idPatient>${
-                data?.identification?.idPatient ?? ''
-              }</xsd:idPatient>
-              <xsd:source>${'ecoodentist'}</xsd:source>
-              <xsd:dateFacturation format="yyyyMMdd">${formatDate(
-                data?.identification?.dateFacturation,
-              )}</xsd:dateFacturation>
-              <xsd:datePrescription format="yyyyMMdd">${formatDate(
-                data?.identification?.datePrescription,
-              )}</xsd:datePrescription>
-              <xsd:numNatPs>${
-                data?.identification?.numNatPs ?? ''
-              }</xsd:numNatPs>
-              <xsd:numFiness>${
-                data?.identification?.numFiness ?? ''
-              }</xsd:numFiness>
-              <xsd:numNatPsRemplace>${
-                data?.identification?.numNatPsRemplace ?? ''
-              }</xsd:numNatPsRemplace>
-              <xsd:isTpAmo>${
-                data?.identification?.isTpAmo ? 'true' : 'false'
-              }</xsd:isTpAmo>
-              <xsd:isTpAmc>${
-                data?.identification?.isTpAmc ? 'true' : 'false'
-              }</xsd:isTpAmc>
-              ${
-                (data?.identification?.GenererDRE ?? null) !== null
-                  ? `<xsd:GenererDRE>${
-                      data?.identification?.GenererDRE ? 'true' : 'false'
-                    }</xsd:GenererDRE>`
-                  : ``
-              }
-              ${
-                (data?.identification?.modeSecurisation ?? null) !== null
-                  ? `<xsd:modeSecurisation>${data?.identification?.modeSecurisation}</xsd:GenererDRE>`
-                  : ``
-              }
-              ${_getpPescripteurXml(data?.identification?.prescripteur)}
-              ${_getSituationParcoursDeSoin()}
-            </xsd:identification>
-            ${data?.actes
-              ?.map(
-                (acte, index) => `
+    const acte = data?.actes?.map(
+      (acte, index) => `
                 <xsd:acte>
                 <xsd:numero>${index}</xsd:numero>
-                <xsd:dateExecution format="yyyyMMdd">${formatDate(
-                  acte?.dateExecution,
-                )}</xsd:dateExecution>
+                ${
+                  acte?.dateExecution
+                    ? `<xsd:dateExecution format="yyyyMMdd">${dayjs(
+                        acte?.dateExecution,
+                      ).format('YYYYMMDD')}</xsd:dateExecution>`
+                    : ''
+                }
                 <xsd:codeActe>${acte?.codeActe ?? ''}</xsd:codeActe>
                 <xsd:qte>${acte?.qte ?? ''}</xsd:qte>
                 ${
@@ -402,13 +412,12 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
                     ? ` <xsd:montantHonoraire>${acte?.montantHonoraire}</xsd:montantHonoraire>`
                     : ''
                 }
-               
                 <xsd:libelle>${acte?.libelle ?? ''}</xsd:libelle>
                 <xsd:numeroDents>${acte?.numeroDents ?? ''}</xsd:numeroDents>
                 <xsd:coefficient>${acte?.coefficient ?? ''}</xsd:coefficient>
                 ${
                   acte?.codeAssociation
-                    ? `<xsd:codeAssociation>${acte?.coefficient}</xsd:codeAssociation>`
+                    ? `<xsd:codeAssociation>${acte?.codeAssociation}</xsd:codeAssociation>`
                     : ``
                 }
                 ${
@@ -478,9 +487,7 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
                 }
                 ${
                   acte?.dateDemandePrealable
-                    ? `<xsd:dateDemandePrealable format="yyyyMMdd">${formatDate(
-                        acte?.dateDemandePrealable,
-                      )}</xsd:dateDemandePrealable>`
+                    ? `<xsd:dateDemandePrealable format="yyyyMMdd">${acte?.dateDemandePrealable}</xsd:dateDemandePrealable>`
                     : ``
                 }
                 ${
@@ -490,8 +497,74 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
                 }
               </xsd:acte>
               `,
-              )
-              .join('')}
+    );
+    const xml = `
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">
+      <soapenv:Body>
+        <jux:TransmettreFacture>
+          <xsd:appelTransmettreFacture>
+            <xsd:identification>
+            ${
+              data?.identification?.idPatient
+                ? `<xsd:idPatient>${data?.identification?.idPatient}</xsd:idPatient>`
+                : ''
+            }
+              <xsd:source>${'ecoodentist'}</xsd:source>
+              ${
+                data?.identification?.dateFacturation
+                  ? `<xsd:dateFacturation format="yyyyMMdd">${data?.identification?.dateFacturation}</xsd:dateFacturation>`
+                  : ''
+              }
+                ${
+                  data?.identification?.datePrescription
+                    ? `<xsd:datePrescription format="yyyyMMdd">${data?.identification?.datePrescription}</xsd:datePrescription>`
+                    : ''
+                }
+              ${
+                data?.identification?.numNatPs
+                  ? `<xsd:numNatPs>${data?.identification?.numNatPs}</xsd:numNatPs>`
+                  : ''
+              }
+              ${
+                data?.identification?.numFiness
+                  ? `<xsd:numFiness>${data?.identification?.numFiness}</xsd:numFiness>`
+                  : ''
+              }
+         ${
+           data?.identification?.numNatPsRemplace
+             ? `<xsd:numNatPsRemplace>${data?.identification?.numNatPsRemplace}</xsd:numNatPsRemplace>`
+             : ''
+         }
+         ${
+           data?.identification?.isTpAmo !== undefined
+             ? `<xsd:isTpAmo>${
+                 data?.identification?.isTpAmo ? 'true' : 'false'
+               }</xsd:isTpAmo>`
+             : ''
+         }
+        ${
+          data?.identification?.isTpAmc !== undefined
+            ? `<xsd:isTpAmc>${
+                data?.identification?.isTpAmc ? 'true' : 'false'
+              }</xsd:isTpAmc>`
+            : ''
+        }
+         ${
+           data?.identification?.GenererDRE !== undefined
+             ? `<xsd:GenererDRE>${
+                 data?.identification?.GenererDRE ? 'true' : 'false'
+               }</xsd:GenererDRE>`
+             : ''
+         }
+         ${
+           data?.identification?.modeSecurisation
+             ? `<xsd:modeSecurisation>${data?.identification?.modeSecurisation}</xsd:modeSecurisation>`
+             : ''
+         }
+              ${_getpPescripteurXml(data?.identification?.prescripteur)}
+              ${_getSituationParcoursDeSoin()}
+            </xsd:identification>
+            ${acte.join('')}
            
           </xsd:appelTransmettreFacture>
         </jux:TransmettreFacture>
