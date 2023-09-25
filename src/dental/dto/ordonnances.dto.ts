@@ -25,7 +25,7 @@ export class OrdonnancesDto {
     name: 'bcbVersion',
     required: false,
   })
-  bcbVersion?: number;
+  bcbVersion?: string;
 
   @ApiProperty({
     name: 'title',
