@@ -2,10 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { SaveContraindicationDto } from '../dto/contraindication.contact.dto';
 import { DataSource } from 'typeorm';
 
+/**
+ * php/contact/contraindication/save.php
+ */
 @Injectable()
 export class ContraindicationContactService {
   constructor(private dataSource: DataSource) {}
 
+  /**
+   * php/contact/contraindication/save.php
+   */
   async saveContraindication(payload: SaveContraindicationDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
