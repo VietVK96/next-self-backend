@@ -22,6 +22,7 @@ import {
   CreateImageSoftwareDto,
   CreateImageSoftwareQueryDto,
 } from './dto/image-software.dto';
+import { ShowImagingSoftwareQueryDto } from './dto/show-imaging-softwar.dto';
 
 @ApiBearerAuth()
 @ApiTags('Workstation')
@@ -127,5 +128,14 @@ export class WorkstationController {
   @UseGuards(TokenGuard)
   async deleteImagingSoftwares(@Param('id') id: number) {
     return this.imagingSoftwareService.deleteImagingSoftwaresById(id);
+  }
+
+  @Get('/imaging-softwares-show/:id')
+  @UseGuards(TokenGuard)
+  async showImagingSoftware(
+    @Param('id') id: number,
+    @Query() query: ShowImagingSoftwareQueryDto,
+  ) {
+    return this.imagingSoftwareService.showImagingSoftware(id, query);
   }
 }
