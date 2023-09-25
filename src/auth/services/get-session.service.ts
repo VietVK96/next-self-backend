@@ -18,6 +18,7 @@ import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { parseJson } from 'src/common/util/json';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { UserAmoEntity } from 'src/entities/user-amo.entity';
+import { AddressEntity } from 'src/entities/address.entity';
 
 @Injectable()
 export class GetSessionService {
@@ -29,6 +30,8 @@ export class GetSessionService {
     private userMedicalRepository: Repository<UserMedicalEntity>,
     @InjectRepository(UserAmoEntity)
     private userAmoRepo: Repository<UserAmoEntity>,
+    @InjectRepository(AddressEntity)
+    private addressRepo: Repository<AddressEntity>,
   ) {}
 
   async getSession(identity: UserIdentity) {

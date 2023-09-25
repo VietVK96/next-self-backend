@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { MedicalService } from './services/medical.service';
 import {
@@ -18,16 +18,13 @@ export class MedicalController {
   /**
    * php/medical/order/baseClaudeBernardCheck.php
    */
-  @Post('baseClaudeBernardCheck')
+  @Get('baseClaudeBernardCheck')
   @UseGuards(TokenGuard)
   async baseClaudeBernardCheck(
-    @Body() payload: BaseClaudeBernardCheckDto,
+    @Query() payload: BaseClaudeBernardCheckDto,
     @CurrentUser() identity: UserIdentity,
   ) {
-    return this.medicalService.baseClaudeBernardCheck(
-      payload.contact,
-      identity.org,
-    );
+    return this.medicalService.baseClaudeBernardCheck(payload, identity.org);
   }
 
   /**

@@ -139,7 +139,17 @@ export class OrdonnancesServices {
       let prescriptions = payload?.prescriptions || '';
 
       prescriptions = prescriptions.replace(
-        /<DIV name="cross" [^>]+><\/DIV>/gi,
+        /<div name="cross" [^>]+><\/div>/gi,
+        '',
+      );
+
+      prescriptions = prescriptions.replace(
+        /<div id="cross" [^>]+><\/div>/gi,
+        '',
+      );
+
+      prescriptions = prescriptions.replace(
+        /<div class="isBCB" [^>]+><\/div>/gi,
         '',
       );
       prescriptions = prescriptions.replace(/ onmouseover="[^"]+"/gi, '');
@@ -299,7 +309,7 @@ export class OrdonnancesServices {
         headerEnable,
         versions,
         versionsLength: versions.length - 1,
-        ident_patient,
+        ident_patient: nl2br(ident_patient),
         prescriptions: nl2br(cleanedHTML),
         numberOfPrescription,
         medicalOrderSignaturePraticien,
