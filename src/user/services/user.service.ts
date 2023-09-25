@@ -96,6 +96,10 @@ export class UserService {
         userId: user?.id,
       },
     });
+    const preferences = await this.dataSource.manager.findOne(
+      UserPreferenceEntity,
+      { where: { usrId: user?.id } },
+    );
     const appointmentReminderLibraries = await this.dataSource.manager.find(
       AppointmentReminderLibraryEntity,
       {
@@ -121,6 +125,7 @@ export class UserService {
       address: {
         ...address,
       },
+      preferences,
       eventTypes,
       appointmentReminderLibraries,
     };
