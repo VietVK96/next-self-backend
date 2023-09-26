@@ -15,6 +15,8 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { PerCode } from 'src/constants/permissions';
 import { ActDto } from '../dto/act.dto';
 import { PrestationDto } from 'src/contact/dto/prestation.dto';
+import { PlanEventEntity } from 'src/entities/plan-event.entity';
+import { PlanPlfEntity } from 'src/entities/plan-plf.entity';
 
 @Injectable()
 export class PrestationService {
@@ -234,9 +236,9 @@ export class PrestationService {
         throw new CNotFoundRequestException(ErrorCode.NOT_FOUND);
       }
 
-      const actEntities: EventTaskEntity[] = await this.dataSource
+      const actEntity: EventTaskEntity = await this.dataSource
         .getRepository(EventTaskEntity)
-        .find({
+        .findOne({
           where: {
             id: id,
           },
@@ -246,14 +248,12 @@ export class PrestationService {
             patient: true,
           },
         });
-      const actEntity: EventTaskEntity =
-        actEntities && actEntities.length > 0 ? actEntities[0] : undefined;
 
       // Si l'acte fait partie d'un devis ou plan de traitement,
       // on modifie uniquement son état.
-      const { count: etkCount } = await this.dataSource.manager.query(
+      const rs: { count: string }[] = await this.dataSource.manager.query(
         `
-        SELECT COUNT(*)
+        SELECT COUNT(*) as count
         FROM T_EVENT_TASK_ETK
         JOIN T_EVENT_EVT
         JOIN T_PLAN_EVENT_PLV
@@ -265,11 +265,26 @@ export class PrestationService {
         `,
         [id],
       );
-      if (Number(etkCount)) {
+
+      if (Number(rs[0].count)) {
         await this.dataSource.query(
           `UPDATE T_EVENT_TASK_ETK SET ETK_STATE = 0 WHERE ETK_ID = ?`,
           [id],
         );
+        const planEvent = await this.dataSource
+          .getRepository(PlanEventEntity)
+          .findOne({
+            where: { evtId: actEntity.evtId },
+            relations: {
+              plan: true,
+            },
+          });
+        const plan = planEvent?.plan;
+        if (plan)
+          await this.dataSource.getRepository(PlanPlfEntity).save({
+            ...plan,
+            acceptedOn: null,
+          });
       } else {
         await this.dataSource
           .getRepository(EventTaskEntity)

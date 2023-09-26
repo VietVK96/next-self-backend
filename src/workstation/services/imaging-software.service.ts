@@ -18,6 +18,11 @@ import { checkEmpty } from 'src/common/util/string';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { MACOS, WINDOWS } from './platformsClass';
 import { parseString } from 'xml2js';
+import { ShowImagingSoftwareQueryDto } from '../dto/show-imaging-softwar.dto';
+import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
+import { ContactEntity } from 'src/entities/contact.entity';
+import { UserEntity } from 'src/entities/user.entity';
+import { ImagingGatewayService } from './imaging-gateway.service';
 
 @Injectable()
 export class ImagingSoftwareService {
@@ -26,6 +31,11 @@ export class ImagingSoftwareService {
     private workstaionRepository: Repository<WorkstationEntity>,
     @InjectRepository(ImagingSoftwareEntity)
     private imagingSoftwareRepository: Repository<ImagingSoftwareEntity>,
+    @InjectRepository(ContactEntity)
+    private contactRepo: Repository<ContactEntity>,
+    @InjectRepository(UserEntity)
+    private userRepo: Repository<UserEntity>,
+    private imagingGatewayService: ImagingGatewayService,
   ) {}
 
   async getImagingSoftwaresByWorkstationId(id: number) {
@@ -278,5 +288,38 @@ export class ImagingSoftwareService {
     } catch (e) {
       return new CBadRequestException(ErrorCode.FORBIDDEN);
     }
+  }
+
+  async showImagingSoftware(id: number, query: ShowImagingSoftwareQueryDto) {
+    const imagingSoftware = await this.imagingSoftwareRepository.findOne({
+      where: { id },
+    });
+    if (!imagingSoftware) {
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND);
+    }
+
+    const contact = await this.contactRepo.findOne({
+      where: {
+        id: query?.contactId,
+      },
+    });
+    if (!contact) {
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND);
+    }
+
+    const practitioner = await this.userRepo.findOne({
+      where: {
+        id: query.practitionerId,
+      },
+    });
+    if (!practitioner) {
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND);
+    }
+
+    return this.imagingGatewayService.getLaunchParameters(
+      imagingSoftware,
+      contact,
+      practitioner,
+    );
   }
 }

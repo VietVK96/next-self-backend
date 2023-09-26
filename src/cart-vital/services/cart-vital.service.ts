@@ -82,13 +82,13 @@ export class CartVitalService {
     }
 
     patient = this.setServiceAmo(patient, respone);
-    patient = await this.createOrUpdateAmos(
-      patient,
-      respone?.individu?.[0]?.couvertureAMO ?? [],
-    );
     patient = await this.createOrUpdateAmcs(
       patient,
       respone?.individu?.[0]?.couvertureAMC ?? [],
+    );
+    patient = await this.createOrUpdateAmos(
+      patient,
+      respone?.individu?.[0]?.couvertureAMO ?? [],
     );
 
     if (respone?.individu?.[0]?.idAssure?.[0]) {
@@ -105,7 +105,56 @@ export class CartVitalService {
       patient.amoTaux = 90;
     }
 
-    await this.dataSource.getRepository(ContactEntity).save(patient);
+    const resultPatient = await this.dataSource
+      .getRepository(ContactEntity)
+      .save({ ...patient });
+    for (const amc of patient?.amcs) {
+      let saveAmc;
+      if (!amc?.amc?.id) {
+        saveAmc = await this.dataSource
+          .getRepository(AmcEntity)
+          .save({ ...amc?.amc, id: amc?.amc?.id });
+      }
+      if (!amc?.id) {
+        await this.dataSource.getRepository(PatientAmcEntity).save({
+          ...amc,
+          patientId: resultPatient?.id,
+          amcId: saveAmc?.id,
+          amc: saveAmc,
+        });
+      }
+    }
+
+    for (const amo of patient?.amos) {
+      let saveAmo;
+      if (!amo?.amo?.id) {
+        saveAmo = await this.dataSource
+          .getRepository(AmoEntity)
+          .save({ ...amo?.amo, id: amo?.amo?.id });
+      }
+      if (!amo?.id) {
+        await this.dataSource.getRepository(PatientAmoEntity).save({
+          ...amo,
+          patientId: resultPatient?.id,
+          amoId: saveAmo?.id,
+          amo: saveAmo,
+        });
+      }
+    }
+    const savePolicyHolder = await this.dataSource
+      .getRepository(PolicyHolderEntity)
+      .save({
+        ...patient?.medical?.policyHolder,
+        id: patient?.medical?.policyHolder?.id,
+      });
+    await this.dataSource.getRepository(PatientMedicalEntity).save({
+      ...patient?.medical,
+      patientId: resultPatient?.id,
+      policyHolderId: savePolicyHolder?.id,
+      policyHolder: savePolicyHolder,
+    });
+
+    return resultPatient;
   }
 
   public getActiveAmo(date, patient: ContactEntity) {
@@ -160,11 +209,10 @@ export class CartVitalService {
         ? dayjs(couvertureAmo?.dateFin?.[0]?.['_']).format('YYYY-MM-DD')
         : null;
       let patientAmo: PatientAmoEntity =
-        await this.findOneByPatientAndStartDateAndEndDate(
+        await this.findOneByPatientAndStartDateAndEndDateAmo(
           patient,
           startDate,
           endDate,
-          PatientAmoEntity,
         );
 
       if (!patientAmo) {
@@ -186,13 +234,14 @@ export class CartVitalService {
         amo.grandRegime = couvertureAmo?.tiers?.[0]?.grandRegime?.[0];
         amo.caisseGestionnaire = couvertureAmo?.tiers?.[0]?.codeCaisse?.[0];
         amo.centreGestionnaire = couvertureAmo?.tiers?.[0]?.codeCentre?.[0];
+        amo.codeNational = amo?.caisseGestionnaire + amo?.centreGestionnaire;
       }
 
       patientAmo.amo = amo;
       patientAmo.startDate = startDate;
       patientAmo.endDate = endDate;
-      patientAmo.isTp = couvertureAmo?.isTp?.[0];
-      patientAmo.isAld = couvertureAmo?.codeAld?.[0];
+      patientAmo.isTp = couvertureAmo?.isTp?.[0] === 'true' ? 1 : 0;
+      patientAmo.isAld = couvertureAmo?.codeAld?.[0] === 'true' ? 1 : 0;
       patientAmo.maternityDate = couvertureAmo?.materniteDate?.[0] ?? null;
       patientAmo.childbirthDate = patientAmo?.maternityDate
         ? dayjs(patientAmo?.maternityDate).add(9, 'month').format('YYYY-MM-DD')
@@ -229,18 +278,17 @@ export class CartVitalService {
         : null;
 
       let patientAmc: PatientAmcEntity =
-        await this.findOneByPatientAndStartDateAndEndDate(
+        await this.findOneByPatientAndStartDateAndEndDateAmc(
           patient,
           startDate,
           endDate,
-          PatientAmcEntity,
         );
 
       if (!patientAmc) {
         patientAmc = new PatientAmcEntity();
       }
 
-      const isGu = couvertureAmc?.isGu?.[0];
+      const isGu = couvertureAmc?.isGu?.[0] === 'true' ? 1 : 0;
       const numero = couvertureAmc?.GU?.[0]?.mutnum?.[0]
         ? couvertureAmc?.GU?.[0]?.mutnum?.[0]
         : couvertureAmc?.rnm?.[0];
@@ -254,14 +302,16 @@ export class CartVitalService {
         amc = new AmcEntity();
         amc.libelle = numero;
         amc.isGu = isGu;
+        amc.numero = numero;
       }
 
       patientAmc.amc = amc;
       patientAmc.startDate = startDate;
       patientAmc.endDate = endDate;
-      patientAmc.isTp = couvertureAmc?.isTp?.[0];
-      patientAmc.isCmu = couvertureAmc?.isCmu?.[0];
-      patientAmc.isDrePossible = couvertureAmc?.isDrePossible?.[0];
+      patientAmc.isTp = couvertureAmc?.isTp?.[0] === 'true' ? 1 : 0;
+      patientAmc.isCmu = couvertureAmc?.isCmu?.[0] === 'true' ? 1 : 0;
+      patientAmc.isDrePossible =
+        couvertureAmc?.isDrePossible?.[0] === 'true' ? 1 : 0;
       patientAmc.typeAme = couvertureAmc?.typeAme?.[0] ?? null;
       patientAmc.lectureAdr = couvertureAmc?.isLectureAdr?.[0]
         ? dayjs().format('YYYY-MM-DD')
@@ -311,33 +361,39 @@ export class CartVitalService {
     } catch (error) {}
   }
 
-  public async findOneByPatientAndStartDateAndEndDate(
+  public async findOneByPatientAndStartDateAndEndDateAmc(
     patient: ContactEntity,
     startDate,
     endDate,
-    entity,
   ) {
     try {
-      const queryBuilder = this.dataSource
-        .getRepository(entity)
-        .createQueryBuilder('a');
-      queryBuilder.where('IDENTITY(a.patient) = :patient');
-      if (dayjs(startDate).isValid()) {
-        queryBuilder.andWhere('a.startDate = :startDate');
-        queryBuilder.setParameter('startDate', startDate);
-      } else {
-        queryBuilder.andWhere('a.startDate IS NULL');
-      }
+      const res = this.dataSource.getRepository(PatientAmcEntity).findOne({
+        where: {
+          patientId: patient?.id,
+          startDate: dayjs(startDate).isValid() ? startDate : null,
+          endDate: dayjs(endDate).isValid() ? endDate : null,
+        },
+      });
+      return res;
+    } catch (error) {
+      return null;
+    }
+  }
 
-      if (dayjs(endDate).isValid()) {
-        queryBuilder.andWhere('a.endDate = :endDate');
-        queryBuilder.setParameter('endDate', endDate);
-      } else {
-        queryBuilder.andWhere('a.endDate IS NULL');
-      }
-
-      queryBuilder.setParameter('patient', patient?.id);
-      return await queryBuilder.getRawOne();
+  public async findOneByPatientAndStartDateAndEndDateAmo(
+    patient: ContactEntity,
+    startDate,
+    endDate,
+  ) {
+    try {
+      const res = this.dataSource.getRepository(PatientAmoEntity).findOne({
+        where: {
+          patientId: patient?.id,
+          startDate: dayjs(startDate).isValid() ? startDate : null,
+          endDate: dayjs(endDate).isValid() ? endDate : null,
+        },
+      });
+      return res;
     } catch (error) {
       return null;
     }
@@ -452,7 +508,10 @@ export class CartVitalService {
 
     patient.externalReferenceId = payload?.external_reference_id;
 
-    await this.updateFromSv(patient);
-    return { ...patient, external_reference_id: patient.externalReferenceId };
+    const newPatient = await this.updateFromSv(patient);
+    return {
+      ...newPatient,
+      external_reference_id: patient.externalReferenceId,
+    };
   }
 }
