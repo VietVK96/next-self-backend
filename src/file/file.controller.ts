@@ -37,23 +37,8 @@ export class FileController {
    */
   @Get('/download/:id')
   @UseGuards(TokenDownloadGuard)
-  async downloadFile(
-    @CurrentUser() user: UserIdentity,
-    @Param('id') id: number,
-    @Res() res: Response,
-  ) {
-    try {
-      const { mimeType, path, originalFilename } =
-        await this.fileService.getPathFile(id);
-      const disposition = `attachment; filename="${originalFilename}"`;
-
-      res.setHeader('Content-Type', mimeType);
-      res.setHeader('Content-Disposition', disposition);
-      // don't use __dirname because path is full path of the file
-      res.sendFile(path, { root: '.' });
-    } catch (error) {
-      throw new CBadRequestException('file not found', error);
-    }
+  async downloadFile(@Param('id') id: number, @Res() res: Response) {
+    await this.fileService.downloadFile(id, res);
   }
 
   /**
@@ -62,24 +47,8 @@ export class FileController {
    */
   @Get('/inline/:id')
   @UseGuards(TokenDownloadGuard)
-  async openInline(
-    @CurrentUser() user: UserIdentity,
-    @Param('id') id: number,
-    @Res() res: Response,
-  ) {
-    try {
-      const { mimeType, path, originalFilename } =
-        await this.fileService.getPathFile(id);
-
-      const disposition = `inline; filename="${originalFilename}"`;
-
-      res.setHeader('Content-Type', mimeType);
-      res.setHeader('Content-Disposition', disposition);
-      res.sendFile(path, { root: '.' });
-    } catch (error) {
-      this.logger.error(error);
-      throw new CBadRequestException(ErrorCode.FILE_NOT_FOUND, error);
-    }
+  async openInline(@Param('id') id: number, @Res() res: Response) {
+    await this.fileService.previewFile(id, res);
   }
 
   /**
