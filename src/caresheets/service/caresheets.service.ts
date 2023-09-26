@@ -214,7 +214,6 @@ export class ActsService {
         caresheet?.tasks.push(act?.medical);
       });
       await this.interfacageService.compute(caresheet);
-      //convert funtion transmettrePatient in client services
 
       await this.sesamvitaleTeletranmistionService.transmettrePatient(
         user,
@@ -336,6 +335,7 @@ export class ActsService {
           dateDemandePrealable: date_demande_prealable,
           remboursementExceptionnel: undefined,
           complementPrestation: undefined,
+          isAld: undefined,
         };
 
         if (act?.medical?.exceeding === String(ExceedingEnum.GRATUIT)) {
@@ -381,8 +381,8 @@ export class ActsService {
         for (let i = 0; i < modifiers.length; i++) {
           acte['codeModificateur' + (i + 1)] = modifiers[i];
         }
-        const intersectedModifiers: string[] = ['N', 'A', 'E', 'B'].filter(
-          (modifier) => ['N', 'E'].includes(modifier),
+        const intersectedModifiers: string[] = ['N', 'E'].filter((item) =>
+          modifiers.includes(item),
         );
         if (intersectedModifiers.length) {
           acte.montantHonoraire = amount;
@@ -394,6 +394,16 @@ export class ActsService {
         // if (relatedToAnAld) {
         //   facture.identification.isTpAmo = true;
         // }
+        const patientAmo = this.getActiveAmo(
+          patient?.amos,
+          new Date(caresheet?.date),
+        );
+        if (patientAmo.length && patientAmo?.[0]?.isAld) {
+          acte.isAld = act?.medical?.ald;
+          if (act?.medical?.ald) {
+            facture.identification.isTpAmo = true;
+          }
+        }
         facture.actes.push(acte);
       }
       const data =

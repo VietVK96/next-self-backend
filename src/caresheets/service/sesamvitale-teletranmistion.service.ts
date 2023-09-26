@@ -571,6 +571,7 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
       </soapenv:Body>
     </soapenv:Envelope>`;
     const res = await this.sendRequest<any>('TransmettreFacture', xml);
+    console.log('res', res);
     return res;
   }
 }
