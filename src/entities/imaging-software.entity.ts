@@ -189,5 +189,9 @@ export class ImagingSoftwareEntity {
     nullable: true,
   })
   computerName?: string;
+
+  getImageBasename() {
+    return `${this.imageBasenamePrefix}%0${this.imageBasenameLength}`;
+  }
 }
 // application\Entity\ImagingSoftware.php

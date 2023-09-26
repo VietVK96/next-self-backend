@@ -12,6 +12,9 @@ export class ContraindicationContactController {
     private contraindicationService: ContraindicationContactService,
   ) {}
 
+  /**
+   * php/contact/contraindication/save.php
+   */
   @Post('contraindication/save')
   @UseGuards(TokenGuard)
   async saveContraindication(@Body() payload: SaveContraindicationDto) {

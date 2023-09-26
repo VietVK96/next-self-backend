@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as dayjs from 'dayjs';
+import { ClaudeBernardService } from 'src/bcb/services/claudeBernard.Service';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { DEFAULT_LOCALE } from 'src/constants/default';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
 import { DataSource, Repository } from 'typeorm';
+import { BaseClaudeBernardCheckDto } from '../dto/baseClaudeBernardCheck.medical.dto';
+import { checkId } from 'src/common/util/number';
+import { boolean } from 'yargs';
 
 @Injectable()
 export class MedicalService {
@@ -15,23 +19,40 @@ export class MedicalService {
     private contactRepo: Repository<ContactEntity>,
     @InjectRepository(MedicalOrderEntity)
     private medicalOrderEntity: Repository<MedicalOrderEntity>,
+    private claudeBernardService: ClaudeBernardService,
   ) {}
 
-  async baseClaudeBernardCheck(patientId: number, organizationId: number) {
+  async baseClaudeBernardCheck(
+    payload: BaseClaudeBernardCheckDto,
+    organizationId: number,
+  ) {
+    const patientId = checkId(payload?.contact);
     try {
-      // @TODO
-      // $claudeBernard = $container->get('medicament_database.claude_bernard');
-      // $claudeBernard->setIdPS($request->query->get('license'));
-      // $claudeBernardVersion = $claudeBernard->getVersion();
-      // $claudeBernardInformation = $claudeBernard->testConnexion();
-      //   if (1 > $claudeBernardInformation->result->statutConnexion) {
-      //     throw new BadRequestHttpException($claudeBernardInformation->result->statutConnexionLibelle);
-      // }
+      this.claudeBernardService.setIdPS(payload?.license?.toString());
+      const claudeBernard = await this.claudeBernardService?.call();
+      const key = {
+        codeEditeur: this.claudeBernardService.codeEditeur,
+        idPS: this.claudeBernardService.idPS,
+        secretEditeur: this.claudeBernardService.generateKey(),
+      };
+      delete payload?.license;
+
+      const claudeBernardVersion: {
+        result?: { idVersionBase: string };
+      } = await new Promise((resolve, reject) => {
+        claudeBernard.getVersion({ key }, (error, res) => {
+          if (error) {
+            reject(error); // Handle the error appropriately
+          } else {
+            resolve(res); // Process the SOAP response
+          }
+        });
+      });
 
       const profilPatientQueryBuilder =
         this.contactRepo.createQueryBuilder('con');
       profilPatientQueryBuilder.select(
-        'TIMESTAMPDIFF(MONTH , con.birthday, CURRENT_TIMESTAMP())',
+        'TIMESTAMPDIFF(MONTH , con.birthday, CURRENT_TIMESTAMP()) as age',
       );
       profilPatientQueryBuilder.addSelect('con.breastfeeding as allaitement');
       profilPatientQueryBuilder.addSelect('con.pregnancy as grossesse');
@@ -45,14 +66,19 @@ export class MedicalService {
       profilPatientQueryBuilder.addSelect('con.size as taille');
       profilPatientQueryBuilder.addSelect('gen.type as sexe');
       profilPatientQueryBuilder.leftJoin('con.gender', 'gen');
-      profilPatientQueryBuilder.where('con.id = :patientId', { patientId });
+      profilPatientQueryBuilder.where('con.id = :patientId', {
+        patientId: patientId || 0,
+      });
       profilPatientQueryBuilder.andWhere('con.group = :organizationId', {
         organizationId,
       });
 
       const profilPatient = await profilPatientQueryBuilder.getRawOne();
 
-      const patient = await this.contactRepo.findOneBy({ id: patientId });
+      const patient = await this.contactRepo.findOne({
+        where: { id: patientId || 0 },
+        relations: { contraindications: true },
+      });
       const contraindications = patient.contraindications;
 
       for (const contraindication of contraindications) {
@@ -71,48 +97,26 @@ export class MedicalService {
       profilPatient['creatininemieMg'] = 0;
       profilPatient['creatininemieMol'] = 0;
 
-      // @TODO
-      // // Contrôle de l'ordonnance en fonction du profil du patient et des produits.
-      // $claudeBernardControle = $claudeBernard->controleOrdonnance([
-      //     'lstIdProduit' => $prescriptionIds,
-      //     'profilPatient' => $profilPatient,
-      //     'pays' => 0
-      // ]);
+      // Contrôle de l'ordonnance en fonction du profil du patient et des produits.
+      const claudeBernardControle = await new Promise((resolve, reject) => {
+        claudeBernard.controleOrdonnance(
+          {
+            key,
+            lstIdProduit: payload?.prescriptionIds,
+            profilPatient: profilPatient,
+            pays: 0,
+          },
+          (error, res) => {
+            if (error) {
+              reject(error); // Handle the error appropriately
+            } else {
+              resolve(res); // Process the SOAP response
+            }
+          },
+        );
+      });
 
-      // $templateNames = [
-      //     'lstAllergies' => 'prescriptions/allergies.twig',
-      //     'lstIPC' => 'prescriptions/ipc.twig',
-      //     'lstInteractions' => 'prescriptions/interactions.twig',
-      //     'lstPrecautionsEmploi' => 'prescriptions/precautions-of-use.twig',
-      //     'lstSurdosage' => 'prescriptions/overdoses.twig'
-      // ];
-
-      // foreach ($claudeBernardControle->controleResult as $key => $results) {
-
-      //     if (isset($templateNames[$key])) {
-
-      //         if (is_object($results)) {
-
-      //             $errors['errors'][] = ['error' => $twig->render($templateNames[$key], (array) $results)];
-
-      //         } else {
-
-      //             foreach ($results as & $result) {
-
-      //                 $errors['errors'][] = ['error' => $twig->render($templateNames[$key], (array) $result)];
-
-      //             }
-
-      //         }
-
-      //     }
-
-      // }
-
-      // return (new JsonResponse($errors))->send();
-      throw new CBadRequestException(
-        `Une erreur interne est survenue lors du contrôle de l'ordonnance. Veuillez réessayer ultérieurement ou continuer pour imprimer l'ordonnance.`,
-      );
+      return { claudeBernardControle, claudeBernardVersion };
     } catch (e) {
       return {
         checking: true,

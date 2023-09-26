@@ -25,3 +25,23 @@ export class BcbDto {
   })
   query?: string;
 }
+
+export class BcbFindOneDto {
+  @ApiProperty({
+    name: 'license',
+    required: false,
+  })
+  license?: number;
+
+  @ApiProperty({
+    name: 'id',
+    required: false,
+  })
+  id?: string;
+
+  @ApiProperty({
+    name: 'baseLocation',
+    required: false,
+  })
+  contactId?: number;
+}
