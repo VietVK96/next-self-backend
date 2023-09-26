@@ -53,24 +53,24 @@ export class StoreCaresheetsService {
         situation_parcours_de_soin,
         nom_medecin_orienteur,
         prenom_medecin_orienteur,
-        related_ald,
         date_demande_prealable,
         code_accord_prealable,
-        // suite_exp,
         generer_dre,
       } = request;
       const [patient, user] = await Promise.all([
-        this.patientRepository.findOneOrFail({
+        this.patientRepository.findOne({
           relations: { amos: true },
           where: { id: patient_id },
         }),
-        this.userRepository.findOneOrFail({
+        this.userRepository.findOne({
           relations: { medical: true },
           where: { id: user_id },
         }),
       ]);
       const acts: EventTaskEntity[] = await this.eventTaskRepository.find({
-        relations: { medical: { act: true, ccam: { family: true } } },
+        relations: {
+          medical: { act: true, ccam: { family: true }, ngapKey: true },
+        },
         where: { id: In(act_id), conId: patient_id },
       });
       if (acts?.length === 0) {
@@ -80,7 +80,7 @@ export class StoreCaresheetsService {
       caresheet.usrId = user?.id;
       caresheet.conId = patient?.id;
       caresheet.numeroFacturation = user?.medical?.finessNumber;
-      caresheet.date = dayjs().format('YYYY-MM-dd');
+      caresheet.date = dayjs().format('YYYY-MM-DD');
       caresheet.tasks = [];
       caresheet.fseStatus = await this.caresheetStatusRepository.findOne({
         where: { value: 0 },

@@ -189,7 +189,7 @@ export class ContactPaymentService {
     const caresheetId = data?.caresheet?.id || null;
     const debtorId = data?.debtor?.id || null;
     const debtorName = data?.debtor?.name || null;
-
+    let paymentId;
     // Champ practitioner.id requis
     if (!practitionerId) {
       throw new CBadRequestException('Invalid practitioner');
@@ -269,7 +269,7 @@ export class ContactPaymentService {
           amountCare,
           amountProsthesis,
         ]);
-
+        paymentId = insertRes.insertId;
         // Pour chaque bénéficiaire
         for (const beneficiary of beneficiaries) {
           // Insertion du règlement du bénéficiaire.
@@ -372,6 +372,7 @@ export class ContactPaymentService {
                   beneficiaryAmountProsthesis,
                   'plus',
                 );
+                paymentId = insertRes.insertId;
 
                 // Réinitialise le niveau de relance
                 await queryRunner.query(insertToCSC, [
@@ -404,7 +405,9 @@ export class ContactPaymentService {
         );
       }
       await queryRunner.commitTransaction();
-      return { success: true };
+      // return { success: true };
+      return await this.show(paymentId);
+      return;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw new CBadRequestException(err);
