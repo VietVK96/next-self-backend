@@ -169,4 +169,7 @@ export interface IConsulterClient {
 
 export interface ITransmettrePatient {
   idPatient?: string[];
+  erreur?: {
+    libelleErreur?: string[];
+  };
 }

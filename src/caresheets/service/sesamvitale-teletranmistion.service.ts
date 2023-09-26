@@ -271,10 +271,13 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
       'transmettrePatient',
       xml,
     );
-
-    if (!patient?.externalReferenceId) {
-      patient.externalReferenceId = Number(respone?.idPatient?.[0]);
-      await this.dataSource.getRepository(UserEntity).save(patient);
+    if (respone?.idPatient?.[0]) {
+      if (!patient?.externalReferenceId) {
+        patient.externalReferenceId = Number(respone?.idPatient?.[0]);
+        await this.dataSource.getRepository(UserEntity).save(patient);
+      }
+    } else if (respone?.erreur?.[0]?.libelleErreur?.[0]) {
+      throw respone?.erreur?.[0]?.libelleErreur?.[0];
     }
     return respone;
   }
@@ -487,12 +490,14 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
                 }
                 ${
                   acte?.dateDemandePrealable
-                    ? `<xsd:dateDemandePrealable format="yyyyMMdd">${acte?.dateDemandePrealable}</xsd:dateDemandePrealable>`
+                    ? `<xsd:dateDemandePrealable format="yyyyMMdd">${dayjs(
+                        acte?.dateDemandePrealable,
+                      ).format('YYYYMMDD')}</xsd:dateDemandePrealable>`
                     : ``
                 }
                 ${
                   acte?.codeAccordPrealable
-                    ? `<xsd:codeAccordPrealable">${acte?.codeAccordPrealable}</xsd:codeAccordPrealable>`
+                    ? `<xsd:codeAccordPrealable>${acte?.codeAccordPrealable}</xsd:codeAccordPrealable>`
                     : ``
                 }
               </xsd:acte>
@@ -571,7 +576,6 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
       </soapenv:Body>
     </soapenv:Envelope>`;
     const res = await this.sendRequest<any>('TransmettreFacture', xml);
-    console.log('res', res);
     return res;
   }
 }

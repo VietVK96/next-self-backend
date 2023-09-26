@@ -177,18 +177,16 @@ export class ActsService {
         situation_parcours_de_soin,
         nom_medecin_orienteur,
         prenom_medecin_orienteur,
-        related_ald,
         date_demande_prealable,
         code_accord_prealable,
-        // suite_exp,
         generer_dre,
       } = request;
       const [patient, user] = await Promise.all([
-        this.patientRepository.findOneOrFail({
+        this.patientRepository.findOne({
           relations: { amos: true },
           where: { id: patient_id },
         }),
-        this.userRepository.findOneOrFail({
+        this.userRepository.findOne({
           relations: { medical: true },
           where: { id: user_id },
         }),
@@ -391,9 +389,6 @@ export class ActsService {
           facture.identification.isTpAmo = true;
           acte.codeJustifExoneration = 7;
         }
-        // if (relatedToAnAld) {
-        //   facture.identification.isTpAmo = true;
-        // }
         const patientAmo = this.getActiveAmo(
           patient?.amos,
           new Date(caresheet?.date),
@@ -410,12 +405,16 @@ export class ActsService {
         await this.sesamvitaleTeletranmistionService.transmettreFacture(
           facture,
         );
-      if (data) {
+      if (data?.idFacture?.[0]) {
         caresheet.externalReferenceId = data?.idFacture?.[0];
+      } else if (data?.erreur?.[0]?.libelleErreur?.[0]) {
+        throw data?.erreur?.[0]?.libelleErreur?.[0];
       }
       return await this.fseRepository.save({ ...caresheet });
     } catch (error) {
-      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
+      throw new CBadRequestException(
+        error?.response?.msg || error?.sqlMessage || error,
+      );
     }
   }
 
