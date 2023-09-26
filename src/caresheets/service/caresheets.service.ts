@@ -192,7 +192,9 @@ export class ActsService {
         }),
       ]);
       const acts: EventTaskEntity[] = await this.eventTaskRepository.find({
-        relations: { medical: { act: true, ccam: { family: true } } },
+        relations: {
+          medical: { act: true, ccam: { family: true }, ngapKey: true },
+        },
         where: { id: In(act_id), conId: patient_id },
       });
       if (acts?.length === 0) {
@@ -202,7 +204,7 @@ export class ActsService {
       caresheet.usrId = user?.id;
       caresheet.conId = patient?.id;
       caresheet.numeroFacturation = user?.medical?.finessNumber;
-      caresheet.date = dayjs().format('YYYY-MM-dd');
+      caresheet.date = dayjs().format('YYYY-MM-DD');
       caresheet.tasks = [];
       caresheet.fseStatus = await this.caresheetStatusRepository.findOne({
         where: { value: 0 },
@@ -223,7 +225,9 @@ export class ActsService {
         datePrescription = dayjs(datePrescription).format('YYYYMMDD');
       } else {
         const actDates = acts.map((act) => new Date(act?.date).getTime());
-        const minDate = actDates.length ? new Date(Math.min(...actDates)) : '';
+        const minDate = actDates.length
+          ? new Date(Math.min(...actDates))
+          : new Date();
         datePrescription = minDate && dayjs(minDate).format('YYYYMMDD');
       }
 
