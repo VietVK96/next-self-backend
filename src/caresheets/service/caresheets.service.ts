@@ -1,22 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository, In } from 'typeorm';
-import { format, isAfter, isBefore, subWeeks } from 'date-fns';
-import { create } from 'xmlbuilder2';
+import { Repository } from 'typeorm';
+import { isAfter, isBefore, subWeeks } from 'date-fns';
 import axios from 'axios';
 import * as AdmZip from 'adm-zip';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import { UserEntity } from 'src/entities/user.entity';
-import { ContactEntity } from '../../entities/contact.entity';
-import { CaresheetsDto } from '../dto/index.dto';
 import { FseEntity } from 'src/entities/fse.entity';
-import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { DentalEventTaskEntity } from 'src/entities/dental-event-task.entity';
-import { InterfacageService } from 'src/interfacage/services/interfacage.service';
-import { CodeNatureAssuranceEnum, ExceedingEnum } from 'src/constants/act';
 import { PatientAmoEntity } from 'src/entities/patient-amo.entity';
-import { ExemptionCodeEnum } from 'src/enum/exemption-code.enum';
 import { ConfigService } from '@nestjs/config';
 import { CaresheetStatusEntity } from 'src/entities/caresheet-status.entity';
 import { RequestException } from 'src/common/exceptions/request-exception.exception';
@@ -44,13 +37,11 @@ import { associatifToSequential } from 'src/common/util/array';
 import { PatientAmcEntity } from 'src/entities/patient-amc.entity';
 const PDFMerger = require('pdf-merger-js');
 
-const PAV_AUTHORIZED_CODES = ['ACO', 'ADA', 'ADC', 'ADE', 'ATM'];
-const PAV_MINIMUM_AMOUNT = 120;
 const helpersCaresheetPdf = {
   formatDate: function (date: string) {
     return dayjs(date).format('DDMMYYYY');
   },
-  formatInsee: function (s1, s2) {
+  formatInsee: function (s1: string, s2: string) {
     let string = s1?.concat(s2 ?? '');
     if (!string) return '';
     string = string?.replace(/\W/g, '')?.toUpperCase();
@@ -59,34 +50,34 @@ const helpersCaresheetPdf = {
       '$1 $2 $3 $4 $5 $6 $7',
     );
   },
-  formatDateISO: function (date) {
+  formatDateISO: function (date: string) {
     return dayjs(date).format('DD/MM/YYYY');
   },
-  slice: function (string, start, end) {
-    if (!string) return;
-    return string.toString().slice(start, end);
+  slice: function (str: string, start: number, end: number) {
+    if (!str) return;
+    return str.toString().slice(start, end);
   },
-  padStart: function (value, num) {
+  padStart: function (value: string, num: number) {
     if (!value) return;
     return value.padStart(num, '');
   },
-  padEnd: function (value, num) {
+  padEnd: function (value: string, num: number) {
     if (!value) return;
     return value.padEnd(num, '');
   },
-  joinAndReplace: function (string, key, value) {
+  joinAndReplace: function (string: string[], key: string, value: string) {
     if (!string) return;
     return string.join('').replace(key, value);
   },
-  setVar: function (varName, varValue, options) {
+  setVar: function (varName: string, varValue: string, options) {
     options.data.root[varName] = varValue;
   },
-  concatString: function (s1, s2) {
+  concatString: function (s1: string, s2: string) {
     return s1.concat(s2);
   },
-  math: function (lvalue, operator, rvalue) {
-    lvalue = parseFloat(lvalue);
-    rvalue = parseFloat(rvalue);
+  math: function (lvalue: number, operator: string, rvalue: number) {
+    lvalue = parseFloat(`${lvalue}`);
+    rvalue = parseFloat(`${rvalue}`);
     return {
       '+': lvalue + rvalue,
       '-': lvalue - rvalue,
@@ -95,7 +86,7 @@ const helpersCaresheetPdf = {
       '%': lvalue % rvalue,
     }[operator];
   },
-  table: function (context) {
+  table: function (context: string | null) {
     if (!context) return;
     const listItem = context.toString().split('');
     const width = Math.floor(100 / listItem.length);
@@ -112,7 +103,7 @@ const helpersCaresheetPdf = {
     </table>`;
     return str;
   },
-  nameToTransmit: (key) => {
+  nameToTransmit: (key: string) => {
     return key === 'CBX' ? 'CCX' : key;
   },
   formatNumber: (n: number) => {
@@ -138,16 +129,10 @@ export class ActsService {
 
   constructor(
     private configService: ConfigService,
-    private dataSource: DataSource,
-    private interfacageService: InterfacageService,
-    @InjectRepository(ContactEntity)
-    private patientRepository: Repository<ContactEntity>,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     @InjectRepository(FseEntity)
     private fseRepository: Repository<FseEntity>,
-    @InjectRepository(EventTaskEntity)
-    private eventTaskRepository: Repository<EventTaskEntity>,
     @InjectRepository(CaresheetStatusEntity)
     private caresheetStatusRepository: Repository<CaresheetStatusEntity>,
     @InjectRepository(ThirdPartyAmcEntity)
@@ -160,303 +145,6 @@ export class ActsService {
     @InjectRepository(LotEntity)
     private lotRepository: Repository<LotEntity>,
   ) {}
-
-  /**
-   * php/caresheets/store.php
-   */
-  async store(request: CaresheetsDto) {
-    try {
-      const {
-        patient_id,
-        user_id,
-        act_id,
-        is_tp_amo,
-        is_tp_amc,
-        prescripteur,
-        date_prescription,
-        situation_parcours_de_soin,
-        nom_medecin_orienteur,
-        prenom_medecin_orienteur,
-        related_ald,
-        date_demande_prealable,
-        code_accord_prealable,
-        // suite_exp,
-        generer_dre,
-      } = request;
-      const [patient, user] = await Promise.all([
-        this.patientRepository.findOneOrFail({
-          relations: { amos: true },
-          where: { id: patient_id },
-        }),
-        this.userRepository.findOneOrFail({
-          relations: { medical: true },
-          where: { id: user_id },
-        }),
-      ]);
-      const acts: EventTaskEntity[] = await this.eventTaskRepository.find({
-        relations: { medical: { act: true, ccam: { family: true } } },
-        where: { id: In(act_id), conId: patient_id },
-      });
-      if (acts?.length === 0) {
-        throw new CBadRequestException(ErrorCode.ERROR_CARESHEET_ACTS_IS_EMPTY);
-      }
-      const caresheet: FseEntity = {};
-      caresheet.usrId = user?.id;
-      caresheet.conId = patient?.id;
-      caresheet.numeroFacturation = user?.medical?.finessNumber;
-      caresheet.date = dayjs().format('YYYY-MM-dd');
-      caresheet.tasks = [];
-      caresheet.fseStatus = await this.caresheetStatusRepository.findOne({
-        where: { value: 0 },
-      });
-      caresheet.dreStatus = caresheet.fseStatus;
-      acts.forEach((act) => {
-        caresheet?.tasks.push(act?.medical);
-      });
-      await this.interfacageService.compute(caresheet);
-
-      await this.sesamvitaleTeletranmistionService.transmettrePatient(
-        user,
-        patient,
-      );
-
-      let datePrescription: string = date_prescription;
-      if (datePrescription) {
-        datePrescription = dayjs(datePrescription).format('YYYYMMDD');
-      } else {
-        const actDates = acts.map((act) => new Date(act?.date).getTime());
-        const minDate = actDates.length ? new Date(Math.min(...actDates)) : '';
-        datePrescription = minDate && dayjs(minDate).format('YYYYMMDD');
-      }
-
-      const facture = {
-        identification: {
-          idPatient: patient?.externalReferenceId,
-          dateFacturation: dayjs().format('YYYYMMDD'),
-          datePrescription: datePrescription,
-          numFiness: user?.medical?.finessNumber,
-          numNatPs: user?.medical?.nationalIdentifierNumber,
-          numNatPsRemplace: user?.medical?.nationalIdentifierNumberRemp,
-          isTpAmo: is_tp_amo ?? false,
-          isTpAmc: is_tp_amc ?? false,
-          prescripteur,
-          modeSecurisation: user?.setting?.sesamVitaleModeDesynchronise
-            ? 'DESYNCHR'
-            : undefined,
-          ParcoursDeSoin: {
-            situationParcoursDeSoin: situation_parcours_de_soin,
-            nomMedecinOrienteur: nom_medecin_orienteur,
-            prenomMedecinOrienteur: prenom_medecin_orienteur,
-          },
-        },
-        actes: [],
-      };
-
-      if (generer_dre) {
-        facture.identification['GenererDRE'] = Boolean(generer_dre);
-      }
-
-      const participationAssures = [];
-      if (
-        this.isEligibleForParticipationAssure(
-          patient?.amos,
-          new Date(caresheet?.date),
-        )
-      ) {
-        const groupBy: { [key: string]: EventTaskEntity[] } = {};
-
-        acts.forEach((act) => {
-          const dateKey = dayjs(act?.date).format('YYYYMMDD');
-          if (!groupBy[dateKey]) {
-            groupBy[dateKey] = [];
-          }
-          groupBy[dateKey].push(act);
-        });
-        for (const [, collection] of Object.entries(groupBy)) {
-          const collectionFilteredByFamilyCode = collection.filter(
-            (act) =>
-              (!act?.medical ? false : act?.medical !== null) &&
-              PAV_AUTHORIZED_CODES.includes(act?.medical?.ccam?.family?.code),
-          );
-          const amounts = collection.map((act) => act?.amount);
-          const totalAmount = amounts.reduce((acc, cur) => acc + cur, 0);
-          if (
-            collectionFilteredByFamilyCode.length &&
-            totalAmount >= PAV_MINIMUM_AMOUNT
-          ) {
-            const collection = collectionFilteredByFamilyCode.sort(
-              (a, b) => a?.amount - b?.amount,
-            );
-            participationAssures.push(collection[collection.length - 1]?.id);
-          }
-        }
-      }
-
-      // DÉPISTAGE DE LA COVID-19
-      // Il faut paramétrer une exonération « div 3 » si il existe un des actes suivant :
-      // - TEST ANTIGÉNIQUE : C 1.13
-      // - PRÉLÈVEMENT NASOPHARYNGÉ : C 0.42
-      // - PRÉLÈVEMENT OROPHARYNGÉ : C 0.25
-      let codeJustifExoneration = undefined;
-      if (
-        acts.reduce(
-          (isTestAntigenique, act) =>
-            isTestAntigenique || this.isTestAntigenique(act?.medical),
-          false,
-        )
-      ) {
-        codeJustifExoneration = 3;
-      }
-      for (const act of acts) {
-        const amount = act?.amount;
-        const amoAmount = act?.medical?.secuAmount;
-        const coefficient = act?.medical?.coef;
-        const rawTeeth = act?.medical?.teeth
-          ?.split(',')
-          .map((tooth) => (tooth === '00' ? ['01', '02'] : tooth))
-          .flat();
-        const teeth = Array.from(new Set(rawTeeth));
-        const acte = {
-          qte: 1,
-          dateExecution: act?.date,
-          codeActe: act?.medical?.ccam
-            ? act?.medical?.ccam?.code
-            : act?.medical?.ngapKey?.name === 'CBX'
-            ? 'CCX'
-            : act?.medical?.ngapKey?.name, // nameToTransmit
-          coefficient: coefficient,
-          montantHonoraire: amount !== amoAmount ? amount : undefined,
-          libelle: act?.name,
-          numeroDents: teeth.join(','),
-          codeAssociation: act?.medical?.associationCode,
-          codeAccordPrealable: code_accord_prealable,
-          codeJustifExoneration: undefined,
-          qualifDepense: act?.medical?.exceeding,
-          dateDemandePrealable: date_demande_prealable,
-          remboursementExceptionnel: undefined,
-          complementPrestation: undefined,
-          isAld: undefined,
-        };
-
-        if (act?.medical?.exceeding === String(ExceedingEnum.GRATUIT)) {
-          acte.montantHonoraire = null;
-        }
-
-        const exemptionCode = act?.medical?.exemptionCode;
-        if (!!exemptionCode) {
-          acte.codeJustifExoneration = exemptionCode;
-          if (exemptionCode === ExemptionCodeEnum.DISPOSITIF_PREVENTION) {
-            facture.identification.isTpAmo = true;
-          }
-        }
-        if (codeJustifExoneration !== undefined) {
-          acte.codeJustifExoneration = codeJustifExoneration;
-        }
-
-        const ngapKey = act?.medical?.ngapKey;
-        if (ngapKey) {
-          acte.complementPrestation = act?.medical?.complement;
-          const name = ngapKey?.name;
-          if (name === 'IK') {
-            acte.qte = coefficient;
-            acte.montantHonoraire = undefined;
-            acte.coefficient = 1;
-          } else if (['FDA', 'FDC', 'FDO', 'FDR'].includes(name)) {
-            acte.montantHonoraire = amount;
-            acte.coefficient = 1;
-          } else if (['TSA', 'TSM'].includes(name)) {
-            acte.montantHonoraire = amount;
-          } else if (['CBX'].includes(name)) {
-            facture.identification.isTpAmo = true;
-          }
-        }
-
-        const ccam = act?.medical?.ccam;
-        if (ccam && !!ccam?.repayableOnCondition) {
-          acte.remboursementExceptionnel = act?.medical?.exceptionalRefund;
-        }
-
-        /** === MODIFICATEURS === */
-        const modifiers = act?.medical?.ccamModifier ?? [];
-        for (let i = 0; i < modifiers.length; i++) {
-          acte['codeModificateur' + (i + 1)] = modifiers[i];
-        }
-        const intersectedModifiers: string[] = ['N', 'E'].filter((item) =>
-          modifiers.includes(item),
-        );
-        if (intersectedModifiers.length) {
-          acte.montantHonoraire = amount;
-        }
-        if (!!request?.suite_exp) {
-          facture.identification.isTpAmo = true;
-          acte.codeJustifExoneration = 7;
-        }
-        // if (relatedToAnAld) {
-        //   facture.identification.isTpAmo = true;
-        // }
-        const patientAmo = this.getActiveAmo(
-          patient?.amos,
-          new Date(caresheet?.date),
-        );
-        if (patientAmo.length && patientAmo?.[0]?.isAld) {
-          acte.isAld = act?.medical?.ald;
-          if (act?.medical?.ald) {
-            facture.identification.isTpAmo = true;
-          }
-        }
-        facture.actes.push(acte);
-      }
-      const data =
-        await this.sesamvitaleTeletranmistionService.transmettreFacture(
-          facture,
-        );
-      if (data) {
-        caresheet.externalReferenceId = data?.idFacture?.[0];
-      }
-      return await this.fseRepository.save({ ...caresheet });
-    } catch (error) {
-      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
-    }
-  }
-
-  private isTestAntigenique(medical): boolean {
-    if (!medical?.ngapKey) {
-      return false;
-    }
-    return (
-      medical?.ngapKey.name === 'C' &&
-      [0.25, 0.42, 1.13].includes(medical?.ngapKey?.coefficient)
-    );
-  }
-
-  private isEligibleForParticipationAssure = (
-    amos: PatientAmoEntity[],
-    dateTime: Date,
-  ) => {
-    const amo: any = this.getActiveAmo(amos, dateTime);
-    return (
-      !amo.length ||
-      ([
-        CodeNatureAssuranceEnum.ASSURANCE_MALADIE,
-        CodeNatureAssuranceEnum.ALSACE_MOSELLE,
-      ].includes(amo?.codeNatureAssurance) &&
-        [
-          ExemptionCodeEnum.PAS_EXONERATION,
-          ExemptionCodeEnum.REGIMES_SPECIAUX,
-        ].includes(amo?.codeExoneration))
-    );
-  };
-
-  private getActiveAmo = (amos: PatientAmoEntity[], date: Date) => {
-    return amos.filter((amo) => {
-      return (
-        amo?.startDate === null ||
-        (isBefore(new Date(amo?.startDate), new Date(date)) &&
-          (amo?.endDate === null ||
-            isAfter(new Date(amo?.endDate), new Date(date))))
-      );
-    });
-  };
 
   async sendRequest(action: string, contents: string): Promise<any> {
     const endpoint = await this.configService.get('app.sesamVitale.endPoint');
@@ -1157,6 +845,16 @@ export class ActsService {
     ];
     return PROSTHESIS_FAMILIES.includes(family);
   }
+
+  private getActiveAmo = (amos: PatientAmoEntity[], date: Date) => {
+    return amos.filter((amo) => {
+      return (
+        amo?.startDate === null ||
+        (dayjs(amo?.startDate).isBefore(date) &&
+          (amo?.endDate === null || dayjs(amo?.endDate).isAfter(date)))
+      );
+    });
+  };
 
   private getActiveAmc = (amcs: PatientAmcEntity[], date: Date) => {
     return amcs.filter((amc) => {
