@@ -47,26 +47,30 @@ export class MedicamentDatabaseService {
   }
 
   async connnectMedicamentDatabase(userId: number) {
-    const wsdlUrl = this.config.get<string>('app.claudeBernard.wdsl');
-    const user = await this.userRepo.findOne({ where: { id: userId } });
-    const claudeBernardLicence = user?.bcbLicense;
-    const claudeBernard = await soap.createClientAsync(wsdlUrl);
-    const resultTest = await claudeBernard?.testConnexionAsync({
-      key: {
-        codeEditeur: this.config.get<string>('app.claudeBernard.codeEditeur'),
-        idPS: claudeBernardLicence,
-        secretEditeur: this._generateKey(
-          this.config.get<string>('app.claudeBernard.codeEditeur'),
-          claudeBernardLicence,
-        ),
-      },
-    });
-    return {
-      claudeBernardStatutConnexion:
-        resultTest[0]?.result?.statutConnexion === 1,
-      claudeBernardStatutConnexionLibelle:
-        resultTest[0]?.result?.statutConnexionLibelle,
-    };
+    try {
+      const wsdlUrl = this.config.get<string>('app.claudeBernard.wsdl');
+      const user = await this.userRepo.findOne({ where: { id: userId } });
+      const claudeBernardLicence = user?.bcbLicense;
+      const claudeBernard = await soap.createClientAsync(wsdlUrl);
+      const resultTest = await claudeBernard?.testConnexionAsync({
+        key: {
+          codeEditeur: this.config.get<string>('app.claudeBernard.codeEditeur'),
+          idPS: claudeBernardLicence,
+          secretEditeur: this._generateKey(
+            this.config.get<string>('app.claudeBernard.codeEditeur'),
+            claudeBernardLicence,
+          ),
+        },
+      });
+      return {
+        claudeBernardStatutConnexion:
+          resultTest[0]?.result?.statutConnexion === 1,
+        claudeBernardStatutConnexionLibelle:
+          resultTest[0]?.result?.statutConnexionLibelle,
+      };
+    } catch (error) {
+      console.log('connnectMedicamentDatabase => error', error);
+    }
   }
 
   async findMedicamentDatabase(
