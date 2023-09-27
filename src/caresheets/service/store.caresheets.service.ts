@@ -305,7 +305,7 @@ export class StoreCaresheetsService {
       return await this.fseRepository.findOne({ where: { id: fseSave?.id } });
     } catch (error) {
       throw new CBadRequestException(
-        error?.response?.msg || error?.sqlMessage || error,
+        error?.response?.msg || error?.sqlMessage || error?.message || error,
       );
     }
   }
