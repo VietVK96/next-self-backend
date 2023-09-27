@@ -293,7 +293,9 @@ export class StoreCaresheetsService {
       }
       return await this.fseRepository.save({ ...caresheet });
     } catch (error) {
-      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
+      throw new CBadRequestException(
+        error?.response?.msg || error?.sqlMessage || error?.message,
+      );
     }
   }
 
