@@ -609,9 +609,10 @@ export class FactureServices {
         }
 
         const billlines = await this.billLineRepository.find({
-          where: { id: newFacture.id || 0 },
+          where: { bilId: newFacture.id || 0 },
         });
-        return { newFacture, billlines };
+        newFacture.lines = billlines;
+        return newFacture;
       } catch (err) {
         throw new CBadRequestException(err);
       }
