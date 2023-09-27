@@ -608,7 +608,7 @@ export class UserService {
             resourceId: 1,
             avatarId: null,
             admin: 1,
-            log: `Testper${n}`,
+            log: `Testtt${n}`,
             passwordAccounting: null,
             password:
               '$2y$10$jldzVAQH5pG2R5uSqMiP0uHVE.VJ2u2ghErBEKpfOGlw8m2R3CHda',
