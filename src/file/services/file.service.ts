@@ -16,6 +16,8 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import * as fs from 'fs';
 import { SuccessResponse } from 'src/common/response/success.res';
 import { ErrorCode } from 'src/constants/error';
+import { Response } from 'express';
+import { root } from 'cheerio/lib/static';
 
 @Injectable()
 export class FileService {
@@ -43,12 +45,42 @@ export class FileService {
     if (!fs.existsSync(fullPath)) {
       throw new CBadRequestException(ErrorCode.FILE_NOT_FOUND);
     }
-
     return {
       mimeType: file.type,
       path: fullPath,
       originalFilename: originalFilename,
+      filePath: fileName,
     };
+  }
+
+  async previewFile(id: number, res: Response) {
+    try {
+      const { mimeType, filePath, originalFilename } = await this.getPathFile(
+        id,
+      );
+      const disposition = `inline; filename="${originalFilename}"`;
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Content-Disposition', disposition);
+      const dir = await this.configService.get('app.uploadDir');
+      res.sendFile(filePath, { root: dir });
+    } catch (error) {
+      res.status(404).send(ErrorCode.FILE_NOT_FOUND);
+    }
+  }
+
+  async downloadFile(id: number, res: Response) {
+    try {
+      const { mimeType, filePath, originalFilename } = await this.getPathFile(
+        id,
+      );
+      const disposition = `attachment; filename="${originalFilename}"`;
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Content-Disposition', disposition);
+      const dir = await this.configService.get('app.uploadDir');
+      res.sendFile(filePath, { root: dir });
+    } catch (error) {
+      res.status(404).send(ErrorCode.FILE_NOT_FOUND);
+    }
   }
 
   async updateFile(id: number, payload: UpdateFileDto, user: UserIdentity) {
