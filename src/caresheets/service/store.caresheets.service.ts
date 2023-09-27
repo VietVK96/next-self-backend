@@ -36,6 +36,8 @@ export class StoreCaresheetsService {
     @InjectRepository(CaresheetStatusEntity)
     private caresheetStatusRepository: Repository<CaresheetStatusEntity>,
     private sesamvitaleTeletranmistionService: SesamvitaleTeletranmistionService,
+    @InjectRepository(DentalEventTaskEntity)
+    private dentalEventTaskRepository: Repository<DentalEventTaskEntity>,
   ) {}
   /**
    * php/caresheets/store.php
@@ -291,9 +293,20 @@ export class StoreCaresheetsService {
       } else if (data?.erreur?.[0]?.libelleErreur?.[0]) {
         throw data?.erreur?.[0]?.libelleErreur?.[0];
       }
-      return await this.fseRepository.save({ ...caresheet });
+      const fseSave = await this.fseRepository.save({ ...caresheet });
+      await Promise.all(
+        caresheet?.tasks.map((item) => {
+          return this.dentalEventTaskRepository.save({
+            ...item,
+            fseId: fseSave?.id,
+          });
+        }),
+      );
+      return await this.fseRepository.findOne({ where: { id: fseSave?.id } });
     } catch (error) {
-      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
+      throw new CBadRequestException(
+        error?.response?.msg || error?.sqlMessage || error,
+      );
     }
   }
 
