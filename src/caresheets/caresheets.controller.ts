@@ -20,12 +20,16 @@ import { ActsService } from './service/caresheets.service';
 import { CaresheetStatusRes } from './reponse/index.res';
 import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
 import type { Response } from 'express';
+import { StoreCaresheetsService } from './service/store.caresheets.service';
 
 @ApiBearerAuth()
 @ApiTags('Caresheets')
 @Controller('caresheets')
 export class CaresheetsController {
-  constructor(private service: ActsService) {}
+  constructor(
+    private service: ActsService,
+    private storeService: StoreCaresheetsService,
+  ) {}
 
   /**
    * file: php/service/caresheet/store.php
@@ -33,7 +37,7 @@ export class CaresheetsController {
   @Post('store')
   @UseGuards(TokenGuard)
   async store(@Body() request: CaresheetsDto) {
-    return await this.service.store(request);
+    return await this.storeService.store(request);
   }
 
   /**

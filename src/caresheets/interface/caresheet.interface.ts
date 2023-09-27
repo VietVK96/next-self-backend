@@ -166,3 +166,10 @@ export interface IConsulterClient {
     idAssure?: string[];
   }[];
 }
+
+export interface ITransmettrePatient {
+  idPatient?: string[];
+  erreur?: {
+    libelleErreur?: string[];
+  };
+}

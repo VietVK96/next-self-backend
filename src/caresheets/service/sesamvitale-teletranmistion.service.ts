@@ -9,17 +9,27 @@ import {
   IRecevoirDetailListeRsp,
   IRecevoirRsp,
   IConsulterClient,
+  ITransmettrePatient,
 } from '../interface/caresheet.interface';
 import { SesamvitaleBaseService } from './sesamvitale-base.service';
+import { UserEntity } from 'src/entities/user.entity';
+import { ContactEntity } from 'src/entities/contact.entity';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
+import * as dayjs from 'dayjs';
+import { DataSource } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
-  // constructor(
-  //   private config: ConfigService,
-  //   private readonly httpService: HttpService,
-  // ){
-  //   super(config, httpService);
-  // }
+  constructor(
+    private dataSource: DataSource,
+    config: ConfigService,
+    httpService: HttpService,
+  ) {
+    super(config, httpService);
+  }
 
   async listeChangementEtat(idTeletrans: number): Promise<IChangementEta> {
     const xml = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">
@@ -172,5 +182,400 @@ export class SesamvitaleTeletranmistionService extends SesamvitaleBaseService {
       xml,
     );
     return data;
+  }
+
+  async transmettrePatient(user: UserEntity, patient: ContactEntity) {
+    if (
+      !patient?.firstname ||
+      !patient?.lastname ||
+      !patient?.birthday ||
+      !patient?.birthOrder ||
+      !patient?.insee ||
+      !patient?.inseeKey
+    ) {
+      throw new CBadRequestException(ErrorCode.ERROR_PATIENT_IS_REQUIRED);
+    }
+    const birthDate = patient?.birthDateLunar
+      ? dayjs(patient?.birthDateLunar).format('YYYYMMDD')
+      : dayjs(patient?.birthday).format('YYYYMMDD');
+    const matches = birthDate.match(
+      /^(?<year>[0-9]{4})(?<month>[0-9]{2})(?<day>[0-9]{2})$/,
+    );
+
+    if (patient?.externalReferenceId) {
+      const respone = await this.consulterClient(patient?.externalReferenceId);
+      if (
+        respone?.individu?.[0]?.nomUsuel?.[0].toLocaleLowerCase() ===
+          patient?.lastname.toLocaleLowerCase() &&
+        respone?.individu?.[0]?.prenom?.[0].toLocaleLowerCase() ===
+          patient?.firstname.toLocaleLowerCase() &&
+        respone?.individu?.[0]?.rangGem?.[0] === String(patient?.birthOrder) &&
+        respone?.individu?.[0]?.dateNaissance?.[0] ===
+          `${matches?.groups?.year}${matches?.groups?.month}${matches?.groups?.day}` &&
+        respone?.individu?.[0]?.nirIndividu?.[0] === patient?.insee &&
+        respone?.individu?.[0]?.nirIndividuCle?.[0] === patient?.inseeKey
+      ) {
+        return null;
+      }
+    }
+
+    const numFacturation = user?.medical?.finessNumber;
+    const numRpps = user?.medical?.nationalIdentifierNumber;
+    const idPatient = patient?.externalReferenceId;
+    const nom = patient?.lastname;
+    const prenom = patient?.firstname;
+    const jour = matches?.groups?.day;
+    const mois = matches?.groups?.month;
+    const annee = matches?.groups?.year;
+    const lunaire = !!patient?.birthDateLunar ? 'true' : 'false';
+    const numeroSS = patient?.insee;
+    const cleNumeroSS = patient?.inseeKey;
+    const rangNaissance = patient?.birthOrder;
+    const xml = `
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">
+      <soapenv:Body>
+        <jux:transmettrePatient>
+          <xsd:appelTransmettrePatient>
+            ${
+              numFacturation
+                ? `<xsd:numFacturation>${numFacturation}</xsd:numFacturation>`
+                : ''
+            }
+            ${numRpps ? `<xsd:numRpps>${numRpps}</xsd:numRpps>` : ''}
+            ${idPatient ? `<xsd:idPatient>${idPatient}</xsd:idPatient>` : ``}
+            ${nom ? `<xsd:nom>${nom}</xsd:nom>` : ''}
+            ${prenom ? `<xsd:prenom>${prenom}</xsd:prenom>` : ''}
+            <xsd:dateNaissance>
+              ${jour ? `<xsd:jour>${jour}</xsd:jour>` : ``}
+              ${mois ? `<xsd:mois>${mois}</xsd:mois>` : ``}
+              ${annee ? `<xsd:annee>${annee}</xsd:annee>` : ``}
+              <xsd:lunaire>${lunaire}</xsd:lunaire>
+            </xsd:dateNaissance>
+            ${numeroSS ? `<xsd:numeroSS>${numeroSS}</xsd:numeroSS>` : ``}
+            ${
+              cleNumeroSS
+                ? `<xsd:cleNumeroSS>${cleNumeroSS}</xsd:cleNumeroSS>`
+                : ``
+            }
+            ${
+              rangNaissance
+                ? `<xsd:rangNaissance>${rangNaissance}</xsd:rangNaissance>`
+                : ``
+            }
+          </xsd:appelTransmettrePatient>
+        </jux:transmettrePatient>
+      </soapenv:Body>
+    </soapenv:Envelope>`;
+
+    const respone = await this.sendRequest<ITransmettrePatient>(
+      'transmettrePatient',
+      xml,
+    );
+    if (respone?.idPatient?.[0]) {
+      if (!patient?.externalReferenceId) {
+        patient.externalReferenceId = Number(respone?.idPatient?.[0]);
+        await this.dataSource.getRepository(UserEntity).save(patient);
+      }
+    } else if (respone?.erreur?.[0]?.libelleErreur?.[0]) {
+      throw respone?.erreur?.[0]?.libelleErreur?.[0];
+    }
+    return respone;
+  }
+
+  async transmettreFacture(data: {
+    identification: {
+      idPatient?: number;
+      dateFacturation?: string;
+      datePrescription?: string;
+      numFiness?: string;
+      numNatPs?: string;
+      numNatPsRemplace?: string;
+      isTpAmo?: boolean;
+      isTpAmc?: boolean;
+      prescripteur?: string;
+      modeSecurisation?: string;
+      ParcoursDeSoin: {
+        situationParcoursDeSoin?: string;
+        nomMedecinOrienteur?: string;
+        prenomMedecinOrienteur?: string;
+      };
+      GenererDRE?: boolean;
+    };
+    actes: any[];
+  }) {
+    const _getpPescripteurXml = (prescripteur: any) => {
+      const codeConditionExercice = prescripteur?.codeConditionExercice;
+      const numIdFacPresc = prescripteur?.numIdFacPresc;
+      const rppsPresc = prescripteur?.rppsPresc;
+      const numeroStructure = prescripteur?.numeroStructure;
+      const codeSpecialite = prescripteur?.codeSpecialite;
+      const estPrescipteurSncf = prescripteur?.estPrescipteurSncf;
+      if (numIdFacPresc) {
+        return `
+        <xsd:prescripteur>
+          ${
+            codeConditionExercice
+              ? `<xsd:codeConditionExercice>${codeConditionExercice}</xsd:codeConditionExercice>`
+              : ''
+          }
+          ${
+            numIdFacPresc
+              ? `<xsd:numIdFacPresc>${numIdFacPresc?.slice(
+                  0,
+                  -1,
+                )}</xsd:numIdFacPresc>`
+              : ''
+          }
+          ${
+            numIdFacPresc
+              ? `<xsd:numIdFacPrescCle>${numIdFacPresc?.slice(
+                  -1,
+                )}</xsd:numIdFacPrescCle>`
+              : ''
+          }
+          ${
+            codeSpecialite
+              ? `<xsd:codeSpecialite>${codeSpecialite}</xsd:codeSpecialite>`
+              : ''
+          }
+          ${
+            rppsPresc
+              ? `<xsd:rppsPresc>${rppsPresc?.slice(0, -1)}</xsd:rppsPresc>`
+              : ''
+          }
+          ${
+            rppsPresc
+              ? `<xsd:rppsPrescCle>${rppsPresc?.slice(-1)}</xsd:rppsPrescCle>`
+              : ''
+          }
+          ${
+            numeroStructure
+              ? `<xsd:numeroStructure>${numeroStructure}</xsd:numeroStructure>`
+              : ''
+          }
+          ${
+            estPrescipteurSncf !== null && estPrescipteurSncf !== undefined
+              ? `<xsd:estPrescipteurSncf>${
+                  estPrescipteurSncf ? 'true' : 'false'
+                }</xsd:estPrescipteurSncf>`
+              : ''
+          }
+        </xsd:prescripteur>
+        `;
+      }
+      return '';
+    };
+
+    const _getSituationParcoursDeSoin = () => {
+      const situationParcoursDeSoin =
+        data?.identification?.ParcoursDeSoin?.situationParcoursDeSoin;
+      if (situationParcoursDeSoin) {
+        const nomMedecinOrienteur =
+          data?.identification?.ParcoursDeSoin?.nomMedecinOrienteur;
+        const prenomMedecinOrienteur =
+          data?.identification?.ParcoursDeSoin?.prenomMedecinOrienteur;
+        return `
+        <xsd:ParcoursDeSoin>
+          ${
+            situationParcoursDeSoin
+              ? `<xsd:situationParcoursDeSoin>${situationParcoursDeSoin}</xsd:situationParcoursDeSoin>`
+              : ''
+          }
+          ${
+            nomMedecinOrienteur
+              ? `<xsd:nomMedecinOrienteur>${nomMedecinOrienteur}</xsd:nomMedecinOrienteur>`
+              : ''
+          }
+          ${
+            prenomMedecinOrienteur
+              ? `<xsd:prenomMedecinOrienteur>${prenomMedecinOrienteur}</xsd:prenomMedecinOrienteur>`
+              : ''
+          }
+        </xsd:ParcoursDeSoin>
+        `;
+      }
+      return '';
+    };
+
+    const acte = data?.actes?.map(
+      (acte, index) => `
+                <xsd:acte>
+                <xsd:numero>${index}</xsd:numero>
+                ${
+                  acte?.dateExecution
+                    ? `<xsd:dateExecution format="yyyyMMdd">${dayjs(
+                        acte?.dateExecution,
+                      ).format('YYYYMMDD')}</xsd:dateExecution>`
+                    : ''
+                }
+                <xsd:codeActe>${acte?.codeActe ?? ''}</xsd:codeActe>
+                <xsd:qte>${acte?.qte ?? ''}</xsd:qte>
+                ${
+                  acte?.montantHonoraire
+                    ? ` <xsd:montantHonoraire>${acte?.montantHonoraire}</xsd:montantHonoraire>`
+                    : ''
+                }
+                <xsd:libelle>${acte?.libelle ?? ''}</xsd:libelle>
+                <xsd:numeroDents>${acte?.numeroDents ?? ''}</xsd:numeroDents>
+                <xsd:coefficient>${acte?.coefficient ?? ''}</xsd:coefficient>
+                ${
+                  acte?.codeAssociation
+                    ? `<xsd:codeAssociation>${acte?.codeAssociation}</xsd:codeAssociation>`
+                    : ``
+                }
+                ${
+                  acte?.qualifDepense
+                    ? `<xsd:qualifDepense>${acte?.qualifDepense}</xsd:qualifDepense>`
+                    : ``
+                }
+                ${
+                  acte?.complementPrestation
+                    ? `<xsd:complementPrestation>${acte?.complementPrestation}</xsd:complementPrestation>`
+                    : ``
+                }
+                ${
+                  acte?.codeModificateur1
+                    ? `<xsd:codeModificateur1>
+              <xsd:codeModificateur>              
+              ${acte?.codeModificateur1}
+              </xsd:codeModificateur>
+              </xsd:codeModificateur1>`
+                    : ``
+                }
+                ${
+                  acte?.codeModificateur2
+                    ? `<xsd:codeModificateur2>
+              <xsd:codeModificateur>              
+              ${acte?.codeModificateur2}
+              </xsd:codeModificateur>
+              </xsd:codeModificateur2>`
+                    : ``
+                }
+                ${
+                  acte?.codeModificateur3
+                    ? `<xsd:codeModificateur3>
+              <xsd:codeModificateur>              
+              ${acte?.codeModificateur3}
+              </xsd:codeModificateur>
+              </xsd:codeModificateur3>`
+                    : ``
+                }
+                ${
+                  acte?.codeModificateur4
+                    ? `<xsd:codeModificateur4>
+              <xsd:codeModificateur>              
+              ${acte?.codeModificateur4}
+              </xsd:codeModificateur>
+              </xsd:codeModificateur4>`
+                    : ``
+                }
+                ${
+                  acte?.remboursementExceptionnel !== undefined
+                    ? `<xsd:remboursementExceptionnel>${
+                        !!acte?.remboursementExceptionnel ? 'true' : 'false'
+                      }</xsd:remboursementExceptionnel>`
+                    : ``
+                }
+                ${
+                  acte?.codeJustifExoneration
+                    ? `<xsd:codeJustifExoneration>${acte?.codeJustifExoneration}</xsd:codeJustifExoneration>`
+                    : ``
+                }
+                ${
+                  acte?.isAld !== undefined
+                    ? `<xsd:isAld>${
+                        !!acte?.isAld ? 'true' : 'false'
+                      }</xsd:isAld>`
+                    : ``
+                }
+                ${
+                  acte?.dateDemandePrealable
+                    ? `<xsd:dateDemandePrealable format="yyyyMMdd">${dayjs(
+                        acte?.dateDemandePrealable,
+                      ).format('YYYYMMDD')}</xsd:dateDemandePrealable>`
+                    : ``
+                }
+                ${
+                  acte?.codeAccordPrealable
+                    ? `<xsd:codeAccordPrealable>${acte?.codeAccordPrealable}</xsd:codeAccordPrealable>`
+                    : ``
+                }
+              </xsd:acte>
+              `,
+    );
+    const xml = `
+    <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:jux="http://www.juxta.fr" xmlns:xsd="XsdWebServiceFSV.xsd">
+      <soapenv:Body>
+        <jux:TransmettreFacture>
+          <xsd:appelTransmettreFacture>
+            <xsd:identification>
+            ${
+              data?.identification?.idPatient
+                ? `<xsd:idPatient>${data?.identification?.idPatient}</xsd:idPatient>`
+                : ''
+            }
+              <xsd:source>${'ecoodentist'}</xsd:source>
+              ${
+                data?.identification?.dateFacturation
+                  ? `<xsd:dateFacturation format="yyyyMMdd">${data?.identification?.dateFacturation}</xsd:dateFacturation>`
+                  : ''
+              }
+                ${
+                  data?.identification?.datePrescription
+                    ? `<xsd:datePrescription format="yyyyMMdd">${data?.identification?.datePrescription}</xsd:datePrescription>`
+                    : ''
+                }
+              ${
+                data?.identification?.numNatPs
+                  ? `<xsd:numNatPs>${data?.identification?.numNatPs}</xsd:numNatPs>`
+                  : ''
+              }
+              ${
+                data?.identification?.numFiness
+                  ? `<xsd:numFiness>${data?.identification?.numFiness}</xsd:numFiness>`
+                  : ''
+              }
+         ${
+           data?.identification?.numNatPsRemplace
+             ? `<xsd:numNatPsRemplace>${data?.identification?.numNatPsRemplace}</xsd:numNatPsRemplace>`
+             : ''
+         }
+         ${
+           data?.identification?.isTpAmo !== undefined
+             ? `<xsd:isTpAmo>${
+                 data?.identification?.isTpAmo ? 'true' : 'false'
+               }</xsd:isTpAmo>`
+             : ''
+         }
+        ${
+          data?.identification?.isTpAmc !== undefined
+            ? `<xsd:isTpAmc>${
+                data?.identification?.isTpAmc ? 'true' : 'false'
+              }</xsd:isTpAmc>`
+            : ''
+        }
+         ${
+           data?.identification?.GenererDRE !== undefined
+             ? `<xsd:GenererDRE>${
+                 data?.identification?.GenererDRE ? 'true' : 'false'
+               }</xsd:GenererDRE>`
+             : ''
+         }
+         ${
+           data?.identification?.modeSecurisation
+             ? `<xsd:modeSecurisation>${data?.identification?.modeSecurisation}</xsd:modeSecurisation>`
+             : ''
+         }
+              ${_getpPescripteurXml(data?.identification?.prescripteur)}
+              ${_getSituationParcoursDeSoin()}
+            </xsd:identification>
+            ${acte.join('')}
+           
+          </xsd:appelTransmettreFacture>
+        </jux:TransmettreFacture>
+      </soapenv:Body>
+    </soapenv:Envelope>`;
+    const res = await this.sendRequest<any>('TransmettreFacture', xml);
+    return res;
   }
 }

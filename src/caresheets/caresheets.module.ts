@@ -18,6 +18,7 @@ import { ThirdPartyAmcEntity } from 'src/entities/third-party-amc.entity';
 import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 import { SesamvitaleTeletranmistionService } from './service/sesamvitale-teletranmistion.service';
 import { LotEntity } from 'src/entities/lot.entity';
+import { StoreCaresheetsService } from './service/store.caresheets.service';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { LotEntity } from 'src/entities/lot.entity';
     ActsService,
     InterfacageService,
     SesamvitaleTeletranmistionService,
+    StoreCaresheetsService,
   ],
   exports: [ActsService],
 })

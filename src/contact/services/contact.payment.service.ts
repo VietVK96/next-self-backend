@@ -375,6 +375,7 @@ export class ContactPaymentService {
                   beneficiaryAmountProsthesis,
                   'plus',
                 );
+                paymentId = insertRes.insertId;
 
                 // Réinitialise le niveau de relance
                 await queryRunner.query(insertToCSC, [
