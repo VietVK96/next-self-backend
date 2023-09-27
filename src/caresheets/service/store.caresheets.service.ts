@@ -286,8 +286,10 @@ export class StoreCaresheetsService {
         await this.sesamvitaleTeletranmistionService.transmettreFacture(
           facture,
         );
-      if (data) {
+      if (data?.idFacture?.[0]) {
         caresheet.externalReferenceId = data?.idFacture?.[0];
+      } else if (data?.erreur?.[0]?.libelleErreur?.[0]) {
+        throw data?.erreur?.[0]?.libelleErreur?.[0];
       }
       return await this.fseRepository.save({ ...caresheet });
     } catch (error) {
