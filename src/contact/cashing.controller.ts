@@ -1,11 +1,7 @@
 import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import {
-  CurrentUser,
-  TokenGuard,
-  UserIdentity,
-} from 'src/common/decorator/auth.decorator';
+import { TokenGuard } from 'src/common/decorator/auth.decorator';
 import { CashingService } from './services/cashing.service';
 import { CashingPrintDto } from './dto/cashing.dto';
 import { ConditionsDto } from './dto/condition.dto';
