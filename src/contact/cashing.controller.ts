@@ -9,6 +9,7 @@ import {
 import { CashingService } from './services/cashing.service';
 import { CashingPrintDto } from './dto/cashing.dto';
 import { ConditionsDto } from './dto/condition.dto';
+import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
 @ApiBearerAuth()
 @Controller('/cashing')
 @ApiTags('Cashing')
@@ -45,13 +46,13 @@ export class CashingController {
   @UseGuards(TokenGuard)
   async exportCashingToCSV(
     @Query() queryParams: ConditionsDto,
-    @CurrentUser() user: UserIdentity,
+    @CurrentDoctor() user: number,
     @Res() response: Response,
   ) {
     // Xử lý và chuyển đổi các tham số từ URL sang định dạng phù hợp để sử dụng trong service
     // Gọi service để lấy dữ liệu dựa trên các điều kiện và userId
     const cashingsCSV = await this.service.exportPayments(
-      user.id,
+      user,
       queryParams.conditions,
     );
 
