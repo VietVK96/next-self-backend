@@ -814,7 +814,16 @@ export class ActsService {
         caresheet.thirdPartyAmc = thirdPartyAmc;
       }
 
-      return await this.fseRepository.save(caresheet);
+      const fseSave = await this.fseRepository.save({ ...caresheet });
+      await Promise.all(
+        caresheet?.actMedicals.map((item) => {
+          return this.dentalEventTaskRepository.save({
+            ...item,
+            fseId: fseSave?.id,
+          });
+        }),
+      );
+      return await this.fseRepository.findOne({ where: { id: fseSave?.id } });
     } catch (error) {
       console.log('error', error);
     }
