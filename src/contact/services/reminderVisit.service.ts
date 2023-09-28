@@ -330,7 +330,7 @@ export class ReminderVisitService {
           patient.number,
           `${patient.lastname} ${patient.firstname}`,
           `<span data-type="textarea" data-pk="${patient.id}" data-value="${
-            patient.message
+            patient.message || 'null'
           }">${nl2br(patient.message)}</span>`,
           patient.email,
           phoneNumber?.phoneNumber,
