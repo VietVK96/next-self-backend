@@ -55,14 +55,15 @@ export class CashingService {
     user: number,
     conditions: FindAllStructDto[],
   ): Promise<string> {
-    const payments: PaymentInterface[] = [];
+    try {
+      const payments: PaymentInterface[] = [];
 
-    const where = this.conditionsToSQL(conditions);
-    // query table T_CASHING_CSG join many table ....
-    const conditionValue = `${user} ${where}`;
+      const where = this.conditionsToSQL(conditions);
+      // query table T_CASHING_CSG join many table ....
+      const conditionValue = `${user} ${where}`;
 
-    const statements: PaymentInterface[] = await this.dataSource.query(
-      `SELECT
+      const statements: PaymentInterface[] = await this.dataSource.query(
+        `SELECT
       T_CASHING_CSG.CSG_ID AS id,
       T_CASHING_CSG.CON_ID AS patient_id,
       T_CASHING_CSG.LBK_ID AS bank_id,
@@ -83,34 +84,34 @@ export class CashingService {
   LEFT OUTER JOIN T_CONTACT_CON ON T_CONTACT_CON.CON_ID = T_CASHING_CONTACT_CSC.CON_ID
   LEFT OUTER JOIN T_LIBRARY_BANK_LBK ON T_LIBRARY_BANK_LBK.LBK_ID = T_CASHING_CSG.LBK_ID
   WHERE T_CASHING_CSG.USR_ID = ? ORDER BY T_CASHING_CSG.CSG_PAYMENT_DATE DESC, T_CASHING_CSG.created_at DESC`,
-      [conditionValue],
-    );
+        [user],
+      );
 
-    for (const statement of statements) {
-      const payment = statement;
-      const id = statement?.id;
-      const patientId = statement?.patient_id;
-      const bankId = statement?.bank_id;
-      const slipCheckId = statement?.slip_check_id;
-      // query table T_CONTACT_CON
-      const patientStatement: PatientStatement[] = patientId
-        ? await this.dataSource.query(
-            `SELECT
+      for (const statement of statements) {
+        const payment = statement;
+        const id = statement?.id;
+        const patientId = statement?.patient_id;
+        const bankId = statement?.bank_id;
+        const slipCheckId = statement?.slip_check_id;
+        // query table T_CONTACT_CON
+        const patientStatement: PatientStatement[] = patientId
+          ? await this.dataSource.query(
+              `SELECT
       T_CONTACT_CON.CON_ID AS id,
       T_CONTACT_CON.CON_NBR AS number,
       T_CONTACT_CON.CON_LASTNAME AS lastname,
       T_CONTACT_CON.CON_FIRSTNAME AS firstname
   FROM T_CONTACT_CON
   WHERE T_CONTACT_CON.CON_ID = ?`,
-            [patientId],
-          )
-        : null;
-      payment.patient = patientStatement;
+              [patientId],
+            )
+          : null;
+        payment.patient = patientStatement;
 
-      // query table T_CASHING_CONTACT_CSC Join T_CONTACT_CON
-      const beneficiariesStatement: Beneficiaries[] = id
-        ? await this.dataSource.query(
-            `SELECT
+        // query table T_CASHING_CONTACT_CSC Join T_CONTACT_CON
+        const beneficiariesStatement: Beneficiaries[] = id
+          ? await this.dataSource.query(
+              `SELECT
       T_CONTACT_CON.CON_ID AS id,
       T_CONTACT_CON.CON_LASTNAME AS lastname,
       T_CONTACT_CON.CON_FIRSTNAME AS firstname,
@@ -121,15 +122,15 @@ export class CashingService {
   JOIN T_CONTACT_CON
   WHERE T_CASHING_CONTACT_CSC.CSG_ID = ?
     AND T_CASHING_CONTACT_CSC.CON_ID = T_CONTACT_CON.CON_ID`,
-            [id],
-          )
-        : null;
-      payment.beneficiaries = beneficiariesStatement;
+              [id],
+            )
+          : null;
+        payment.beneficiaries = beneficiariesStatement;
 
-      // query table T_LIBRARY_BANK_LBK
-      const bankStatement: BankStatement[] = bankId
-        ? await this.dataSource.query(
-            `SELECT
+        // query table T_LIBRARY_BANK_LBK
+        const bankStatement: BankStatement[] = bankId
+          ? await this.dataSource.query(
+              `SELECT
       T_LIBRARY_BANK_LBK.LBK_ID AS id,
       T_LIBRARY_BANK_LBK.LBK_ACCOUNTING_CODE AS accounting_code,
       T_LIBRARY_BANK_LBK.third_party_account,
@@ -137,15 +138,15 @@ export class CashingService {
       T_LIBRARY_BANK_LBK.LBK_NAME as bank_name
   FROM T_LIBRARY_BANK_LBK
   WHERE T_LIBRARY_BANK_LBK.LBK_ID = ?`,
-            [bankId],
-          )
-        : null;
-      payment.bank = bankStatement;
+              [bankId],
+            )
+          : null;
+        payment.bank = bankStatement;
 
-      // query table T_SLIP_CHECK_SLC join T_LIBRARY_BANK_LBK
-      const slipCheckStatement: SlipCheck[] = slipCheckId
-        ? await this.dataSource.query(
-            `SELECT
+        // query table T_SLIP_CHECK_SLC join T_LIBRARY_BANK_LBK
+        const slipCheckStatement: SlipCheck[] = slipCheckId
+          ? await this.dataSource.query(
+              `SELECT
       T_SLIP_CHECK_SLC.SLC_ID AS id,
       T_SLIP_CHECK_SLC.SLC_NBR AS number,
       T_SLIP_CHECK_SLC.SLC_DATE AS date,
@@ -156,57 +157,62 @@ export class CashingService {
   JOIN T_LIBRARY_BANK_LBK
   WHERE T_SLIP_CHECK_SLC.SLC_ID = ?
     AND T_SLIP_CHECK_SLC.LBK_ID = T_LIBRARY_BANK_LBK.LBK_ID`,
-            [slipCheckId],
-          )
-        : null;
-      payment.slip_check = slipCheckStatement;
-      // ruslt
-      payments.push(payment);
+              [slipCheckId],
+            )
+          : null;
+        payment.slip_check = slipCheckStatement;
+        // ruslt
+        payments.push(payment);
+      }
+
+      // Tiếp theo, sử dụng payments để tạo tệp CSV và xuất dữ liệu.
+      // tạo tệp CSV
+      let csvContent =
+        'NOTE : Utiliser encodage UTF-8 et comme separateur le point virgule pour la lecture de ce fichier\n';
+      csvContent += `PRATICIEN;PRATICIEN_NAME\n`;
+
+      // Ghi dữ liệu payments vào tệp CSV
+
+      for (const payment of payments) {
+        let debiteurNumber = -1;
+        let debiteur = payment?.debtor;
+        let bankName = '';
+        switch (payment?.payment) {
+          case 'cheque':
+            bankName = payment?.checkBank;
+            break;
+          default:
+            bankName = payment?.bank?.[0]?.bank_name;
+            break;
+        }
+
+        if (payment.patient && payment.patient.length > 0) {
+          debiteurNumber = payment?.patient[0]?.number;
+          debiteur =
+            payment?.patient[0]?.lastname + payment?.patient?.[0]?.firstname;
+        }
+
+        let noBordereau = 0;
+        if (payment?.slip_check) {
+          noBordereau = payment.slip_check?.[0]?.number;
+        }
+        csvContent += `${debiteurNumber || ''},${
+          payment?.date ? dayjs(payment?.date).format('DD/MM/YYYY') : ''
+        },${
+          payment?.paymentDate
+            ? dayjs(payment?.paymentDate).format('DD/MM/YYYY')
+            : ''
+        }, "${debiteur ? debiteur : ''}",${payment?.payment || ''},${
+          payment?.checkNbr || ''
+        },"${bankName}",${noBordereau ? noBordereau : ''},${
+          payment?.type || ''
+        },${payment?.amount || ''},"${payment?.msg || ''}"\n`;
+      }
+
+      return csvContent;
+    } catch {
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
-
-    // Tiếp theo, sử dụng payments để tạo tệp CSV và xuất dữ liệu.
-    // tạo tệp CSV
-    let csvContent =
-      'NOTE : Utiliser encodage UTF-8 et comme separateur le point virgule pour la lecture de ce fichier\n';
-    csvContent += `PRATICIEN;PRATICIEN_NAME\n`;
-
-    // Ghi dữ liệu payments vào tệp CSV
-
-    for (const payment of payments) {
-      let debiteurNumber = -1;
-      let debiteur = payment?.debtor;
-      let bankName = '';
-      switch (payment?.payment) {
-        case 'cheque':
-          bankName = payment?.checkBank;
-        default:
-          bankName = payment?.bank[0]?.bank_name;
-      }
-
-      if (payment.patient && payment.patient.length > 0) {
-        debiteurNumber = payment?.patient[0]?.number;
-        debiteur =
-          payment?.patient[0]?.lastname + payment?.patient?.[0]?.firstname;
-      }
-
-      let noBordereau = 0;
-      if (payment?.slip_check) {
-        noBordereau = payment.slip_check?.[0]?.number;
-      }
-      csvContent += `${debiteurNumber || ''},${
-        payment?.date ? dayjs(payment?.date).format('DD/MM/YYYY') : ''
-      },${
-        payment?.paymentDate
-          ? dayjs(payment?.paymentDate).format('DD/MM/YYYY')
-          : ''
-      }, "${debiteur ? debiteur : ''}",${payment?.payment || ''},${
-        payment?.checkNbr || ''
-      },"${bankName}",${noBordereau ? noBordereau : ''},${
-        payment?.type || ''
-      },${payment?.amount || ''},"${payment?.msg || ''}"\n`;
-    }
-
-    return csvContent;
   }
 
   // php/cashing/print.php 31
