@@ -197,8 +197,8 @@ export class StoreCaresheetsService {
         const acte = {
           qte: 1,
           dateExecution: act?.date,
-          codeActe: act?.medical?.ccam
-            ? act?.medical?.ccam?.code
+          codeActe: act?.medical?.ccamCode
+            ? act?.medical?.ccamCode
             : act?.medical?.ngapKey?.name === 'CBX'
             ? 'CCX'
             : act?.medical?.ngapKey?.name, // nameToTransmit
