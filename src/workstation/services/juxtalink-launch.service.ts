@@ -46,6 +46,80 @@ export class JuxtalinkLaunchService {
     };
   }
 
+  async makeFileAndCallExe(
+    configurationFileDirname: string,
+    configurationFileBasename: string,
+    configurationFileContents: string,
+    executableDirname: string,
+    executableBasename: string,
+    executableParameters: string,
+  ): Promise<JuxtalinkRes> {
+    const token = await this.getToken();
+    const version = this.configService.get<string>('juxtalink.version');
+    const plageDePorts = this.configService.get<string>(
+      'juxtalink.plageDePorts',
+    );
+    const drcDownloadPopup = this.configService.get<number>(
+      'juxtalink.drcDownloadPopup',
+    );
+    const juxtalinkDownloadPopup = this.configService.get<number>(
+      'juxtalink.juxtalinkDownloadPopup',
+    );
+    return {
+      token,
+      plugin: 'LaunchSoftware',
+      action: 'CallExecutable',
+      version: version,
+      plageDePorts: plageDePorts,
+      drcDownloadPopup: drcDownloadPopup,
+      juxtalinkDownloadPopup: juxtalinkDownloadPopup,
+      applicationUrl: this.getApplicationUrl(),
+      parameters: {
+        pathFileOds: configurationFileDirname,
+        nameFile: configurationFileBasename,
+        contenu: configurationFileContents,
+        pathExeOds: executableDirname,
+        nameExe: executableBasename,
+        parametersExe: executableParameters,
+      },
+    };
+  }
+
+  async writeToClipboardAndCallExe(
+    clipboardText: string,
+    executableDirname: string,
+    executableBasename: string,
+    executableParameters: string,
+  ): Promise<JuxtalinkRes> {
+    const token = await this.getToken();
+    const version = this.configService.get<string>('juxtalink.version');
+    const plageDePorts = this.configService.get<string>(
+      'juxtalink.plageDePorts',
+    );
+    const drcDownloadPopup = this.configService.get<number>(
+      'juxtalink.drcDownloadPopup',
+    );
+    const juxtalinkDownloadPopup = this.configService.get<number>(
+      'juxtalink.juxtalinkDownloadPopup',
+    );
+    return {
+      token,
+      plugin: 'LaunchSoftware',
+      action: 'CallExecutable',
+      version: version,
+      plageDePorts: plageDePorts,
+      drcDownloadPopup: drcDownloadPopup,
+      juxtalinkDownloadPopup: juxtalinkDownloadPopup,
+      applicationUrl: this.getApplicationUrl(),
+      parameters: {
+        clipboardText,
+        pathExeOds: executableDirname,
+        nameExe: executableBasename,
+        parametersExe: executableParameters,
+      },
+    };
+  }
+
   getApplicationUrl(): string {
     const updateUrl = this.configService.get<string>(
       'juxtalink.updateServerUrl',
