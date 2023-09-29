@@ -9,6 +9,14 @@ export class ParametersJuxtalinkRes {
 
   @ApiProperty()
   parametersExe: string;
+  @ApiProperty()
+  pathFileOds?: string;
+  @ApiProperty()
+  nameFile?: string;
+  @ApiProperty()
+  contenu?: string;
+  @ApiProperty()
+  clipboardText?: string;
 }
 
 export class JuxtalinkRes {

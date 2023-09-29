@@ -302,6 +302,9 @@ export class ImagingSoftwareService {
       where: {
         id: query?.contactId,
       },
+      relations: {
+        gender: true,
+      },
     });
     if (!contact) {
       throw new CNotFoundRequestException(ErrorCode.NOT_FOUND);
