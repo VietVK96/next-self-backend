@@ -894,55 +894,50 @@ export class DevisServices {
       /**
        * if (isset($pdf)) {... todo ...} svg
        */
-      if (res?.schemas != 'none') {
-        const imgPath = path.join(
-          process.cwd(),
-          'resources/svg/odontogram',
-          'background_adult.png',
-        );
-        const img = fs.readFileSync(imgPath);
-        const imageBase = img.toString('base64');
-        function setImagePath(xml: string): string {
-          const parser = new DOMParser();
-          const domDocument = parser.parseFromString(xml, 'image/svg+xml');
-          const texts = domDocument.getElementsByTagName('tspan');
-          for (let i = 0; i < texts.length; i++) {
-            texts[i].setAttribute('style', 'opacity:0');
-          }
-          const svg = domDocument.getElementsByTagName('svg')[0];
-          const node = domDocument.getElementsByTagName('image')[0];
-          svg.setAttribute('height', '269');
-          svg.setAttribute('width', '643');
-          node.setAttribute(
-            'xlink:href',
-            'data:image/jpeg;base64,' + imageBase,
-          );
-          const serializer = new XMLSerializer();
-          return serializer.serializeToString(domDocument);
+
+      const imgPath = path.join(
+        process.cwd(),
+        'resources/svg/odontogram',
+        'background_adult.png',
+      );
+      const img = fs.readFileSync(imgPath);
+      const imageBase = img.toString('base64');
+      function setImagePath(xml: string): string {
+        const parser = new DOMParser();
+        const domDocument = parser.parseFromString(xml, 'image/svg+xml');
+        const texts = domDocument.getElementsByTagName('tspan');
+        for (let i = 0; i < texts.length; i++) {
+          texts[i].setAttribute('style', 'opacity:0');
         }
-        if (res.schemas === 'three') {
-          const init = await this.odotogramService?.show({
-            name: 'adult',
-            status: 'initial',
-            conId: contactEntity?.id,
-          });
-          res.schemaInitial = setImagePath(init);
-        }
-        res.schemaActuel = setImagePath(
-          await this.odotogramService?.show({
-            name: 'adult',
-            status: 'current',
-            conId: contactEntity?.id,
-          }),
-        );
-        res.schemaDevis = setImagePath(
-          await this.odotogramService?.show({
-            name: 'adult',
-            status: 'planned',
-            conId: contactEntity?.id,
-          }),
-        );
+        const svg = domDocument.getElementsByTagName('svg')[0];
+        const node = domDocument.getElementsByTagName('image')[0];
+        svg.setAttribute('height', '269');
+        svg.setAttribute('width', '643');
+        node.setAttribute('xlink:href', 'data:image/jpeg;base64,' + imageBase);
+        const serializer = new XMLSerializer();
+        return serializer.serializeToString(domDocument);
       }
+      const init = await this.odotogramService?.show({
+        name: 'adult',
+        status: 'initial',
+        conId: contactEntity?.id,
+      });
+      res.schemaInitial = setImagePath(init);
+      res.schemaActuel = setImagePath(
+        await this.odotogramService?.show({
+          name: 'adult',
+          status: 'current',
+          conId: contactEntity?.id,
+        }),
+      );
+      res.schemaDevis = setImagePath(
+        await this.odotogramService?.show({
+          name: 'adult',
+          status: 'planned',
+          conId: contactEntity?.id,
+        }),
+      );
+
       total_rss =
         Math.round((total_rss / socialSecurityReimbursementRate) * 100) / 100;
       const date_signature = dayjs().format('DD/MM/YYYY');

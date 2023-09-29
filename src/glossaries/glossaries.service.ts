@@ -13,6 +13,7 @@ import { SortGlossaryDto, UpdateGlossaryDto } from './dto/update.glossary.dto';
 import { UpdateGlossaryEntryDto } from './dto/update.glossaryEntry.dto';
 import { ErrorCode } from 'src/constants/error';
 import { SuccessResponse } from 'src/common/response/success.res';
+import { UserIdentity } from 'src/common/decorator/auth.decorator';
 
 @Injectable()
 export class GlossariesService {
@@ -25,9 +26,12 @@ export class GlossariesService {
   ) {}
 
   // php/glossaries/index.php 100%
-  async findGlossaries(): Promise<FindGlossariesRes[]> {
+  async findGlossaries(identity: UserIdentity): Promise<FindGlossariesRes[]> {
     const glossaries = await this.glossaryRepo.find({
       order: { position: 'ASC', id: 'ASC' },
+      where: {
+        organizationId: identity.org,
+      },
     });
     const res = glossaries.map((glossary) => {
       return this.convertToGlossaryRes(glossary);
@@ -73,8 +77,9 @@ export class GlossariesService {
     orgId: number,
   ): Promise<GlossaryEntryRes> {
     const count = await this.glossaryEntryRepo.count({
-      where: { glossaryId: Number(payload.glossary) },
+      where: { glossaryId: Number(payload.glossary), organizationId: orgId },
     });
+
     if (count >= MAX_ENTRIES) {
       // `Le nombre maximal d'entrée du glossaire a été atteint (max=${MAX_ENTRIES})`,
 
@@ -109,8 +114,11 @@ export class GlossariesService {
     payload: SaveGlossaryDto,
     orgId: number,
   ): Promise<FindGlossariesRes> {
-    const count = await this.glossaryRepo.count();
-    if (count >= MAX_GLOSSARY) {
+    const glossaire = await this.glossaryRepo.find({
+      where: { organizationId: orgId },
+    });
+
+    if (glossaire?.length >= MAX_GLOSSARY) {
       // `Le nombre maximal de glossaire a été atteint (max=${MAX_GLOSSARY}).`,
 
       throw new CBadRequestException(ErrorCode.MAXIMUM);

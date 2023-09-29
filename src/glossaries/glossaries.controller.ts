@@ -28,8 +28,8 @@ export class GlossriesController {
 
   @Get()
   @UseGuards(TokenGuard)
-  async findGlossaries() {
-    return this.glossariesService.findGlossaries();
+  async findGlossaries(@CurrentUser() identity: UserIdentity) {
+    return this.glossariesService.findGlossaries(identity);
   }
 
   @Get('/:id')

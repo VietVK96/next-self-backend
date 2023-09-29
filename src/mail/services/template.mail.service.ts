@@ -53,14 +53,21 @@ export class TemplateMailService {
 
     // Replace the signature for the practitioner if it exists in the context
     if (context.praticien?.signature) {
-      const regexPractitionerSignature =
-        /(<img[^>]+signaturePraticien[^>]+\/?>)/;
-      content = content.replace(
-        regexPractitionerSignature,
-        context.praticien.signature,
-      );
+      const htmlString = context.praticien?.signature;
+      const imgTagPattern = /<img\s[^>]*src=['"]([^'"]*)['"][^>]*>/i;
+      const match = htmlString.match(imgTagPattern);
+      if (match) {
+        const srcAttribute = match[1].trim();
+        if (srcAttribute !== '') {
+          const regexPractitionerSignature =
+            /(<img[^>]+signaturePraticien[^>]+\/?>)/;
+          content = content.replace(
+            regexPractitionerSignature,
+            context.praticien.signature,
+          );
+        }
+      }
     }
-
     // Replace the signature for the practitioner if it exists in the signature object
     if (signature?.practitioner) {
       const regexPractitionerClass = /class=["']signaturePraticien["']/;

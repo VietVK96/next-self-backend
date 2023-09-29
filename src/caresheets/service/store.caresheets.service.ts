@@ -36,6 +36,8 @@ export class StoreCaresheetsService {
     @InjectRepository(CaresheetStatusEntity)
     private caresheetStatusRepository: Repository<CaresheetStatusEntity>,
     private sesamvitaleTeletranmistionService: SesamvitaleTeletranmistionService,
+    @InjectRepository(DentalEventTaskEntity)
+    private dentalEventTaskRepository: Repository<DentalEventTaskEntity>,
   ) {}
   /**
    * php/caresheets/store.php
@@ -53,24 +55,24 @@ export class StoreCaresheetsService {
         situation_parcours_de_soin,
         nom_medecin_orienteur,
         prenom_medecin_orienteur,
-        related_ald,
         date_demande_prealable,
         code_accord_prealable,
-        // suite_exp,
         generer_dre,
       } = request;
       const [patient, user] = await Promise.all([
-        this.patientRepository.findOneOrFail({
+        this.patientRepository.findOne({
           relations: { amos: true },
           where: { id: patient_id },
         }),
-        this.userRepository.findOneOrFail({
+        this.userRepository.findOne({
           relations: { medical: true },
           where: { id: user_id },
         }),
       ]);
       const acts: EventTaskEntity[] = await this.eventTaskRepository.find({
-        relations: { medical: { act: true, ccam: { family: true } } },
+        relations: {
+          medical: { act: true, ccam: { family: true }, ngapKey: true },
+        },
         where: { id: In(act_id), conId: patient_id },
       });
       if (acts?.length === 0) {
@@ -80,7 +82,7 @@ export class StoreCaresheetsService {
       caresheet.usrId = user?.id;
       caresheet.conId = patient?.id;
       caresheet.numeroFacturation = user?.medical?.finessNumber;
-      caresheet.date = dayjs().format('YYYY-MM-dd');
+      caresheet.date = dayjs().format('YYYY-MM-DD');
       caresheet.tasks = [];
       caresheet.fseStatus = await this.caresheetStatusRepository.findOne({
         where: { value: 0 },
@@ -195,8 +197,8 @@ export class StoreCaresheetsService {
         const acte = {
           qte: 1,
           dateExecution: act?.date,
-          codeActe: act?.medical?.ccam
-            ? act?.medical?.ccam?.code
+          codeActe: act?.medical?.ccamCode
+            ? act?.medical?.ccamCode
             : act?.medical?.ngapKey?.name === 'CBX'
             ? 'CCX'
             : act?.medical?.ngapKey?.name, // nameToTransmit
@@ -286,12 +288,25 @@ export class StoreCaresheetsService {
         await this.sesamvitaleTeletranmistionService.transmettreFacture(
           facture,
         );
-      if (data) {
+      if (data?.idFacture?.[0]) {
         caresheet.externalReferenceId = data?.idFacture?.[0];
+      } else if (data?.erreur?.[0]?.libelleErreur?.[0]) {
+        throw data?.erreur?.[0]?.libelleErreur?.[0];
       }
-      return await this.fseRepository.save({ ...caresheet });
+      const fseSave = await this.fseRepository.save({ ...caresheet });
+      await Promise.all(
+        caresheet?.tasks.map((item) => {
+          return this.dentalEventTaskRepository.save({
+            ...item,
+            fseId: fseSave?.id,
+          });
+        }),
+      );
+      return await this.fseRepository.findOne({ where: { id: fseSave?.id } });
     } catch (error) {
-      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
+      throw new CBadRequestException(
+        error?.response?.msg || error?.sqlMessage || error?.message || error,
+      );
     }
   }
 
