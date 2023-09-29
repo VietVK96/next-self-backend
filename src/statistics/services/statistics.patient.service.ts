@@ -32,10 +32,14 @@ export class StatisticsPatientService {
       );
     }
     const users = await this.userRepository.find({
-      where: { client: Not(AccountStatusEnum.TERMINATED) },
+      where: {
+        client: Not(AccountStatusEnum.TERMINATED),
+        organizationId: identity.org,
+      },
       relations: ['medical'],
       order: { lastname: 'ASC', firstname: 'ASC' },
     });
+
     const defaults = users.reduce((list, user) => {
       const fullName = `${user?.lastname ?? ''} ${user?.firstname ?? ''}`;
       if (user?.medical && !list.includes(fullName)) {
@@ -43,6 +47,7 @@ export class StatisticsPatientService {
       }
       return list;
     }, []);
+
     const sql = `
     SELECT
     t1.date,
@@ -67,12 +72,14 @@ export class StatisticsPatientService {
       param?.end_date,
       dateFormat,
     ]);
+
     const dataRes = this.statisticsService.toArray(
       dataQuery,
       defaults,
       param,
       true,
     );
+
     return {
       aggregate: param?.aggregate,
       data: dataRes?.data,

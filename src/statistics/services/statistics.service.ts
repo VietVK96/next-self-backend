@@ -63,6 +63,7 @@ export class StatisticsService {
         datas.push({ date, ...defaults });
       }
     }
+
     datas.map((data, index) => {
       datas[index] = { ...defaults, ...data };
     });
@@ -127,6 +128,7 @@ export class StatisticsService {
     if (group) {
       datas = this.group(datas);
     }
+
     // Chèn dữ liệu bị thiếu
     this.insertMissingData(datas, defaultsObj, param);
 
