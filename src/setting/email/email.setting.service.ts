@@ -123,6 +123,7 @@ export class EmailSettingService {
       emailOutgoingServer.connectionEstablished = 1;
 
       const halite = new HaliteEncryptorHelper(process.env.HALITE_KEY);
+
       emailOutgoingServer.username = halite.encrypt(
         payload.outgoingServer.username,
       );
