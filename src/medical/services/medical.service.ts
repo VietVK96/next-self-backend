@@ -2,14 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as dayjs from 'dayjs';
 import { ClaudeBernardService } from 'src/bcb/services/claudeBernard.Service';
-import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { DEFAULT_LOCALE } from 'src/constants/default';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { MedicalOrderEntity } from 'src/entities/medical-order.entity';
 import { DataSource, Repository } from 'typeorm';
 import { BaseClaudeBernardCheckDto } from '../dto/baseClaudeBernardCheck.medical.dto';
 import { checkId } from 'src/common/util/number';
-import { boolean } from 'yargs';
 
 @Injectable()
 export class MedicalService {

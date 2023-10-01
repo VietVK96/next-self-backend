@@ -19,22 +19,20 @@ import { parseJson } from 'src/common/util/json';
 import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
 import { UserAmoEntity } from 'src/entities/user-amo.entity';
 import { WorkstationEntity } from 'src/entities/workstation.entity';
-import { AddressEntity } from 'src/entities/address.entity';
+import { OrganizationEntity } from 'src/entities/organization.entity';
 
 @Injectable()
 export class GetSessionService {
   constructor(
     private dataSource: DataSource,
-    @InjectRepository(UserEntity)
-    private userRepository: Repository<UserEntity>,
     @InjectRepository(UserMedicalEntity)
     private userMedicalRepository: Repository<UserMedicalEntity>,
     @InjectRepository(UserAmoEntity)
     private userAmoRepo: Repository<UserAmoEntity>,
     @InjectRepository(WorkstationEntity)
     private workstaionRepository: Repository<WorkstationEntity>,
-    @InjectRepository(AddressEntity)
-    private addressRepo: Repository<AddressEntity>,
+    @InjectRepository(OrganizationEntity)
+    private organizationRepo: Repository<OrganizationEntity>,
   ) {}
 
   async getSession(identity: UserIdentity) {
@@ -45,7 +43,17 @@ export class GetSessionService {
     data.practitioners = await this.getPractitioners(identity.id, identity.org);
     data.users = await this.getUsers(identity.id, identity.org);
     data.workstations = await this.getWorkstations(identity.org);
+    data.subscriptions = await this.getSubscriptions(identity.org);
     return data;
+  }
+
+  //application/Entity/Organization.php 668
+  async getSubscriptions(orgId: number) {
+    const org = await this.organizationRepo.findOne({
+      where: { id: orgId },
+      relations: { subscriptions: { plan: true } },
+    });
+    return org.subscriptions;
   }
 
   // php/session.php(line 32 - 120)

@@ -8,7 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { OrganizationEntity } from './organization.entity';
-import { PlanPlfEntity } from './plan-plf.entity';
+import { PlanEntity } from './plan.entity';
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\OrganizationSubscriptionRepository")
@@ -71,13 +71,13 @@ export class OrganizationSubscriptionEntity {
     width: 11,
   })
   planId?: number;
-  @ManyToOne(() => PlanPlfEntity, {
+  @ManyToOne(() => PlanEntity, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({
     name: 'plan_id',
   })
-  plan?: PlanPlfEntity;
+  plan?: PlanEntity;
 
   /**
    * @ORM\Column(name="start_of_period", type="datetime")
