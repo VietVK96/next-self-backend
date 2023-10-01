@@ -3,6 +3,7 @@ import { findWhere, groupBy } from 'src/common/util/array';
 import { startOf } from 'src/common/util/datetime';
 import { DataSource } from 'typeorm';
 import { FilterValuesStatisticDto } from '../dto';
+import { checkNumber } from 'src/common/util/number';
 
 export class StatisticsService {
   constructor(
@@ -80,14 +81,12 @@ export class StatisticsService {
     keys.forEach((key) => {
       const inputs = datas.map((data) => data[key]);
       const total = inputs.reduce(
-        (initial, value) => initial + parseFloat(value),
+        (initial, value) => initial + checkNumber(value),
         0,
       );
-
       extra.average[key] = total / inputs.length;
       extra.total[key] = total;
     });
-
     return extra;
   }
 
