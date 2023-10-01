@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { OrganizationSubscriptionEntity } from 'src/entities/organization-subcription.entity';
 import { UserAmoEntity } from 'src/entities/user-amo.entity';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
 import { WorkstationEntity } from 'src/entities/workstation.entity';
@@ -432,4 +433,7 @@ export class SessionRes {
 
   @ApiProperty()
   workstations?: Array<WorkstationEntity>;
+
+  @ApiProperty()
+  subscriptions?: Array<OrganizationSubscriptionEntity>;
 }
