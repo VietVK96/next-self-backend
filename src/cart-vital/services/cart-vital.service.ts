@@ -47,7 +47,7 @@ export class CartVitalService {
     return queryBuilder.getRawMany();
   }
 
-  async updateFromSv(patient: ContactEntity) {
+  async updateFromSv(patient: ContactEntity, organization: OrganizationEntity) {
     const respone =
       await this.sesamvitaleTeletranmistionService.consulterClient(
         patient?.externalReferenceId,
@@ -66,7 +66,8 @@ export class CartVitalService {
     patient.inseeKey = respone?.individu?.[0]?.nirIndividuCle?.[0];
 
     const dateNaissance = respone?.individu?.[0]?.dateNaissance?.[0]?.['_'];
-    const isDateLunaire = respone?.individu?.[0]?.isDateLunaire?.[0];
+    const isDateLunaire =
+      respone?.individu?.[0]?.isDateLunaire?.[0] === 'true' ? true : false;
     const matches = dateNaissance.match(
       /^(?<year>[0-9]{4})(?<month>[0-9]{2})(?<day>[0-9]{2})$/,
     );
@@ -107,7 +108,10 @@ export class CartVitalService {
 
     const resultPatient = await this.dataSource
       .getRepository(ContactEntity)
-      .save({ ...patient });
+      .save({
+        ...patient,
+        nbr: patient?.nbr ? patient?.nbr : organization?.maxPatientNumber + 1,
+      });
     for (const amc of patient?.amcs) {
       let saveAmc;
       if (!amc?.amc?.id) {
@@ -153,6 +157,13 @@ export class CartVitalService {
       policyHolderId: savePolicyHolder?.id,
       policyHolder: savePolicyHolder,
     });
+
+    if (resultPatient?.nbr !== patient?.nbr) {
+      await this.dataSource.getRepository(OrganizationEntity).save({
+        ...organization,
+        maxPatientNumber: organization?.maxPatientNumber + 1,
+      });
+    }
 
     return resultPatient;
   }
@@ -497,7 +508,7 @@ export class CartVitalService {
         .findOne({
           where: { id: payload?.id },
           relations: {
-            medical: { policyHolder: { patient: true } },
+            medical: { policyHolder: { patient: true }, tariffType: true },
             amos: true,
           },
         });
@@ -508,7 +519,7 @@ export class CartVitalService {
 
     patient.externalReferenceId = payload?.external_reference_id;
 
-    const newPatient = await this.updateFromSv(patient);
+    const newPatient = await this.updateFromSv(patient, organization);
     return {
       ...newPatient,
       external_reference_id: patient.externalReferenceId,
