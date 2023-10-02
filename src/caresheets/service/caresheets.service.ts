@@ -807,7 +807,8 @@ export class ActsService {
         caresheet.tiersPayant = 1;
         caresheet.tiersPayantStatus = EnumThirdPartyStatus.WAITING;
 
-        const amountThirdParty = caresheet?.thirdPartyAmount + amountAmo;
+        const amountThirdParty =
+          Number(caresheet?.thirdPartyAmount) + amountAmo;
         caresheet.thirdPartyAmount = amountThirdParty;
         caresheet.thirdPartyAmo = thirdPartyAmo;
       }
@@ -827,7 +828,7 @@ export class ActsService {
           : (thirdPartyAmc.isDre = 0);
         caresheet.tiersPayant = 1;
         caresheet.tiersPayantStatus = EnumThirdPartyStatus.WAITING;
-        const amountThirdParty = caresheet.thirdPartyAmount + amountAmc;
+        const amountThirdParty = Number(caresheet.thirdPartyAmount) + amountAmc;
         caresheet.thirdPartyAmount = amountThirdParty;
         caresheet.thirdPartyAmc = thirdPartyAmc;
       }
