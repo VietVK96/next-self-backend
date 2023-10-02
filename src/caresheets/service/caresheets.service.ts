@@ -35,6 +35,7 @@ import { CurrencyEnum } from 'src/constants/currency';
 import { SuccessResponse } from 'src/common/response/success.res';
 import { associatifToSequential } from 'src/common/util/array';
 import { PatientAmcEntity } from 'src/entities/patient-amc.entity';
+import { EventTaskEntity } from 'src/entities/event-task.entity';
 const PDFMerger = require('pdf-merger-js');
 
 const helpersCaresheetPdf = {
@@ -144,6 +145,8 @@ export class ActsService {
     private sesamvitaleTeletranmistionService: SesamvitaleTeletranmistionService,
     @InjectRepository(LotEntity)
     private lotRepository: Repository<LotEntity>,
+    @InjectRepository(EventTaskEntity)
+    private eventTaskRepository: Repository<EventTaskEntity>,
   ) {}
 
   async sendRequest(action: string, contents: string): Promise<any> {
@@ -643,9 +646,20 @@ export class ActsService {
     try {
       const caresheet = await this.fseRepository.findOne({
         where: { id: id },
+        relations: {
+          tasks: {
+            act: true,
+          },
+        },
       });
       if (!caresheet) {
         throw new CBadRequestException(ErrorCode.FILE_NOT_FOUND);
+      }
+      if (caresheet?.tasks) {
+        caresheet?.tasks.forEach(async (actMedicals) => {
+          actMedicals.act.status = 1;
+          await this.eventTaskRepository.save(actMedicals.act);
+        });
       }
       await this.fseRepository.delete({ id });
 
@@ -817,9 +831,7 @@ export class ActsService {
         caresheet.thirdPartyAmount = amountThirdParty;
         caresheet.thirdPartyAmc = thirdPartyAmc;
       }
-      caresheet?.actMedicals.forEach((actMedicals) => {
-        actMedicals.act.status = 1;
-      });
+
       const fseSave = await this.fseRepository.save({ ...caresheet });
       await Promise.all(
         caresheet?.actMedicals.map((item) => {
