@@ -9,6 +9,7 @@ import { DataSource } from 'typeorm';
 import { DataMailService } from './data.mail.service';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { TemplateMailService } from './template.mail.service';
+import puppeteer from 'puppeteer';
 
 @Injectable()
 export class PreviewMailService {
@@ -27,7 +28,7 @@ export class PreviewMailService {
           address: true,
         },
       });
-      if (!doctor) return new CBadRequestException(ErrorCode.NOT_FOUND_DOCTOR);
+      if (!doctor) throw new CBadRequestException(ErrorCode.NOT_FOUND_DOCTOR);
 
       const today = new Date();
       const birthday = new Date(2000, 2, 14);
@@ -186,12 +187,27 @@ export class PreviewMailService {
       });
       context['payment_schedule'] = mailBody;
       const mail = await this.dataMailService.findById(id);
-      if (mail instanceof CNotFoundRequestException) return mail;
+      if (mail instanceof CNotFoundRequestException) throw mail;
       //  @TODO
       // Mail::pdf($mailConverted);
-      return await this.transform(mail, context, null, true);
+
+      const browser = await puppeteer.launch({
+        headless: 'new',
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
+      const page = await browser.newPage();
+
+      const mailConverted = await this.transform(mail, context, null, true);
+      const htmlContent = mailConverted?.body
+        ? mailConverted?.body
+        : '<div></div>';
+      await page.setContent(`<div style="padding: 30px;">${htmlContent}</div>`);
+      const buffer = await page.pdf();
+
+      await browser.close();
+      return buffer;
     } catch (err) {
-      return new CBadRequestException(ErrorCode.FORBIDDEN);
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
   }
 
