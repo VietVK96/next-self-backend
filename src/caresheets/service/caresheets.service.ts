@@ -574,22 +574,26 @@ export class ActsService {
   }
 
   async print(userId: number, ids: Array<number>, duplicata?: boolean) {
-    const merger = new PDFMerger();
-    for (const id of ids) {
-      const { file } = await this.getCaresheetFileById(id, duplicata);
-      await merger.add(file);
-    }
-    const user = await this.userRepository.findOne({
-      where: { id: userId },
-      relations: ['medical', 'medical.specialtyCode', 'preference'],
-    });
-    const lots: LotEntity[] = await this.getListLotByIds(ids);
+    try {
+      const merger = new PDFMerger();
+      for (const id of ids) {
+        const { file } = await this.getCaresheetFileById(id, duplicata);
+        await merger.add(file);
+      }
+      const user = await this.userRepository.findOne({
+        where: { id: userId },
+        relations: ['medical', 'medical.specialtyCode', 'preference'],
+      });
+      const lots: LotEntity[] = await this.getListLotByIds(ids);
 
-    for (const lot of lots) {
-      const { file } = await this.getLotFile(lot, user);
-      await merger.add(file);
+      for (const lot of lots) {
+        const { file } = await this.getLotFile(lot, user);
+        await merger.add(file);
+      }
+      return await merger.saveAsBuffer();
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
-    return await merger.saveAsBuffer();
   }
 
   async printLotBordereau(id: number, user_id: number) {
