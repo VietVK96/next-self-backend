@@ -293,7 +293,15 @@ export class StoreCaresheetsService {
       } else if (data?.erreur?.[0]?.libelleErreur?.[0]) {
         throw data?.erreur?.[0]?.libelleErreur?.[0];
       }
+
+      if (caresheet?.tasks) {
+        caresheet?.tasks.forEach(async (actMedicals) => {
+          actMedicals.act.status = 2;
+          await this.eventTaskRepository.save(actMedicals.act);
+        });
+      }
       const fseSave = await this.fseRepository.save({ ...caresheet });
+
       await Promise.all(
         caresheet?.tasks.map((item) => {
           return this.dentalEventTaskRepository.save({
