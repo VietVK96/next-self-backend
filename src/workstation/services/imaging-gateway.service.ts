@@ -393,7 +393,7 @@ END:VCARD`;
 </LinkageParameter>
 `;
     return await this.juxtalinkLaunchService.makeFileAndCallExe(
-      dirname(this.imagingSoftware.configurationFilePath),
+      dirname(this.imagingSoftware.executablePath),
       'Linkage.xml',
       configurationFileContents,
       executableDirname,
