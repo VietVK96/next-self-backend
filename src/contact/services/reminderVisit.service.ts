@@ -736,6 +736,7 @@ export class ReminderVisitService {
               id: +patId,
             },
           });
+          validateEmail(patient.email)
 
           if (!validateEmail(patient.email)) {
             const fullname = patient.firstname + ' ' + patient.lastname;

@@ -57,35 +57,53 @@ export class CashingService {
   ): Promise<string> {
     try {
       const payments: PaymentInterface[] = [];
+      const currentUser = await this.userRepo.findOne({
+        select: {
+          lastname: true,
+          firstname: true,
+        },
+        where: {
+          id: user,
+        },
+      });
+      const fullName = `${currentUser.lastname ?? ''} ${
+        currentUser.firstname ?? ''
+      } `;
 
       const where = this.conditionsToSQL(conditions);
       // query table T_CASHING_CSG join many table ....
-      const conditionValue = `${user} ${where}`;
 
-      const statements: PaymentInterface[] = await this.dataSource.query(
-        `SELECT
-      T_CASHING_CSG.CSG_ID AS id,
-      T_CASHING_CSG.CON_ID AS patient_id,
-      T_CASHING_CSG.LBK_ID AS bank_id,
-      T_CASHING_CSG.SLC_ID AS slip_check_id,
-      T_CASHING_CSG.CSG_DATE AS date,
-      T_CASHING_CSG.CSG_PAYMENT_DATE AS paymentDate,
-      T_CASHING_CSG.CSG_PAYMENT AS payment,
-      T_CASHING_CSG.CSG_TYPE AS type,
-      T_CASHING_CSG.CSG_AMOUNT AS amount,
-      T_CASHING_CSG.amount_care as amountCare,
-      T_CASHING_CSG.amount_prosthesis as amountProsthesis,
-      T_CASHING_CSG.CSG_DEBTOR AS debtor,
-      T_CASHING_CSG.CSG_CHECK_NBR AS checkNbr,
-      T_CASHING_CSG.CSG_CHECK_BANK AS checkBank,
-      T_CASHING_CSG.CSG_MSG AS msg
-  FROM T_CASHING_CSG
-  LEFT OUTER JOIN T_CASHING_CONTACT_CSC ON T_CASHING_CONTACT_CSC.CSG_ID = T_CASHING_CSG.CSG_ID
-  LEFT OUTER JOIN T_CONTACT_CON ON T_CONTACT_CON.CON_ID = T_CASHING_CONTACT_CSC.CON_ID
-  LEFT OUTER JOIN T_LIBRARY_BANK_LBK ON T_LIBRARY_BANK_LBK.LBK_ID = T_CASHING_CSG.LBK_ID
-  WHERE T_CASHING_CSG.USR_ID = ? ORDER BY T_CASHING_CSG.CSG_PAYMENT_DATE DESC, T_CASHING_CSG.created_at DESC`,
-        [user],
-      );
+      let sql = `SELECT
+          T_CASHING_CSG.CSG_ID AS id,
+          T_CASHING_CSG.CON_ID AS patient_id,
+          T_CASHING_CSG.LBK_ID AS bank_id,
+          T_CASHING_CSG.SLC_ID AS slip_check_id,
+          T_CASHING_CSG.CSG_DATE AS date,
+          T_CASHING_CSG.CSG_PAYMENT_DATE AS paymentDate,
+          T_CASHING_CSG.CSG_PAYMENT AS payment,
+          T_CASHING_CSG.CSG_TYPE AS type,
+          T_CASHING_CSG.CSG_AMOUNT AS amount,
+          T_CASHING_CSG.amount_care as amountCare,
+          T_CASHING_CSG.amount_prosthesis as amountProsthesis,
+          T_CASHING_CSG.CSG_DEBTOR AS debtor,
+          T_CASHING_CSG.CSG_CHECK_NBR AS checkNbr,
+          T_CASHING_CSG.CSG_CHECK_BANK AS checkBank,
+          T_CASHING_CSG.CSG_MSG AS msg
+        FROM T_CASHING_CSG
+        LEFT OUTER JOIN T_CASHING_CONTACT_CSC ON T_CASHING_CONTACT_CSC.CSG_ID = T_CASHING_CSG.CSG_ID
+        LEFT OUTER JOIN T_CONTACT_CON ON T_CONTACT_CON.CON_ID = T_CASHING_CONTACT_CSC.CON_ID
+        LEFT OUTER JOIN T_LIBRARY_BANK_LBK ON T_LIBRARY_BANK_LBK.LBK_ID = T_CASHING_CSG.LBK_ID
+        WHERE T_CASHING_CSG.USR_ID = ? `;
+
+      if (where) {
+        sql += `AND ${where} ORDER BY T_CASHING_CSG.CSG_PAYMENT_DATE DESC, T_CASHING_CSG.created_at DESC`;
+      } else {
+        sql += `ORDER BY T_CASHING_CSG.CSG_PAYMENT_DATE DESC, T_CASHING_CSG.created_at DESC`;
+      }
+
+      const statements: PaymentInterface[] = await this.dataSource.query(sql, [
+        user,
+      ]);
 
       for (const statement of statements) {
         const payment = statement;
@@ -97,12 +115,12 @@ export class CashingService {
         const patientStatement: PatientStatement[] = patientId
           ? await this.dataSource.query(
               `SELECT
-      T_CONTACT_CON.CON_ID AS id,
-      T_CONTACT_CON.CON_NBR AS number,
-      T_CONTACT_CON.CON_LASTNAME AS lastname,
-      T_CONTACT_CON.CON_FIRSTNAME AS firstname
-  FROM T_CONTACT_CON
-  WHERE T_CONTACT_CON.CON_ID = ?`,
+                T_CONTACT_CON.CON_ID AS id,
+                T_CONTACT_CON.CON_NBR AS number,
+                T_CONTACT_CON.CON_LASTNAME AS lastname,
+                T_CONTACT_CON.CON_FIRSTNAME AS firstname
+              FROM T_CONTACT_CON
+              WHERE T_CONTACT_CON.CON_ID = ?`,
               [patientId],
             )
           : null;
@@ -112,16 +130,16 @@ export class CashingService {
         const beneficiariesStatement: Beneficiaries[] = id
           ? await this.dataSource.query(
               `SELECT
-      T_CONTACT_CON.CON_ID AS id,
-      T_CONTACT_CON.CON_LASTNAME AS lastname,
-      T_CONTACT_CON.CON_FIRSTNAME AS firstname,
-      T_CASHING_CONTACT_CSC.CSC_AMOUNT AS amount,
-      T_CASHING_CONTACT_CSC.amount_care,
-      T_CASHING_CONTACT_CSC.amount_prosthesis
-  FROM T_CASHING_CONTACT_CSC
-  JOIN T_CONTACT_CON
-  WHERE T_CASHING_CONTACT_CSC.CSG_ID = ?
-    AND T_CASHING_CONTACT_CSC.CON_ID = T_CONTACT_CON.CON_ID`,
+              T_CONTACT_CON.CON_ID AS id,
+              T_CONTACT_CON.CON_LASTNAME AS lastname,
+              T_CONTACT_CON.CON_FIRSTNAME AS firstname,
+              T_CASHING_CONTACT_CSC.CSC_AMOUNT AS amount,
+              T_CASHING_CONTACT_CSC.amount_care,
+              T_CASHING_CONTACT_CSC.amount_prosthesis
+            FROM T_CASHING_CONTACT_CSC
+            JOIN T_CONTACT_CON
+            WHERE T_CASHING_CONTACT_CSC.CSG_ID = ?
+            AND T_CASHING_CONTACT_CSC.CON_ID = T_CONTACT_CON.CON_ID`,
               [id],
             )
           : null;
@@ -169,7 +187,7 @@ export class CashingService {
       // tạo tệp CSV
       let csvContent =
         'NOTE : Utiliser encodage UTF-8 et comme separateur le point virgule pour la lecture de ce fichier\n';
-      csvContent += `PRATICIEN;PRATICIEN_NAME\n`;
+      csvContent += `PRATICIEN;${fullName};\nN° dossier;Date;Echéance;Débiteur;Mode;No Chèque;Banque;No Bordereau;Type paiement;Montant;Commentaire\n`;
 
       // Ghi dữ liệu payments vào tệp CSV
 

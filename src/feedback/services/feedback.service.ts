@@ -61,7 +61,7 @@ export class FeedbackService {
     );
     mailTo.push(hotlineMail);
 
-    const subject = `[e.cooDentist][${type.toUpperCase()}] Message envoyé par ${
+    const subject = `[weClever][${type.toUpperCase()}] Message envoyé par ${
       user.lastname + user.firstname
     }`;
     const tempFolder = this.configService.get<string>(
@@ -90,11 +90,11 @@ export class FeedbackService {
       },
     };
 
-    const email: FactureEmailDataDto = {
+    const email = {
       from: user.email,
       to: mailTo,
       subject: subject,
-      template: mailBody,
+      html: mailBody,
       context: context,
     };
 

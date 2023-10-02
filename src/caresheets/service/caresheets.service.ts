@@ -574,22 +574,26 @@ export class ActsService {
   }
 
   async print(userId: number, ids: Array<number>, duplicata?: boolean) {
-    const merger = new PDFMerger();
-    for (const id of ids) {
-      const { file } = await this.getCaresheetFileById(id, duplicata);
-      await merger.add(file);
-    }
-    const user = await this.userRepository.findOne({
-      where: { id: userId },
-      relations: ['medical', 'medical.specialtyCode', 'preference'],
-    });
-    const lots: LotEntity[] = await this.getListLotByIds(ids);
+    try {
+      const merger = new PDFMerger();
+      for (const id of ids) {
+        const { file } = await this.getCaresheetFileById(id, duplicata);
+        await merger.add(file);
+      }
+      const user = await this.userRepository.findOne({
+        where: { id: userId },
+        relations: ['medical', 'medical.specialtyCode', 'preference'],
+      });
+      const lots: LotEntity[] = await this.getListLotByIds(ids);
 
-    for (const lot of lots) {
-      const { file } = await this.getLotFile(lot, user);
-      await merger.add(file);
+      for (const lot of lots) {
+        const { file } = await this.getLotFile(lot, user);
+        await merger.add(file);
+      }
+      return await merger.saveAsBuffer();
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
-    return await merger.saveAsBuffer();
   }
 
   async printLotBordereau(id: number, user_id: number) {
@@ -881,7 +885,7 @@ export class ActsService {
     const caresheet = await this.fseRepository.findOne({
       where: { id },
       relations: {
-        actMedicals: {
+        tasks: {
           act: true,
           ccam: true,
           ngapKey: true,
@@ -901,9 +905,15 @@ export class ActsService {
         },
       },
     });
-    console.log('check log pre-pro caresheets =====>', caresheet?.patient);
-    console.log('check log pre-pro caresheets =====>', caresheet?.amc);
-    console.log('check log pre-pro caresheets =====>', caresheet?.actMedicals);
+
+    caresheet.tasks = caresheet.tasks.map((dentalEventTask) => {
+      return {
+        ...dentalEventTask,
+        teethArr: dentalEventTask.teeth.includes(',')
+          ? dentalEventTask.teeth.split(',')
+          : [dentalEventTask.teeth],
+      };
+    });
     caresheet.thirdPartyAmo = await this.thirdPartyAmoRepository.findOne({
       where: {
         caresheetId: caresheet?.id,

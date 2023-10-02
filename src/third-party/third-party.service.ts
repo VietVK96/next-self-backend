@@ -430,7 +430,7 @@ export class ThirdPartyService {
         thirdPartyAmc?.amountCare - thirdPartyAmc?.amountCarePaid;
       const amountPaid = Math.max(
         -thirdPartyAmc?.amountPaid,
-        Math.min(amountRemaining, payload?.amo_amount),
+        Math.min(amountRemaining, payload?.amc_amount),
       );
       const amountCarePaid = Math.max(
         -thirdPartyAmc?.amountCarePaid,

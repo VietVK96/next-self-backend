@@ -96,7 +96,7 @@ export class CaresheetsController {
    */
 
   @Get('/print')
-  @UseGuards(TokenDownloadGuard)
+  @UseGuards(TokenGuard)
   async print(
     @Res() res: Response,
     @CurrentUser() identity: UserIdentity,
@@ -141,7 +141,7 @@ export class CaresheetsController {
 
   //ecoophp/php/caresheets/quittance.php
   @Get('/quittance')
-  @UseGuards(TokenDownloadGuard)
+  @UseGuards(TokenGuard)
   async quittance(
     @Res() res: Response,
     @CurrentUser() identity: UserIdentity,

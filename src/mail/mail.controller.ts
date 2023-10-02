@@ -10,6 +10,7 @@ import {
   Param,
   UseInterceptors,
   UploadedFiles,
+  Res,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -35,6 +36,9 @@ import { EnumLettersType } from 'src/entities/letters.entity';
 import { DataMailService } from './services/data.mail.service';
 import { TemplateMailService } from './services/template.mail.service';
 import { PreviewMailService } from './services/preview.mail.service';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
+import { Response } from 'express';
 
 @ApiBearerAuth()
 @Controller('/mails')
@@ -219,11 +223,29 @@ export class MailController {
   @Get('/preview')
   @UseGuards(TokenGuard)
   async preview(
+    @Res() res: Response,
     @Query('id') id: number,
     @CurrentDoctor() docId: number,
     @CurrentUser() identity: UserIdentity,
-  ): Promise<TranformDto> {
-    return this.previewMailService.preview(id, docId, identity.org);
+  ) {
+    try {
+      const buffer = await this.previewMailService.preview(
+        id,
+        docId,
+        identity.org,
+      );
+      res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment;`,
+        'Content-Length': buffer.length,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: 0,
+      });
+      res.end(buffer);
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
+    }
   }
 
   /**

@@ -107,6 +107,8 @@ export class DentalEventTaskEntity {
   })
   teeth?: string;
 
+  teethArr?: string[];
+
   /**
    * @ORM\Column(name="DET_TYPE", type="string", nullable=true, options={"default": "CCAM"})
    */

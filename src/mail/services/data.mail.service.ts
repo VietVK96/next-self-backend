@@ -145,7 +145,7 @@ export class DataMailService {
       },
     });
 
-    if (!qr) return new CNotFoundRequestException(`Mail Not found`);
+    if (!qr) throw new CNotFoundRequestException(`Mail Not found`);
 
     const doctors: PersonInfoDto[] = await this.dataSource.query(
       `SELECT
