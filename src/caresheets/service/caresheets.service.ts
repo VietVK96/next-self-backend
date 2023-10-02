@@ -885,7 +885,7 @@ export class ActsService {
     const caresheet = await this.fseRepository.findOne({
       where: { id },
       relations: {
-        actMedicals: {
+        tasks: {
           act: true,
           ccam: true,
           ngapKey: true,
@@ -905,9 +905,15 @@ export class ActsService {
         },
       },
     });
-    console.log('check log pre-pro caresheets =====>', caresheet?.patient);
-    console.log('check log pre-pro caresheets =====>', caresheet?.amc);
-    console.log('check log pre-pro caresheets =====>', caresheet?.actMedicals);
+
+    caresheet.tasks = caresheet.tasks.map((dentalEventTask) => {
+      return {
+        ...dentalEventTask,
+        teethArr: dentalEventTask.teeth.includes(',')
+          ? dentalEventTask.teeth.split(',')
+          : [dentalEventTask.teeth],
+      };
+    });
     caresheet.thirdPartyAmo = await this.thirdPartyAmoRepository.findOne({
       where: {
         caresheetId: caresheet?.id,
