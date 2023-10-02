@@ -293,6 +293,9 @@ export class StoreCaresheetsService {
       } else if (data?.erreur?.[0]?.libelleErreur?.[0]) {
         throw data?.erreur?.[0]?.libelleErreur?.[0];
       }
+      caresheet?.actMedicals.forEach((actMedicals) => {
+        actMedicals.act.status = 2;
+      });
       const fseSave = await this.fseRepository.save({ ...caresheet });
       await Promise.all(
         caresheet?.tasks.map((item) => {

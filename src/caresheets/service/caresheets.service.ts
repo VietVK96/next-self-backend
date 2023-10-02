@@ -817,7 +817,9 @@ export class ActsService {
         caresheet.thirdPartyAmount = amountThirdParty;
         caresheet.thirdPartyAmc = thirdPartyAmc;
       }
-
+      caresheet?.actMedicals.forEach((actMedicals) => {
+        actMedicals.act.status = 1;
+      });
       const fseSave = await this.fseRepository.save({ ...caresheet });
       await Promise.all(
         caresheet?.actMedicals.map((item) => {
