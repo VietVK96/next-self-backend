@@ -32,6 +32,7 @@ export class MailTransportService {
       });
 
       if (!user) return new CBadRequestException(ErrorCode.ERROR_GET_USER);
+      user.emailAccounts
       if (user.emailAccounts.length === 0)
         return new CBadRequestException(ErrorCode.NOT_FOUND_EMAIL_SETTING);
 
@@ -77,6 +78,7 @@ export class MailTransportService {
         return new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
       }
       return { success: true };
-    } catch (error) {}
+    } catch (error) {
+    }
   }
 }
