@@ -146,7 +146,7 @@ export class CorrespondentService {
       await queryRunner.connect();
       await queryRunner.startTransaction();
 
-      let correspondentType = await queryRunner.manager
+      const correspondentType = await queryRunner.manager
         .createQueryBuilder()
         .select(`CRT.id`)
         .from(CorrespondentTypeEntity, 'CRT')
@@ -156,15 +156,15 @@ export class CorrespondentService {
         })
         .getRawOne();
 
+      let correspondentTypeId = correspondentType?.CRT_id ?? 1;
+
       if (!correspondentType) {
         const insertCorrespondentType = await queryRunner.manager.query(
           `INSERT INTO correspondent_type (group_id, name)
                 VALUES (?, ?)`,
           [groupId, payload?.type?.name],
         );
-        correspondentType = insertCorrespondentType.insertId;
-      } else {
-        correspondentType = Object.values(correspondentType)[0];
+        correspondentTypeId = insertCorrespondentType.insertId;
       }
 
       if (!payload?.id) {
@@ -187,7 +187,7 @@ export class CorrespondentService {
             groupId,
             payload?.civility?.id,
             addressInsert.insertId,
-            correspondentType,
+            correspondentTypeId,
             payload?.lastname,
             payload?.firstname,
             payload?.email,
@@ -266,7 +266,7 @@ export class CorrespondentService {
           CPD_MSG = ? WHERE CPD_ID = ?`,
           [
             payload?.civility.id,
-            payload?.type.id,
+            correspondentTypeId,
             payload?.lastname,
             payload?.firstname,
             payload?.email,
