@@ -26,7 +26,7 @@ export class EmailSettingController {
   // settings/email-accounts/index.php
   @Get('')
   @UseGuards(TokenGuard)
-  async find(@Query('doctorId') id:number) {
+  async find(@Query('doctorId') id: number) {
     return await this.emailSettingService.find(id);
   }
 
