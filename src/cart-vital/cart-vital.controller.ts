@@ -5,7 +5,12 @@ import {
   TokenGuard,
   UserIdentity,
 } from 'src/common/decorator/auth.decorator';
-import { ReadCardVitalDto, SaveCardVitalDto } from './dto/cart-vital.dto';
+import {
+  ReadCardVitalDto,
+  SaveCardVitalDto,
+  SyncFsvDto,
+  UpdateFSVDto,
+} from './dto/cart-vital.dto';
 import { CartVitalService } from './services/cart-vital.service';
 
 @Controller('/cart-vital')
@@ -37,5 +42,30 @@ export class CartVitalController {
     @Body() payload: SaveCardVitalDto,
   ) {
     return await this.cartVitalService.saveCartVital(payload, identity);
+  }
+
+  //php/sesam-vitale/patient/synchronize.php
+  // all line
+  @Post('/sync-fsv')
+  @UseGuards(TokenGuard)
+  @ApiProperty({
+    description: 'sync fsv',
+  })
+  async fsvSynchronize(@Body() payload: SyncFsvDto) {
+    return await this.cartVitalService.syncFsv(payload);
+  }
+
+  //php/sesam-vitale/patient/updateFrom.php
+  //all line
+  @Post('/update-fsv')
+  @UseGuards(TokenGuard)
+  @ApiProperty({
+    description: 'update fsv',
+  })
+  async updateFSV(
+    @CurrentUser() identity: UserIdentity,
+    @Body() payload: UpdateFSVDto,
+  ) {
+    return await this.cartVitalService.updateFrom(payload, identity?.org);
   }
 }
