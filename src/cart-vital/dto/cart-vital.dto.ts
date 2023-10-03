@@ -15,3 +15,16 @@ export class SaveCardVitalDto {
   @ApiProperty()
   id?: number;
 }
+
+export class SyncFsvDto {
+  @ApiProperty()
+  patient_id?: number;
+
+  @ApiProperty()
+  user_id?: number;
+}
+
+export class UpdateFSVDto {
+  @ApiProperty()
+  idPatient?: number;
+}
