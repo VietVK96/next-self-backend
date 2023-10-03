@@ -36,6 +36,8 @@ import { SuccessResponse } from 'src/common/response/success.res';
 import { associatifToSequential } from 'src/common/util/array';
 import { PatientAmcEntity } from 'src/entities/patient-amc.entity';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
+import { PatientService } from 'src/patient/service/patient.service';
+import { ContactUserEntity } from 'src/entities/contact-user.entity';
 const PDFMerger = require('pdf-merger-js');
 
 const helpersCaresheetPdf = {
@@ -147,6 +149,9 @@ export class ActsService {
     private lotRepository: Repository<LotEntity>,
     @InjectRepository(EventTaskEntity)
     private eventTaskRepository: Repository<EventTaskEntity>,
+    @InjectRepository(ContactUserEntity)
+    private contactUserRepository: Repository<ContactUserEntity>,
+    private patientService: PatientService,
   ) {}
 
   async sendRequest(action: string, contents: string): Promise<any> {
@@ -703,7 +708,7 @@ export class ActsService {
       let amountAmc = 0;
       let amountAmcCare = 0;
       let amountAmcProsthesis = 0;
-
+      let patientUser: ContactUserEntity;
       const prestations = associatifToSequential(facture?.prestations);
       if (prestations && prestations.length > 0) {
         for (const prestation of prestations) {
@@ -811,6 +816,25 @@ export class ActsService {
           Number(caresheet?.thirdPartyAmount) + amountAmo;
         caresheet.thirdPartyAmount = amountThirdParty;
         caresheet.thirdPartyAmo = thirdPartyAmo;
+
+        if (thirdPartyAmo.patientId && thirdPartyAmo.userId) {
+          patientUser = await this.patientService.getPatientUser(
+            thirdPartyAmo?.userId,
+            thirdPartyAmo?.patientId,
+          );
+          patientUser.amount =
+            Number(patientUser?.amount) - Number(thirdPartyAmo?.amount);
+          patientUser.amountCare =
+            Number(patientUser?.amountCare) - Number(thirdPartyAmo?.amountCare);
+          patientUser.amountProsthesis =
+            Number(patientUser?.amountProsthesis) -
+            Number(thirdPartyAmo?.amountProsthesis);
+
+          patientUser.thirdPartyBalance =
+            Number(patientUser?.thirdPartyBalance) +
+            Number(thirdPartyAmo?.amount);
+          await this.contactUserRepository.save({ ...patientUser });
+        }
       }
       if (amcIsTp && amountAmc) {
         const thirdPartyAmc = new ThirdPartyAmcEntity();
@@ -831,6 +855,24 @@ export class ActsService {
         const amountThirdParty = Number(caresheet.thirdPartyAmount) + amountAmc;
         caresheet.thirdPartyAmount = amountThirdParty;
         caresheet.thirdPartyAmc = thirdPartyAmc;
+
+        if (thirdPartyAmc.patientId && thirdPartyAmc.userId) {
+          const patientUser = await this.patientService.getPatientUser(
+            thirdPartyAmc.userId,
+            thirdPartyAmc.patientId,
+          );
+          patientUser.amount =
+            Number(patientUser?.amount) - Number(thirdPartyAmc?.amount);
+          patientUser.amountCare =
+            Number(patientUser?.amountCare) - Number(thirdPartyAmc?.amountCare);
+          patientUser.amountProsthesis =
+            Number(patientUser?.amountProsthesis) -
+            Number(thirdPartyAmc?.amountProsthesis);
+          patientUser.thirdPartyBalance =
+            Number(patientUser?.thirdPartyBalance) +
+            Number(thirdPartyAmc?.amount);
+          await this.contactUserRepository.save({ ...patientUser });
+        }
       }
 
       const fseSave = await this.fseRepository.save({ ...caresheet });
