@@ -44,6 +44,8 @@ export class CartVitalController {
     return await this.cartVitalService.saveCartVital(payload, identity);
   }
 
+  //php/sesam-vitale/patient/synchronize.php
+  // all line
   @Post('/sync-fsv')
   @UseGuards(TokenGuard)
   @ApiProperty({
@@ -53,6 +55,8 @@ export class CartVitalController {
     return await this.cartVitalService.syncFsv(payload);
   }
 
+  //php/sesam-vitale/patient/updateFrom.php
+  //all line
   @Post('/update-fsv')
   @UseGuards(TokenGuard)
   @ApiProperty({
