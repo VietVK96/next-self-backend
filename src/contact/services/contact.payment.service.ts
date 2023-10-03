@@ -104,6 +104,7 @@ export class ContactPaymentService {
       .where('csg.CSG_ID = csc.CSG_ID')
       .andWhere('csc.CON_ID = :id', { id: request?.id })
       .andWhere('csg.USR_ID = usr.USR_ID')
+      .orderBy('paymentDate', 'DESC')
       .getRawMany();
     for (const cash of cashes) {
       cash.bordereau = null;
