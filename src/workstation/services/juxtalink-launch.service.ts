@@ -68,7 +68,7 @@ export class JuxtalinkLaunchService {
     return {
       token,
       plugin: 'LaunchSoftware',
-      action: 'CallExecutable',
+      action: 'MakeFileAndCallExe',
       version: version,
       plageDePorts: plageDePorts,
       drcDownloadPopup: drcDownloadPopup,
