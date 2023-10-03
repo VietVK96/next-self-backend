@@ -34,6 +34,7 @@ import { EventTaskEntity } from './event-task.entity';
 import { ContraindicationEntity } from './contraindication.entity';
 import { PeriodontalChartEntity } from './periodontal-chart.entity';
 import { PatientMedicalEntity } from './patient-medical.entity';
+import * as dayjs from 'dayjs';
 
 export enum EnumContactReminderVisitType {
   NONE = 'none',
@@ -1061,4 +1062,12 @@ export class ContactEntity {
 
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt?: Date;
+
+  getBirthDay?(fm: string): string {
+    const b = dayjs(this.birthday);
+    if (b.isValid()) {
+      return b.format(fm);
+    }
+    return '';
+  }
 }

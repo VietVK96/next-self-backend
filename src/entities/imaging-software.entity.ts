@@ -190,7 +190,7 @@ export class ImagingSoftwareEntity {
   })
   computerName?: string;
 
-  getImageBasename() {
+  getImageBasename?() {
     return `${this.imageBasenamePrefix}%0${this.imageBasenameLength}`;
   }
 }
