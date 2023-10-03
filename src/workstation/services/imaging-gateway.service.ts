@@ -63,8 +63,7 @@ export class ImagingGatewayService {
     PATID=${this.patient?.number}
     PATLNAME=${this.patient?.lastname}
     PATFNAME=${this.patient?.firstname}
-    PATBD=${this.patient.getBirthDay('DD/MM/YYYY')}
-    `;
+    PATBD=${this.patient.getBirthDay('DD/MM/YYYY')}`;
     return await this.juxtalinkLaunchService.makeFileAndCallExe(
       dirname(this.imagingSoftware.configurationFilePath),
       basename(this.imagingSoftware.configurationFilePath),
@@ -276,8 +275,7 @@ END:VCARD`;
     PATID=${this.patient?.number}
     PATLNAME=${this.patient?.lastname}
     PATFNAME=${this.patient?.firstname}
-    PATBD=${this.patient.getBirthDay('DD/MM/YYYY')}
-    `;
+    PATBD=${this.patient.getBirthDay('DD/MM/YYYY')}`;
     return await this.juxtalinkLaunchService.makeFileAndCallExe(
       dirname(this.imagingSoftware.configurationFilePath),
       basename(this.imagingSoftware.configurationFilePath),
@@ -386,8 +384,7 @@ END:VCARD`;
 <SocialID></SocialID>
 <Gender>${gender}</Gender>
 </Patient>
-</LinkageParameter>
-`;
+</LinkageParameter>`;
     return await this.juxtalinkLaunchService.makeFileAndCallExe(
       dirname(this.imagingSoftware.executablePath),
       'Linkage.xml',
@@ -405,8 +402,7 @@ END:VCARD`;
     const configurationFileContents = `[PATIENT]
 Number=${this.patient.id}
 Name=${this.patient.lastname}
-Birthdate=${this.patient.getBirthDay('DD/MM/YYYY')}
-`;
+Birthdate=${this.patient.getBirthDay('DD/MM/YYYY')}`;
     return await this.juxtalinkLaunchService.makeFileAndCallExe(
       dirname(this.imagingSoftware.configurationFilePath),
       basename(this.imagingSoftware.configurationFilePath),
