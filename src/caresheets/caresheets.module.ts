@@ -19,6 +19,16 @@ import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 import { SesamvitaleTeletranmistionService } from './service/sesamvitale-teletranmistion.service';
 import { LotEntity } from 'src/entities/lot.entity';
 import { StoreCaresheetsService } from './service/store.caresheets.service';
+import { ContactUserEntity } from 'src/entities/contact-user.entity';
+import { PatientService } from 'src/patient/service/patient.service';
+import { AddressModule } from 'src/address/address.module';
+import { AmoEntity } from 'src/entities/amo.entity';
+import { AmcEntity } from 'src/entities/amc.entity';
+import { LibraryActEntity } from 'src/entities/library-act.entity';
+import { LettersEntity } from 'src/entities/letters.entity';
+import { DocumentMailService } from 'src/mail/services/document.mail.service';
+import { MailModule } from 'src/mail/mail.module';
+import { ContactNoteEntity } from 'src/entities/contact-note.entity';
 
 @Module({
   imports: [
@@ -34,9 +44,17 @@ import { StoreCaresheetsService } from './service/store.caresheets.service';
       ThirdPartyAmcEntity,
       ThirdPartyAmoEntity,
       LotEntity,
+      ContactUserEntity,
+      AmoEntity,
+      AmcEntity,
+      LibraryActEntity,
+      LettersEntity,
+      ContactNoteEntity,
     ]),
     forwardRef(() => ContactModule),
     HttpModule,
+    AddressModule,
+    MailModule,
   ],
   controllers: [CaresheetsController],
   providers: [
@@ -45,6 +63,8 @@ import { StoreCaresheetsService } from './service/store.caresheets.service';
     InterfacageService,
     SesamvitaleTeletranmistionService,
     StoreCaresheetsService,
+    PatientService,
+    DocumentMailService,
   ],
   exports: [ActsService],
 })
