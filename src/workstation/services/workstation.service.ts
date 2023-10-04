@@ -27,6 +27,19 @@ export class WorkstationService {
     }
   }
 
+  async getWorkstation(organizationID: number, id: number) {
+    try {
+      return await this.workstaionRepository.findOne({
+        where: {
+          organizationId: organizationID,
+          id,
+        },
+      });
+    } catch (error) {
+      throw new CBadRequestException(error?.message);
+    }
+  }
+
   async createWorkstations(
     organizationId: number,
     payload: CreateWorkstationDto,
