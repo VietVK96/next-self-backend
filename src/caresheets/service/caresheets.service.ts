@@ -966,9 +966,9 @@ export class ActsService {
     caresheet.tasks = caresheet.tasks.map((dentalEventTask) => {
       return {
         ...dentalEventTask,
-        teethArr: dentalEventTask.teeth.includes(',')
-          ? dentalEventTask.teeth.split(',')
-          : [dentalEventTask.teeth],
+        teethArr: dentalEventTask?.teeth?.includes(',')
+          ? dentalEventTask?.teeth?.split(',')
+          : [dentalEventTask?.teeth],
       };
     });
     caresheet.thirdPartyAmo = await this.thirdPartyAmoRepository.findOne({
