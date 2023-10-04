@@ -32,12 +32,21 @@ export class WorkstationController {
     private workstationService: WorkstationService,
     private imagingSoftwareService: ImagingSoftwareService,
   ) {}
+
+  // FIle: settings/workstations/index.php
   @Get()
   @UseGuards(TokenGuard)
   async findAll(@CurrentUser() identity: UserIdentity) {
     return this.workstationService.getWorkstations(identity.org);
   }
+  // FIle: settings/workstations/edit.php
+  @Get('/w/:id')
+  @UseGuards(TokenGuard)
+  async find(@CurrentUser() identity: UserIdentity, @Param('id') id: number) {
+    return this.workstationService.getWorkstation(identity.org, id);
+  }
 
+  // File: settings/workstations/create.php
   @Post()
   @UseGuards(TokenGuard)
   async create(
@@ -105,21 +114,19 @@ export class WorkstationController {
     @Param('id') id: number,
   ) {
     return this.imagingSoftwareService.getImagingSoftwaresById(
-      workstationId,
       id,
+      workstationId,
     );
   }
 
   @Put('/imaging-softwares/:id')
   @UseGuards(TokenGuard)
   async updateImagingSoftwares(
-    @Query('workstationId') workstationId: number,
     @Body() payload: CreateImageSoftwareDto,
     @Param('id') id: number,
   ) {
     return this.imagingSoftwareService.updateImagingSoftwaresByWorkstationId(
       id,
-      workstationId,
       payload,
     );
   }
