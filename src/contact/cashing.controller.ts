@@ -6,6 +6,7 @@ import { CashingService } from './services/cashing.service';
 import { CashingPrintDto } from './dto/cashing.dto';
 import { ConditionsDto } from './dto/condition.dto';
 import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
+import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
 @ApiBearerAuth()
 @Controller('/cashing')
 @ApiTags('Cashing')
@@ -14,14 +15,14 @@ export class CashingController {
 
   // php/cashing/print.php
   @Get('/print')
-  @UseGuards(TokenGuard)
+  @UseGuards(TokenDownloadGuard)
   async print(@Res() res: Response, @Query() payload: CashingPrintDto) {
     const buffer = await this.service.print(payload);
 
     res.set({
       // pdf
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename=print.pdf`,
+      'Content-Disposition': `inline; filename=Journal des encaissements.pdf`,
       'Content-Length': buffer.length,
       // prevent cache
       'Cache-Control': 'no-cache, no-store, must-revalidate',
