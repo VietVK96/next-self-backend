@@ -20,9 +20,7 @@ export class MailTransportService {
 
   async createTranspoter(
     userId: number,
-  ): Promise<
-    nodemailer.Transporter<SMTPTransport.SentMessageInfo> | CBadRequestException
-  > {
+  ): Promise<nodemailer.Transporter<SMTPTransport.SentMessageInfo>> {
     try {
       const user = await this.dataSource.getRepository(UserEntity).findOne({
         where: { id: userId },
@@ -31,9 +29,9 @@ export class MailTransportService {
         },
       });
 
-      if (!user) return new CBadRequestException(ErrorCode.ERROR_GET_USER);
+      if (!user) throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
       if (user.emailAccounts.length === 0)
-        return new CBadRequestException(ErrorCode.NOT_FOUND_EMAIL_SETTING);
+        throw new CBadRequestException(ErrorCode.NOT_FOUND_EMAIL_SETTING);
 
       const email: EmailAccountEntity = user.emailAccounts[0];
       const emailOutgoingServer = await this.dataSource
@@ -61,22 +59,17 @@ export class MailTransportService {
 
       return transport;
     } catch (e) {
-      return new CBadRequestException(ErrorCode.FORBIDDEN);
+      throw new CBadRequestException(ErrorCode.FORBIDDEN);
     }
   }
 
   async sendEmail(userId: number, data: Mail.Options) {
     try {
       const transportInstance = await this.createTranspoter(userId);
-      if (transportInstance instanceof CBadRequestException) {
-        return transportInstance;
-      }
-
-      const result = await transportInstance.sendMail(data);
-      if (result.rejected.length !== 0) {
-        return new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
-      }
+      await transportInstance.sendMail(data);
       return { success: true };
-    } catch (error) {}
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.CANNOT_SEND_MAIL);
+    }
   }
 }
