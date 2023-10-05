@@ -42,7 +42,7 @@ export class ImagingGatewayService {
     const executableDirname = '';
     const executableBasename = this.imagingSoftware.executablePath;
     // -P{$imagingSoftware->getImageDirname()}\\{$imageBasename} -N{$patient->getLastName()} -F{$patient->getFirstName()}
-    const executableParameters = `"${this.patient?.number}" "${
+    const executableParameters = `"${this.patient.nbr}" "${
       this.patient?.lastname
     }" "${this.patient?.firstname}" "${dayjs(this.patient?.birthday).format(
       'DD/MM/YYYY',
@@ -60,11 +60,10 @@ export class ImagingGatewayService {
     const executableParameters = '';
     const configurationFileContents = `[PracticeManagementInterface]
     USE_PRACTICE_MANAGEMENT=1
-    PATID=${this.patient?.number}
+    PATID=${this.patient.nbr}
     PATLNAME=${this.patient?.lastname}
     PATFNAME=${this.patient?.firstname}
-    PATBD=${dayjs(this.patient.birthday).format('DD/MM/YYYY')}
-    `;
+    PATBD=${this.patient.getBirthDay('DD/MM/YYYY')}`;
     return await this.juxtalinkLaunchService.makeFileAndCallExe(
       dirname(this.imagingSoftware.configurationFilePath),
       basename(this.imagingSoftware.configurationFilePath),
@@ -82,7 +81,7 @@ export class ImagingGatewayService {
     const configurationFileContents = `${this.patient?.lastname};${
       this.patient?.firstname
     };${dayjs(this.patient?.birthday).format('DD/MM/YYYY')};${
-      this.patient?.number
+      this.patient.nbr
     };`;
 
     return await this.juxtalinkLaunchService.makeFileAndCallExe(
@@ -99,7 +98,7 @@ export class ImagingGatewayService {
     const executableDirname = '';
     const executableBasename = this.imagingSoftware.executablePath;
     const executableParameters = '';
-    const clipboardText = `$$DFWIN$$ OPEN -n"${this.patient?.lastname} ${this.patient?.firstname}" -c${this.patient?.number} -r`;
+    const clipboardText = `$$DFWIN$$ OPEN -n"${this.patient?.lastname} ${this.patient?.firstname}" -c${this.patient.nbr} -r`;
 
     return await this.juxtalinkLaunchService.writeToClipboardAndCallExe(
       clipboardText,
@@ -111,7 +110,7 @@ export class ImagingGatewayService {
 
   async dismac() {
     const imageBasename =
-      this.imagingSoftware.getImageBasename() + this.patient.number;
+      this.imagingSoftware.getImageBasename() + this.patient.nbr;
 
     const executableDirname = '';
     const executableBasename = 'open';
@@ -132,7 +131,7 @@ export class ImagingGatewayService {
     const executableDirname = '';
     const executableBasename = this.imagingSoftware.executablePath;
     const executableParameters = `-c "UPDATE_CREATE" -r "${
-      this.patient.number
+      this.patient.nbr
     }" -f "${this.patient.firstname}" -l "${this.patient.lastname}" -b "${dayjs(
       this.patient?.birthday,
     ).format('DD/MM/YYYY')}" -g "${gender}"`;
@@ -159,7 +158,7 @@ export class ImagingGatewayService {
 VERSION:3.0
 FN:${this.patient.lastname} ${this.patient.firstname}
 N:${this.patient.lastname};${this.patient.firstname}
-NOTE:HD-IS_Index :${this.patient.number}
+NOTE:HD-IS_Index :${this.patient.nbr}
 END:VCARD`;
     const executableDirname = '';
     const executableBasename = 'open';
@@ -182,7 +181,7 @@ END:VCARD`;
     }
     const executableDirname = '';
     const executableBasename = this.imagingSoftware.executablePath;
-    const executableParameters = `C,${this.patient.number},,,${
+    const executableParameters = `C,${this.patient.nbr},,,${
       this.patient.firstname
     } ${this.patient.lastname},${gender},${dayjs(this.patient?.birthday).format(
       'DD/MM/YYYY',
@@ -195,8 +194,7 @@ END:VCARD`;
   }
 
   async mediadent() {
-    const imageBasename =
-      this.imagingSoftware.imageDirname + this.patient.number;
+    const imageBasename = this.imagingSoftware.imageDirname + this.patient.nbr;
     const executableDirname = '';
     const executableBasename = this.imagingSoftware.getImageBasename();
     const executableParameters = `/D ${this.practitioner.lastname} ${this.practitioner.firstname} /P ${this.patient.lastname} ${this.patient.firstname} /F ${this.imagingSoftware.imageDirname}/${imageBasename}`;
@@ -210,7 +208,7 @@ END:VCARD`;
   async myray() {
     const executableDirname = '';
     const executableBasename = this.imagingSoftware.executablePath;
-    const executableParameters = `${this.patient.number} "${
+    const executableParameters = `${this.patient.nbr} "${
       this.patient.firstname
     }" "${this.patient.lastname}" ${dayjs(this.patient?.birthday).format(
       'DD,MM,YYYY',
@@ -236,7 +234,7 @@ END:VCARD`;
   async owandy() {
     const executableDirname = '';
     const executableBasename = this.imagingSoftware.executablePath;
-    const executableParameters = `/P:${this.patient.number},${
+    const executableParameters = `/P:${this.patient.nbr},${
       this.patient.lastname
     },${this.patient.firstname},,${dayjs(this.patient?.birthday).format(
       'DD-MM-YYYY',
@@ -249,8 +247,7 @@ END:VCARD`;
   }
 
   async romexis() {
-    const imageBasename =
-      this.imagingSoftware.imageDirname + this.patient.number;
+    const imageBasename = this.imagingSoftware.imageDirname + this.patient.nbr;
     const executableDirname = '';
     const executableBasename = this.imagingSoftware.executablePath;
     const executableParameters = `${imageBasename} "${
@@ -275,11 +272,10 @@ END:VCARD`;
     const executableParameters = '';
     const configurationFileContents = `[PracticeManagementInterface]
     USE_PRACTICE_MANAGEMENT=1
-    PATID=${this.patient?.number}
+    PATID=${this.patient.nbr}
     PATLNAME=${this.patient?.lastname}
     PATFNAME=${this.patient?.firstname}
-    PATBD=${dayjs(this.patient.birthday).format('DD/MM/YYYY')}
-    `;
+    PATBD=${this.patient.getBirthDay('DD/MM/YYYY')}`;
     return await this.juxtalinkLaunchService.makeFileAndCallExe(
       dirname(this.imagingSoftware.configurationFilePath),
       basename(this.imagingSoftware.configurationFilePath),
@@ -293,7 +289,7 @@ END:VCARD`;
   async schick() {
     const executableDirname = '';
     const executableBasename = this.imagingSoftware.executablePath;
-    const executableParameters = `/LastName${this.patient.lastname} /FirstName${this.patient.firstname} /IDNumber${this.patient.number}`;
+    const executableParameters = `/LastName${this.patient.lastname} /FirstName${this.patient.firstname} /IDNumber${this.patient.nbr}`;
     return this.juxtalinkLaunchService.callExecutable(
       executableDirname,
       executableBasename,
@@ -305,8 +301,8 @@ END:VCARD`;
     const chr = String.fromCharCode(0);
     const gContent = `${this.patient.lastname}${chr}${
       this.patient.firstname
-    }${chr}${dayjs(this.patient.birthday).format('DD/MM/YYYY')}${chr}${
-      this.patient.number
+    }${chr}${this.patient.getBirthDay('DD/MM/YYYY')}${chr}${
+      this.patient.nbr
     }${chr}`;
     const configurationFileContents1 = `N${chr}${gContent}M${chr}${this.practitioner.lastname}${this.practitioner.firstname}\\\\${this.imagingSoftware.computerName}\\ECOODENTIST${chr}\\\\*\\SIDEXIS${chr} 
 `;
@@ -342,11 +338,9 @@ END:VCARD`;
   async soproImaging() {
     const executableDirname = '';
     const executableBasename = this.imagingSoftware.executablePath;
-    const executableParameters = `${this.patient.number} "${
+    const executableParameters = `${this.patient.nbr} "${
       this.patient.firstname
-    }" "${this.patient.lastname}" ${dayjs(this.patient.birthday).format(
-      'DD/MM/YYYY',
-    )}`;
+    }" "${this.patient.lastname}" ${this.patient.getBirthDay('DD/MM/YYYY')}`;
     return this.juxtalinkLaunchService.callExecutable(
       executableDirname,
       executableBasename,
@@ -359,9 +353,9 @@ END:VCARD`;
     const executableBasename = 'open';
     const executableParameters = `${
       this.imagingSoftware.executablePath
-    } --args ${this.patient.number} "${this.patient.firstname}" "${
+    } --args ${this.patient.nbr} "${this.patient.firstname}" "${
       this.patient.lastname
-    }" ${dayjs(this.patient.birthday).format('DD/MM/YYYY')}`;
+    }" ${this.patient.getBirthDay('DD/MM/YYYY')}`;
     return this.juxtalinkLaunchService.callExecutable(
       executableDirname,
       executableBasename,
@@ -379,10 +373,10 @@ END:VCARD`;
     const executableParameters = '';
     const configurationFileContents = `<?xml version="1.0" encoding="utf-8"?>
 <LinkageParameter>
-<Patient ChartNumber="${this.patient.number}" FirstName="${
+<Patient ChartNumber="${this.patient.nbr}" FirstName="${
       this.patient.firstname
     }" LastName="${this.patient.lastname}">
-<Birthday>${dayjs(this.patient.birthday).format('DD/MM/YYYY')}</Birthday>
+<Birthday>${this.patient.getBirthDay('DD/MM/YYYY')}</Birthday>
 <Address></Address>
 <ZipCode></ZipCode>
 <Phone></Phone>
@@ -390,10 +384,9 @@ END:VCARD`;
 <SocialID></SocialID>
 <Gender>${gender}</Gender>
 </Patient>
-</LinkageParameter>
-`;
+</LinkageParameter>`;
     return await this.juxtalinkLaunchService.makeFileAndCallExe(
-      dirname(this.imagingSoftware.configurationFilePath),
+      dirname(this.imagingSoftware.executablePath),
       'Linkage.xml',
       configurationFileContents,
       executableDirname,
@@ -407,10 +400,9 @@ END:VCARD`;
     const executableBasename = this.imagingSoftware.executablePath;
     const executableParameters = '';
     const configurationFileContents = `[PATIENT]
-Number=${this.patient.number}
+Number=${this.patient.nbr}
 Name=${this.patient.lastname}
-Birthdate=${dayjs(this.patient.birthday).format('DD/MM/YYYY')}
-`;
+Birthdate=${this.patient.getBirthDay('DD/MM/YYYY')}`;
     return await this.juxtalinkLaunchService.makeFileAndCallExe(
       dirname(this.imagingSoftware.configurationFilePath),
       basename(this.imagingSoftware.configurationFilePath),
@@ -423,7 +415,7 @@ Birthdate=${dayjs(this.patient.birthday).format('DD/MM/YYYY')}
 
   async vixwin() {
     const imageBasename =
-      this.imagingSoftware.getImageBasename() + this.patient.number;
+      this.imagingSoftware.getImageBasename() + this.patient.nbr;
     const executableDirname = '';
     const executableBasename = this.imagingSoftware.executablePath;
     const executableParameters = `-I ${imageBasename} -N "${this.patient.lastname}^${this.patient.firstname}" -P ${this.imagingSoftware.imageDirname}/${imageBasename}`;

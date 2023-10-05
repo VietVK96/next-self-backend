@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -25,8 +26,8 @@ export class EmailSettingController {
   // settings/email-accounts/index.php
   @Get('')
   @UseGuards(TokenGuard)
-  async find(@CurrentUser() identity: UserIdentity) {
-    return await this.emailSettingService.find(identity.id);
+  async find(@Query('doctorId') id: number) {
+    return await this.emailSettingService.find(id);
   }
 
   // settings/email-accounts/edit.php?id

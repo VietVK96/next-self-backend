@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { DataSource } from 'typeorm';
-import { ReadCardVitalDto, SaveCardVitalDto } from '../dto/cart-vital.dto';
+import {
+  ReadCardVitalDto,
+  SaveCardVitalDto,
+  SyncFsvDto,
+  UpdateFSVDto,
+} from '../dto/cart-vital.dto';
 import { SesamvitaleTeletranmistionService } from 'src/caresheets/service/sesamvitale-teletranmistion.service';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
@@ -30,24 +35,16 @@ export class CartVitalService {
   ) {}
 
   async getHomonymsByLastNameAndFirstName(lastname: string, firstname: string) {
-    const queryBuilder = this.dataSource
-      .getRepository(ContactEntity)
-      .createQueryBuilder('patient');
-    queryBuilder.where('patient.lastNamePhonetic = :lastNamePhonetic');
-    queryBuilder.andWhere('patient.firstNamePhonetic = :firstNamePhonetic');
-    queryBuilder.setParameter(
-      'lastNamePhonetic',
-      metaphone(lastname).substring(0, 10),
-    );
-    queryBuilder.setParameter(
-      'firstNamePhonetic',
-      metaphone(firstname).substring(0, 10),
-    );
-
-    return queryBuilder.getRawMany();
+    const listPatient = this.dataSource.getRepository(ContactEntity).find({
+      where: {
+        lastNamePhonetic: metaphone(lastname).substring(0, 10),
+        firstNamePhonetic: metaphone(firstname).substring(0, 10),
+      },
+    });
+    return listPatient;
   }
 
-  async updateFromSv(patient: ContactEntity) {
+  async updateFromSv(patient: ContactEntity, organization: OrganizationEntity) {
     const respone =
       await this.sesamvitaleTeletranmistionService.consulterClient(
         patient?.externalReferenceId,
@@ -66,7 +63,8 @@ export class CartVitalService {
     patient.inseeKey = respone?.individu?.[0]?.nirIndividuCle?.[0];
 
     const dateNaissance = respone?.individu?.[0]?.dateNaissance?.[0]?.['_'];
-    const isDateLunaire = respone?.individu?.[0]?.isDateLunaire?.[0];
+    const isDateLunaire =
+      respone?.individu?.[0]?.isDateLunaire?.[0] === 'true' ? true : false;
     const matches = dateNaissance.match(
       /^(?<year>[0-9]{4})(?<month>[0-9]{2})(?<day>[0-9]{2})$/,
     );
@@ -104,55 +102,63 @@ export class CartVitalService {
     ) {
       patient.amoTaux = 90;
     }
+    const amos = patient?.amos;
+    const amcs = patient?.amcs;
+    const policyHolder = patient?.medical?.policyHolder;
+    const medical = patient?.medical;
+    delete patient?.amos;
+    delete patient?.amcs;
+    delete patient?.medical;
 
     const resultPatient = await this.dataSource
       .getRepository(ContactEntity)
-      .save({ ...patient });
-    for (const amc of patient?.amcs) {
-      let saveAmc;
-      if (!amc?.amc?.id) {
-        saveAmc = await this.dataSource
-          .getRepository(AmcEntity)
-          .save({ ...amc?.amc, id: amc?.amc?.id });
-      }
-      if (!amc?.id) {
-        await this.dataSource.getRepository(PatientAmcEntity).save({
-          ...amc,
-          patientId: resultPatient?.id,
-          amcId: saveAmc?.id,
-          amc: saveAmc,
-        });
-      }
+      .save({
+        ...patient,
+        nbr: patient?.nbr ? patient?.nbr : organization?.maxPatientNumber + 1,
+      });
+    for (const amc of amcs) {
+      const saveAmc = await this.dataSource
+        .getRepository(AmcEntity)
+        .save({ ...amc?.amc });
+      await this.dataSource.getRepository(PatientAmcEntity).save({
+        ...amc,
+        patientId: resultPatient?.id,
+        amcId: saveAmc?.id,
+        amc: saveAmc,
+      });
     }
 
-    for (const amo of patient?.amos) {
-      let saveAmo;
-      if (!amo?.amo?.id) {
-        saveAmo = await this.dataSource
-          .getRepository(AmoEntity)
-          .save({ ...amo?.amo, id: amo?.amo?.id });
-      }
-      if (!amo?.id) {
-        await this.dataSource.getRepository(PatientAmoEntity).save({
-          ...amo,
-          patientId: resultPatient?.id,
-          amoId: saveAmo?.id,
-          amo: saveAmo,
-        });
-      }
+    for (const amo of amos) {
+      const saveAmo = await this.dataSource
+        .getRepository(AmoEntity)
+        .save({ ...amo?.amo });
+
+      await this.dataSource.getRepository(PatientAmoEntity).save({
+        ...amo,
+        patientId: resultPatient?.id,
+        amoId: saveAmo?.id,
+        amo: saveAmo,
+      });
     }
     const savePolicyHolder = await this.dataSource
       .getRepository(PolicyHolderEntity)
       .save({
-        ...patient?.medical?.policyHolder,
-        id: patient?.medical?.policyHolder?.id,
+        ...policyHolder,
+        id: patient?.medical?.policyHolder?.id ?? null,
       });
     await this.dataSource.getRepository(PatientMedicalEntity).save({
-      ...patient?.medical,
-      patientId: resultPatient?.id,
+      ...medical,
+      patientId: resultPatient?.id ?? null,
       policyHolderId: savePolicyHolder?.id,
       policyHolder: savePolicyHolder,
     });
+
+    if (resultPatient?.nbr !== patient?.nbr) {
+      await this.dataSource.getRepository(OrganizationEntity).save({
+        ...organization,
+        maxPatientNumber: organization?.maxPatientNumber + 1,
+      });
+    }
 
     return resultPatient;
   }
@@ -238,6 +244,7 @@ export class CartVitalService {
       }
 
       patientAmo.amo = amo;
+      patientAmo.amoId = amo?.id;
       patientAmo.startDate = startDate;
       patientAmo.endDate = endDate;
       patientAmo.isTp = couvertureAmo?.isTp?.[0] === 'true' ? 1 : 0;
@@ -306,6 +313,7 @@ export class CartVitalService {
       }
 
       patientAmc.amc = amc;
+      patientAmc.amcId = amc?.id;
       patientAmc.startDate = startDate;
       patientAmc.endDate = endDate;
       patientAmc.isTp = couvertureAmc?.isTp?.[0] === 'true' ? 1 : 0;
@@ -340,13 +348,15 @@ export class CartVitalService {
         policyHolder = new PolicyHolderEntity();
         policyHolder.organizationId = patient?.organizationId;
       }
-      policyHolder.name =
-        policyHolderClient?.individu?.[0]?.nomUsuel?.[0] +
-        ' ' +
-        policyHolderClient?.individu?.[0]?.prenom?.[0];
-      policyHolder.inseeNumber =
-        policyHolderClient?.individu?.[0]?.nirIndividu?.[0] +
-        policyHolderClient?.individu?.[0]?.nirIndividuCle?.[0];
+      if (policyHolderClient?.individu) {
+        policyHolder.name =
+          policyHolderClient?.individu?.[0]?.nomUsuel?.[0] +
+          ' ' +
+          policyHolderClient?.individu?.[0]?.prenom?.[0];
+        policyHolder.inseeNumber =
+          policyHolderClient?.individu?.[0]?.nirIndividu?.[0] +
+          policyHolderClient?.individu?.[0]?.nirIndividuCle?.[0];
+      }
       const policyHolderPatient = await this.dataSource
         .getRepository(ContactEntity)
         .findOne({ where: { externalReferenceId } });
@@ -416,36 +426,23 @@ export class CartVitalService {
     });
     let patients = [];
     if (!patient) {
-      const queryBuilder = this.dataSource
+      const searchPatients = await this.dataSource
         .getRepository(ContactEntity)
-        .createQueryBuilder('p');
-      queryBuilder.where('p.lastname = :lastname');
-      queryBuilder.andWhere('p.firstname = :firstname');
-      queryBuilder.andWhere('p.birthOrder = :birthOrder');
-      queryBuilder.andWhere('p.birthday = :birthday');
-      queryBuilder.andWhere('p.insee = :insee');
-      queryBuilder.andWhere('p.inseeKey = :inseeKey');
-      queryBuilder.setParameter('lastname', data?.individu?.[0]?.nomUsuel?.[0]);
-      queryBuilder.setParameter('firstname', data?.individu?.[0]?.prenom?.[0]);
-      queryBuilder.setParameter(
-        'birthOrder',
-        data?.individu?.[0]?.rangGem?.[0],
-      );
-      queryBuilder.setParameter(
-        'birthday',
-        data?.individu?.[0]?.dateNaissance?.[0]?.['_']
-          ? dayjs(data?.individu?.[0]?.dateNaissance?.[0]?.['_']).format(
-              'YYYY-MM-DD',
-            )
-          : null,
-      );
-      queryBuilder.setParameter('insee', data?.individu?.[0]?.nirIndividu?.[0]);
-      queryBuilder.setParameter(
-        'inseeKey',
-        data?.individu?.[0]?.nirIndividuCle?.[0],
-      );
-
-      patients = await queryBuilder.getRawMany();
+        .find({
+          where: {
+            lastname: data?.individu?.[0]?.nomUsuel?.[0],
+            firstname: data?.individu?.[0]?.prenom?.[0],
+            birthOrder: Number(data?.individu?.[0]?.rangGem?.[0]),
+            birthday: data?.individu?.[0]?.dateNaissance?.[0]?.['_']
+              ? dayjs(data?.individu?.[0]?.dateNaissance?.[0]?.['_']).format(
+                  'YYYY-MM-DD',
+                )
+              : null,
+            insee: data?.individu?.[0]?.nirIndividu?.[0],
+            inseeKey: data?.individu?.[0]?.nirIndividuCle?.[0],
+          },
+        });
+      patients = searchPatients;
       if (patients.length === 0) {
         patients = await this.getHomonymsByLastNameAndFirstName(
           data?.individu?.[0]?.nomUsuel?.[0],
@@ -497,7 +494,7 @@ export class CartVitalService {
         .findOne({
           where: { id: payload?.id },
           relations: {
-            medical: { policyHolder: { patient: true } },
+            medical: { policyHolder: { patient: true }, tariffType: true },
             amos: true,
           },
         });
@@ -508,10 +505,59 @@ export class CartVitalService {
 
     patient.externalReferenceId = payload?.external_reference_id;
 
-    const newPatient = await this.updateFromSv(patient);
+    const newPatient = await this.updateFromSv(patient, organization);
     return {
       ...newPatient,
       external_reference_id: patient.externalReferenceId,
     };
+  }
+
+  async syncFsv(payload: SyncFsvDto) {
+    try {
+      if (!payload?.patient_id || !payload?.user_id) {
+        throw ErrorCode.FORBIDDEN;
+      }
+
+      const patient = await this.dataSource
+        .getRepository(ContactEntity)
+        .findOne({ where: { id: payload?.patient_id } });
+      const user = await this.dataSource
+        .getRepository(UserEntity)
+        .findOne({ where: { id: payload?.user_id } });
+
+      if (!patient || !user) {
+        throw ErrorCode.NOT_FOUND_ID;
+      }
+
+      await this.sesamvitaleTeletranmistionService.transmettrePatient(
+        user,
+        patient,
+      );
+      return patient;
+    } catch (error) {
+      throw new CBadRequestException(error);
+    }
+  }
+
+  async updateFrom(payload: UpdateFSVDto, organizationId: number) {
+    const patient = await this.dataSource.getRepository(ContactEntity).findOne({
+      where: { externalReferenceId: payload?.idPatient },
+      relations: {
+        medical: { policyHolder: { patient: true }, tariffType: true },
+        amos: true,
+      },
+    });
+    const organization = await this.dataSource
+      .getRepository(OrganizationEntity)
+      .findOne({ where: { id: organizationId } });
+
+    if (patient && organization) {
+      await this.updateFromSv(patient, organization);
+      return {
+        success: true,
+      };
+    } else {
+      throw new CBadRequestException(ErrorCode.NOT_FOUND_PATIENT);
+    }
   }
 }

@@ -35,6 +35,9 @@ import { CurrencyEnum } from 'src/constants/currency';
 import { SuccessResponse } from 'src/common/response/success.res';
 import { associatifToSequential } from 'src/common/util/array';
 import { PatientAmcEntity } from 'src/entities/patient-amc.entity';
+import { EventTaskEntity } from 'src/entities/event-task.entity';
+import { PatientService } from 'src/patient/service/patient.service';
+import { ContactUserEntity } from 'src/entities/contact-user.entity';
 const PDFMerger = require('pdf-merger-js');
 
 const helpersCaresheetPdf = {
@@ -144,6 +147,11 @@ export class ActsService {
     private sesamvitaleTeletranmistionService: SesamvitaleTeletranmistionService,
     @InjectRepository(LotEntity)
     private lotRepository: Repository<LotEntity>,
+    @InjectRepository(EventTaskEntity)
+    private eventTaskRepository: Repository<EventTaskEntity>,
+    @InjectRepository(ContactUserEntity)
+    private contactUserRepository: Repository<ContactUserEntity>,
+    private patientService: PatientService,
   ) {}
 
   async sendRequest(action: string, contents: string): Promise<any> {
@@ -643,9 +651,20 @@ export class ActsService {
     try {
       const caresheet = await this.fseRepository.findOne({
         where: { id: id },
+        relations: {
+          tasks: {
+            act: true,
+          },
+        },
       });
       if (!caresheet) {
         throw new CBadRequestException(ErrorCode.FILE_NOT_FOUND);
+      }
+      if (caresheet?.tasks) {
+        caresheet?.tasks.forEach(async (actMedicals) => {
+          actMedicals.act.status = 1;
+          await this.eventTaskRepository.save(actMedicals.act);
+        });
       }
       await this.fseRepository.delete({ id });
 
@@ -689,7 +708,7 @@ export class ActsService {
       let amountAmc = 0;
       let amountAmcCare = 0;
       let amountAmcProsthesis = 0;
-
+      let patientUser: ContactUserEntity;
       const prestations = associatifToSequential(facture?.prestations);
       if (prestations && prestations.length > 0) {
         for (const prestation of prestations) {
@@ -793,9 +812,29 @@ export class ActsService {
         caresheet.tiersPayant = 1;
         caresheet.tiersPayantStatus = EnumThirdPartyStatus.WAITING;
 
-        const amountThirdParty = caresheet?.thirdPartyAmount + amountAmo;
+        const amountThirdParty =
+          Number(caresheet?.thirdPartyAmount) + amountAmo;
         caresheet.thirdPartyAmount = amountThirdParty;
         caresheet.thirdPartyAmo = thirdPartyAmo;
+
+        if (thirdPartyAmo.patientId && thirdPartyAmo.userId) {
+          patientUser = await this.patientService.getPatientUser(
+            thirdPartyAmo?.userId,
+            thirdPartyAmo?.patientId,
+          );
+          patientUser.amount =
+            Number(patientUser?.amount) - Number(thirdPartyAmo?.amount);
+          patientUser.amountCare =
+            Number(patientUser?.amountCare) - Number(thirdPartyAmo?.amountCare);
+          patientUser.amountProsthesis =
+            Number(patientUser?.amountProsthesis) -
+            Number(thirdPartyAmo?.amountProsthesis);
+
+          patientUser.thirdPartyBalance =
+            Number(patientUser?.thirdPartyBalance) +
+            Number(thirdPartyAmo?.amount);
+          await this.contactUserRepository.save({ ...patientUser });
+        }
       }
       if (amcIsTp && amountAmc) {
         const thirdPartyAmc = new ThirdPartyAmcEntity();
@@ -813,9 +852,27 @@ export class ActsService {
           : (thirdPartyAmc.isDre = 0);
         caresheet.tiersPayant = 1;
         caresheet.tiersPayantStatus = EnumThirdPartyStatus.WAITING;
-        const amountThirdParty = caresheet.thirdPartyAmount + amountAmc;
+        const amountThirdParty = Number(caresheet.thirdPartyAmount) + amountAmc;
         caresheet.thirdPartyAmount = amountThirdParty;
         caresheet.thirdPartyAmc = thirdPartyAmc;
+
+        if (thirdPartyAmc.patientId && thirdPartyAmc.userId) {
+          const patientUser = await this.patientService.getPatientUser(
+            thirdPartyAmc.userId,
+            thirdPartyAmc.patientId,
+          );
+          patientUser.amount =
+            Number(patientUser?.amount) - Number(thirdPartyAmc?.amount);
+          patientUser.amountCare =
+            Number(patientUser?.amountCare) - Number(thirdPartyAmc?.amountCare);
+          patientUser.amountProsthesis =
+            Number(patientUser?.amountProsthesis) -
+            Number(thirdPartyAmc?.amountProsthesis);
+          patientUser.thirdPartyBalance =
+            Number(patientUser?.thirdPartyBalance) +
+            Number(thirdPartyAmc?.amount);
+          await this.contactUserRepository.save({ ...patientUser });
+        }
       }
 
       const fseSave = await this.fseRepository.save({ ...caresheet });
@@ -885,7 +942,7 @@ export class ActsService {
     const caresheet = await this.fseRepository.findOne({
       where: { id },
       relations: {
-        actMedicals: {
+        tasks: {
           act: true,
           ccam: true,
           ngapKey: true,
@@ -905,9 +962,15 @@ export class ActsService {
         },
       },
     });
-    console.log('check log pre-pro caresheets =====>', caresheet?.patient);
-    console.log('check log pre-pro caresheets =====>', caresheet?.amc);
-    console.log('check log pre-pro caresheets =====>', caresheet?.actMedicals);
+
+    caresheet.tasks = caresheet.tasks.map((dentalEventTask) => {
+      return {
+        ...dentalEventTask,
+        teethArr: dentalEventTask?.teeth?.includes(',')
+          ? dentalEventTask?.teeth?.split(',')
+          : [dentalEventTask?.teeth],
+      };
+    });
     caresheet.thirdPartyAmo = await this.thirdPartyAmoRepository.findOne({
       where: {
         caresheetId: caresheet?.id,

@@ -171,6 +171,7 @@ export class HistoricalService {
       evo.evo_date date,
       IF(EVT.EVT_STATE = 3, 'Rendez-vous décommandé', 'Absent au rendez-vous') as name,
       EVT.created_at as createdOn,
+      EVT.msg as msg,
       USR.USR_ID practitionerId,
       USR.USR_ABBR practitionerAbbr,
       USR.USR_LASTNAME practitionerLastname,
