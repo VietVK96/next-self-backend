@@ -10,6 +10,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { JWT_LOG_OUT } from 'src/constants/jwt';
 import { JwtPayload } from 'jsonwebtoken';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { LicenseService } from 'src/user/services/license.service';
+import { ErrorCode } from 'src/constants/error';
 export interface UserIdentity extends JwtPayload {
   id: number;
   org: number; // $groupId = $session->get("group"); $session->get('organization_id');
@@ -35,6 +37,9 @@ export const CurrentUser = createParamDecorator(
 export class TokenGuard extends AuthGuard('jwt') {
   @Inject(CACHE_MANAGER)
   protected cacheManager: Cache;
+  @Inject(LicenseService)
+  private licenseService: LicenseService;
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = this.getRequest(context);
     let authorization = request.headers?.authorization;
@@ -56,6 +61,15 @@ export class TokenGuard extends AuthGuard('jwt') {
     const x = await super.canActivate(context);
     if (!x) {
       throw new UnauthorizedException();
+    }
+    const r = this.getRequest(context);
+
+    console.log(this.licenseService);
+    const blocked = await this.licenseService.blocked(r.user.id);
+    if (blocked) {
+      throw new UnauthorizedException({
+        msg: ErrorCode.USER_EXPIRED_LICENSE,
+      });
     }
     return true;
   }
