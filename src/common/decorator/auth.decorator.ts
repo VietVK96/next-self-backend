@@ -64,7 +64,6 @@ export class TokenGuard extends AuthGuard('jwt') {
     }
     const r = this.getRequest(context);
 
-    console.log(this.licenseService);
     const blocked = await this.licenseService.blocked(r.user.id);
     if (blocked) {
       throw new UnauthorizedException({
