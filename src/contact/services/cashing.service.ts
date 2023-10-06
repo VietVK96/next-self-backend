@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as mysql from 'mysql2';
 import {
   CashingEntity,
   EnumCashingPayment,
@@ -736,10 +737,6 @@ export class CashingService {
   // suport findByDoctor
   private conditionsToSQL(conditions: FindAllStructDto[]): string {
     const conditionFields = {
-      // Định nghĩa các trường điều kiện tại đây
-      // Ví dụ:
-      // field1: 'table_name.field1',
-      // field2: 'table_name.field2',
       'csg.date': 'T_CASHING_CSG.CSG_DATE',
       'csg.paymentDate': 'T_CASHING_CSG.CSG_PAYMENT_DATE',
       'csg.amount': 'T_CASHING_CSG.CSG_AMOUNT',
@@ -753,21 +750,11 @@ export class CashingService {
       'lbk.abbr': 'T_LIBRARY_BANK_LBK.LBK_ABBR',
     };
     const conditionOperators = {
-      // Định nghĩa các toán tử điều kiện tại đây
-      // Ví dụ:
-      // equals: '=',
-      // greaterThan: '>',
-      // lessThan: '<',
-      // ...
       gte: '>=',
       eq: '=',
       lte: '<=',
       like: 'LIKE',
     };
-    // Viết hàm chuyển đổi các điều kiện thành câu SQL tương tự như trước đó
-    // (Ví dụ: AND field1 = value1 AND field2 > value2 ...)
-    // Hàm này không cần sửa đổi nếu logic xử lý điều kiện không thay đổi.
-    // Return câu điều kiện SQL được tạo ra từ mảng conditions.
     const wheres = [];
 
     for (const condition of conditions) {
@@ -778,12 +765,12 @@ export class CashingService {
       }
 
       const operator = conditionUse?.op;
-      const value = conditionUse?.value;
+      const value = mysql.escape(conditionUse?.value);
       const field = conditionUse?.field;
 
       if (conditionFields[field] && conditionOperators[operator]) {
         wheres.push(
-          `${conditionFields[field]} ${conditionOperators[operator]} '${value}'`,
+          `${conditionFields[field]} ${conditionOperators[operator]} ${value}`,
         );
       }
     }
