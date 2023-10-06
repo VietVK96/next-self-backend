@@ -62,7 +62,7 @@ export class ThirdPartyController {
   }
 
   /**
-   * File: php/third-party/print.php
+   * File: php/caresheet/print.php
    */
   @Get('caresheet/print')
   @UseGuards(TokenGuard)
