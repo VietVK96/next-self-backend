@@ -988,28 +988,13 @@ export class ActsService {
         };
       });
     }
-    // const thirdPartyAmo = await this.thirdPartyAmoRepository.findOne({
-    //   where: {
-    //     caresheetId: caresheet?.id,
-    //   },
-    // });
-    // if(thirdPartyAmo){
-    //   caresheet.thirdPartyAmo = thirdPartyAmo
-    // }
+
     caresheet.thirdPartyAmo = await this.thirdPartyAmoRepository.findOne({
       where: {
         caresheetId: caresheet?.id,
       },
     });
 
-    // const thirdPartyAmc = await this.thirdPartyAmcRepository.findOne({
-    //   where: {
-    //     caresheetId: caresheet?.id,
-    //   },
-    // });
-    // if(thirdPartyAmc){
-    //   caresheet.thirdPartyAmc = thirdPartyAmc
-    // }
     caresheet.thirdPartyAmc = await this.thirdPartyAmcRepository.findOne({
       where: {
         caresheetId: caresheet?.id,
