@@ -535,7 +535,7 @@ export class CartVitalService {
       );
       return patient;
     } catch (error) {
-      throw new CBadRequestException(error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 

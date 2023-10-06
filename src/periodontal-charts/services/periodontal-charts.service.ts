@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PeriodontalChartEntity } from 'src/entities/periodontal-chart.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class PeriodontalChartsService {
@@ -47,7 +48,7 @@ export class PeriodontalChartsService {
     try {
       await this.periodontalChartRepository.delete(id);
     } catch (err) {
-      throw new CNotFoundRequestException(err);
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND);
     }
   }
 
@@ -68,7 +69,7 @@ export class PeriodontalChartsService {
         organizationId: identity?.org,
       } as PeriodontalChartEntity);
     } catch (err) {
-      throw new CNotFoundRequestException(err);
+      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND);
     }
   }
 }

@@ -19,6 +19,7 @@ import {
 
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { CreateUpdateTagDto, TagDto } from './dto/index.dto';
+import { ErrorCode } from 'src/constants/error';
 
 @ApiTags('Tags')
 @Controller('tags')
@@ -39,7 +40,7 @@ export class TagController {
     try {
       return await this.tagService.getTags(identity, payload);
     } catch (error) {
-      throw new CBadRequestException('tags not found', error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 

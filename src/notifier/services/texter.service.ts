@@ -16,6 +16,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserSmsEntity } from 'src/entities/user-sms.entity';
 import { SendingLogEntity } from 'src/entities/sending-log.entity';
 import * as dayjs from 'dayjs';
+import { ErrorCode } from 'src/constants/error';
 
 /**
  * application/Service/Notifier/Texter.php
@@ -138,7 +139,7 @@ export class TexterService {
         `/sms/${this.serviceName}/outgoing/${id}`,
       );
     } catch (error) {
-      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -212,7 +213,7 @@ export class TexterService {
         await this.sendingLogRepo.save(sendingLog);
       }
     } catch (error) {
-      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 

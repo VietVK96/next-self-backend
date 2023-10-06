@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as phpPassword from 'node-php-password';
 import { UpdatePassWordDto } from '../dtos/user-setting.dto';
+import { ErrorCode } from 'src/constants/error';
 @Injectable()
 export class AccountSecurityService {
   constructor(
@@ -46,7 +47,7 @@ export class AccountSecurityService {
 
       return { message: 'Password changed successfully' };
     } catch (error) {
-      throw new BadRequestException(error);
+      throw new BadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

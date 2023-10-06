@@ -48,7 +48,7 @@ export class ImagingSoftwareService {
 
       return imagingSoftware;
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -118,7 +118,7 @@ export class ImagingSoftwareService {
         };
       }
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -150,7 +150,7 @@ export class ImagingSoftwareService {
 
       return await this.imagingSoftwareRepository.save(imagingSoftware);
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -182,7 +182,7 @@ export class ImagingSoftwareService {
         ...imagingSoftware,
       });
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -195,7 +195,7 @@ export class ImagingSoftwareService {
       await this.imagingSoftwareRepository.remove(currentImagingSoftware);
       return;
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 

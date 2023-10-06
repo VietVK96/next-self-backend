@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { StatisticsService } from './statistics.service';
 import { FilterValuesStatisticDto } from '../dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class StatisticsEventsService {
@@ -51,7 +52,7 @@ export class StatisticsEventsService {
         aggregate: inputs?.aggregate,
       };
     } catch (error) {
-      throw new CBadRequestException(error.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -126,7 +127,7 @@ export class StatisticsEventsService {
         aggregate: inputs?.aggregate,
       };
     } catch (error) {
-      throw new CBadRequestException(error.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -166,7 +167,7 @@ export class StatisticsEventsService {
         aggregate: inputs?.aggregate,
       };
     } catch (error) {
-      throw new CBadRequestException(error.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -207,7 +208,7 @@ export class StatisticsEventsService {
         aggregate: inputs?.aggregate,
       };
     } catch (error) {
-      throw new CBadRequestException(error.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -298,7 +299,7 @@ export class StatisticsEventsService {
         aggregate: inputs?.aggregate,
       };
     } catch (error) {
-      throw new CBadRequestException(error.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 

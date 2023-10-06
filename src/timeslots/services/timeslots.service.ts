@@ -218,7 +218,7 @@ export class TimeslotsService {
       return 1;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw new CBadRequestException(error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     } finally {
       await queryRunner.release();
     }

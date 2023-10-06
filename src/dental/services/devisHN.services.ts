@@ -639,7 +639,7 @@ export class DevisServices {
           patientInsee: currentPatient?.INSEE,
         };
       } catch (err) {
-        throw new CBadRequestException(err);
+        throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
       }
     } else if (no_devis) {
       try {
@@ -795,7 +795,7 @@ export class DevisServices {
           actes,
         };
       } catch (error) {
-        throw new CBadRequestException(error);
+        throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
       }
     }
 
@@ -960,7 +960,7 @@ export class DevisServices {
         date_signature,
       };
     } catch (error) {
-      throw new CBadRequestException(error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
 
     return res;
@@ -1149,8 +1149,7 @@ export class DevisServices {
         helpers: {},
       });
     } catch (err) {
-      console.log('-----data-----', err);
-      throw new CBadRequestException(err);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

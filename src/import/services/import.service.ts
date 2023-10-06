@@ -152,7 +152,9 @@ export class ImportServices {
             filename: `dsio/${file.originalname}`,
           };
         } catch (error) {
-          throw new CBadRequestException(error.message);
+          throw new CBadRequestException(
+            ErrorCode.STATUS_INTERNAL_SERVER_ERROR,
+          );
         }
 
       default:

@@ -165,7 +165,7 @@ export class ContactPaymentService {
         return;
       }
     } catch (error) {
-      throw new CBadRequestException(error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
   // application/Services/Payment.php
@@ -412,7 +412,7 @@ export class ContactPaymentService {
       return await this.show(paymentId);
     } catch (err) {
       await queryRunner.rollbackTransaction();
-      throw new CBadRequestException(err);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     } finally {
       await queryRunner.release();
     }

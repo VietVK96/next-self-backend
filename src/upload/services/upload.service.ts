@@ -16,6 +16,7 @@ import { ContactEntity } from 'src/entities/contact.entity';
 import { StringHelper } from 'src/common/util/string-helper';
 import { v4 as uuidv4 } from 'uuid';
 import Jimp from 'jimp';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class UploadService {
@@ -170,7 +171,7 @@ export class UploadService {
           .save(uploadEntity);
       }
     } catch (error) {
-      throw new CBadRequestException(error.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -226,7 +227,7 @@ export class UploadService {
           .execute();
       }
     } catch (e) {
-      throw new CBadRequestException(e.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

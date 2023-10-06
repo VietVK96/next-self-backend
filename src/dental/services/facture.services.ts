@@ -508,7 +508,7 @@ export class FactureServices {
           modePaiement,
         });
       } catch (err) {
-        throw new CBadRequestException(err);
+        throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
       }
     } else if (caresheet_id) {
       try {
@@ -614,7 +614,7 @@ export class FactureServices {
         newFacture.lines = billlines;
         return newFacture;
       } catch (err) {
-        throw new CBadRequestException(err);
+        throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
       }
     }
   }
@@ -1049,7 +1049,7 @@ export class FactureServices {
       });
       return { message: true };
     } catch (err) {
-      throw new CBadRequestException(err?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 

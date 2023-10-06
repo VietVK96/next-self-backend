@@ -16,6 +16,7 @@ import { ContactEntity } from 'src/entities/contact.entity';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ContraindicationEntity } from 'src/entities/contraindication.entity';
 import { ConfigService } from '@nestjs/config';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class MedicamentDatabaseService {
@@ -330,7 +331,7 @@ export class MedicamentDatabaseService {
       }
       return infos[0]?.produitResult;
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }
