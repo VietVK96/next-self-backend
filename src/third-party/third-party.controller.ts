@@ -11,7 +11,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { TokenGuard } from 'src/common/decorator/auth.decorator';
 import { ThirdPartyService } from './services/third-party.service';
 import { ThirdPartyDto, ThirdPartyUpdateDto } from './dto/index.dto';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { CareSheetPrintService } from './services/caresheet.print.service';
 
 @ApiBearerAuth()
@@ -67,10 +67,19 @@ export class ThirdPartyController {
   @Get('caresheet/print')
   @UseGuards(TokenGuard)
   async careShetPrint(
+    @Res() res: Response,
     @Query('id') id: number,
     @Query('duplicata') duplicata?: boolean,
   ) {
     const buffer = await this.caresheetPrintService.print(id, duplicata);
-    return buffer;
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=print.pdf`,
+      'Content-Length': buffer?.length,
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: 0,
+    });
+    res.end(buffer);
   }
 }

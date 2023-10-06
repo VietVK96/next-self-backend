@@ -21,6 +21,7 @@ export class CareSheetPrintService {
     @InjectRepository(ThirdPartyAmcEntity)
     private thirdPartyAmcRepository: Repository<ThirdPartyAmcEntity>,
   ) {}
+
   async print(id: number, duplicata: boolean) {
     const caresheet = await this.fseRepo.findOne({
       where: {
