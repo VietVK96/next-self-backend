@@ -302,7 +302,7 @@ export class UserController {
       });
       res.end(buffer);
     } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
 

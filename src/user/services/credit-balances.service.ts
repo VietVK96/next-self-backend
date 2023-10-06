@@ -116,7 +116,7 @@ export class CreditBalancesService {
         footerTemplate: `<div style="width: 100%;margin-right:10mm; text-align: right; font-size: 8px;"><span class="pageNumber"></span>/<span class="totalPages"></span></div>`,
         margin: {
           left: '5mm',
-          top: '5mm',
+          top: '15mm',
           right: '5mm',
           bottom: '5mm',
         },
