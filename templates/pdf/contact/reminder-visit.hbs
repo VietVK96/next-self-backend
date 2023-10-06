@@ -1,62 +1,32 @@
-<style type="text/css">
+<style type='text/css'>
 
-    table {
-        width: 100%;
-        border-spacing: 0;
-        border-collapse: collapse;
-    }
+  table {font-family: Arial, Helvetica, sans-serif; width: 100%; border-spacing:
+  0; border-collapse: collapse; font-size: 13px; } table th, table td { padding:
+  2mm; border: solid 1px black; } .number { width: 10%; } .name { width: 35%; }
+  .phone { width: 15%; } .date { width: 20%; } .text-right { text-align: right;
+  } .text-center { text-align: center; }
 
-    table th,
-    table td {
-        padding: 2mm;
-        border: solid 1px black;
-    }
-
-    .number {
-        width: 10%;
-    }
-
-    .name {
-        width: 35%;
-    }
-    
-    .phone {
-        width: 15%;
-    }
-
-    .date {
-        width: 20%;
-    }
-	
-	.text-right {
-        text-align: right;
-    }
-
-	.text-center {
-        text-align: center;
-    }
-	
 </style>
 <!-- page.hbs -->
-  <table class="cashingCollection">
-    <thead>
+<table class='cashingCollection'>
+  <thead>
+    <tr>
+      <th class='number'>#</th>
+      <td style='font-weight: bold;' class='name'>Nom</td>
+      <th class='phone'>Numéro de téléphone</th>
+      <th class='date'>Dernière visite</th>
+      <th class='date'>Prochain rappel</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each patients}}
       <tr>
-        <th class="number">#</th>
-        <th class="name">Nom</th>
-        <th class="phone">Numéro de téléphone</th>
-        <th class="date">Dernière visite</th>
-        <th class="date">Prochain rappel</th>
+        <td class='number text-center'>{{number}}</td>
+        <td class='name'>{{lastname}} {{firstname}}</td>
+        <td class='phone text-center'>{{phone}}</td>
+        <td class='date text-center'>{{dateOfLastVisit}}</td>
+        <td class='date text-center'>{{dateOfNextReminder}}</td>
       </tr>
-    </thead>
-    <tbody>
-      {{#each patients}}
-      <tr>
-        <td class="number text-center">{{ number }}</td>
-        <td class="name">{{ lastname }} {{firstname}}</td>
-        <td class="phone text-center">{{ phone }}</td>
-        <td class="date text-center">{{ dateOfLastVisit }}</td>
-        <td class="date text-center">{{ dateOfNextReminder }}</td>
-      </tr>
-      {{/each}}
-    </tbody>
-  </table>
+    {{/each}}
+  </tbody>
+</table>
