@@ -2,7 +2,7 @@ import { ContactEntity } from 'src/entities/contact.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, IsNull, Repository } from 'typeorm';
-import { ThirdPartyDto, ThirdPartyUpdateDto } from './dto/index.dto';
+import { ThirdPartyDto, ThirdPartyUpdateDto } from '../dto/index.dto';
 import { UserEntity } from 'src/entities/user.entity';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import {
@@ -13,7 +13,7 @@ import { ThirdPartyAmoEntity } from 'src/entities/third-party-amo.entity';
 import { AmoEntity } from 'src/entities/amo.entity';
 import { AmcEntity } from 'src/entities/amc.entity';
 import { FseEntity } from 'src/entities/fse.entity';
-import { UserThirdPartyRes } from './response/index.res';
+import { UserThirdPartyRes } from '../response/index.res';
 import { format } from 'date-fns';
 import { thirdPartySort } from 'src/constants/third-party';
 import { Parser } from 'json2csv';
