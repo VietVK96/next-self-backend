@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Command, Positional, Option } from 'nestjs-command';
-import { UserService } from 'src/user/services/user.service';
+import { Command, Positional } from 'nestjs-command';
 
 interface BasicCommandOptions {
   noa?: number;

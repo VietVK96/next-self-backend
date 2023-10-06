@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AddressService } from 'src/address/service/address.service';
 import { LicenseEntity } from 'src/entities/license.entity';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';

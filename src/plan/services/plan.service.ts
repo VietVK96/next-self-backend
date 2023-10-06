@@ -679,7 +679,6 @@ export class PlanService {
           }
 
           if (tasks.length > 0) {
-            const listTask = tasks.join();
             const sqlsub = Array(tasks.length).fill('?').join();
             const sql = `
               DELETE ETK, DET
