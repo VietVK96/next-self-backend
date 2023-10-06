@@ -59,7 +59,7 @@ export class AppointmentReminderLibrarieService {
       });
       return user.appointmentReminderLibraries;
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -153,7 +153,7 @@ export class AppointmentReminderLibrarieService {
         attachments: attachments,
       });
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -190,7 +190,7 @@ export class AppointmentReminderLibrarieService {
         message: 'success',
       };
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -235,7 +235,7 @@ export class AppointmentReminderLibrarieService {
       });
       return iterableResult;
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

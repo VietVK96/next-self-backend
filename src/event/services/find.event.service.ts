@@ -13,7 +13,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as dayjs from 'dayjs';
 import { GetSessionService } from 'src/auth/services/get-session.service';
-import { customCreatePdf } from 'src/common/util/pdf';
+import { PrintPDFOptions, customCreatePdf } from 'src/common/util/pdf';
 import Handlebars from 'handlebars';
 
 const classNameFromStatuses: Map<number, string> = new Map<number, string>();
@@ -742,7 +742,7 @@ export class FindEventService {
 
       const files = [{ path: filePath, data }];
 
-      const options = {
+      const options: PrintPDFOptions = {
         format: 'A4',
         displayHeaderFooter: false,
         landscape: true,
@@ -763,8 +763,6 @@ export class FindEventService {
 
       return await customCreatePdf({ files, options, helpers });
     } catch (e) {
-      console.log('check print agenda', e);
-
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }

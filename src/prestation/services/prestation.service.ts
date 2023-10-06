@@ -308,7 +308,7 @@ export class PrestationService {
         // @TODO Ids\Log:: write('Acte', $act -> getPatient() -> getId(), 3);
       }
     } catch (error) {
-      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 

@@ -35,7 +35,11 @@ import {
 } from 'src/common/util/number';
 import { PrintPDFDto } from '../dto/facture.dto';
 import * as path from 'path';
-import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
+import {
+  PdfTemplateFile,
+  PrintPDFOptions,
+  customCreatePdf,
+} from 'src/common/util/pdf';
 import { TherapeuticAlternativeService } from './therapeuticAlternative.service';
 import { ErrorCode } from 'src/constants/error';
 import { checkDay } from 'src/common/util/day';
@@ -797,7 +801,7 @@ export class QuotesServices {
       if (queryRunner?.isTransactionActive) {
         await queryRunner.rollbackTransaction();
       }
-      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -1104,7 +1108,7 @@ export class QuotesServices {
         },
       };
 
-      const options = {
+      const options: PrintPDFOptions = {
         format: 'A4',
         displayHeaderFooter: true,
         footerTemplate: '<div></div>',
@@ -1117,7 +1121,7 @@ export class QuotesServices {
         },
       };
       return customCreatePdf({ files, options, helpers });
-    } catch (error) {
+    } catch {
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }

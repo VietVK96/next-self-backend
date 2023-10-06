@@ -9,15 +9,19 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { TokenGuard } from 'src/common/decorator/auth.decorator';
-import { ThirdPartyService } from './third-party.service';
+import { ThirdPartyService } from './services/third-party.service';
 import { ThirdPartyDto, ThirdPartyUpdateDto } from './dto/index.dto';
-import { Response } from 'express';
+import type { Response } from 'express';
+import { CareSheetPrintService } from './services/caresheet.print.service';
 
 @ApiBearerAuth()
 @ApiTags('ThirdParty')
 @Controller('/third-party')
 export class ThirdPartyController {
-  constructor(private thirdPartyService: ThirdPartyService) {}
+  constructor(
+    private thirdPartyService: ThirdPartyService,
+    private caresheetPrintService: CareSheetPrintService,
+  ) {}
 
   /**
    * File: php/third-party/index.php
@@ -55,5 +59,27 @@ export class ThirdPartyController {
   async print(@Query() payload: ThirdPartyDto) {
     const buffer = await this.thirdPartyService.printThirdParty(payload);
     return buffer;
+  }
+
+  /**
+   * File: php/caresheet/print.php
+   */
+  @Get('caresheet/print')
+  @UseGuards(TokenGuard)
+  async careShetPrint(
+    @Res() res: Response,
+    @Query('id') id: number,
+    @Query('duplicata') duplicata?: boolean,
+  ) {
+    const buffer = await this.caresheetPrintService.print(id, duplicata);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=print.pdf`,
+      'Content-Length': buffer?.length,
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: 0,
+    });
+    res.end(buffer);
   }
 }

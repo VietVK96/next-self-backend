@@ -1,20 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, FindOptionsWhere, Repository } from 'typeorm';
-import { DataRes, FindAllMailRes } from '../response/findAll.mail.res';
+import { DataSource, Repository } from 'typeorm';
+import { DataRes } from '../response/findAll.mail.res';
 import { FindAllMailDto } from '../dto/findAll.mail.contact';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LettersEntity } from 'src/entities/letters.entity';
-import * as dayjs from 'dayjs';
-
-interface LetterI {
-  id: number;
-  doctor_id: number;
-  title: string;
-  type: string;
-  favorite: string;
-  created_at: string;
-  updated_at: string;
-}
 
 @Injectable()
 export class MailService {

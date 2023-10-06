@@ -302,7 +302,7 @@ export class AccountService {
         success: true,
       };
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

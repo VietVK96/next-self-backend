@@ -48,7 +48,7 @@ export class ImagingSoftwareService {
 
       return imagingSoftware;
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -96,11 +96,17 @@ export class ImagingSoftwareService {
 
   async getImagingSoftwaresById(id: number, workstationId: number) {
     try {
-      if (workstationId) throw new CBadRequestException(ErrorCode.FORBIDDEN);
+      if (!workstationId) throw new CBadRequestException(ErrorCode.FORBIDDEN);
       if (id) {
         const imagingSoftware = await this.imagingSoftwareRepository.findOne({
-          where: { id },
+          where: {
+            id,
+            workstationId,
+          },
         });
+        if (!imagingSoftware) {
+          throw new CNotFoundRequestException('IMAGING');
+        }
         return {
           id: imagingSoftware.id,
           name: imagingSoftware.name,
@@ -112,7 +118,7 @@ export class ImagingSoftwareService {
         };
       }
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -144,23 +150,24 @@ export class ImagingSoftwareService {
 
       return await this.imagingSoftwareRepository.save(imagingSoftware);
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
   async updateImagingSoftwaresByWorkstationId(
     id: number,
-    workstationId: number,
     payload: CreateImageSoftwareDto,
   ) {
     try {
-      if (!workstationId) {
-        throw new CBadRequestException(ErrorCode.FORBIDDEN);
-      }
       const currentImagingSoftware =
-        await this.imagingSoftwareRepository.findOneOrFail({
-          where: { id },
+        await this.imagingSoftwareRepository.findOne({
+          where: {
+            id,
+          },
         });
+      if (!currentImagingSoftware) {
+        throw new CNotFoundRequestException('IMAGING');
+      }
       const imagingSoftware = new ImagingSoftwareEntity();
       imagingSoftware.name = payload?.name;
       imagingSoftware.executablePath = payload?.executablePath;
@@ -175,7 +182,7 @@ export class ImagingSoftwareService {
         ...imagingSoftware,
       });
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -188,7 +195,7 @@ export class ImagingSoftwareService {
       await this.imagingSoftwareRepository.remove(currentImagingSoftware);
       return;
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 

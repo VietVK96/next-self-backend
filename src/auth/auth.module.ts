@@ -15,6 +15,8 @@ import { UserAmoEntity } from 'src/entities/user-amo.entity';
 import { UserConnectionService } from 'src/user/services/user-connection.service';
 import { UserConnectionEntity } from 'src/entities/user-connection.entity';
 import { WorkstationEntity } from 'src/entities/workstation.entity';
+import { LicenseService } from 'src/user/services/license.service';
+import { LicenseEntity } from 'src/entities/license.entity';
 
 @Module({
   imports: [
@@ -26,6 +28,7 @@ import { WorkstationEntity } from 'src/entities/workstation.entity';
       UserAmoEntity,
       UserConnectionEntity,
       WorkstationEntity,
+      LicenseEntity,
     ]),
     JwtModule.register({
       secret: JWT_SECRET,
@@ -39,6 +42,7 @@ import { WorkstationEntity } from 'src/entities/workstation.entity';
     JwtStrategy,
     GetSessionService,
     UserConnectionService,
+    LicenseService,
   ],
   exports: [GetSessionService, SessionService],
 })

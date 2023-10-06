@@ -65,7 +65,7 @@ export class ReminderVisitController {
     );
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename=print.pdf`,
+      'Content-Disposition': `inline; filename=document.pdf`,
       'Content-Length': buffer?.length,
       'Cache-Control': 'no-cache, no-store, must-revalidate',
       Pragma: 'no-cache',

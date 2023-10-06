@@ -23,6 +23,7 @@ import {
 } from './dto/facture.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
+import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -38,7 +39,7 @@ export class FactureController {
 
   /// dental/facture/facture_pdf.php
   @Get('/facture/facture_pdf')
-  @UseGuards(TokenGuard)
+  @UseGuards(TokenDownloadGuard)
   async getPdf(
     @Res() res: Response,
     @Query() payload: PrintPDFDto,
@@ -50,7 +51,7 @@ export class FactureController {
       res.set({
         // pdf
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Disposition': `inline; filename=print.pdf`,
         'Content-Length': buffer.length,
         // prevent cache
         'Cache-Control': 'no-cache, no-store, must-revalidate',

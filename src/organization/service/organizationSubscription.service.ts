@@ -7,6 +7,7 @@ import { OrganizationEntity } from 'src/entities/organization.entity';
 import { PlanEntity } from 'src/entities/plan.entity';
 import { Repository } from 'typeorm';
 import { SubscriptionsPlanUpdateDto } from '../dto/organization.dto';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class OrganizationSubscriptionService {
@@ -35,7 +36,7 @@ export class OrganizationSubscriptionService {
         subscriptionPlans: organization.subscriptions,
       };
     } catch (error) {
-      throw new CBadRequestException(error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
   //File fsd/organizations/subscriptions/update.php
@@ -81,7 +82,7 @@ export class OrganizationSubscriptionService {
         success: true,
       };
     } catch (error) {
-      throw new CBadRequestException(error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

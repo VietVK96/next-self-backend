@@ -17,7 +17,6 @@ import * as fs from 'fs';
 import { SuccessResponse } from 'src/common/response/success.res';
 import { ErrorCode } from 'src/constants/error';
 import { Response } from 'express';
-import { root } from 'cheerio/lib/static';
 
 @Injectable()
 export class FileService {

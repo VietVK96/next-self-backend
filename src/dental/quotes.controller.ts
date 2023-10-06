@@ -21,6 +21,7 @@ import { PrintPDFDto } from './dto/facture.dto';
 import { Convention2020RequestAjaxDto } from './dto/devis_request_ajax.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
+import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -50,7 +51,7 @@ export class QuotesController {
    * Line: 23-92
    */
   @Get('/quotes/convention-2020/devis_pdf')
-  @UseGuards(TokenGuard)
+  @UseGuards(TokenDownloadGuard)
   async quotesDevisPdf(@Res() res: Response, @Query() req: PrintPDFDto) {
     try {
       const buffer = await this.quotesServices.generatePdf(req);
@@ -58,7 +59,7 @@ export class QuotesController {
       res.set({
         // pdf
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Disposition': `inline; filename=devis.pdf`,
         'Content-Length': buffer.length,
         // prevent cache
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -67,7 +68,7 @@ export class QuotesController {
       });
       res.end(buffer);
     } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
 

@@ -85,8 +85,8 @@ export class BordereauxController {
         Expires: 0,
       });
       res.end(buffer);
-    } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    } catch {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
 

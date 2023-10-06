@@ -196,7 +196,7 @@ export class LetterImporterService {
             await this.letterRepo.save(mail);
           } catch (error) {
             throw new CBadRequestException(
-              error?.response?.msg || error?.sqlMessage,
+              ErrorCode.STATUS_INTERNAL_SERVER_ERROR,
             );
           }
         }

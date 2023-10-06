@@ -23,7 +23,7 @@ import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
 import { PatientOdontogramService } from 'src/patient/service/patientOdontogram.service';
-import { customCreatePdf } from 'src/common/util/pdf';
+import { PrintPDFOptions, customCreatePdf } from 'src/common/util/pdf';
 import * as path from 'path';
 import * as handlebars from 'handlebars';
 import { checkId } from 'src/common/util/number';
@@ -639,7 +639,7 @@ export class DevisServices {
           patientInsee: currentPatient?.INSEE,
         };
       } catch (err) {
-        throw new CBadRequestException(err);
+        throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
       }
     } else if (no_devis) {
       try {
@@ -795,7 +795,7 @@ export class DevisServices {
           actes,
         };
       } catch (error) {
-        throw new CBadRequestException(error);
+        throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
       }
     }
 
@@ -960,7 +960,7 @@ export class DevisServices {
         date_signature,
       };
     } catch (error) {
-      throw new CBadRequestException(error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
 
     return res;
@@ -1044,7 +1044,7 @@ export class DevisServices {
         paymentSchedule: undefined,
       };
 
-      const options = {
+      const options: PrintPDFOptions = {
         format: 'A4',
         displayHeaderFooter: true,
         headerTemplate: `<div></div>`,
@@ -1149,8 +1149,7 @@ export class DevisServices {
         helpers: {},
       });
     } catch (err) {
-      console.log('-----data-----', err);
-      throw new CBadRequestException(err);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

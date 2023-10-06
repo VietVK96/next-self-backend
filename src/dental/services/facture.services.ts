@@ -43,7 +43,11 @@ import {
   DetailsRes,
   InitFactureRes,
 } from '../res/facture.res';
-import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
+import {
+  PdfTemplateFile,
+  PrintPDFOptions,
+  customCreatePdf,
+} from 'src/common/util/pdf';
 import { facturePdfFooter, facturePdfFooter1 } from '../constant/htmlTemplate';
 import { br2nl, nl2br } from 'src/common/util/string';
 import { validateEmail } from 'src/common/util/string';
@@ -508,7 +512,7 @@ export class FactureServices {
           modePaiement,
         });
       } catch (err) {
-        throw new CBadRequestException(err);
+        throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
       }
     } else if (caresheet_id) {
       try {
@@ -614,7 +618,7 @@ export class FactureServices {
         newFacture.lines = billlines;
         return newFacture;
       } catch (err) {
-        throw new CBadRequestException(err);
+        throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
       }
     }
   }
@@ -808,7 +812,7 @@ export class FactureServices {
           'templates/pdf/invoice',
           'convention.hbs',
         );
-        const options = {
+        const options: PrintPDFOptions = {
           format: 'A4',
           displayHeaderFooter: true,
           footerTemplate: facturePdfFooter1(),
@@ -906,7 +910,7 @@ export class FactureServices {
           };
         }
 
-        const options = {
+        const options: PrintPDFOptions = {
           format: 'A4',
           displayHeaderFooter: true,
           footerTemplate: facturePdfFooter(Boolean(invoice.user.agaMember)),
@@ -1049,7 +1053,7 @@ export class FactureServices {
       });
       return { message: true };
     } catch (err) {
-      throw new CBadRequestException(err?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 

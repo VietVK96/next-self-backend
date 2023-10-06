@@ -38,6 +38,7 @@ import { UserConnectionService } from './services/user-connection.service';
 import { ListOfTreatmentsService } from './services/list-of-treatments.service';
 import { ListOfTreatmentsFindAllDto } from './dto/list-of-treatments.dto';
 import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
+import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -92,7 +93,7 @@ export class UserController {
       const buffer = await this.listOfTreatmentsService.print(doctorId, params);
       res.set({
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment;`,
+        'Content-Disposition': `inline;filename=print.pdf`,
         'Content-Length': buffer.length,
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         Pragma: 'no-cache',
@@ -100,7 +101,7 @@ export class UserController {
       });
       res.end(buffer);
     } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -238,7 +239,7 @@ export class UserController {
     try {
       return await this.userService.getActiveUser(identity.org);
     } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_USER, error);
+      throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
     }
   }
 
@@ -255,7 +256,7 @@ export class UserController {
         identity.org,
       );
     } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_USER, error);
+      throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
     }
   }
 
@@ -301,7 +302,7 @@ export class UserController {
       });
       res.end(buffer);
     } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
 

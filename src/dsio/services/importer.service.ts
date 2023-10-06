@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ImportDsioService } from './import-dsio.service';
 import { HandleDsioService } from './handle-dsio.service';
+import { ErrorCode } from 'src/constants/error';
 
 /**
  * php/dsio/import_shell.php
@@ -207,7 +208,7 @@ export class ImporterService {
         }),
       );
     } catch (error) {
-      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

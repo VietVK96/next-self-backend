@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { isAfter, isBefore, subWeeks } from 'date-fns';
+import { subWeeks } from 'date-fns';
 import axios from 'axios';
 import * as AdmZip from 'adm-zip';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
@@ -27,7 +27,7 @@ import {
 } from '../reponse/index.res';
 import { SesamvitaleTeletranmistionService } from './sesamvitale-teletranmistion.service';
 import * as path from 'path';
-import { customCreatePdf } from 'src/common/util/pdf';
+import { PrintPDFOptions, customCreatePdf } from 'src/common/util/pdf';
 import * as dayjs from 'dayjs';
 import { LotEntity } from 'src/entities/lot.entity';
 import { checkBoolean, checkId } from 'src/common/util/number';
@@ -38,94 +38,9 @@ import { PatientAmcEntity } from 'src/entities/patient-amc.entity';
 import { EventTaskEntity } from 'src/entities/event-task.entity';
 import { PatientService } from 'src/patient/service/patient.service';
 import { ContactUserEntity } from 'src/entities/contact-user.entity';
+import { helpersCaresheetPdf, optionsCaresheetPdf } from '../utils/pdf';
 const PDFMerger = require('pdf-merger-js');
 
-const helpersCaresheetPdf = {
-  formatDate: function (date: string) {
-    return dayjs(date).format('DDMMYYYY');
-  },
-  formatInsee: function (s1: string, s2: string) {
-    let string = s1?.concat(s2 ?? '');
-    if (!string) return '';
-    string = string?.replace(/\W/g, '')?.toUpperCase();
-    return string?.replace(
-      /(\w{1})(\w{2})(\w{2})(\w{2})(\w{3})(\w{3})(\w{2})/,
-      '$1 $2 $3 $4 $5 $6 $7',
-    );
-  },
-  formatDateISO: function (date: string) {
-    return dayjs(date).format('DD/MM/YYYY');
-  },
-  slice: function (str: string, start: number, end: number) {
-    if (!str) return;
-    return str.toString().slice(start, end);
-  },
-  padStart: function (value: string, num: number) {
-    if (!value) return;
-    return value.padStart(num, '');
-  },
-  padEnd: function (value: string, num: number) {
-    if (!value) return;
-    return value.padEnd(num, '');
-  },
-  joinAndReplace: function (string: string[], key: string, value: string) {
-    if (!string) return;
-    return string.join('').replace(key, value);
-  },
-  setVar: function (varName: string, varValue: string, options) {
-    options.data.root[varName] = varValue;
-  },
-  concatString: function (s1: string, s2: string) {
-    return s1.concat(s2);
-  },
-  math: function (lvalue: number, operator: string, rvalue: number) {
-    lvalue = parseFloat(`${lvalue}`);
-    rvalue = parseFloat(`${rvalue}`);
-    return {
-      '+': lvalue + rvalue,
-      '-': lvalue - rvalue,
-      '*': lvalue * rvalue,
-      '/': lvalue / rvalue,
-      '%': lvalue % rvalue,
-    }[operator];
-  },
-  table: function (context: string | null) {
-    if (!context) return;
-    const listItem = context.toString().split('');
-    const width = Math.floor(100 / listItem.length);
-    let str = `
-    <table class="text-center">
-      <tbody>
-        <tr>`;
-    for (let i = 0, j = listItem.length; i < j; i++) {
-      str += `<td style="width: ${width}%;">${listItem[i]}</td>`;
-    }
-    str += `
-        </tr>
-      </tbody>
-    </table>`;
-    return str;
-  },
-  nameToTransmit: (key: string) => {
-    return key === 'CBX' ? 'CCX' : key;
-  },
-  formatNumber: (n: number) => {
-    return Number(n).toFixed(2);
-  },
-};
-const optionsCaresheetPdf = {
-  format: 'A4',
-  displayHeaderFooter: true,
-  landscape: true,
-  headerTemplate: '<div></div>',
-  footerTemplate: '<div></div>',
-  margin: {
-    left: '10mm',
-    top: '25mm',
-    right: '10mm',
-    bottom: '15mm',
-  },
-};
 @Injectable()
 export class ActsService {
   private readonly logger: Logger = new Logger(ActsService.name);
@@ -530,7 +445,7 @@ export class ActsService {
     };
     const pdf = await customCreatePdf({
       files: [{ path: filePath, data }],
-      options: { optionsCaresheetPdf },
+      options: optionsCaresheetPdf,
       helpers: helpersCaresheetPdf,
     });
     return {
@@ -676,7 +591,7 @@ export class ActsService {
 
   async updateCaresheet(id: number) {
     try {
-      const caresheet = await this.fseRepository.findOne({
+      const caresheet: FseEntity = await this.fseRepository.findOne({
         where: { id },
         relations: {
           actMedicals: {
@@ -690,12 +605,15 @@ export class ActsService {
             medical: {
               policyHolder: true,
             },
-            amos: true,
-            amcs: true,
+            amos: {
+              amo: true,
+            },
+            amcs: {
+              amc: true,
+            },
           },
         },
       });
-
       const facture =
         await this.sesamvitaleTeletranmistionService.consulterFacture(
           caresheet?.externalReferenceId,
@@ -734,8 +652,12 @@ export class ActsService {
       const amo = activeAmo?.amo ? activeAmo?.amo : null;
       const amc = activeAmc?.amc ? activeAmc?.amc : null;
 
-      caresheet.amo = amo;
-      caresheet.amc = amc;
+      caresheet.amoId = amo?.id;
+      caresheet.amcId = amc?.id;
+
+      // Comment for check later
+      // caresheet.amo = amo;
+      // caresheet.amc = amc;
 
       caresheet.nbr =
         typeof facture?.numeroFse?.[0] === 'string'
@@ -804,8 +726,9 @@ export class ActsService {
         const thirdPartyAmo = new ThirdPartyAmoEntity();
         thirdPartyAmo.userId = caresheet?.usrId;
         thirdPartyAmo.patientId = caresheet?.conId;
-        thirdPartyAmo.amo = caresheet?.amo;
-        thirdPartyAmo.amoId = caresheet?.amo?.id;
+        // thirdPartyAmo.amo = caresheet?.amo;
+        // thirdPartyAmo.amoId = caresheet?.amo?.id;
+        thirdPartyAmo.amoId = amo?.id;
         thirdPartyAmo.amount = amountAmo;
         thirdPartyAmo.amountCare = amountAmoCare;
         thirdPartyAmo.amountProsthesis = amountAmoProsthesis;
@@ -833,6 +756,9 @@ export class ActsService {
           patientUser.thirdPartyBalance =
             Number(patientUser?.thirdPartyBalance) +
             Number(thirdPartyAmo?.amount);
+
+          thirdPartyAmo.caresheetId = caresheet.id;
+          await this.thirdPartyAmoRepository.save({ ...thirdPartyAmo });
           await this.contactUserRepository.save({ ...patientUser });
         }
       }
@@ -840,8 +766,8 @@ export class ActsService {
         const thirdPartyAmc = new ThirdPartyAmcEntity();
         thirdPartyAmc.userId = caresheet?.usrId;
         thirdPartyAmc.patientId = caresheet?.conId;
-        thirdPartyAmc.amc = caresheet?.amc;
-        thirdPartyAmc.amcId = caresheet?.amc?.id;
+        // thirdPartyAmc.amc = caresheet?.amc;
+        thirdPartyAmc.amcId = amc?.id;
         thirdPartyAmc.amount = amountAmc;
         thirdPartyAmc.amountCare = amountAmcCare;
         thirdPartyAmc.amountProsthesis = amountAmcProsthesis;
@@ -871,6 +797,9 @@ export class ActsService {
           patientUser.thirdPartyBalance =
             Number(patientUser?.thirdPartyBalance) +
             Number(thirdPartyAmc?.amount);
+          thirdPartyAmc.caresheetId = caresheet.id;
+          await this.thirdPartyAmcRepository.save({ ...thirdPartyAmc });
+
           await this.contactUserRepository.save({ ...patientUser });
         }
       }
@@ -884,7 +813,10 @@ export class ActsService {
           });
         }),
       );
-      return await this.fseRepository.findOne({ where: { id: fseSave?.id } });
+      return await this.fseRepository.findOne({
+        where: { id: fseSave?.id },
+        relations: { patient: true },
+      });
     } catch (error) {
       console.log('error', error);
     }
@@ -931,13 +863,11 @@ export class ActsService {
   private getActiveAmo = (amos: PatientAmoEntity[], date: Date) => {
     return amos.filter((amo) => {
       return (
-        amo?.startDate === null ||
-        (dayjs(amo?.startDate).isBefore(date) &&
-          (amo?.endDate === null || dayjs(amo?.endDate).isAfter(date)))
+        (amo?.startDate === null || dayjs(amo?.startDate).isBefore(date)) &&
+        (amo?.endDate === null || dayjs(amo?.endDate).isAfter(dayjs(date)))
       );
     });
   };
-
   async getQuittanceFile(id: number): Promise<{ file: Buffer; name: string }> {
     const caresheet = await this.fseRepository.findOne({
       where: { id },
@@ -963,19 +893,23 @@ export class ActsService {
       },
     });
 
-    caresheet.tasks = caresheet.tasks.map((dentalEventTask) => {
-      return {
-        ...dentalEventTask,
-        teethArr: dentalEventTask.teeth.includes(',')
-          ? dentalEventTask.teeth.split(',')
-          : [dentalEventTask.teeth],
-      };
-    });
+    if (caresheet?.tasks) {
+      caresheet.tasks = caresheet?.tasks?.map((dentalEventTask) => {
+        return {
+          ...dentalEventTask,
+          teethArr: dentalEventTask?.teeth?.includes(',')
+            ? dentalEventTask?.teeth?.split(',')
+            : [dentalEventTask?.teeth],
+        };
+      });
+    }
+
     caresheet.thirdPartyAmo = await this.thirdPartyAmoRepository.findOne({
       where: {
         caresheetId: caresheet?.id,
       },
     });
+
     caresheet.thirdPartyAmc = await this.thirdPartyAmcRepository.findOne({
       where: {
         caresheetId: caresheet?.id,
@@ -1008,13 +942,12 @@ export class ActsService {
     await merger.add(file);
     return await merger.saveAsBuffer();
   }
+
   private getActiveAmc = (amcs: PatientAmcEntity[], date: Date) => {
     return amcs.filter((amc) => {
       return (
-        amc?.startDate === null ||
-        (isBefore(new Date(amc?.startDate), new Date(date)) &&
-          (amc?.endDate === null ||
-            isAfter(new Date(amc?.endDate), new Date(date))))
+        (amc?.startDate === null || dayjs(amc?.startDate).isBefore(date)) &&
+        (amc?.endDate === null || dayjs(amc?.endDate).isAfter(dayjs(date)))
       );
     });
   };

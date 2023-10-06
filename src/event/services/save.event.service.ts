@@ -12,6 +12,8 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { ErrorCode } from 'src/constants/error';
 import { checkId, checkNumber } from 'src/common/util/number';
 import { EventEntity } from 'src/entities/event.entity';
+import { ReminderEntity } from 'src/entities/reminder.entity';
+import { convertTimeZoneToNumber } from 'src/common/util/convertTimeZone';
 
 @Injectable()
 export class SaveEventService {
@@ -535,7 +537,57 @@ export class SaveEventService {
             ),
           );
         }
-        await Promise.all(promiseArr);
+        const listSaveReminders = await Promise.all(promiseArr);
+
+        const listQuerySelectReminder = listSaveReminders.map((x) => {
+          return queryRunner.manager
+            .getRepository(ReminderEntity)
+            .findOne({ where: { id: x?.insertId } });
+        });
+        const listNewReminder = await Promise.all(listQuerySelectReminder);
+
+        for (const newReminder of listNewReminder) {
+          if (newReminder?.id) {
+            const inMinute = await queryRunner.query(
+              `
+            SELECT T_REMINDER_UNIT_RMU.RMU_NBR * ?  as inMinute
+            FROM T_REMINDER_UNIT_RMU 
+            WHERE T_REMINDER_UNIT_RMU.RMU_ID = ?`,
+              [newReminder?.nbr, newReminder?.rmuId],
+            );
+
+            const userPreference = await queryRunner.manager
+              .getRepository(UserPreferenceEntity)
+              .findOne({ where: { usrId: newReminder?.usrId } });
+
+            const userTimezone = convertTimeZoneToNumber(
+              userPreference?.timezone,
+            );
+            const currentTimezone = convertTimeZoneToNumber();
+
+            const sending_date_utc = await queryRunner.query(
+              `
+            SELECT CONVERT_TZ(SUBDATE(T_EVENT_EVT.EVT_START, INTERVAL ? MINUTE), ?, ?) as sending_date_utc
+            FROM T_EVENT_EVT
+            JOIN T_USER_USR
+            JOIN T_USER_PREFERENCE_USP
+            WHERE T_EVENT_EVT.EVT_ID = ?
+              AND T_EVENT_EVT.USR_ID = T_USER_USR.USR_ID
+              AND T_USER_USR.USR_ID = T_USER_PREFERENCE_USP.USR_ID`,
+              [
+                inMinute?.[0]?.inMinute,
+                userTimezone,
+                currentTimezone,
+                newReminder?.eventId,
+              ],
+            );
+
+            await queryRunner.manager.getRepository(ReminderEntity).save({
+              ...newReminder,
+              sendingDateUTC: sending_date_utc?.[0]?.sending_date_utc,
+            });
+          }
+        }
       }
       await queryRunner.commitTransaction();
       return { success: true };

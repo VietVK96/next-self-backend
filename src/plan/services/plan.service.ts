@@ -28,6 +28,9 @@ import {
   TaskData,
   findOnePlanRes,
 } from '../response/plan.res';
+import { ReminderEntity } from 'src/entities/reminder.entity';
+import { UserPreferenceEntity } from 'src/entities/user-preference.entity';
+import { convertTimeZoneToNumber } from 'src/common/util/convertTimeZone';
 
 @Injectable()
 export class PlanService {
@@ -440,7 +443,7 @@ export class PlanService {
 
           if (this._empty(event?.id)) {
             event.id = insertEvents.insertId;
-            await manager.query(
+            const saveRemider = await manager.query(
               `
             INSERT INTO T_REMINDER_RMD (USR_ID, EVT_ID, RMT_ID, RMR_ID, RMU_ID, appointment_reminder_library_id, RMD_NBR)
             SELECT USR_ID, ?, RMT_ID, RMR_ID, RMU_ID, RML_ID, RML_NBR
@@ -448,6 +451,50 @@ export class PlanService {
             WHERE USR_ID = ?`,
               [event?.id, event?.user?.id],
             );
+            if (saveRemider?.insertId) {
+              const newReminder = await manager
+                .getRepository(ReminderEntity)
+                .findOne({ where: { id: saveRemider?.insertId } });
+
+              const inMinute = await manager.query(
+                `
+              SELECT T_REMINDER_UNIT_RMU.RMU_NBR * ?  as inMinute
+              FROM T_REMINDER_UNIT_RMU 
+              WHERE T_REMINDER_UNIT_RMU.RMU_ID = ?`,
+                [newReminder?.nbr, newReminder?.rmuId],
+              );
+
+              const userPreference = await manager
+                .getRepository(UserPreferenceEntity)
+                .findOne({ where: { usrId: newReminder?.usrId } });
+
+              const userTimezone = convertTimeZoneToNumber(
+                userPreference?.timezone,
+              );
+              const currentTimezone = convertTimeZoneToNumber();
+
+              const sending_date_utc = await manager.query(
+                `
+              SELECT CONVERT_TZ(SUBDATE(T_EVENT_EVT.EVT_START, INTERVAL ? MINUTE), ?, ?) as sending_date_utc
+              FROM T_EVENT_EVT
+              JOIN T_USER_USR
+              JOIN T_USER_PREFERENCE_USP
+              WHERE T_EVENT_EVT.EVT_ID = ?
+                AND T_EVENT_EVT.USR_ID = T_USER_USR.USR_ID
+                AND T_USER_USR.USR_ID = T_USER_PREFERENCE_USP.USR_ID`,
+                [
+                  inMinute?.[0]?.inMinute,
+                  userTimezone,
+                  currentTimezone,
+                  newReminder?.eventId,
+                ],
+              );
+
+              await manager.getRepository(ReminderEntity).save({
+                ...newReminder,
+                sendingDateUTC: sending_date_utc?.[0]?.sending_date_utc,
+              });
+            }
           }
 
           await manager.query(
@@ -679,7 +726,6 @@ export class PlanService {
           }
 
           if (tasks.length > 0) {
-            const listTask = tasks.join();
             const sqlsub = Array(tasks.length).fill('?').join();
             const sql = `
               DELETE ETK, DET
@@ -752,7 +798,7 @@ export class PlanService {
         }
         return options?.id;
       } catch (error) {
-        throw new CBadRequestException(error);
+        throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
       }
     });
   }
@@ -995,7 +1041,7 @@ export class PlanService {
 
         return id;
       } catch (error) {
-        throw new CBadRequestException(error);
+        throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
       }
     });
   }
@@ -1019,7 +1065,7 @@ export class PlanService {
       // return JSON.stringify(planification)
       return planification;
     } catch (error) {
-      throw new CBadRequestException(error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 

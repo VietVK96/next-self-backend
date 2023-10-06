@@ -83,7 +83,7 @@ export class DsioImporterService {
         ext: extension,
       };
     } catch (error) {
-      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

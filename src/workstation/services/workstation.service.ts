@@ -4,6 +4,7 @@ import { WorkstationEntity } from 'src/entities/workstation.entity';
 import { CreateWorkstationDto } from '../dto/workstation.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { Repository } from 'typeorm';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class WorkstationService {
@@ -23,7 +24,20 @@ export class WorkstationService {
         },
       });
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getWorkstation(organizationID: number, id: number) {
+    try {
+      return await this.workstaionRepository.findOne({
+        where: {
+          organizationId: organizationID,
+          id,
+        },
+      });
+    } catch (error) {
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -38,7 +52,7 @@ export class WorkstationService {
           organizationId,
         });
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -52,7 +66,7 @@ export class WorkstationService {
         ...payload,
       });
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -64,7 +78,7 @@ export class WorkstationService {
       await this.workstaionRepository.remove(currentWorkstaion);
       return;
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

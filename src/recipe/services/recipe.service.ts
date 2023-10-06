@@ -232,8 +232,8 @@ export class RecipeService {
   LEFT OUTER JOIN T_CASHING_CONTACT_CSC ON T_CASHING_CONTACT_CSC.CSG_ID = T_CASHING_CSG.CSG_ID
   LEFT OUTER JOIN T_CONTACT_CON ON T_CONTACT_CON.CON_ID = T_CASHING_CONTACT_CSC.CON_ID
   LEFT OUTER JOIN T_LIBRARY_BANK_LBK ON T_LIBRARY_BANK_LBK.LBK_ID = T_CASHING_CSG.LBK_ID
-  WHERE T_CASHING_CSG.USR_ID = ?${where} GROUP BY T_CASHING_CSG.CSG_ID ORDER BY ${orderBy} ${order}, T_CASHING_CSG.created_at DESC LIMIT ? OFFSET ?`,
-      [doctorId, limit, offset],
+  WHERE T_CASHING_CSG.USR_ID = ?${where.wheres} GROUP BY T_CASHING_CSG.CSG_ID ORDER BY ? ?, T_CASHING_CSG.created_at DESC LIMIT ? OFFSET ?`,
+      [doctorId, ...where.values, orderBy, order, limit, offset],
     );
 
     for (const statement of statements) {
@@ -310,7 +310,10 @@ export class RecipeService {
   }
 
   // suport findByDoctor
-  private conditionsToSQL(conditions: Condition[]): string {
+  private conditionsToSQL(conditions: Condition[]): {
+    wheres: string;
+    values: string[];
+  } {
     const conditionFields = {
       // Định nghĩa các trường điều kiện tại đây
       // Ví dụ:
@@ -345,6 +348,7 @@ export class RecipeService {
     // Hàm này không cần sửa đổi nếu logic xử lý điều kiện không thay đổi.
     // Return câu điều kiện SQL được tạo ra từ mảng conditions.
     const wheres = [];
+    const values = [];
 
     for (const condition of conditions) {
       let conditionUse = condition;
@@ -358,12 +362,16 @@ export class RecipeService {
 
       if (conditionFields[field] && conditionOperators[operator]) {
         wheres.push(
-          `${conditionFields[field]} ${conditionOperators[operator]} "${value}"`,
+          `${conditionFields[field]} ${conditionOperators[operator]} ?`,
         );
+        values.push(value);
       }
     }
 
-    return wheres.length > 0 ? ' AND ' + wheres.join(' AND ') : '';
+    return {
+      wheres: wheres.length > 0 ? ' AND ' + wheres.join(' AND ') : '',
+      values,
+    };
   }
 
   async getExtras(
@@ -386,10 +394,10 @@ FROM (
     LEFT OUTER JOIN T_CONTACT_CON ON T_CONTACT_CON.CON_ID = T_CASHING_CONTACT_CSC.CON_ID
     LEFT OUTER JOIN T_LIBRARY_BANK_LBK ON T_LIBRARY_BANK_LBK.LBK_ID = T_CASHING_CSG.LBK_ID
     WHERE T_CASHING_CSG.USR_ID = ?
-      ${where}
+      ${where.wheres}
     GROUP BY T_CASHING_CSG.CSG_ID
 ) AS t1`,
-      [doctorId],
+      [doctorId, ...where.values],
     );
 
     response.total = statement?.[0].total ?? 0;

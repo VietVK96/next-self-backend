@@ -96,13 +96,12 @@ export class SaveUpdateContactService {
       if (medical) {
         medicalUpdate = {
           ...medical,
-          tariffTypeId: reqBody?.medical?.tariffTypeId,
+          tariffTypeId: reqBody?.medical?.tariffTypeId ?? null,
         };
       } else {
         medicalUpdate = {
-          ...medical,
           patientId: reqBody?.id,
-          tariffTypeId: reqBody?.medical?.tariffTypeId,
+          tariffTypeId: reqBody?.medical?.tariffTypeId ?? null,
         };
       }
       await this.patientMedicalRepository.save(medicalUpdate);

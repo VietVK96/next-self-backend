@@ -16,7 +16,11 @@ import { LettersEntity } from 'src/entities/letters.entity';
 import { PrintPDFDto } from '../dto/facture.dto';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { ErrorCode } from 'src/constants/error';
-import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
+import {
+  PdfTemplateFile,
+  PrintPDFOptions,
+  customCreatePdf,
+} from 'src/common/util/pdf';
 import * as path from 'path';
 import { DevisStd2ActesRes, DevisStd2InitRes } from '../res/devisStd2.res';
 import { checkDay, customDayOfYear } from 'src/common/util/day';
@@ -541,7 +545,9 @@ export class DevisStd2Services {
           }
           result.attachments = attachments;
         } catch {
-          throw new CBadRequestException('dsa');
+          throw new CBadRequestException(
+            ErrorCode.STATUS_INTERNAL_SERVER_ERROR,
+          );
         }
       });
     } else if (req?.no_devis) {
@@ -663,7 +669,7 @@ export class DevisStd2Services {
           actes,
         };
       } catch (err) {
-        throw new CBadRequestException(err);
+        throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
       }
     }
     // const user = await this.userRepository.findOne({
@@ -804,7 +810,7 @@ export class DevisStd2Services {
       });
       result.odontogramType = 'adult';
     } catch (error) {
-      throw new CBadRequestException(error.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
 
     if (result?.schemas !== 'none') {
@@ -908,7 +914,7 @@ export class DevisStd2Services {
         this.corps3(initData, true),
       ];
 
-      const options = {
+      const options: PrintPDFOptions = {
         format: 'A4',
         displayHeaderFooter: true,
         footerTemplate: '',
