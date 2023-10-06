@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { isAfter, isBefore, subWeeks } from 'date-fns';
+import { subWeeks } from 'date-fns';
 import axios from 'axios';
 import * as AdmZip from 'adm-zip';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
@@ -676,7 +676,7 @@ export class ActsService {
 
   async updateCaresheet(id: number) {
     try {
-      const caresheet = await this.fseRepository.findOne({
+      const caresheet: FseEntity = await this.fseRepository.findOne({
         where: { id },
         relations: {
           actMedicals: {
@@ -690,12 +690,15 @@ export class ActsService {
             medical: {
               policyHolder: true,
             },
-            amos: true,
-            amcs: true,
+            amos: {
+              amo: true,
+            },
+            amcs: {
+              amc: true,
+            },
           },
         },
       });
-
       const facture =
         await this.sesamvitaleTeletranmistionService.consulterFacture(
           caresheet?.externalReferenceId,
@@ -734,8 +737,12 @@ export class ActsService {
       const amo = activeAmo?.amo ? activeAmo?.amo : null;
       const amc = activeAmc?.amc ? activeAmc?.amc : null;
 
-      caresheet.amo = amo;
-      caresheet.amc = amc;
+      caresheet.amoId = amo?.id;
+      caresheet.amcId = amc?.id;
+
+      // Comment for check later
+      // caresheet.amo = amo;
+      // caresheet.amc = amc;
 
       caresheet.nbr =
         typeof facture?.numeroFse?.[0] === 'string'
@@ -804,8 +811,9 @@ export class ActsService {
         const thirdPartyAmo = new ThirdPartyAmoEntity();
         thirdPartyAmo.userId = caresheet?.usrId;
         thirdPartyAmo.patientId = caresheet?.conId;
-        thirdPartyAmo.amo = caresheet?.amo;
-        thirdPartyAmo.amoId = caresheet?.amo?.id;
+        // thirdPartyAmo.amo = caresheet?.amo;
+        // thirdPartyAmo.amoId = caresheet?.amo?.id;
+        thirdPartyAmo.amoId = amo?.id;
         thirdPartyAmo.amount = amountAmo;
         thirdPartyAmo.amountCare = amountAmoCare;
         thirdPartyAmo.amountProsthesis = amountAmoProsthesis;
@@ -833,6 +841,9 @@ export class ActsService {
           patientUser.thirdPartyBalance =
             Number(patientUser?.thirdPartyBalance) +
             Number(thirdPartyAmo?.amount);
+
+          thirdPartyAmo.caresheetId = caresheet.id;
+          await this.thirdPartyAmoRepository.save({ ...thirdPartyAmo });
           await this.contactUserRepository.save({ ...patientUser });
         }
       }
@@ -840,8 +851,8 @@ export class ActsService {
         const thirdPartyAmc = new ThirdPartyAmcEntity();
         thirdPartyAmc.userId = caresheet?.usrId;
         thirdPartyAmc.patientId = caresheet?.conId;
-        thirdPartyAmc.amc = caresheet?.amc;
-        thirdPartyAmc.amcId = caresheet?.amc?.id;
+        // thirdPartyAmc.amc = caresheet?.amc;
+        thirdPartyAmc.amcId = amc?.id;
         thirdPartyAmc.amount = amountAmc;
         thirdPartyAmc.amountCare = amountAmcCare;
         thirdPartyAmc.amountProsthesis = amountAmcProsthesis;
@@ -871,6 +882,9 @@ export class ActsService {
           patientUser.thirdPartyBalance =
             Number(patientUser?.thirdPartyBalance) +
             Number(thirdPartyAmc?.amount);
+          thirdPartyAmc.caresheetId = caresheet.id;
+          await this.thirdPartyAmcRepository.save({ ...thirdPartyAmc });
+
           await this.contactUserRepository.save({ ...patientUser });
         }
       }
@@ -884,7 +898,10 @@ export class ActsService {
           });
         }),
       );
-      return await this.fseRepository.findOne({ where: { id: fseSave?.id } });
+      return await this.fseRepository.findOne({
+        where: { id: fseSave?.id },
+        relations: { patient: true },
+      });
     } catch (error) {
       console.log('error', error);
     }
@@ -931,13 +948,11 @@ export class ActsService {
   private getActiveAmo = (amos: PatientAmoEntity[], date: Date) => {
     return amos.filter((amo) => {
       return (
-        amo?.startDate === null ||
-        (dayjs(amo?.startDate).isBefore(date) &&
-          (amo?.endDate === null || dayjs(amo?.endDate).isAfter(date)))
+        (amo?.startDate === null || dayjs(amo?.startDate).isBefore(date)) &&
+        (amo?.endDate === null || dayjs(amo?.endDate).isAfter(dayjs(date)))
       );
     });
   };
-
   async getQuittanceFile(id: number): Promise<{ file: Buffer; name: string }> {
     const caresheet = await this.fseRepository.findOne({
       where: { id },
@@ -963,19 +978,38 @@ export class ActsService {
       },
     });
 
-    caresheet.tasks = caresheet.tasks.map((dentalEventTask) => {
-      return {
-        ...dentalEventTask,
-        teethArr: dentalEventTask?.teeth?.includes(',')
-          ? dentalEventTask?.teeth?.split(',')
-          : [dentalEventTask?.teeth],
-      };
-    });
+    if (caresheet?.tasks) {
+      caresheet.tasks = caresheet?.tasks?.map((dentalEventTask) => {
+        return {
+          ...dentalEventTask,
+          teethArr: dentalEventTask?.teeth?.includes(',')
+            ? dentalEventTask?.teeth?.split(',')
+            : [dentalEventTask?.teeth],
+        };
+      });
+    }
+    // const thirdPartyAmo = await this.thirdPartyAmoRepository.findOne({
+    //   where: {
+    //     caresheetId: caresheet?.id,
+    //   },
+    // });
+    // if(thirdPartyAmo){
+    //   caresheet.thirdPartyAmo = thirdPartyAmo
+    // }
     caresheet.thirdPartyAmo = await this.thirdPartyAmoRepository.findOne({
       where: {
         caresheetId: caresheet?.id,
       },
     });
+
+    // const thirdPartyAmc = await this.thirdPartyAmcRepository.findOne({
+    //   where: {
+    //     caresheetId: caresheet?.id,
+    //   },
+    // });
+    // if(thirdPartyAmc){
+    //   caresheet.thirdPartyAmc = thirdPartyAmc
+    // }
     caresheet.thirdPartyAmc = await this.thirdPartyAmcRepository.findOne({
       where: {
         caresheetId: caresheet?.id,
@@ -1008,13 +1042,12 @@ export class ActsService {
     await merger.add(file);
     return await merger.saveAsBuffer();
   }
+
   private getActiveAmc = (amcs: PatientAmcEntity[], date: Date) => {
     return amcs.filter((amc) => {
       return (
-        amc?.startDate === null ||
-        (isBefore(new Date(amc?.startDate), new Date(date)) &&
-          (amc?.endDate === null ||
-            isAfter(new Date(amc?.endDate), new Date(date))))
+        (amc?.startDate === null || dayjs(amc?.startDate).isBefore(date)) &&
+        (amc?.endDate === null || dayjs(amc?.endDate).isAfter(dayjs(date)))
       );
     });
   };

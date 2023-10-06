@@ -314,24 +314,24 @@ export class FseEntity {
    * @Serializer\Expose
    * @Serializer\Groups({"caresheet:index", "caresheet:read", "tiersPayant:index"})
    */
-  @OneToOne(() => ThirdPartyAmoEntity, {
+  @OneToOne(() => ThirdPartyAmoEntity, (e) => e.caresheet, {
     createForeignKeyConstraints: false,
   })
-  @JoinColumn({
-    name: 'amo_id',
-  })
+  // @JoinColumn({
+  //   name: 'amo_id',
+  // })
   thirdPartyAmo?: ThirdPartyAmoEntity;
   /**
    * @ORM\OneToOne(targetEntity="ThirdPartyAmc", mappedBy="caresheet", cascade={"persist", "remove"})
    * @Serializer\Expose
    * @Serializer\Groups({"caresheet:read", "tiersPayant:index"})
    */
-  @OneToOne(() => ThirdPartyAmcEntity, {
+  @OneToOne(() => ThirdPartyAmcEntity, (e) => e.caresheet, {
     createForeignKeyConstraints: false,
   })
-  @JoinColumn({
-    name: 'amc_id',
-  })
+  // @JoinColumn({
+  //   name: 'amc_id',
+  // })
   // thirdPartyAmo?: ThirdPartyAmoEntity;
   thirdPartyAmc?: ThirdPartyAmcEntity;
 

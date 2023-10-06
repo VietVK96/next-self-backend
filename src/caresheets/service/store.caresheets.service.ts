@@ -349,9 +349,8 @@ export class StoreCaresheetsService {
   private getActiveAmo = (amos: PatientAmoEntity[], date: Date) => {
     return amos.filter((amo) => {
       return (
-        amo?.startDate === null ||
-        (dayjs(amo?.startDate).isBefore(date) &&
-          (amo?.endDate === null || dayjs(amo?.endDate).isAfter(date)))
+        (amo?.startDate === null || dayjs(amo?.startDate).isBefore(date)) &&
+        (amo?.endDate === null || dayjs(amo?.endDate).isAfter(dayjs(date)))
       );
     });
   };
