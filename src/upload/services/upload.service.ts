@@ -15,6 +15,7 @@ import { PermissionService } from 'src/user/services/permission.service';
 import { ContactEntity } from 'src/entities/contact.entity';
 import { StringHelper } from 'src/common/util/string-helper';
 import { v4 as uuidv4 } from 'uuid';
+import Jimp from 'jimp';
 
 @Injectable()
 export class UploadService {
@@ -134,22 +135,35 @@ export class UploadService {
   ): Promise<UploadEntity> {
     try {
       if (files) {
-        const mimeTypes = files?.mimetype;
-        const token = uuidv4();
         const uploadEntity = new UploadEntity();
+        let mimeTypes = files?.mimetype;
+        let name = files.originalname;
+        if (files?.mimetype === 'image/bmp') {
+          mimeTypes = 'image/png';
+          name = `${files.originalname?.split('.')?.[0]}.bmp.png`;
+        }
+        uploadEntity.name = files.originalname;
+        const token = uuidv4();
         uploadEntity.path = `${auth}/`;
         uploadEntity.userId = userCurrent.id;
-        uploadEntity.fileName = `${auth}/${files?.originalname}`;
-        uploadEntity.name = files.originalname;
+        uploadEntity.fileName = `${auth}/${name}`;
         uploadEntity.type = mimeTypes;
         uploadEntity.size = files.size;
         uploadEntity.token = token;
         uploadEntity.user = userCurrent;
-        const dirFile = `${dir}/${auth}/${files?.originalname}`;
+        const dirFile = `${dir}/${auth}/${name}`;
         if (!fs.existsSync(`${dir}/${auth}`)) {
           fs.mkdirSync(`${dir}/${auth}`, { recursive: true });
         }
-        fs.writeFileSync(dirFile, files?.buffer);
+        if (files?.mimetype === 'image/bmp') {
+          Jimp.read(files?.buffer, function (_, image) {
+            if (image) {
+              image.write(dirFile);
+            }
+          });
+        } else {
+          fs.writeFileSync(dirFile, files?.buffer);
+        }
         files['uploadEntity'] = uploadEntity;
         return await this.dataSource
           .getRepository(UploadEntity)

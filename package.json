@@ -72,6 +72,7 @@
     "google-libphonenumber": "^3.2.32",
     "googleapis": "^126.0.0",
     "html-entities": "^2.4.0",
+    "jimp": "^0.22.10",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.0",
     "multer": "^1.4.5-lts.1",
