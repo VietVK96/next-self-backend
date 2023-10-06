@@ -13,7 +13,7 @@ import { PrintPDFDto } from '../dto/facture.dto';
 import { ErrorCode } from 'src/constants/error';
 import { checkId, toFixed } from 'src/common/util/number';
 import { PaymentScheduleService } from 'src/payment-schedule/services/payment-schedule.service';
-import { customCreatePdf } from 'src/common/util/pdf';
+import { PrintPDFOptions, customCreatePdf } from 'src/common/util/pdf';
 import { QuotationMutualInitChampsDto } from '../dto/quotatio-mutual.dto';
 import * as dayjs from 'dayjs';
 import { OrganizationEntity } from 'src/entities/organization.entity';
@@ -452,7 +452,7 @@ export class QuotationMutualServices {
     let dataTemp: any;
     const files = [];
     try {
-      const options = {
+      const options: PrintPDFOptions = {
         format: 'A4',
         displayHeaderFooter: true,
         headerTemplate: `<div></div>`,

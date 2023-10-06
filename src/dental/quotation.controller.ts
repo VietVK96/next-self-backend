@@ -108,7 +108,7 @@ export class QuotationController {
       res.set({
         // pdf
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Disposition': `inline; filename=print.pdf`,
         'Content-Length': buffer.length,
         // prevent cache
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -116,8 +116,8 @@ export class QuotationController {
         Expires: 0,
       });
       res.end(buffer);
-    } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    } catch {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
 }
