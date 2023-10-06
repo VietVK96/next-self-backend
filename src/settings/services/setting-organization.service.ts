@@ -183,7 +183,7 @@ export class SettingOrganizationService {
 
       return { success: true };
     } catch (error) {
-      throw new CBadRequestException(error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -243,7 +243,7 @@ export class SettingOrganizationService {
       return { success: true };
     } catch (e) {
       await queryRunner.rollbackTransaction();
-      throw new CBadRequestException(e.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     } finally {
       await queryRunner.release();
     }

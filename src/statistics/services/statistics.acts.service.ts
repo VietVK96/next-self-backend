@@ -4,6 +4,7 @@ import { StatisticsService } from './statistics.service';
 import { FilterValuesStatisticDto } from '../dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { CcamFamilyEntity } from 'src/entities/ccamFamily.entity';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class StatisticsActsService {
@@ -63,7 +64,7 @@ export class StatisticsActsService {
         aggregate: inputs?.aggregate,
       };
     } catch (error) {
-      throw new CBadRequestException(error.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -113,7 +114,7 @@ export class StatisticsActsService {
         aggregate: inputs?.aggregate,
       };
     } catch (error) {
-      throw new CBadRequestException(error.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

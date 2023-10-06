@@ -545,7 +545,9 @@ export class DevisStd2Services {
           }
           result.attachments = attachments;
         } catch {
-          throw new CBadRequestException('dsa');
+          throw new CBadRequestException(
+            ErrorCode.STATUS_INTERNAL_SERVER_ERROR,
+          );
         }
       });
     } else if (req?.no_devis) {
@@ -667,7 +669,7 @@ export class DevisStd2Services {
           actes,
         };
       } catch (err) {
-        throw new CBadRequestException(err);
+        throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
       }
     }
     // const user = await this.userRepository.findOne({
@@ -808,7 +810,7 @@ export class DevisStd2Services {
       });
       result.odontogramType = 'adult';
     } catch (error) {
-      throw new CBadRequestException(error.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
 
     if (result?.schemas !== 'none') {

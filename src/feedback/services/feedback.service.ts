@@ -12,7 +12,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ErrorCode } from 'src/constants/error';
 import { ConfigService } from '@nestjs/config';
-import { FactureEmailDataDto } from 'src/dental/dto/facture.dto';
 
 @Injectable()
 export class FeedbackService {

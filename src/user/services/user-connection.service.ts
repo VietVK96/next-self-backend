@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { UserConnectionDto } from '../dto/user-connectio.dto';
 import { Request } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import { ErrorCode } from 'src/constants/error';
 @Injectable()
 export class UserConnectionService {
   constructor(
@@ -52,7 +53,7 @@ export class UserConnectionService {
         },
       };
     } catch (error) {
-      throw new CBadRequestException(error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 

@@ -7,6 +7,7 @@ import { CBadRequestException } from 'src/common/exceptions/bad-request.exceptio
 import { ContactFamilyEntity } from 'src/entities/contact-family.entity';
 import { ContactService } from './contact.service';
 import { PermissionService } from 'src/user/services/permission.service';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class FamilyService {
@@ -190,8 +191,8 @@ export class FamilyService {
       } else {
         throw new CBadRequestException('unknown action');
       }
-    } catch (e) {
-      throw new CBadRequestException(e?.response?.msg);
+    } catch {
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

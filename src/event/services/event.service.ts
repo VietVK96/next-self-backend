@@ -162,7 +162,7 @@ export class EventService {
     datetime1: string,
     datetime2: string,
     format: string,
-    range: number,
+    _range: number,
   ) {
     try {
       const events = await this._getExportQuery(

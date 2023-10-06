@@ -551,8 +551,8 @@ export class BordereauxService {
 
       await this.cashingRepository.save(updatePayments);
       return newSlipcheck;
-    } catch (err) {
-      throw new CBadRequestException(err);
+    } catch {
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

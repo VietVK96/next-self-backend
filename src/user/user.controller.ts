@@ -101,7 +101,7 @@ export class UserController {
       });
       res.end(buffer);
     } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -239,7 +239,7 @@ export class UserController {
     try {
       return await this.userService.getActiveUser(identity.org);
     } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_USER, error);
+      throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
     }
   }
 
@@ -256,7 +256,7 @@ export class UserController {
         identity.org,
       );
     } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_USER, error);
+      throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
     }
   }
 
@@ -302,7 +302,7 @@ export class UserController {
       });
       res.end(buffer);
     } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
 

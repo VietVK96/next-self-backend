@@ -3,6 +3,7 @@ import * as readline from 'readline';
 import * as events from 'events';
 import { SectionsDto } from '../dto/sections.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { ErrorCode } from 'src/constants/error';
 
 /**
  * php/dsio/sections.php
@@ -81,7 +82,7 @@ export class SectionsDsio {
       this.newEntitie(ar_prat_cur, RSR);
       return this.ar_list;
     } catch (error) {
-      throw new CBadRequestException(error.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 

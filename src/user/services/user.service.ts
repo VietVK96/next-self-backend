@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AddressService } from 'src/address/service/address.service';
 import { LicenseEntity } from 'src/entities/license.entity';
 import { UserMedicalEntity } from 'src/entities/user-medical.entity';
@@ -180,7 +180,7 @@ export class UserService {
         therapeutic_alternative: therapeutic,
       };
     } catch (error) {
-      throw new BadRequestException(error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -191,7 +191,7 @@ export class UserService {
       });
       if (userFind) return { userFind };
     } catch (err) {
-      throw new BadRequestException(err);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -573,7 +573,7 @@ export class UserService {
       };
     } catch (error) {
       await transaction.rollbackTransaction();
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 

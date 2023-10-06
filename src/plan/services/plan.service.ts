@@ -679,7 +679,6 @@ export class PlanService {
           }
 
           if (tasks.length > 0) {
-            const listTask = tasks.join();
             const sqlsub = Array(tasks.length).fill('?').join();
             const sql = `
               DELETE ETK, DET
@@ -752,7 +751,7 @@ export class PlanService {
         }
         return options?.id;
       } catch (error) {
-        throw new CBadRequestException(error);
+        throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
       }
     });
   }
@@ -995,7 +994,7 @@ export class PlanService {
 
         return id;
       } catch (error) {
-        throw new CBadRequestException(error);
+        throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
       }
     });
   }
@@ -1019,7 +1018,7 @@ export class PlanService {
       // return JSON.stringify(planification)
       return planification;
     } catch (error) {
-      throw new CBadRequestException(error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
