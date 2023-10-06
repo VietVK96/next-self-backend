@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { ImporterDsioDto } from '../dto/importer-dsio.dto';
@@ -14,6 +14,8 @@ import { LetterImporterService } from './letter-importer.service';
 
 @Injectable()
 export class DsioImporterService {
+  private logger: Logger = new Logger(DsioImporterService.name);
+
   constructor(
     private configService: ConfigService,
     @InjectRepository(UserPreferenceEntity)
@@ -40,11 +42,11 @@ export class DsioImporterService {
 
       const extension = path.extname(pathname).toUpperCase();
       if (extension === '.ZIP') {
-        await this.letterImporterService
-          .letterImport(user, pathname)
-          .catch((error) => {
-            console.log('letterImport', error);
-          });
+        await this.letterImporterService.letterImport(
+          user,
+          pathname,
+          importerDsioDto.iduser,
+        );
       } else {
         // Import fichier DSIO
         const userPreference: UserPreferenceEntity =
@@ -67,7 +69,7 @@ export class DsioImporterService {
         this.importerService
           .runImportShell(importerDsioDto, user.org, FRQ, HMD, HMF, HAD, HAF)
           .catch((error) => {
-            console.log('runImportShell', error);
+            this.logger.error('importerService - runImportShell', error);
           });
       }
 

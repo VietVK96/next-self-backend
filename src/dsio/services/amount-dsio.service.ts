@@ -464,9 +464,7 @@ export class AmountDsioService {
       if ((bname === 'PC1' && !isNaN(Number(value))) || bname === 'PR1') {
         value = String(0 + Number(value));
       } else if (bname === 'PTC' && !isNaN(Number(value))) {
-        value = String(
-          Math.floor(Number(value)) + max_CON_NBR ? max_CON_NBR : '',
-        );
+        value = String(Math.floor(Number(value)) + max_CON_NBR);
       }
 
       if (this.handleDsioService.esc('B')) {
