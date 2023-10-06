@@ -1,7 +1,8 @@
-import puppeteer from 'puppeteer';
+import puppeteer, { PDFOptions } from 'puppeteer';
 import * as hbs from 'handlebars';
 import * as fs from 'fs';
 import { nl2br } from './string';
+import { PDFDocument } from 'pdf-lib';
 
 export type HandlebarsHelpers = {
   [key: string]: hbs.HelperDelegate;
@@ -12,9 +13,11 @@ export type PdfTemplateFile = {
   data: any;
   type?: string;
 };
+
+export type PrintPDFOptions = PDFOptions & { metadata?: { title?: string } };
 type CustomCreatePdfProps = {
   files: PdfTemplateFile[];
-  options: any;
+  options: PrintPDFOptions;
   helpers?: HandlebarsHelpers;
 };
 
@@ -100,7 +103,7 @@ export const customCreatePdf = async ({
     });
     const content = contents.join('');
     await page.setContent(content);
-    const buffer = await page.pdf({
+    let buffer = await page.pdf({
       format: 'a4',
       printBackground: true,
       margin: {
@@ -112,6 +115,12 @@ export const customCreatePdf = async ({
       ...options,
     });
     await browser.close();
+    if (options?.metadata?.title && options?.metadata?.title !== '') {
+      const pdfDoc = await PDFDocument.load(buffer);
+      pdfDoc.setTitle(options?.metadata?.title);
+      pdfDoc.setAuthor('Weclever Dental');
+      buffer = Buffer.from(await pdfDoc.save());
+    }
     return buffer;
   } catch (e) {
     console.log(e);

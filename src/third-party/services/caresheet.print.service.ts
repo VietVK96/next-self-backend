@@ -60,7 +60,7 @@ export class CareSheetPrintService {
     };
     const pdf = await customCreatePdf({
       files: [{ path: filePath, data }],
-      options: { optionsCaresheetPdf },
+      options: optionsCaresheetPdf,
       helpers: helpersCaresheetPdf,
     });
     return pdf;

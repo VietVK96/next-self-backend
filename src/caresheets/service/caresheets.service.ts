@@ -27,7 +27,7 @@ import {
 } from '../reponse/index.res';
 import { SesamvitaleTeletranmistionService } from './sesamvitale-teletranmistion.service';
 import * as path from 'path';
-import { customCreatePdf } from 'src/common/util/pdf';
+import { PrintPDFOptions, customCreatePdf } from 'src/common/util/pdf';
 import * as dayjs from 'dayjs';
 import { LotEntity } from 'src/entities/lot.entity';
 import { checkBoolean, checkId } from 'src/common/util/number';
@@ -445,7 +445,7 @@ export class ActsService {
     };
     const pdf = await customCreatePdf({
       files: [{ path: filePath, data }],
-      options: { optionsCaresheetPdf },
+      options: optionsCaresheetPdf,
       helpers: helpersCaresheetPdf,
     });
     return {

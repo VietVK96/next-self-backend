@@ -85,6 +85,7 @@
     "ovh": "^2.0.3",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
+    "pdf-lib": "^1.17.1",
     "pdf-merger-js": "^4.3.0",
     "pino-http": "^8.3.3",
     "puppeteer": "^20.9.0",

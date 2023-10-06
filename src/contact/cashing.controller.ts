@@ -17,12 +17,11 @@ export class CashingController {
   @Get('/print')
   @UseGuards(TokenDownloadGuard)
   async print(@Res() res: Response, @Query() payload: CashingPrintDto) {
-    const buffer = await this.service.print(payload);
-
+    const { buffer, periodTitle } = await this.service.print(payload);
     res.set({
       // pdf
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `inline; filename=Journal des encaissements.pdf`,
+      'Content-Disposition': `inline; filename=${periodTitle}`,
       'Content-Length': buffer.length,
       // prevent cache
       'Cache-Control': 'no-cache, no-store, must-revalidate',

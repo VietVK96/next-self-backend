@@ -1,4 +1,5 @@
 import * as dayjs from 'dayjs';
+import { PrintPDFOptions } from 'src/common/util/pdf';
 
 export const helpersCaresheetPdf = {
   formatDate: function (date: string) {
@@ -74,7 +75,7 @@ export const helpersCaresheetPdf = {
   },
 };
 
-export const optionsCaresheetPdf = {
+export const optionsCaresheetPdf: PrintPDFOptions = {
   format: 'A4',
   displayHeaderFooter: true,
   landscape: true,

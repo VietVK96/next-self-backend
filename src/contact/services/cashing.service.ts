@@ -33,8 +33,9 @@ import {
   SlipCheck,
 } from '../../interfaces/interface';
 import { DEFAULT_LOCALE } from 'src/constants/default';
-import { customCreatePdf } from 'src/common/util/pdf';
+import { PrintPDFOptions, customCreatePdf } from 'src/common/util/pdf';
 import { checkNumber } from 'src/common/util/number';
+import { PDFOptions } from 'puppeteer';
 
 dayjs.locale(DEFAULT_LOCALE);
 @Injectable()
@@ -255,12 +256,46 @@ export class CashingService {
         },
       };
 
+      let periodTitle: string;
+
+      switch (payload?.group) {
+        case 'day':
+          periodTitle = 'Livre des honoraires journaliers';
+          break;
+        case 'month':
+          periodTitle = 'Livre des honoraires mensuels';
+          break;
+        default:
+          periodTitle = 'Journal des encaissements';
+          break;
+      }
+
+      const filteredConditions = payload?.conditions.filter((condition) =>
+        ['csg.date', 'csg.paymentDate'].includes(condition.field),
+      );
+
+      if (filteredConditions.length > 0) {
+        const periodValues = filteredConditions.map(
+          (condition) => new Date(condition.value),
+        );
+        const periodMin = new Date(
+          Math.min(...periodValues.map((date) => date.getTime())),
+        );
+
+        const periodMax = new Date(
+          Math.max(...periodValues.map((date) => date.getTime())),
+        );
+        periodTitle += ` du ${dayjs(periodMin).format('DD/MM/YYYY')} au ${dayjs(
+          periodMax,
+        ).format('DD/MM/YYYY')}`;
+      }
+
       const filePath = path.join(
         process.cwd(),
         'templates/pdf/cashing',
         'cashing.hbs',
       );
-      const options = {
+      const options: PrintPDFOptions = {
         format: 'A4',
         displayHeaderFooter: true,
         headerTemplate: `<div style="width: 100%;margin: 0 5mm;font-size: 8px; display:flex; justify-content:space-between"><div>${user.lastname} ${user.firstname}</div> <div>Dossiers créditeurs</div></div>`,
@@ -270,6 +305,9 @@ export class CashingService {
           top: '25mm',
           right: '5mm',
           bottom: '15mm',
+        },
+        metadata: {
+          title: periodTitle,
         },
       };
 
@@ -322,7 +360,7 @@ export class CashingService {
           total,
           byDay,
         };
-        return await customCreatePdf({
+        const buffer = await customCreatePdf({
           files: [{ data, path: filePath }],
           options,
           helpers: {
@@ -336,6 +374,10 @@ export class CashingService {
             },
           },
         });
+        return {
+          buffer,
+          periodTitle,
+        };
       } else {
         let amountTotal = 0;
         let amountCareTotal = 0;
@@ -418,10 +460,14 @@ export class CashingService {
           total,
         };
 
-        return await customCreatePdf({
+        const buffer = await customCreatePdf({
           files: [{ data, path: filePath }],
           options,
         });
+        return {
+          buffer,
+          periodTitle,
+        };
       }
     } catch (error) {
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);

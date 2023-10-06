@@ -200,6 +200,8 @@ export class PrintPDFDto {
   group?: number;
   @ApiProperty()
   original?: string;
+  @ApiProperty()
+  td?: string;
 }
 
 @ApiExtraModels()

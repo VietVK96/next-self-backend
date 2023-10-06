@@ -8,6 +8,8 @@ import {
 } from 'src/common/decorator/auth.decorator';
 import { ContactPdfService } from './services/contact.pdf.service';
 import { ContactPdfDto } from './dto/contact.pdf.dto';
+import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
+import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
 
 @ApiBearerAuth()
 @Controller('/contact')
@@ -17,7 +19,7 @@ export class ContactPdfController {
 
   // File: php/contact/appointment/print.php
   @Get('appointment/print')
-  @UseGuards(TokenGuard)
+  @UseGuards(TokenDownloadGuard)
   async getContactAppointmentPdf(
     @Res() res: Response,
     @CurrentUser() identity: UserIdentity,
@@ -32,7 +34,7 @@ export class ContactPdfController {
     res.set({
       // pdf
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename=print.pdf`,
+      'Content-Disposition': `inline; filename=document.pdf`,
       'Content-Length': buffer.length,
       // prevent cache
       'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -47,17 +49,18 @@ export class ContactPdfController {
    * Line 16 -> 194
    */
   @Get('fs-verso-pdf/print')
-  @UseGuards(TokenGuard)
+  @UseGuards(TokenDownloadGuard)
   async getFsVersoPdf(
     @Res() res: Response,
     @CurrentUser() identity: UserIdentity,
+
     @Query('person') person?: number,
   ) {
     const buffer = await this.contactPdfService.getFsVersoPdf(person, identity);
     res.set({
       // pdf
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename=print.pdf`,
+      'Content-Disposition': `inline; filename=document.pdf`,
       'Content-Length': buffer.length,
       // prevent cache
       'Cache-Control': 'no-cache, no-store, must-revalidate',

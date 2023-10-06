@@ -11,6 +11,7 @@ import { PrintPDFDto } from './dto/facture.dto';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { ErrorCode } from 'src/constants/error';
 import type { Response } from 'express';
+import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -19,7 +20,7 @@ export class DevisStd2Controller {
   constructor(private devisStd2Services: DevisStd2Services) {}
   //ecoophp/dental/devisStd2/devisStd2_pdf.php
   @Get('/devisStd2/devisStd2_pdf')
-  @UseGuards(TokenGuard)
+  @UseGuards(TokenDownloadGuard)
   async getDevisStd2Pdf(
     @Res() res: Response,
     @Query() payload: PrintPDFDto,
@@ -33,7 +34,7 @@ export class DevisStd2Controller {
       res.set({
         // pdf
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Disposition': `inline; filename=print.pdf`,
         'Content-Length': buffer.length,
         // prevent cache
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -42,7 +43,7 @@ export class DevisStd2Controller {
       });
       res.end(buffer);
     } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
 

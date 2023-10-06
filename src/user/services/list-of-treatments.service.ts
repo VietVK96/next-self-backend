@@ -17,7 +17,7 @@ import type { Response } from 'express';
 import { Parser } from 'json2csv';
 import { format } from 'date-fns';
 import { UserEntity } from '../../entities/user.entity';
-import { customCreatePdf } from '../../common/util/pdf';
+import { PrintPDFOptions, customCreatePdf } from '../../common/util/pdf';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as path from 'path';
 
@@ -389,7 +389,7 @@ export class ListOfTreatmentsService {
         'print.hbs',
       );
 
-      const options = {
+      const options: PrintPDFOptions = {
         format: 'A4',
         displayHeaderFooter: true,
         margin: {

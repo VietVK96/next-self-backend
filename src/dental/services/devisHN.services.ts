@@ -23,7 +23,7 @@ import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import { DentalQuotationActEntity } from 'src/entities/dental-quotation-act.entity';
 import { PatientOdontogramService } from 'src/patient/service/patientOdontogram.service';
-import { customCreatePdf } from 'src/common/util/pdf';
+import { PrintPDFOptions, customCreatePdf } from 'src/common/util/pdf';
 import * as path from 'path';
 import * as handlebars from 'handlebars';
 import { checkId } from 'src/common/util/number';
@@ -1044,7 +1044,7 @@ export class DevisServices {
         paymentSchedule: undefined,
       };
 
-      const options = {
+      const options: PrintPDFOptions = {
         format: 'A4',
         displayHeaderFooter: true,
         headerTemplate: `<div></div>`,

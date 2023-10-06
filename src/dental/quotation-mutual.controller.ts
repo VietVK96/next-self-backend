@@ -38,32 +38,32 @@ export class QuotationMutualController {
 
   // dental/quotation-mutual/devis_pdf.php
   @Get('/quotation-mutual/devis_pdf')
-  @UseGuards(TokenGuard)
+  // @UseGuards(TokenGuard)
   async devisPdf(
     @Res() res: Response,
     @Query() req: PrintPDFDto,
     @CurrentUser() identity: UserIdentity,
   ) {
-    try {
-      const buffer = await this.quotationMutualServices.generatePdf(
-        req,
-        identity,
-      );
+    console.log(
+      '🚀 ~ file: quotation-mutual.controller.ts:47 ~ QuotationMutualController ~ identity:',
+      identity,
+    );
+    const buffer = await this.quotationMutualServices.generatePdf(
+      req,
+      identity,
+    );
 
-      res.set({
-        // pdf
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename=print.pdf`,
-        'Content-Length': buffer.length,
-        // prevent cache
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        Pragma: 'no-cache',
-        Expires: 0,
-      });
-      res.end(buffer);
-    } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
-    }
+    res.set({
+      // pdf
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename=print.pdf`,
+      'Content-Length': buffer.length,
+      // prevent cache
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: 0,
+    });
+    res.end(buffer);
   }
 
   @Post('/quotation-mutual/devis_requetes_ajax')
