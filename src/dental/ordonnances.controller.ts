@@ -17,8 +17,6 @@ import {
 import { OrdonnancesServices } from './services/ordonnances.services';
 import { OrdonnancesDto } from './dto/ordonnances.dto';
 import { PrintPDFDto } from './dto/facture.dto';
-import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
-import { ErrorCode } from 'src/constants/error';
 import type { Response } from 'express';
 
 @ApiBearerAuth()
