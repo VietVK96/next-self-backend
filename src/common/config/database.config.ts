@@ -18,7 +18,6 @@ export default registerAs('database', (): TypeOrmModuleOptions => {
 
   let i = 0;
   for (const host of slaveHosts) {
-    console.log('host', host, host && host !== '');
     if (host && host.trim() !== '') {
       slaves.push({
         host,
