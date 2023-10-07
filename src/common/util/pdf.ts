@@ -3,6 +3,7 @@ import * as hbs from 'handlebars';
 import * as fs from 'fs';
 import { nl2br } from './string';
 import { PDFDocument } from 'pdf-lib';
+import * as dayjs from 'dayjs';
 
 export type HandlebarsHelpers = {
   [key: string]: hbs.HelperDelegate;
@@ -88,6 +89,9 @@ export const customCreatePdf = async ({
           style: 'currency',
           currency: currency || 'EUR',
         }).format(+e);
+      },
+      currentTime: () => {
+        return dayjs().format('DD/MM/YYYY, HH:mm A');
       },
     });
 
