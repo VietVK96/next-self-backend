@@ -89,25 +89,52 @@ export class ActServices {
         id: true,
         medicalDeviceId: true,
         reference: true,
+        observation: true,
       },
     });
 
-    if (dataAfter) {
-      let traceabilityStatus = TraceabilityStatusEnum.NONE;
+    let traceabilityStatus = TraceabilityStatusEnum.NONE;
+    if (dataAfter.length) {
       for (const data of dataAfter) {
-        traceabilityStatus =
-          data.medicalDeviceId !== null && data.reference !== ''
-            ? TraceabilityStatusEnum.FILLED
-            : data.reference !== ''
-            ? TraceabilityStatusEnum.FILLED
-            : data.medicalDeviceId !== null
-            ? TraceabilityStatusEnum.UNFILLED
-            : TraceabilityStatusEnum.NONE;
+        if (traceabilityStatus === TraceabilityStatusEnum.FILLED) {
+          break;
+        }
+
+        switch (true) {
+          case data.medicalDeviceId !== null && data.reference !== '':
+            traceabilityStatus = TraceabilityStatusEnum.FILLED;
+            break;
+
+          case data.medicalDeviceId === null && data.observation !== '':
+            traceabilityStatus = TraceabilityStatusEnum.UNFILLED;
+            break;
+
+          case data.reference !== '':
+            traceabilityStatus = TraceabilityStatusEnum.FILLED;
+            break;
+
+          case data.medicalDeviceId !== null:
+            traceabilityStatus = TraceabilityStatusEnum.UNFILLED;
+            break;
+
+          default:
+            if (
+              traceabilityStatus !== Number(TraceabilityStatusEnum.UNFILLED)
+            ) {
+              traceabilityStatus = TraceabilityStatusEnum.NONE;
+            }
+            break;
+        }
         await this.eventTaskRepository.save({
           id,
           traceabilityStatus,
         });
       }
+    } else {
+      await this.eventTaskRepository.save({
+        id,
+        traceabilityStatus,
+      });
     }
   }
 
