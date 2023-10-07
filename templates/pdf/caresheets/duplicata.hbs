@@ -1,311 +1,309 @@
-
 <style>
+    @page {
+        size: A4;
+        margin: 0;
+        padding: 0;
+    }
 
-@page {
-    margin: 0;
-    padding: 0;
-}
+    body {
+        font-weight: normal;
+        font-family: Courier;
+        font-size: 20px;
+    }
 
-body {
-    font-family: Courier;
-    font-size: 20px;
-}
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        border-spacing: 0;
+    }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    border-spacing: 0;
-}
+    div.duplicata {
+        position: absolute;
+        top: 27.5mm;
+        left: 162mm;
+        color: red;
+    }
 
-div.duplicata {
-    position: absolute;
-    top: 27.5mm;
-    left: 162mm;
-    color: red;
-}
+    div.caresheetNumber {
+        position: absolute;
+        top: 7.5mm;
+        left: 157mm;
+        width: 45mm;
+    }
 
-div.caresheetNumber {
-    position: absolute;
-    top: 7.5mm;
-    left: 157mm;
-    width: 45mm;
-}
+    div.caresheetCreationDate {
+        position: absolute;
+        top: 13.5mm;
+        left: 162mm;
+        width: 40mm;
+    }
 
-div.caresheetCreationDate {
-    position: absolute;
-    top: 13.5mm;
-    left: 162mm;
-    width: 40mm;
-}
+    div.patientFullName {
+        position: absolute;
+        top: 27.5mm;
+        left: 39mm;
+    }
 
-div.patientFullName {
-    position: absolute;
-    top: 27.5mm;
-    left: 39mm;
-}
+    div.patientInseeNumber {
+        position: absolute;
+        top: 35.5mm;
+        left: 57.5mm;
+        width: 65mm;
+    }
 
-div.patientInseeNumber {
-    position: absolute;
-    top: 35.5mm;
-    left: 57.5mm;
-    width: 65mm;
-}
+    div.patientInseeNumberKey {
+        position: absolute;
+        top: 35.5mm;
+        left: 125mm;
+        width: 10mm;
+    }
 
-div.patientInseeNumberKey {
-    position: absolute;
-    top: 35.5mm;
-    left: 125mm;
-    width: 10mm;
-}
+    div.patientBirthDate {
+        position: absolute;
+        top: 43mm;
+        left: 57.5mm;
+        width: 40mm;
+    }
 
-div.patientBirthDate {
-    position: absolute;
-    top: 43mm;
-    left: 57.5mm;
-    width: 40mm;
-}
+    div.policyHolderFullName {
+        position: absolute;
+        top: 53mm;
+        left: 39mm;
+    }
 
-div.policyHolderFullName {
-    position: absolute;
-    top: 53mm;
-    left: 39mm;
-}
+    div.policyHolderInseeNumber {
+        position: absolute;
+        top: 61mm;
+        left: 57.5mm;
+        width: 65mm;
+    }
 
-div.policyHolderInseeNumber {
-    position: absolute;
-    top: 61mm;
-    left: 57.5mm;
-    width: 65mm;
-}
+    div.policyHolderInseeNumberKey {
+        position: absolute;
+        top: 61mm;
+        left: 125mm;
+        width: 10mm;
+    }
 
-div.policyHolderInseeNumberKey {
-    position: absolute;
-    top: 61mm;
-    left: 125mm;
-    width: 10mm;
-}
+    div.act1 {
+        position: absolute;
+        top: 200mm;
+    }
 
-div.act1 {
-    position: absolute;
-    top: 200mm;
-}
+    div.act2 {
+        position: absolute;
+        top: 213mm;
+    }
 
-div.act2 {
-    position: absolute;
-    top: 213mm;
-}
+    div.act3 {
+        position: absolute;
+        top: 226mm;
+    }
 
-div.act3 {
-    position: absolute;
-    top: 226mm;
-}
+    div.act4 {
+        position: absolute;
+        top: 239mm;
+    }
 
-div.act4 {
-    position: absolute;
-    top: 239mm;
-}
+    div.actDate {
+        position: absolute;
+        bottom: 100mm;
+        left: 9mm;
+        width: 30mm;
+    }
 
-div.actDate {
-    position: absolute;
-    bottom: 100mm;
-    left: 9mm;
-    width: 30mm;
-}
+    div.actCcamCode {
+        position: absolute;
+        left: 40.5mm;
+        width: 35mm;
+    }
 
-div.actCcamCode {
-    position: absolute;
-    left: 40.5mm;
-    width: 35mm;
-}
+    div.actCcamActivity {
+        position: absolute;
+        left: 77mm;
+        width: 5mm;
+    }
 
-div.actCcamActivity {
-    position: absolute;
-    left: 77mm;
-    width: 5mm;
-}
+    div.actNgapKey {
+        position: absolute;
+        bottom: 100mm;
+        left: 82mm;
+        width: 8mm;
+    }
 
-div.actNgapKey {
-    position: absolute;
-    bottom: 100mm;
-    left: 82mm;
-    width: 8mm;
-}
+    div.actModifier {
+        position: absolute;
+        left: 91mm;
+        width: 16mm;
+    }
 
-div.actModifier {
-    position: absolute;
-    left: 91mm;
-    width: 16mm;
-}
+    div.actAssociationCode {
+        position: absolute;
+        left: 108mm;
+        width: 16mm;
+    }
 
-div.actAssociationCode {
-    position: absolute;
-    left: 108mm;
-    width: 16mm;
-}
+    div.actExceptionalRefund {
+        position: absolute;
+        left: 110mm;
+        width: 16mm;
+    }
 
-div.actExceptionalRefund {
-    position: absolute;
-    left: 110mm;
-    width: 16mm;
-}
+    div.actAmount {
+        position: absolute;
+        bottom: 100mm;
+        left: 150mm;
+        width: 30mm;
+    }
 
-div.actAmount {
-    position: absolute;
-    bottom: 100mm;
-    left: 150mm;
-    width: 30mm;
-}
+    div.actExceeding {
+        position: absolute;
+        left: 155mm;
+        width: 7mm;
+    }
 
-div.actExceeding {
-    position: absolute;
-    left: 155mm;
-    width: 7mm;
-}
+    div.act1Teeth {
+        position: absolute;
+        top: 205mm;
+    }
 
-div.act1Teeth {
-    position: absolute;
-    top: 205mm;
-}
+    div.act2Teeth {
+        position: absolute;
+        top: 218mm;
+    }
 
-div.act2Teeth {
-    position: absolute;
-    top: 218mm;
-}
+    div.act3Teeth {
+        position: absolute;
+        top: 231mm;
+    }
 
-div.act3Teeth {
-    position: absolute;
-    top: 231mm;
-}
+    div.act4Teeth {
+        position: absolute;
+        top: 244mm;
+    }
 
-div.act4Teeth {
-    position: absolute;
-    top: 244mm;
-}
+    div.actTeeth {
+        position: absolute;
+        left: 40.5mm;
+        width: 161.5mm;
+    }
 
-div.actTeeth {
-    position: absolute;
-    left: 40.5mm;
-    width: 161.5mm;
-}
+    div.amountTotal {
+        position: absolute;
+        top: 257mm;
+        left: 105mm;
+        width: 40mm;
+    }
 
-div.amountTotal {
-    position: absolute;
-    top: 257mm;
-    left: 105mm;
-    width: 40mm;
-}
+    div.thirdPartyAmo {
+        position: absolute;
+        top: 265.5mm;
+        left: 88.5mm;
+    }
 
-div.thirdPartyAmo {
-    position: absolute;
-    top: 265.5mm;
-    left: 88.5mm;
-}
-
-div.thirdPartyAmc {
-    position: absolute;
-    top: 265.5mm;
-    left: 191mm;
-}
-
+    div.thirdPartyAmc {
+        position: absolute;
+        top: 265.5mm;
+        left: 191mm;
+    }
 </style>
-  {{#each caresheet.actMedicals}} 
-  <div 
-    {{#unless @last}}style="page-break-after: always;"{{/unless}}> 
-    {{#if ../duplicata}} 
-      <div class="duplicata"> DUPLICATA </div> 
-    {{else if (eq ../caresheet.mode DEGRADE)}} 
-      <div class="duplicata"> DÉGRADÉ </div> 
-    {{/if}} 
+{{#each caresheet.actMedicals}}
+<div {{#unless @last}}style="page-break-after: always;" {{/unless}}>
+    {{#if ../duplicata}}
+    <div class="duplicata"> DUPLICATA </div>
+    {{else if (eq ../caresheet.mode DEGRADE)}}
+    <div class="duplicata"> DÉGRADÉ </div>
+    {{/if}}
 
-    {{#if ../caresheet.nbr}} 
-        <div class="caresheetNumber"> 
-            {{#table ../caresheet.nbr}} {{/table}}
-        </div> 
-    {{/if}} 
+    {{#if ../caresheet.nbr}}
+    <div class="caresheetNumber">
+        {{#table ../caresheet.nbr}} {{/table}}
+    </div>
+    {{/if}}
 
-    <div class="caresheetCreationDate"> 
-             {{#table (formatDate ../caresheet.date)}} 
-             {{/table}}
-    </div> 
-  
-     <div class="patientFullName"> {{../caresheet.patient.lastname}} {{../caresheet.patient.firstname}} </div> 
-        {{#if ../caresheet.patient.insee}} 
-        <div class="patientInseeNumber"> {{#table  ../caresheet.patient.insee}} {{/table}} </div> 
+    <div class="caresheetCreationDate">
+        {{#table (formatDate ../caresheet.date)}}
+        {{/table}}
+    </div>
+
+    <div class="patientFullName"> {{../caresheet.patient.lastname}} {{../caresheet.patient.firstname}} </div>
+    {{#if ../caresheet.patient.insee}}
+    <div class="patientInseeNumber"> {{#table ../caresheet.patient.insee}} {{/table}} </div>
+    {{/if}}
+    {{#if ../caresheet.patient.inseeKey}}
+    <div class="patientInseeNumberKey"> {{#table caresheet.patient.inseeKey}} {{/table}} </div>
+    {{/if}}
+    {{#if ../caresheet.patient.birthday}}
+    <div class="patientBirthDate"> {{#table (formatDate ../caresheet.patient.birthday) }} {{/table}} </div>
+    {{/if}}
+    {{#if ../caresheet.patient.medical.policyHolder}}
+    <div class="policyHolderFullName">
+        {{ ../caresheet.patient.medical.policyHolder.name}}
+    </div>
+    {{#if ../caresheet.patient.medical.policyHolder}}
+    <div class="policyHolderInseeNumber">
+        {{#table (slice ../caresheet.patient.medical.inseeNumber 0 13)}} {{/table}}
+    </div>
+    <div class="policyHolderInseeNumberKey">
+        {{#table (slice ../caresheet.patient.medical.policyHolder.inseeNumber 13 15)}} {{/table}}
+    </div>
+    {{/if}}
+    {{/if}}
+    {{setVar "amountTotal" 0}}
+    {{#each ../caresheet.actMedicals}}
+    {{ setVar "amountTotal" (math @root.amountTotal "+" act.amount)}}
+    <div class="act{{@index}}">
+        <div class="actDate"> {{#table (formatDate act.date)}} {{/table}} </div>
+        {{#if ccam.id}}
+        <div class="actCcamCode">
+            {{ccam.code}}
+        </div>
+        <div class="actCcamActivity">
+            {{ccam.activity}}
+        </div>
+        {{#if modifiers}}
+        <div class="actModifier"> {{ modifiers.join ''}} </div>
         {{/if}}
-         {{#if ../caresheet.patient.inseeKey}} 
-        <div class="patientInseeNumberKey"> {{#table caresheet.patient.inseeKey}} {{/table}} </div> 
-        {{/if}} 
-        {{#if  ../caresheet.patient.birthday}} 
-        <div class="patientBirthDate"> {{#table (formatDate ../caresheet.patient.birthday) }} {{/table}} </div> 
-        {{/if}} 
-        {{#if ../caresheet.patient.medical.policyHolder}} 
-            <div class="policyHolderFullName"> 
-                {{ ../caresheet.patient.medical.policyHolder.name}} 
-            </div> 
-        {{#if ../caresheet.patient.medical.policyHolder}} 
-            <div class="policyHolderInseeNumber"> 
-                {{#table (slice ../caresheet.patient.medical.inseeNumber 0 13)}} {{/table}} 
-            </div> 
-            <div class="policyHolderInseeNumberKey"> 
-                {{#table (slice ../caresheet.patient.medical.policyHolder.inseeNumber 13 15)}} {{/table}} 
-            </div> 
-          {{/if}} 
-        {{/if}} 
-        {{setVar "amountTotal" 0}} 
-        {{#each ../caresheet.actMedicals}}
-        {{ setVar "amountTotal" (math  @root.amountTotal "+"  act.amount)}} 
-            <div class="act{{@index}}"> 
-                <div class="actDate"> {{#table (formatDate act.date)}} {{/table}} </div> 
-                  {{#if ccam.id}} 
-                    <div class="actCcamCode"> 
-                     {{ccam.code}}
-                    </div> 
-                    <div class="actCcamActivity"> 
-                        {{ccam.activity}} 
-                    </div> 
-                    {{#if modifiers}} 
-                    <div class="actModifier"> {{ modifiers.join ''}} </div> 
-                    {{/if}}
-                  {{/if}} 
-                  {{#if ngapKey}} 
-                    <div class="actNgapKey"> 
-                     {{nameToTransmit ngapKey.name}}{{coef}} 
-                    </div> 
-                    {{#if complement}} 
-                        <div class="actModifier"> {{complement}} </div> 
-                    {{/if}}
-                  {{/if}} 
-                  {{#if  associationCode}} 
-                    <div class="actAssociationCode"> 
-                        {{associationCode}} 
-                    </div> 
-                  {{/if}} 
-                  {{#if exceptionalRefund}} 
-                  <div class="actExceptionalRefund"> X </div> 
-                  {{/if}} 
-                  <div class="actAmount"> 
-                    {{act.amount}}
-                    </div> 
-                    {{#if  exceeding}} 
-                      <div class="actExceeding"> {{exceeding}} </div> 
-                    {{/if}} 
-              </div> 
-              {{#if teeth}} 
-                <div class="act{{@index}}Teeth"> 
-                    <div class="actTeeth"> 
-                        {{#table (padEnd (joinAndReplace actMedical.teeth "00" "0102") 32)}} {{/table}}
-                    </div> 
-                </div> 
-                {{/if}} 
-            {{/each}} 
-            <div class="amountTotal"> 
-                {{formatNumber @root.amountTotal}}
-                </div> 
-              {{#if ../caresheet.thirdPartyAmo}} 
-              <div class="thirdPartyAmo"> X </div> 
-              {{/if}} 
-              {{#if ../caresheet.thirdPartyAmc}} 
-              <div class="thirdPartyAmc"> X </div> 
-              {{/if}} 
-    </div> 
-  {{/each}}
+        {{/if}}
+        {{#if ngapKey}}
+        <div class="actNgapKey">
+            {{nameToTransmit ngapKey.name}}{{coef}}
+        </div>
+        {{#if complement}}
+        <div class="actModifier"> {{complement}} </div>
+        {{/if}}
+        {{/if}}
+        {{#if associationCode}}
+        <div class="actAssociationCode">
+            {{associationCode}}
+        </div>
+        {{/if}}
+        {{#if exceptionalRefund}}
+        <div class="actExceptionalRefund"> X </div>
+        {{/if}}
+        <div class="actAmount">
+            {{act.amount}}
+        </div>
+        {{#if exceeding}}
+        <div class="actExceeding"> {{exceeding}} </div>
+        {{/if}}
+    </div>
+    {{#if teeth}}
+    <div class="act{{@index}}Teeth">
+        <div class="actTeeth">
+            {{#table (padEnd (joinAndReplace actMedical.teeth "00" "0102") 32)}} {{/table}}
+        </div>
+    </div>
+    {{/if}}
+    {{/each}}
+    <div class="amountTotal">
+        {{formatNumber @root.amountTotal}}
+    </div>
+    {{#if ../caresheet.thirdPartyAmo}}
+    <div class="thirdPartyAmo"> X </div>
+    {{/if}}
+    {{#if ../caresheet.thirdPartyAmc}}
+    <div class="thirdPartyAmc"> X </div>
+    {{/if}}
+</div>
+{{/each}}
