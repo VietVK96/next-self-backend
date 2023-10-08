@@ -34,7 +34,7 @@ export class QuotesController {
     @CurrentUser() identity: UserIdentity,
     @Body() payload: QuotesConventionDto,
   ) {
-    return this.quotesServices.init(payload, identity);
+    return await this.quotesServices.init(payload, identity);
   }
 
   @Post('/quotes/convention-2020/devis_requetes_ajax/:id')
