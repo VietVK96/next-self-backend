@@ -112,9 +112,8 @@ export class PaymentScheduleService {
       await queryRunner.commitTransaction();
       return this.find(paymentSchedule.insertId, identity.org);
     } catch (err) {
-      console.log('payment-schedule.service.ts ---store', err);
-      
       await queryRunner.rollbackTransaction();
+      throw new CBadRequestException(err);
     } finally {
       await queryRunner.release();
     }
