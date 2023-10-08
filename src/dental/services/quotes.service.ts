@@ -801,7 +801,8 @@ export class QuotesServices {
       if (queryRunner?.isTransactionActive) {
         await queryRunner.rollbackTransaction();
       }
-      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+      console.log('-----data-----', error);
+      throw new CBadRequestException(error);
     }
   }
 
