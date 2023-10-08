@@ -434,7 +434,7 @@ export class FactureServices {
     }
     const userNumeroFacturant = user?.numeroFacturant;
     if (userNumeroFacturant) {
-      adressePrat = 'N° ADELI : ' + userNumeroFacturant;
+      adressePrat = adressePrat + 'N° ADELI : ' + userNumeroFacturant;
     }
 
     const medicalHeader = await this.medicalHeaderRepository.findOneBy({
