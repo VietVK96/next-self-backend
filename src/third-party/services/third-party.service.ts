@@ -33,6 +33,7 @@ import { ErrorCode } from 'src/constants/error';
 import Handlebars from 'handlebars';
 import * as path from 'path';
 import * as fs from 'fs';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 
 @Injectable()
 export class ThirdPartyService {
@@ -511,139 +512,150 @@ export class ThirdPartyService {
    *
    */
   async printThirdParty(payload: ThirdPartyDto) {
-    const user = await this.userRepository.findOne({
-      where: { id: payload?.user_id },
-    });
-    if (!user) {
-      throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
-    }
-
-    const queryBuilder = this.fseRepository
-      .createQueryBuilder('caresheet')
-      .innerJoinAndSelect('caresheet.patient', 'patient')
-      .where('caresheet.usrId = :usrId', { usrId: user.id })
-      .andWhere('caresheet.tiersPayant = true');
-
-    payload.filterParam?.forEach((param, index) => {
-      const valueParam = payload.filterValue[index];
-      switch (param) {
-        case 'caresheet.creationDate':
-          queryBuilder.andWhere('caresheet.FSE_DATE = :creationDate', {
-            creationDate: valueParam,
-          });
-          break;
-        case 'caresheet.number':
-          queryBuilder.andWhere('caresheet.nbr = LPAD(:number, 9, 0)', {
-            number: valueParam,
-          });
-          break;
-        case 'caresheet.tiersPayantStatus':
-          queryBuilder.andWhere(
-            'caresheet.tiersPayantStatus = :tiersPayantStatus',
-            { tiersPayantStatus: valueParam },
-          );
-          break;
-        case 'amo.libelle':
-          queryBuilder.innerJoin(
-            ThirdPartyAmoEntity,
-            'thirdPartyAmo',
-            'thirdPartyAmo.caresheetId = caresheet.id',
-          );
-          queryBuilder.innerJoin(
-            AmoEntity,
-            'amo',
-            'thirdPartyAmo.amoId = amo.id',
-          );
-          queryBuilder.andWhere('amo.libelle LIKE :amoLibelle', {
-            amoLibelle: `${valueParam}%`,
-          });
-          break;
-        case 'amc.libelle':
-          queryBuilder.innerJoin(
-            ThirdPartyAmcEntity,
-            'thirdPartyAmc',
-            'thirdPartyAmc.caresheetId = caresheet.id',
-          );
-          queryBuilder.innerJoin(
-            AmcEntity,
-            'amc',
-            'thirdPartyAmc.amcId = amc.id',
-          );
-          queryBuilder.andWhere('amc.libelle LIKE :amcLibelle', {
-            amcLibelle: `${valueParam}%`,
-          });
-          break;
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id: payload?.user_id },
+      });
+      if (!user) {
+        throw new CNotFoundRequestException(ErrorCode.NOT_FOUND_USER);
       }
-    });
 
-    const sortList = payload?.sort?.split('+') ?? [];
-    for (const sortItem of sortList) {
-      const sort = thirdPartySort[sortItem];
-      queryBuilder.addOrderBy(
-        sort,
-        payload.direction?.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
-      );
-    }
-    const caresheets = await queryBuilder.getMany();
+      const queryBuilder = this.fseRepository
+        .createQueryBuilder('caresheet')
+        .innerJoinAndSelect('caresheet.patient', 'patient')
+        .where('caresheet.usrId = :usrId', { usrId: user.id })
+        .andWhere('caresheet.tiersPayant = true');
 
-    const thirdPartyAmcs = await this.thirdPartyAmcRepository.find({
-      select: ['id', 'status', 'caresheetId', 'amcId'],
-      relations: ['amc'],
-    });
+      payload.filterParam?.forEach((param, index) => {
+        const valueParam = payload.filterValue[index];
+        switch (param) {
+          case 'caresheet.creationDate':
+            queryBuilder.andWhere('caresheet.FSE_DATE = :creationDate', {
+              creationDate: valueParam,
+            });
+            break;
+          case 'caresheet.number':
+            queryBuilder.andWhere('caresheet.nbr = LPAD(:number, 9, 0)', {
+              number: valueParam,
+            });
+            break;
+          case 'caresheet.tiersPayantStatus':
+            queryBuilder.andWhere(
+              'caresheet.tiersPayantStatus = :tiersPayantStatus',
+              { tiersPayantStatus: valueParam },
+            );
+            break;
+          case 'amo.libelle':
+            queryBuilder.innerJoin(
+              ThirdPartyAmoEntity,
+              'thirdPartyAmo',
+              'thirdPartyAmo.caresheetId = caresheet.id',
+            );
+            queryBuilder.innerJoin(
+              AmoEntity,
+              'amo',
+              'thirdPartyAmo.amoId = amo.id',
+            );
+            queryBuilder.andWhere('amo.libelle LIKE :amoLibelle', {
+              amoLibelle: `${valueParam}%`,
+            });
+            break;
+          case 'amc.libelle':
+            queryBuilder.innerJoin(
+              ThirdPartyAmcEntity,
+              'thirdPartyAmc',
+              'thirdPartyAmc.caresheetId = caresheet.id',
+            );
+            queryBuilder.innerJoin(
+              AmcEntity,
+              'amc',
+              'thirdPartyAmc.amcId = amc.id',
+            );
+            queryBuilder.andWhere('amc.libelle LIKE :amcLibelle', {
+              amcLibelle: `${valueParam}%`,
+            });
+            break;
+        }
+      });
 
-    const thirdPartyAmos = await this.thirdPartyAmoRepository.find({
-      select: ['id', 'status', 'caresheetId', 'amoId'],
-      relations: ['amo'],
-    });
+      const sortList = payload?.sort?.split('+') ?? [];
+      for (const sortItem of sortList) {
+        const sort = thirdPartySort[sortItem];
+        queryBuilder.addOrderBy(
+          sort,
+          payload.direction?.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
+        );
+      }
+      const caresheets = await queryBuilder.getMany();
 
-    const newCaresheets = caresheets.map((item) => {
-      return {
-        ...item,
-        thirdPartyAmountRemaining:
-          item.thirdPartyAmount - item.thirdPartyAmountPaid,
-        thirdPartyAmo: thirdPartyAmos.find(
-          (tpamo) => tpamo?.caresheetId === item?.id,
-        ),
-        thirdPartyAmc: thirdPartyAmcs.find(
-          (tpamc) => tpamc?.caresheetId === item?.id,
-        ),
+      const thirdPartyAmcs = await this.thirdPartyAmcRepository.find({
+        select: ['id', 'status', 'caresheetId', 'amcId'],
+        relations: ['amc'],
+      });
+
+      const thirdPartyAmos = await this.thirdPartyAmoRepository.find({
+        select: ['id', 'status', 'caresheetId', 'amoId'],
+        relations: ['amo'],
+      });
+
+      const newCaresheets = caresheets.map((item) => {
+        return {
+          ...item,
+          thirdPartyAmountRemaining:
+            item.thirdPartyAmount - item.thirdPartyAmountPaid,
+          thirdPartyAmo: thirdPartyAmos.find(
+            (tpamo) => tpamo?.caresheetId === item?.id,
+          ),
+          thirdPartyAmc: thirdPartyAmcs.find(
+            (tpamc) => tpamc?.caresheetId === item?.id,
+          ),
+        };
+      });
+
+      let thirdPartyAmountTotal = 0;
+      let thirdPartyAmountPaidTotal = 0;
+      let thirdPartyAmountRemainingTotal = 0;
+      for (const key of newCaresheets) {
+        thirdPartyAmountTotal += +key.thirdPartyAmount;
+        thirdPartyAmountPaidTotal += +key.thirdPartyAmountPaid;
+        thirdPartyAmountRemainingTotal += +key.thirdPartyAmountRemaining;
+      }
+
+      const currencyObj = await this.userPreferenceRepo.findOneOrFail({
+        select: ['currency'],
+        where: {
+          usrId: user.id,
+        },
+      });
+
+      const data = {
+        user,
+        caresheets: newCaresheets,
+        currency: currencyObj?.currency,
+        thirdPartyAmountTotal,
+        thirdPartyAmountPaidTotal,
+        thirdPartyAmountRemainingTotal,
       };
-    });
 
-    let thirdPartyAmountTotal = 0;
-    let thirdPartyAmountPaidTotal = 0;
-    let thirdPartyAmountRemainingTotal = 0;
-    for (const key of newCaresheets) {
-      thirdPartyAmountTotal += +key.thirdPartyAmount;
-      thirdPartyAmountPaidTotal += +key.thirdPartyAmountPaid;
-      thirdPartyAmountRemainingTotal += +key.thirdPartyAmountRemaining;
+      const pathFile = path.join(
+        process.cwd(),
+        'templates/third-party',
+        'index.hbs',
+      );
+
+      const templates = fs.readFileSync(pathFile, 'utf8');
+
+      Handlebars.registerHelper('dateShort', function (date) {
+        return date ? dayjs(date).format('DD/MM/YYYY') : '';
+      });
+
+      return Handlebars.compile(templates)(data);
+    } catch (error) {
+      console.log(
+        '🚀 ~ file: third-party.service.ts:650 ~ ThirdPartyService ~ printThirdParty ~ error:',
+        error,
+      );
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
-
-    const currencyObj = await this.userPreferenceRepo.findOneOrFail({
-      select: ['currency'],
-      where: {
-        usrId: user.id,
-      },
-    });
-
-    const data = {
-      user,
-      caresheets: newCaresheets,
-      currency: currencyObj?.currency,
-      thirdPartyAmountTotal,
-      thirdPartyAmountPaidTotal,
-      thirdPartyAmountRemainingTotal,
-    };
-
-    const templates = fs.readFileSync(
-      path.join(__dirname, '../../templates/third-party/index.hbs'),
-      'utf-8',
-    );
-
-    Handlebars.registerHelper('dateShort', function (date) {
-      return date ? dayjs(date).format('DD/MM/YYYY') : '';
-    });
-
-    return Handlebars.compile(templates)(data);
   }
 }

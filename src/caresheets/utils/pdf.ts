@@ -79,15 +79,16 @@ export const optionsCaresheetPdf: PrintPDFOptions = {
   format: 'A4',
   displayHeaderFooter: true,
   landscape: true,
-  headerTemplate: `
-    <div style="width: 100%; font-size: 7pt; display: flex; justify-content: space-between;">
-      <div style='width: 50%; font-size: 7pt; margin-left: 10mm'>
-        ${dayjs().format('DD/MM/YYYY, HH:mm: A')}
-      </div>
-      <div style='width: 50%; font-size: 7pt;'>
-        Suivi de télétransmission - weClever
-      </div>
-    </div>`,
+  headerTemplate: `<div></div`,
+  // `
+  //   <div style="width: 100%; font-size: 7pt; display: flex; justify-content: space-between;">
+  //     <div style='width: 50%; font-size: 7pt; margin-left: 10mm'>
+  //       ${dayjs().format('DD/MM/YYYY, HH:mm: A')}
+  //     </div>
+  //     <div style='width: 50%; font-size: 7pt;'>
+  //       Suivi de télétransmission - weClever
+  //     </div>
+  //   </div>`,
   footerTemplate: `
     <div style="width: 100%; font-size: 7pt; display: flex; justify-content: end;">
       <div style='font-size: 7pt; margin-right: 10mm'>
