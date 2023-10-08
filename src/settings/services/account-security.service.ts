@@ -1,16 +1,22 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 
 import { UserEntity } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as phpPassword from 'node-php-password';
 import { UpdatePassWordDto } from '../dtos/user-setting.dto';
+import { PermissionService } from 'src/user/services/permission.service';
 import { ErrorCode } from 'src/constants/error';
 @Injectable()
 export class AccountSecurityService {
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
+    private readonly permissionService: PermissionService,
   ) {}
 
   async updatePasswordAccount(
@@ -18,10 +24,17 @@ export class AccountSecurityService {
     updatePassAccountDto: UpdatePassWordDto,
   ) {
     try {
+      const hasPermission = await this.permissionService.hasPermission(
+        'PERMISSION_PASSWORD',
+        4,
+        id,
+      );
+      if (!hasPermission) {
+        throw new ForbiddenException('http_error_forbidden');
+      }
       const userFind = await this.userRepository.findOneOrFail({
         where: { id: id },
       });
-
       const { password, new_password, confirm_password } = updatePassAccountDto;
 
       if (!userFind) {

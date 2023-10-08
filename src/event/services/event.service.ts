@@ -59,16 +59,16 @@ export class EventService {
     const { eventId, practitionerId, planId } =
       await this.recordEventOccurrence(id);
     if (
-      !this.permissionService.hasPermission(
+      !(await this.permissionService.hasPermission(
         PerCode.PERMISSION_DELETE,
         8,
         orgId,
-      ) ||
-      !this.permissionService.hasPermission(
+      )) ||
+      !(await this.permissionService.hasPermission(
         PerCode.PERMISSION_CALENDAR,
         8,
         practitionerId,
-      )
+      ))
     ) {
       throw new CForbiddenRequestException(ErrorCode.FORBIDDEN);
     }
