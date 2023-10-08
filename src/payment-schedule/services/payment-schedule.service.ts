@@ -112,6 +112,7 @@ export class PaymentScheduleService {
       await queryRunner.commitTransaction();
       return this.find(paymentSchedule.insertId, identity.org);
     } catch (err) {
+      throw new CBadRequestException(err);
       await queryRunner.rollbackTransaction();
       throw new CBadRequestException(err);
     } finally {

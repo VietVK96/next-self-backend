@@ -801,6 +801,7 @@ export class QuotesServices {
       if (queryRunner?.isTransactionActive) {
         await queryRunner.rollbackTransaction();
       }
+      console.log('-----data-----', error);
       throw new CBadRequestException(error);
     }
   }
