@@ -704,12 +704,12 @@ export class QuotesServices {
         relations: ['medical', 'group', 'group.address', 'setting'],
       });
       const attachments = [];
-      for (const quoteAct of quote?.acts) {
+      for (const quoteAct of quote?.acts ?? []) {
         const libraryAct = libraryActs.find(
           (v) => v?.id === quoteAct?.libraryActId,
         );
         if (libraryAct && libraryAct?.attachmentCount) {
-          for (const attachment of libraryAct?.attachments) {
+          for (const attachment of libraryAct?.attachments ?? []) {
             const isExistAttachment = attachments.find(
               (v) => v?.id === attachment?.id,
             );
@@ -726,8 +726,7 @@ export class QuotesServices {
         }
       }
       const quoteUser = users.find((u) => u?.id === quote?.userId);
-      quote.user = quoteUser;
-
+      if (quote) quote.user = quoteUser;
       let amountTotal = 0;
       let amoAmountTotal = 0;
       let amoRefundTotal = 0;
@@ -801,8 +800,7 @@ export class QuotesServices {
       if (queryRunner?.isTransactionActive) {
         await queryRunner.rollbackTransaction();
       }
-      console.log('-----data-----', error);
-      throw new CBadRequestException(error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
