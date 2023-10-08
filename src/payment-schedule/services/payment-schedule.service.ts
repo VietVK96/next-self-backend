@@ -114,6 +114,7 @@ export class PaymentScheduleService {
     } catch (err) {
       throw new CBadRequestException(err);
       await queryRunner.rollbackTransaction();
+      throw new CBadRequestException(err);
     } finally {
       await queryRunner.release();
     }

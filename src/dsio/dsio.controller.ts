@@ -30,6 +30,9 @@ export class DsioController {
     return await this.dsioImporterService.importer(user, importerDsioDto);
   }
 
+  /**
+   * php/dsio/percent.php -> full
+   */
   @Get('percent')
   @UseGuards(TokenGuard)
   async percent(@Query('pathname') pathname: string) {
