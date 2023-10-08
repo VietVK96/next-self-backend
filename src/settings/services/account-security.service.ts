@@ -23,8 +23,6 @@ export class AccountSecurityService {
     id: number,
     updatePassAccountDto: UpdatePassWordDto,
   ) {
-    // $entityManager->getRepository("\App\Entities\User")->hasPermission("PERMISSION_PASSWORD", 4, $userId)
-
     try {
       const hasPermission = await this.permissionService.hasPermission(
         'PERMISSION_PASSWORD',
@@ -62,7 +60,7 @@ export class AccountSecurityService {
 
       return { message: 'Password changed successfully' };
     } catch (error) {
-      throw new BadRequestException(error);
+      throw new BadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

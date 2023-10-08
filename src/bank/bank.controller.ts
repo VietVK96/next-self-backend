@@ -42,8 +42,8 @@ export class BankController {
   async findAllBank(@CurrentUser() identity: UserIdentity) {
     try {
       return await this.bankService.findAllBank(identity.org, identity.id);
-    } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_BANKS, error);
+    } catch {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_BANKS);
     }
   }
   /**
@@ -55,8 +55,8 @@ export class BankController {
   async bankChecks(@CurrentUser() identity: UserIdentity) {
     try {
       return await this.bankService.bankChecks(identity.org);
-    } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    } catch {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
   /**
@@ -80,8 +80,8 @@ export class BankController {
         Expires: 0,
       });
       res.end(buffer);
-    } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    } catch {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
 
@@ -118,8 +118,8 @@ export class BankController {
   async findAllBankByUser(@Query('id') id: number) {
     try {
       return await this.bankService.findAllByUser(id);
-    } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_BANKS, error);
+    } catch {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_BANKS);
     }
   }
 

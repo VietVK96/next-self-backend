@@ -296,7 +296,7 @@ WHERE T_REMINDER_MESSAGE_RMM.USR_ID = ?
         success: true,
       };
     } catch (error) {
-      throw new CBadRequestException(error?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

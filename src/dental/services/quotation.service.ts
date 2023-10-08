@@ -58,7 +58,11 @@ import { PermissionService } from 'src/user/services/permission.service';
 import { ConfigService } from '@nestjs/config';
 import { PatientOdontogramService } from 'src/patient/service/patientOdontogram.service';
 import { ContactEntity } from 'src/entities/contact.entity';
-import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
+import {
+  PdfTemplateFile,
+  PrintPDFOptions,
+  customCreatePdf,
+} from 'src/common/util/pdf';
 import { PrintPDFDto } from '../dto/facture.dto';
 import { DOMParser, XMLSerializer } from 'xmldom';
 
@@ -140,7 +144,7 @@ export class QuotationServices {
         files.push(await this.pageDiagram(initData, tempFolder));
       }
 
-      const options = {
+      const options: PrintPDFOptions = {
         format: 'A4',
         displayHeaderFooter: true,
         footerTemplate: '',

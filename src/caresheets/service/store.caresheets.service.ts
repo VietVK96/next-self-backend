@@ -312,9 +312,7 @@ export class StoreCaresheetsService {
       );
       return await this.fseRepository.findOne({ where: { id: fseSave?.id } });
     } catch (error) {
-      throw new CBadRequestException(
-        error?.response?.msg || error?.sqlMessage || error?.message || error,
-      );
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -349,9 +347,8 @@ export class StoreCaresheetsService {
   private getActiveAmo = (amos: PatientAmoEntity[], date: Date) => {
     return amos.filter((amo) => {
       return (
-        amo?.startDate === null ||
-        (dayjs(amo?.startDate).isBefore(date) &&
-          (amo?.endDate === null || dayjs(amo?.endDate).isAfter(date)))
+        (amo?.startDate === null || dayjs(amo?.startDate).isBefore(date)) &&
+        (amo?.endDate === null || dayjs(amo?.endDate).isAfter(dayjs(date)))
       );
     });
   };

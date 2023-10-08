@@ -354,7 +354,7 @@ export class MailService {
 
       return res;
     } catch (err) {
-      throw new CBadRequestException(err?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -421,7 +421,7 @@ export class MailService {
 
       return res;
     } catch (err) {
-      throw new CBadRequestException(err?.message);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

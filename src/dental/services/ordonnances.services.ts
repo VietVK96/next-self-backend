@@ -13,7 +13,11 @@ import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { CNotFoundRequestException } from 'src/common/exceptions/notfound-request.exception';
 import { PrintPDFDto } from '../dto/facture.dto';
 import { checkBoolean, checkId, checkNumber } from 'src/common/util/number';
-import { PdfTemplateFile, customCreatePdf } from 'src/common/util/pdf';
+import {
+  PdfTemplateFile,
+  PrintPDFOptions,
+  customCreatePdf,
+} from 'src/common/util/pdf';
 import { UserEntity } from 'src/entities/user.entity';
 import * as cheerio from 'cheerio';
 import * as path from 'path';
@@ -247,7 +251,7 @@ export class OrdonnancesServices {
       const finessNumber = medicalOrder?.user?.finess;
 
       const user = await this.userRepository.findOne({
-        where: { id: medicalOrder.usrId },
+        where: { id: medicalOrder?.usrId },
         relations: { medical: true },
       });
       const rppsNumber = user?.medical?.rppsNumber;
@@ -336,7 +340,7 @@ export class OrdonnancesServices {
         },
       ];
 
-      const options = {
+      const options: PrintPDFOptions = {
         format: 'A4',
         displayHeaderFooter: true,
         footerTemplate: '',
@@ -350,6 +354,8 @@ export class OrdonnancesServices {
 
       return customCreatePdf({ files, options });
     } catch (error) {
+      console.log(error);
+
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }

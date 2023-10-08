@@ -23,6 +23,7 @@ import {
   DevisHNPdfDto,
   DevisRequestAjaxDto,
 } from './dto/devisHN.dto';
+import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
 
 @ApiBearerAuth()
 @Controller('/dental')
@@ -65,7 +66,7 @@ export class DevisHNController {
    * dental/devisHN/devisHN_pdf.php
    */
   @Get('devisHN/devisHN_pdf')
-  @UseGuards(TokenGuard)
+  @UseGuards(TokenDownloadGuard)
   async devisHNGetPDF(
     @Res() res: Response,
     @CurrentUser() user: UserIdentity,
@@ -77,7 +78,7 @@ export class DevisHNController {
       res.set({
         // pdf
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename=print.pdf`,
+        'Content-Disposition': `inline; filename=print.pdf`,
         'Content-Length': buffer.length,
         // prevent cache
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -85,8 +86,8 @@ export class DevisHNController {
         Expires: 0,
       });
       res.end(buffer);
-    } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF, error);
+    } catch {
+      throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
 

@@ -198,7 +198,7 @@ export class PatientService {
         .where('id = :id', { id: patient?.id })
         .execute();
     } catch (error) {
-      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 

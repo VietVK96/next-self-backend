@@ -29,7 +29,7 @@ export class LetterImporterService {
   /**
    * File: php/document/letters/import.php -> full
    */
-  async letterImport(user: UserIdentity, pathname: string) {
+  async letterImport(user: UserIdentity, pathname: string, userId: number) {
     const BATCH_SIZE = 50;
     let i = 1;
     const fileName = pathname;
@@ -56,20 +56,20 @@ export class LetterImporterService {
       await logger(handle, JSON.stringify(data), true);
       throw new CBadRequestException(ErrorCode.FILE_NOT_FOUND);
     }
-    const patients = await this.contactRepo.find({
-      where: { organizationId: user?.org },
-    });
-    const users = await this.userRepo.find({
-      relations: ['medical'],
-      order: {
-        lastname: 'asc',
-        firstname: 'asc',
-      },
-    });
-    const doctors = users.filter(
-      (u) => u?.medical && u?.organizationId === user?.org,
-    );
-    if (!(doctors?.length > 0)) {
+
+    let users: UserEntity[] = await this.userRepo
+      .createQueryBuilder('u')
+      .innerJoinAndSelect('u.medical', 'm')
+      .where('u.organizationId = :orgId', { orgId: user?.org })
+      .orderBy('u.lastname', 'ASC')
+      .addOrderBy('u.firstname', 'ASC')
+      .getMany();
+
+    if (userId) {
+      users = users.filter((user) => userId === user.id);
+    }
+
+    if (users?.length <= 0) {
       const data = {
         status: -1,
         error: 'Aucun utilisateur sélectionné',
@@ -77,9 +77,9 @@ export class LetterImporterService {
       await logger(handle, JSON.stringify(data), true);
       throw new CBadRequestException('Aucun utilisateur sélectionné');
     }
+
     const zip = new AdmZip(fileName);
-    const zipEntries = zip.getEntries();
-    if (!zip) {
+    if (!zip || zip?.getEntryCount() <= 0) {
       const data = {
         status: -1,
         error:
@@ -90,6 +90,8 @@ export class LetterImporterService {
         "Impossible d'extraire les fichiers. Vérifier que le zip n'est pas corrompu.",
       );
     }
+
+    const zipEntries = zip.getEntries();
     for (let index = 0; index < zipEntries.length; index++) {
       const percent =
         Math.round(((100 * index) / zipEntries.length) * 100) / 100;
@@ -132,35 +134,44 @@ export class LetterImporterService {
           });
         }
       });
+
       let title = '';
       let type: EnumLettersType = EnumLettersType.CONTACT;
       const firstPos = originalFilename.indexOf('_');
       const firstPart = originalFilename.substring(0, firstPos);
       let createdAt: Date | null = null;
       let patient: ContactEntity | null = null;
+
       if (/^\d+$/.test(firstPart)) {
         title = originalFilename.substring(firstPos + 1);
-        patient = patients.find((p) => p?.nbr === parseFloat(firstPart));
+        patient = await this.contactRepo.findOneBy({
+          organizationId: user?.org,
+          nbr: Number(firstPart),
+        });
       } else if (firstPart === 'macdent') {
-        const elements = originalFilename.split('_');
+        const elements = originalFilename.split('_', 5);
         title =
           elements[3].substring(0, 3) +
-          (elements.length === 4 ? '' : ' : ' + elements[4]);
+          (elements.length === 4 ? '' : ' : ' + elements[4].replace(/_/g, ' '));
         createdAt = dayjs(elements[2]).toDate();
-        patient = patients.find((p) => p?.nbr === parseFloat(elements[1]));
+        patient = await this.contactRepo.findOneBy({
+          organizationId: user?.org,
+          nbr: Number(elements[1]),
+        });
       } else {
         const lastPos = originalFilename.lastIndexOf('_');
         const firstPart = originalFilename.substring(0, lastPos);
         title = firstPart
           .replace(/_/g, ' ')
           .toLowerCase()
-          .replace(/\b\w/g, (c) => c.toUpperCase());
+          .replace(/^./, (c) => c.toUpperCase());
 
         const lastChar = originalFilename.charAt(lastPos + 1);
         if (lastChar && lastChar.toUpperCase() !== 'P') {
           type = EnumLettersType.CORRESPONDENT;
         }
       }
+
       if (firstPart !== 'macdent' || patient) {
         for (const user of users) {
           try {
@@ -169,6 +180,7 @@ export class LetterImporterService {
             mail.title = title;
             mail.msg = root.querySelectorAll('body').toString();
             mail.type = type;
+
             if (createdAt) {
               mail.createdAt = createdAt;
               mail.updatedAt = createdAt;
@@ -176,18 +188,20 @@ export class LetterImporterService {
               mail.createdAt = dayjs().toDate();
               mail.updatedAt = dayjs().toDate();
             }
+
             if (patient) {
-              mail.patient = patient;
               mail.conId = patient?.id;
             }
+
             await this.letterRepo.save(mail);
           } catch (error) {
             throw new CBadRequestException(
-              error?.response?.msg || error?.sqlMessage,
+              ErrorCode.STATUS_INTERNAL_SERVER_ERROR,
             );
           }
         }
       }
+
       if (++i % BATCH_SIZE === 0) {
         const data = {
           status: 1,
@@ -198,6 +212,7 @@ export class LetterImporterService {
         await logger(handle, JSON.stringify(data), false);
       }
     }
+
     const dataJson = {
       status: 1,
       action: 'Importation des fichiers terminé',

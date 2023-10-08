@@ -9,6 +9,7 @@ import {
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 import { OrganizationSubscriptionService } from './service/organizationSubscription.service';
 import { SubscriptionsPlanUpdateDto } from './dto/organization.dto';
+import { ErrorCode } from 'src/constants/error';
 
 @ApiTags('Organization')
 @Controller('organization')
@@ -29,7 +30,7 @@ export class OrganizationController {
     try {
       return await this.organizationService.about(identity);
     } catch (error) {
-      throw new CBadRequestException('error get about organization', error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -43,7 +44,7 @@ export class OrganizationController {
         identity.org,
       );
     } catch (error) {
-      throw new CBadRequestException('error get about organization', error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 

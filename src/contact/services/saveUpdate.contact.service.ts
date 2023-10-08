@@ -24,8 +24,6 @@ export class SaveUpdateContactService {
   constructor(
     @InjectRepository(PatientMedicalEntity)
     private readonly patientMedicalRepository: Repository<PatientMedicalEntity>,
-    @InjectRepository(ContactEntity)
-    private readonly contactRepo: Repository<ContactEntity>,
     private dataSource: DataSource,
     private contactService: ContactService,
   ) {}
@@ -90,7 +88,7 @@ export class SaveUpdateContactService {
 
       const medical = await this.patientMedicalRepository.findOne({
         where: {
-          patientId: reqBody.id,
+          patientId: reqBody?.id,
         },
       });
 
@@ -98,13 +96,12 @@ export class SaveUpdateContactService {
       if (medical) {
         medicalUpdate = {
           ...medical,
-          tariffTypeId: reqBody.medical.tariffTypeId,
+          tariffTypeId: reqBody?.medical?.tariffTypeId ?? null,
         };
       } else {
         medicalUpdate = {
-          ...medical,
-          patientId: reqBody.id,
-          tariffTypeId: reqBody.medical.tariffTypeId,
+          patientId: reqBody?.id,
+          tariffTypeId: reqBody?.medical?.tariffTypeId ?? null,
         };
       }
       await this.patientMedicalRepository.save(medicalUpdate);
@@ -127,8 +124,8 @@ export class SaveUpdateContactService {
         cofId: checkId(reqBody?.contactFamilyId),
         profession: reqBody?.profession || null,
         email: reqBody?.email || null,
-        birthday: checkDay(reqBody.birthday),
-        quality: checkNumber(reqBody.quality),
+        birthday: checkDay(reqBody?.birthday),
+        quality: checkNumber(reqBody?.quality),
         breastfeeding: checkNumber(reqBody?.breastfeeding) || 0,
         pregnancy: checkNumber(reqBody?.pregnancy) || 0,
         clearanceCreatinine: checkNumber(reqBody?.clearanceCreatinine) || 0,
@@ -142,7 +139,7 @@ export class SaveUpdateContactService {
         notificationEveryTime: checkNumber(reqBody?.notificationEveryTime) || 0,
         reminderVisitType:
           EnumContactReminderVisitType[
-            reqBody.reminderVisitType.toUpperCase()
+            reqBody?.reminderVisitType.toUpperCase()
           ] || EnumContactReminderVisitType.DURATION,
         reminderVisitDuration: checkNumber(reqBody?.reminderVisitDuration),
         reminderVisitDate: reqBody?.reminderVisitDate || null,

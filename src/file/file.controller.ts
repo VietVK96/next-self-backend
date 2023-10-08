@@ -65,7 +65,14 @@ export class FileController {
     try {
       const { mimeType, path } = await this.fileService.getPathFile(id);
       const streamFile = resizeThumbnail(path, mimeType.split('/')[1]);
-
+      streamFile.on('error', () => {
+        const streamFileFail = resizeThumbnail(
+          join(process.cwd(), 'resources/front/no_image.png'),
+          'jpg',
+        );
+        res.setHeader('Content-Type', 'image/png');
+        streamFileFail.pipe(res);
+      });
       streamFile.pipe(res);
     } catch (error) {
       const streamFile = resizeThumbnail(

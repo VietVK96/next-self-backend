@@ -19,6 +19,7 @@ import { checkBoolean, checkId } from 'src/common/util/number';
 import { changeSectorNumberToTooth } from 'src/common/util/odontogram';
 import { parseJson } from 'src/common/util/json';
 import { PatientOdontogramStyleRes } from '../reponse/patientOdontogram.res';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class PatientOdontogramService {
@@ -132,7 +133,7 @@ export class PatientOdontogramService {
 
       return await this.odontogramRunStatus(evenTasks);
     } catch (err) {
-      throw new CBadRequestException(err);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -173,7 +174,7 @@ export class PatientOdontogramService {
       );
       return await this.odontogramRunStatus(evenTasks);
     } catch (error) {
-      throw new CBadRequestException(error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
   async odontogramRunStatus(evenTasks: EventTaskEntity[]) {

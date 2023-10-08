@@ -4,6 +4,7 @@ import { OrganizationEntity } from 'src/entities/organization.entity';
 import { DataSource } from 'typeorm';
 import { StorageService } from './storage.service';
 import { UsersStorageDto } from '../dto/storage-pack.dto';
+import { ErrorCode } from 'src/constants/error';
 
 @Injectable()
 export class UsersStorageSpace {
@@ -73,7 +74,7 @@ export class UsersStorageSpace {
         total,
       };
     } catch (error) {
-      throw new CBadRequestException(error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -100,7 +101,7 @@ export class UsersStorageSpace {
         success: true,
       };
     } catch (error) {
-      throw new CBadRequestException(error);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

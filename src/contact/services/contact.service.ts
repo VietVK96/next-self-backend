@@ -494,7 +494,7 @@ count(CON_ID) as countId,COD_TYPE as codType
       }
       return nextId;
     } catch (error) {
-      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -537,7 +537,7 @@ count(CON_ID) as countId,COD_TYPE as codType
       }
       return previousId;
     } catch (error) {
-      throw new CBadRequestException(error?.response?.msg || error?.sqlMessage);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -684,8 +684,8 @@ count(CON_ID) as countId,COD_TYPE as codType
           },
         ],
       });
-    } catch (error) {
-      throw new CBadRequestException(error.message);
+    } catch {
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -727,8 +727,8 @@ count(CON_ID) as countId,COD_TYPE as codType
           },
         ],
       });
-    } catch (error) {
-      throw new CBadRequestException(error.message);
+    } catch {
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 }

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as mysql from 'mysql2';
 import {
   CashingEntity,
   EnumCashingPayment,
@@ -32,8 +33,9 @@ import {
   SlipCheck,
 } from '../../interfaces/interface';
 import { DEFAULT_LOCALE } from 'src/constants/default';
-import { customCreatePdf } from 'src/common/util/pdf';
+import { PrintPDFOptions, customCreatePdf } from 'src/common/util/pdf';
 import { checkNumber } from 'src/common/util/number';
+import { PDFOptions } from 'puppeteer';
 
 dayjs.locale(DEFAULT_LOCALE);
 @Injectable()
@@ -254,12 +256,46 @@ export class CashingService {
         },
       };
 
+      let periodTitle: string;
+
+      switch (payload?.group) {
+        case 'day':
+          periodTitle = 'Livre des honoraires journaliers';
+          break;
+        case 'month':
+          periodTitle = 'Livre des honoraires mensuels';
+          break;
+        default:
+          periodTitle = 'Journal des encaissements';
+          break;
+      }
+
+      const filteredConditions = payload?.conditions.filter((condition) =>
+        ['csg.date', 'csg.paymentDate'].includes(condition.field),
+      );
+
+      if (filteredConditions.length > 0) {
+        const periodValues = filteredConditions.map(
+          (condition) => new Date(condition.value),
+        );
+        const periodMin = new Date(
+          Math.min(...periodValues.map((date) => date.getTime())),
+        );
+
+        const periodMax = new Date(
+          Math.max(...periodValues.map((date) => date.getTime())),
+        );
+        periodTitle += ` du ${dayjs(periodMin).format('DD/MM/YYYY')} au ${dayjs(
+          periodMax,
+        ).format('DD/MM/YYYY')}`;
+      }
+
       const filePath = path.join(
         process.cwd(),
         'templates/pdf/cashing',
         'cashing.hbs',
       );
-      const options = {
+      const options: PrintPDFOptions = {
         format: 'A4',
         displayHeaderFooter: true,
         headerTemplate: `<div style="width: 100%;margin: 0 5mm;font-size: 8px; display:flex; justify-content:space-between"><div>${user.lastname} ${user.firstname}</div> <div>Dossiers créditeurs</div></div>`,
@@ -269,6 +305,9 @@ export class CashingService {
           top: '25mm',
           right: '5mm',
           bottom: '15mm',
+        },
+        metadata: {
+          title: periodTitle,
         },
       };
 
@@ -321,7 +360,7 @@ export class CashingService {
           total,
           byDay,
         };
-        return await customCreatePdf({
+        const buffer = await customCreatePdf({
           files: [{ data, path: filePath }],
           options,
           helpers: {
@@ -335,6 +374,10 @@ export class CashingService {
             },
           },
         });
+        return {
+          buffer,
+          periodTitle,
+        };
       } else {
         let amountTotal = 0;
         let amountCareTotal = 0;
@@ -417,10 +460,14 @@ export class CashingService {
           total,
         };
 
-        return await customCreatePdf({
+        const buffer = await customCreatePdf({
           files: [{ data, path: filePath }],
           options,
         });
+        return {
+          buffer,
+          periodTitle,
+        };
       }
     } catch (error) {
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
@@ -690,10 +737,6 @@ export class CashingService {
   // suport findByDoctor
   private conditionsToSQL(conditions: FindAllStructDto[]): string {
     const conditionFields = {
-      // Định nghĩa các trường điều kiện tại đây
-      // Ví dụ:
-      // field1: 'table_name.field1',
-      // field2: 'table_name.field2',
       'csg.date': 'T_CASHING_CSG.CSG_DATE',
       'csg.paymentDate': 'T_CASHING_CSG.CSG_PAYMENT_DATE',
       'csg.amount': 'T_CASHING_CSG.CSG_AMOUNT',
@@ -707,21 +750,11 @@ export class CashingService {
       'lbk.abbr': 'T_LIBRARY_BANK_LBK.LBK_ABBR',
     };
     const conditionOperators = {
-      // Định nghĩa các toán tử điều kiện tại đây
-      // Ví dụ:
-      // equals: '=',
-      // greaterThan: '>',
-      // lessThan: '<',
-      // ...
       gte: '>=',
       eq: '=',
       lte: '<=',
       like: 'LIKE',
     };
-    // Viết hàm chuyển đổi các điều kiện thành câu SQL tương tự như trước đó
-    // (Ví dụ: AND field1 = value1 AND field2 > value2 ...)
-    // Hàm này không cần sửa đổi nếu logic xử lý điều kiện không thay đổi.
-    // Return câu điều kiện SQL được tạo ra từ mảng conditions.
     const wheres = [];
 
     for (const condition of conditions) {
@@ -732,12 +765,12 @@ export class CashingService {
       }
 
       const operator = conditionUse?.op;
-      const value = conditionUse?.value;
+      const value = mysql.escape(conditionUse?.value);
       const field = conditionUse?.field;
 
       if (conditionFields[field] && conditionOperators[operator]) {
         wheres.push(
-          `${conditionFields[field]} ${conditionOperators[operator]} '${value}'`,
+          `${conditionFields[field]} ${conditionOperators[operator]} ${value}`,
         );
       }
     }

@@ -67,9 +67,9 @@ export class DocumentServices {
 
     const typeEnum = await this.convertToEnumContactDocumentType(type);
     await this.contactDocumentRepository.save({
-      conId: contact[0].id,
+      conId: contact[0]?.id,
       type: typeEnum,
-      uplId: fileUpload.id,
+      uplId: fileUpload?.id,
     });
 
     //@TODO: // 2012-12-12 09:25 romain
