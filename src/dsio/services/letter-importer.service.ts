@@ -157,10 +157,12 @@ export class LetterImporterService {
           elements[3].substring(0, 3) +
           (elements.length === 4 ? '' : ' : ' + elements[4].replace(/_/g, ' '));
         createdAt = dayjs(elements[2]).toDate();
-        patient = await this.contactRepo.findOneBy({
-          organizationId: user?.org,
-          nbr: Number(elements[1]),
-        });
+        if (/^\d+$/.test(elements[1])) {
+          patient = await this.contactRepo.findOneBy({
+            organizationId: user?.org,
+            nbr: Number(elements[1]),
+          });
+        }
       } else {
         const lastPos = originalFilename.lastIndexOf('_');
         const firstPart = originalFilename.substring(0, lastPos);
