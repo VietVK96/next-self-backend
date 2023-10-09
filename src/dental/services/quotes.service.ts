@@ -424,7 +424,7 @@ export class QuotesServices {
         ORDER BY ETK.EVT_ID, ETK.ETK_POS
       `;
       const actes: any[] = await this.dataSource.query(queryAct, [idsEvents]);
-      actes.map((acte: any, index: number) => {
+      actes?.map((acte: any, index: number) => {
         if (acte?.ngap_key_name) {
           acte.localisation = actes[Math.max(0, index - 1)].localisation;
         }
@@ -643,7 +643,8 @@ export class QuotesServices {
       )
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
       const id_devis = dentalQuotation?.insertId;
-
+      console.log('-----data-----', dentalQuotation?.insertId);
+      console.log('-----data-----', dentalQuotation);
       for (let index = 0; index < actes.length; index++) {
         const acte = actes[index];
 
