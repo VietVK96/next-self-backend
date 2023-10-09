@@ -643,8 +643,7 @@ export class QuotesServices {
       )
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
       const id_devis = dentalQuotation?.insertId;
-      console.log('-----data-----', dentalQuotation?.insertId);
-      console.log('-----data-----', dentalQuotation);
+
       for (let index = 0; index < actes.length; index++) {
         const acte = actes[index];
 
@@ -685,19 +684,25 @@ export class QuotesServices {
       queryRunner.commitTransaction();
       const quote = await this.dentalQuotationRepository.findOne({
         where: { id: id_devis },
-        relations: [
-          'acts',
-          'user',
-          'patient',
-          'acts.libraryActQuantity',
-          'acts.libraryActQuantity.ccam',
-          'acts.libraryActQuantity.ccam.cmuCodifications',
-          'acts.libraryActQuantity.ccam.teeth',
-          'acts.libraryActQuantity.ccam.unitPrices',
-          'acts.libraryActQuantity.ccam.family',
-          'acts.libraryActQuantity.ccam.family.panier',
-        ],
+        relations: {
+          acts: {
+            libraryActQuantity: {
+              ccam: {
+                cmuCodifications: true,
+                teeth: true,
+                unitPrices: true,
+                family: {
+                  panier: true,
+                },
+              },
+            },
+          },
+          user: true,
+          patient: true,
+        },
       });
+      console.log('-----quote-----', quote);
+      console.log('-----id_devis-----', id_devis);
       const libraryActs = await this.libraryActRepository.find({
         relations: ['attachments'],
       });
