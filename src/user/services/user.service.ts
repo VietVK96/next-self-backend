@@ -41,7 +41,7 @@ export class UserService {
 
   // application/Services/User.php 153 -> 207
   async find(id: number) {
-    id = checkId(id);
+    const ids = checkId(id);
     const queryBuiler = this.dataSource.createQueryBuilder();
     const select = `
     USR.USR_ID AS id,
@@ -83,52 +83,52 @@ export class UserService {
       )
       .leftJoin(UserTypeEntity, 'UST', 'UST.UST_ID = USR.UST_ID')
       .leftJoin(UserMedicalEntity, 'UMD', 'UMD.user_id = USR.USR_ID')
-      .where('USR.USR_ID = :id', { id: id || 0 });
-    const user = await q.getRawOne();
-    if (!user?.id) {
-      throw new CBadRequestException(ErrorCode.NOT_FOUND_USER);
-    }
-    const address = await this.addressService.find(user?.address_id);
+      .where('USR.USR_ID = :id', { id: ids || 0 });
 
-    // for get eventType and reminders when create appointment
-    const eventTypes = await this.dataSource.manager.find(EventTypeEntity, {
-      where: {
-        userId: user?.id,
-      },
-    });
-    const preferences = await this.dataSource.manager.findOne(
-      UserPreferenceEntity,
-      { where: { usrId: user?.id } },
-    );
-    const appointmentReminderLibraries = await this.dataSource.manager.find(
-      AppointmentReminderLibraryEntity,
-      {
+    const user = await q.getRawOne();
+
+    if (user?.id) {
+      const address = await this.addressService.find(user?.address_id);
+      // for get eventType and reminders when create appointment
+      const eventTypes = await this.dataSource.manager.find(EventTypeEntity, {
         where: {
-          usrId: user.id,
+          userId: user?.id,
         },
-        relations: {
-          addressee: true,
-          category: true,
-          timelimitUnit: true,
+      });
+      const preferences = await this.dataSource.manager.findOne(
+        UserPreferenceEntity,
+        { where: { usrId: user?.id } },
+      );
+      const appointmentReminderLibraries = await this.dataSource.manager.find(
+        AppointmentReminderLibraryEntity,
+        {
+          where: {
+            usrId: user?.id,
+          },
+          relations: {
+            addressee: true,
+            category: true,
+            timelimitUnit: true,
+          },
+          select: {
+            id: true,
+            timelimit: true,
+            addressee: { id: true },
+            category: { id: true },
+            timelimitUnit: { id: true },
+          },
         },
-        select: {
-          id: true,
-          timelimit: true,
-          addressee: { id: true },
-          category: { id: true },
-          timelimitUnit: { id: true },
+      );
+      return {
+        ...user,
+        address: {
+          ...address,
         },
-      },
-    );
-    return {
-      ...user,
-      address: {
-        ...address,
-      },
-      preferences,
-      eventTypes,
-      appointmentReminderLibraries,
-    };
+        preferences,
+        eventTypes,
+        appointmentReminderLibraries,
+      };
+    }
   }
 
   async updateUserMedical(id: number, payload: UpdateTherapeuticDto) {
@@ -397,7 +397,9 @@ export class UserService {
     if (!userData) throw new CBadRequestException(ErrorCode.NOT_FOUND);
 
     const userFrom = await this.find(loginUserId);
+
     const userTo = await this.find(queryId);
+
     const permission = await this._findAllPermissions(userTo?.id);
 
     if (!(userFrom?.admin || userFrom?.id === userTo?.id)) {
@@ -425,7 +427,6 @@ export class UserService {
         doctors: practitioners,
       };
     } catch (err) {
-      console.log('🚀 ~ file: user.service.ts:428 ~ UserService ~ err:', err);
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
