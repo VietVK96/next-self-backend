@@ -391,6 +391,7 @@ export class UserService {
     const userData = await this.userRepository.findOne({
       where: { id: queryId },
     });
+
     const practitioners = await this._getPractitioners(organizationId);
 
     if (!userData) throw new CBadRequestException(ErrorCode.NOT_FOUND);
@@ -402,25 +403,31 @@ export class UserService {
     if (!(userFrom?.admin || userFrom?.id === userTo?.id)) {
       throw new CBadRequestException(ErrorCode.CANNOT_EDIT_USER);
     }
-    const doctors = permission.doctors;
-    practitioners.forEach((prac, indexP) => {
-      doctors.forEach((doc) => {
-        if (prac?.id === doc?.id) {
-          practitioners[indexP]['permission'] = doc.permissionDoctor;
-        }
+
+    try {
+      const doctors = permission.doctors;
+      practitioners.forEach((prac, indexP) => {
+        doctors.forEach((doc) => {
+          if (prac?.id === doc?.id) {
+            practitioners[indexP]['permission'] = doc.permissionDoctor;
+          }
+        });
       });
-    });
-    const { id, lastname, firstname, color } = userTo;
-    return {
-      user: {
-        id,
-        lastname,
-        firstname,
-        color,
-        permission: permission.current,
-      },
-      doctors: practitioners,
-    };
+      const { id, lastname, firstname, color } = userTo;
+      return {
+        user: {
+          id,
+          lastname,
+          firstname,
+          color,
+          permission: permission.current,
+        },
+        doctors: practitioners,
+      };
+    } catch (err) {
+      console.log('🚀 ~ file: user.service.ts:428 ~ UserService ~ err:', err);
+      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+    }
   }
 
   async updateActiveUser(
