@@ -66,9 +66,10 @@ export class DataMailService {
                 T_LETTERS_LET.USR_ID IS NULL OR
                 T_LETTERS_LET.USR_ID = ?
             )
-        ORDER BY favorite DESC, ? ?`,
-        [search, docId, usableOrderBy, direction],
+        ORDER BY favorite DESC,?? ${direction}`,
+        [search, docId, usableOrderBy],
       );
+
       for (const iterator of mails) {
         if (iterator.doctor_id !== null && docId)
           iterator.doctor = doctors.find(
