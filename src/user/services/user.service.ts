@@ -41,7 +41,7 @@ export class UserService {
 
   // application/Services/User.php 153 -> 207
   async find(id: number) {
-    id = checkId(id);
+    const ids = checkId(id);
     const queryBuiler = this.dataSource.createQueryBuilder();
     const select = `
     USR.USR_ID AS id,
@@ -83,11 +83,19 @@ export class UserService {
       )
       .leftJoin(UserTypeEntity, 'UST', 'UST.UST_ID = USR.UST_ID')
       .leftJoin(UserMedicalEntity, 'UMD', 'UMD.user_id = USR.USR_ID')
-      .where('USR.USR_ID = :id', { id: id || 0 });
+      .where('USR.USR_ID = :id', { id: ids || 0 });
+
     const user = await q.getRawOne();
+
+    console.log(
+      '🚀 ~ file: user.service.ts:88 ~ UserService ~ find ~ user:',
+      user,
+    );
+
     if (!user?.id) {
       throw new CBadRequestException(ErrorCode.NOT_FOUND_USER);
     }
+
     const address = await this.addressService.find(user?.address_id);
 
     // for get eventType and reminders when create appointment
@@ -397,7 +405,9 @@ export class UserService {
     if (!userData) throw new CBadRequestException(ErrorCode.NOT_FOUND);
 
     const userFrom = await this.find(loginUserId);
+
     const userTo = await this.find(queryId);
+
     const permission = await this._findAllPermissions(userTo?.id);
 
     if (!(userFrom?.admin || userFrom?.id === userTo?.id)) {
