@@ -701,8 +701,6 @@ export class QuotesServices {
           patient: true,
         },
       });
-      console.log('-----quote-----', quote);
-      console.log('-----id_devis-----', id_devis);
       const libraryActs = await this.libraryActRepository.find({
         relations: ['attachments'],
       });
