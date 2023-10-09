@@ -681,7 +681,7 @@ export class QuotesServices {
           acte.id_devis_acte = dentalQuotationAct?.insertId;
         }
       }
-      queryRunner.commitTransaction();
+      await queryRunner.commitTransaction();
       const quote = await this.dentalQuotationRepository.findOne({
         where: { id: id_devis },
         relations: {
