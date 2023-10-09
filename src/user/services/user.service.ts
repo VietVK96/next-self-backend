@@ -87,56 +87,48 @@ export class UserService {
 
     const user = await q.getRawOne();
 
-    console.log(
-      '🚀 ~ file: user.service.ts:88 ~ UserService ~ find ~ user:',
-      user,
-    );
-
-    if (!user?.id) {
-      throw new CBadRequestException(ErrorCode.NOT_FOUND_USER);
-    }
-
-    const address = await this.addressService.find(user?.address_id);
-
-    // for get eventType and reminders when create appointment
-    const eventTypes = await this.dataSource.manager.find(EventTypeEntity, {
-      where: {
-        userId: user?.id,
-      },
-    });
-    const preferences = await this.dataSource.manager.findOne(
-      UserPreferenceEntity,
-      { where: { usrId: user?.id } },
-    );
-    const appointmentReminderLibraries = await this.dataSource.manager.find(
-      AppointmentReminderLibraryEntity,
-      {
+    if (user?.id) {
+      const address = await this.addressService.find(user?.address_id);
+      // for get eventType and reminders when create appointment
+      const eventTypes = await this.dataSource.manager.find(EventTypeEntity, {
         where: {
-          usrId: user.id,
+          userId: user?.id,
         },
-        relations: {
-          addressee: true,
-          category: true,
-          timelimitUnit: true,
+      });
+      const preferences = await this.dataSource.manager.findOne(
+        UserPreferenceEntity,
+        { where: { usrId: user?.id } },
+      );
+      const appointmentReminderLibraries = await this.dataSource.manager.find(
+        AppointmentReminderLibraryEntity,
+        {
+          where: {
+            usrId: user?.id,
+          },
+          relations: {
+            addressee: true,
+            category: true,
+            timelimitUnit: true,
+          },
+          select: {
+            id: true,
+            timelimit: true,
+            addressee: { id: true },
+            category: { id: true },
+            timelimitUnit: { id: true },
+          },
         },
-        select: {
-          id: true,
-          timelimit: true,
-          addressee: { id: true },
-          category: { id: true },
-          timelimitUnit: { id: true },
+      );
+      return {
+        ...user,
+        address: {
+          ...address,
         },
-      },
-    );
-    return {
-      ...user,
-      address: {
-        ...address,
-      },
-      preferences,
-      eventTypes,
-      appointmentReminderLibraries,
-    };
+        preferences,
+        eventTypes,
+        appointmentReminderLibraries,
+      };
+    }
   }
 
   async updateUserMedical(id: number, payload: UpdateTherapeuticDto) {
@@ -435,7 +427,6 @@ export class UserService {
         doctors: practitioners,
       };
     } catch (err) {
-      console.log('🚀 ~ file: user.service.ts:428 ~ UserService ~ err:', err);
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
