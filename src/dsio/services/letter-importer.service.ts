@@ -149,7 +149,10 @@ export class LetterImporterService {
           nbr: Number(firstPart),
         });
       } else if (firstPart === 'macdent') {
-        const elements = originalFilename.split('_', 5);
+        let elements = originalFilename.split('_');
+        if (elements.length >= 5) {
+          elements = elements.slice(0, 4).concat(elements.slice(4).join('_'));
+        }
         title =
           elements[3].substring(0, 3) +
           (elements.length === 4 ? '' : ' : ' + elements[4].replace(/_/g, ' '));
