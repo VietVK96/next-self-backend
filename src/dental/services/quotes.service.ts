@@ -732,7 +732,7 @@ export class QuotesServices {
       let amoRefundTotal = 0;
       let patientAmountTotal = 0;
 
-      for (const act of quote?.acts) {
+      for (const act of quote?.acts ?? []) {
         const ccam = act?.libraryActQuantity
           ? act.libraryActQuantity?.ccam
           : null;
