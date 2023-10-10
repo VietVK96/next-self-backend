@@ -124,6 +124,7 @@ export class DocumentServices {
       AND COD.COD_TYPE = ?
       AND COD.UPL_ID = UPL.UPL_ID
       AND UPL.USR_ID = USR.USR_ID
+      ORDER BY created_at DESC
     `;
     const queryParameters = [orgId, patientId, type];
 
