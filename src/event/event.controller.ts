@@ -113,7 +113,7 @@ export class EventController {
     @Body() payload: DeteleEventDto,
     @Param('id') id: number,
   ) {
-    return await this.eventService.detete(id, identity.org, payload);
+    return await this.eventService.detete(id, identity?.id, payload);
   }
 
   /**
