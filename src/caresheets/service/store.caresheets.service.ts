@@ -312,7 +312,23 @@ export class StoreCaresheetsService {
       );
       return await this.fseRepository.findOne({ where: { id: fseSave?.id } });
     } catch (error) {
-      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+      if (
+        error === ErrorCode.ERROR_CARESHEET_ACTS_IS_EMPTY ||
+        error?.response?.msg === ErrorCode.ERROR_CARESHEET_ACTS_IS_EMPTY
+      )
+        throw new CBadRequestException(ErrorCode.ERROR_CARESHEET_ACTS_IS_EMPTY);
+      else if (
+        error === ErrorCode.ERROR_PATIENT_IS_REQUIRED ||
+        error?.response?.msg === ErrorCode.ERROR_PATIENT_IS_REQUIRED
+      )
+        throw new CBadRequestException(ErrorCode.ERROR_PATIENT_IS_REQUIRED);
+      else if (
+        error === ErrorCode.FSE_REQUIRED_CARE_PATH ||
+        error?.response?.msg === ErrorCode.FSE_REQUIRED_CARE_PATH
+      )
+        throw new CBadRequestException(ErrorCode.FSE_REQUIRED_CARE_PATH);
+      else
+        throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
 

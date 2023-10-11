@@ -90,6 +90,7 @@ export enum ErrorCode {
   NOT_FOUND_QUANTITIES = 'NOT_FOUND_QUANTITIES',
   CANNOT_REQUEST_CLAUDEBERNARD = 'CANNOT_REQUEST_CLAUDEBERNARD',
   NOT_FOUND_PATIENT_ID_IN_CART_VITAL = 'NOT_FOUND_PATIENT_ID_IN_CART_VITAL',
+  FSE_REQUIRED_CARE_PATH = 'Le parcours de soin est obligatoire pour les prescripteurs.',
 }
 
 export enum HttpStatus {
