@@ -73,6 +73,10 @@ export const helpersCaresheetPdf = {
   formatNumber: (n: number) => {
     return Number(n).toFixed(2);
   },
+  genActTeeth: (x: any) => {
+    const y = Number(x) + 1;
+    return 'act' + y + 'Teeth';
+  },
 };
 
 export const optionsCaresheetPdf: PrintPDFOptions = {

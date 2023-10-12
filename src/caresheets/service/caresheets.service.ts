@@ -434,6 +434,18 @@ export class ActsService {
         caresheetId: caresheet?.id,
       },
     });
+
+    if (caresheet?.actMedicals.length > 0) {
+      caresheet.actMedicals = caresheet?.actMedicals?.map((dentalEventTask) => {
+        return {
+          ...dentalEventTask,
+          teethArr: dentalEventTask?.teeth?.includes(',')
+            ? dentalEventTask?.teeth?.split(',')
+            : [dentalEventTask?.teeth],
+        };
+      });
+    }
+
     const filePath = path.join(
       process.cwd(),
       'templates/pdf/caresheets',

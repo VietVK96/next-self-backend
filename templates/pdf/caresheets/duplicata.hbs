@@ -288,12 +288,12 @@
         <div class="actExceeding"> {{exceeding}} </div>
         {{/if}}
     </div>
-    {{#if teeth}}
-    <div class="act{{@index}}Teeth">
-        <div class="actTeeth">
-            {{#table (padEnd (joinAndReplace actMedical.teeth "00" "0102") 32)}} {{/table}}
+    {{#if teethArr}}
+        <div class="{{genActTeeth @index}}">
+            <div class="actTeeth">
+                {{padEnd (joinAndReplace teethArr "00" "0102") 32}}
+            </div>
         </div>
-    </div>
     {{/if}}
     {{/each}}
     <div class="amountTotal">
