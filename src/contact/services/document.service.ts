@@ -137,6 +137,7 @@ export class DocumentServices {
       `;
       queryParameters.push(...tags);
     }
+    query += `ORDER BY created_at DESC`;
     return await this.dataSource.query(query, queryParameters);
   }
 

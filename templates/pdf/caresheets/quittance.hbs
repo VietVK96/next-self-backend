@@ -1,6 +1,3 @@
-
-
-
     <title>{{ 'Quittance' }}</title>
     <style>
 
@@ -29,16 +26,19 @@
     table {
         width: 100%;
         border-collapse: collapse;
+        font-size: 12px;
     }
 
     table thead th {
         text-align: center;
+        font-size: 12px;
     }
 
     table td,
     table th {
         padding: 2mm;
         vertical-align: top;
+        font-size: 12px;
     }
 
     table.bordered td,
@@ -162,7 +162,7 @@
                     {{/if}}
                 </td>
                 <td class="text-right">{{ this.act.amount}} {{../currencyy}}</td>
-                <td class="text-right">{{ this.secuRepayment}} {{../currencyy}}</td>
+                <td class="text-right">{{ this.secuRepayment }} {{../currencyy}}</td>
                 <td class="text-right">{{ this.mutualRepayment }} {{../currencyy}}</td>
                 <td class="text-right">{{ this.personAmount}} {{../currencyy}}</td>
             </tr>
@@ -180,16 +180,16 @@
                   {{/if}}
                 </td>
                 <td class="text-right">
-                    <strong>{{ caresheet.amount}} {{../currencyy}}</strong>
+                    <strong>{{ caresheet.amount}} {{ currencyy }}</strong>
                 </td>
                 <td class="text-right">
-                    <strong>{{ caresheet.amountAMO }} {{../currencyy}}</strong>
+                    <strong>{{ caresheet.amountAMO }} {{ currencyy }}</strong>
                 </td>
                 <td class="text-right">
-                    <strong>{{ caresheet.amountAMC }} {{../currencyy}}</strong>
+                    <strong>{{ caresheet.amountAMC }} {{ currencyy }}</strong>
                 </td>
                 <td class="text-right">
-                    <strong>{{ caresheet.amountAssure }} {{../currencyy}}</strong>
+                    <strong>{{ caresheet.amountAssure }} {{ currencyy }}</strong>
                 </td>
             </tr>
         </tfoot>

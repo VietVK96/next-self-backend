@@ -424,7 +424,7 @@ export class QuotesServices {
         ORDER BY ETK.EVT_ID, ETK.ETK_POS
       `;
       const actes: any[] = await this.dataSource.query(queryAct, [idsEvents]);
-      actes.map((acte: any, index: number) => {
+      actes?.map((acte: any, index: number) => {
         if (acte?.ngap_key_name) {
           acte.localisation = actes[Math.max(0, index - 1)].localisation;
         }
@@ -681,21 +681,25 @@ export class QuotesServices {
           acte.id_devis_acte = dentalQuotationAct?.insertId;
         }
       }
-      queryRunner.commitTransaction();
+      await queryRunner.commitTransaction();
       const quote = await this.dentalQuotationRepository.findOne({
         where: { id: id_devis },
-        relations: [
-          'acts',
-          'user',
-          'patient',
-          'acts.libraryActQuantity',
-          'acts.libraryActQuantity.ccam',
-          'acts.libraryActQuantity.ccam.cmuCodifications',
-          'acts.libraryActQuantity.ccam.teeth',
-          'acts.libraryActQuantity.ccam.unitPrices',
-          'acts.libraryActQuantity.ccam.family',
-          'acts.libraryActQuantity.ccam.family.panier',
-        ],
+        relations: {
+          acts: {
+            libraryActQuantity: {
+              ccam: {
+                cmuCodifications: true,
+                teeth: true,
+                unitPrices: true,
+                family: {
+                  panier: true,
+                },
+              },
+            },
+          },
+          user: true,
+          patient: true,
+        },
       });
       const libraryActs = await this.libraryActRepository.find({
         relations: ['attachments'],

@@ -38,7 +38,6 @@ import { UserConnectionService } from './services/user-connection.service';
 import { ListOfTreatmentsService } from './services/list-of-treatments.service';
 import { ListOfTreatmentsFindAllDto } from './dto/list-of-treatments.dto';
 import { CurrentDoctor } from 'src/common/decorator/doctor.decorator';
-import { TokenDownloadGuard } from 'src/common/decorator/token-download.decorator';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -249,15 +248,11 @@ export class UserController {
     @CurrentUser() identity: UserIdentity,
     @Param('id') id: number,
   ) {
-    try {
-      return await this.userService.getOneActiveUser(
-        identity.id,
-        id,
-        identity.org,
-      );
-    } catch (error) {
-      throw new CBadRequestException(ErrorCode.ERROR_GET_USER);
-    }
+    return await this.userService.getOneActiveUser(
+      identity.id,
+      id,
+      identity.org,
+    );
   }
 
   //settings/group/user.php

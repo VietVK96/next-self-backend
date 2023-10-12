@@ -28,20 +28,18 @@ export class ReminderService {
   private readonly logger = new Logger(ReminderService.name);
 
   public utf8ToGsm0338(utf8String, replacement = '') {
-    return utf8String.replace(/./g, function (character) {
+    for (const character of utf8String) {
       const codepoint = character.codePointAt(0);
-      const hexvalue = '0x' + codepoint.toString(16).toUpperCase();
-
+      const hexvalue = '0x00' + codepoint.toString(16).toUpperCase();
       if (GSM0338_CHARACTERS.includes(hexvalue)) {
-        return character;
+        replacement += character;
+      } else if (TRANSLITERATE.hasOwnProperty(hexvalue)) {
+        replacement += String.fromCodePoint(
+          parseInt(TRANSLITERATE[hexvalue], 16),
+        );
       }
-
-      if (TRANSLITERATE.hasOwnProperty(hexvalue)) {
-        return String.fromCodePoint(parseInt(TRANSLITERATE[hexvalue], 16));
-      }
-
-      return replacement;
-    });
+    }
+    return replacement;
   }
 
   public isValidEmail(email: string) {
@@ -208,7 +206,7 @@ export class ReminderService {
             templateRendered = this.utf8ToGsm0338(templateRendered);
             const currentUser = await this.datasource
               .getRepository(UserEntity)
-              .findOneOrFail({ where: { id: userId } });
+              .findOne({ where: { id: userId } });
             const notifier = this.texterService;
             notifier.setUser(currentUser);
             notifier.addReceiver(phoneNumber, countryCode);

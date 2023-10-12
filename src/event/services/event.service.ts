@@ -53,7 +53,7 @@ export class EventService {
 
   async detete(
     id: number,
-    orgId: number,
+    userId: number,
     payload: DeteleEventDto,
   ): Promise<SuccessResponse> {
     const { eventId, practitionerId, planId } =
@@ -62,11 +62,12 @@ export class EventService {
       !(await this.permissionService.hasPermission(
         PerCode.PERMISSION_DELETE,
         8,
-        orgId,
+        userId,
       )) ||
       !(await this.permissionService.hasPermission(
         PerCode.PERMISSION_CALENDAR,
         8,
+        userId,
         practitionerId,
       ))
     ) {

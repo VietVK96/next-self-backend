@@ -14,7 +14,7 @@ export enum ErrorCode {
   ERROR_GET_PDF = 'ERROR_GET_PDF',
   ERROR_PATIENT_IS_REQUIRED = 'error.patient.fields_required',
   FILE_NOT_FOUND = 'FILE_NOT_FOUND',
-  FORBIDDEN = 'FORBIDDEN REQUEST',
+  FORBIDDEN = 'http_error_forbidden',
   FRESH_TOKEN_WRONG = 'FRESH_TOKEN_WRONG',
   INSERT_FAILED = 'INSERT_FAILED',
   INVALID_FILE = 'INVALID_FILE',
@@ -90,6 +90,7 @@ export enum ErrorCode {
   NOT_FOUND_QUANTITIES = 'NOT_FOUND_QUANTITIES',
   CANNOT_REQUEST_CLAUDEBERNARD = 'CANNOT_REQUEST_CLAUDEBERNARD',
   NOT_FOUND_PATIENT_ID_IN_CART_VITAL = 'NOT_FOUND_PATIENT_ID_IN_CART_VITAL',
+  FSE_REQUIRED_CARE_PATH = 'Le parcours de soin est obligatoire pour les prescripteurs.',
 }
 
 export enum HttpStatus {
