@@ -46,6 +46,7 @@ import { LettersEntity } from 'src/entities/letters.entity';
 import { TranformVariableParam } from 'src/mail/dto/transformVariable.dto';
 import { DocumentMailService } from 'src/mail/services/document.mail.service';
 import { ContactNoteEntity } from 'src/entities/contact-note.entity';
+import { thirdPartySort } from 'src/constants/third-party';
 
 const TypeFile = {
   EXCEL: 'xlsx',
@@ -367,8 +368,6 @@ export class PatientService {
     if (!patient) {
       throw new CNotFoundRequestException('Patient Not Found');
     }
-    const sortParam =
-      sort === 'caresheet.creationDate' ? 'caresheet.date' : 'caresheet.nbr';
     const patients = await this.patientRepository.find({
       select: ['id', 'lastname', 'firstname'],
     });
@@ -412,7 +411,7 @@ export class PatientService {
           });
           break;
         case 'caresheet.number':
-          queryBuilder.andWhere('caresheet.number = LPAD(:number, 9, 0)', {
+          queryBuilder.andWhere('caresheet.nbr = LPAD(:number, 9, 0)', {
             number: valueParam,
           });
           break;
@@ -454,12 +453,15 @@ export class PatientService {
           break;
       }
     });
-    const queryResult: FseEntity[] = await queryBuilder
-      .orderBy(
-        sortParam,
+    const sortList = payload?.sort?.split('+') ?? [];
+    for (const sortItem of sortList) {
+      const sort = thirdPartySort[sortItem];
+      queryBuilder.addOrderBy(
+        sort,
         direction?.toLocaleLowerCase() === 'asc' ? 'ASC' : 'DESC',
-      )
-      .getRawMany();
+      );
+    }
+    const queryResult: FseEntity[] = await queryBuilder.getRawMany();
     const patientThirdParties = queryResult.map((item: FseEntity) => {
       const res: PatientThirdPartyRes = {
         id: item?.id,
@@ -507,8 +509,11 @@ export class PatientService {
       }
       return res;
     });
-    const offSet = (page - 1) * per_page;
-    const dataPaging = patientThirdParties.slice(offSet, offSet + per_page);
+    const offSet = page && per_page ? (page - 1) * per_page : 0;
+    const dataPaging =
+      page && per_page
+        ? patientThirdParties.slice(offSet, offSet + per_page)
+        : patientThirdParties;
     const data = {
       current_page_number: page,
       custom_parameters: { sorted: true },
