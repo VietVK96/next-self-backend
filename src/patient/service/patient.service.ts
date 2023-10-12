@@ -453,7 +453,7 @@ export class PatientService {
           break;
       }
     });
-    const sortList = payload?.sort?.split('+') ?? [];
+    const sortList = sort?.split('+') ?? [];
     for (const sortItem of sortList) {
       const sort = thirdPartySort[sortItem];
       queryBuilder.addOrderBy(
