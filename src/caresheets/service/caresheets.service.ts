@@ -904,7 +904,7 @@ export class ActsService {
         },
       },
     });
-
+    console.log('caresheet?.tasks =>>>>>>>>>>>', caresheet?.tasks);
     if (caresheet?.tasks) {
       caresheet.tasks = caresheet?.tasks?.map((dentalEventTask) => {
         return {
@@ -927,12 +927,15 @@ export class ActsService {
         caresheetId: caresheet?.id,
       },
     });
+    console.log('caresheet?.tasks update =>>>>>>>>>>>', caresheet?.tasks);
+
     const filePath = path.join(
       process.cwd(),
       'templates/pdf/caresheets',
       'quittance.hbs',
     );
-
+    // Log for check bug
+    console.log('caresheet print =>>>>>>>>>>>>>>', caresheet.tasks);
     const data = {
       caresheet,
       currencyy: CurrencyEnum[caresheet?.user.setting?.currency ?? 'EUR'],
