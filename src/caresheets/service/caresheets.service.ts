@@ -639,7 +639,6 @@ export class ActsService {
       let amountAmcCare = 0;
       let amountAmcProsthesis = 0;
       let patientUser: ContactUserEntity;
-      console.log('facture =>>>>>>', facture);
       const prestations = associatifToSequential(facture?.prestations);
       if (prestations && prestations.length > 0) {
         for (const prestation of prestations) {
@@ -703,12 +702,11 @@ export class ActsService {
           ? actMedicals?.ccam?.code
           : actMedicals?.ngapKey?.name;
 
-        console.log('prestations', prestations);
         for (const prestation of prestations) {
           const presentationCode = prestation?.[0]?.codesActes?.[0].code?.[0];
           const prestationMontantTotal = prestation?.[0]?.montantTotal?.[0];
-          if (presentationCode === code && prestationMontantTotal === amount) {
-            console.log('dispatch =>>>>>>>>>');
+
+          if (presentationCode === code && prestationMontantTotal == amount) {
             actMedicals.secuRepayment = prestation?.[0]?.montantAMO?.[0];
             actMedicals.mutualRepayment = prestation?.[0]?.montantAMC?.[0];
             actMedicals.personAmount = prestation?.[0]?.montantPP?.[0];
