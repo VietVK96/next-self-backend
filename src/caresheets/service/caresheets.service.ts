@@ -710,10 +710,7 @@ export class ActsService {
             actMedicals.secuRepayment = prestation?.[0]?.montantAMO?.[0];
             actMedicals.mutualRepayment = prestation?.[0]?.montantAMC?.[0];
             actMedicals.personAmount = prestation?.[0]?.montantPP?.[0];
-            console.log(
-              'actMedicals.secuRepayment =>>>>>>>>',
-              actMedicals.secuRepayment,
-            );
+
             await this.dentalEventTaskRepository.save(actMedicals);
 
             const ccamFamily = actMedicals?.act?.ccamFamily;
