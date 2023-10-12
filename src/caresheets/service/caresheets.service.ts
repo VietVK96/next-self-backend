@@ -639,6 +639,7 @@ export class ActsService {
       let amountAmcCare = 0;
       let amountAmcProsthesis = 0;
       let patientUser: ContactUserEntity;
+      console.log('facture =>>>>>>', facture);
       const prestations = associatifToSequential(facture?.prestations);
       if (prestations && prestations.length > 0) {
         for (const prestation of prestations) {
@@ -702,14 +703,19 @@ export class ActsService {
           ? actMedicals?.ccam?.code
           : actMedicals?.ngapKey?.name;
 
+        console.log('prestations', prestations);
         for (const prestation of prestations) {
           const presentationCode = prestation?.[0]?.codesActes?.[0].code?.[0];
           const prestationMontantTotal = prestation?.[0]?.montantTotal?.[0];
           if (presentationCode === code && prestationMontantTotal === amount) {
+            console.log('dispatch =>>>>>>>>>');
             actMedicals.secuRepayment = prestation?.[0]?.montantAMO?.[0];
             actMedicals.mutualRepayment = prestation?.[0]?.montantAMC?.[0];
             actMedicals.personAmount = prestation?.[0]?.montantPP?.[0];
-
+            console.log(
+              'actMedicals.secuRepayment =>>>>>>>>',
+              actMedicals.secuRepayment,
+            );
             await this.dentalEventTaskRepository.save(actMedicals);
 
             const ccamFamily = actMedicals?.act?.ccamFamily;
@@ -904,7 +910,7 @@ export class ActsService {
         },
       },
     });
-    console.log('caresheet?.tasks =>>>>>>>>>>>', caresheet?.tasks);
+
     if (caresheet?.tasks) {
       caresheet.tasks = caresheet?.tasks?.map((dentalEventTask) => {
         return {
@@ -927,15 +933,13 @@ export class ActsService {
         caresheetId: caresheet?.id,
       },
     });
-    console.log('caresheet?.tasks update =>>>>>>>>>>>', caresheet?.tasks);
 
     const filePath = path.join(
       process.cwd(),
       'templates/pdf/caresheets',
       'quittance.hbs',
     );
-    // Log for check bug
-    console.log('caresheet print =>>>>>>>>>>>>>>', caresheet.tasks);
+
     const data = {
       caresheet,
       currencyy: CurrencyEnum[caresheet?.user.setting?.currency ?? 'EUR'],
