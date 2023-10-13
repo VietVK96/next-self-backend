@@ -760,6 +760,7 @@ export class FactureServices {
         );
       }
     } catch (e) {
+      console.log('----------- initFacture', e);
       throw new CBadRequestException(ErrorCode.NOT_FOUND);
     }
   }
