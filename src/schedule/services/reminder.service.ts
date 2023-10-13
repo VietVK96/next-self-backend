@@ -30,7 +30,10 @@ export class ReminderService {
   public utf8ToGsm0338(utf8String, replacement = '') {
     for (const character of utf8String) {
       const codepoint = character.codePointAt(0);
-      const hexvalue = '0x00' + codepoint.toString(16).toUpperCase();
+      const hexvalue = `0x${codepoint
+        .toString(16)
+        .toUpperCase()
+        .padStart(4, '0')}`;
       if (GSM0338_CHARACTERS.includes(hexvalue)) {
         replacement += character;
       } else if (TRANSLITERATE.hasOwnProperty(hexvalue)) {
