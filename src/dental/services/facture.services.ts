@@ -948,6 +948,7 @@ export class FactureServices {
 
   async factureEmail({ id_facture }: FactureEmailDto, identity: UserIdentity) {
     id_facture = checkId(id_facture);
+    console.log('---------id_facture', id_facture);
     try {
       const qb = this.dataSource
         .getRepository(BillEntity)
@@ -965,7 +966,7 @@ export class FactureServices {
         .innerJoin('bill.contact', 'con')
         .where('bill.id = :id', { id: id_facture })
         .getRawOne();
-
+      console.log('---------result', result);
       const billDate = result?.billDate;
       const billDateAsString = format(billDate, 'dd/MM/yyyy');
       const userEmail = result?.userEmail;
