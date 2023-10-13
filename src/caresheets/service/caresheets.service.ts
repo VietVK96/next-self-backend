@@ -829,9 +829,18 @@ export class ActsService {
           });
         }),
       );
+
       return await this.fseRepository.findOne({
         where: { id: fseSave?.id },
-        relations: { patient: true },
+        relations: {
+          patient: true,
+          thirdPartyAmo: {
+            amo: true,
+          },
+          thirdPartyAmc: {
+            amc: true,
+          },
+        },
       });
     } catch (error) {
       console.log('error', error);
