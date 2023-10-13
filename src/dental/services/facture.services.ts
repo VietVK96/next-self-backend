@@ -700,12 +700,13 @@ export class FactureServices {
 
   async initFacture(id: number): Promise<InitFactureRes> {
     id = checkId(id);
+    console.log('---- ID inttFac', id);
     try {
       const bill = await this.billRepository.findOne({
         where: { id: id || 0, delete: 0 },
         relations: ['user', 'patient'],
       });
-
+      console.log('----------bill', bill);
       if (bill) {
         const res: InitFactureRes = {
           noFacture: bill?.nbr || '',
