@@ -1054,6 +1054,7 @@ export class FactureServices {
       });
       return { message: true };
     } catch (err) {
+      console.log('---------err', err);
       throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
     }
   }
