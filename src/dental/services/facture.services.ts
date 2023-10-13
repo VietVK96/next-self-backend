@@ -942,6 +942,7 @@ export class FactureServices {
         return pdfBuffer;
       }
     } catch (error) {
+      console.log('--------errorPDF', error);
       throw new CBadRequestException(ErrorCode.ERROR_GET_PDF);
     }
   }
