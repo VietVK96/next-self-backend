@@ -120,6 +120,8 @@ export class CartVitalService {
       const saveAmc = await this.dataSource
         .getRepository(AmcEntity)
         .save({ ...amc?.amc });
+
+      delete amc.id;
       await this.dataSource.getRepository(PatientAmcEntity).save({
         ...amc,
         patientId: resultPatient?.id,
@@ -132,6 +134,7 @@ export class CartVitalService {
       const saveAmo = await this.dataSource
         .getRepository(AmoEntity)
         .save({ ...amo?.amo });
+      delete amo.id;
 
       await this.dataSource.getRepository(PatientAmoEntity).save({
         ...amo,
@@ -247,9 +250,14 @@ export class CartVitalService {
       patientAmo.amoId = amo?.id;
       patientAmo.startDate = startDate;
       patientAmo.endDate = endDate;
+
       patientAmo.isTp = couvertureAmo?.isTp?.[0] === 'true' ? 1 : 0;
-      patientAmo.isAld = couvertureAmo?.codeAld?.[0] === 'true' ? 1 : 0;
-      patientAmo.maternityDate = couvertureAmo?.materniteDate?.[0] ?? null;
+      patientAmo.isAld = couvertureAmo?.codeAld?.[0] === '0' ? 0 : 1;
+
+      patientAmo.maternityDate =
+        couvertureAmo?.materniteDate?.[0] === ''
+          ? null
+          : couvertureAmo?.materniteDate?.[0];
       patientAmo.childbirthDate = patientAmo?.maternityDate
         ? dayjs(patientAmo?.maternityDate).add(9, 'month').format('YYYY-MM-DD')
         : null;
@@ -259,9 +267,10 @@ export class CartVitalService {
       patientAmo.codeExoneration =
         couvertureAmo?.codeJustifExoneration?.[0] ??
         ExemptionCodeEnum.PAS_EXONERATION;
-      patientAmo.lectureAdr = couvertureAmo?.isLectureAdr?.[0]
-        ? dayjs().format('YYYY-MM-DD')
-        : null;
+      patientAmo.lectureAdr =
+        couvertureAmo?.isLectureAdr?.[0] === 'true'
+          ? dayjs().format('YYYY-MM-DD')
+          : null;
 
       patient.amos.push(patientAmo);
     }
@@ -280,8 +289,8 @@ export class CartVitalService {
       const startDate = couvertureAmc?.dateDeb?.[0]?.['_']
         ? dayjs(couvertureAmc?.dateDeb?.[0]?.['_']).format('YYYY-MM-DD')
         : null;
-      const endDate = couvertureAmc?.dateDeb?.[0]?.['_']
-        ? dayjs(couvertureAmc?.dateDeb?.[0]?.['_']).format('YYYY-MM-DD')
+      const endDate = couvertureAmc?.dateFin?.[0]?.['_']
+        ? dayjs(couvertureAmc?.dateFin?.[0]?.['_']).format('YYYY-MM-DD')
         : null;
 
       let patientAmc: PatientAmcEntity =
@@ -320,10 +329,12 @@ export class CartVitalService {
       patientAmc.isCmu = couvertureAmc?.isCmu?.[0] === 'true' ? 1 : 0;
       patientAmc.isDrePossible =
         couvertureAmc?.isDrePossible?.[0] === 'true' ? 1 : 0;
-      patientAmc.typeAme = couvertureAmc?.typeAme?.[0] ?? null;
-      patientAmc.lectureAdr = couvertureAmc?.isLectureAdr?.[0]
-        ? dayjs().format('YYYY-MM-DD')
-        : null;
+      patientAmc.typeAme =
+        couvertureAmc?.typeAme?.[0] === '' ? null : couvertureAmc?.typeAme?.[0];
+      patientAmc.lectureAdr =
+        couvertureAmc?.isLectureAdr?.[0] === 'true'
+          ? dayjs().format('YYYY-MM-DD')
+          : null;
 
       patient.amcs.push(patientAmc);
     }
