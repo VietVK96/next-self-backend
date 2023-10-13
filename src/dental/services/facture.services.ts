@@ -480,11 +480,11 @@ export class FactureServices {
         if (address) {
           identPat +=
             '\n' +
-            address?.street +
+            (address?.street !== null ? address.street : '') +
             '\n' +
-            address?.zipCode +
+            (address?.zipCode !== null ? address.zipCode : '') +
             ' ' +
-            address?.city;
+            (address?.city !== null ? address.city : '');
         }
         let personInsee = contact?.insee;
         let personInseeKey = contact?.inseeKey;
