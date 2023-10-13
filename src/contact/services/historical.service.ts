@@ -321,6 +321,37 @@ export class HistoricalService {
       })
       .orderBy('date', 'DESC')
       .addOrderBy('createdOn', 'DESC');
-    return qr.getRawMany();
+    const result = await qr.getRawMany();
+    for (const record of result) {
+      record['fse_status'] =
+        null === record['caresheet_status_fse_id']
+          ? null
+          : {
+              id: record['caresheet_status_fse_id'],
+              value: record['caresheet_status_fse_value'],
+              label: record['caresheet_status_fse_label'],
+              description: record['caresheet_status_fse_description'],
+            };
+
+      record['dre_status'] =
+        null === record['caresheet_status_dre_id']
+          ? null
+          : {
+              id: record['caresheet_status_dre_id'],
+              value: record['caresheet_status_dre_value'],
+              label: record['caresheet_status_dre_label'],
+              description: record['caresheet_status_dre_description'],
+            };
+
+      delete record['caresheet_status_fse_id'];
+      delete record['caresheet_status_fse_value'];
+      delete record['caresheet_status_fse_label'];
+      delete record['caresheet_status_fse_description'];
+      delete record['caresheet_status_dre_id'];
+      delete record['caresheet_status_dre_value'];
+      delete record['caresheet_status_dre_label'];
+      delete record['caresheet_status_dre_description'];
+    }
+    return result;
   }
 }

@@ -641,11 +641,11 @@ export class ActsService {
       let patientUser: ContactUserEntity;
       const prestations = associatifToSequential(facture?.prestations);
       if (prestations && prestations.length > 0) {
-        for (const prestation of prestations) {
-          const montantAMO = parseFloat(prestation?.[0]?.montantAMO?.[0]);
-          const montantAMC = parseFloat(prestation?.[0]?.montantAMC?.[0]);
-          amount += parseFloat(prestation?.[0]?.montantTotal?.[0]);
-          amountPatient += parseFloat(prestation?.[0]?.montantPP?.[0]);
+        for (const prestation of prestations[0]) {
+          const montantAMO = parseFloat(prestation?.montantAMO?.[0]);
+          const montantAMC = parseFloat(prestation?.montantAMC?.[0]);
+          amount += parseFloat(prestation?.montantTotal?.[0]);
+          amountPatient += parseFloat(prestation?.montantPP?.[0]);
           amountAmo += montantAMO;
           amountAmc += montantAMC;
         }
@@ -702,32 +702,35 @@ export class ActsService {
           ? actMedicals?.ccam?.code
           : actMedicals?.ngapKey?.name;
 
-        for (const prestation of prestations) {
-          const presentationCode = prestation?.[0]?.codesActes?.[0].code?.[0];
-          const prestationMontantTotal = prestation?.[0]?.montantTotal?.[0];
+        const actMedicalsAmount = actMedicals?.act?.amount
+          ? parseFloat(`${actMedicals?.act?.amount}`)
+          : null;
 
-          if (presentationCode === code && prestationMontantTotal == amount) {
-            actMedicals.secuRepayment = prestation?.[0]?.montantAMO?.[0];
-            actMedicals.mutualRepayment = prestation?.[0]?.montantAMC?.[0];
-            actMedicals.personAmount = prestation?.[0]?.montantPP?.[0];
+        for (const prestation of prestations[0]) {
+          const presentationCode = prestation?.codesActes?.[0].code?.[0];
+          const prestationMontantTotal = prestation?.montantTotal?.[0];
+
+          if (
+            presentationCode === code &&
+            parseFloat(`${prestationMontantTotal}`) == actMedicalsAmount
+          ) {
+            actMedicals.secuRepayment = prestation?.montantAMO?.[0];
+            actMedicals.mutualRepayment = prestation?.montantAMC?.[0];
+            actMedicals.personAmount = prestation?.montantPP?.[0];
 
             await this.dentalEventTaskRepository.save(actMedicals);
 
             const ccamFamily = actMedicals?.act?.ccamFamily;
             if (ccamFamily && this.isProsthesis(ccamFamily)) {
               amountAmoProsthesis += parseFloat(
-                prestation?.[0]?.montantAMO?.[0] || 0,
+                prestation?.montantAMO?.[0] || 0,
               );
               amountAmcProsthesis += parseFloat(
-                prestation?.[0]?.montantAMC?.[0] || 0,
+                prestation?.montantAMC?.[0] || 0,
               );
             } else {
-              amountAmoCare += parseFloat(
-                prestation?.[0]?.montantAMO?.[0] || 0,
-              );
-              amountAmcCare += parseFloat(
-                prestation?.[0]?.montantAMC?.[0] || 0,
-              );
+              amountAmoCare += parseFloat(prestation?.montantAMO?.[0] || 0);
+              amountAmcCare += parseFloat(prestation?.montantAMC?.[0] || 0);
             }
             break;
           }
