@@ -57,7 +57,7 @@ export class CaresheetsController {
   async getUserCaresheet(
     @Query('id') id: number,
     @Query('page') page?: number,
-    @Query('page_size') size?: number,
+    @Query('per_page') size?: number,
     @Query('filterParam') filterParam?: string[],
     @Query('filterValue') filterValue?: string[],
   ) {
