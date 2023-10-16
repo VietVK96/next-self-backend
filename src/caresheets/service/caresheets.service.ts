@@ -640,7 +640,8 @@ export class ActsService {
       let amountAmcProsthesis = 0;
       let patientUser: ContactUserEntity;
       const prestations = associatifToSequential(facture?.prestations);
-      if (prestations && prestations.length > 0) {
+
+      if (prestations && prestations?.length > 0) {
         for (const prestation of prestations[0]) {
           const montantAMO = parseFloat(prestation?.montantAMO?.[0]);
           const montantAMC = parseFloat(prestation?.montantAMC?.[0]);
@@ -708,17 +709,19 @@ export class ActsService {
 
         for (const prestation of prestations[0]) {
           const presentationCode = prestation?.codesActes?.[0].code?.[0];
+
           const prestationMontantTotal = prestation?.montantTotal?.[0];
 
-          if (
-            presentationCode === code &&
-            parseFloat(`${prestationMontantTotal}`) == actMedicalsAmount
-          ) {
+          if (presentationCode === code) {
             actMedicals.secuRepayment = prestation?.montantAMO?.[0];
             actMedicals.mutualRepayment = prestation?.montantAMC?.[0];
             actMedicals.personAmount = prestation?.montantPP?.[0];
 
             await this.dentalEventTaskRepository.save(actMedicals);
+            console.log(
+              '🚀 ~ file: caresheets.service.ts:721 ~ ActsService ~ updateCaresheet ~ actMedicals:',
+              actMedicals,
+            );
 
             const ccamFamily = actMedicals?.act?.ccamFamily;
             if (ccamFamily && this.isProsthesis(ccamFamily)) {
@@ -893,6 +896,7 @@ export class ActsService {
       );
     });
   };
+
   async getQuittanceFile(id: number): Promise<{ file: Buffer; name: string }> {
     const caresheet = await this.fseRepository.findOne({
       where: { id },
