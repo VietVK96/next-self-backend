@@ -395,10 +395,6 @@ export class BankService {
         ],
         relations: { user: true },
       });
-      console.log(
-        '🚀 ~ file: bank.service.ts:398 ~ BankService ~ libraryBankEntity:',
-        libraryBankEntity,
-      );
 
       if (!libraryBankEntity) {
         throw new CBadRequestException(ErrorCode.NOT_FOUND);
