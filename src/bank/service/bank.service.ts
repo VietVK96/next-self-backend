@@ -26,6 +26,7 @@ import { LibraryBankEntity } from 'src/entities/library-bank.entity';
 import { AddressEntity } from 'src/entities/address.entity';
 import axios from 'axios';
 import { SuccessResponse } from 'src/common/response/success.res';
+import { PerCode } from 'src/constants/permissions';
 
 @Injectable()
 export class BankService {
@@ -376,46 +377,65 @@ export class BankService {
     userId: number,
     organizationId: number,
   ): Promise<SuccessResponse> {
-    try {
-      id = checkId(id);
-      if (id) {
-        const libraryBankEntity = await this.libraryBankRepo.findOne({
-          where: { id: id || 0, usrId: userId },
-          relations: { user: true },
-        });
-        if (!libraryBankEntity) {
-          throw new CBadRequestException(ErrorCode.NOT_FOUND);
-        }
-        if (!libraryBankEntity?.user?.admin) {
-          throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
-        }
-        const hasPermissionDelete = await this.permissionService.hasPermission(
-          'PERMISSION_DELETE',
-          8,
-          userId,
-        );
-        if (!hasPermissionDelete) {
-          throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
-        }
-        const listLibraryBank = await this.libraryBankRepo.find({
-          where: {
+    id = checkId(id);
+    if (id) {
+      const hasPermissionLibrary = await this.permissionService.hasPermission(
+        PerCode.PERMISSION_LIBRARY,
+        2,
+        userId,
+      );
+      if (!hasPermissionLibrary) {
+        throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
+      }
+
+      const libraryBankEntity = await this.libraryBankRepo.findOne({
+        where: [
+          { id: id, usrId: userId },
+          { id: id, organizationId: organizationId },
+        ],
+        relations: { user: true },
+      });
+
+      if (!libraryBankEntity) {
+        throw new CBadRequestException(ErrorCode.NOT_FOUND);
+      }
+      const UserEntity = await this.userRepo.findOne({
+        where: { id: userId },
+      });
+      if (!UserEntity.admin) {
+        throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
+      }
+      const hasPermissionDelete = await this.permissionService.hasPermission(
+        PerCode.PERMISSION_DELETE,
+        8,
+        userId,
+      );
+      if (!hasPermissionDelete) {
+        throw new CBadRequestException(ErrorCode.PERMISSION_DENIED);
+      }
+
+      const listLibraryBank = await this.libraryBankRepo.find({
+        where: [
+          {
             organizationId,
             usrId: userId,
             deletedAt: null,
           },
-        });
-        if (listLibraryBank.length <= 1)
-          throw new CBadRequestException(
-            ErrorCode.AT_LEAST_ONE_BANK_IS_REQUIRED,
-          );
-        libraryBankEntity.deletedAt = new Date();
-        await this.libraryBankRepo.save(libraryBankEntity);
-        return {
-          success: true,
-        };
-      }
-    } catch (error) {
-      throw new CBadRequestException(ErrorCode.STATUS_INTERNAL_SERVER_ERROR);
+          {
+            organizationId,
+            usrId: null,
+            deletedAt: null,
+          },
+        ],
+      });
+
+      if (listLibraryBank.length <= 1)
+        throw new CBadRequestException(ErrorCode.AT_LEAST_ONE_BANK_IS_REQUIRED);
+      libraryBankEntity.deletedAt = new Date();
+      await this.libraryBankRepo.save(libraryBankEntity);
+      return {
+        success: true,
+      };
     }
   }
 

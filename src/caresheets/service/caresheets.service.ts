@@ -712,16 +712,15 @@ export class ActsService {
 
           const prestationMontantTotal = prestation?.montantTotal?.[0];
 
-          if (presentationCode === code) {
+          if (
+            presentationCode === code &&
+            parseFloat(`${prestationMontantTotal}`) == actMedicalsAmount
+          ) {
             actMedicals.secuRepayment = prestation?.montantAMO?.[0];
             actMedicals.mutualRepayment = prestation?.montantAMC?.[0];
             actMedicals.personAmount = prestation?.montantPP?.[0];
 
             await this.dentalEventTaskRepository.save(actMedicals);
-            console.log(
-              '🚀 ~ file: caresheets.service.ts:721 ~ ActsService ~ updateCaresheet ~ actMedicals:',
-              actMedicals,
-            );
 
             const ccamFamily = actMedicals?.act?.ccamFamily;
             if (ccamFamily && this.isProsthesis(ccamFamily)) {
