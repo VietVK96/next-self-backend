@@ -66,9 +66,10 @@ export class InterfacageService {
           caresheet.tasks.push(actMedical);
         }
 
-        caresheet.amount += act?.amount;
-        caresheet.amountAssure += act?.amount;
+        caresheet.amount += Number(act?.amount);
+        caresheet.amountAssure += Number(act?.amount);
       });
+
       await this.eventTaskRepository.save(dataActs);
       this.compute(caresheet);
       return await this.fseRepository.save({ ...caresheet });
