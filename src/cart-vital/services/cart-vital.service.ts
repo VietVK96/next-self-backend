@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
-import { DataSource } from 'typeorm';
+import { DataSource, IsNull } from 'typeorm';
 import {
   ReadCardVitalDto,
   SaveCardVitalDto,
@@ -25,6 +25,7 @@ import { ExemptionCodeEnum } from 'src/enum/exemption-code.enum';
 import { PatientAmcEntity } from 'src/entities/patient-amc.entity';
 import { AmcEntity } from 'src/entities/amc.entity';
 import { PolicyHolderEntity } from 'src/entities/policy-holder.entity';
+import { checkId, checkNumber } from 'src/common/util/number';
 
 @Injectable()
 export class CartVitalService {
@@ -121,7 +122,6 @@ export class CartVitalService {
         .getRepository(AmcEntity)
         .save({ ...amc?.amc });
 
-      delete amc.id;
       await this.dataSource.getRepository(PatientAmcEntity).save({
         ...amc,
         patientId: resultPatient?.id,
@@ -134,7 +134,6 @@ export class CartVitalService {
       const saveAmo = await this.dataSource
         .getRepository(AmoEntity)
         .save({ ...amo?.amo });
-      delete amo.id;
 
       await this.dataSource.getRepository(PatientAmoEntity).save({
         ...amo,
@@ -388,13 +387,16 @@ export class CartVitalService {
     endDate,
   ) {
     try {
-      const res = this.dataSource.getRepository(PatientAmcEntity).findOne({
-        where: {
-          patientId: patient?.id,
-          startDate: dayjs(startDate).isValid() ? startDate : null,
-          endDate: dayjs(endDate).isValid() ? endDate : null,
-        },
-      });
+      const id = checkNumber(patient?.id);
+      const res = await this.dataSource
+        .getRepository(PatientAmcEntity)
+        .findOne({
+          where: {
+            patientId: id,
+            startDate: dayjs(startDate).isValid() ? startDate : null,
+            endDate: dayjs(endDate).isValid() ? endDate : null,
+          },
+        });
       return res;
     } catch (error) {
       return null;
@@ -407,13 +409,16 @@ export class CartVitalService {
     endDate,
   ) {
     try {
-      const res = this.dataSource.getRepository(PatientAmoEntity).findOne({
-        where: {
-          patientId: patient?.id,
-          startDate: dayjs(startDate).isValid() ? startDate : null,
-          endDate: dayjs(endDate).isValid() ? endDate : null,
-        },
-      });
+      const id = checkNumber(patient?.id);
+      const res = await this.dataSource
+        .getRepository(PatientAmoEntity)
+        .findOne({
+          where: {
+            patientId: id,
+            startDate: dayjs(startDate).isValid() ? startDate : null,
+            endDate: dayjs(endDate).isValid() ? endDate : null,
+          },
+        });
       return res;
     } catch (error) {
       return null;
