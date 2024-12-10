@@ -9,9 +9,7 @@ import crypto from 'crypto';
 import * as phpPassword from 'node-php-password';
 import { SessionService } from './session.service';
 import { LoginRes } from '../reponse/token.res';
-import { UserConnectionService } from 'src/user/services/user-connection.service';
 import { Request } from 'express';
-import { LicenseService } from 'src/user/services/license.service';
 
 @Injectable()
 export class ValidationService {
@@ -19,8 +17,6 @@ export class ValidationService {
     @InjectRepository(UserEntity)
     private userRepo: Repository<UserEntity>,
     private sessionService: SessionService,
-    private useConnectionService: UserConnectionService,
-    private licenseService: LicenseService,
   ) {}
 
   /**
@@ -28,10 +24,7 @@ export class ValidationService {
    * @function main function
    *
    */
-  async validation(
-    payload: ValidationDto,
-    request: Request,
-  ): Promise<LoginRes> {
+  async validation(payload: ValidationDto): Promise<LoginRes> {
     const user = await this.userRepo.findOne({
       where: {
         log: payload.username,
@@ -68,27 +61,6 @@ export class ValidationService {
         await this.userRepo.save(user);
       }
     }
-    /**
-     * End logic CheckPassword
-     *
-     */
-    // File: auth\validation.php 38-46
-    if (!user.validated || user.validated === null) {
-      throw new CBadRequestException(ErrorCode.USER_NOT_ACTIVE);
-    }
-
-    // End logic
-    // @TODO check license from : application\Repositories\User.php 155-171
-    // @TODO Save session and check laguage auth\validation.php 56-77
-
-    const isNotValidLicense = await this.licenseService.blocked(user.id);
-    if (isNotValidLicense) {
-      throw new CBadRequestException(ErrorCode.USER_EXPIRED_LICENSE);
-    }
-    // save user connection
-    //ecoophp/application/include/default.inc.php
-    // 38 -> 46
-    this.useConnectionService.saveConnection(user.id, request);
 
     // Replace session to jwt token
     return await this.sessionService.createTokenLogin({ user });

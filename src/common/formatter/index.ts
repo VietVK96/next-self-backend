@@ -1,4 +1,3 @@
-import { format } from 'date-fns';
 import { PhoneNumberFormat, PhoneNumberUtil } from 'google-libphonenumber';
 
 export const addressFormatter = (address) => {
@@ -26,12 +25,6 @@ export const inseeFormatter = (num) => {
     '$1 $2 $3 $4 $5 $6 $7',
   );
   return result.replace(/null/g, '');
-};
-
-export const dateFormatter = (date: '') => {
-  if (!date) return null;
-  const day = new Date(date);
-  return format(day, 'dd/MM/yyyy');
 };
 
 export const phoneNumberFormatter = (phoneNumber: string) => {

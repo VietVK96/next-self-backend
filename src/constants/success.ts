@@ -1,4 +1,0 @@
-export enum SuccessCode {
-  COPY_SUCCESS = 'COPY_SUCCESS',
-  DELETE_SUCCESS = 'DELETE_SUCCESS',
-}

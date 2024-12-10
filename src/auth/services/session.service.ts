@@ -9,9 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as jwt from 'jsonwebtoken';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cache } from 'cache-manager';
-import { DEFAULT_LANGUAGE } from 'src/constants/default';
 import { JWT_LOG_OUT, JWT_RF_LOG_OUT, JWT_SECRET } from 'src/constants/jwt';
-import { UserEntity } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { LoginRes } from '../reponse/token.res';
@@ -19,7 +17,7 @@ import { RefreshJwt, UserIdentity } from 'src/common/decorator/auth.decorator';
 import { ErrorCode } from 'src/constants/error';
 import * as dayjs from 'dayjs';
 import { LogoutDto } from '../dto/logout.dto';
-import { GetSessionService } from './get-session.service';
+import { UserEntity } from 'src/entities/user.entity';
 
 @Injectable()
 export class SessionService {
@@ -31,31 +29,20 @@ export class SessionService {
     private jwtService: JwtService,
     @Inject(CACHE_MANAGER)
     protected cacheManager: Cache,
-    private getSessionService: GetSessionService,
   ) {}
 
   async createTokenLogin({
     user,
-    lang,
     oldRefreshToken,
   }: {
     user: UserEntity;
     lang?: string;
     oldRefreshToken?: string;
   }): Promise<LoginRes> {
-    const practitioners = await this.getSessionService.getPractitioners(
-      user?.id,
-      user?.organizationId,
-    );
-    const doctorIds = practitioners.map((r) => r.id);
-
     const payloadSign: UserIdentity = {
       id: user.id,
       type: 'auth',
       sub: user.log,
-      dis: doctorIds,
-      org: user.organizationId,
-      lang: lang ?? DEFAULT_LANGUAGE,
     };
 
     const token = this.jwtService.sign(payloadSign);
@@ -119,12 +106,8 @@ export class SessionService {
       throw new UnauthorizedException(ErrorCode.CAN_NOT_LOGIN);
     }
 
-    if (!user.validated || user.validated === null) {
-      throw new UnauthorizedException(ErrorCode.USER_NOT_ACTIVE);
-    }
     return await this.createTokenLogin({
       user,
-      lang: DEFAULT_LANGUAGE,
       oldRefreshToken: payload.refreshToken,
     });
   }

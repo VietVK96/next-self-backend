@@ -1,29 +1,15 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Post,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Req } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import {
-  CurrentUser,
-  TokenGuard,
-  UserIdentity,
-} from 'src/common/decorator/auth.decorator';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Request } from 'express';
 import { HaliteEncryptorHelper } from 'src/common/lib/halite/encryptor.helper';
 import { SuccessResponse } from 'src/common/response/success.res';
 import { LogoutDto } from './dto/logout.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ValidationDto } from './dto/validation.dto';
 import { LoginRes } from './reponse/token.res';
-import { GetSessionService } from './services/get-session.service';
 import { SessionService } from './services/session.service';
 import { ValidationService } from './services/validation.service';
-import { Request } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -31,7 +17,6 @@ export class AuthController {
   constructor(
     private validationService: ValidationService,
     private sessionService: SessionService,
-    private getSessionService: GetSessionService,
     private configService: ConfigService,
   ) {}
 
@@ -60,14 +45,6 @@ export class AuthController {
     return {
       success: true,
     };
-  }
-
-  @ApiBearerAuth()
-  @Get('session')
-  @UseGuards(TokenGuard)
-  async session(@CurrentUser() userIdentity: UserIdentity) {
-    const data = await this.getSessionService.getSession(userIdentity);
-    return data;
   }
 
   /**

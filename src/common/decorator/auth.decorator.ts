@@ -1,23 +1,19 @@
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
+  createParamDecorator,
   ExecutionContext,
   Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Cache } from 'cache-manager';
-import { createParamDecorator } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { JWT_LOG_OUT } from 'src/constants/jwt';
+import { Cache } from 'cache-manager';
 import { JwtPayload } from 'jsonwebtoken';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { LicenseService } from 'src/user/services/license.service';
-import { ErrorCode } from 'src/constants/error';
+import { JWT_LOG_OUT } from 'src/constants/jwt';
 export interface UserIdentity extends JwtPayload {
   id: number;
-  org: number; // $groupId = $session->get("group"); $session->get('organization_id');
   un?: string;
   type?: string;
-  dis?: number[]; // list doctor id
 }
 
 export interface RefreshJwt extends JwtPayload {
@@ -37,8 +33,6 @@ export const CurrentUser = createParamDecorator(
 export class TokenGuard extends AuthGuard('jwt') {
   @Inject(CACHE_MANAGER)
   protected cacheManager: Cache;
-  @Inject(LicenseService)
-  private licenseService: LicenseService;
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = this.getRequest(context);
@@ -62,14 +56,8 @@ export class TokenGuard extends AuthGuard('jwt') {
     if (!x) {
       throw new UnauthorizedException();
     }
-    const r = this.getRequest(context);
+    this.getRequest(context);
 
-    const blocked = await this.licenseService.blocked(r.user.id);
-    if (blocked) {
-      throw new UnauthorizedException({
-        msg: ErrorCode.USER_EXPIRED_LICENSE,
-      });
-    }
     return true;
   }
 
