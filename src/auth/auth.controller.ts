@@ -1,7 +1,6 @@
-import { Body, Controller, Delete, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Request } from 'express';
 import { HaliteEncryptorHelper } from 'src/common/lib/halite/encryptor.helper';
 import { SuccessResponse } from 'src/common/response/success.res';
 import { LogoutDto } from './dto/logout.dto';
@@ -24,8 +23,8 @@ export class AuthController {
    * File: auth\validation.php
    */
   @Post('validation')
-  async validation(@Body() payload: ValidationDto, @Req() request: Request) {
-    return await this.validationService.validation(payload, request);
+  async validation(@Body() payload: ValidationDto) {
+    return await this.validationService.validation(payload);
   }
 
   @Post('refresh')
