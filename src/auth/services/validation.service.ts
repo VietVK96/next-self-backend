@@ -9,7 +9,6 @@ import crypto from 'crypto';
 import * as phpPassword from 'node-php-password';
 import { SessionService } from './session.service';
 import { LoginRes } from '../reponse/token.res';
-import { Request } from 'express';
 
 @Injectable()
 export class ValidationService {
