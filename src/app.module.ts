@@ -5,6 +5,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { AuthModule } from './auth/auth.module';
 import configuration from './common/config';
 import { EntityModule } from './entities';
+import { TestModule } from './test/test.module';
 
 const importsModules = [
   ConfigModule.forRoot({
@@ -21,6 +22,7 @@ const importsModules = [
   }),
   EntityModule,
   AuthModule,
+  TestModule,
 ];
 
 if (process.env.LOGSTACK_ENABLE === 'true') {
