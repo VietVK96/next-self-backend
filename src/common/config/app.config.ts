@@ -71,5 +71,6 @@ export default registerAs('app', () => ({
       process?.env?.OVH_CONSUMER_KEY ?? 'zAqkJJSsdfsbJHaadL2FY7CgIrFox0Y',
     serviceName: process?.env?.OVH_SERVICE_NAME ?? 'zms-hl35552-1',
   },
+  chatGptApi: process.env.CHAT_GPT_KEY || '/',
   isRunCron,
 }));
