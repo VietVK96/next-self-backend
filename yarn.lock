@@ -6411,6 +6411,11 @@ node-domexception@1.0.0:
   resolved "https://registry.yarnpkg.com/node-domexception/-/node-domexception-1.0.0.tgz#6888db46a1f71c0b76b3f7555016b63fe64766e5"
   integrity sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==
 
+node-domexception@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/node-domexception/-/node-domexception-1.0.0.tgz#6888db46a1f71c0b76b3f7555016b63fe64766e5"
+  integrity sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==
+
 node-emoji@1.11.0:
   version "1.11.0"
   resolved "https://registry.yarnpkg.com/node-emoji/-/node-emoji-1.11.0.tgz#69a0150e6946e2f115e9d7ea4df7971e2628301c"
@@ -6583,10 +6588,17 @@ open@7:
     is-docker "^2.0.0"
     is-wsl "^2.1.1"
 
+<<<<<<< HEAD
 openai@^4.76.0:
   version "4.76.0"
   resolved "https://registry.yarnpkg.com/openai/-/openai-4.76.0.tgz#0ba135ff6452eadbce980c604f98799dfa239325"
   integrity sha512-QBGIetjX1C9xDp5XGa/3mPnfKI9BgAe2xHQX6PmO98wuW9qQaurBaumcYptQWc9LHZZq7cH/Y1Rjnsr6uUDdVw==
+=======
+openai@^4.76.1:
+  version "4.76.1"
+  resolved "https://registry.yarnpkg.com/openai/-/openai-4.76.1.tgz#3e844cef2f2d55814ff7c6e134700eacb7c9897b"
+  integrity sha512-ci63/WFEMd6QjjEVeH0pV7hnFS6CCqhgJydSti4Aak/8uo2SpgzKjteUDaY+OkwziVj11mi6j+0mRUIiGKUzWw==
+>>>>>>> 521f30fc531c1fb460ac37a4fe845d7f15122a8f
   dependencies:
     "@types/node" "^18.11.18"
     "@types/node-fetch" "^2.6.4"
