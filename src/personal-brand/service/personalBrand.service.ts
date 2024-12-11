@@ -6,6 +6,6 @@ export class PersonalBrandService {
   constructor(private openAIService: OpenAIService) {}
 
   async processCV(file: Express.Multer.File) {
-    console.log('-----data-----', 'upload CV');
+    console.log('-----data-----', 'dsa');
   }
 }

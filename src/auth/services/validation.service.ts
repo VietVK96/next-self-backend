@@ -5,10 +5,11 @@ import { ErrorCode } from 'src/constants/error';
 import { UserEntity } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
 import { ValidationDto } from '../dto/validation.dto';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 import * as phpPassword from 'node-php-password';
 import { SessionService } from './session.service';
 import { LoginRes } from '../reponse/token.res';
+import { RegisterDto } from '../dto/resgister.dto';
 
 @Injectable()
 export class ValidationService {
@@ -26,7 +27,7 @@ export class ValidationService {
   async validation(payload: ValidationDto): Promise<LoginRes> {
     const user = await this.userRepo.findOne({
       where: {
-        log: payload.username,
+        email: payload.email,
       },
     });
     if (!user) {
@@ -39,29 +40,32 @@ export class ValidationService {
      *
      */
 
-    if (!user.passwordHash) {
-      const shasum = crypto.createHash('sha1');
-      const passwordHash = shasum.update(payload.password).digest('hex');
-      if (passwordHash !== user.password) {
-        throw new CBadRequestException(ErrorCode.CAN_NOT_LOGIN);
-      }
+    if (!phpPassword.verify(payload.password, user.password)) {
+      throw new CBadRequestException(ErrorCode.CAN_NOT_LOGIN);
+    }
+    if (
+      phpPassword.needsRehash(user.password, 'PASSWORD_DEFAULT', { cost: 10 })
+    ) {
       user.password = phpPassword.hash(payload.password);
-      // user.passwordHash = true;
-      user.passwordHash = Number(true);
-      await this.userRepo.save(user);
-    } else {
-      if (!phpPassword.verify(payload.password, user.password)) {
-        throw new CBadRequestException(ErrorCode.CAN_NOT_LOGIN);
-      }
-      if (
-        phpPassword.needsRehash(user.password, 'PASSWORD_DEFAULT', { cost: 10 })
-      ) {
-        user.password = phpPassword.hash(payload.password);
+      try {
         await this.userRepo.save(user);
+      } catch (error) {
+        console.log(error);
       }
     }
 
     // Replace session to jwt token
     return await this.sessionService.createTokenLogin({ user });
+  }
+
+  async register(payload: RegisterDto) {
+    const { email, name, password } = payload;
+    await this.userRepo.save({
+      name,
+      email,
+      password: phpPassword.hash(password),
+      log: email,
+    });
+    return 'success';
   }
 }

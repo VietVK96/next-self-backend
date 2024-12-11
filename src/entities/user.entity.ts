@@ -69,21 +69,11 @@ export class UserEntity {
    * @ORM\Column(name="USR_LASTNAME", type="string", length=50)
    */
   @Column({
-    name: 'USR_LASTNAME',
+    name: 'USR_NAME',
     type: 'varchar',
     length: 50,
   })
-  lastname?: string;
-
-  /**
-   * @ORM\Column(name="USR_FIRSTNAME", type="string", length=50)
-   */
-  @Column({
-    name: 'USR_FIRSTNAME',
-    type: 'varchar',
-    length: 50,
-  })
-  firstname?: string;
+  name?: string;
 
   /**
    * @ORM\Column(name="USR_PHONE_NUMBER", type="string", length=45, nullable=true)
