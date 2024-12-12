@@ -42,4 +42,9 @@ export class UserInfoEntity {
     nullable: true,
   })
   job?: string;
+
+  @Column({
+    nullable: true,
+  })
+  summarizeCV?: string;
 }

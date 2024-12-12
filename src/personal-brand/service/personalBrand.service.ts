@@ -9,6 +9,7 @@ import { UserInfoEntity } from 'src/entities/infomation.entity';
 import { Repository } from 'typeorm';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { UpdateInfoBodyDto } from '../dtos/upload.dto';
+import * as pdfParse from 'pdf-parse';
 
 @Injectable()
 export class PersonalBrandService {
@@ -33,6 +34,11 @@ export class PersonalBrandService {
     }
     fs.writeFileSync(fileName, file.buffer);
 
+    let summarizeCV = '';
+    if (file) {
+      const cv = await pdfParse(file.buffer);
+      summarizeCV = await this.openAIService.summarizeCV(cv.text);
+    }
     const currentInfo = await this.getUserInfo(user);
     if (!currentInfo) {
       const cv = new UserInfoEntity();
@@ -41,6 +47,7 @@ export class PersonalBrandService {
       cv.activeStep = 1;
       cv.branchName = body.branchName;
       cv.job = body.job;
+      cv.summarizeCV = summarizeCV;
       return await this.repo.save(cv);
     } else {
       currentInfo.cvPath = fileName;
@@ -48,7 +55,7 @@ export class PersonalBrandService {
       currentInfo.activeStep = 1;
       currentInfo.branchName = body.branchName;
       currentInfo.job = body.job;
-
+      currentInfo.summarizeCV = summarizeCV;
       return await this.repo.save(currentInfo);
     }
   }
@@ -77,9 +84,8 @@ export class PersonalBrandService {
 
   async getFinal(user: UserIdentity) {
     const currentInfo = await this.getUserInfo(user);
-    const cv = fs.readFileSync(currentInfo.cvPath, 'utf8');
     return await this.openAIService.getBrandingStrategy(
-      cv,
+      currentInfo.summarizeCV,
       currentInfo.questions,
     );
   }

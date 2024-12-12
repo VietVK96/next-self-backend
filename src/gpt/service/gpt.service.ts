@@ -4,7 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { OpenAI } from 'openai';
 import { UserEntity } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
-import { systemPrompt } from '../data/systemPorm';
+import { systemPrompt2 } from '../data/systemPorm';
+// import { systemPrompt, systemPrompt2 } from '../data/systemPorm';
 
 @Injectable()
 export class OpenAIService {
@@ -34,7 +35,7 @@ export class OpenAIService {
     const response = await this.openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: systemPrompt },
+        { role: 'system', content: systemPrompt2 },
         { role: 'user', content: userPrompt },
       ],
       temperature: 0.7,
