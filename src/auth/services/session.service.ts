@@ -74,7 +74,7 @@ export class SessionService {
     return {
       accessToken: token,
       refreshToken: refreshToken,
-      expiresIn: 3600,
+      expiresIn: 36000,
       expiresAt: decode['exp'],
     };
   }

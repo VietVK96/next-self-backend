@@ -15,4 +15,5 @@ export default registerAs('app', () => ({
     serviceName: process?.env?.OVH_SERVICE_NAME ?? 'zms-hl35552-1',
   },
   apiKey: process.env.API_KEY,
+  uploadDir: './uploads',
 }));

@@ -24,7 +24,7 @@ export class ValidationService {
    * @function main function
    *
    */
-  async validation(payload: ValidationDto): Promise<LoginRes> {
+  async validation(payload: ValidationDto) {
     const user = await this.userRepo.findOne({
       where: {
         email: payload.email,
@@ -55,7 +55,11 @@ export class ValidationService {
     }
 
     // Replace session to jwt token
-    return await this.sessionService.createTokenLogin({ user });
+    const token = await this.sessionService.createTokenLogin({ user });
+    return {
+      token,
+      user,
+    };
   }
 
   async register(payload: RegisterDto) {

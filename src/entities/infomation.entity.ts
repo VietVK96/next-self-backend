@@ -17,17 +17,29 @@ export class UserInfoEntity {
   userId?: number;
 
   @Column({
-    nullable: true
+    nullable: true,
   })
   cvPath?: string;
 
   @Column({
-    nullable: true
+    nullable: false,
+    default: 0,
+  })
+  activeStep?: number;
+
+  @Column({
+    nullable: true,
+    type: 'json',
+  })
+  questions?: string;
+
+  @Column({
+    nullable: true,
   })
   branchName?: string;
 
   @Column({
-    nullable: true
+    nullable: true,
   })
   job?: string;
 }

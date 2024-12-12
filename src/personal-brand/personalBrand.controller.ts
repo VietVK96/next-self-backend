@@ -3,16 +3,23 @@ import {
   Post,
   UseInterceptors,
   UploadedFile,
-  BadRequestException,
   Body,
+  UseGuards,
+  Get,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PersonalBrandService } from './service/personalBrand.service';
-import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
-import { CurrentUser, UserIdentity } from 'src/common/decorator/auth.decorator';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import {
+  CurrentUser,
+  TokenGuard,
+  UserIdentity,
+} from 'src/common/decorator/auth.decorator';
+import { UpdateInfoBodyDto } from './dtos/upload.dto';
 
 @ApiTags('Personal brand')
 @Controller('personal-brand')
+@ApiBearerAuth()
 export class PersonalBrandController {
   constructor(private readonly personalBrandService: PersonalBrandService) {}
 
@@ -25,28 +32,51 @@ export class PersonalBrandController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'file CSV',
+          description: 'file pdf',
         },
       },
       required: ['file'],
     },
   })
   @UseInterceptors(FileInterceptor('file'))
+  @UseGuards(TokenGuard)
   async uploadFile(
     @CurrentUser() userIdentity: UserIdentity,
     @UploadedFile() file: Express.Multer.File,
+    @Body() body: UpdateInfoBodyDto,
   ) {
-    await this.personalBrandService.processCV(file, userIdentity.id);
-    return {
-      success: true,
-    };
+    return await this.personalBrandService.processCV(file, userIdentity, body);
   }
 
   @Post('recall')
   async recallExportAgent(
     @CurrentUser() identity: UserIdentity,
-    @Body() userAnswers: Record<string, any> ,
+    @Body() userAnswers: string,
   ) {
-    return await this.personalBrandService.processAnswers(userAnswers, identity);
+    return await this.personalBrandService.processAnswers(
+      userAnswers,
+      identity,
+    );
+  }
+
+  @Get('/')
+  @UseGuards(TokenGuard)
+  async getInfo(@CurrentUser() identity: UserIdentity) {
+    return await this.personalBrandService.getUserInfo(identity);
+  }
+
+  @Post('/')
+  @UseGuards(TokenGuard)
+  async update(
+    @CurrentUser() userIdentity: UserIdentity,
+    @Body() body: UpdateInfoBodyDto,
+  ) {
+    return await this.personalBrandService.update(userIdentity, body);
+  }
+
+  @Get('/final-result')
+  @UseGuards(TokenGuard)
+  async getFinal(@CurrentUser() identity: UserIdentity) {
+    return await this.personalBrandService.getFinal(identity);
   }
 }

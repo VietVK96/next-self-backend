@@ -22,12 +22,12 @@ export class OpenAIService {
 
   async getBrandingStrategy(
     cvSummary: string,
-    userAnswers: Record<string, any>,
+    userAnswers: string,
   ): Promise<any> {
     // Tạo message gồm system prompt (chạy ngầm), sau đó đưa cvSummary và câu trả lời người dùng vào user prompt
     const userPrompt = `
     Here is the CV summary:\n${cvSummary}\n
-    Here are the user answers:\n${JSON.stringify(userAnswers, null, 2)}\n
+    Here are the user answers:\n${userAnswers}\n
     Please provide the personal branding strategy in JSON format as described.
     `;
 
