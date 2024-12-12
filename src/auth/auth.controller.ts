@@ -9,6 +9,7 @@ import { ValidationDto } from './dto/validation.dto';
 import { LoginRes } from './reponse/token.res';
 import { SessionService } from './services/session.service';
 import { ValidationService } from './services/validation.service';
+import { RegisterDto } from './dto/resgister.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -77,5 +78,13 @@ export class AuthController {
         checked: decode === input.inputCheck,
       },
     };
+  }
+
+  @Post('register')
+  @ApiOperation({
+    description: 'Register',
+  })
+  async register(@Body() payload: RegisterDto) {
+    return await this.validationService.register(payload);
   }
 }

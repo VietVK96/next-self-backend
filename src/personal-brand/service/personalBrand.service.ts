@@ -19,6 +19,7 @@ export class PersonalBrandService {
     
   ) {}
 
+<<<<<<< HEAD
   async processCV(file: Express.Multer.File , userId : number) {
     const fileExt = path.extname(file.originalname);
     if (
@@ -46,5 +47,9 @@ export class PersonalBrandService {
     await this.repo.update({userId:user.id},{job:userAnswers})
     const cv = await this.repo.findOne({where:{userId: user.id}})
     return this.openAIService.getBrandingStrategy(cv.cvPath,userAnswers)
+=======
+  async processCV(file: Express.Multer.File) {
+    console.log('-----data-----', 'dsa');
+>>>>>>> 22e98cdb51d8fdde5d9469982e68d249a17d6271
   }
 }
