@@ -16,12 +16,18 @@ export class UserInfoEntity {
   @Column()
   userId?: number;
 
-  @Column()
+  @Column({
+    nullable: true
+  })
   cvPath?: string;
 
-  @Column()
+  @Column({
+    nullable: true
+  })
   branchName?: string;
 
-  @Column()
+  @Column({
+    nullable: true
+  })
   job?: string;
 }

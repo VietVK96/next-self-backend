@@ -16,19 +16,4 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: any) {
     return payload;
   }
-  //   const grants = this.rolesBuilder.getGrants();
-
-  //   const role = payload?.role || '';
-  //   if (role === '') {
-  //     return {
-  //       ...payload,
-  //       pers: [],
-  //     };
-  //   }
-  //   const userRole = grants[role];
-  //   return {
-  //     ...payload,
-  //     pers: userRole,
-  //   };
-  // }
 }
