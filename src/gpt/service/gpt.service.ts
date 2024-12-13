@@ -4,8 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { OpenAI } from 'openai';
 import { UserEntity } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
-import { systemPrompt2 } from '../data/systemPorm';
-// import { systemPrompt, systemPrompt2 } from '../data/systemPorm';
+import { systemPrompt } from '../data/systemPorm';
 
 @Injectable()
 export class OpenAIService {
@@ -31,20 +30,30 @@ export class OpenAIService {
     Here are the user answers:\n${userAnswers}\n
     Please provide the personal branding strategy in JSON format as described.
     `;
+    for (let index = 1; index < 10; index++) {
+      try {
+        const response = await this.openai.chat.completions.create({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+          temperature: 0.7,
+          max_tokens: 4096,
+        });
 
-    const response = await this.openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: systemPrompt2 },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.7,
-      max_tokens: 1500,
-    });
-
-    // parse JSON từ response
-    const strategyJson = response.choices[0].message?.content?.trim();
-    return strategyJson ? JSON.parse(strategyJson) : null;
+        // parse JSON từ response
+        let strategyJson = response.choices[0].message?.content?.trim();
+        strategyJson = strategyJson
+          .replace(/```json/g, '')
+          .replace(/```/g, '')
+          .trim();
+        return strategyJson ? JSON.parse(strategyJson) : null;
+      } catch (err) {
+        console.log('-----data-----', err);
+        continue;
+      }
+    }
   }
 
   async summarizeCV(cvText: string): Promise<string> {

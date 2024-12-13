@@ -10,6 +10,8 @@ import { Repository } from 'typeorm';
 import { UserIdentity } from 'src/common/decorator/auth.decorator';
 import { UpdateInfoBodyDto } from '../dtos/upload.dto';
 import * as pdfParse from 'pdf-parse';
+import * as mammoth from 'mammoth';
+import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
 
 @Injectable()
 export class PersonalBrandService {
@@ -34,28 +36,39 @@ export class PersonalBrandService {
     }
     fs.writeFileSync(fileName, file.buffer);
 
-    let summarizeCV = '';
+    let summarizeCV = null;
     if (file) {
-      const cv = await pdfParse(file.buffer);
-      summarizeCV = await this.openAIService.summarizeCV(cv.text);
+      if (fileExt.toLocaleLowerCase() === '.pdf') {
+        const cv = await pdfParse(file.buffer);
+        summarizeCV = await this.openAIService.summarizeCV(cv.text);
+      } else if (
+        fileExt.toLocaleLowerCase() === '.doc' ||
+        fileExt.toLocaleLowerCase() === '.docx'
+      ) {
+        const docData = await mammoth.extractRawText({ buffer: file.buffer });
+        summarizeCV = docData.value;
+      } else {
+        throw new CBadRequestException('File invalid!');
+      }
     }
     const currentInfo = await this.getUserInfo(user);
+    const brandPlatform = JSON.stringify(body);
     if (!currentInfo) {
       const cv = new UserInfoEntity();
       cv.cvPath = fileName;
       cv.userId = user.id;
       cv.activeStep = 1;
-      cv.branchName = body.branchName;
-      cv.job = body.job;
       cv.summarizeCV = summarizeCV;
+      cv.brandPlatform = brandPlatform;
+      cv.originalname = file?.originalname ?? null;
       return await this.repo.save(cv);
     } else {
       currentInfo.cvPath = fileName;
       currentInfo.userId = user.id;
       currentInfo.activeStep = 1;
-      currentInfo.branchName = body.branchName;
-      currentInfo.job = body.job;
       currentInfo.summarizeCV = summarizeCV;
+      currentInfo.brandPlatform = brandPlatform;
+      currentInfo.originalname = file?.originalname ?? null;
       return await this.repo.save(currentInfo);
     }
   }
@@ -84,8 +97,19 @@ export class PersonalBrandService {
 
   async getFinal(user: UserIdentity) {
     const currentInfo = await this.getUserInfo(user);
+    let summarizeCV = currentInfo?.summarizeCV;
+    if (!summarizeCV) {
+      let brandPlatform: string | UpdateInfoBodyDto = currentInfo.brandPlatform;
+      if (typeof brandPlatform === 'string') {
+        brandPlatform = JSON.parse(brandPlatform) as UpdateInfoBodyDto;
+      }
+
+      summarizeCV = `
+      I am ${brandPlatform.title} in ${brandPlatform.technique} field, i want to ${brandPlatform?.goals}
+      `;
+    }
     return await this.openAIService.getBrandingStrategy(
-      currentInfo.summarizeCV,
+      summarizeCV,
       currentInfo.questions,
     );
   }

@@ -35,16 +35,18 @@ export class UserInfoEntity {
 
   @Column({
     nullable: true,
+    type: 'json',
   })
-  branchName?: string;
+  brandPlatform?: string;
 
   @Column({
     nullable: true,
   })
-  job?: string;
+  originalname?: string;
 
   @Column({
     nullable: true,
+    type: 'text',
   })
   summarizeCV?: string;
 }

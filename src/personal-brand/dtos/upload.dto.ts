@@ -4,12 +4,17 @@ export class UpdateInfoBodyDto {
   @ApiProperty({
     required: false,
   })
-  branchName?: string;
+  technique?: string;
 
   @ApiProperty({
     required: false,
   })
-  job?: string;
+  title?: string;
+
+  @ApiProperty({
+    required: false,
+  })
+  goals?: string;
 
   @ApiProperty({
     required: false,
