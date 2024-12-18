@@ -6,6 +6,7 @@ import {
   Body,
   UseGuards,
   Get,
+  Param,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PersonalBrandService } from './service/personalBrand.service';
@@ -78,5 +79,26 @@ export class PersonalBrandController {
   @UseGuards(TokenGuard)
   async getFinal(@CurrentUser() identity: UserIdentity) {
     return await this.personalBrandService.getFinal(identity);
+  }
+
+  @Get('/system-prompt')
+  @UseGuards(TokenGuard)
+  async getSystemPrompt() {
+    return await this.personalBrandService.getSystemPrompt();
+  }
+
+  @Post('/system-prompt/:id')
+  @UseGuards(TokenGuard)
+  async updateSystemPrompt(
+    @Param('id') id: number,
+    @Body('content') content: string,
+  ) {
+    return await this.personalBrandService.updateSystemPrompt(id, content);
+  }
+
+  @Get('/system-prompt/check-cv')
+  @UseGuards(TokenGuard)
+  async checkCv(@CurrentUser() currentUser: UserIdentity) {
+    return await this.personalBrandService.checkResultCV(currentUser);
   }
 }

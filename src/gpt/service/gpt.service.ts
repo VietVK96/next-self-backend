@@ -4,7 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { OpenAI } from 'openai';
 import { UserEntity } from 'src/entities/user.entity';
 import { Repository } from 'typeorm';
-import { systemPrompt } from '../data/systemPorm';
+import { systemPrompt as defaultPrompt } from '../data/systemPorm';
+import { SystemPromptEntity } from 'src/entities/system-pormt.entity';
 
 @Injectable()
 export class OpenAIService {
@@ -14,6 +15,8 @@ export class OpenAIService {
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
     private readonly config: ConfigService,
+    @InjectRepository(SystemPromptEntity)
+    private readonly systemPromptRepo: Repository<SystemPromptEntity>,
   ) {
     this.openai = new OpenAI({
       apiKey: this.config.get('app.apiKey'),
@@ -30,12 +33,16 @@ export class OpenAIService {
     Here are the user answers:\n${userAnswers}\n
     Please provide the personal branding strategy in JSON format as described.
     `;
+
+    const systemPrompt = await this.systemPromptRepo.findOne({
+      where: { id: 1 },
+    });
     for (let index = 1; index < 10; index++) {
       try {
         const response = await this.openai.chat.completions.create({
           model: 'gpt-3.5-turbo',
           messages: [
-            { role: 'system', content: systemPrompt },
+            { role: 'system', content: systemPrompt?.content ?? defaultPrompt },
             { role: 'user', content: userPrompt },
           ],
           temperature: 0.7,
@@ -58,12 +65,17 @@ export class OpenAIService {
 
   async summarizeCV(cvText: string): Promise<string> {
     // Gọi OpenAI để tóm tắt nội dung CV
+    const systemPrompt = await this.systemPromptRepo.findOne({
+      where: { id: 2 },
+    });
     const response = await this.openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful assistant that summarizes CV content.',
+          content:
+            systemPrompt?.content ??
+            'You are a helpful assistant that summarizes CV content.',
         },
         { role: 'user', content: `Summarize the following CV:\n${cvText}` },
       ],

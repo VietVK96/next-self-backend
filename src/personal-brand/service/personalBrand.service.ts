@@ -12,6 +12,8 @@ import { UpdateInfoBodyDto } from '../dtos/upload.dto';
 import * as pdfParse from 'pdf-parse';
 import * as mammoth from 'mammoth';
 import { CBadRequestException } from 'src/common/exceptions/bad-request.exception';
+import { SystemPromptEntity } from 'src/entities/system-pormt.entity';
+import { UserEntity } from 'src/entities/user.entity';
 
 @Injectable()
 export class PersonalBrandService {
@@ -20,6 +22,8 @@ export class PersonalBrandService {
     private readonly configService: ConfigService,
     @InjectRepository(UserInfoEntity)
     private readonly repo: Repository<UserInfoEntity>,
+    @InjectRepository(SystemPromptEntity)
+    private readonly systemPromptRepo: Repository<SystemPromptEntity>,
   ) {}
 
   async processCV(
@@ -112,5 +116,52 @@ export class PersonalBrandService {
       summarizeCV,
       currentInfo.questions,
     );
+  }
+
+  async getSystemPrompt() {
+    return await this.systemPromptRepo.find();
+  }
+
+  async updateSystemPrompt(id: number, content: string) {
+    const prompt = await this.systemPromptRepo.findOne({ where: { id } });
+    await this.systemPromptRepo.update(prompt?.id, { content });
+    const dirName = `./resources/system-prompt/${prompt.name}`;
+    if (!fs.existsSync(dirName)) {
+      fs.mkdirSync(dirName, { recursive: true });
+    }
+    fs.writeFileSync(
+      path.join(dirName, `${prompt.name}.txt`),
+      content,
+      'utf-8',
+    );
+    return prompt;
+  }
+
+  async checkResultCV(currentUser: UserEntity) {
+    const currentUserInfo = await this.repo.findOne({
+      where: {
+        userId: currentUser?.id,
+      },
+    });
+    if (fs.existsSync(currentUserInfo.cvPath)) {
+      const file = fs.readFileSync(currentUserInfo.cvPath);
+      const fileExt = path.extname(currentUserInfo.originalname);
+      if (file) {
+        let summarizeCV = null;
+        if (fileExt.toLocaleLowerCase() === '.pdf') {
+          const cv = await pdfParse(file.buffer);
+          summarizeCV = await this.openAIService.summarizeCV(cv.text);
+        } else if (
+          fileExt.toLocaleLowerCase() === '.doc' ||
+          fileExt.toLocaleLowerCase() === '.docx'
+        ) {
+          const docData = await mammoth.extractRawText({ buffer: file });
+          summarizeCV = docData.value;
+        } else {
+          throw new CBadRequestException('File invalid!');
+        }
+        return summarizeCV;
+      }
+    }
   }
 }
